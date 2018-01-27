@@ -452,6 +452,81 @@
     AssertEqual(numRows, 1u);
 }
 
+- (void) testLeftJoin {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
+    [joinme setValue: @42 forKey: @"theone"];
+    [self saveDocument: joinme];
+    
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    
+    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: on];
+    
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number2" from:@"main"];
+    CBLQueryExpression* NUMBER2  = [CBLQueryExpression property: @"theone" from:@"secondary"];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: NUMBER1],
+                         [CBLQuerySelectResult expression: NUMBER2]];
+    
+    
+    
+    CBLQuery* q = [CBLQuery select: results
+                              from: [CBLQueryDataSource database: self.db as: @"main"]
+                              join: @[join]];
+    Assert(q);
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+    {
+
+        if (n == 41) {
+            AssertEqual ([r integerAtIndex: 0], 59u);
+            AssertNil ([r valueAtIndex: 1]);
+        }
+        if (n == 42) {
+            AssertEqual ([r integerAtIndex: 0], 58u);
+            AssertEqual ([r integerAtIndex: 1], 42u);
+        }
+    }];
+    
+    AssertEqual(numRows, 101u);
+}
+
+- (void) testCrossJoin {
+    [self loadNumbers: 10];
+    
+    CBLQueryJoin* join = [CBLQueryJoin crossJoin: [CBLQueryDataSource database: self.db as: @"secondary"]];
+    
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1" from:@"main"];
+    CBLQueryExpression* NUMBER2  = [CBLQueryExpression property: @"number2" from:@"secondary"];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: NUMBER1],
+                         [CBLQuerySelectResult expression: NUMBER2]];
+    
+    
+    
+    CBLQuery* q = [CBLQuery select: results
+                              from: [CBLQueryDataSource database: self.db as: @"main"]
+                              join: @[join]];
+    Assert(q);
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        NSInteger num1 = [r integerAtIndex:0];
+        NSInteger num2 = [r integerAtIndex:1];
+        AssertEqual ((num1 - 1) % 10,(long)(n - 1)/10 );
+        AssertEqual ((10 - num2) % 10,(long)n % 10 );
+        
+    }];
+    
+    AssertEqual(numRows, 100u);
+}
+
 
 - (void) testGroupBy {
     NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];

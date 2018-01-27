@@ -361,6 +361,64 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 1)
     }
     
+    func testLeftJoin() throws {
+        try loadNumbers(100)
+        
+        let doc = createDocument("joinme")
+        doc.setValue(42, forKey: "theone")
+        try saveDocument(doc)
+        
+        let NUMBER1 = Expression.property("number2").from("main")
+        let NUMBER2 = Expression.property("theone").from("secondary")
+        
+        let join = Join.leftJoin(DataSource.database(db).as("secondary"))
+            .on(Expression.property("number1").from("main")
+                .equalTo(Expression.property("theone").from("secondary")))
+        
+        let q = Query
+            .select(SelectResult.expression(NUMBER1),SelectResult.expression(NUMBER2))
+            .from(DataSource.database(db).as("main"))
+            .join(join)
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            
+            if (n == 41) {
+                XCTAssertEqual(r.int(at: 0) , 59)
+                XCTAssertNil(r.value(at: 1));
+            }
+            if (n == 42) {
+                XCTAssertEqual(r.int(at: 0) , 58)
+                XCTAssertEqual(r.int(at: 1) , 42)
+            }
+        })
+        XCTAssertEqual(numRow, 101)
+    }
+    
+    func testCrossJoin() throws {
+        try loadNumbers(10)
+        
+        
+        let NUMBER1 = Expression.property("number1").from("main")
+        let NUMBER2 = Expression.property("number2").from("secondary")
+        
+        let join = Join.crossJoin(DataSource.database(db).as("secondary"))
+        
+        let q = Query
+            .select(SelectResult.expression(NUMBER1),SelectResult.expression(NUMBER2))
+            .from(DataSource.database(db).as("main"))
+            .join(join).orderBy(Ordering.expression(NUMBER2))
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            
+            let num1 = r.int(at: 0)
+            let num2 = r.int(at: 1)
+
+            XCTAssertEqual ((num1 - 1)%10,Int((n - 1) % 10) )
+            XCTAssertEqual (num2 ,Int((n - 1)/10) )
+            
+        })
+        XCTAssertEqual(numRow, 100)
+    }
     
     func testGroupBy() throws {
         var expectedStates  = ["AL",    "CA",    "CO",    "FL",    "IA"]
