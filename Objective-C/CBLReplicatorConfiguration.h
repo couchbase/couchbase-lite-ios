@@ -92,6 +92,19 @@ typedef enum {
  */
 @property (nonatomic, nullable) NSArray<NSString*>* documentIDs;
 
+
+#if TARGET_OS_IPHONE
+/**
+ Allows the replicator to continue replicating in the background. The default
+ value is NO, which means that the replicator will suspend itself when the
+ replicator detects that the application is running in the background.
+ 
+ If setting the value to YES, please ensure that the application requests
+ for extending the background task properly.
+ */
+@property (nonatomic) BOOL allowReplicatingInBackground;
+#endif
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 

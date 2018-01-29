@@ -41,6 +41,10 @@
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
 
+#if TARGET_OS_IPHONE
+@synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
+#endif
+
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            target: (id<CBLEndpoint>)target
 {
@@ -132,6 +136,16 @@
 }
 
 
+#if TARGET_OS_IPHONE
+- (void) setAllowReplicatingInBackground: (BOOL)allowReplicatingInBackground {
+    [self checkReadonly];
+    
+    if (_allowReplicatingInBackground != allowReplicatingInBackground) {
+        _allowReplicatingInBackground = allowReplicatingInBackground;
+    }
+}
+#endif
+
 #pragma mark - Internal
 
 
@@ -139,6 +153,7 @@
                        readonly: (BOOL)readonly {
     self = [super init];
     if (self) {
+        _readonly = readonly;
         _database = config.database;
         _target = config.target;
         _replicatorType = config.replicatorType;
@@ -149,7 +164,9 @@
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
-        _readonly = readonly;
+#if TARGET_OS_IPHONE
+        _allowReplicatingInBackground = config.allowReplicatingInBackground;
+#endif
     }
     return self;
 }
