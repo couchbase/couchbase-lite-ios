@@ -322,7 +322,30 @@
 }
 
 
-- (void) testPullConflict {
+- (void) testPullConflict_MineWins {
+    [self testPullConflictWithResolver: [MineWins new]
+                        expectedResult: @{@"species": @"Tiger",
+                                          @"name": @"Hobbes"}];
+}
+
+- (void) testPullConflict_TheirsWins {
+    [self testPullConflictWithResolver: [TheirsWins new]
+                        expectedResult: @{@"species": @"Tiger",
+                                          @"pattern": @"striped"}];
+}
+
+- (void) testPullConflict_MergeThenTheirsWins {
+    MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
+    resolver.requireBaseRevision = true;
+    [self testPullConflictWithResolver: resolver
+                        expectedResult: @{@"species": @"Tiger",
+                                          @"name": @"Hobbes",
+                                          @"pattern": @"striped"}];
+}
+
+- (void) testPullConflictWithResolver: (TestResolver*)resolver
+                       expectedResult: (NSDictionary*)expectedResult
+{
     // Create a document and push it to otherDB:
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
@@ -330,8 +353,8 @@
     Assert([self.db saveDocument: doc1 error: &error]);
 
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
 
     // Now make different changes in db and otherDB:
     doc1 = [[self.db documentWithID: @"doc"] toMutable];
@@ -344,18 +367,23 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     // Pull from otherDB, creating a conflict to resolve:
-    MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
-    resolver.requireBaseRevision = true;
-    config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO
+    id pullConfig = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO
                    conflictResolver: resolver];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
 
     // Check that it was resolved:
+    Assert(resolver.wasCalled);
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
-                                                 @"name": @"Hobbes",
-                                                 @"pattern": @"striped"}));
+    AssertEqualObjects(savedDoc.toDictionary, expectedResult);
+
+    // Push to otherDB again to verify there is no replication conflict now,
+    // and that otherDB ends up with the same resolved document:
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+
+    AssertEqual(otherDB.count, 1u);
+    CBLDocument* otherSavedDoc = [otherDB documentWithID: @"doc"];
+    AssertEqualObjects(otherSavedDoc.toDictionary, expectedResult);
 }
 
 

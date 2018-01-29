@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- The conflict resolver for this replicator. Setting nil means using the default
+ The conflict resolver for this database. Setting nil means using the default
  conflict resolver, where the revision with more history wins.
  */
 @property (nonatomic) id<CBLConflictResolver> conflictResolver;
