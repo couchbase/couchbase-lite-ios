@@ -38,11 +38,12 @@ class CBLTestCase: XCTestCase {
     
     
     func openDB(name: String) throws -> Database {
-        let builder = DatabaseConfiguration.Builder().setDirectory(self.directory)
+        let config = DatabaseConfiguration()
+        config.directory = self.directory
         if let resolver = self.conflictResolver {
-            builder.setConflictResolver(resolver)
+            config.conflictResolver = resolver
         }
-        return try Database(name: name, config: builder.build())
+        return try Database(name: name, config: config)
     }
     
     
@@ -64,12 +65,12 @@ class CBLTestCase: XCTestCase {
     
     
     func createDocument(_ id: String?) -> MutableDocument {
-        return MutableDocument(withID: id)
+        return MutableDocument(id: id)
     }
     
     
     func createDocument(_ id: String?, data: [String:Any]) -> MutableDocument {
-        return MutableDocument(withID: id, data: data)
+        return MutableDocument(id: id, data: data)
     }
     
     
@@ -110,7 +111,7 @@ class CBLTestCase: XCTestCase {
                     let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
                     let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
                     let docID = String(format: "doc-%03llu", n)
-                    let doc = MutableDocument(withID: docID, data: dict)
+                    let doc = MutableDocument(id: docID, data: dict)
                     try! self.db.saveDocument(doc)
                 })
             }

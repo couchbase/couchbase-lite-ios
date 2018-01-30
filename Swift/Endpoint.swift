@@ -27,7 +27,7 @@ public struct DatabaseEndpoint: InternalEndpoint {
     /// Initializes the DatabaseEndpoint with the database object.
     ///
     /// - Parameter database: The database object.
-    public init(withDatabase database: Database) {
+    public init(database: Database) {
         self.database = database
     }
     
@@ -49,7 +49,7 @@ public struct URLEndpoint: InternalEndpoint {
     /// for transferring data over a secure connection.
     ///
     /// - Parameter url: The URL object.
-    public init(withURL url: URL) {
+    public init(url: URL) {
         impl = CBLURLEndpoint(url: url)
         self.url = url
     }

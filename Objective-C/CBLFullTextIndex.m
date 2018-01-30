@@ -12,16 +12,15 @@
 
 @implementation CBLFullTextIndex {
     NSArray<CBLFullTextIndexItem*>* _items;
-    CBLFullTextIndexOptions* _options;
 }
 
-- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items
-                       options: (nullable CBLFullTextIndexOptions*)options
-{
+@synthesize language=_language, ignoreAccents=_ignoreAccents;
+
+- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items {
     self = [super initWithNone];
     if (self) {
         _items = items;
-        _options = options;
+        _language = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
     }
     return self;
 }
@@ -33,16 +32,10 @@
 
 
 - (C4IndexOptions) indexOptions {
-    NSString* locale = _options.locale;
-    if (!locale)
-        locale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
-    
     C4IndexOptions c4options = { };
-    c4options.language = locale.UTF8String;
-    if (_options)
-        c4options.ignoreDiacritics = _options.ignoreAccents;
-    else
-        c4options.ignoreDiacritics = [locale isEqualToString: @"en"];
+    if (_language)
+        c4options.language = _language.UTF8String;
+    c4options.ignoreDiacritics = _ignoreAccents;
     return c4options;
 }
 
@@ -53,6 +46,26 @@
         [json addObject: [item.expression asJSON]];
     }
     return json;
+}
+
+@end
+
+
+@implementation CBLFullTextIndexItem
+
+@synthesize expression=_expression;
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression {
+    self = [super init];
+    if (self) {
+        _expression = expression;
+    }
+    return self;
+}
+
++ (CBLFullTextIndexItem*) property: (NSString*)property {
+    return [[CBLFullTextIndexItem alloc] initWithExpression:
+            [CBLQueryExpression property: property]];
 }
 
 @end

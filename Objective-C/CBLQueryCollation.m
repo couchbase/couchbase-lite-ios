@@ -49,7 +49,7 @@
         _unicode = unicode;
         
         if (_unicode && !locale)
-            locale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
+            locale = [NSLocale currentLocale].localeIdentifier;
         _locale = locale;
         
         _ignoreCase = ignoreCase;

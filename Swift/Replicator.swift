@@ -63,9 +63,9 @@ public final class Replicator {
     /// Initializes a replicator with the given configuration.
     ///
     /// - Parameter config: The configuration.
-    public init(withConfig config: ReplicatorConfiguration) {
+    public init(config: ReplicatorConfiguration) {
+        _config = ReplicatorConfiguration(config: config, readonly: true)
         _impl = CBLReplicator(config: config.toImpl());
-        _config = config
     }
     
     
@@ -73,7 +73,6 @@ public final class Replicator {
     public var config: ReplicatorConfiguration {
         return _config
     }
-    
     
     
     /// The replicator's current status: its activity level and progress. Observable.
@@ -85,6 +84,7 @@ public final class Replicator {
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress throuh the replicator change notification.
     public func start() {
+        registerActiveReplicator()
         _impl.start()
     }
     
@@ -133,18 +133,39 @@ public final class Replicator {
     }
     
     
-    // MARK: Private
+    // MARK: Internal
+    
+    
+    func registerActiveReplicator() {
+        _lock.lock()
+        if _listenerToken == nil {
+            _config.database.addReplicator(self)
+            _listenerToken = _impl.addChangeListener({ (change) in
+                if change.status.activity == kCBLReplicatorStopped {
+                    self.unregisterActiveReplicator()
+                }
+            })
+        }
+        _lock.unlock()
+    }
+    
+    
+    func unregisterActiveReplicator() {
+        _lock.lock()
+        if let token = _listenerToken {
+            _impl.removeChangeListener(with: token)
+            _config.database.removeReplicator(self)
+            _listenerToken = nil
+        }
+        _lock.unlock()
+    }
     
     
     private let _impl: CBLReplicator
     
     private let _config: ReplicatorConfiguration
     
+    private var _listenerToken: ListenerToken?
     
-    // MARK: deinit
-    
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
+    private let _lock = NSLock()
 }

@@ -58,7 +58,11 @@ typedef struct {
  */
 @interface CBLReplicator : NSObject
 
-/** The replicator's configuration. */
+/**
+ The replicator's configuration. The returned configuration object is readonly;
+ an NSInternalInconsistencyException exception will be thrown if
+ the configuration object is modified.
+ */
 @property (readonly, nonatomic) CBLReplicatorConfiguration* config;
 
 /** The replicator's current status: its activity level and progress. Observable. */

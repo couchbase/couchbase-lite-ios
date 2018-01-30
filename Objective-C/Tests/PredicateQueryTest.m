@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+NSPredicate.h"
+#import "CBLFullTextIndex.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLJSON.h"
 
@@ -46,7 +47,7 @@
 - (void) testPredicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
     NSError* error;
-    CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"blurb"]] options: nil];
+    CBLIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"blurb"]]];
     Assert([_db createIndex: index withName: @"blurb" error: &error]);
     
     const struct {const char *pred; const char *json5;} kTests[] = {
@@ -186,7 +187,7 @@
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
     NSError *error;
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
-    CBLIndex* index = [CBLIndex valueIndexWithItems: @[[CBLValueIndexItem expression: firstName]]];
+    CBLIndex* index = [CBLIndexBuilder valueIndexWithItems: @[[CBLValueIndexItem expression: firstName]]];
     
     for (int pass = 0; pass < 2; ++pass) {
         Log(@"---- Pass %d", pass);
@@ -239,7 +240,7 @@
     [self loadJSONResource: @"sentences"];
     NSError* error;
     
-    CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]] options: nil];
+    CBLIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]];
     Assert([_db createIndex: index withName: @"sentence" error: &error]);
     
     CBLPredicateQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];

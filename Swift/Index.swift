@@ -9,16 +9,19 @@
 import Foundation
 
 
+public protocol Index { }
+
+
 /// Index represents an index which could be a value index for regular queries or
 /// full-text index for full-text queries (using the match operator).
-public class Index {
+public class IndexBuilder {
     
     /// Create a value index with the given index items. The index items are a list of
     /// the properties or expressions to be indexed.
     
     /// - Parameter: items The index items.
     /// - Returns: The ValueIndex.
-    public class func valueIndex(withItems items: ValueIndexItem...) -> ValueIndex {
+    public class func valueIndex(items: ValueIndexItem...) -> ValueIndex {
         return ValueIndex(items: items)
     }
     
@@ -29,16 +32,8 @@ public class Index {
     ///
     /// - Parameter: items The index items.
     /// - Returns: The ON operator.
-    public class func fullTextIndex(withItems items: FullTextIndexItem...) -> FullTextIndex {
-        return FullTextIndex(items: items, ignoreAccents: nil, locale: nil)
-    }
-    
-    // MARK: Internal
-    
-    var impl: CBLIndex
-    
-    init(impl: CBLIndex) {
-        self.impl = impl
+    public class func fullTextIndex(items: FullTextIndexItem...) -> FullTextIndex {
+        return FullTextIndex(items: items)
     }
     
 }
@@ -48,16 +43,20 @@ public class Index {
 
 
 /// A value index for regular queries.
-public final class ValueIndex: Index {
+public final class ValueIndex: Index, CBLIndexConvertible {
     
-    // MARK: Internal
+    private let impl: CBLIndex
     
     init(items: [ValueIndexItem]) {
         var cblItems: [CBLValueIndexItem] = []
         for item in items {
             cblItems.append(item.impl)
         }
-        super.init(impl: CBLIndex.valueIndex(with: cblItems))
+        impl = CBLIndexBuilder.valueIndex(with: cblItems)
+    }
+    
+    func toImpl() -> CBLIndex {
+        return self.impl
     }
     
 }
@@ -93,64 +92,42 @@ public final class ValueIndexItem {
 
 
 /// A full-text search index for full-text search query with the match operator.
-public final class FullTextIndex: Index {
+public final class FullTextIndex: Index, CBLIndexConvertible {
     
     /// Set to true ignore accents/diacritical marks. The default value is false.
     ///
     /// - Parameter ignoreAccents: The ignore accent value.
     /// - Returns: The FTSIndex instance.
     public func ignoreAccents(_ ignoreAccents: Bool) -> Self {
-        if ignoreAccents != self.ignoreAccents {
-            self.ignoreAccents = ignoreAccents
-            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
-            self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
-        }
+        self.impl.ignoreAccents = ignoreAccents
         return self
     }
     
     
-    /// The locale code which is an ISO-639 language code plus, optionally, an underscore
-    /// and an ISO-3166 country code: "en", "en_US", "fr_CA", etc. Setting the locale code affects
-    /// how word breaks and word stems are parsed. Setting nil value to use current locale and
-    /// setting "" to disable stemming. The default value is nil.
+    /// The language code which is an ISO-639 language code such as "en", "fr", etc.
+    /// Setting the language code affects how word breaks and word stems are parsed.
+    /// Without setting the language code, the current locale's language will be used.
+    /// Setting nil value or "" value to disable the language features.
     ///
-    /// - Parameter locale: The locale code.
+    /// - Parameter language: The language code.
     /// - Returns: The FTSIndex instance.
-    public func locale(_ locale: String?) -> Self {
-        if locale != self.locale {
-            self.locale = locale
-            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents,
-                                           locale: self.locale)
-            self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
-        }
+    public func language(_ language: String?) -> Self {
+        self.impl.language = language
         return self
     }
     
     // MARK: Internal
     
-    var items: [CBLFullTextIndexItem]
-    var ignoreAccents: Bool?
-    var locale: String?
+    private let impl: CBLFullTextIndex
     
-    init(items: [FullTextIndexItem], ignoreAccents: Bool?, locale: String?) {
-        self.items = []
-        for item in items {
-            self.items.append(item.impl)
-        }
-        
-        self.ignoreAccents = ignoreAccents
-        self.locale = locale
-        let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
-        super.init(impl: CBLIndex.fullTextIndex(with: self.items, options: options))
+    init(items: [FullTextIndexItem]) {
+        self.impl = CBLIndexBuilder.fullTextIndex(with: items.map { $0.impl })
     }
     
-    class func options(ignoreAccents: Bool?, locale: String?) -> CBLFullTextIndexOptions? {
-        let options = CBLFullTextIndexOptions()
-        options.ignoreAccents = ignoreAccents ?? false
-        options.locale = locale
-        return options
+    func toImpl() -> CBLIndex {
+        return self.impl as CBLIndex
     }
-
+    
 }
 
 
@@ -173,5 +150,19 @@ public class FullTextIndexItem {
     init(impl: CBLFullTextIndexItem) {
         self.impl = impl
     }
-    
+}
+
+
+protocol CBLIndexConvertible {
+    func toImpl() -> CBLIndex
+}
+
+
+extension Index {
+    func toImpl() -> CBLIndex {
+        if let index = self as? CBLIndexConvertible {
+            return index.toImpl()
+        }
+        fatalError("Unsupported index.")
+    }
 }

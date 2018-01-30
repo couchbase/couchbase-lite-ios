@@ -22,10 +22,9 @@ class DatabaseEncryptionTest: CBLTestCase {
     }
     
     func openSeekrit(password: String?) throws -> Database {
-        let config = DatabaseConfiguration.Builder()
-            .setEncryptionKey(password != nil ? EncryptionKey.password(password!) : nil)
-            .setDirectory(self.directory)
-            .build()
+        let config = DatabaseConfiguration()
+        config.encryptionKey = password != nil ? EncryptionKey.password(password!) : nil
+        config.directory = self.directory
         return try Database(name: "seekrit", config: config)
     }
     
@@ -38,15 +37,21 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Try to reopen with password (fails):
-        expectError(domain: "LiteCore", code: 29) {
+    #if COUCHBASE_ENTERPRISE
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
-        
+    #else
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnsupported) {
+            try _ = self.openSeekrit(password: "wrong")
+        }
+    #endif
         // Reopen with no password:
         seekrit = try openSeekrit(password: nil)
         XCTAssertEqual(seekrit!.count, 1)
     }
     
+#if COUCHBASE_ENTERPRISE
     func testEncryptedDatabase() throws {
         // Create encrypted database:
         seekrit = try openSeekrit(password: "letmein")
@@ -57,12 +62,12 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Reopen without password (fails):
-        expectError(domain: "LiteCore", code: 29) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: nil)
         }
         
         // Reopen with wrong password (fails):
-        expectError(domain: "LiteCore", code: 29) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
         
@@ -90,7 +95,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Make sure old password doesn't work:
-        expectError(domain: "LiteCore", code: 29) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "letmein")
         }
     }
@@ -220,4 +225,5 @@ class DatabaseEncryptionTest: CBLTestCase {
             i = i + 1
         }
     }
+#endif
 }

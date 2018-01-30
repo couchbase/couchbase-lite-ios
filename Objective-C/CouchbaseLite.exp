@@ -14,7 +14,6 @@
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
-.objc_class_name_CBLDatabaseConfigurationBuilder
 .objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
@@ -33,6 +32,7 @@
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryArrayExpression
 .objc_class_name_CBLQueryArrayFunction
+.objc_class_name_CBLQueryBuilder
 .objc_class_name_CBLQueryChange
 .objc_class_name_CBLQueryCollation
 .objc_class_name_CBLQueryDataSource
@@ -58,3 +58,8 @@
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
 .objc_class_name_CBLValueIndexItem
+
+# NSString constants:
+_CBLErrorDomain
+_kCBLAllPropertiesName
+

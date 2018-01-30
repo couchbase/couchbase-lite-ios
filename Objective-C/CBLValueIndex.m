@@ -44,3 +44,28 @@
 
 
 @end
+
+@implementation CBLValueIndexItem
+
+@synthesize expression=_expression;
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression {
+    self = [super init];
+    if (self) {
+        _expression = expression;
+    }
+    return self;
+}
+
+
++ (CBLValueIndexItem*) property: (NSString*)property{
+    return [[CBLValueIndexItem alloc] initWithExpression:
+            [CBLQueryExpression property: property]];
+}
+
+
++ (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
+    return [[CBLValueIndexItem alloc] initWithExpression: expression];
+}
+
+@end

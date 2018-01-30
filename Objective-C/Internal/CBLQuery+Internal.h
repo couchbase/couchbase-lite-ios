@@ -112,6 +112,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryParameters ()
 
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
+                           readonly: (BOOL)readonly;
+
 - (nullable NSData*) encodeAsJSON: (NSError**)outError;
 
 @end

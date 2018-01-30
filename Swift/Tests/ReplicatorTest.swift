@@ -25,16 +25,14 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func run(type: ReplicatorType, target: Endpoint, expectedError: Int?) {
-        let config = ReplicatorConfiguration
-            .Builder(withDatabase: self.db, target: target)
-            .setReplicatorType(type)
-            .build()
+        let config = ReplicatorConfiguration(database: self.db, target: target)
+        config.replicatorType = type
         run(config: config, expectedError: expectedError)
     }
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         let x = self.expectation(description: "change")
-        let repl = Replicator(withConfig: config);
+        let repl = Replicator(config: config)
         let token = repl.addChangeListener { (change) in
             let status = change.status
             if status.activity == .stopped {
@@ -53,7 +51,8 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func testEmptyPush() {
-        let target = DatabaseEndpoint(withDatabase: otherDB)
+        let target = DatabaseEndpoint(database: otherDB)
         run(type: .push, target: target, expectedError: nil)
     }
+    
 }

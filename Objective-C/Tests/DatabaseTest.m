@@ -136,49 +136,39 @@
     AssertNotNil(config1.conflictResolver);
     AssertNil(config1.encryptionKey);
     AssertNil(config1.encryptionKey);
-#if TARGET_OS_IPHONE
-    AssertEqual(config1.fileProtection, 0);
-#endif
     
     // Custom:
     CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
     DummyResolver *resolver = [DummyResolver new];
-    CBLDatabaseConfiguration* config2 =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = @"/tmp/mydb";
-                builder.conflictResolver = resolver;
-                builder.encryptionKey = key;
-#if TARGET_OS_IPHONE
-                builder.fileProtection = NSDataWritingFileProtectionComplete;
-#endif
-            }];
-    
+    CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
+    config2.directory = @"/tmp/mydb";
+    config2.conflictResolver = resolver;
+    config2.encryptionKey = key;
+
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
     AssertEqualObjects(config2.encryptionKey, key);
-#if TARGET_OS_IPHONE
-    AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
-#endif
 }
 
 
 - (void) testGetSetConfiguration {
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder * _Nonnull builder) {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
 #if !TARGET_OS_IPHONE
-                // MacOS needs directory as there is no bundle in mac unit test:
-                builder.directory = _db.config.directory;
+    // MacOS needs directory as there is no bundle in mac unit test:
+    config.directory = _db.config.directory;
 #endif
-    }];
-
+    
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
                                                  config: config
                                                   error: &error];
     AssertNotNil(db.config);
-    Assert(db.config == config);
+    Assert(db.config != config);
+    
+    // Configuration from the database is readonly:
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        self.db.config.directory = @"";
+    }];
 }
 
 
@@ -234,7 +224,7 @@
 
 - (void) testCreateWithEmptyDBNames {
     // create db with default configuration
-    [self expectError: @"LiteCore" code: 30 in: ^BOOL(NSError** error) {
+    [self expectError: CBLErrorDomain code: CBLErrorWrongFormat in: ^BOOL(NSError** error) {
         return [self openDBNamed: @"" error: error] != nil;
     }];
 }
@@ -247,11 +237,8 @@
     
     // create db with custom directory
     NSError* error;
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
     
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNil(error);
@@ -408,7 +395,7 @@
     
     // update doc & store it into different instance
     [doc setValue: @2 forKey: @"key"];
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
@@ -432,7 +419,7 @@
     
     // update doc & store it into different db
     [doc setValue: @2 forKey: @"key"];
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
@@ -665,7 +652,7 @@
     AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB purgeDocument: doc error: error2];
     }]; // forbidden
     AssertEqual(1, (long)otherDB.count);
@@ -691,7 +678,7 @@
     AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB purgeDocument: doc error: error2];
     }]; // forbidden
     
@@ -841,7 +828,7 @@
 - (void) testCloseThenCallInBatch {
     NSError* error;
     BOOL success = [self.db inBatch: &error usingBlock: ^{
-        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+        [self expectError: CBLErrorDomain code: CBLErrorTransactionNotClosed in: ^BOOL(NSError** error2) {
             return [self.db close: error2];
         }];
         // 26 -> kC4ErrorTransactionNotClosed
@@ -928,7 +915,7 @@
 - (void) testDeleteThenCallInBatch {
     NSError* error;
     BOOL sucess = [self.db inBatch: &error usingBlock:^{
-        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+        [self expectError: CBLErrorDomain code: CBLErrorTransactionNotClosed in: ^BOOL(NSError** error2) {
             return [self.db delete: error2];
         }];
         // 26 -> kC4ErrorTransactionNotClosed: Function cannot be called while in a transaction
@@ -946,7 +933,7 @@
     AssertNotNil(otherDB);
     
     // delete db
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [self.db delete: error2];
     }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
@@ -989,7 +976,7 @@
     
     // delete db with nil directory
     // 24 -> kC4ErrorBusy: Database is busy/locked
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [CBLDatabase deleteDatabase: @"db" inDirectory: nil error: error2];
     }];
 }
@@ -1001,11 +988,8 @@
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
     
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
@@ -1026,16 +1010,15 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
     
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: error2];
     }];
 }
@@ -1087,11 +1070,9 @@
     AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // create db with custom directory
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1208,8 +1189,8 @@
     
     CBLQueryExpression* DOCID = [CBLQueryMeta id];
     CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: DOCID];
-    CBLQuery* query = [CBLQuery select: @[S_DOCID]
-                                  from: [CBLQueryDataSource database: nudb]];
+    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+                                         from: [CBLQueryDataSource database: nudb]];
     CBLQueryResultSet* rs = [query execute: &error];
     
     for (CBLQueryResult* r in rs) {
@@ -1247,21 +1228,21 @@
     
     NSError* error;
     
-    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
+    CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
-    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.locale = @"es";
-    options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detailItem2] options: options];
+    CBLFullTextIndex* index3 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem2]];
+    index3.language = @"es";
+    index3.ignoreAccents = YES;
+    
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     
@@ -1276,7 +1257,7 @@
     NSError* error;
     CBLValueIndexItem* item = [CBLValueIndexItem expression:
                                [CBLQueryExpression property: @"firstName"]];
-    CBLIndex* index = [CBLIndex valueIndexWithItems: @[item]];
+    CBLValueIndex* index = [CBLIndexBuilder valueIndexWithItems: @[item]];
     Assert([self.db createIndex: index withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1298,13 +1279,13 @@
     
     // Create value index with first name:
     CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
-    CBLIndex* fNameIndex = [CBLIndex valueIndexWithItems: @[fNameItem]];
+    CBLValueIndex* fNameIndex = [CBLIndexBuilder valueIndexWithItems: @[fNameItem]];
     Assert([self.db createIndex: fNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
 
     // Create value index with last name:
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
-    CBLIndex* lNameIndex = [CBLIndex valueIndexWithItems: @[lNameItem]];
+    CBLValueIndex* lNameIndex = [CBLIndexBuilder valueIndexWithItems: @[lNameItem]];
     Assert([self.db createIndex: lNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1315,7 +1296,7 @@
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* detailIndex = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* detailIndex = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: detailIndex withName: @"myindex" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
@@ -1338,22 +1319,20 @@
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
     
     NSError* error;
-    
-    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
+    CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLFullTextIndexItem* detail2Item = [CBLFullTextIndexItem property: @"es-detail"];
-    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.locale = @"es";
-    options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detail2Item] options: options];
+    CBLFullTextIndex* index3 = [CBLIndexBuilder fullTextIndexWithItems: @[detail2Item]];
+    index3.language = @"es";
+    index3.ignoreAccents = YES;
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     

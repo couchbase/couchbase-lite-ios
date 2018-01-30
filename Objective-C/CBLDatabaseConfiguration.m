@@ -9,46 +9,82 @@
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabase+Internal.h"
 
-@interface CBLDatabaseConfigurationBuilder()
-- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config;
-@end
 
-@implementation CBLDatabaseConfigurationBuilder
+@implementation CBLDatabaseConfiguration {
+    BOOL _readonly;
+}
 
 @synthesize directory=_directory;
-@synthesize conflictResolver = _conflictResolver;
+@synthesize conflictResolver =_conflictResolver;
 @synthesize encryptionKey=_encryptionKey;
-@synthesize fileProtection=_fileProtection;
+
+
+- (instancetype) init {
+    return [self initWithConfig: nil readonly: NO];
+}
+
 
 - (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config {
+    return [self initWithConfig: config readonly: NO];
+}
+
+
+- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
+                       readonly: (BOOL)readonly
+{
     self = [super init];
     if (self) {
+        _readonly = readonly;
+        
         if (config) {
             _directory = config.directory;
             _conflictResolver = config.conflictResolver;
             _encryptionKey = config.encryptionKey;
-            _fileProtection = config.fileProtection;
+        } else {
+            _directory = [CBLDatabaseConfiguration defaultDirectory];
+            _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
         }
     }
     return self;
 }
 
 
-- (NSString*) directory {
-    if (!_directory)
-        _directory = [CBLDatabaseConfigurationBuilder defaultDirectory];
-    return _directory;
+- (void) setDirectory: (NSString *)directory {
+    [self checkReadonly];
+    
+    if (_directory != directory) {
+        _directory = directory;
+    }
 }
 
 
-- (id<CBLConflictResolver>) conflictResolver {
-    if (!_conflictResolver)
-        _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
-    return _conflictResolver;
+- (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
+    [self checkReadonly];
+    
+    if (_conflictResolver != conflictResolver) {
+        _conflictResolver = conflictResolver;
+    }
+}
+
+
+- (void) setEncryptionKey: (CBLEncryptionKey *)encryptionKey {
+    [self checkReadonly];
+    
+    if (_encryptionKey != encryptionKey) {
+        _encryptionKey = encryptionKey;
+    }
 }
 
 
 #pragma mark - Internal
+
+
+- (void) checkReadonly {
+    if (_readonly) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"This configuration object is readonly."];
+    }
+}
 
 
 + (NSString*) defaultDirectory {
@@ -66,46 +102,3 @@
 }
 
 @end
-
-
-@implementation CBLDatabaseConfiguration
-
-@synthesize directory=_directory;
-@synthesize conflictResolver = _conflictResolver;
-@synthesize encryptionKey=_encryptionKey;
-@synthesize fileProtection=_fileProtection;
-
-
-- (instancetype) init {
-    return [self initWithConfig: nil block: nil];
-}
-
-
-- (instancetype) initWithBlock: (nullable void(^)(CBLDatabaseConfigurationBuilder* builder))block
-{
-    return [self initWithConfig: nil block: block];
-}
-
-
-- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
-                          block: (nullable void(^)(CBLDatabaseConfigurationBuilder* builder))block
-{
-    self = [super init];
-    if (self) {
-        CBLDatabaseConfigurationBuilder* builder =
-            [[CBLDatabaseConfigurationBuilder alloc] initWithConfig: config];
-        
-        if (block)
-            block(builder);
-        
-        _directory = builder.directory;
-        _conflictResolver = builder.conflictResolver;
-        _encryptionKey = builder.encryptionKey;
-        _fileProtection = builder.fileProtection;
-    }
-    return self;
-}
-
-
-@end
-

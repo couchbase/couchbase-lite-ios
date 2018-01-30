@@ -13,33 +13,23 @@ import Foundation
 /// A Query instance can be constructed by calling one of the select class methods.
 public class Query {
     
-    /// Returns the Parameters object used for setting values to the query parameters defined
+    /// A Parameters object used for setting values to the query parameters defined
     /// in the query. All parameters defined in the query must be given values
     /// before running the query, or the query will fail.
+    ///
+    /// The returned Parameters object will be readonly.
     public var parameters: Parameters? {
-        didSet {
+        get {
+            return params
+        }
+        set {
+            if let p = newValue {
+                params = Parameters(parameters: p, readonly: true)
+            } else {
+                params = nil
+            }
             applyParameters()
         }
-    }
-    
-    
-    /// Create a SELECT statement instance that you can use further
-    /// (e.g. calling the from() function) to construct the complete query statement.
-    ///
-    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
-    /// - Returns: A Select object.
-    public static func select(_ results: SelectResultProtocol...) -> Select {
-        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
-    }
-    
-    
-    /// Create a SELECT DISTINCT statement instance that you can use further
-    /// (e.g. calling the from() function) to construct the complete query statement.
-    ///
-    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
-    /// - Returns: A Select distinct object.
-    public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
-        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
     }
     
 
@@ -53,7 +43,6 @@ public class Query {
     /// - Returns: The ResultSet object representing the query result.
     /// - Throws: An error on failure, or if the query is invalid.
     public func execute() throws -> ResultSet {
-        prepareQuery()
         applyParameters()
         return try ResultSet(impl: queryImpl!.execute())
     }
@@ -84,7 +73,7 @@ public class Query {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(
         _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
-        return self .addChangeListener(withQueue: nil, listener)
+        return self.addChangeListener(withQueue: nil, listener)
     }
     
     
@@ -98,8 +87,13 @@ public class Query {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        
         prepareQuery()
-        return self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
+        let token = self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
             let rows: ResultSet?;
             if let rs = change.results {
                 rows = ResultSet(impl: rs)
@@ -108,6 +102,13 @@ public class Query {
             }
             listener(QueryChange(query: self, results: rows, error: change.error))
         })
+        
+        if tokens.count == 0 {
+            database!.addQuery(self)
+        }
+        
+        tokens.add(token)
+        return token
     }
     
     
@@ -115,11 +116,20 @@ public class Query {
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
+        lock.lock()
         prepareQuery()
-        self.queryImpl!.removeChangeListener(with: token)
+        queryImpl!.removeChangeListener(with: token)
+        tokens.remove(token)
+        
+        if tokens.count == 0 {
+            database!.removeQuery(self)
+        }
+        lock.unlock()
     }
 
     // MARK: Internal
+    
+    var params: Parameters?
     
     var selectImpl: [CBLQuerySelectResult]?
     
@@ -143,11 +153,18 @@ public class Query {
     
     var queryImpl: CBLQuery?
     
-    var params: Parameters?
+    var tokens = NSMutableSet()
+    
+    var lock = NSRecursiveLock()
     
     init() { }
     
     func prepareQuery() {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        
         if queryImpl != nil {
             return
         }
@@ -155,7 +172,7 @@ public class Query {
         precondition(fromImpl != nil, "From statement is required.")
         assert(selectImpl != nil && database != nil)
         if self.distinct {
-            queryImpl = CBLQuery.selectDistinct(
+            queryImpl = CBLQueryBuilder.selectDistinct(
                 selectImpl!,
                 from: fromImpl!,
                 join: joinsImpl,
@@ -165,7 +182,7 @@ public class Query {
                 orderBy: orderingsImpl,
                 limit: limitImpl)
         } else {
-            queryImpl = CBLQuery.select(
+            queryImpl = CBLQueryBuilder.select(
                 selectImpl!,
                 from: fromImpl!,
                 join: joinsImpl,
@@ -178,8 +195,17 @@ public class Query {
     }
     
     func applyParameters() {
+        lock.lock()
         prepareQuery()
-        queryImpl!.parameters = self.parameters?.toImpl()
+        queryImpl!.parameters = self.params?.toImpl()
+        lock.unlock()
+    }
+    
+    func stop() {
+        lock.lock()
+        database!.removeQuery(self)
+        tokens.removeAllObjects()
+        lock.unlock()
     }
 
     func copy(_ query: Query) {
@@ -193,9 +219,31 @@ public class Query {
         self.havingImpl = query.havingImpl
         self.orderingsImpl = query.orderingsImpl
         self.limitImpl = query.limitImpl
-        self.params = query.params
     }
     
+}
+
+
+/// A factory class to create a Select instance.
+public final class QueryBuilder {
+    /// Create a SELECT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select object.
+    public static func select(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
+    }
+    
+    
+    /// Create a SELECT DISTINCT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select distinct object.
+    public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
+    }
 }
 
 

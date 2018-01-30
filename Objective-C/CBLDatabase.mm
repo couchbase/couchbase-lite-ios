@@ -87,9 +87,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
-    return [self initWithName: name
-                       config: [CBLDatabaseConfiguration new]
-                        error: outError];
+    return [self initWithName: name config: nil error: outError];
 }
 
 
@@ -99,7 +97,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     self = [super init];
     if (self) {
         _name = name;
-        _config = config != nil ? config : [CBLDatabaseConfiguration new];
+        _config = [[CBLDatabaseConfiguration alloc] initWithConfig: config readonly: YES];
         if (![self open: outError])
             return nil;
         
@@ -340,7 +338,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     C4Error err;
     C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
     if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
-        BOOL success = setupDatabaseDirectory(toPathStr, config.fileProtection, outError);
+        BOOL success = setupDatabaseDirectory(toPathStr, outError);
         if (!success) {
             NSError* removeError;
             if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
@@ -493,7 +491,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     
     NSString* dir = _config.directory;
     Assert(dir != nil);
-    if (!setupDatabaseDirectory(dir, _config.fileProtection, outError))
+    if (!setupDatabaseDirectory(dir, outError))
         return NO;
     
     NSString* path = databasePath(_name, dir);
@@ -531,7 +529,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 static NSString* defaultDirectory() {
-    return [CBLDatabaseConfigurationBuilder defaultDirectory];
+    return [CBLDatabaseConfiguration defaultDirectory];
 }
 
 
@@ -542,51 +540,18 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-static BOOL setupDatabaseDirectory(NSString* dir,
-                                   NSDataWritingOptions fileProtection,
-                                   NSError** outError)
+static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
 {
-    NSDictionary* attributes = nil;
-#if TARGET_OS_IPHONE
-    // Set the iOS file protection mode of the manager's top-level directory.
-    // This mode will be inherited by all files created in that directory.
-    NSString* protection;
-    switch (fileProtection & NSDataWritingFileProtectionMask) {
-        case NSDataWritingFileProtectionNone:
-            protection = NSFileProtectionNone;
-            break;
-        case NSDataWritingFileProtectionComplete:
-            protection = NSFileProtectionComplete;
-            break;
-        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
-            protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
-            break;
-        default:
-            break;
-    }
-    if (protection)
-        attributes = @{NSFileProtectionKey: protection};
-#endif
-    
     NSError* error;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
                                    withIntermediateDirectories: YES
-                                                    attributes: attributes
+                                                    attributes: nil
                                                          error: &error]) {
         if (!CBLIsFileExistsError(error)) {
             if (outError) *outError = error;
             return NO;
         }
     }
-    
-    if (attributes) {
-        // TODO: Optimization - Check the existing file protection level.
-        if (![[NSFileManager defaultManager] setAttributes: attributes
-                                              ofItemAtPath: dir
-                                                     error: outError])
-            return NO;
-    }
-    
     return YES;
 }
 
@@ -645,8 +610,8 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     if (!document.database) {
         document.database = self;
     } else if (document.database != self) {
-        return createError(kCBLStatusForbidden,
-                           @"The document is from the different database.", error);
+        return createError(CBLErrorInvalidParameter,
+                           @"The document is from a different database.", error);
     }
     return YES;
 }
@@ -1049,7 +1014,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         BOOL success = [self saveResolvedDocument: resolved
                                       forConflict: conflict
                                             error: &err];
-        if ($equal(err.domain, @"LiteCore") && err.code == kC4ErrorConflict)
+        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
             continue;
         
         if (outError)
@@ -1060,7 +1025,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (BOOL) saveResolvedDocument: (CBLDocument*)resolved
+- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
                   forConflict: (CBLConflict*)conflict
                         error: (NSError**)outError
 {
@@ -1069,39 +1034,36 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         if (!t.begin())
             return convertError(t.error(), outError);
         
-        auto doc = conflict.mine;
-        auto otherDoc = conflict.theirs;
-        
-        // Figure out what revision to delete and what if anything to add:
-        CBLStringBytes winningRevID, losingRevID;
+        auto localDoc = conflict.mine;
+        auto remoteDoc = conflict.theirs;
+        if (resolvedDoc != localDoc)
+            resolvedDoc.database = self;
+
+        // The remote branch has to win, so that the doc revision history matches the server's.
+        CBLStringBytes winningRevID = remoteDoc.revID;
+        CBLStringBytes losingRevID = localDoc.revID;
+
         NSData* mergedBody = nil;
-        if (resolved == otherDoc) {
-            winningRevID = otherDoc.revID;
-            losingRevID = doc.revID;
-        } else {
-            winningRevID = doc.revID;
-            losingRevID = otherDoc.revID;
-            if (resolved != doc) {
-                resolved.database = self;
-                mergedBody = [resolved encode: outError];
-                if (!mergedBody)
-                    return false;
-            }
+        if (resolvedDoc != remoteDoc) {
+            // Unless the remote revision is being used as-is, we need a new revision:
+            mergedBody = [resolvedDoc encode: outError];
+            if (!mergedBody)
+                return false;
         }
         
         // Tell LiteCore to do the resolution:
-        C4Document *rawDoc = doc.c4Doc.rawDoc;
+        C4Document *rawDoc = localDoc.c4Doc.rawDoc;
         C4Error c4err;
         if (!c4doc_resolveConflict(rawDoc,
                                    winningRevID,
                                    losingRevID,
                                    data2slice(mergedBody),
                                    &c4err)
-            || !c4doc_save(rawDoc, 0, &c4err)) {
+                || !c4doc_save(rawDoc, 0, &c4err)) {
             return convertError(c4err, outError);
         }
         CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
-               doc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+               localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
         
         return t.commit() || convertError(t.error(), outError);
     }

@@ -74,7 +74,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter dictionary: the dictionary object.
-    public init(withData data: Dictionary<String, Any>?) {
+    public init(data: Dictionary<String, Any>?) {
         super.init(CBLMutableDictionary())
         setData(data)
     }

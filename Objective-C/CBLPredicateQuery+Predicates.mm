@@ -16,11 +16,6 @@ extern "C" {
 #import "Test.h"
 }
 
-#define kBadQuerySpecError -1
-#define CBLErrorDomain @"CouchbaseLite"
-#define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
-                                              FMT, ## __VA_ARGS__)
-
 
 typedef NS_OPTIONS(NSUInteger, CollationOptions) {
     kUnicode                = 1,

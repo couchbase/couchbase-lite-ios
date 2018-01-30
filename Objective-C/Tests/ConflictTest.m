@@ -8,6 +8,7 @@
 
 #import "ConflictTest.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLErrors.h"
 
 #include "c4.h"
 #include "c4Document+Fleece.h"
@@ -15,11 +16,36 @@
 #include "Fleece+CoreFoundation.h"
 
 
+@implementation TestResolver
+
+@synthesize wasCalled=_wasCalled, requireBaseRevision=_requireBaseRevision;
+
+- (CBLDocument*) resolve: (CBLConflict*)conflict {
+    _wasCalled = YES;
+    if (_requireBaseRevision)
+        NSAssert(conflict.base != nil, @"Missing base");
+    return nil;
+}
+
+@end
+
+
 @implementation DoNotResolve
 
 - (CBLDocument*) resolve: (CBLConflict*)conflict {
+    [super resolve: conflict];
     NSAssert(NO, @"Resolver should not have been called!");
     return nil;
+}
+
+@end
+
+
+@implementation MineWins
+
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
+    [super resolve: conflict];
+    return conflict.mine;
 }
 
 @end
@@ -28,6 +54,7 @@
 @implementation TheirsWins
 
 - (CBLDocument*) resolve: (CBLConflict *)conflict {
+    [super resolve: conflict];
     return conflict.theirs;
 }
 
@@ -36,11 +63,8 @@
 
 @implementation MergeThenTheirsWins
 
-@synthesize requireBaseRevision=_requireBaseRevision;
-
 - (CBLDocument*) resolve: (CBLConflict *)conflict {
-    if (_requireBaseRevision)
-        NSAssert(conflict.base != nil, @"Missing base");
+    [super resolve: conflict];
     CBLMutableDocument* resolved = [[CBLMutableDocument alloc] init];
     for (NSString* key in conflict.base) {
         [resolved setValue: [conflict.base valueForKey: key] forKey: key];
@@ -66,6 +90,7 @@
 @implementation GiveUp
 
 - (CBLDocument*) resolve: (CBLConflict *)conflict {
+    [super resolve: conflict];
     return nil;
 }
 
@@ -85,13 +110,14 @@
 }
 
 - (CBLDocument*) resolve: (CBLConflict *)conflict {
+    [super resolve: conflict];
     return self.block(conflict);
 }
 
 @end
 
-@interface ConflictTest : CBLTestCase
 
+@interface ConflictTest : CBLTestCase
 @end
 
 @implementation ConflictTest
@@ -213,8 +239,8 @@
     CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
     AssertFalse([_db saveDocument: doc error: &error], @"Save should have failed!");
-    AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
-    AssertEqual(error.code, kC4ErrorConflict);
+    AssertEqualObjects(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, CBLErrorConflict);
 }
 
 
