@@ -22,9 +22,9 @@
 .objc_class_name_CBLEncryptionKey
 .objc_class_name_CBLFullTextIndex
 .objc_class_name_CBLFullTextIndexItem
-.objc_class_name_CBLFullTextIndexOptions
 .objc_class_name_CBLFragment
 .objc_class_name_CBLIndex
+.objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLMutableArray
 .objc_class_name_CBLMutableDictionary
 .objc_class_name_CBLMutableDocument
@@ -53,7 +53,6 @@
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
-.objc_class_name_CBLReplicatorConfigurationBuilder
 .objc_class_name_CBLSessionAuthenticator
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
