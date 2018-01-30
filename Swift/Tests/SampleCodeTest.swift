@@ -112,6 +112,7 @@ class SampleCodeTest: CBLTestCase {
     }
     
     func dontTestBlob() throws {
+    #if TARGET_OS_IPHONE
         database = self.db
         let newTask = MutableDocument()
         var image: UIImage!
@@ -130,6 +131,7 @@ class SampleCodeTest: CBLTestCase {
         // </doc>
         
         print("\(image)")
+    #endif
     }
     
     // MARK: Query
