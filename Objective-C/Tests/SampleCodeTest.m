@@ -117,6 +117,7 @@
 }
 
 - (void) dontTestBlob {
+#if TARGET_OS_IPHONE
     NSError *error;
     CBLDatabase *database = self.db;
     CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
@@ -134,6 +135,7 @@
     // </doc>
     
     NSLog(@"%@", taskImage);
+#endif
 }
 
 #pragma mark - Query
