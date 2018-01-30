@@ -87,9 +87,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
-    return [self initWithName: name
-                       config: [CBLDatabaseConfiguration new]
-                        error: outError];
+    return [self initWithName: name config: nil error: outError];
 }
 
 
@@ -99,7 +97,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     self = [super init];
     if (self) {
         _name = name;
-        _config = config != nil ? config : [CBLDatabaseConfiguration new];
+        _config = [[CBLDatabaseConfiguration alloc] initWithConfig: config readonly: YES];
         if (![self open: outError])
             return nil;
         
@@ -340,7 +338,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     C4Error err;
     C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
     if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
-        BOOL success = setupDatabaseDirectory(toPathStr, config.fileProtection, outError);
+        BOOL success = setupDatabaseDirectory(toPathStr, outError);
         if (!success) {
             NSError* removeError;
             if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
@@ -493,7 +491,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     
     NSString* dir = _config.directory;
     Assert(dir != nil);
-    if (!setupDatabaseDirectory(dir, _config.fileProtection, outError))
+    if (!setupDatabaseDirectory(dir, outError))
         return NO;
     
     NSString* path = databasePath(_name, dir);
@@ -531,7 +529,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 static NSString* defaultDirectory() {
-    return [CBLDatabaseConfigurationBuilder defaultDirectory];
+    return [CBLDatabaseConfiguration defaultDirectory];
 }
 
 
@@ -542,51 +540,18 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-static BOOL setupDatabaseDirectory(NSString* dir,
-                                   NSDataWritingOptions fileProtection,
-                                   NSError** outError)
+static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
 {
-    NSDictionary* attributes = nil;
-#if TARGET_OS_IPHONE
-    // Set the iOS file protection mode of the manager's top-level directory.
-    // This mode will be inherited by all files created in that directory.
-    NSString* protection;
-    switch (fileProtection & NSDataWritingFileProtectionMask) {
-        case NSDataWritingFileProtectionNone:
-            protection = NSFileProtectionNone;
-            break;
-        case NSDataWritingFileProtectionComplete:
-            protection = NSFileProtectionComplete;
-            break;
-        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
-            protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
-            break;
-        default:
-            break;
-    }
-    if (protection)
-        attributes = @{NSFileProtectionKey: protection};
-#endif
-    
     NSError* error;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
                                    withIntermediateDirectories: YES
-                                                    attributes: attributes
+                                                    attributes: nil
                                                          error: &error]) {
         if (!CBLIsFileExistsError(error)) {
             if (outError) *outError = error;
             return NO;
         }
     }
-    
-    if (attributes) {
-        // TODO: Optimization - Check the existing file protection level.
-        if (![[NSFileManager defaultManager] setAttributes: attributes
-                                              ofItemAtPath: dir
-                                                     error: outError])
-            return NO;
-    }
-    
     return YES;
 }
 

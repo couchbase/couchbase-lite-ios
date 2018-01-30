@@ -606,12 +606,9 @@
                                     where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
                                   orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
-                                  ^(CBLQueryParametersBuilder* builder)
-    {
-        [builder setValue: @(2) forName: @"num1"];
-        [builder setValue: @(5) forName: @"num2"];
-    }];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @(2) forName: @"num1"];
+    [params setValue: @(5) forName: @"num2"];
     
     q.parameters = params;
     
@@ -690,11 +687,8 @@
                         orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                           limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
-                                  ^(CBLQueryParametersBuilder* builder)
-    {
-        [builder setValue: @3 forName: @"LIMIT_NUM"];
-    }];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @3 forName: @"LIMIT_NUM"];
     q.parameters = params;
     
     expectedNumbers = @[@1, @2, @3];
@@ -734,12 +728,9 @@
                           limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
                                                offset: [CBLQueryExpression parameterNamed:@"OFFSET_NUM"]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
-                                  ^(CBLQueryParametersBuilder* builder)
-    {
-        [builder setValue: @3 forName: @"LIMIT_NUM"];
-        [builder setValue: @5 forName: @"OFFSET_NUM"];
-    }];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @3 forName: @"LIMIT_NUM"];
+    [params setValue: @5 forName: @"OFFSET_NUM"];
     q.parameters = params;
     
     expectedNumbers = @[@6, @7, @8];

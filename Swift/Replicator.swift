@@ -64,7 +64,7 @@ public final class Replicator {
     ///
     /// - Parameter config: The configuration.
     public init(withConfig config: ReplicatorConfiguration) {
-        _config = config
+        _config = ReplicatorConfiguration(withConfig: config, readonly: true)
         _impl = CBLReplicator(config: config.toImpl());
     }
     
@@ -73,7 +73,6 @@ public final class Replicator {
     public var config: ReplicatorConfiguration {
         return _config
     }
-    
     
     
     /// The replicator's current status: its activity level and progress. Observable.

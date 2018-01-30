@@ -26,8 +26,12 @@ NS_ASSUME_NONNULL_BEGIN
  A CBLQueryParameters object used for setting values to the query parameters defined
  in the query. All parameters defined in the query must be given values
  before running the query, or the query will fail.
+ 
+ The returned CBLQueryParameters object will be readonly.
+ an NSInternalInconsistencyException exception will be thrown if the parameters
+ object is modified.
  */
-@property (atomic, nullable) CBLQueryParameters* parameters;
+@property (atomic, copy, nullable) CBLQueryParameters* parameters;
 
 /** 
  Returns a string describing the implementation of the compiled query.

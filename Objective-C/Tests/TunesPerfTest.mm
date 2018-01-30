@@ -327,9 +327,9 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         unsigned albumCount = 0;
         for (NSString* artistName in _artists) {
             @autoreleasepool {
-                query.parameters = [[CBLQueryParameters alloc] initWithBlock:^(CBLQueryParametersBuilder *builder) {
-                    [builder setValue: artistName forName: @"ARTIST"];
-                }];
+                CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+                [params setValue: artistName forName: @"ARTIST"];
+                query.parameters = params;
                 NSArray* albums = [self collectQueryResults: query];
                 albumCount += albums.count;
                 //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);

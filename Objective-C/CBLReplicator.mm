@@ -84,7 +84,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     self = [super init];
     if (self) {
         NSParameterAssert(config.database != nil && config.target != nil);
-        _config = config;
+        _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
         _dispatchQueue = dispatch_get_main_queue();
     }
     return self;
@@ -212,12 +212,12 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
 
 
 static BOOL isPush(CBLReplicatorType type) {
-    return type == kCBLReplicatorPushAndPull || type == kCBLReplicatorPush;
+    return type == kCBLReplicatorTypePushAndPull || type == kCBLReplicatorTypePush;
 }
 
 
 static BOOL isPull(CBLReplicatorType type) {
-    return type == kCBLReplicatorPushAndPull || type == kCBLReplicatorPull;
+    return type == kCBLReplicatorTypePushAndPull || type == kCBLReplicatorTypePull;
 }
 
 

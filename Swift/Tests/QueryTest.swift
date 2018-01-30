@@ -499,10 +499,9 @@ class QueryTest: CBLTestCase {
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
-        q.parameters = Parameters.Builder()
+        q.parameters = Parameters()
             .setValue(2, forName: "num1")
             .setValue(5, forName: "num2")
-            .build()
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
@@ -578,9 +577,7 @@ class QueryTest: CBLTestCase {
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"))
         
-        q.parameters = Parameters.Builder()
-            .setValue(3, forName: "LIMIT_NUM")
-            .build()
+        q.parameters = Parameters().setValue(3, forName: "LIMIT_NUM")
         
         expectedNumbers = [1, 2, 3]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -615,10 +612,9 @@ class QueryTest: CBLTestCase {
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"), offset: Expression.parameter("OFFSET_NUM"))
         
-        q.parameters = Parameters.Builder()
+        q.parameters = Parameters()
             .setValue(3, forName: "LIMIT_NUM")
             .setValue(5, forName: "OFFSET_NUM")
-            .build()
         
         expectedNumbers = [6, 7, 8]
         numRow = try verifyQuery(q, block: { (n, r) in

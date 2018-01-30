@@ -136,49 +136,39 @@
     AssertNotNil(config1.conflictResolver);
     AssertNil(config1.encryptionKey);
     AssertNil(config1.encryptionKey);
-#if TARGET_OS_IPHONE
-    AssertEqual(config1.fileProtection, 0);
-#endif
     
     // Custom:
     CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
     DummyResolver *resolver = [DummyResolver new];
-    CBLDatabaseConfiguration* config2 =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = @"/tmp/mydb";
-                builder.conflictResolver = resolver;
-                builder.encryptionKey = key;
-#if TARGET_OS_IPHONE
-                builder.fileProtection = NSDataWritingFileProtectionComplete;
-#endif
-            }];
-    
+    CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
+    config2.directory = @"/tmp/mydb";
+    config2.conflictResolver = resolver;
+    config2.encryptionKey = key;
+
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
     AssertEqualObjects(config2.encryptionKey, key);
-#if TARGET_OS_IPHONE
-    AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
-#endif
 }
 
 
 - (void) testGetSetConfiguration {
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder * _Nonnull builder) {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
 #if !TARGET_OS_IPHONE
-                // MacOS needs directory as there is no bundle in mac unit test:
-                builder.directory = _db.config.directory;
+    // MacOS needs directory as there is no bundle in mac unit test:
+    config.directory = _db.config.directory;
 #endif
-    }];
-
+    
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
                                                  config: config
                                                   error: &error];
     AssertNotNil(db.config);
-    Assert(db.config == config);
+    Assert(db.config != config);
+    
+    // Configuration from the database is readonly:
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        self.db.config.directory = @"";
+    }];
 }
 
 
@@ -247,11 +237,8 @@
     
     // create db with custom directory
     NSError* error;
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
     
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNil(error);
@@ -1001,11 +988,8 @@
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
     
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
@@ -1026,11 +1010,10 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1087,11 +1070,9 @@
     AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // create db with custom directory
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder *builder) {
-                builder.directory = dir;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);

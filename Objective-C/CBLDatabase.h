@@ -55,8 +55,9 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 @property (readonly, atomic) uint64_t count;
 
 /** 
- The database's configuration. If the configuration is not specify when initializing
- the database, the default configuration will be returned.
+ The database's configuration. The returned configuration object is readonly;
+ an NSInternalInconsistencyException exception will be thrown if
+ the configuration object is modified.
  */
 @property (readonly, nonatomic) CBLDatabaseConfiguration *config;
 

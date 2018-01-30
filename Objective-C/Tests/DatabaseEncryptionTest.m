@@ -25,13 +25,10 @@
 
 
 - (CBLDatabase*) openSeekritWithPassword: (nullable NSString*)password error: (NSError**)error {
-    CBLDatabaseConfiguration* config =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder* builder) {
-                if (password)
-                    builder.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword: password];
-                builder.directory = self.directory;
-            }];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    if (password)
+        config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword: password];
+    config.directory = self.directory;
     return [[CBLDatabase alloc] initWithName: @"seekrit" config: config error: error];
 }
 

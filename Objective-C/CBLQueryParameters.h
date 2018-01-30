@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLQueryParametersBuilder : NSObject
+@interface CBLQueryParameters : NSObject
 
 /**
  Set the value to the query parameter referenced by the given name. A query parameter
@@ -93,47 +93,23 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setDate: (nullable NSDate*)value forName: (NSString*)name;
 
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
-
-@end
-
-
-/** 
- A CBLQueryParameters object used for setting values to the query parameters defined
- in the query.
- */
-@interface CBLQueryParameters : NSObject
-
-/**
- Initializes the CBLQueryParameters object with the given parameters builder block.
- 
- @param block The builder block.
- @return The CBLQueryParameters object.
- */
-- (instancetype) initWithBlock: (nullable void(^)(CBLQueryParametersBuilder* builder))block;
-
-/**
- Initializes the CBLQueryParameters object with the initialized parameters
- object and the parameters builder block.
- 
- @param parameters The parameters object.
- @param block The builder block.
- @return The CBLQueryParameters object.
- */
-- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
-                              block: (nullable void(^)(CBLQueryParametersBuilder* builder))block;
-
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
-
 /**
  Get the parameter value.
-
+ 
  @param name The name of the parameter.
  @return The value of the parameter.
  */
 - (nullable id) valueForName: (NSString*)name;
+
+/**
+ Initializes the CBLQueryParameters object.
+ */
+- (instancetype) init;
+
+/**
+ Initializes the CBLQueryParameters object with the parameters object.
+ */
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters;
 
 @end
 

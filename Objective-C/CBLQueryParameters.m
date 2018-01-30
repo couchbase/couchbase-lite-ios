@@ -9,41 +9,41 @@
 #import "CBLQueryParameters.h"
 #import "CBLQuery+Internal.h"
 
-@interface CBLQueryParametersBuilder()
-
-@property (readonly, nonatomic, nullable) NSDictionary* data;
-
-- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters;
-
-@end
 
 @interface CBLQueryParameters()
-
 @property (readonly, nonatomic, nullable) NSDictionary* data;
-
 @end
 
-@implementation CBLQueryParametersBuilder {
+@implementation CBLQueryParameters {
+    BOOL _readonly;
     NSMutableDictionary* _data;
 }
 
+- (instancetype) init {
+    return [self initWithParameters: nil readonly: NO];
+}
+
+
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters {
+   return [self initWithParameters: parameters readonly: NO];
+}
+
+
 - (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
-{
+                           readonly: (BOOL)readonly {
     self = [super init];
     if (self) {
         if (parameters.data)
             _data = [NSMutableDictionary dictionaryWithDictionary: parameters.data];
+        _readonly = readonly;
     }
     return self;
 }
 
 
-- (NSDictionary*) data {
-    return _data;
-}
-
-
 - (void) setValue: (id)value forName: (NSString*)name {
+    [self checkReadonly];
+    
     if (!_data)
         _data = [NSMutableDictionary dictionary];
     
@@ -93,36 +93,6 @@
     [self setValue: value forName: name];
 }
 
-@end
-
-
-@implementation CBLQueryParameters
-
-@synthesize data=_data;
-
-- (instancetype) initWithBlock: (nullable void(^)(CBLQueryParametersBuilder* builder))block
-{
-    return [self initWithParameters: nil block: block];
-}
-
-
-- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
-                              block: (nullable void(^)(CBLQueryParametersBuilder* builder))block
-{
-    self = [super init];
-    if (self) {
-        CBLQueryParametersBuilder* builder =
-        [[CBLQueryParametersBuilder alloc] initWithParameters: parameters];
-        
-        if (block)
-            block(builder);
-        
-        if (builder.data)
-            _data = [NSDictionary dictionaryWithDictionary: builder.data];
-    }
-    return self;
-}
-
 
 - (nullable id) valueForName:(NSString *)name {
     return [_data objectForKey: name];
@@ -132,12 +102,24 @@
 #pragma mark - Internal
 
 
+- (NSDictionary*) data {
+    return _data;
+}
+
+
+- (void) checkReadonly {
+    if (_readonly) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"This parameters object is readonly."];
+    }
+}
+
+
 - (nullable NSData*) encodeAsJSON: (NSError**)outError {
     if (_data)
         return [NSJSONSerialization dataWithJSONObject: _data options: 0 error: outError];
     else
         return nil;
 }
-
 
 @end

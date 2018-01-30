@@ -85,7 +85,10 @@
 
 - (void) setParameters: (CBLQueryParameters *)parameters {
     CBL_LOCK(self) {
-        _parameters = parameters;
+        if (parameters)
+            _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
+        else
+            _parameters = nil;
         [_liveQuery queryParametersChanged];
     }
 }

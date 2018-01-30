@@ -13,11 +13,21 @@ import Foundation
 /// A Query instance can be constructed by calling one of the select class methods.
 public class Query {
     
-    /// Returns the Parameters object used for setting values to the query parameters defined
+    /// A Parameters object used for setting values to the query parameters defined
     /// in the query. All parameters defined in the query must be given values
     /// before running the query, or the query will fail.
+    ///
+    /// The returned Parameters object will be readonly.
     public var parameters: Parameters? {
-        didSet {
+        get {
+            return params
+        }
+        set {
+            if let p = newValue {
+                params = Parameters(withParameters: p, readonly: true)
+            } else {
+                params = nil
+            }
             applyParameters()
         }
     }
@@ -119,6 +129,8 @@ public class Query {
 
     // MARK: Internal
     
+    var params: Parameters?
+    
     var selectImpl: [CBLQuerySelectResult]?
     
     var distinct = false
@@ -185,7 +197,7 @@ public class Query {
     func applyParameters() {
         lock.lock()
         prepareQuery()
-        queryImpl!.parameters = self.parameters?.toImpl()
+        queryImpl!.parameters = self.params?.toImpl()
         lock.unlock()
     }
     

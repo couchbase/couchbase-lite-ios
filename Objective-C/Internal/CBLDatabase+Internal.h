@@ -51,7 +51,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// CBLDatabaseConfigurationBuilder:
 
 
-@interface CBLDatabaseConfigurationBuilder ()
+@interface CBLDatabaseConfiguration()
+
+- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
+                       readonly: (BOOL)readonly;
 
 + (NSString*) defaultDirectory;
 

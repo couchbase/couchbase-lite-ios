@@ -28,9 +28,8 @@
 
 - (void) dontTestEncryption {
     // <doc>
-    CBLDatabaseConfiguration *config = [[CBLDatabaseConfiguration alloc] initWithBlock:^(CBLDatabaseConfigurationBuilder *builder) {
-        [builder setEncryptionKey:[[CBLEncryptionKey alloc] initWithPassword:@"secretpassword"]];
-    }];
+    CBLDatabaseConfiguration *config = [[CBLDatabaseConfiguration alloc] init];
+    config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword:@"secretpassword"];
     
     NSError *error;
     CBLDatabase *database = [[CBLDatabase alloc] initWithName:@"my-database" config: config error:&error];
@@ -426,10 +425,8 @@
     NSURL *url = [NSURL URLWithString:@"ws://localhost:4984/db"];
     CBLURLEndpoint *target = [[CBLURLEndpoint alloc] initWithURL: url];
     CBLReplicatorConfiguration *config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database
-                                                                                       target:target
-                                                                                        block:^(CBLReplicatorConfigurationBuilder *builder) {
-        builder.replicatorType = kCBLReplicatorPull;
-    }];
+                                                                                       target:target];
+    config.replicatorType = kCBLReplicatorTypePull;
     CBLReplicator *replicator = [[CBLReplicator alloc] initWithConfig:config];
     [replicator start];
     // </doc>
@@ -483,12 +480,10 @@
     
     // <doc>
     NSData *data = [self dataFromResource: @"cert" ofType: @"cer"];
-    SecCertificateRef certificate = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)data);
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)data);
     CBLReplicatorConfiguration *config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database
-                                                                                       target:target
-                                                                                        block:^(CBLReplicatorConfigurationBuilder *builder) {
-                                                                                            builder.pinnedServerCertificate = certificate;
-                                                                                        }];
+                                                                                       target:target];
+    config.pinnedServerCertificate = (SecCertificateRef)CFAutorelease(cert);
     // </doc>
     
     NSLog(@"%@", config);
