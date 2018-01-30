@@ -38,15 +38,21 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Try to reopen with password (fails):
+    #if COUCHBASE_ENTERPRISE
         expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
-        
+    #else
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnsupported) {
+            try _ = self.openSeekrit(password: "wrong")
+        }
+    #endif
         // Reopen with no password:
         seekrit = try openSeekrit(password: nil)
         XCTAssertEqual(seekrit!.count, 1)
     }
     
+#if COUCHBASE_ENTERPRISE
     func testEncryptedDatabase() throws {
         // Create encrypted database:
         seekrit = try openSeekrit(password: "letmein")
@@ -220,4 +226,5 @@ class DatabaseEncryptionTest: CBLTestCase {
             i = i + 1
         }
     }
+#endif
 }
