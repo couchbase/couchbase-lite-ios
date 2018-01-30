@@ -42,7 +42,7 @@ class DatabaseEncryptionTest: CBLTestCase {
             try _ = self.openSeekrit(password: "wrong")
         }
     #else
-        expectError(domain: CBLErrorDomain, code: CBLErrorUnsupported) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
     #endif
