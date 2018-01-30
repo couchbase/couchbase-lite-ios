@@ -30,7 +30,7 @@ class SampleCodeTest: CBLTestCase {
     
     func dontTestEncryption() throws {
         // <doc>
-        var config = DatabaseConfiguration()
+        let config = DatabaseConfiguration()
         config.encryptionKey = EncryptionKey.password("secretpassword")
         self.database = try Database(name: "my-database", config: config)
         // </doc>
@@ -450,7 +450,7 @@ class SampleCodeTest: CBLTestCase {
         // <doc>
         let url = URL(string: "ws://localhost:4984/db")!
         let target = URLEndpoint(withURL: url)
-        var config = ReplicatorConfiguration(withDatabase: database, target: target)
+        let config = ReplicatorConfiguration(withDatabase: database, target: target)
         config.replicatorType = .pull
         
         self.replicator = Replicator(withConfig: config)
@@ -495,7 +495,7 @@ class SampleCodeTest: CBLTestCase {
         let data = try self.dataFromResource(name: "cert", ofType: "cer")
         let certificate = SecCertificateCreateWithData(nil, data)
 
-        var config = ReplicatorConfiguration(withDatabase: database, target: target)
+        let config = ReplicatorConfiguration(withDatabase: database, target: target)
         config.pinnedServerCertificate = certificate
         // </doc>
         

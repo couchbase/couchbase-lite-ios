@@ -32,7 +32,7 @@ public enum EncryptionKey {
 
 
 /// Configuration for opening a database.
-public struct DatabaseConfiguration {
+public class DatabaseConfiguration {
     
     /// Path to the directory to store the database in.
     public var directory: String = CBLDatabaseConfiguration().directory {
@@ -56,12 +56,12 @@ public struct DatabaseConfiguration {
     }
     
     /// Initializes a DatabaseConfiguration's builder with default values.
-    public init() {
+    public convenience init() {
         self.init(withConfig: nil, readonly: false)
     }
     
     /// Initializes a DatabaseConfiguration's builder with the configuration object.
-    public init(withConfig config: DatabaseConfiguration?) {
+    public convenience init(withConfig config: DatabaseConfiguration?) {
         self.init(withConfig: config, readonly: false)
     }
     
@@ -94,5 +94,5 @@ public struct DatabaseConfiguration {
         config.encryptionKey = self.encryptionKey?.impl
         return config
     }
-    
+
 }

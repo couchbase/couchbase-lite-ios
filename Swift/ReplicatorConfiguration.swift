@@ -22,7 +22,7 @@ public enum ReplicatorType: UInt8 {
 
 
 /// Replicator configuration.
-public struct ReplicatorConfiguration {
+public class ReplicatorConfiguration {
     
     /// The local database to replicate with the replication target.
     public let database: Database
@@ -107,7 +107,7 @@ public struct ReplicatorConfiguration {
     /// configuration object.
     ///
     /// - Parameter config: The configuration object.
-    public init(withConfig config: ReplicatorConfiguration) {
+    public convenience init(withConfig config: ReplicatorConfiguration) {
         self.init(withConfig: config, readonly: false)
     }
     

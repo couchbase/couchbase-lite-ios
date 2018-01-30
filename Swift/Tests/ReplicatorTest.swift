@@ -25,7 +25,7 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func run(type: ReplicatorType, target: Endpoint, expectedError: Int?) {
-        var config = ReplicatorConfiguration(withDatabase: self.db, target: target)
+        let config = ReplicatorConfiguration(withDatabase: self.db, target: target)
         config.replicatorType = type
         run(config: config, expectedError: expectedError)
     }
