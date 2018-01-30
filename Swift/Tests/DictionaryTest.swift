@@ -32,7 +32,7 @@ class DictionaryTest: CBLTestCase {
         let dict: [String: Any] = ["street": "1 Main street",
                                    "city": "Mountain View",
                                    "state": "CA"];
-        let address = MutableDictionaryObject(withData: dict)
+        let address = MutableDictionaryObject(data: dict)
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")

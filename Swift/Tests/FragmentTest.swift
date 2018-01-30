@@ -364,7 +364,7 @@ class FragmentTest: CBLTestCase {
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
         let doc = createDocument("doc1")
-        let dict = MutableDictionaryObject(withData: data)
+        let dict = MutableDictionaryObject(data: data)
         doc["dict"].value = dict
         
         try saveDocument(doc, eval: { (d) in
@@ -377,7 +377,7 @@ class FragmentTest: CBLTestCase {
     
     func testDictionaryFragmentSetArray() throws {
         let doc = createDocument("doc1")
-        let array = MutableArrayObject(withData: [0, 1, 2])
+        let array = MutableArrayObject(data: [0, 1, 2])
         doc["array"].value = array
         
         try saveDocument(doc, eval: { (d) in
@@ -446,7 +446,7 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["array"].value = []
         
-        let dict = MutableDictionaryObject(withData: data)
+        let dict = MutableDictionaryObject(data: data)
         doc["array"].array!.addValue(dict)
         
         try saveDocument(doc, eval: { (d) in

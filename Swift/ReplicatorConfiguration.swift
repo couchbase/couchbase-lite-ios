@@ -97,7 +97,7 @@ public class ReplicatorConfiguration {
     /// - Parameters:
     ///   - database: The local database.
     ///   - target: The replication target.
-    public init(withDatabase database: Database, target: Endpoint) {
+    public init(database: Database, target: Endpoint) {
         self.database = database
         self.target = target
         self.readonly = false
@@ -107,15 +107,15 @@ public class ReplicatorConfiguration {
     /// configuration object.
     ///
     /// - Parameter config: The configuration object.
-    public convenience init(withConfig config: ReplicatorConfiguration) {
-        self.init(withConfig: config, readonly: false)
+    public convenience init(config: ReplicatorConfiguration) {
+        self.init(config: config, readonly: false)
     }
     
     // MARK: Internal
     
     private let readonly: Bool
     
-    init(withConfig config: ReplicatorConfiguration, readonly: Bool) {
+    init(config: ReplicatorConfiguration, readonly: Bool) {
         self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType

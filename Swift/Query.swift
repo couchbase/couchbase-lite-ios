@@ -24,7 +24,7 @@ public class Query {
         }
         set {
             if let p = newValue {
-                params = Parameters(withParameters: p, readonly: true)
+                params = Parameters(parameters: p, readonly: true)
             } else {
                 params = nil
             }

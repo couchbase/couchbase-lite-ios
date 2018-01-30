@@ -57,19 +57,19 @@ public class DatabaseConfiguration {
     
     /// Initializes a DatabaseConfiguration's builder with default values.
     public convenience init() {
-        self.init(withConfig: nil, readonly: false)
+        self.init(config: nil, readonly: false)
     }
     
     /// Initializes a DatabaseConfiguration's builder with the configuration object.
-    public convenience init(withConfig config: DatabaseConfiguration?) {
-        self.init(withConfig: config, readonly: false)
+    public convenience init(config: DatabaseConfiguration?) {
+        self.init(config: config, readonly: false)
     }
     
     // MARK: Internal
     
     private let readonly: Bool
     
-    init(withConfig config: DatabaseConfiguration?, readonly: Bool) {
+    init(config: DatabaseConfiguration?, readonly: Bool) {
         if let c = config {
             self.directory = c.directory
             self.conflictResolver = c.conflictResolver

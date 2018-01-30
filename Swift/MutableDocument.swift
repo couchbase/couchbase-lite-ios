@@ -29,7 +29,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// you call the Database's save() method with the document object given.
     ///
     /// - Parameter id: The document ID.
-    public convenience init(withID id: String?) {
+    public convenience init(id: String?) {
         self.init(CBLMutableDocument(id: id))
     }
     
@@ -42,7 +42,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// Database's save() method with the document object given.
     ///
     /// - Parameter data: The data.
-    public convenience init(withData data: Dictionary<String, Any>?) {
+    public convenience init(data: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument())
         setData(data)
     }
@@ -59,7 +59,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - id: The document ID.
     ///   - data: The dictionary object.
-    public convenience init(withID id: String?, data: Dictionary<String, Any>?) {
+    public convenience init(id: String?, data: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument(id: id))
         setData(data)
     }

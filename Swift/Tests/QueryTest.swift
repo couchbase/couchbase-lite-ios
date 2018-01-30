@@ -271,7 +271,7 @@ class QueryTest: CBLTestCase {
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
-        let index = IndexBuilder.fullTextIndex(withItems: FullTextIndexItem.property("sentence"))
+        let index = IndexBuilder.fullTextIndex(items: FullTextIndexItem.property("sentence"))
             .language(nil)
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
@@ -703,7 +703,7 @@ class QueryTest: CBLTestCase {
     
     
     func testArrayFunctions() throws {
-        let doc = MutableDocument(withID: "doc1")
+        let doc = MutableDocument(id: "doc1")
         let array = MutableArrayObject()
         array.addValue("650-123-0001")
         array.addValue("650-123-0002")
@@ -735,7 +735,7 @@ class QueryTest: CBLTestCase {
     
     func testMathFunctions() throws {
         let num = 0.6
-        let doc = MutableDocument(withID: "doc1")
+        let doc = MutableDocument(id: "doc1")
         doc.setValue(num, forKey: "number")
         try db.saveDocument(doc)
         
@@ -801,7 +801,7 @@ class QueryTest: CBLTestCase {
     
     func testStringFunctions() throws {
         let str = "  See you 18r  "
-        let doc = MutableDocument(withID: "doc1")
+        let doc = MutableDocument(id: "doc1")
         doc.setValue(str, forKey: "greeting")
         try db.saveDocument(doc)
         

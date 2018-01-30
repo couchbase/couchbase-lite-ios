@@ -65,7 +65,7 @@ class SampleCodeTest: CBLTestCase {
         let dict: [String: Any] = ["type": "task",
                                    "owner": "todo",
                                    "createdAt": Date()]
-        let newTask = MutableDocument(withData: dict)
+        let newTask = MutableDocument(data: dict)
         try database.saveDocument(newTask)
         // </doc>
     }
@@ -138,7 +138,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let index = IndexBuilder.valueIndex(withItems:
+        let index = IndexBuilder.valueIndex(items:
             ValueIndexItem.expression(Expression.property("type")),
             ValueIndexItem.expression(Expression.property("name")))
         try database.createIndex(index, withName: "TypeNameIndex")
@@ -414,7 +414,7 @@ class SampleCodeTest: CBLTestCase {
         
         // Create index
         do {
-            let index = IndexBuilder.fullTextIndex(withItems: FullTextIndexItem.property("name")).ignoreAccents(false)
+            let index = IndexBuilder.fullTextIndex(items: FullTextIndexItem.property("name")).ignoreAccents(false)
             try database.createIndex(index, withName: "nameFTSIndex")
         } catch let error {
             print(error.localizedDescription)
@@ -449,11 +449,11 @@ class SampleCodeTest: CBLTestCase {
         
         // <doc>
         let url = URL(string: "ws://localhost:4984/db")!
-        let target = URLEndpoint(withURL: url)
-        let config = ReplicatorConfiguration(withDatabase: database, target: target)
+        let target = URLEndpoint(url: url)
+        let config = ReplicatorConfiguration(database: database, target: target)
         config.replicatorType = .pull
         
-        self.replicator = Replicator(withConfig: config)
+        self.replicator = Replicator(config: config)
         self.replicator.start()
         // </doc>
     }
@@ -489,13 +489,13 @@ class SampleCodeTest: CBLTestCase {
     
     func dontTestCertificatePinning() throws {
         let url = URL(string: "wss://localhost:4985/db")!
-        let target = URLEndpoint(withURL: url)
+        let target = URLEndpoint(url: url)
         
         // <doc>
         let data = try self.dataFromResource(name: "cert", ofType: "cer")
         let certificate = SecCertificateCreateWithData(nil, data)
 
-        let config = ReplicatorConfiguration(withDatabase: database, target: target)
+        let config = ReplicatorConfiguration(database: database, target: target)
         config.pinnedServerCertificate = certificate
         // </doc>
         

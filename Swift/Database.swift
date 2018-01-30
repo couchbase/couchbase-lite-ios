@@ -40,7 +40,7 @@ public final class Database {
     ///   - config: The database options, or nil for the default options.
     /// - Throws: An error when the database cannot be opened.
     public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration()) throws {
-        _config = DatabaseConfiguration(withConfig: config, readonly: true)
+        _config = DatabaseConfiguration(config: config, readonly: true)
         _impl = try CBLDatabase(name: name, config: _config.toImpl())
     }
     

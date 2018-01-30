@@ -21,7 +21,7 @@ public class IndexBuilder {
     
     /// - Parameter: items The index items.
     /// - Returns: The ValueIndex.
-    public class func valueIndex(withItems items: ValueIndexItem...) -> ValueIndex {
+    public class func valueIndex(items: ValueIndexItem...) -> ValueIndex {
         return ValueIndex(items: items)
     }
     
@@ -32,7 +32,7 @@ public class IndexBuilder {
     ///
     /// - Parameter: items The index items.
     /// - Returns: The ON operator.
-    public class func fullTextIndex(withItems items: FullTextIndexItem...) -> FullTextIndex {
+    public class func fullTextIndex(items: FullTextIndexItem...) -> FullTextIndex {
         return FullTextIndex(items: items)
     }
     

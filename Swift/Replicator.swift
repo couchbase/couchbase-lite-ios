@@ -63,8 +63,8 @@ public final class Replicator {
     /// Initializes a replicator with the given configuration.
     ///
     /// - Parameter config: The configuration.
-    public init(withConfig config: ReplicatorConfiguration) {
-        _config = ReplicatorConfiguration(withConfig: config, readonly: true)
+    public init(config: ReplicatorConfiguration) {
+        _config = ReplicatorConfiguration(config: config, readonly: true)
         _impl = CBLReplicator(config: config.toImpl());
     }
     

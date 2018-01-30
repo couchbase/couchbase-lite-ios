@@ -14,14 +14,14 @@ public class Parameters {
     
     /// Initializes the Parameters's builder.
     public convenience init() {
-        self.init(withParameters: nil, readonly: false)
+        self.init(parameters: nil, readonly: false)
     }
     
     /// Initializes the Parameters's builder with the given parameters.
     ///
     /// - Parameter parameters: The parameters.
-    public convenience init(withParameters parameters: Parameters?) {
-        self.init(withParameters: parameters, readonly: false)
+    public convenience init(parameters: Parameters?) {
+        self.init(parameters: parameters, readonly: false)
     }
     
     /// Gets a parameter's value.
@@ -128,7 +128,7 @@ public class Parameters {
     
     var params: Dictionary<String, Any>
     
-    init(withParameters parameters: Parameters?, readonly: Bool) {
+    init(parameters: Parameters?, readonly: Bool) {
         self.params = parameters != nil ? parameters!.params : [:]
         self.readonly = readonly
     }

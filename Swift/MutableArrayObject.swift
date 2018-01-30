@@ -124,7 +124,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter array: The array object.
-    public init(withData data: Array<Any>?) {
+    public init(data: Array<Any>?) {
         super.init(CBLMutableArray())
         setData(data)
     }

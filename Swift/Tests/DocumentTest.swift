@@ -61,7 +61,7 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocWithID() throws {
-        let doc1a = MutableDocument(withID: "doc1")
+        let doc1a = MutableDocument(id: "doc1")
         XCTAssertNotNil(doc1a)
         XCTAssertEqual(doc1a.id, "doc1")
         XCTAssertFalse(doc1a.isDeleted)
@@ -75,7 +75,7 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocwithEmptyStringID() throws {
-        let doc1a = MutableDocument(withID: "")
+        let doc1a = MutableDocument(id: "")
         XCTAssertNotNil(doc1a)
         
         var error: NSError? = nil
@@ -92,7 +92,7 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocWithNilID() throws {
-        let doc1a = MutableDocument(withID: nil)
+        let doc1a = MutableDocument(id: nil)
         XCTAssertNotNil(doc1a)
         XCTAssertTrue(doc1a.id.count > 0)
         XCTAssertFalse(doc1a.isDeleted)
@@ -113,7 +113,7 @@ class DocumentTest: CBLTestCase {
                                                "state": "CA"],
                                    "phones": ["650-123-0001", "650-123-0002"]]
         
-        let doc1a = MutableDocument(withID: "doc1", data: dict)
+        let doc1a = MutableDocument(id: "doc1", data: dict)
         XCTAssertNotNil(doc1a)
         XCTAssertTrue(doc1a.id.count > 0)
         XCTAssertFalse(doc1a.isDeleted)
