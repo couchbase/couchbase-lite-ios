@@ -29,8 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLFullTextIndex ()
 
-- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items
-                       options: (nullable CBLFullTextIndexOptions*)options;
+- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items;
 
 @end
 
@@ -57,3 +56,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+

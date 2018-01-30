@@ -22,26 +22,6 @@ public class Query {
         }
     }
     
-    
-    /// Create a SELECT statement instance that you can use further
-    /// (e.g. calling the from() function) to construct the complete query statement.
-    ///
-    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
-    /// - Returns: A Select object.
-    public static func select(_ results: SelectResultProtocol...) -> Select {
-        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
-    }
-    
-    
-    /// Create a SELECT DISTINCT statement instance that you can use further
-    /// (e.g. calling the from() function) to construct the complete query statement.
-    ///
-    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
-    /// - Returns: A Select distinct object.
-    public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
-        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
-    }
-    
 
     /// Executes the query. The returning an enumerator that returns result rows one at a time.
     /// You can run the query any number of times, and you can even have multiple enumerators active 
@@ -180,7 +160,7 @@ public class Query {
         precondition(fromImpl != nil, "From statement is required.")
         assert(selectImpl != nil && database != nil)
         if self.distinct {
-            queryImpl = CBLQuery.selectDistinct(
+            queryImpl = CBLQueryBuilder.selectDistinct(
                 selectImpl!,
                 from: fromImpl!,
                 join: joinsImpl,
@@ -190,7 +170,7 @@ public class Query {
                 orderBy: orderingsImpl,
                 limit: limitImpl)
         } else {
-            queryImpl = CBLQuery.select(
+            queryImpl = CBLQueryBuilder.select(
                 selectImpl!,
                 from: fromImpl!,
                 join: joinsImpl,
@@ -229,6 +209,29 @@ public class Query {
         self.limitImpl = query.limitImpl
     }
     
+}
+
+
+/// A factory class to create a Select instance.
+public final class QueryBuilder {
+    /// Create a SELECT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select object.
+    public static func select(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
+    }
+    
+    
+    /// Create a SELECT DISTINCT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select distinct object.
+    public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
+    }
 }
 
 

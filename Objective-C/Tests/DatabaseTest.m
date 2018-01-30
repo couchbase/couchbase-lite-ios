@@ -1208,8 +1208,8 @@
     
     CBLQueryExpression* DOCID = [CBLQueryMeta id];
     CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: DOCID];
-    CBLQuery* query = [CBLQuery select: @[S_DOCID]
-                                  from: [CBLQueryDataSource database: nudb]];
+    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+                                         from: [CBLQueryDataSource database: nudb]];
     CBLQueryResultSet* rs = [query execute: &error];
     
     for (CBLQueryResult* r in rs) {
@@ -1247,21 +1247,21 @@
     
     NSError* error;
     
-    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
+    CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
-    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.language = @"es";
-    options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detailItem2] options: options];
+    CBLFullTextIndex* index3 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem2]];
+    index3.language = @"es";
+    index3.ignoreAccents = YES;
+    
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     
@@ -1276,7 +1276,7 @@
     NSError* error;
     CBLValueIndexItem* item = [CBLValueIndexItem expression:
                                [CBLQueryExpression property: @"firstName"]];
-    CBLIndex* index = [CBLIndex valueIndexWithItems: @[item]];
+    CBLValueIndex* index = [CBLIndexBuilder valueIndexWithItems: @[item]];
     Assert([self.db createIndex: index withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1298,13 +1298,13 @@
     
     // Create value index with first name:
     CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
-    CBLIndex* fNameIndex = [CBLIndex valueIndexWithItems: @[fNameItem]];
+    CBLValueIndex* fNameIndex = [CBLIndexBuilder valueIndexWithItems: @[fNameItem]];
     Assert([self.db createIndex: fNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
 
     // Create value index with last name:
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
-    CBLIndex* lNameIndex = [CBLIndex valueIndexWithItems: @[lNameItem]];
+    CBLValueIndex* lNameIndex = [CBLIndexBuilder valueIndexWithItems: @[lNameItem]];
     Assert([self.db createIndex: lNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1315,7 +1315,7 @@
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* detailIndex = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* detailIndex = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: detailIndex withName: @"myindex" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
@@ -1338,22 +1338,20 @@
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
     
     NSError* error;
-    
-    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
+    CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
-    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLFullTextIndexItem* detail2Item = [CBLFullTextIndexItem property: @"es-detail"];
-    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.language = @"es";
-    options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detail2Item] options: options];
+    CBLFullTextIndex* index3 = [CBLIndexBuilder fullTextIndexWithItems: @[detail2Item]];
+    index3.language = @"es";
+    index3.ignoreAccents = YES;
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     

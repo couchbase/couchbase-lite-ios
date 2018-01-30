@@ -146,7 +146,7 @@
     // <doc>
     CBLValueIndexItem *type = [CBLValueIndexItem property:@"type"];
     CBLValueIndexItem *name = [CBLValueIndexItem property:@"name"];
-    CBLIndex *index = [CBLIndex valueIndexWithItems:@[type, name]];
+    CBLIndex* index = [CBLIndexBuilder valueIndexWithItems:@[type, name]];
     [database createIndex:index withName:@"TypeNameIndex" error:&error];
     // </doc>
 }
@@ -157,10 +157,10 @@
     
     // <doc>
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
-    CBLQuery *query = [CBLQuery select:@[name]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"user"]] andExpression:
-                                        [[CBLQueryExpression property:@"admin"] equalTo:[CBLQueryExpression boolean:NO]]]];
+    CBLQuery *query = [CBLQueryBuilder select:@[name]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"user"]] andExpression:
+                                               [[CBLQueryExpression property:@"admin"] equalTo:[CBLQueryExpression boolean:NO]]]];
     
     NSEnumerator* rs = [query execute:&error];
     for (CBLQueryResult *result in rs) {
@@ -173,8 +173,8 @@
     CBLDatabase *database = self.db;
     
     // <doc>
-    CBLQuery *query = [CBLQuery select:@[[CBLQuerySelectResult all]]
-                                  from:[CBLQueryDataSource database:database]];
+    CBLQuery *query = [CBLQueryBuilder select:@[[CBLQuerySelectResult all]]
+                                         from:[CBLQueryDataSource database:database]];
     // </doc>
     
     NSLog(@"%@", query);
@@ -185,11 +185,11 @@
     CBLDatabase *database = self.db;
     
     // <doc>
-    CBLQuery *query = [CBLQuery select:@[[CBLQuerySelectResult all]]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"hotel"]]
-                               groupBy:nil having:nil orderBy:nil
-                                 limit:[CBLQueryLimit limit:[CBLQueryExpression integer:10]]];
+    CBLQuery *query = [CBLQueryBuilder select:@[[CBLQuerySelectResult all]]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"hotel"]]
+                                      groupBy:nil having:nil orderBy:nil
+                                        limit:[CBLQueryLimit limit:[CBLQueryExpression integer:10]]];
     
     NSEnumerator* rs = [query execute:&error];
     for (CBLQueryResult *result in rs) {
@@ -214,9 +214,9 @@
     CBLQueryExpression *contains = [CBLQueryArrayFunction contains:[CBLQueryExpression property:@"public_likes"]
                                                              value:[CBLQueryExpression string:@"Armani Langworth"]];
     
-    CBLQuery *query = [CBLQuery select:@[id, name, likes]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: contains]];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, name, likes]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: contains]];
     
     NSEnumerator* rs = [query execute:&error];
     for (CBLQueryResult *result in rs) {
@@ -237,9 +237,9 @@
     CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"landmark"]];
     CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression value:@"Royal engineers museum"]];
     
-    CBLQuery *query = [CBLQuery select:@[id, country, name]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: like]];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, country, name]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: like]];
     
     NSEnumerator* rs = [query execute:&error];
     for (CBLQueryResult *result in rs) {
@@ -261,11 +261,11 @@
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
-    CBLQuery *query = [CBLQuery select:@[id, country, name]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: like]
-                               groupBy:nil having:nil orderBy:nil
-                                 limit:limit];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, country, name]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: like]
+                                      groupBy:nil having:nil orderBy:nil
+                                        limit:limit];
     // </doc>
     
     NSLog(@"%@", query);
@@ -284,11 +284,11 @@
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
-    CBLQuery *query = [CBLQuery select:@[id, country, name]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: like]
-                               groupBy:nil having:nil orderBy:nil
-                                 limit:limit];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, country, name]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: like]
+                                      groupBy:nil having:nil orderBy:nil
+                                        limit:limit];
     // </doc>
     
     NSLog(@"%@", query);
@@ -306,11 +306,11 @@
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
-    CBLQuery *query = [CBLQuery select:@[id, name]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: regex]
-                               groupBy:nil having:nil orderBy:nil
-                                 limit:limit];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, name]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: regex]
+                                      groupBy:nil having:nil orderBy:nil
+                                        limit:limit];
     // </doc>
     
     NSLog(@"%@", query);
@@ -333,10 +333,10 @@
     CBLQueryExpression *typeAirline = [[CBLQueryExpression property:@"type" from:@"airline"] equalTo:[CBLQueryExpression value:@"airline"]];
     CBLQueryExpression *sourceRIX = [[CBLQueryExpression property:@"sourceairport" from:@"route"] equalTo:[CBLQueryExpression value:@"RIX"]];
     
-    CBLQuery *query = [CBLQuery select:@[name, callsign, dest, stops, airline]
-                                  from:[CBLQueryDataSource database:database as:@"airline"]
-                                  join:@[join]
-                                 where:[[typeRoute andExpression:typeAirline] andExpression:sourceRIX]];
+    CBLQuery *query = [CBLQueryBuilder select:@[name, callsign, dest, stops, airline]
+                                         from:[CBLQueryDataSource database:database as:@"airline"]
+                                         join:@[join]
+                                        where:[[typeRoute andExpression:typeAirline] andExpression:sourceRIX]];
     // </doc>
     
     NSLog(@"%@", query);
@@ -353,11 +353,11 @@
     CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"airport"]];
     CBLQueryExpression *geoAlt = [[CBLQueryExpression property:@"geo.alt"] greaterThanOrEqualTo:[CBLQueryExpression integer:300]];
     
-    CBLQuery *query = [CBLQuery select:@[count, country, tz]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[type andExpression: geoAlt]
-                               groupBy:@[[CBLQueryExpression property:@"country"],
-                                         [CBLQueryExpression property:@"tz"]]];
+    CBLQuery *query = [CBLQueryBuilder select:@[count, country, tz]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[type andExpression: geoAlt]
+                                      groupBy:@[[CBLQueryExpression property:@"country"],
+                                                [CBLQueryExpression property:@"tz"]]];
     // </doc>
     
     NSLog(@"%@", query);
@@ -370,10 +370,10 @@
     CBLQuerySelectResult *id = [CBLQuerySelectResult expression:[CBLQueryMeta id]];
     CBLQuerySelectResult *title = [CBLQuerySelectResult property:@"title"];
     
-    CBLQuery *query = [CBLQuery select:@[id, title]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"hotel"]]
-                               orderBy:@[[[CBLQueryOrdering property:@"title"] descending]]];
+    CBLQuery *query = [CBLQueryBuilder select:@[id, title]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"hotel"]]
+                                      orderBy:@[[[CBLQueryOrdering property:@"title"] descending]]];
     // </doc>
     
     NSLog(@"%@", query);
@@ -394,10 +394,8 @@
     }
     
     // Create index
-    CBLFullTextIndexOptions *options = [[CBLFullTextIndexOptions alloc] init];
-    options.ignoreAccents = NO;
-    CBLIndex *index = [CBLIndex fullTextIndexWithItems:@[[CBLFullTextIndexItem property:@"name"]]
-                                               options:options];
+    CBLFullTextIndex *index = [CBLIndexBuilder fullTextIndexWithItems:@[[CBLFullTextIndexItem property:@"name"]]];
+    index.ignoreAccents = NO;
     [database createIndex:index withName:@"nameFTSIndex" error:&error];
     // </doc>
 }
@@ -408,9 +406,9 @@
     
     // <doc>
     CBLQueryExpression *where = [[CBLQueryFullTextExpression indexWithName:@"nameFTSIndex"] match:@"'buy'"];
-    CBLQuery *query = [CBLQuery select:@[[CBLQuerySelectResult expression:[CBLQueryMeta id]]]
-                                  from:[CBLQueryDataSource database:database]
-                                 where:where];
+    CBLQuery *query = [CBLQueryBuilder select:@[[CBLQuerySelectResult expression:[CBLQueryMeta id]]]
+                                         from:[CBLQueryDataSource database:database]
+                                        where:where];
     
     NSEnumerator* rs = [query execute:&error];
     for (CBLQueryResult *result in rs) {

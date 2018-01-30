@@ -11,7 +11,7 @@
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
 @class CBLEncryptionKey;
-@class CBLIndex, CBLPredicateQuery;
+@class CBLIndex;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 

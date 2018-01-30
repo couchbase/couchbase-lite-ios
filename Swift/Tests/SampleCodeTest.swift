@@ -139,7 +139,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let index = Index.valueIndex(withItems:
+        let index = IndexBuilder.valueIndex(withItems:
             ValueIndexItem.expression(Expression.property("type")),
             ValueIndexItem.expression(Expression.property("name")))
         try database.createIndex(index, withName: "TypeNameIndex")
@@ -150,7 +150,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("type"),
@@ -173,7 +173,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(SelectResult.all())
             .from(DataSource.database(database))
         // </doc>
@@ -185,7 +185,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(SelectResult.all())
             .from(DataSource.database(database))
             .where(Expression.property("type").equalTo(Expression.value("hotel")))
@@ -207,7 +207,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("name"),
@@ -230,7 +230,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("country"),
@@ -254,7 +254,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("country"),
@@ -278,7 +278,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("country"),
@@ -302,7 +302,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("name")
@@ -325,7 +325,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Expression.property("name").from("airline")),
                 SelectResult.expression(Expression.property("callsign").from("airline")),
@@ -361,17 +361,16 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query.select(
-            SelectResult.expression(Function.count(Expression.all())),
-            SelectResult.property("country"),
-            SelectResult.property("tz")
-            )
+        let query = QueryBuilder
+            .select(
+                SelectResult.expression(Function.count(Expression.all())),
+                SelectResult.property("country"),
+                SelectResult.property("tz"))
             .from(DataSource.database(database))
             .where(
                 Expression.property("type").equalTo(Expression.value("airport"))
                     .and(Expression.property("geo.alt").greaterThanOrEqualTo(Expression.int(300)))
-            )
-            .groupBy(
+            ).groupBy(
                 Expression.property("country"),
                 Expression.property("tz")
         )
@@ -388,7 +387,7 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let query = Query
+        let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
                 SelectResult.property("title"))
@@ -416,7 +415,7 @@ class SampleCodeTest: CBLTestCase {
         
         // Create index
         do {
-            let index = Index.fullTextIndex(withItems: FullTextIndexItem.property("name")).ignoreAccents(false)
+            let index = IndexBuilder.fullTextIndex(withItems: FullTextIndexItem.property("name")).ignoreAccents(false)
             try database.createIndex(index, withName: "nameFTSIndex")
         } catch let error {
             print(error.localizedDescription)
@@ -429,7 +428,8 @@ class SampleCodeTest: CBLTestCase {
         
         // <doc>
         let whereClause = FullTextExpression.index("nameFTSIndex").match("'buy'")
-        let query = Query.select(SelectResult.expression(Meta.id))
+        let query = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(database))
             .where(whereClause)
         

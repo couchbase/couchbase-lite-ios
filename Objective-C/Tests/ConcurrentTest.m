@@ -94,9 +94,9 @@
 
 - (void) verifyWhere: (nullable CBLQueryExpression*)expr
                 test: (void (^)(uint64_t n, CBLQueryRow *row))block {
-    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
-                              from: [CBLQueryDataSource database: self.db]
-                             where: expr];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: expr];
     NSError* error;
     NSEnumerator* e = [q execute: &error];
     Assert(e, @"Query failed: %@", error);

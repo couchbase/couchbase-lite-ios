@@ -49,7 +49,7 @@ class QueryTest: CBLTestCase {
             let total = result.count
             
             let w = c[0] as! ExpressionProtocol
-            let q = Query.select(kDOCID).from(DataSource.database(db)).where(w)
+            let q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).where(w)
             let rows = try verifyQuery(q, block: { (n, r) in
                 let doc = db.document(withID: r.string(at: 0)!)!
                 let props = doc.toDictionary()
@@ -67,7 +67,7 @@ class QueryTest: CBLTestCase {
     func testNoWhereQuery() throws {
         try loadJSONResource(name: "names_100")
         
-        let q = Query.select(kDOCID).from(DataSource.database(db))
+        let q = QueryBuilder.select(kDOCID).from(DataSource.database(db))
         let numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
             let expectedID = String(format: "doc-%03llu", n);
@@ -158,7 +158,7 @@ class QueryTest: CBLTestCase {
         for test in tests {
             let exp = test[0] as! ExpressionProtocol
             let expectedDocs = test[1] as! [Document]
-            let q = Query.select(kDOCID).from(DataSource.database(db)).where(exp)
+            let q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).where(exp)
             let numRows = try verifyQuery(q, block: { (n, r) in
                 if (Int(n) <= expectedDocs.count) {
                     let docID = r.string(at: 0)!
@@ -175,7 +175,7 @@ class QueryTest: CBLTestCase {
         doc1.setValue("string", forKey: "string")
         try saveDocument(doc1)
         
-        var q = Query.select(kDOCID).from(DataSource.database(db)).where(
+        var q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).where(
             Expression.property("string").is(Expression.string("string")))
         var numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
@@ -184,7 +184,7 @@ class QueryTest: CBLTestCase {
         }
         XCTAssertEqual(numRows, 1);
         
-        q = Query.select(kDOCID).from(DataSource.database(db)).where(
+        q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).where(
             Expression.property("string").isNot(Expression.string("string1")))
         numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
@@ -209,7 +209,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         let w = Expression.property("name.first").like(Expression.string("%Mar%"))
-        let q = Query
+        let q = QueryBuilder
             .select(kDOCID)
             .from(DataSource.database(db))
             .where(w)
@@ -234,7 +234,7 @@ class QueryTest: CBLTestCase {
         let names = expected.map() { Expression.string($0) }
         let w = Expression.property("name.first").in(names)
         let o = Ordering.property("name.first")
-        let q = Query.select(kDOCID).from(DataSource.database(db)).where(w).orderBy(o)
+        let q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
             let firstName = expected[Int(n)-1]
@@ -249,7 +249,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         let w = Expression.property("name.first").regex(Expression.string("^Mar.*"))
-        let q = Query
+        let q = QueryBuilder
             .select(kDOCID)
             .from(DataSource.database(db))
             .where(w)
@@ -271,7 +271,7 @@ class QueryTest: CBLTestCase {
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
-        let index = Index.fullTextIndex(withItems: FullTextIndexItem.property("sentence"))
+        let index = IndexBuilder.fullTextIndex(withItems: FullTextIndexItem.property("sentence"))
             .language(nil)
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
@@ -281,7 +281,7 @@ class QueryTest: CBLTestCase {
         
         let w = sentence.match("'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = Query.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
+        let q = QueryBuilder.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q) { (n, r) in
             
         }
@@ -300,7 +300,7 @@ class QueryTest: CBLTestCase {
                 o = Ordering.expression(Expression.property("name.first")).descending()
             }
             
-            let q = Query.select(kDOCID).from(DataSource.database(db)).orderBy(o)
+            let q = QueryBuilder.select(kDOCID).from(DataSource.database(db)).orderBy(o)
             var firstNames: [String] = []
             let numRows = try verifyQuery(q, block: { (n, r) in
                 let doc = db.document(withID: r.string(at: 0)!)!
@@ -329,7 +329,7 @@ class QueryTest: CBLTestCase {
         
         let NUMBER  = Expression.property("number")
         
-        let q = Query.selectDistinct(SelectResult.expression(NUMBER)).from(DataSource.database(db))
+        let q = QueryBuilder.selectDistinct(SelectResult.expression(NUMBER)).from(DataSource.database(db))
         let numRow = try verifyQuery(q, block: { (n, r) in
             XCTAssertEqual(r.int(at: 0), 20)
         })
@@ -346,7 +346,7 @@ class QueryTest: CBLTestCase {
         
         let DOCID = SelectResult.expression(Meta.id.from("main"))
         
-        let q = Query
+        let q = QueryBuilder
             .select(DOCID)
             .from(DataSource.database(db).as("main"))
             .join(
@@ -375,7 +375,7 @@ class QueryTest: CBLTestCase {
             .on(Expression.property("number1").from("main")
                 .equalTo(Expression.property("theone").from("secondary")))
         
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.expression(NUMBER1),SelectResult.expression(NUMBER2))
             .from(DataSource.database(db).as("main"))
             .join(join)
@@ -403,7 +403,7 @@ class QueryTest: CBLTestCase {
         
         let join = Join.crossJoin(DataSource.database(db).as("secondary"))
         
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.expression(NUMBER1),SelectResult.expression(NUMBER2))
             .from(DataSource.database(db).as("main"))
             .join(join).orderBy(Ordering.expression(NUMBER2))
@@ -436,7 +436,7 @@ class QueryTest: CBLTestCase {
         let S_COUNT  = SelectResult.expression(COUNT)
         let S_MAXZIP = SelectResult.expression(MAXZIP)
         
-        var q = Query
+        var q = QueryBuilder
             .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo(Expression.string("female")))
@@ -462,7 +462,7 @@ class QueryTest: CBLTestCase {
         expectedCounts  = [6,       3,       2]
         expectedMaxZips = ["94153", "50801", "47952"]
         
-        q = Query
+        q = QueryBuilder
             .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo(Expression.string("female")))
@@ -493,7 +493,7 @@ class QueryTest: CBLTestCase {
         let PARAM_N1 = Expression.parameter("num1")
         let PARAM_N2 = Expression.parameter("num2")
         
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
@@ -524,7 +524,7 @@ class QueryTest: CBLTestCase {
         let S_DOC_SEQ = SelectResult.expression(DOC_SEQ)
         let S_NUMBER1 = SelectResult.expression(NUMBER1)
         
-        let q = Query
+        let q = QueryBuilder
             .select(S_DOC_ID, S_DOC_SEQ, S_NUMBER1)
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(DOC_SEQ))
@@ -559,7 +559,7 @@ class QueryTest: CBLTestCase {
         
         let NUMBER1  = Expression.property("number1")
         
-        var q = Query
+        var q = QueryBuilder
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
@@ -572,7 +572,7 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 5)
         
-        q = Query
+        q = QueryBuilder
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
@@ -596,7 +596,7 @@ class QueryTest: CBLTestCase {
         
         let NUMBER1  = Expression.property("number1")
         
-        var q = Query
+        var q = QueryBuilder
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
@@ -609,7 +609,7 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 5)
         
-        q = Query
+        q = QueryBuilder
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
@@ -642,7 +642,7 @@ class QueryTest: CBLTestCase {
         let S_GENDER  = SelectResult.expression(GENDER)
         let S_CITY  = SelectResult.expression(CITY)
         
-        let q = Query
+        let q = QueryBuilder
             .select(S_FNAME, S_LNAME, S_GENDER, S_CITY)
             .from(DataSource.database(db))
         
@@ -666,7 +666,7 @@ class QueryTest: CBLTestCase {
         let MAX = SelectResult.expression(Function.max(Expression.property("number1")))
         let SUM = SelectResult.expression(Function.sum(Expression.property("number1")))
         
-        let q = Query
+        let q = QueryBuilder
             .select(AVG, CNT, MIN.as("min"), MAX, SUM.as("sum"))
             .from(DataSource.database(db))
         
@@ -691,7 +691,7 @@ class QueryTest: CBLTestCase {
         let MAX = SelectResult.expression(Function.max(Expression.property("number1")))
         let SUM = SelectResult.expression(Function.sum(Expression.property("number1")))
         
-        let q = Query
+        let q = QueryBuilder
             .select(AVG, CNT, MIN, MAX, SUM)
             .from(DataSource.database(db))
         
@@ -715,7 +715,7 @@ class QueryTest: CBLTestCase {
         try self.db.saveDocument(doc)
         
         let ARRAY_LENGTH = ArrayFunction.length(Expression.property("array"))
-        var q = Query
+        var q = QueryBuilder
             .select(SelectResult.expression(ARRAY_LENGTH))
             .from(DataSource.database(db))
         
@@ -726,7 +726,7 @@ class QueryTest: CBLTestCase {
         
         let ARRAY_CONTAINS1 = ArrayFunction.contains(Expression.property("array"), value: Expression.string("650-123-0001"))
         let ARRAY_CONTAINS2 = ArrayFunction.contains(Expression.property("array"), value: Expression.string("650-123-0003"))
-        q = Query
+        q = QueryBuilder
             .select(SelectResult.expression(ARRAY_CONTAINS1), SelectResult.expression(ARRAY_CONTAINS2))
             .from(DataSource.database(db))
         
@@ -791,7 +791,7 @@ class QueryTest: CBLTestCase {
         
         var index = 0
         for f in functions {
-            let q = Query
+            let q = QueryBuilder
                 .select(SelectResult.expression(f))
                 .from(DataSource.database(db))
             let numRow = try verifyQuery(q, block: { (n, r) in
@@ -814,7 +814,7 @@ class QueryTest: CBLTestCase {
         // Contains:
         let CONTAINS1 = Function.contains(p, substring: Expression.string("8"))
         let CONTAINS2 = Function.contains(p, substring: Expression.string("9"))
-        var q = Query
+        var q = QueryBuilder
             .select(SelectResult.expression(CONTAINS1), SelectResult.expression(CONTAINS2))
             .from(DataSource.database(db))
         
@@ -826,7 +826,7 @@ class QueryTest: CBLTestCase {
         
         // Length:
         let LENGTH = Function.length(p)
-        q = Query
+        q = QueryBuilder
             .select(SelectResult.expression(LENGTH))
             .from(DataSource.database(db))
         
@@ -842,7 +842,7 @@ class QueryTest: CBLTestCase {
         let TRIM = Function.trim(p)
         let UPPER = Function.upper(p)
         
-        q = Query
+        q = QueryBuilder
             .select(SelectResult.expression(LOWER),
                     SelectResult.expression(LTRIM),
                     SelectResult.expression(RTRIM),
@@ -871,7 +871,7 @@ class QueryTest: CBLTestCase {
         let LIKE = ArrayExpression.variable("LIKE")
         
         // ANY:
-        var q = Query
+        var q = QueryBuilder
             .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(ArrayExpression.any(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("climbing"))))
@@ -883,7 +883,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, UInt64(expected.count))
         
         // EVERY:
-        q = Query
+        q = QueryBuilder
             .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(ArrayExpression.every(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("taxes"))))
@@ -896,7 +896,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 42)
         
         // ANY AND EVERY:
-        q = Query
+        q = QueryBuilder
             .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(ArrayExpression.anyAndEvery(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("taxes"))))
@@ -918,7 +918,7 @@ class QueryTest: CBLTestCase {
         let S_TESTDB_NUMBER1 = SelectResult.expression(TESTDB_NUMBER1)
         
         // SELECT *
-        var q = Query
+        var q = QueryBuilder
             .select(S_STAR)
             .from(DataSource.database(db))
         
@@ -934,7 +934,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
         
         // SELECT testdb.*
-        q = Query
+        q = QueryBuilder
             .select(S_TESTDB_STAR)
             .from(DataSource.database(db).as("testdb"))
         
@@ -950,7 +950,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
         
         // SELECT *, number1
-        q = Query
+        q = QueryBuilder
             .select(S_STAR, S_NUMBER1)
             .from(DataSource.database(db))
         
@@ -968,7 +968,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
         
         // SELECT testdb.*, testdb.number1
-        q = Query
+        q = QueryBuilder
             .select(S_TESTDB_STAR, S_TESTDB_NUMBER1)
             .from(DataSource.database(db).as("testdb"))
         
@@ -1000,7 +1000,7 @@ class QueryTest: CBLTestCase {
         
         // Without locale:
         let NO_LOCALE = Collation.unicode()
-        var q = Query
+        var q = QueryBuilder
             .select(S_STRING)
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(STRING.collate(NO_LOCALE)))
@@ -1013,7 +1013,7 @@ class QueryTest: CBLTestCase {
         
         // With locale
         let WITH_LOCALE = Collation.unicode().locale("se")
-        q = Query
+        q = QueryBuilder
             .select(S_STRING)
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(STRING.collate(WITH_LOCALE)))
@@ -1106,7 +1106,7 @@ class QueryTest: CBLTestCase {
                 VALUE.collate(data.3).equalTo(Expression.string(data.1)) :
                 VALUE.collate(data.3).lessThan(Expression.string(data.1))
             
-            let q = Query.select().from(DataSource.database(db)).where(comparison)
+            let q = QueryBuilder.select().from(DataSource.database(db)).where(comparison)
             let numRow = try verifyQuery(q, block: { (n, r) in })
             XCTAssertEqual(numRow, 1)
             
@@ -1118,7 +1118,7 @@ class QueryTest: CBLTestCase {
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;
-        let q = Query
+        let q = QueryBuilder
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(Expression.int(10)))
@@ -1152,7 +1152,7 @@ class QueryTest: CBLTestCase {
     func testLiveQueryNoUpdate() throws {
         try loadNumbers(100)
         var count = 0;
-        let q = Query
+        let q = QueryBuilder
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(Expression.int(10)))
@@ -1189,7 +1189,7 @@ class QueryTest: CBLTestCase {
     
     func testResultSetEnumeration() throws {
         try loadNumbers(5)
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .orderBy(Ordering.property("number1"))
@@ -1220,7 +1220,7 @@ class QueryTest: CBLTestCase {
     
     func testGetAllResults() throws {
         try loadNumbers(5)
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .orderBy(Ordering.property("number1"))
@@ -1259,7 +1259,7 @@ class QueryTest: CBLTestCase {
         doc1.setValue(nil, forKey: "address")
         try saveDocument(doc1)
         
-        let q = Query
+        let q = QueryBuilder
             .select(SelectResult.property("name"),
                     SelectResult.property("address"),
                     SelectResult.property("age"))

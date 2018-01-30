@@ -25,8 +25,7 @@ extension Database {
     ///   - name: The index name.
     /// - Throws: An error on a failure.
     public func createIndex(_ index: Index, withName name: String) throws {
-        
-        try _impl.createIndex(index.impl, withName: name)
+        try _impl.createIndex(index.toImpl(), withName: name)
     }
     
     
