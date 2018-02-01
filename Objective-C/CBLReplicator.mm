@@ -120,22 +120,26 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 
 - (void) start {
-    if (_repl) {
-        CBLWarn(Sync, @"%@ has already started", self);
-        return;
+    CBL_LOCK(self) {
+        if (_repl) {
+            CBLWarn(Sync, @"%@ has already started", self);
+            return;
+        }
+        
+        CBLLog(Sync, @"%@: Starting", self);
+        _retryCount = 0;
+        [self _start];
     }
-    
-    CBLLog(Sync, @"%@: Starting", self);
-    _retryCount = 0;
-    [self _start];
 }
 
 
 - (void) retry {
-    if (_repl || _rawStatus.level != kC4Offline)
-        return;
-    CBLLog(Sync, @"%@: Retrying...", self);
-    [self _start];
+    CBL_LOCK(self) {
+        if (_repl || _rawStatus.level != kC4Offline)
+            return;
+        CBLLog(Sync, @"%@: Retrying...", self);
+        [self _start];
+    }
 }
 
 
@@ -222,10 +226,15 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) stop {
-    if (_repl)
-        c4repl_stop(_repl);     // this is async; status will change when repl actually stops
-    [_reachability stop];
-    _reachability = nil;
+    CBL_LOCK(self) {
+        if (_repl)
+            c4repl_stop(_repl);     // this is async; status will change when repl actually stops
+        else if (_rawStatus.level == kC4Offline)
+            [self c4StatusChanged: {.level = kC4Stopped}];
+        
+        [_reachability stop];
+        _reachability = nil;
+    }
 }
 
 
@@ -248,11 +257,13 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) reachabilityChanged {
-    bool reachable = _reachability.reachable;
-    if (reachable && !_repl) {
-        CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
-        _retryCount = 0;
-        [self retry];
+    CBL_LOCK(self) {
+        bool reachable = _reachability.reachable;
+        if (reachable && !_repl) {
+            CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
+            _retryCount = 0;
+            [self retry];
+        }
     }
 }
 
@@ -265,19 +276,23 @@ static BOOL isPull(CBLReplicatorType type) {
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
 {
-    if (!_listenerTokens) {
-        _listenerTokens = [NSMutableSet set];
+    CBL_LOCK(self) {
+        if (!_listenerTokens) {
+            _listenerTokens = [NSMutableSet set];
+        }
+        
+        id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                              queue: queue];
+        [_listenerTokens addObject: token];
+        return token;
     }
-    
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: queue];
-    [_listenerTokens addObject: token];
-    return token;
 }
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    [_listenerTokens removeObject: token];
+    CBL_LOCK(self) {
+        [_listenerTokens removeObject: token];
+    }
 }
 
 
@@ -294,36 +309,38 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
-    if (c4Status.level == kC4Stopped) {
-        if ([self handleError: c4Status.error]) {
-            // Change c4Status to offline, so my state will reflect that, and proceed:
-            c4Status.level = kC4Offline;
+    CBL_LOCK(self) {
+        if (c4Status.level == kC4Stopped) {
+            if ([self handleError: c4Status.error]) {
+                // Change c4Status to offline, so my state will reflect that, and proceed:
+                c4Status.level = kC4Offline;
+            }
+        } else if (c4Status.level > kC4Connecting) {
+            _retryCount = 0;
+            [_reachability stop];
+            _reachability = nil;
         }
-    } else if (c4Status.level > kC4Connecting) {
-        _retryCount = 0;
-        [_reachability stop];
-        _reachability = nil;
-    }
-
-    // Update my properties:
-    [self updateStateProperties: c4Status];
-
-    // Post change
-    CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
-                                                                           status: self.status];
-    for (CBLChangeListenerToken* token in _listenerTokens) {
-        void (^listener)(CBLReplicatorChange*) = token.listener;
-        dispatch_async(token.queue, ^{
-            listener(change);
-        });
-    }
-    
-    // If Stopped:
-    if (c4Status.level == kC4Stopped) {
-        // Stopped:
-        [self clearRepl];
-        CBL_LOCK(_config.database) {
-            [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+        
+        // Update my properties:
+        [self updateStateProperties: c4Status];
+        
+        // Post change
+        CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
+                                                                               status: self.status];
+        for (CBLChangeListenerToken* token in _listenerTokens) {
+            void (^listener)(CBLReplicatorChange*) = token.listener;
+            dispatch_async(token.queue, ^{
+                listener(change);
+            });
+        }
+        
+        // If Stopped:
+        if (c4Status.level == kC4Stopped) {
+            // Stopped:
+            [self clearRepl];
+            CBL_LOCK(_config.database) {
+                [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+            }
         }
     }
 }
@@ -393,8 +410,10 @@ static void onDocError(C4Replicator *repl,
     NSString* docIDStr = slice2string(docID);
     auto replicator = (__bridge CBLReplicator*)context;
     dispatch_async(replicator->_dispatchQueue, ^{
-        if (repl == replicator->_repl)
-            [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+        CBL_LOCK(replicator) {
+            if (repl == replicator->_repl)
+                [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+        }
     });
 }
 
