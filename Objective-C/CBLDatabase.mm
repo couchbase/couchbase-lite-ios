@@ -1025,7 +1025,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
+- (BOOL) saveResolvedDocument: (CBLDocument*)resolved
                   forConflict: (CBLConflict*)conflict
                         error: (NSError**)outError
 {
@@ -1034,36 +1034,39 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         if (!t.begin())
             return convertError(t.error(), outError);
         
-        auto localDoc = conflict.mine;
-        auto remoteDoc = conflict.theirs;
-        if (resolvedDoc != localDoc)
-            resolvedDoc.database = self;
-
-        // The remote branch has to win, so that the doc revision history matches the server's.
-        CBLStringBytes winningRevID = remoteDoc.revID;
-        CBLStringBytes losingRevID = localDoc.revID;
-
+        auto doc = conflict.mine;
+        auto otherDoc = conflict.theirs;
+        
+        // Figure out what revision to delete and what if anything to add:
+        CBLStringBytes winningRevID, losingRevID;
         NSData* mergedBody = nil;
-        if (resolvedDoc != remoteDoc) {
-            // Unless the remote revision is being used as-is, we need a new revision:
-            mergedBody = [resolvedDoc encode: outError];
-            if (!mergedBody)
-                return false;
+        if (resolved == otherDoc) {
+            winningRevID = otherDoc.revID;
+            losingRevID = doc.revID;
+        } else {
+            winningRevID = doc.revID;
+            losingRevID = otherDoc.revID;
+            if (resolved != doc) {
+                resolved.database = self;
+                mergedBody = [resolved encode: outError];
+                if (!mergedBody)
+                    return false;
+            }
         }
         
         // Tell LiteCore to do the resolution:
-        C4Document *rawDoc = localDoc.c4Doc.rawDoc;
+        C4Document *rawDoc = doc.c4Doc.rawDoc;
         C4Error c4err;
         if (!c4doc_resolveConflict(rawDoc,
                                    winningRevID,
                                    losingRevID,
                                    data2slice(mergedBody),
                                    &c4err)
-                || !c4doc_save(rawDoc, 0, &c4err)) {
+            || !c4doc_save(rawDoc, 0, &c4err)) {
             return convertError(c4err, outError);
         }
         CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
-               localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+               doc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
         
         return t.commit() || convertError(t.error(), outError);
     }

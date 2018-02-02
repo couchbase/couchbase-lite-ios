@@ -10,35 +10,28 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TestResolver : NSObject <CBLConflictResolver>
-@property (atomic) BOOL requireBaseRevision;
-@property (readonly, atomic) BOOL wasCalled;
-@end
-
 /** Default Conflict Resolution set to ConflictTest which 
     will just make the assertion false as shouldn't be called. */
-@interface DoNotResolve : TestResolver
+@interface DoNotResolve : NSObject <CBLConflictResolver>
 @end
 
-/** Select my version. */
-@interface MineWins : TestResolver
+/** Select theirs version. */
+@interface TheirsWins : NSObject <CBLConflictResolver>
 @end
 
-/** Select their version. */
-@interface TheirsWins : TestResolver
-@end
 
-/** Merge, but if both sides changed the same property then use their value. */
-@interface MergeThenTheirsWins : TestResolver
+/** Merge or select theirs version. */
+@interface MergeThenTheirsWins : NSObject <CBLConflictResolver>
+@property (atomic) BOOL requireBaseRevision;
 @end
 
 /** Return nil to give up the conflict resolving. The document save operation will return 
     the conflicting error. */
-@interface GiveUp : TestResolver
+@interface GiveUp : NSObject <CBLConflictResolver>
 @end
 
 /** Block based resolver */
-@interface BlockResolver : TestResolver
+@interface BlockResolver : NSObject <CBLConflictResolver>
 
 @property (atomic, readonly) CBLDocument* (^block)(CBLConflict*);
 
