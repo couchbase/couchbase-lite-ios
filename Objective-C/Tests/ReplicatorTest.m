@@ -673,7 +673,7 @@
     id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
     if (!target)
         return;
-    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation* x1 = [self expectationWithDescription: @"Offline"];
