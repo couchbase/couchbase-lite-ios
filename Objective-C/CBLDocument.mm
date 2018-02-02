@@ -135,12 +135,14 @@ using namespace fleeceapi;
 - (void) updateDictionary {
     if (_fleeceData) {
         _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_fleeceData), self.isMutable));
-        _dict = _root->asNative();
+        CBL_LOCK(_database) {
+            _dict = _root->asNative();
+        }
     } else {
         // New document:
         _root.reset();
         _dict = self.isMutable ? (id)[[CBLNewDictionary alloc] init]
-                               : [[CBLDictionary alloc] initEmpty];
+        : [[CBLDictionary alloc] initEmpty];
     }
 }
 

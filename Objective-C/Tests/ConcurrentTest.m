@@ -180,7 +180,7 @@
 
 
 // https://github.com/couchbase/couchbase-lite-ios/issues/1967
-- (void) failingTestConcurrentReadForUpdatesDocs {
+- (void) testConcurrentReadForUpdatesDocs {
     const NSUInteger kNDocs = 100;
     const NSUInteger kNRounds = 10;
     const NSUInteger kNConcurrents = 5;
@@ -202,7 +202,7 @@
 
 
 // https://github.com/couchbase/couchbase-lite-ios/issues/1967
-- (void) failingTestConcurrentUpdateSeperateDocInstances {
+- (void) testConcurrentUpdateSeperateDocInstances {
     const NSUInteger kNDocs = 1;
     const NSUInteger kNRounds = 10;
     const NSUInteger kNConcurrents = 5;

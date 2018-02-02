@@ -76,10 +76,13 @@ using namespace fleeceapi;
 
 
 - (CBLMutableDictionary*) mutableCopyWithZone:(NSZone *)zone {
-    return [[CBLMutableDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
+    CBL_LOCK(self.sharedLock) {
+        return [[CBLMutableDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
+    }
 }
 
 
+// Called under the database's lock:
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     Encoder encoder(enc);
     _dict.encodeTo(encoder);
@@ -96,7 +99,9 @@ using namespace fleeceapi;
 
 
 - (NSUInteger) count {
-    return _dict.count();
+    CBL_LOCK(self.sharedLock) {
+        return _dict.count();
+    }
 }
 
 
@@ -107,19 +112,23 @@ using namespace fleeceapi;
     // I cache the keys array because my -countByEnumeratingWithState method delegates to it,
     // but it's not actually retained by anything related to the enumeration, so it's otherwise
     // possible for the array to be dealloced while the enumeration is going on.
-    if (!_keys) {
-        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
-        for (MDict<id>::iterator i(_dict); i; ++i)
-            [keys addObject: i.nativeKey()];
-        _keys = keys;
+    CBL_LOCK(self.sharedLock) {
+        if (!_keys) {
+            NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
+            for (MDict<id>::iterator i(_dict); i; ++i)
+                [keys addObject: i.nativeKey()];
+            _keys = keys;
+        }
+        return _keys;
     }
-    return _keys;
 }
 
 
 - (void) keysChanged {
     // My subclass CBLMutableDictionary calls this when it's mutated, to invalidate the array
-    _keys = nil;
+    CBL_LOCK(self.sharedLock) {
+        _keys = nil;
+    }
 }
 
 
@@ -142,62 +151,86 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable id) valueForKey: (NSString*)key {
-    return _getObject(_dict, key, nil);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, nil);
+    }
 }
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    return _getObject(_dict, key, [NSString class]);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, [NSString class]);
+    }
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    return _getObject(_dict, key, [NSNumber class]);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, [NSNumber class]);
+    }
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    return asInteger(_get(_dict, key), _dict);
+    CBL_LOCK(self.sharedLock) {
+        return asInteger(_get(_dict, key), _dict);
+    }
 }
 
 
 - (long long) longLongForKey: (NSString*)key {
-    return asLongLong(_get(_dict, key), _dict);
+    CBL_LOCK(self.sharedLock) {
+        return asLongLong(_get(_dict, key), _dict);
+    }
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    return asFloat(_get(_dict, key), _dict);
+    CBL_LOCK(self.sharedLock) {
+        return asFloat(_get(_dict, key), _dict);
+    }
 }
 
 
 - (double) doubleForKey: (NSString*)key {
-    return asDouble(_get(_dict, key), _dict);
+    CBL_LOCK(self.sharedLock) {
+        return asDouble(_get(_dict, key), _dict);
+    }
 }
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    return asBool(_get(_dict, key), _dict);
+    CBL_LOCK(self.sharedLock) {
+        return asBool(_get(_dict, key), _dict);
+    }
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return asDate(_getObject(_dict, key, nil));
+    CBL_LOCK(self.sharedLock) {
+        return asDate(_getObject(_dict, key, nil));
+    }
 }
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLBlob class]);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, [CBLBlob class]);
+    }
 }
 
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLArray class]);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, [CBLArray class]);
+    }
 }
 
 
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLDictionary class]);
+    CBL_LOCK(self.sharedLock) {
+        return _getObject(_dict, key, [CBLDictionary class]);
+    }
 }
 
 
@@ -205,7 +238,9 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (BOOL) containsValueForKey: (NSString*)key {
-    return !_get(_dict, key).isEmpty();
+    CBL_LOCK(self.sharedLock) {
+        return !_get(_dict, key).isEmpty();
+    }
 }
 
 
@@ -213,11 +248,13 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: _dict.count()];
-    for (MDict<id>::iterator i(_dict); i; ++i) {
-        result[i.nativeKey()] = [i.nativeValue() cbl_toPlainObject];
+    CBL_LOCK(self.sharedLock) {
+        NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: _dict.count()];
+        for (MDict<id>::iterator i(_dict); i; ++i) {
+            result[i.nativeKey()] = [i.nativeValue() cbl_toPlainObject];
+        }
+        return result;
     }
-    return result;
 }
 
 
@@ -264,28 +301,42 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     if (self.count != other.count)
         return NO;
     
-    for (MDict<id>::iterator i(_dict); i; ++i) {
-        NSString* key = i.nativeKey();
-        id value = i.nativeValue();
-        if (value) {
-            if (![value isEqual: [other valueForKey: key]])
-                return NO;
-        } else {
-            if ([other valueForKey: key] || ![other containsValueForKey: key])
-                return NO;
+    CBL_LOCK(self.sharedLock) {
+        for (MDict<id>::iterator i(_dict); i; ++i) {
+            NSString* key = i.nativeKey();
+            id value = i.nativeValue();
+            if (value) {
+                if (![value isEqual: [other valueForKey: key]])
+                    return NO;
+            } else {
+                if ([other valueForKey: key] || ![other containsValueForKey: key])
+                    return NO;
+            }
         }
     }
-    
     return YES;
 }
 
 
 - (NSUInteger) hash {
-    NSUInteger hash = 0;
-    for (MDict<id>::iterator i(_dict); i; ++i) {
-        hash += ([i.nativeKey() hash] ^ [i.nativeValue() hash]);
+    CBL_LOCK(self.sharedLock) {
+        NSUInteger hash = 0;
+        for (MDict<id>::iterator i(_dict); i; ++i) {
+            hash += ([i.nativeKey() hash] ^ [i.nativeValue() hash]);
+        }
+        return hash;
     }
-    return hash;
+}
+
+
+#pragma mark - Lock
+
+
+- (NSObject*) sharedLock {
+    CBLDatabase* db = nil;
+    if (_dict.context() != MContext::gNullContext)
+        db = ((DocContext*)_dict.context())->database();
+    return db != nil ? db : self;
 }
 
 

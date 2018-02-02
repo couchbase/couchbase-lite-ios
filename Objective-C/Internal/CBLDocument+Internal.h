@@ -109,6 +109,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLArray ()
 
+@property (atomic, readonly) NSObject* sharedLock;
+
 - (instancetype) initEmpty;
 
 @end
@@ -117,8 +119,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDictionary ()
 
+@property (atomic, readonly) NSObject* sharedLock;
+
 - (instancetype) initEmpty;
 - (void) keysChanged;
+
 @end
 
 /////////////////
