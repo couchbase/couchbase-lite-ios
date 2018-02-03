@@ -561,7 +561,6 @@
 		93F5D1A61EFAEA2400E2DF53 /* CBLSessionAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93F5D1A71EFAEA2400E2DF53 /* CBLSessionAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */; };
 		93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
-		93FD61352020440800E7F6A1 /* QueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FD61342020440800E7F6A1 /* QueryBuilder.swift */; };
 		93FD61492020446300E7F6A1 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93FD614A2020446300E7F6A1 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93FD614B2020446300E7F6A1 /* CBLQueryBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD61482020446300E7F6A1 /* CBLQueryBuilder.m */; };
@@ -1144,7 +1143,6 @@
 		93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLSessionAuthenticator.h; sourceTree = "<group>"; };
 		93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLSessionAuthenticator.m; sourceTree = "<group>"; };
 		93F74A8A1EC5549C001289F8 /* FragmentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FragmentTest.swift; sourceTree = "<group>"; };
-		93FD61342020440800E7F6A1 /* QueryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilder.swift; sourceTree = "<group>"; };
 		93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLQueryBuilder.h; sourceTree = "<group>"; };
 		93FD61482020446300E7F6A1 /* CBLQueryBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLQueryBuilder.m; sourceTree = "<group>"; };
 		93FD615F20204E3600E7F6A1 /* CBLIndexBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexBuilder.h; sourceTree = "<group>"; };
@@ -1608,7 +1606,6 @@
 				938CDF171E807F08002EE790 /* Select.swift */,
 				9380D2721F0DBD79007DD84A /* SelectResult.swift */,
 				938CDF1B1E807F23002EE790 /* Where.swift */,
-				93FD61342020440800E7F6A1 /* QueryBuilder.swift */,
 			);
 			name = Query;
 			sourceTree = "<group>";
@@ -2686,7 +2683,6 @@
 				9384D8631FC4163D00FE89D8 /* FullTextFunction.swift in Sources */,
 				9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */,
 				93AF51C71E80A70900E200F0 /* CBLQuery.mm in Sources */,
-				93FD61352020440800E7F6A1 /* QueryBuilder.swift in Sources */,
 				93DECEB6200A6EAA00F44953 /* ValueExpression.swift in Sources */,
 				9308F4111E64B2B300F53EE4 /* CBLMutableDocument.mm in Sources */,
 				93EC42DD1FB384D200D54BB4 /* CBLFunctionExpression.m in Sources */,
