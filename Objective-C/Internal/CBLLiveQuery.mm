@@ -85,8 +85,12 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         }];
     }
     _observing = YES;
-    _rs = nil;
-    [self update];
+    
+    CBL_LOCK(self) {
+        _rs = nil;
+        _willUpdate = NO;
+        [self updateAfter:0.0];
+    }
 }
 
 
@@ -100,11 +104,15 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         _dbListenerToken = nil;
     }
     
-    _willUpdate = NO; // cancels the delayed update started by -databaseChanged
     _observing = NO;
     _listenerTokens = nil;
-    _rs = nil;
+    
+    CBL_LOCK(self) {
+        _willUpdate = NO; // cancels the delayed update started by -databaseChanged
+        _rs = nil;
+    }
 }
+
 
 
 - (void) queryParametersChanged {
@@ -147,9 +155,11 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) databaseChanged: (CBLDatabaseChange*)change {
-    if (_willUpdate)
-        return;  // Already a pending update scheduled
-
+    CBL_LOCK(self) {
+        if (_willUpdate)
+            return;  // Already a pending update scheduled
+    }
+    
     // Use double the update interval if this is a remote change (coming from a pull replication):
     NSTimeInterval updateInterval = _updateInterval;
     if (change.isExternal)
@@ -163,19 +173,23 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) updateAfter: (NSTimeInterval)updateDelay {
-    if (_willUpdate)
-        return;  // Already a pending update scheduled
-    _willUpdate = YES;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{        //FIX: Use a different queue
+    CBL_LOCK(self) {
         if (_willUpdate)
-            [self update];
-    });
+            return;  // Already a pending update scheduled
+        _willUpdate = YES;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
+                       _query.database.queryQueue, ^{
+            CBL_LOCK(self) {
+                if (_willUpdate)
+                    [self update];
+            }
+        });
+    }
 }
 
 
 - (void) update {
-    //TODO: Make this asynchronous (as in 1.x)
     CBLQuery* strongQuery = _query;
     CBLLog(Query, @"%@: Querying...", self);
     NSError *error;

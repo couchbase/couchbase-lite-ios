@@ -51,6 +51,7 @@ using namespace fleece;
 
 @synthesize name=_name;
 @synthesize dispatchQueue=_dispatchQueue;
+@synthesize queryQueue=_queryQueue;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 @synthesize liveQueries= _liveQueries;
@@ -106,6 +107,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         
         NSString* qName = $sprintf(@"Database <%@>", name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        
+        qName = $sprintf(@"Database-Query <%@>", name);
+        _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        
         _replications = [NSMapTable strongToWeakObjectsMapTable];
         _activeReplications = [NSMutableSet new];
         _liveQueries = [NSMutableSet new];

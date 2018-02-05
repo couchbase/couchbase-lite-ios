@@ -46,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
+@property (readonly, nonatomic) dispatch_queue_t queryQueue;
 @property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
 @property (readonly, nonatomic) NSMutableSet<CBLReplicator*>* activeReplications;
 @property (readonly, nonatomic) NSMutableSet<CBLLiveQuery*>* liveQueries;
