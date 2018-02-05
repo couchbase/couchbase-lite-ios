@@ -1430,65 +1430,62 @@
     [q removeChangeListenerWithToken: token];
 }
 
-- (void) testLiveQueryCleanUpAfterCloseDatabase {
-    // Add a live query to the DB
-    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+- (void) testCloseDatabaseWithActiveLiveQuery {
+    // Add a live query to the DB:
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]];
-    
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
-       
+        [x fulfill];
+    }];
+    [self waitForExpectations: @[x] timeout: 2.0];
+    
+    // Confirm the addition of query:
+    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
+    
+    // Close Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db close: err];
     }];
     
-    // Confirm the addition of query
-    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
-
-    // Close Database - This should trigger a stop of live query
-    NSError* error;
-    Assert([self.db close:&error]);
-    
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
-            break;
-    }
-    
-    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
-
+    // Remove the listener:
     [q removeChangeListenerWithToken: token];
     
+    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
+    
+    // Close Database:
+    NSError* error;
+    Assert([self.db close: &error], @"Cannot close database: %@", error);
+    
+    sleep(2);
 }
 
 
-- (void) testLiveQueryCleanUpAfterDeleteDatabase {
-    // Add a live query to the DB
-    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+- (void) testDeleteDatabaseWithActiveLiveQuery {
+    // Add a live query to the DB:
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]];
-    
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
-        
+        [x fulfill];
     }];
+    [self waitForExpectations: @[x] timeout: 2.0];
     
-    // Confirm the addition of query    
+    // Confirm the addition of query:
     AssertEqual(self.db.liveQueries.count,(unsigned long)1);
 
+    // Delete Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db delete: err];
+    }];
     
-    // Close Database - This should trigger a stop of live query
-    NSError* error;
-    Assert([self.db delete:&error]);
-    
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
-            break;
-    }
-    
+    // Remove the listener:
+    [q removeChangeListenerWithToken: token];
     AssertEqual(self.db.liveQueries.count,(unsigned long)0);
     
-    [q removeChangeListenerWithToken: token];
+    // Delete Database:
+    NSError* error;
+    Assert([self.db delete: &error], @"Cannot delete database: %@", error);
 }
 
 

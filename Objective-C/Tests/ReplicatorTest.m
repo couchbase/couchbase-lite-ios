@@ -478,66 +478,76 @@
 }
 
 
-- (void) testCleanupOfActiveReplicationsAfterDatabaseClose {
-    // add a replicator to the DB
+- (void) testCloseDatabaseWithActiveReplicator {
+    // Add a replicator to the DB:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
-    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
-
-    // add observer to check if replicators are stopped on DB close
+    XCTestExpectation *x1 = [self expectationWithDescription: @"Connect"];
+    XCTestExpectation *x2 = [self expectationWithDescription: @"Stop"];
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
-        if (change.status.activity == kCBLReplicatorStopped) {
-            [x fulfill];
-        }
+        if (change.status.activity == kCBLReplicatorConnecting)
+            [x1 fulfill];
+        
+        if (change.status.activity == kCBLReplicatorStopped)
+            [x2 fulfill];
     }];
     
     [r start];
     AssertEqual(self.db.activeReplications.count,(unsigned long)1);
+    [self waitForExpectations: @[x1] timeout: 2.0];
     
-    // Close Database - This should trigger a replication stop which should be caught by
-    // replicator change listener
-    NSError* error;
-    [self.db close:&error];
+    // Close Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db close: err];
+    }];
     
-    [self waitForExpectations: @[x] timeout: 7.0];
-    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
-    
+    [r stop];
+    [self waitForExpectations: @[x2] timeout: 5.0];
     [r removeChangeListenerWithToken: token];
     
+    NSError* error;
+    Assert([self.db close:&error], @"Cannot close database: %@", error);
+    
+    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
 }
 
 
-- (void) testCleanupOfActiveReplicationsAfterDatabaseDelete {
+- (void) testDeleteDatabaseWithActiveReplicator {
     // add a replicator to the DB
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
-    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
+    XCTestExpectation *x1 = [self expectationWithDescription: @"Connect"];
+    XCTestExpectation *x2 = [self expectationWithDescription: @"Stop"];
     
     // add observer to check if replicators are stopped on DB close
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
-        if (change.status.activity == kCBLReplicatorStopped) {
-            [x fulfill];
-         }
+        if (change.status.activity == kCBLReplicatorConnecting)
+            [x1 fulfill];
+        
+        if (change.status.activity == kCBLReplicatorStopped)
+            [x2 fulfill];
     }];
     
     [r start];
-    
-    // Confirm that one active replicator
     AssertEqual(self.db.activeReplications.count,(unsigned long)1);
+    [self waitForExpectations: @[x1] timeout: 2.0];
+    
+    // Close Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db delete: err];
+    }];
+    
+    [r stop];
+    [self waitForExpectations: @[x2] timeout: 5.0];
+    [r removeChangeListenerWithToken: token];
     
     // Close Database - This should trigger a replication stop which should be caught by listener
     NSError* error;
-    
-    [self.db delete:&error];
-  
-    [self waitForExpectations: @[x] timeout: 7.0];
-    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
-
-    [r removeChangeListenerWithToken: token];
+    Assert([self.db delete:&error], @"Cannot delete database: %@", error);
 }
 
 
