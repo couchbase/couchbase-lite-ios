@@ -78,6 +78,9 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     unsigned _retryCount;
     CBLReachability* _reachability;
     NSMutableSet* _listenerTokens;
+    
+    // TODO: Instead of having multiple boolean variables, we could
+    // have a enum based variable to represent the replicator state.
     BOOL _isStopping;
     BOOL _isSuspending;
 }
@@ -220,10 +223,10 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
             [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
         }
         
-#if TARGET_OS_IPHONE
+    #if TARGET_OS_IPHONE
         if (!_config.allowReplicatingInBackground)
             [self setupBackgrounding];
-#endif
+    #endif
     } else {
         status = {kC4Stopped, {}, err};
     }
@@ -383,9 +386,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else if (c4Status.level == kC4Stopped) {
             _isStopping = NO;
             [self clearRepl];
-            #if TARGET_OS_IPHONE
-                [self endBackgrounding];
-            #endif
+        #if TARGET_OS_IPHONE
+            [self endBackgrounding];
+        #endif
             CBL_LOCK(_config.database) {
                 [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
             }

@@ -97,10 +97,10 @@ typedef enum {
 /**
  Allows the replicator to continue replicating in the background. The default
  value is NO, which means that the replicator will suspend itself when the
- replicator detects that the application is running in the background.
+ replicator detects that the application is being backgrounded.
  
- If setting the value to YES, please ensure that the application requests
- for extending the background task properly.
+ If setting the value to YES, please ensure that your application delegate
+ requests background time from the OS until the replication finishes.
  */
 @property (nonatomic) BOOL allowReplicatingInBackground;
 #endif
