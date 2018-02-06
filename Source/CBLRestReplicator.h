@@ -14,8 +14,10 @@
 /** Abstract base class for push or pull replications. */
 @interface CBLRestReplicator : NSObject <CBL_Replicator>
 
+@property (readonly, atomic) BOOL active; // for backgrounding and unit tests
+
 #if DEBUG
-@property (readonly) BOOL running, active; // for unit tests
+@property (readonly) BOOL running; // for unit tests
 #endif
 
 @end

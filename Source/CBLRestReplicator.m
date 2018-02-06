@@ -57,6 +57,7 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
 @interface CBLRestReplicator () <CBLRemoteRequestDelegate>
 @property (readwrite) CBL_ReplicatorStatus status;
 @property (readwrite, copy) NSDictionary* remoteCheckpoint;
+@property (readwrite, atomic) BOOL active;
 - (void) updateActive;
 - (void) fetchRemoteCheckpointDoc;
 - (void) saveLastSequence;
@@ -85,8 +86,9 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
 }
 
 @synthesize db=_db, settings=_settings, serverCert=_serverCert;
+@synthesize active=_active;
 #if DEBUG
-@synthesize running=_running, active=_active;
+@synthesize running=_running;
 #endif
 
 
@@ -314,10 +316,6 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
     [self updateStatus];
     _startTime = CFAbsoluteTimeGetCurrent();
     
-#if TARGET_OS_IPHONE
-    [self setupBackgrounding];
-#endif
-    
     if (!_settings.continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _settings.remote]) {
         [self goOnline];    // non-continuous or local-to-local replication
     } else {
@@ -334,6 +332,10 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
         [_host startOnRunLoop: CFRunLoopGetCurrent()];
         [self reachabilityChanged: _host];
     }
+    
+#if TARGET_OS_IPHONE
+    [self setupBackgrounding];
+#endif
 }
 
 
@@ -521,7 +523,7 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
         }
 
         LogTo(Sync, @"%@ Progress: set active = %d", self, active);
-        _active = active;
+        self.active = active;
         [self updateStatus];
         [self postProgressChanged];
         if (!_active) {
