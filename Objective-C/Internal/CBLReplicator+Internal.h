@@ -20,6 +20,7 @@
 #import "CBLReplicator.h"
 #import "CBLReplicatorConfiguration.h"
 #import "c4.h"
+@class MYBackgroundMonitor;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -36,7 +37,15 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-@interface CBLReplicator ()
+@interface CBLReplicator () {
+    // For CBLReplicator+Backgrounding:
+    BOOL _deepBackground;
+    BOOL _filesystemUnavailable;
+}
+
+@property (readonly, atomic) BOOL active;
+@property (atomic) BOOL suspended;
+@property (nonatomic) MYBackgroundMonitor* bgMonitor;
 
 @end
 

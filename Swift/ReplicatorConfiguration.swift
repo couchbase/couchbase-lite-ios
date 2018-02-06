@@ -102,6 +102,22 @@ public class ReplicatorConfiguration {
         }
     }
     
+    #if os(iOS)
+    /**
+     Allows the replicator to continue replicating in the background. The default
+     value is NO, which means that the replicator will suspend itself when the
+     replicator detects that the application is running in the background.
+     
+     If setting the value to YES, please ensure that the application requests
+     for extending the background task properly.
+     */
+    public var allowReplicatingInBackground: Bool = false {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    #endif
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
@@ -127,6 +143,7 @@ public class ReplicatorConfiguration {
     private let readonly: Bool
     
     init(config: ReplicatorConfiguration, readonly: Bool) {
+        self.readonly = readonly
         self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
@@ -137,7 +154,9 @@ public class ReplicatorConfiguration {
         self.headers = config.headers
         self.channels = config.channels
         self.documentIDs = config.documentIDs
-        self.readonly = readonly
+    #if os(iOS)
+        self.allowReplicatingInBackground = config.allowReplicatingInBackground
+    #endif
     }
     
     func checkReadOnly() {
@@ -161,6 +180,9 @@ public class ReplicatorConfiguration {
         c.headers = self.headers
         c.channels = self.channels
         c.documentIDs = self.documentIDs
+    #if os(iOS)
+        c.allowReplicatingInBackground = self.allowReplicatingInBackground
+    #endif
         return c
     }
 }

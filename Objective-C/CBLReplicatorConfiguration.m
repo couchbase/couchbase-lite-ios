@@ -41,6 +41,10 @@
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
 
+#if TARGET_OS_IPHONE
+@synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
+#endif
+
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            target: (id<CBLEndpoint>)target
 {
@@ -62,75 +66,58 @@
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
     [self checkReadonly];
-    
-    if (_replicatorType != replicatorType) {
-        _replicatorType = replicatorType;
-    }
+    _replicatorType = replicatorType;
 }
 
 
 - (void) setContinuous: (BOOL)continuous {
     [self checkReadonly];
-    
-    if (_continuous != continuous) {
-        _continuous = continuous;
-    }
+    _continuous = continuous;
 }
 
 
 - (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
     [self checkReadonly];
-    
-    if (_conflictResolver != conflictResolver) {
-        _conflictResolver = conflictResolver;
-    }
+    _conflictResolver = conflictResolver;
 }
 
 
 - (void) setAuthenticator: (CBLAuthenticator *)authenticator {
     [self checkReadonly];
-    
-    if (_authenticator != authenticator) {
-        _authenticator = authenticator;
-    }
+    _authenticator = authenticator;
 }
 
 
 - (void) setPinnedServerCertificate: (SecCertificateRef)pinnedServerCertificate {
     [self checkReadonly];
-    
-    if (_pinnedServerCertificate != pinnedServerCertificate) {
-        _pinnedServerCertificate = pinnedServerCertificate;
-    }
+    _pinnedServerCertificate = pinnedServerCertificate;
 }
 
 
 - (void) setHeaders: (NSDictionary<NSString *,NSString *> *)headers {
     [self checkReadonly];
-    
-    if (_headers != headers) {
-        _headers = headers;
-    }
+    _headers = headers;
 }
 
 
 - (void) setDocumentIDs: (NSArray<NSString *> *)documentIDs {
     [self checkReadonly];
-    
-    if (_documentIDs != documentIDs) {
-        _documentIDs = documentIDs;
-    }
+    _documentIDs = documentIDs;
 }
 
 
 - (void) setChannels: (NSArray<NSString *> *)channels {
     [self checkReadonly];
-    
-    if (_channels != channels) {
-        _channels = channels;
-    }
+    _channels = channels;
 }
 
+
+#if TARGET_OS_IPHONE
+- (void) setAllowReplicatingInBackground: (BOOL)allowReplicatingInBackground {
+    [self checkReadonly];
+    _allowReplicatingInBackground = allowReplicatingInBackground;
+}
+#endif
 
 #pragma mark - Internal
 
@@ -139,6 +126,7 @@
                        readonly: (BOOL)readonly {
     self = [super init];
     if (self) {
+        _readonly = readonly;
         _database = config.database;
         _target = config.target;
         _replicatorType = config.replicatorType;
@@ -149,7 +137,9 @@
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
-        _readonly = readonly;
+#if TARGET_OS_IPHONE
+        _allowReplicatingInBackground = config.allowReplicatingInBackground;
+#endif
     }
     return self;
 }
