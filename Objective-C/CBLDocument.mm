@@ -142,7 +142,7 @@ using namespace fleeceapi;
         // New document:
         _root.reset();
         _dict = self.isMutable ? (id)[[CBLNewDictionary alloc] init]
-        : [[CBLDictionary alloc] initEmpty];
+                               : [[CBLDictionary alloc] initEmpty];
     }
 }
 

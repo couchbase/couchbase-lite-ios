@@ -36,6 +36,7 @@ using namespace fleeceapi;
 @implementation CBLDictionary
 {
     NSArray* _keys;
+    __weak NSObject* _sharedLock;
 }
 
 
@@ -44,7 +45,11 @@ using namespace fleeceapi;
 
 
 - (instancetype) initEmpty {
-    return [super init];
+    self = [super init];
+    if (self) {
+        _sharedLock = [self _sharedLock];
+    }
+    return self;
 }
 
 
@@ -54,6 +59,7 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _dict.initInSlot(mv, parent);
+        _sharedLock = [self _sharedLock];
     }
     return self;
 }
@@ -65,8 +71,17 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _dict.initAsCopyOf(mDict, isMutable);
+        _sharedLock = [self _sharedLock];
     }
     return self;
+}
+
+
+- (NSObject*) _sharedLock {
+    id db;
+    if (_dict.context() != MContext::gNullContext)
+        db = ((DocContext*)_dict.context())->database();
+    return db != nil ? db : self;
 }
 
 
@@ -301,17 +316,19 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     if (self.count != other.count)
         return NO;
     
-    CBL_LOCK(self.sharedLock) {
-        for (MDict<id>::iterator i(_dict); i; ++i) {
-            NSString* key = i.nativeKey();
-            id value = i.nativeValue();
-            if (value) {
-                if (![value isEqual: [other valueForKey: key]])
-                    return NO;
-            } else {
-                if ([other valueForKey: key] || ![other containsValueForKey: key])
-                    return NO;
-            }
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        NSString* key;
+        id value;
+        CBL_LOCK(self.sharedLock) {
+            key = i.nativeKey();
+            value = i.nativeValue();
+        }
+        if (value) {
+            if (![value isEqual: [other valueForKey: key]])
+                return NO;
+        } else {
+            if ([other valueForKey: key] || ![other containsValueForKey: key])
+                return NO;
         }
     }
     return YES;
@@ -331,12 +348,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 #pragma mark - Lock
 
-
 - (NSObject*) sharedLock {
-    CBLDatabase* db = nil;
-    if (_dict.context() != MContext::gNullContext)
-        db = ((DocContext*)_dict.context())->database();
-    return db != nil ? db : self;
+    return _sharedLock;
 }
 
 

@@ -31,14 +31,20 @@ using namespace cbl;
 using namespace fleeceapi;
 
 
-@implementation CBLArray 
+@implementation CBLArray {
+    __weak NSObject* _sharedLock;
+}
 
 
 @synthesize swiftObject=_swiftObject;
 
 
 - (instancetype) initEmpty {
-    return [super init];
+    self = [super init];
+    if (self) {
+        _sharedLock = [self _sharedLock];
+    }
+    return self;
 }
 
 
@@ -48,6 +54,7 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _array.initInSlot(mv, parent);
+        _sharedLock = [self _sharedLock];
     }
     return self;
 }
@@ -59,8 +66,17 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _array.initAsCopyOf(mArray, isMutable);
+        _sharedLock = [self _sharedLock];
     }
     return self;
+}
+
+
+- (NSObject*) _sharedLock {
+    id db = nil;
+    if (_array.context() != MContext::gNullContext)
+        db = ((DocContext*)_array.context())->database();
+    return db != nil ? db : self;
 }
 
 
@@ -270,8 +286,10 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    if (index >= _array.count())
-        return nil;
+    CBL_LOCK(self.sharedLock) {
+        if (index >= _array.count())
+            return nil;
+    }
     return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
@@ -316,10 +334,7 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (NSObject*) sharedLock {
-    CBLDatabase* db = nil;
-    if (_array.context() != MContext::gNullContext)
-        db = ((DocContext*)_array.context())->database();
-    return db != nil ? db : self;
+    return _sharedLock;
 }
 
 
