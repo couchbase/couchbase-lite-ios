@@ -353,22 +353,23 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)outError
 {
-    NSString* toPathStr = databasePath(name, config.directory ?: defaultDirectory());
+    NSString* dir = config.directory ?: defaultDirectory();
+    if (!setupDatabaseDirectory(dir, outError))
+        return NO;
+    
+    NSString* toPathStr = databasePath(name, dir);
     slice toPath(toPathStr.fileSystemRepresentation);
     slice fromPath(path.fileSystemRepresentation);
-
+    
     C4Error err;
     C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
-    if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
-        BOOL success = setupDatabaseDirectory(toPathStr, outError);
-        if (!success) {
-            NSError* removeError;
-            if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
-                CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
-        }
-        return success;
-    } else
+    if (!(c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError))) {
+        NSError* removeError;
+        if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
+            CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
         return NO;
+    }
+    return YES;
 }
 
 
