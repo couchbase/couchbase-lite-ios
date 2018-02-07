@@ -51,7 +51,9 @@
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: false];
+    CBL_LOCK(self.sharedLock) {
+        return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: false];
+    }
 }
 
 
@@ -66,15 +68,17 @@
 
 
 - (void) setValue: (id)value atIndex: (NSUInteger)index {
-    // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
-    // a JSON "null". But Cocoa doesn't allow this and throws an exception.
-    // For cross-platform consistency we're allowing nil values on Apple platforms too,
-    // by translating them to an NSNull so they have the same behavior in the document.
-    if (!value) value = [NSNull null];
-    
-    if (cbl::valueWouldChange(value, _array.get(index), _array)) {
-        if (!_array.set(index, [value cbl_toCBLObject]))
-            throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
+        // a JSON "null". But Cocoa doesn't allow this and throws an exception.
+        // For cross-platform consistency we're allowing nil values on Apple platforms too,
+        // by translating them to an NSNull so they have the same behavior in the document.
+        if (!value) value = [NSNull null];
+        
+        if (cbl::valueWouldChange(value, _array.get(index), _array)) {
+            if (!_array.set(index, [value cbl_toCBLObject]))
+                throwRangeException(index);
+        }
     }
 }
 
@@ -138,9 +142,11 @@
 
 
 - (void) addValue: (id)value  {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
-    if (!value) value = [NSNull null];
-    _array.append([value cbl_toCBLObject]);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
+        if (!value) value = [NSNull null];
+        _array.append([value cbl_toCBLObject]);
+    }
 }
 
 
@@ -203,10 +209,12 @@
 
 
 - (void) insertValue: (id)value atIndex: (NSUInteger)index {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
-    if (!value) value = [NSNull null];
-    if (!_array.insert(index, [value cbl_toCBLObject]))
-        throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
+        if (!value) value = [NSNull null];
+        if (!_array.insert(index, [value cbl_toCBLObject]))
+            throwRangeException(index);
+    }
 }
 
 
@@ -269,9 +277,11 @@
 
 
 - (void) setData:(nullable NSArray *)data {
-    _array.clear();
-    for (id obj in data)
-        _array.append([obj cbl_toCBLObject]);
+    CBL_LOCK(self.sharedLock) {
+        _array.clear();
+        for (id obj in data)
+            _array.append([obj cbl_toCBLObject]);
+    }
 }
 
 
@@ -279,8 +289,10 @@
 
 
 - (void) removeValueAtIndex:(NSUInteger)index {
-    if (!_array.remove(index))
-        throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        if (!_array.remove(index))
+            throwRangeException(index);
+    }
 }
 
 

@@ -31,14 +31,20 @@ using namespace cbl;
 using namespace fleeceapi;
 
 
-@implementation CBLArray 
+@implementation CBLArray {
+    __weak NSObject* _sharedLock;
+}
 
 
 @synthesize swiftObject=_swiftObject;
 
 
 - (instancetype) initEmpty {
-    return [super init];
+    self = [super init];
+    if (self) {
+        [self setupSharedLock];
+    }
+    return self;
 }
 
 
@@ -48,6 +54,7 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _array.initInSlot(mv, parent);
+        [self setupSharedLock];
     }
     return self;
 }
@@ -59,8 +66,17 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _array.initAsCopyOf(mArray, isMutable);
+        [self setupSharedLock];
     }
     return self;
+}
+
+
+- (void) setupSharedLock {
+    id db = nil;
+    if (_array.context() != MContext::gNullContext)
+        db = ((DocContext*)_array.context())->database();
+    _sharedLock = db != nil ? db : self;
 }
 
 
@@ -70,10 +86,13 @@ using namespace fleeceapi;
 
 
 - (CBLMutableArray*) mutableCopyWithZone:(NSZone *)zone {
-    return [[CBLMutableArray alloc] initWithCopyOfMArray: _array isMutable: true];
+    CBL_LOCK(_sharedLock) {
+        return [[CBLMutableArray alloc] initWithCopyOfMArray: _array isMutable: true];
+    }
 }
 
 
+// Called under the database's lock:
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     Encoder encoder(enc);
     _array.encodeTo(encoder);
@@ -114,67 +133,93 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (nullable id) valueAtIndex: (NSUInteger)index {
-    return _getObject(_array, index);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index);
+    }
 }
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [NSString class]);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index, [NSString class]);
+    }
 }
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [NSNumber class]);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index, [NSNumber class]);
+    }
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return asInteger(_get(_array, index), _array);
+    CBL_LOCK(_sharedLock) {
+        return asInteger(_get(_array, index), _array);
+    }
 }
 
 
 - (long long) longLongAtIndex: (NSUInteger)index {
-    return asLongLong(_get(_array, index), _array);
+    CBL_LOCK(_sharedLock) {
+        return asLongLong(_get(_array, index), _array);
+    }
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    return asFloat(_get(_array, index), _array);
+    CBL_LOCK(_sharedLock) {
+        return asFloat(_get(_array, index), _array);
+    }
 }
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    return asDouble(_get(_array, index), _array);
+    CBL_LOCK(_sharedLock) {
+        return asDouble(_get(_array, index), _array);
+    }
 }
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    return asBool(_get(_array, index), _array);
+    CBL_LOCK(_sharedLock) {
+        return asBool(_get(_array, index), _array);
+    }
 }
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return asDate(_getObject(_array, index));
+    CBL_LOCK(_sharedLock) {
+        return asDate(_getObject(_array, index));
+    }
 }
 
 
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLBlob class]);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index, [CBLBlob class]);
+    }
 }
 
 
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLArray class]);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index, [CBLArray class]);
+    }
 }
 
 
 - (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLDictionary class]);
+    CBL_LOCK(_sharedLock) {
+        return _getObject(_array, index, [CBLDictionary class]);
+    }
 }
 
 
 - (NSUInteger) count {
-    return _array.count();
+    CBL_LOCK(_sharedLock) {
+        return _array.count();
+    }
 }
 
 
@@ -182,11 +227,13 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (NSArray*) toArray {
-    auto count = _array.count();
-    NSMutableArray* result = [NSMutableArray arrayWithCapacity: count];
-    for (NSUInteger i = 0; i < count; i++)
-        [result addObject: [_getObject(_array, i) cbl_toPlainObject]];
-    return result;
+    CBL_LOCK(_sharedLock) {
+        auto count = _array.count();
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: count];
+        for (NSUInteger i = 0; i < count; i++)
+            [result addObject: [_getObject(_array, i) cbl_toPlainObject]];
+        return result;
+    }
 }
 
 
@@ -239,8 +286,10 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    if (index >= _array.count())
-        return nil;
+    CBL_LOCK(_sharedLock) {
+        if (index >= _array.count())
+            return nil;
+    }
     return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
@@ -278,6 +327,14 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
         hash ^= (value ? [value hash] : 0);
     }
     return hash;
+}
+
+
+#pragma mark - Lock
+
+
+- (NSObject*) sharedLock {
+    return _sharedLock;
 }
 
 

@@ -21,9 +21,5 @@
 #pragma once
 
 #if CBL_THREADSAFE
-    #if DEBUG
-        #define CBL_LOCK(m) assert(m); @synchronized(m)
-    #else
-        #define CBL_LOCK(m) @synchronized(m)
-    #endif
+    #define CBL_LOCK(m) @synchronized(m)
 #endif
