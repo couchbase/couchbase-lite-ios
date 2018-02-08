@@ -538,6 +538,46 @@
 }
 
 
+- (void) testCrossJoin2 {
+    [self loadJSONResource:@"join"];
+    CBLQueryExpression* FIRSTNAME  = [CBLQueryExpression property: @"firstname" from:@"employeeDS"];
+    CBLQueryExpression* LASTNAME  = [CBLQueryExpression property: @"lastname" from:@"employeeDS"];
+    CBLQueryExpression* DEPTNAME  = [CBLQueryExpression property: @"name" from:@"departmentDS"];
+
+    NSArray* results = @[[CBLQuerySelectResult expression: FIRSTNAME],
+                         [CBLQuerySelectResult expression: LASTNAME],
+                         [CBLQuerySelectResult expression: DEPTNAME]];
+
+
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"employeeDS"]];
+
+
+    CBLQueryExpression* expr1 = [[CBLQueryExpression property:@"type" from:@"employeeDS"]  equalTo: [CBLQueryExpression string:@"employee"]];
+    CBLQueryExpression* expr2 = [[CBLQueryExpression property:@"type" from:@"departmentDS"] equalTo :[CBLQueryExpression string:@"department"]];
+
+    CBLQueryJoin* join = [CBLQueryJoin crossJoin:[CBLQueryDataSource database: self.db as: @"departmentDS"]];
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db as: @"employeeDS"]
+                                     join: @[join]
+                                    where:[expr1 andExpression:expr2]];
+
+
+    Assert(q);
+    NSError* error;
+
+    NSLog(@"%@",[q explain:nil]);
+
+    CBLQueryResultSet* rs = [q execute: &error];
+
+    NSUInteger i = 0;
+    NSArray* res = [rs allResults];
+    for (CBLQueryResult* r in res) {
+        NSLog(@" %@",[r toDictionary]);
+
+        i++;
+    }
+
+}
 - (void) testGroupBy {
     NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
     NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
@@ -1637,8 +1677,8 @@
     CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"itemDS"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[ITEM_DOC_ID, CATEGORY_DOC_ID]
-                              from: [CBLQueryDataSource database: self.db as: @"categoryDS"]
-                              join: @[join]];
+                                     from: [CBLQueryDataSource database: self.db as: @"categoryDS"]
+                                     join: @[join]];
     Assert(q);
     NSError* error;
 
