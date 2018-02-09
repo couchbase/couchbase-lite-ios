@@ -1,0 +1,47 @@
+COUCHBASE INC. ENTERPRISE LICENSE AGREEMENT - FREE EDITION
+
+IMPORTANT-READ CAREFULLY: BY CLICKING THE "I ACCEPT" BOX OR INSTALLING,
+DOWNLOADING OR OTHERWISE USING THIS SOFTWARE AND ANY ASSOCIATED
+DOCUMENTATION, YOU, ON BEHALF OF YOURSELF OR AS AN AUTHORIZED
+REPRESENTATIVE ON BEHALF OF AN ENTITY ("LICENSEE") AGREE TO ALL THE
+TERMS OF THIS ENTERPRISE LICENSE AGREEMENT - FREE EDITION (THE
+"AGREEMENT") REGARDING YOUR USE OF THE SOFTWARE.  YOU REPRESENT AND
+WARRANT THAT YOU HAVE FULL LEGAL AUTHORITY TO BIND THE LICENSEE TO THIS
+AGREEMENT. IF YOU DO NOT AGREE WITH ALL OF THESE TERMS, DO NOT SELECT
+THE "I ACCEPT" BOX AND DO NOT INSTALL, DOWNLOAD OR OTHERWISE USE THE
+SOFTWARE. THE EFFECTIVE DATE OF THIS AGREEMENT IS THE DATE ON WHICH YOU
+CLICK "I ACCEPT" OR OTHERWISE INSTALL, DOWNLOAD OR USE THE SOFTWARE.
+
+1. License Grant. Subject to Licensee's compliance with the terms and
+conditions of this Agreement, Couchbase Inc. hereby grants to Licensee a
+perpetual, non-exclusive, non-transferable, non-sublicensable,
+royalty-free, limited license to install and use the Software only for
+Licensee's own internal non-production use for the purpose of
+evaluation and/or development.
+
+2. Restrictions. Licensee will not reverse engineer, disassemble, or
+decompile the Software (except to the extent such restrictions are
+prohibited by law).
+
+3. Support. Couchbase Inc. will provide Licensee with: (a) periodic
+Software updates to correct known bugs and errors to the extent
+Couchbase Inc. incorporates such corrections into the free edition
+version of the Software; and (b) access to, and use of, the Couchbase
+Inc. support forum available at the following URL:
+http://www.couchbase.org/forums/.  Couchbase, Inc. may, at its
+discretion, modify, suspend or terminate support at any time upon notice
+to Licensee.
+
+4. Warranty Disclaimer and Limitation of Liability. THE SOFTWARE IS
+PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+COUCHBASE INC. OR THE AUTHORS OR COPYRIGHT HOLDERS IN THE SOFTWARE BE
+LIABLE FOR ANY INDIRECT OR CONSEQUENTIAL DAMAGES, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE OR FOR AN AMOUNT IN THE AGGREGATE EXCEEDING ONE HUNDRED DOLLARS.
+
+5. General.  This Agreement is the entire agreement and is governed by California law.
+
+

@@ -1,0 +1,38 @@
+{ "type":"employee", "firstname":"John","lastname":"Smith","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"John","lastname":"Anderson","department":"2000","location":"101"}
+{ "type":"employee","firstname":"Jane","lastname":"Doe","department":"1000","location":"101"}
+{ "type":"employee","firstname":"Carman","lastname":"Hopscotch","department":"4000","location":"101"}
+{ "type":"employee", "firstname":"Alex","lastname":"Pepe","department":"4000","location":"101"}
+{ "type":"employee", "firstname":"Priya","lastname":"Rajagopal","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Donald","lastname":"Scotch","department":"2000","location":"102"}
+{ "type":"employee", "firstname":"Alice","lastname":"Matt","department":"3000","location":"101"}
+{ "type":"employee", "firstname":"Roslyn","lastname":"Aerni","department":"3000","location":"101"}
+{ "type":"employee", "firstname":"Berneice","lastname":"Cefalu","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Patricia","lastname":"Shoji","department":"2000","location":"101"}
+{ "type":"employee", "firstname":"Kenton","lastname":"Bagent","department":"3000","location":"101"}
+{ "type":"employee", "firstname":"Elyse","lastname":"Leis","department":"4000","location":"101"}
+{ "type":"employee", "firstname":"Maryjo","lastname":"Tariq","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Margaretta","lastname":"Ogwynn","department":"2000","location":"102"}
+{ "type":"employee", "firstname":"Glory","lastname":"Mollenkopf","department":"2000","location":"102"}
+{ "type":"employee", "firstname":"Janette","lastname":"Nicholes","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Brandon","lastname":"Laidlaw","department":"3000","location":"102"}
+{ "type":"employee", "firstname":"Arturo","lastname":"Kinatyan","department":"3000","location":"101"}
+{ "type":"employee", "firstname":"Eddie","lastname":"Colangelo","department":"3000","location":"102"}
+{ "type":"employee", "firstname":"Margrett","lastname":"Heartz","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Verna","lastname":"Wigfield","department":"4000","location":"102"}
+{ "type":"employee", "firstname":"Jarrod","lastname":"Litwiler","department":"4000","location":"101"}
+{ "type":"employee", "firstname":"Kelley","lastname":"Wala","department":"1000","location":"101"}
+{ "type":"employee", "firstname":"Shaunta","lastname":"Geringer","department":"1000","location":"102"}
+{ "type":"employee", "firstname":"Ira","lastname":"Rechel","department":"1000","location":"102"}
+{ "type":"employee", "firstname":"Rickie","lastname":"Bakaler","department":"2000","location":"102"}
+{ "type":"employee", "firstname":"Georgetta","lastname":"Kolding","department":"2000","location":"101"}
+{ "type":"employee", "firstname":"Concetta","lastname":"Rotondo","department":"1000","location":"102"}
+{ "type":"employee", "firstname":"Chas","lastname":"Cefalu","department":"6000","location":"101"}
+{ "type":"department", "name": "Engineering","code": "1000","head":{"firstname":"Ira","lastname":"Rechel"}}
+{ "type":"department", "name": "Product Management","code": "2000","head":{"firstname":"Patricia","lastname":"Shoji"}}
+{ "type":"department", "name": "Marketing","code": "3000","head":{"firstname":"Arturo","lastname":"Kinatyan"}}
+{ "type":"department", "name": "Sales","code": "4000","head":{"firstname":"Alex","lastname":"Pepe"}}
+{ "type":"department", "name": "HR","code": "5000"}
+{ "type":"department", "name": "Quality","code": "7000"}
+{ "type":"location", "name":"HQ","address": "1123 6th St. Melbourne, FL 32904 ","code": "101"}
+{ "type":"location", "name": "Central HQ","address":"44 Shirley Ave. West Chicago, IL 60185","code": "102"}
