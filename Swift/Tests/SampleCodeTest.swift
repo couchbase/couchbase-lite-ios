@@ -1,9 +1,20 @@
 //
 //  SampleCodeTest.swift
-//  CBL Swift
+//  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 1/25/18.
-//  Copyright © 2018 Couchbase. All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 import XCTest
@@ -62,22 +73,22 @@ class SampleCodeTest: CBLTestCase {
         database = self.db
         
         // <doc>
-        let dict: [String: Any] = ["type": "task",
-                                   "owner": "todo",
-                                   "createdAt": Date()]
-        let newTask = MutableDocument(data: dict)
+        let newTask = MutableDocument()
+            .setString("task", forKey: "type")
+            .setString("todo", forKey: "owner")
+            .setDate(Date(), forKey: "createdAt")
         try database.saveDocument(newTask)
         // </doc>
     }
     
     func dontTestMutability() throws {
         database = self.db
-        let newTask = MutableDocument()
         
         // <doc>
-        // newTask is a MutableDocument
-        newTask.setString("apples", forKey: "name")
-        try database.saveDocument(newTask)
+        guard let document = database.document(withID: "xyz") else { return }
+        let mutableDocument = document.toMutable()
+        mutableDocument.setString("apples", forKey: "name")
+        try database.saveDocument(mutableDocument)
         // </doc>
     }
     
@@ -121,7 +132,7 @@ class SampleCodeTest: CBLTestCase {
         let appleImage = UIImage(named: "avatar.jpg")!
         let imageData = UIImageJPEGRepresentation(appleImage, 1)!
         
-        let blob = Blob(contentType: "image/jpg", data: imageData)
+        let blob = Blob(contentType: "image/jpeg", data: imageData)
         newTask.setBlob(blob, forKey: "avatar")
         try database.saveDocument(newTask)
         
@@ -189,7 +200,7 @@ class SampleCodeTest: CBLTestCase {
         let query = QueryBuilder
             .select(SelectResult.all())
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("hotel")))
+            .where(Expression.property("type").equalTo(Expression.string("hotel")))
             .limit(Expression.int(10))
         
         do {
@@ -215,8 +226,8 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("public_likes")
             )
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("hotel"))
-                .and(ArrayFunction.contains(Expression.property("public_likes"), value: Expression.value("Armani Langworth")))
+            .where(Expression.property("type").equalTo(Expression.string("hotel"))
+                .and(ArrayFunction.contains(Expression.property("public_likes"), value: Expression.string("Armani Langworth")))
         )
         
         do {
@@ -238,8 +249,8 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("name")
             )
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("landmark"))
-                .and( Expression.property("name").like(Expression.value("Royal engineers museum")))
+            .where(Expression.property("type").equalTo(Expression.string("landmark"))
+                .and( Expression.property("name").like(Expression.string("Royal engineers museum")))
             )
             .limit(Expression.int(10))
         
@@ -262,8 +273,8 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("name")
             )
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("landmark"))
-                .and( Expression.property("name").like(Expression.value("eng%e%")))
+            .where(Expression.property("type").equalTo(Expression.string("landmark"))
+                .and(Expression.property("name").like(Expression.string("eng%e%")))
             )
             .limit(Expression.int(10))
         // </doc>
@@ -286,8 +297,8 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("name")
             )
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("landmark"))
-                .and( Expression.property("name").like(Expression.value("eng____r")))
+            .where(Expression.property("type").equalTo(Expression.string("landmark"))
+                .and(Expression.property("name").like(Expression.string("eng____r")))
             )
             .limit(Expression.int(10))
         // </doc>
@@ -309,8 +320,8 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("name")
             )
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("landmark"))
-                .and( Expression.property("name").like(Expression.value("\\bEng.*e\\b")))
+            .where(Expression.property("type").equalTo(Expression.string("landmark"))
+                .and(Expression.property("name").like(Expression.string("\\bEng.*e\\b")))
             )
             .limit(Expression.int(10))
         // </doc>
@@ -345,9 +356,9 @@ class SampleCodeTest: CBLTestCase {
                 )
             )
             .where(
-                Expression.property("type").from("route").equalTo(Expression.value("route"))
-                    .and(Expression.property("type").from("airline").equalTo(Expression.value("airline")))
-                    .and(Expression.property("sourceairport").from("route").equalTo(Expression.value("RIX")))
+                Expression.property("type").from("route").equalTo(Expression.string("route"))
+                    .and(Expression.property("type").from("airline").equalTo(Expression.string("airline")))
+                    .and(Expression.property("sourceairport").from("route").equalTo(Expression.string("RIX")))
         )
         // </doc>
         
@@ -369,7 +380,7 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.property("tz"))
             .from(DataSource.database(database))
             .where(
-                Expression.property("type").equalTo(Expression.value("airport"))
+                Expression.property("type").equalTo(Expression.string("airport"))
                     .and(Expression.property("geo.alt").greaterThanOrEqualTo(Expression.int(300)))
             ).groupBy(
                 Expression.property("country"),
@@ -393,7 +404,7 @@ class SampleCodeTest: CBLTestCase {
                 SelectResult.expression(Meta.id),
                 SelectResult.property("title"))
             .from(DataSource.database(database))
-            .where(Expression.property("type").equalTo(Expression.value("hotel")))
+            .where(Expression.property("type").equalTo(Expression.string("hotel")))
             .orderBy(Ordering.property("title").ascending())
             .limit(Expression.int(10))
         // </doc>

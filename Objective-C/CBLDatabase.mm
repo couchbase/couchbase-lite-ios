@@ -2,16 +2,20 @@
 //  CBLDatabase.m
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 12/15/16.
-//  Copyright © 2016 Couchbase. All rights reserved.
+//  Copyright (c) 2016 Couchbase, Inc All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-//  except in compliance with the License. You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software distributed under the
-//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-//  either express or implied. See the License for the specific language governing permissions
-//  and limitations under the License.
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
 
 #import "CBLDatabase.h"
 #import "c4BlobStore.h"
@@ -36,7 +40,6 @@ using namespace fleece;
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseConfiguration* _config;
-    CBLPredicateQuery* _allDocsQuery;
     
     C4DatabaseObserver* _dbObs;
     NSMutableSet* _dbListenerTokens;
@@ -48,6 +51,7 @@ using namespace fleece;
 
 @synthesize name=_name;
 @synthesize dispatchQueue=_dispatchQueue;
+@synthesize queryQueue=_queryQueue;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 @synthesize liveQueries= _liveQueries;
@@ -103,6 +107,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         
         NSString* qName = $sprintf(@"Database <%@>", name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        
+        qName = $sprintf(@"Database-Query <%@>", name);
+        _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        
         _replications = [NSMapTable strongToWeakObjectsMapTable];
         _activeReplications = [NSMutableSet new];
         _liveQueries = [NSMutableSet new];
@@ -244,11 +252,17 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         
         CBLLog(Database, @"Closing %@ at path %@", self, self.path);
     
-        [self stopActiveReplications];
-    
-        [self stopLiveQueries];
-    
-        _allDocsQuery = nil;
+        if (_activeReplications.count > 0) {
+            NSString* err = @"Cannot close the database. Please stop all of "
+                "the replicators before closing the database.";
+            return createError(CBLErrorBusy, err, outError);
+        }
+        
+        if (_liveQueries.count > 0) {
+            NSString* err = @"Cannot close the database. Please remove all of "
+                "the query listeners before closing the database";
+            return createError(CBLErrorBusy, err, outError);
+        }
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -266,9 +280,17 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     CBL_LOCK(self) {
         [self mustBeOpen];
         
-        [self stopActiveReplications];
+        if (_activeReplications.count > 0) {
+            NSString* err = @"Cannot delete the database. Please stop all of "
+            "the replicators before closing the database.";
+            return createError(CBLErrorBusy, err, outError);
+        }
         
-        [self stopLiveQueries];
+        if (_liveQueries.count > 0) {
+            NSString* err = @"Cannot delete the database. Please remove all of "
+            "the query listeners before deleting the database";
+            return createError(CBLErrorBusy, err, outError);
+        }
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -331,22 +353,23 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)outError
 {
-    NSString* toPathStr = databasePath(name, config.directory ?: defaultDirectory());
+    NSString* dir = config.directory ?: defaultDirectory();
+    if (!setupDatabaseDirectory(dir, outError))
+        return NO;
+    
+    NSString* toPathStr = databasePath(name, dir);
     slice toPath(toPathStr.fileSystemRepresentation);
     slice fromPath(path.fileSystemRepresentation);
-
+    
     C4Error err;
     C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
-    if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
-        BOOL success = setupDatabaseDirectory(toPathStr, outError);
-        if (!success) {
-            NSError* removeError;
-            if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
-                CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
-        }
-        return success;
-    } else
+    if (!(c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError))) {
+        NSError* removeError;
+        if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
+            CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
         return NO;
+    }
+    return YES;
 }
 
 
@@ -509,24 +532,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     return YES;
 }
 
-- (void) stopActiveReplications {
-    // Stop all active replications
-    // Make a copy first to handle case when replicators remove themselves
-    // while being stopped
-    NSSet* copyOfActiveReplications = [_activeReplications copy];
-    for (CBLReplicator* repl in copyOfActiveReplications) {
-        [repl stop];
-    }
-}
-
--(void) stopLiveQueries {
-    // Make a copy first to handle case when live queries remove themselves
-    // while being stopped
-    NSSet* copyOfLiveQueries = [_liveQueries copy];
-    for (CBLLiveQuery* query in copyOfLiveQueries) {
-        [query stop];
-    }
-}
 
 static NSString* defaultDirectory() {
     return [CBLDatabaseConfiguration defaultDirectory];

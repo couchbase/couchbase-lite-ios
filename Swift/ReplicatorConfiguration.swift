@@ -2,8 +2,19 @@
 //  ReplicatorConfiguration.swift
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 5/25/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 import Foundation
@@ -91,6 +102,22 @@ public class ReplicatorConfiguration {
         }
     }
     
+    #if os(iOS)
+    /**
+     Allows the replicator to continue replicating in the background. The default
+     value is NO, which means that the replicator will suspend itself when the
+     replicator detects that the application is running in the background.
+     
+     If setting the value to YES, please ensure that the application requests
+     for extending the background task properly.
+     */
+    public var allowReplicatingInBackground: Bool = false {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    #endif
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
@@ -116,6 +143,7 @@ public class ReplicatorConfiguration {
     private let readonly: Bool
     
     init(config: ReplicatorConfiguration, readonly: Bool) {
+        self.readonly = readonly
         self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
@@ -126,7 +154,9 @@ public class ReplicatorConfiguration {
         self.headers = config.headers
         self.channels = config.channels
         self.documentIDs = config.documentIDs
-        self.readonly = readonly
+    #if os(iOS)
+        self.allowReplicatingInBackground = config.allowReplicatingInBackground
+    #endif
     }
     
     func checkReadOnly() {
@@ -150,6 +180,9 @@ public class ReplicatorConfiguration {
         c.headers = self.headers
         c.channels = self.channels
         c.documentIDs = self.documentIDs
+    #if os(iOS)
+        c.allowReplicatingInBackground = self.allowReplicatingInBackground
+    #endif
         return c
     }
 }

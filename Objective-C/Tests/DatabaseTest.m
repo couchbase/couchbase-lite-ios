@@ -2,8 +2,19 @@
 //  DatabaseTest.m
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 1/10/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "CBLTestCase.h"
@@ -1211,6 +1222,85 @@
     // Clean up:
     Assert([nudb close: nil]);
     Assert([CBLDatabase deleteDatabase: dbName inDirectory: dir error: nil]);
+}
+
+
+- (void) testCopyToNonExistingDirectory {
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%lu", (unsigned long)i];
+        CBLMutableDocument* doc = [self createDocument: docID];
+        [doc setValue: docID forKey: @"name"];
+        
+        NSData* data = [docID dataUsingEncoding: NSUTF8StringEncoding];
+        CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: data];
+        [doc setValue: blob forKey: @"data"];
+        
+        [self saveDocument: doc];
+    }
+    
+    NSString* dbName = @"nudb";
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] initWithConfig: _db.config];
+    config.directory = [config.directory stringByAppendingPathComponent: @"nonexistent"];
+    
+    // Ensure no directory:
+    NSString* dir = config.directory;
+    [[NSFileManager defaultManager] removeItemAtPath: dir error: nil];
+    
+    // Copy:
+    NSError* error;
+    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: &error],
+           @"Error when copying the database: %@", error);
+    
+    // Verify:
+    Assert([CBLDatabase databaseExists: dbName inDirectory: dir]);
+    CBLDatabase* nudb = [[CBLDatabase alloc] initWithName: dbName config: config  error: &error];
+    Assert(nudb, @"Cannot open the new database: %@", error);
+    AssertEqual(nudb.count, 10u);
+    
+    CBLQueryExpression* DOCID = [CBLQueryMeta id];
+    CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: DOCID];
+    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+                                         from: [CBLQueryDataSource database: nudb]];
+    CBLQueryResultSet* rs = [query execute: &error];
+    
+    for (CBLQueryResult* r in rs) {
+        NSString* docID = [r stringAtIndex: 0];
+        Assert(docID);
+        
+        CBLDocument* doc = [nudb documentWithID: docID];
+        Assert(doc);
+        AssertEqualObjects([doc stringForKey:@"name"], docID);
+        
+        CBLBlob* blob = [doc blobForKey: @"data"];
+        Assert(blob);
+        
+        NSString* data = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];
+        AssertEqualObjects(data, docID);
+    }
+    
+    // Clean up:
+    Assert([nudb close: nil]);
+    Assert([[NSFileManager defaultManager] removeItemAtPath: dir error: nil]);
+}
+
+
+- (void) testCopyToExistingDatabase {
+    NSString* dbName = @"nudb";
+    
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] initWithConfig: _db.config];
+    config.directory = [config.directory stringByAppendingPathComponent: @"existent"];
+    
+    NSError* error;
+    CBLDatabase* nudb = [[CBLDatabase alloc] initWithName: dbName config: config  error: &error];
+    Assert(nudb, @"Cannot open the new database: %@", error);
+    
+    [self expectError: NSPOSIXErrorDomain code: EEXIST in: ^BOOL(NSError** error2) {
+        return [CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: error2];
+    }];
+    
+    // Clean up:
+    Assert([nudb close: nil]);
+    Assert([[NSFileManager defaultManager] removeItemAtPath: config.directory error: nil]);
 }
 
 

@@ -2,8 +2,19 @@
 //  CBLReplicatorConfiguration.h
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 5/25/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import <Foundation/Foundation.h>
@@ -46,8 +57,8 @@ typedef enum {
 @property (nonatomic) BOOL continuous;
 
 /**
- The conflict resolver for this replicator. Setting nil means using the default
- conflict resolver, where the revision with more history wins.
+ The conflict resolver for this replicator. Without setting the default conflict
+ resolver, where the revision with more history wins, will be used.
  */
 @property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
@@ -80,6 +91,19 @@ typedef enum {
  and/or pulled.
  */
 @property (nonatomic, nullable) NSArray<NSString*>* documentIDs;
+
+
+#if TARGET_OS_IPHONE
+/**
+ Allows the replicator to continue replicating in the background. The default
+ value is NO, which means that the replicator will suspend itself when the
+ replicator detects that the application is being backgrounded.
+ 
+ If setting the value to YES, please ensure that your application delegate
+ requests background time from the OS until the replication finishes.
+ */
+@property (nonatomic) BOOL allowReplicatingInBackground;
+#endif
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

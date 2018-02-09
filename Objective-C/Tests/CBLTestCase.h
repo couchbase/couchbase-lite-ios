@@ -2,8 +2,19 @@
 //  CBLTestCase.h
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 1/10/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import <XCTest/XCTest.h>
@@ -67,9 +78,13 @@ NS_ASSUME_NONNULL_BEGIN
 /** Reads a bundle resource file into an NSString. */
 - (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type;
 
-/** Loads the database with documents read from a JSON resource file in the test bundle.
-    Each line of the file should be a complete JSON object, which will become a document.
+/** Loads the database with documents read from a multiline JSON string.
+    Each line of the string should be a complete JSON object, which will become a document.
     The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
+- (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName;
+
+/** Loads the database with documents read from a JSON resource file in the test bundle,
+    using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName;
 
 /** Utility to check a failure case. This method asserts that the block returns NO, and that

@@ -2,10 +2,22 @@
 //  CBLReplicator.mm
 //  CouchbaseLite
 //
-//  Created by Jens Alfke on 3/13/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
+#import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
@@ -66,11 +78,17 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     unsigned _retryCount;
     CBLReachability* _reachability;
     NSMutableSet* _listenerTokens;
+    
+    // TODO: Instead of having multiple boolean variables, we could
+    // have a enum based variable to represent the replicator state.
+    BOOL _isStopping;
+    BOOL _isSuspending;
 }
 
 @synthesize config=_config;
 @synthesize status=_status;
-
+@synthesize bgMonitor=_bgMonitor;
+@synthesize suspended=_suspended;
 
 + (void) initialize {
     if (self == [CBLReplicator class]) {
@@ -120,22 +138,31 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 
 - (void) start {
-    if (_repl) {
-        CBLWarn(Sync, @"%@ has already started", self);
-        return;
+    CBL_LOCK(self) {
+        if (_repl) {
+            CBLWarn(Sync, @"%@ has already started", self);
+            return;
+        }
+        
+        CBLLog(Sync, @"%@: Starting", self);
+        _retryCount = 0;
+        _suspended = NO;
+        _isSuspending = NO;
+        [self _start];
     }
-    
-    CBLLog(Sync, @"%@: Starting", self);
-    _retryCount = 0;
-    [self _start];
 }
 
 
 - (void) retry {
-    if (_repl || _rawStatus.level != kC4Offline)
-        return;
-    CBLLog(Sync, @"%@: Retrying...", self);
-    [self _start];
+    CBL_LOCK(self) {
+        if (_repl || _rawStatus.level != kC4Offline) {
+            CBLLog(Sync, @"%@: Ignore retrying (status = %d)", self, _rawStatus.level);
+            return;
+        }
+        
+        CBLLog(Sync, @"%@: Retrying...", self);
+        [self _start];
+    }
 }
 
 
@@ -195,6 +222,11 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         CBL_LOCK(_config.database) {
             [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
         }
+        
+    #if TARGET_OS_IPHONE
+        if (!_config.allowReplicatingInBackground)
+            [self setupBackgrounding];
+    #endif
     } else {
         status = {kC4Stopped, {}, err};
     }
@@ -222,10 +254,23 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) stop {
+    CBL_LOCK(self) {
+        _isStopping = YES;
+        _suspended = NO;
+        _isSuspending = NO;
+        [self _stop];
+    }
+}
+
+
+- (void) _stop {
     if (_repl)
         c4repl_stop(_repl);     // this is async; status will change when repl actually stops
-    [_reachability stop];
-    _reachability = nil;
+    else if (_rawStatus.level == kC4Offline)
+        [self c4StatusChanged: {.level = kC4Stopped}];
+    else if (_isStopping)
+        _isStopping = NO;
+    [self stopReachabilityObserver];
 }
 
 
@@ -247,12 +292,20 @@ static BOOL isPull(CBLReplicatorType type) {
 }
 
 
+- (void) stopReachabilityObserver {
+    [_reachability stop];
+    _reachability = nil;
+}
+
+
 - (void) reachabilityChanged {
-    bool reachable = _reachability.reachable;
-    if (reachable && !_repl) {
-        CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
-        _retryCount = 0;
-        [self retry];
+    CBL_LOCK(self) {
+        bool reachable = _reachability.reachable;
+        if (reachable && !_repl) {
+            CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
+            _retryCount = 0;
+            [self retry];
+        }
     }
 }
 
@@ -265,19 +318,23 @@ static BOOL isPull(CBLReplicatorType type) {
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
 {
-    if (!_listenerTokens) {
-        _listenerTokens = [NSMutableSet set];
+    CBL_LOCK(self) {
+        if (!_listenerTokens) {
+            _listenerTokens = [NSMutableSet set];
+        }
+        
+        id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                              queue: queue];
+        [_listenerTokens addObject: token];
+        return token;
     }
-    
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: queue];
-    [_listenerTokens addObject: token];
-    return token;
 }
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    [_listenerTokens removeObject: token];
+    CBL_LOCK(self) {
+        [_listenerTokens removeObject: token];
+    }
 }
 
 
@@ -294,37 +351,54 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
-    if (c4Status.level == kC4Stopped) {
-        if ([self handleError: c4Status.error]) {
-            // Change c4Status to offline, so my state will reflect that, and proceed:
-            c4Status.level = kC4Offline;
+    CBL_LOCK(self) {
+        if (c4Status.level == kC4Stopped && !_isStopping) {
+            if (_isSuspending || [self handleError: c4Status.error]) {
+                // Change c4Status to offline, so my state will reflect that, and proceed:
+                c4Status.level = kC4Offline;
+            }
+        } else if (c4Status.level > kC4Connecting) {
+            _retryCount = 0;
+            [self stopReachabilityObserver];
         }
-    } else if (c4Status.level > kC4Connecting) {
-        _retryCount = 0;
-        [_reachability stop];
-        _reachability = nil;
-    }
-
-    // Update my properties:
-    [self updateStateProperties: c4Status];
-
-    // Post change
-    CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
-                                                                           status: self.status];
-    for (CBLChangeListenerToken* token in _listenerTokens) {
-        void (^listener)(CBLReplicatorChange*) = token.listener;
-        dispatch_async(token.queue, ^{
-            listener(change);
-        });
-    }
-    
-    // If Stopped:
-    if (c4Status.level == kC4Stopped) {
-        // Stopped:
-        [self clearRepl];
-        CBL_LOCK(_config.database) {
-            [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+        
+        // Update my properties:
+        [self updateStateProperties: c4Status];
+        
+        // Post change
+        CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
+                                                                               status: self.status];
+        for (CBLChangeListenerToken* token in _listenerTokens) {
+            void (^listener)(CBLReplicatorChange*) = token.listener;
+            dispatch_async(token.queue, ^{
+                listener(change);
+            });
         }
+        
+        // Clear replicator:
+        if (c4Status.level == kC4Offline && _isSuspending) {
+            _isSuspending = NO;
+            [self clearRepl];
+            if (!_suspended) {
+                _retryCount = 0;
+                [self retry];
+            }
+        } else if (c4Status.level == kC4Stopped) {
+            _isStopping = NO;
+            [self clearRepl];
+        #if TARGET_OS_IPHONE
+            [self endBackgrounding];
+        #endif
+            CBL_LOCK(_config.database) {
+                [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+            }
+        }
+        
+    #if TARGET_OS_IPHONE
+        //  End the current background task when the replicator is idle:
+        if (c4Status.level == kC4Idle)
+            [self endCurrentBackgroundTask];
+    #endif
     }
 }
 
@@ -341,6 +415,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     [self clearRepl];
     NSError *error = nil;
     convertError(c4err, &error);
+    
     if (transient) {
         // On transient error, retry periodically, with exponential backoff:
         auto delay = retryDelay(++_retryCount);
@@ -393,8 +468,10 @@ static void onDocError(C4Replicator *repl,
     NSString* docIDStr = slice2string(docID);
     auto replicator = (__bridge CBLReplicator*)context;
     dispatch_async(replicator->_dispatchQueue, ^{
-        if (repl == replicator->_repl)
-            [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+        CBL_LOCK(replicator) {
+            if (repl == replicator->_repl)
+                [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+        }
     });
 }
 
@@ -411,7 +488,7 @@ static void onDocError(C4Replicator *repl,
         if (![_config.database resolveConflictInDocument: docID
                                            usingResolver: _config.conflictResolver
                                                    error: &error]) {
-            CBLWarn(Sync, @"Conflict resolution of '%@' failed: %@", docID, error);
+            CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, docID, error);
             // TODO: Should pass error along to listener
         }
     } else {
@@ -423,6 +500,52 @@ static void onDocError(C4Replicator *repl,
                (pushing ? "pushing" : "pulling"),
                docID, error);
         // TODO: Call an optional listener (API TBD)
+    }
+}
+
+
+#pragma mark - BACKGROUNDING SUPPORT
+
+
+- (BOOL) active {
+    CBL_LOCK(self) {
+        return (_rawStatus.level == kC4Connecting || _rawStatus.level == kC4Busy);
+    }
+}
+
+
+- (BOOL) suspended {
+    CBL_LOCK(self) {
+        return _suspended;
+    }
+}
+
+
+- (void) setSuspended: (BOOL)suspended {
+    CBL_LOCK(self) {
+        if (_isStopping || _rawStatus.level == kC4Stopped) {
+            CBLLog(Sync, @"%@: Ignore setting suspended = %d (%@)",
+                   self, suspended, (_isStopping ? @"stopping" : @"stoppped"));
+            return;
+        }
+        
+        if (_suspended != suspended) {
+            CBLLog(Sync, @"%@: Set suspended = %d (suspending = %d)",
+                   self, suspended, _isSuspending);
+            
+            _suspended = suspended;
+            
+            if (_isSuspending)
+                return;
+            
+            if (_suspended) {
+                _isSuspending = YES;
+                [self _stop];
+            } else {
+                _retryCount = 0;
+                [self retry];
+            }
+        }
     }
 }
 

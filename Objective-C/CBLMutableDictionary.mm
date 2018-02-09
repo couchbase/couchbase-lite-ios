@@ -2,8 +2,19 @@
 //  CBLMutableDictionary.mm
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 4/12/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "CBLMutableDictionary.h"
@@ -45,12 +56,16 @@ using namespace fleeceapi;
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: false];
+    CBL_LOCK(self.sharedLock) {
+        return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: false];
+    }
 }
 
 
 - (BOOL) changed {
-    return _dict.isMutated();
+    CBL_LOCK(self.sharedLock) {
+        return _dict.isMutated();
+    }
 }
 
 
@@ -58,14 +73,16 @@ using namespace fleeceapi;
 
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
-    CBLStringBytes keySlice(key);
-    const MValue<id> &oldValue = _dict.get(keySlice);
-    
-    if (!value) value = [NSNull null]; // Store NSNull
-    value = [value cbl_toCBLObject];
-    if (cbl::valueWouldChange(value, oldValue, _dict)) {
-        _dict.set(keySlice, value);
-        [self keysChanged];
+    CBL_LOCK(self.sharedLock) {
+        CBLStringBytes keySlice(key);
+        const MValue<id> &oldValue = _dict.get(keySlice);
+        
+        if (!value) value = [NSNull null]; // Store NSNull
+        value = [value cbl_toCBLObject];
+        if (cbl::valueWouldChange(value, oldValue, _dict)) {
+            _dict.set(keySlice, value);
+            [self keysChanged];
+        }
     }
 }
 
@@ -126,20 +143,24 @@ using namespace fleeceapi;
 
 
 - (void) removeValueForKey: (NSString *)key {
-    CBLStringBytes keySlice(key);
-    _dict.remove(keySlice);
-    [self keysChanged];
+    CBL_LOCK(self.sharedLock) {
+        CBLStringBytes keySlice(key);
+        _dict.remove(keySlice);
+        [self keysChanged];
+    }
 }
 
 
 - (void) setData: (nullable NSDictionary<NSString*,id>*)data {
-    _dict.clear();
-    
-    [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        CBLStringBytes keySlice(key);
-        _dict.set(keySlice, [value cbl_toCBLObject]);
-    }];
-    [self keysChanged];
+    CBL_LOCK(self.sharedLock) {
+        _dict.clear();
+        
+        [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+            CBLStringBytes keySlice(key);
+            _dict.set(keySlice, [value cbl_toCBLObject]);
+        }];
+        [self keysChanged];
+    }
 }
 
 

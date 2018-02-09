@@ -2,8 +2,19 @@
 //  CBLMutableArray.mm
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 4/12/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "CBLMutableArray.h"
@@ -40,7 +51,9 @@
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: false];
+    CBL_LOCK(self.sharedLock) {
+        return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: false];
+    }
 }
 
 
@@ -55,15 +68,17 @@
 
 
 - (void) setValue: (id)value atIndex: (NSUInteger)index {
-    // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
-    // a JSON "null". But Cocoa doesn't allow this and throws an exception.
-    // For cross-platform consistency we're allowing nil values on Apple platforms too,
-    // by translating them to an NSNull so they have the same behavior in the document.
-    if (!value) value = [NSNull null];
-    
-    if (cbl::valueWouldChange(value, _array.get(index), _array)) {
-        if (!_array.set(index, [value cbl_toCBLObject]))
-            throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
+        // a JSON "null". But Cocoa doesn't allow this and throws an exception.
+        // For cross-platform consistency we're allowing nil values on Apple platforms too,
+        // by translating them to an NSNull so they have the same behavior in the document.
+        if (!value) value = [NSNull null];
+        
+        if (cbl::valueWouldChange(value, _array.get(index), _array)) {
+            if (!_array.set(index, [value cbl_toCBLObject]))
+                throwRangeException(index);
+        }
     }
 }
 
@@ -127,9 +142,11 @@
 
 
 - (void) addValue: (id)value  {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
-    if (!value) value = [NSNull null];
-    _array.append([value cbl_toCBLObject]);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
+        if (!value) value = [NSNull null];
+        _array.append([value cbl_toCBLObject]);
+    }
 }
 
 
@@ -192,10 +209,12 @@
 
 
 - (void) insertValue: (id)value atIndex: (NSUInteger)index {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
-    if (!value) value = [NSNull null];
-    if (!_array.insert(index, [value cbl_toCBLObject]))
-        throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
+        if (!value) value = [NSNull null];
+        if (!_array.insert(index, [value cbl_toCBLObject]))
+            throwRangeException(index);
+    }
 }
 
 
@@ -258,9 +277,11 @@
 
 
 - (void) setData:(nullable NSArray *)data {
-    _array.clear();
-    for (id obj in data)
-        _array.append([obj cbl_toCBLObject]);
+    CBL_LOCK(self.sharedLock) {
+        _array.clear();
+        for (id obj in data)
+            _array.append([obj cbl_toCBLObject]);
+    }
 }
 
 
@@ -268,8 +289,10 @@
 
 
 - (void) removeValueAtIndex:(NSUInteger)index {
-    if (!_array.remove(index))
-        throwRangeException(index);
+    CBL_LOCK(self.sharedLock) {
+        if (!_array.remove(index))
+            throwRangeException(index);
+    }
 }
 
 

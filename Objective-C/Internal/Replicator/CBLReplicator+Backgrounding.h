@@ -1,5 +1,5 @@
 //
-//  CBLEndpoint.h
+//  CBLReplicator+Backgrounding.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2018 Couchbase, Inc All rights reserved.
@@ -17,12 +17,22 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
+#if TARGET_OS_IPHONE
 
+#import <CouchbaseLite/CouchbaseLite.h>
 
-/**
- Replication target endpoint.
- */
-@protocol CBLEndpoint <NSObject>
+@interface CBLReplicator (Backgrounding)
+
+- (void) setupBackgrounding;
+
+- (void) endBackgrounding;
+
+- (void) endCurrentBackgroundTask;
+
+- (void) appBackgrounding; // Make the method available for testing
+
+- (void) appForegrounding; // Make the method available for testing
+
 @end
 
+#endif

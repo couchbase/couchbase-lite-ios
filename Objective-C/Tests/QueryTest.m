@@ -2,8 +2,19 @@
 //  QueryTest.m
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 3/13/17.
-//  Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "CBLTestCase.h"
@@ -527,6 +538,46 @@
 }
 
 
+- (void) testCrossJoin2 {
+    [self loadJSONResource:@"join"];
+    CBLQueryExpression* FIRSTNAME  = [CBLQueryExpression property: @"firstname" from:@"employeeDS"];
+    CBLQueryExpression* LASTNAME  = [CBLQueryExpression property: @"lastname" from:@"employeeDS"];
+    CBLQueryExpression* DEPTNAME  = [CBLQueryExpression property: @"name" from:@"departmentDS"];
+
+    NSArray* results = @[[CBLQuerySelectResult expression: FIRSTNAME],
+                         [CBLQuerySelectResult expression: LASTNAME],
+                         [CBLQuerySelectResult expression: DEPTNAME]];
+
+
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"employeeDS"]];
+
+
+    CBLQueryExpression* expr1 = [[CBLQueryExpression property:@"type" from:@"employeeDS"]  equalTo: [CBLQueryExpression string:@"employee"]];
+    CBLQueryExpression* expr2 = [[CBLQueryExpression property:@"type" from:@"departmentDS"] equalTo :[CBLQueryExpression string:@"department"]];
+
+    CBLQueryJoin* join = [CBLQueryJoin crossJoin:[CBLQueryDataSource database: self.db as: @"departmentDS"]];
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db as: @"employeeDS"]
+                                     join: @[join]
+                                    where:[expr1 andExpression:expr2]];
+
+
+    Assert(q);
+    NSError* error;
+
+    NSLog(@"%@",[q explain:nil]);
+
+    CBLQueryResultSet* rs = [q execute: &error];
+
+    NSUInteger i = 0;
+    NSArray* res = [rs allResults];
+    for (CBLQueryResult* r in res) {
+        NSLog(@" %@",[r toDictionary]);
+
+        i++;
+    }
+
+}
 - (void) testGroupBy {
     NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
     NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
@@ -1419,65 +1470,62 @@
     [q removeChangeListenerWithToken: token];
 }
 
-- (void) testLiveQueryCleanUpAfterCloseDatabase {
-    // Add a live query to the DB
-    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+- (void) testCloseDatabaseWithActiveLiveQuery {
+    // Add a live query to the DB:
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]];
-    
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
-       
+        [x fulfill];
+    }];
+    [self waitForExpectations: @[x] timeout: 2.0];
+    
+    // Confirm the addition of query:
+    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
+    
+    // Close Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db close: err];
     }];
     
-    // Confirm the addition of query
-    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
-
-    // Close Database - This should trigger a stop of live query
-    NSError* error;
-    Assert([self.db close:&error]);
-    
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
-            break;
-    }
-    
-    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
-
+    // Remove the listener:
     [q removeChangeListenerWithToken: token];
     
+    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
+    
+    // Close Database:
+    NSError* error;
+    Assert([self.db close: &error], @"Cannot close database: %@", error);
+    
+    sleep(2);
 }
 
 
-- (void) testLiveQueryCleanUpAfterDeleteDatabase {
-    // Add a live query to the DB
-    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+- (void) testDeleteDatabaseWithActiveLiveQuery {
+    // Add a live query to the DB:
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]];
-    
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
-        
+        [x fulfill];
     }];
+    [self waitForExpectations: @[x] timeout: 2.0];
     
-    // Confirm the addition of query    
+    // Confirm the addition of query:
     AssertEqual(self.db.liveQueries.count,(unsigned long)1);
 
+    // Delete Database:
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
+        return [self.db delete: err];
+    }];
     
-    // Close Database - This should trigger a stop of live query
-    NSError* error;
-    Assert([self.db delete:&error]);
-    
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
-            break;
-    }
-    
+    // Remove the listener:
+    [q removeChangeListenerWithToken: token];
     AssertEqual(self.db.liveQueries.count,(unsigned long)0);
     
-    [q removeChangeListenerWithToken: token];
+    // Delete Database:
+    NSError* error;
+    Assert([self.db delete: &error], @"Cannot delete database: %@", error);
 }
 
 
@@ -1598,5 +1646,54 @@
     AssertFalse([r containsValueForKey: @"age"]);
     AssertEqualObjects([r toDictionary], (@{@"name": @"Scott", @"address": [NSNull null]}));
 }
+
+
+- (void) testForumJoin {
+    [self loadJSONString:
+     @"{\"id\":\"ecc:102\",\"type\":\"category\",\"items\":[\"eci:742\",\"eci:743\",\"eci:744\"],\"name\":\"Skills\"}\n"
+      "{\"id\":\"eci:742\",\"type\":\"item\",\"chinese\":\"技术\",\"english\":\"technique\",\"pinyin\":\"jìshù\"}\n"
+      "{\"id\":\"eci:743\",\"type\":\"item\",\"chinese\":\"技术\",\"english\":\"skill\",\"pinyin\":\"jìqiǎo\"}"
+                   named: @"forum.json"];
+
+
+    CBLQuerySelectResult* ITEM_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"itemDS"] as:@"ITEMID"];
+
+
+    CBLQuerySelectResult* CATEGORY_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"categoryDS"] as:@"CATEGORYID"];
+
+    CBLQueryExpression* ITEMID  = [CBLQueryExpression property:@"id" from: @"itemDS"];
+
+    CBLQueryExpression* CATEGORYITEMS  = [CBLQueryExpression property: @"items" from:@"categoryDS"] ;
+    CBLQueryVariableExpression* CATEGORYITEMVAR = [CBLQueryArrayExpression variableWithName: @"item"];
+
+    CBLQueryExpression* on = [CBLQueryArrayExpression
+                              any: CATEGORYITEMVAR
+                              in: CATEGORYITEMS
+                              satisfies: [CATEGORYITEMVAR equalTo: ITEMID]];
+
+
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"itemDS"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[ITEM_DOC_ID, CATEGORY_DOC_ID]
+                                     from: [CBLQueryDataSource database: self.db as: @"categoryDS"]
+                                     join: @[join]];
+    Assert(q);
+    NSError* error;
+
+    NSLog(@"%@",[q explain:nil]);
+
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs);
+
+    int i = 0;
+    for (CBLQueryResult* r in rs) {
+        NSLog(@" %@",[r toDictionary]);
+        i++;
+    }
+    AssertEqual(i, 2);
+}
+
 
 @end
