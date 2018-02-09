@@ -58,9 +58,7 @@
 #ifdef COUCHBASE_ENTERPRISE
     static const int expectedError = CBLErrorUnreadableDatabase;
 #else
-    static const int expectedError = CBLErrorUnreadableDatabase;
-    // TODO: Enable this test when moving to Lite Core without SQLCipher
-    //static const int expectedError = CBLErrorUnsupported;
+    static const int expectedError = CBLErrorUnsupported;
 #endif
 
     // Try to reopen with password (fails):
