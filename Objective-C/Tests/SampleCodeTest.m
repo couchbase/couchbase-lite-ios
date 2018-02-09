@@ -77,10 +77,10 @@
     CBLDatabase *database = self.db;
     
     // <doc>
-    NSDictionary *dict = @{@"type": @"task",
-                           @"owner": @"todo",
-                           @"createdAt": [NSDate date]};
-    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] initWithData:dict];
+    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
+    [newTask setString:@"task" forKey:@"task"];
+    [newTask setString:@"todo" forKey:@"owner"];
+    [newTask setString:@"task" forKey:@"createdAt"];
     CBLDocument *saved = [database saveDocument:newTask error:&error];
     // </doc>
     
@@ -89,13 +89,13 @@
 
 - (void) dontTestMutability {
     NSError *error;
-    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
     CBLDatabase *database = self.db;
     
     // <doc>
-    // newTask is a MutableDocument
-    [newTask setString:@"apples" forKey:@"name"];
-    [database saveDocument:newTask error:&error];
+    CBLDocument *document = [database documentWithID:@"xyz"];
+    CBLMutableDocument *mutableDocument = [document toMutable];
+    [mutableDocument setString:@"apples" forKey:@"name"];
+    [database saveDocument:mutableDocument error:&error];
     // </doc>
 }
 
@@ -222,7 +222,7 @@
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     CBLQuerySelectResult *likes = [CBLQuerySelectResult property:@"public_likes"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"hotel"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"hotel"]];
     CBLQueryExpression *contains = [CBLQueryArrayFunction contains:[CBLQueryExpression property:@"public_likes"]
                                                              value:[CBLQueryExpression string:@"Armani Langworth"]];
     
@@ -246,8 +246,8 @@
     CBLQuerySelectResult *country = [CBLQuerySelectResult property:@"country"];
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"landmark"]];
-    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression value:@"Royal engineers museum"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"landmark"]];
+    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression string:@"Royal engineers museum"]];
     
     CBLQuery *query = [CBLQueryBuilder select:@[id, country, name]
                                          from:[CBLQueryDataSource database:database]
@@ -268,8 +268,8 @@
     CBLQuerySelectResult *country = [CBLQuerySelectResult property:@"country"];
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"landmark"]];
-    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression value:@"eng%e%"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"landmark"]];
+    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression string:@"eng%e%"]];
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
@@ -291,8 +291,8 @@
     CBLQuerySelectResult *country = [CBLQuerySelectResult property:@"country"];
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"landmark"]];
-    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression value:@"eng____r"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"landmark"]];
+    CBLQueryExpression *like = [[CBLQueryExpression property:@"name"] like:[CBLQueryExpression string:@"eng____r"]];
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
@@ -313,8 +313,8 @@
     CBLQuerySelectResult *id = [CBLQuerySelectResult expression:[CBLQueryMeta id]];
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"landmark"]];
-    CBLQueryExpression *regex = [[CBLQueryExpression property:@"name"] regex:[CBLQueryExpression value:@"\\bEng.*e\\b"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"landmark"]];
+    CBLQueryExpression *regex = [[CBLQueryExpression property:@"name"] regex:[CBLQueryExpression string:@"\\bEng.*e\\b"]];
     
     CBLQueryLimit *limit = [CBLQueryLimit limit:[CBLQueryExpression integer:10]];
     
@@ -341,9 +341,9 @@
     CBLQueryJoin *join = [CBLQueryJoin join:[CBLQueryDataSource database:database as:@"route"]
                                          on:[[CBLQueryMeta idFrom:@"airline"] equalTo:[CBLQueryExpression property:@"airlineid" from:@"route"]]];
     
-    CBLQueryExpression *typeRoute = [[CBLQueryExpression property:@"type" from:@"route"] equalTo:[CBLQueryExpression value:@"route"]];
-    CBLQueryExpression *typeAirline = [[CBLQueryExpression property:@"type" from:@"airline"] equalTo:[CBLQueryExpression value:@"airline"]];
-    CBLQueryExpression *sourceRIX = [[CBLQueryExpression property:@"sourceairport" from:@"route"] equalTo:[CBLQueryExpression value:@"RIX"]];
+    CBLQueryExpression *typeRoute = [[CBLQueryExpression property:@"type" from:@"route"] equalTo:[CBLQueryExpression string:@"route"]];
+    CBLQueryExpression *typeAirline = [[CBLQueryExpression property:@"type" from:@"airline"] equalTo:[CBLQueryExpression string:@"airline"]];
+    CBLQueryExpression *sourceRIX = [[CBLQueryExpression property:@"sourceairport" from:@"route"] equalTo:[CBLQueryExpression string:@"RIX"]];
     
     CBLQuery *query = [CBLQueryBuilder select:@[name, callsign, dest, stops, airline]
                                          from:[CBLQueryDataSource database:database as:@"airline"]
@@ -362,7 +362,7 @@
     CBLQuerySelectResult *country = [CBLQuerySelectResult property:@"country"];
     CBLQuerySelectResult *tz = [CBLQuerySelectResult property:@"tz"];
     
-    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"airport"]];
+    CBLQueryExpression *type = [[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"airport"]];
     CBLQueryExpression *geoAlt = [[CBLQueryExpression property:@"geo.alt"] greaterThanOrEqualTo:[CBLQueryExpression integer:300]];
     
     CBLQuery *query = [CBLQueryBuilder select:@[count, country, tz]
@@ -384,7 +384,7 @@
     
     CBLQuery *query = [CBLQueryBuilder select:@[id, title]
                                          from:[CBLQueryDataSource database:database]
-                                        where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression value:@"hotel"]]
+                                        where:[[CBLQueryExpression property:@"type"] equalTo:[CBLQueryExpression string:@"hotel"]]
                                       orderBy:@[[[CBLQueryOrdering property:@"title"] descending]]];
     // </doc>
     
