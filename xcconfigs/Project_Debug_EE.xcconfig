@@ -1,9 +1,7 @@
 //
 //  Project_Debug_EE.xcconfig
-//  CouchbaseLite
 //
-//  Created by Jens Alfke on 2/12/18.
-//  Copyright © 2018 Couchbase. All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
 //
 
 EE_PP_DEFS = COUCHBASE_ENTERPRISE
