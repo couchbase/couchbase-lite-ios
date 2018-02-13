@@ -842,6 +842,8 @@
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTrustCheck.m; sourceTree = "<group>"; };
+		2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug_EE.xcconfig; sourceTree = "<group>"; };
+		2791EA6720327E8B00BD813C /* Project_Release_EE.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release_EE.xcconfig; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
 		27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryEnumerator.mm; sourceTree = "<group>"; };
 		27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthenticator.h; sourceTree = "<group>"; };
@@ -1498,9 +1500,11 @@
 				9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */,
 				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
 				275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */,
+				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
 				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
 				9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */,
-				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
+				2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */,
+				2791EA6720327E8B00BD813C /* Project_Release_EE.xcconfig */,
 			);
 			path = xcconfigs;
 			sourceTree = "<group>";
@@ -3231,6 +3235,347 @@
 			};
 			name = Release;
 		};
+		2791EA4320327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		2791EA4420327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = "";
+			};
+			name = "Debug-EE";
+		};
+		2791EA4520327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		2791EA4620327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+				);
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteTests;
+				PRODUCT_NAME = CouchbaseLiteTests;
+			};
+			name = "Debug-EE";
+		};
+		2791EA4720327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+				);
+			};
+			name = "Debug-EE";
+		};
+		2791EA4820327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		2791EA4920327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Swift/Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftTests;
+				PRODUCT_NAME = CouchbaseLiteSwiftTests;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+			};
+			name = "Debug-EE";
+		};
+		2791EA4A20327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBLPerfTests;
+				SDKROOT = macosx;
+			};
+			name = "Debug-EE";
+		};
+		2791EA4B20327D4E00BD813C /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = All;
+			};
+			name = "Debug-EE";
+		};
+		2791EA5D20327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		2791EA5E20327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				SWIFT_VERSION = "";
+			};
+			name = "Release-EE";
+		};
+		2791EA5F20327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		2791EA6020327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+				);
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteTests;
+				PRODUCT_NAME = CouchbaseLiteTests;
+			};
+			name = "Release-EE";
+		};
+		2791EA6120327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+				);
+			};
+			name = "Release-EE";
+		};
+		2791EA6220327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		2791EA6320327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Swift/Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftTests;
+				PRODUCT_NAME = CouchbaseLiteSwiftTests;
+				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
+			};
+			name = "Release-EE";
+		};
+		2791EA6420327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_NS_ASSERTIONS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = CBLPerfTests;
+				SDKROOT = macosx;
+			};
+			name = "Release-EE";
+		};
+		2791EA6520327D5600BD813C /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = All;
+			};
+			name = "Release-EE";
+		};
 		27BF031D1FB6290C003D5BB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3367,7 +3712,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92861E4D30A4007FD5A2 /* Debug */,
+				2791EA4520327D4E00BD813C /* Debug-EE */,
 				275F92871E4D30A4007FD5A2 /* Release */,
+				2791EA5F20327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3376,7 +3723,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92891E4D30A4007FD5A2 /* Debug */,
+				2791EA4920327D4E00BD813C /* Debug-EE */,
 				275F928A1E4D30A4007FD5A2 /* Release */,
+				2791EA6320327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3385,7 +3734,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275FF6171E3FE9DB005F90DD /* Debug */,
+				2791EA4A20327D4E00BD813C /* Debug-EE */,
 				275FF6181E3FE9DB005F90DD /* Release */,
+				2791EA6420327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3394,7 +3745,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27BF031D1FB6290C003D5BB8 /* Debug */,
+				2791EA4B20327D4E00BD813C /* Debug-EE */,
 				27BF031E1FB6290C003D5BB8 /* Release */,
+				2791EA6520327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3403,7 +3756,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0D1E442A3E00291631 /* Debug */,
+				2791EA4720327D4E00BD813C /* Debug-EE */,
 				938CFA0E1E442A3E00291631 /* Release */,
+				2791EA6120327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3412,7 +3767,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0F1E442A3E00291631 /* Debug */,
+				2791EA4820327D4E00BD813C /* Debug-EE */,
 				938CFA101E442A3E00291631 /* Release */,
+				2791EA6220327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3421,7 +3778,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D9241E03434200464432 /* Debug */,
+				2791EA4320327D4E00BD813C /* Debug-EE */,
 				9398D9251E03434200464432 /* Release */,
+				2791EA5D20327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3430,7 +3789,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D9271E03434200464432 /* Debug */,
+				2791EA4420327D4E00BD813C /* Debug-EE */,
 				9398D9281E03434200464432 /* Release */,
+				2791EA5E20327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3439,7 +3800,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D92A1E03434200464432 /* Debug */,
+				2791EA4620327D4E00BD813C /* Debug-EE */,
 				9398D92B1E03434200464432 /* Release */,
+				2791EA6020327D5600BD813C /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

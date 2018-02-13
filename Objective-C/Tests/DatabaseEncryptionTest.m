@@ -273,10 +273,10 @@
     
     // Query documents:
     CBLQueryExpression* SEQ = [CBLQueryExpression property: @"seq"];
-    CBLQuery* query = [CBLQuery select: @[[CBLQuerySelectResult expression: SEQ]]
-                                  from: [CBLQueryDataSource database: _seekrit]
-                                 where: [SEQ notNullOrMissing]
-                               orderBy: @[[CBLQueryOrdering expression: SEQ]]];
+    CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: SEQ]]
+                                         from: [CBLQueryDataSource database: _seekrit]
+                                        where: [SEQ notNullOrMissing]
+                                      orderBy: @[[CBLQueryOrdering expression: SEQ]]];
     CBLQueryResultSet* rs = [query execute: &error];
     Assert(rs, @"Error when running the query: %@", error);
     AssertEqual(rs.allObjects.count, 100u);
