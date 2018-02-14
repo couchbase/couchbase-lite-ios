@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -o <Output Directory>\n" 
+  echo "\nUsage: ${0} -o <Output Directory> [--EE]\n" 
 }
 
 if ! gem query -i -n jazzy 1>/dev/null;
@@ -13,13 +13,16 @@ then
     exit 3
 fi
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   key=${1}
   case $key in
       -o)
       OUTPUT_DIR=${2}
       shift
+      ;;
+      --EE)
+      EE="Y"
       ;;
       *)
       usage
@@ -35,5 +38,12 @@ then
   exit 4
 fi
 
-jazzy --clean --xcodebuild-arguments "-scheme,CBL Swift" --module CouchbaseLiteSwift --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
-jazzy --clean --objc --xcodebuild-arguments --objc,Objective-C/CouchbaseLite.h,--,-x,objective-c,-isysroot,$(xcrun --show-sdk-path),-I,$(pwd) --module CouchbaseLite --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLite
+if [ -z "$EE" ]
+then
+  SCHEME="CBL Swift"
+else
+  SCHEME="CBL-EE Swift"
+fi
+
+jazzy --clean --xcodebuild-arguments "-scheme,$SCHEME,sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
+jazzy --clean --objc --xcodebuild-arguments --objc,Objective-C/CouchbaseLite.h,--,-x,objective-c,-isysroot,$(xcrun --show-sdk-path --sdk iphonesimulator),-I,$(pwd) --module CouchbaseLite --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLite

@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform: iOS, tvOS, or macOS> -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--verbose]" 
+  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform: iOS, tvOS, or macOS> [-c <Configuration Name, default is 'Release'>] -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--verbose]" 
 }
 
 while [[ $# -gt 0 ]]
@@ -13,6 +13,10 @@ do
   case $key in
       -s)
       SCHEME=${2}
+      shift
+      ;;
+      -c)
+      CONFIGURATION=${2}
       shift
       ;;
       -p)
@@ -44,9 +48,16 @@ then
   exit 4
 fi
 
+if [ -z "$CONFIGURATION" ]
+then
+  CONFIGURATION="Release"
+fi
+
 echo "Scheme: ${SCHEME}"
+echo "Configuration : ${CONFIGURATION}"
 echo "Platform: ${PLATFORM_NAME}"
 echo "Output Directory: ${OUTPUT_DIR}"
+echo "Version: ${VERSION}"
 
 SDKS=()
 PLATFORM_NAME=`echo $PLATFORM_NAME | tr '[:upper:]' '[:lower:]'`
@@ -89,7 +100,7 @@ OUTPUT_FRAMEWORK_BUNDLE_DIR=${OUTPUT_BASE_DIR}/${FRAMEWORK_FILE_NAME}
 # Building all frameworks based on the SDK list:
 for SDK in "${SDKS[@]}"
   do
-    echo "Running xcodebuild on scheme=${SCHEME} and sdk=${SDK} ..."
+    echo "Running xcodebuild on scheme=${SCHEME} configuration=${CONFIGURATION} and sdk=${SDK} ..."
     CLEAN_CMD=""
     if [[ ${ROUND} == 0 ]]
     then
@@ -111,10 +122,10 @@ for SDK in "${SDKS[@]}"
       fi
     fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} OTHER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} ${VERBOSE} build
+    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} OTHER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} ${VERBOSE} build
 
     # Get the XCode built framework and dsym file path:
-    PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration Release -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`
+    PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`
     FRAMEWORK_FILE_PATH=${PRODUCTS_DIR}/${FRAMEWORK_FILE_NAME}
     DSYM_FILE_PATH=${FRAMEWORK_FILE_PATH}.dSYM
 

@@ -4,16 +4,19 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -o <Output Directory>\n" 
+  echo "\nUsage: ${0} -o <Output Directory> [--EE]\n" 
 }
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   key=${1}
   case $key in
       -o)
       OUTPUT_DIR=${2}
       shift
+      ;;
+      --EE)
+      EE="Y"
       ;;
       *)
       usage
@@ -29,11 +32,18 @@ then
   exit 4
 fi
 
+if [ -z "$EE" ]
+then
+  SCHEME_PREFIX="CBL"
+else
+  SCHEME_PREFIX="CBL-EE"
+fi
+
 # DerivedData Directory
 DERIVED_DATA_DIR="Coverage_DerivedData"
 
 # Objective-C
-SCHEME="CBL ObjC"
+SCHEME="$SCHEME_PREFIX ObjC"
 BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug/CouchbaseLite.framework/CouchbaseLite"
 OUTPUT_COVERAGE_DIR="$OUTPUT_DIR/CouchbaseLite"
 
@@ -46,7 +56,7 @@ xcrun llvm-cov show -format=html -instr-profile="$PROFILE_DATA_FILE" "$BINARY_FI
 rm -rf "$DERIVED_DATA_DIR"
 
 # Swift
-SCHEME="CBL Swift"
+SCHEME="$SCHEME_PREFIX Swift"
 BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug/CouchbaseLiteSwift.framework/CouchbaseLiteSwift"
 OUTPUT_COVERAGE_DIR="$OUTPUT_DIR/CouchbaseLiteSwift"
 
