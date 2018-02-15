@@ -17,10 +17,11 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import <Foundation/Foundation.h>
 #import "CBLEndpoint.h"
 @class CBLDatabase;
-
 
 /**
  Database based replication target endpoint.
@@ -42,3 +43,5 @@
 - (instancetype) init NS_UNAVAILABLE;
 
 @end
+
+#endif

@@ -25,12 +25,10 @@
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
-.objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
-.objc_class_name_CBLEncryptionKey
 .objc_class_name_CBLFullTextIndex
 .objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment
@@ -73,3 +71,7 @@
 _CBLErrorDomain
 _kCBLAllPropertiesName
 
+#ifdef COUCHBASE_ENTERPRISE
+.objc_class_name_CBLDatabaseEndpoint
+.objc_class_name_CBLEncryptionKey
+#endif

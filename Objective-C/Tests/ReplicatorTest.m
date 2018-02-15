@@ -237,6 +237,7 @@
 
 #pragma mark - TESTS:
 
+#ifdef COUCHBASE_ENTERPRISE
 
 - (void)testEmptyPush {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
@@ -697,8 +698,10 @@
     r = nil;
 }
 
+#endif // TARGET_OS_IPHONE
 
-#endif
+
+#endif // COUCHBASE_ENTERPRISE
 
 
 #pragma mark - Sync Gateway Tests

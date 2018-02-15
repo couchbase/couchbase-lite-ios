@@ -40,6 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
 
+#ifdef COUCHBASE_ENTERPRISE
+
 /**
  A key to encrypt the database with. If the database does not exist and is being created, it
  will use this key, and the same key must be given every time it's opened.
@@ -53,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable) CBLEncryptionKey* encryptionKey;
 
+#endif
 
 /**
  Initializes the CBLDatabaseConfiguration object.

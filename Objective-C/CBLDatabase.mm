@@ -25,13 +25,16 @@
 #import "CBLDocument+Internal.h"
 #import "CBLDocumentChangeListenerToken.h"
 #import "CBLDocumentFragment.h"
-#import "CBLEncryptionKey+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLMisc.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "CBLLog+Admin.h"
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLEncryptionKey+Internal.h"
+#endif
 
 using namespace fleece;
 
@@ -316,6 +319,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
+#ifdef COUCHBASE_ENTERPRISE
 - (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)outError {
     CBL_LOCK(self) {
         [self mustBeOpen];
@@ -328,6 +332,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         return YES;
     }
 }
+#endif
 
 
 + (BOOL) deleteDatabase: (NSString*)name
@@ -563,12 +568,15 @@ static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
 
 static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4DatabaseConfig c4config = kDBConfig;
+#ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey != nil)
         c4config.encryptionKey = c4EncryptionKey(config.encryptionKey);
+#endif
     return c4config;
 }
 
 
+#ifdef COUCHBASE_ENTERPRISE
 static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     C4EncryptionKey cKey;
     if (key) {
@@ -579,6 +587,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         cKey.algorithm = kC4EncryptionNone;
     return cKey;
 }
+#endif
 
 
 - (void) mustBeOpen {

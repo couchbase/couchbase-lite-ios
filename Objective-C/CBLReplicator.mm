@@ -187,8 +187,10 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
             .path = path
         };
     } else {
+#ifdef COUCHBASE_ENTERPRISE
         otherDB = ((CBLDatabaseEndpoint*)_config.target).database;
         Assert(otherDB);
+#endif
     }
 
     // Encode the options:

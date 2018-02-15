@@ -19,6 +19,8 @@
 
 import Foundation
 
+
+#if COUCHBASE_ENTERPRISE
 /// The encryption key, a raw AES-256 key data which has exactly 32 bytes in length
 /// or a password string. If the password string is given, it will be internally converted to a
 /// raw AES key using 64,000 rounds of PBKDF2 hashing.
@@ -40,6 +42,7 @@ public enum EncryptionKey {
         }
     }
 }
+#endif
 
 
 /// Configuration for opening a database.
@@ -59,12 +62,14 @@ public class DatabaseConfiguration {
         }
     }
     
+    #if COUCHBASE_ENTERPRISE
     /// The key to encrypt the database with.
     public var encryptionKey: EncryptionKey? {
         willSet(newValue) {
             checkReadOnly()
         }
     }
+    #endif
     
     /// Initializes a DatabaseConfiguration's builder with default values.
     public convenience init() {
@@ -84,7 +89,10 @@ public class DatabaseConfiguration {
         if let c = config {
             self.directory = c.directory
             self.conflictResolver = c.conflictResolver
+            
+            #if COUCHBASE_ENTERPRISE
             self.encryptionKey = c.encryptionKey
+            #endif
         }
         self.readonly = readonly
     }
@@ -102,7 +110,9 @@ public class DatabaseConfiguration {
             config.conflictResolver =
                 BridgingConflictResolver(resolver: self.conflictResolver)
         }
+        #if COUCHBASE_ENTERPRISE
         config.encryptionKey = self.encryptionKey?.impl
+        #endif
         return config
     }
 

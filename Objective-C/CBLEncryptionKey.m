@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "CBLEncryptionKey.h"
 #import "CBLEncryptionKey+Internal.h"
 #import <CommonCrypto/CommonCrypto.h>
@@ -72,3 +74,5 @@
 
 
 @end
+
+#endif

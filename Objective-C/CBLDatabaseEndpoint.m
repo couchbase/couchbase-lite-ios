@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabaseEndpoint.h"
 #import "CBLDatabase.h"
 
@@ -38,3 +39,4 @@
 }
 
 @end
+#endif

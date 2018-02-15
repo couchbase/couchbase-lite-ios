@@ -37,6 +37,7 @@
     // </doc>
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) dontTestEncryption {
     // <doc>
     CBLDatabaseConfiguration *config = [[CBLDatabaseConfiguration alloc] init];
@@ -49,6 +50,7 @@
     }
     // </doc>
 }
+#endif
 
 - (void) dontTestLogging {
     // <doc>

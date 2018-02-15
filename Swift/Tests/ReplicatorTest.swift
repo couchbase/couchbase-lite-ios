@@ -60,10 +60,11 @@ class ReplicatorTest: CBLTestCase {
         wait(for: [x], timeout: 5.0)
         repl.removeChangeListener(withToken: token)
     }
-    
+
+    #if COUCHBASE_ENTERPRISE
     func testEmptyPush() {
         let target = DatabaseEndpoint(database: otherDB)
         run(type: .push, target: target, expectedError: nil)
     }
-    
+    #endif
 }

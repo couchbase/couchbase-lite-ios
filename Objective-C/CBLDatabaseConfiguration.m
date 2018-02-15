@@ -27,7 +27,10 @@
 
 @synthesize directory=_directory;
 @synthesize conflictResolver =_conflictResolver;
+
+#ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
+#endif
 
 
 - (instancetype) init {
@@ -50,7 +53,9 @@
         if (config) {
             _directory = config.directory;
             _conflictResolver = config.conflictResolver;
+#ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
+#endif
         } else {
             _directory = [CBLDatabaseConfiguration defaultDirectory];
             _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
@@ -78,6 +83,7 @@
 }
 
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) setEncryptionKey: (CBLEncryptionKey *)encryptionKey {
     [self checkReadonly];
     
@@ -85,6 +91,7 @@
         _encryptionKey = encryptionKey;
     }
 }
+#endif
 
 
 #pragma mark - Internal

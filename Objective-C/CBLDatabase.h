@@ -212,6 +212,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  */
 - (BOOL) compact: (NSError**)error;
 
+#ifdef COUCHBASE_ENTERPRISE
 /**
  Changes the database's encryption key, or removes encryption if the new key is nil.
  
@@ -220,6 +221,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @return True if the database was successfully re-keyed, or false on failure.
  */
 - (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)error;
+#endif
 
 /**
  Deletes a database of the given name in the given directory.

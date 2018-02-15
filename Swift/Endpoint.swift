@@ -29,6 +29,7 @@ public protocol Endpoint {
     func toImpl() -> CBLEndpoint;
 }
 
+#if COUCHBASE_ENTERPRISE
 /// Database based replication target endpoint.
 public struct DatabaseEndpoint: InternalEndpoint {
     
@@ -47,8 +48,8 @@ public struct DatabaseEndpoint: InternalEndpoint {
     func toImpl() -> CBLEndpoint {
         return CBLDatabaseEndpoint(database: self.database._impl)
     }
-    
-}
+}    
+#endif
 
 /// URL based replication target endpoint.
 public struct URLEndpoint: InternalEndpoint {

@@ -39,6 +39,7 @@ class SampleCodeTest: CBLTestCase {
         // </doc>
     }
     
+    #if COUCHBASE_ENTERPRISE
     func dontTestEncryption() throws {
         // <doc>
         let config = DatabaseConfiguration()
@@ -46,6 +47,7 @@ class SampleCodeTest: CBLTestCase {
         self.database = try Database(name: "my-database", config: config)
         // </doc>
     }
+    #endif
     
     func dontTestLogging() throws {
         // <doc>

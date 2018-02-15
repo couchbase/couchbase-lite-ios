@@ -145,20 +145,25 @@
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
     AssertNotNil(config1.conflictResolver);
+    
+#ifdef COUCHBASE_ENTERPRISE
     AssertNil(config1.encryptionKey);
     AssertNil(config1.encryptionKey);
+#endif
     
     // Custom:
-    CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
     DummyResolver *resolver = [DummyResolver new];
     CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
     config2.directory = @"/tmp/mydb";
     config2.conflictResolver = resolver;
-    config2.encryptionKey = key;
-
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
+    
+#ifdef COUCHBASE_ENTERPRISE
+    CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
+    config2.encryptionKey = key;
     AssertEqualObjects(config2.encryptionKey, key);
+#endif
 }
 
 
