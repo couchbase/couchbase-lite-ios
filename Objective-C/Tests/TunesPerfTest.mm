@@ -256,13 +256,14 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 }
 
 
-// Subroutine that runs a query and returns an array of the first 'returning' property
+// Subroutine that runs a query and returns an array of the first 'select'ed property
 - (NSArray*) collectQueryResults: (CBLQuery*)query {
     @autoreleasepool {
         NSMutableArray* results = [NSMutableArray array];
         NSError* error = nil;
         for (CBLQueryResult* row in [query execute: &error]) {
-            [results addObject: row[0].value];
+            id value = row[0].value ?: [NSNull null];
+            [results addObject: value];
         }
         Assert(!error, @"Query failed: %@", error);
         return results;
@@ -343,7 +344,8 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                 query.parameters = params;
                 NSArray* albums = [self collectQueryResults: query];
                 albumCount += albums.count;
-                //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);
+                VerboseLog(2, @"%lu albums by %@: '%@'",
+                           (long)albums.count, artistName, [albums componentsJoinedByString: @"', '"]);
             }
         }
         __unused double t = bench.stop();

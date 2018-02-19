@@ -33,7 +33,7 @@
 
 
 - (void) addRevisions: (unsigned)numRevisions {
-    CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc"];
+    __block CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc"];
     Assert(doc, @"Couldn't create doc");
     NSError *error;
     BOOL ok = [self.db inBatch: &error usingBlock: ^{
@@ -41,7 +41,8 @@
             @autoreleasepool {
                 [doc setValue: @(i) forKey: @"count"];
                 NSError *error2;
-                Assert([self.db saveDocument: doc error: &error2], @"Save failed: %@", error2);
+                doc = [[self.db saveDocument: doc error: &error2] mutableCopy];
+                Assert(doc, @"Save failed: %@", error2);
             }
         }
     }];
