@@ -70,10 +70,9 @@
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: nDocs];
     for (NSUInteger i = 0; i < nDocs; i++) {
         CBLMutableDocument* doc = [self createDoc];
-        CBLDocument* savedDoc = [self.db saveDocument: doc error: error];
-        if (!savedDoc)
+        if (![self.db saveDocument: doc error: error])
             return nil;
-        [docs addObject: savedDoc];
+        [docs addObject: doc];
     }
     return docs;
 }
@@ -84,7 +83,7 @@
              error: (NSError**)error
 {
     [self setProperties: doc custom: custom];
-    return [self.db saveDocument: doc error: error] != nil;
+    return [self.db saveDocument: doc error: error];
 }
 
 

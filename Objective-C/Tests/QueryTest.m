@@ -61,14 +61,11 @@
 
 
 - (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
-    NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
+    NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
     [doc setValue: @(i) forKey: @"number1"];
     [doc setValue: @(num-i) forKey: @"number2"];
-
-    NSError *error;
-    BOOL saved = [_db saveDocument: doc error: &error] != nil;
-    Assert(saved, @"Couldn't save document: %@", error);
+    [self saveDocument: doc];
     return doc;
 }
 
@@ -494,12 +491,12 @@
     {
 
         if (n == 41) {
-            AssertEqual ([r integerAtIndex: 0], 59u);
+            AssertEqual ([r integerAtIndex: 0], 59);
             AssertNil ([r valueAtIndex: 1]);
         }
         if (n == 42) {
-            AssertEqual ([r integerAtIndex: 0], 58u);
-            AssertEqual ([r integerAtIndex: 1], 42u);
+            AssertEqual ([r integerAtIndex: 0], 58);
+            AssertEqual ([r integerAtIndex: 1], 42);
         }
     }];
     
@@ -1371,7 +1368,7 @@
     for (NSArray* data in testData) {
         CBLMutableDocument* doc = [self createDocument];
         [doc setValue: data[0] forKey: @"value"];
-        CBLDocument* savedDoc = [self saveDocument: doc];
+        [self saveDocument: doc];
         
         CBLQueryExpression* VALUE = [CBLQueryExpression property: @"value"];
         CBLQueryExpression* comparison = [data[2] boolValue] ?
@@ -1387,7 +1384,7 @@
                                         test: ^(uint64_t n, CBLQueryResult* r) { }];
         AssertEqual(numRows, 1u);
         
-        Assert([self.db deleteDocument: savedDoc error: nil]);
+        Assert([self.db deleteDocument: doc error: nil]);
     }
 }
 

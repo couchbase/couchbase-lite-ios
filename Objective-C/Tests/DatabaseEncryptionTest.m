@@ -134,19 +134,15 @@
     
     // Create a doc and then update it:
     CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
-    CBLDocument* savedDoc = [_seekrit saveDocument: doc error: &error];
-    Assert(savedDoc, @"Error when save a document: %@", error);
+    Assert([_seekrit saveDocument: doc error: &error], @"Saving Error: %@", error);
     
-    doc = [savedDoc toMutable];
     [doc setValue: @(84) forKey: @"answer"];
-    savedDoc = [_seekrit saveDocument: doc error: &error];
-    Assert(savedDoc, @"Error when save a document: %@", error);
+    Assert([_seekrit saveDocument: doc error: &error], @"Saving Error: %@", error);
     
     // Compact:
     Assert([_seekrit compact: &error], @"Compaction failed: %@", error);
     
     // Update the document again:
-    doc = [savedDoc toMutable];
     [doc setValue: @(85) forKey: @"answer"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     

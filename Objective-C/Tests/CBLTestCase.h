@@ -44,16 +44,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) NSString* directory;
 
-/** Default conflict resolver set to the database configuration when (re)opening 
-    the default test database (.db property) or when calling the -openDBNamed:error: mehtod. */
-@property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
-
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
 
 /** Reopen the default test database (.db property). */
 - (void) reopenDB;
+
+/** Clean the default test database (.db property) */
+- (void) cleanDB;
 
 /** Create a new document */
 - (CBLMutableDocument*) createDocument;
@@ -64,13 +63,13 @@ NS_ASSUME_NONNULL_BEGIN
 /** Create a new document with the given document ID and data. */
 - (CBLMutableDocument*) createDocument:(nullable NSString *)documentID data: (NSDictionary*)data;
 
-/** Save a document return a new instance of the document from the database. */
-- (CBLDocument*) saveDocument: (CBLMutableDocument*)document;
+/** Save a document in the database. */
+- (void) saveDocument: (CBLMutableDocument*)document;
 
-/** Save a document return a new instance of the document from the database. The eval block
- will be called twice before save and after save. When calling the eval block after save, 
- the new instance of the document will be given. */
-- (CBLDocument*) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
+/** Save a document in the database. The eval block
+    will be called three times, before save, after save with the given document
+    object and after save with a new document objct getting from the database. */
+- (void) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
 
 /** Reads a bundle resource file into an NSData. */
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type;

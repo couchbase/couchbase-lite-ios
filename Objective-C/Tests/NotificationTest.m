@@ -56,11 +56,11 @@
     // Create doc1 and doc2
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    doc1 = [[self saveDocument: doc1] toMutable];
+    [self saveDocument: doc1];
     
     CBLMutableDocument *doc2 = [self createDocument: @"doc2"];
     [doc2 setValue: @"Daniel" forKey: @"name"];
-    doc2 = [[self saveDocument: doc2] toMutable];
+    [self saveDocument: doc2];
     
     // Expectation:
     XCTestExpectation* x = [self expectationWithDescription: @"document change"];
@@ -100,9 +100,9 @@
 
 
 - (void) testAddSameChangeListeners {
-    CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    doc1 = [[self saveDocument: doc1] toMutable];
+    [self saveDocument: doc1];
     
     // Add change listeners:
     XCTestExpectation* x = [self expectationWithDescription: @"document change"];
@@ -138,7 +138,7 @@
 - (void) testRemoveDocumentChangeListener {
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    doc1 = [[self saveDocument: doc1] toMutable];
+    [self saveDocument: doc1];
     
     // Add change listener:
     XCTestExpectation* x1 = [self expectationWithDescription: @"document change"];
@@ -151,7 +151,7 @@
     
     // Update doc1:
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
-    doc1 = [[self saveDocument: doc1] toMutable];
+    [self saveDocument: doc1];
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     

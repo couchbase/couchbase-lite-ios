@@ -83,10 +83,8 @@
     [newTask setString:@"task" forKey:@"task"];
     [newTask setString:@"todo" forKey:@"owner"];
     [newTask setString:@"task" forKey:@"createdAt"];
-    CBLDocument *saved = [database saveDocument:newTask error:&error];
+    [database saveDocument:newTask error:&error];
     // </doc>
-    
-    NSLog(@"%@", saved);
 }
 
 - (void) dontTestMutability {
@@ -133,7 +131,7 @@
 #if TARGET_OS_IPHONE
     NSError *error;
     CBLDatabase *database = self.db;
-    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
+    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] initWithID:@"task1"];
     
     // <doc>
     UIImage *appleImage = [UIImage imageNamed:@"avatar.jpg"];
@@ -141,9 +139,10 @@
     
     CBLBlob *blob = [[CBLBlob alloc] initWithContentType:@"image/jpeg" data:imageData];
     [newTask setBlob:blob forKey:@"avatar"];
-    CBLDocument *savedDoc = [database saveDocument:newTask error:&error];
+    [database saveDocument:newTask error:&error];
     
-    CBLBlob *taskBlob = [savedDoc blobForKey:@"avatar"];
+    CBLDocument *savedTask = [database documentWithID: @"task1"];
+    CBLBlob *taskBlob = [savedTask blobForKey:@"avatar"];
     UIImage *taskImage = [UIImage imageWithData:taskBlob.content];
     // </doc>
     

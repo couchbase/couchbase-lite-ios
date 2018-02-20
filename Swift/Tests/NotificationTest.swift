@@ -44,13 +44,13 @@ class NotificationTest: CBLTestCase {
     
     
     func testDocumentChange() throws {
-        var doc1 = createDocument("doc1")
+        let doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        let savedDoc1 = try saveDocument(doc1)
+        try saveDocument(doc1)
         
         let doc2 = createDocument("doc2")
         doc2.setValue("Daniel", forKey: "name")
-        let savedDoc2 = try saveDocument(doc2)
+        try saveDocument(doc2)
         
         let x = self.expectation(description: "Got all changes")
         
@@ -72,12 +72,11 @@ class NotificationTest: CBLTestCase {
         let listener3 = db.addDocumentChangeListener(withID: "doc3", listener: handler)
         
         // Update doc1:
-        doc1 = savedDoc1.toMutable()
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         // Delete doc2:
-        try db.deleteDocument(savedDoc2)
+        try db.deleteDocument(doc2)
         
         // Create doc3:
         let doc3 = createDocument("doc3")
@@ -93,9 +92,9 @@ class NotificationTest: CBLTestCase {
     
     
     func testAddSameChangeListeners() throws {
-        var doc1 = createDocument("doc1")
+        let doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        doc1 = try saveDocument(doc1).toMutable()
+        try saveDocument(doc1)
         
         let x = self.expectation(description: "Got all changes")
         
@@ -127,19 +126,18 @@ class NotificationTest: CBLTestCase {
     func testRemoveDocumentChangeListener() throws {
         var doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        doc1 = try saveDocument(doc1).toMutable()
+        try saveDocument(doc1)
         
         let x1 = self.expectation(description: "change")
         
         // Add change listener:
-        
         let token = db.addDocumentChangeListener(withID: "doc1") { (change) in
             x1.fulfill()
         }
         
         // Update doc1:
         doc1.setValue("Scott Tiger", forKey: "name")
-        doc1 = try saveDocument(doc1).toMutable()
+        try saveDocument(doc1)
         
         waitForExpectations(timeout: 5, handler: nil)
         
