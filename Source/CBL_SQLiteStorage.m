@@ -1871,7 +1871,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                          numericID: docNumericID
                                   generationsBelow: minGenToKeep];
             if (pruned > 0)
-                LogVerbose(Database, @"Pruned %zd old revisions of doc '%@'", pruned, docID);
+                LogVerbose(Database, @"Pruned %ld old revisions of doc '%@'", (long)pruned, docID);
         }
 
         // Figure out what the new winning rev ID is:
@@ -2045,7 +2045,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                              numericID: docNumericID
                                       generationsBelow: minGenToKeep];
                 if (pruned > 0)
-                    LogVerbose(Database, @"Pruned %zd old revisions of doc '%@'", pruned, docID);
+                    LogVerbose(Database, @"Pruned %ld old revisions of doc '%@'", (long)pruned, docID);
             }
         }
 
@@ -2286,8 +2286,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             return -1;
         }
         NSInteger pruned = _fmdb.changes;
-        LogVerbose(Database, @"    pruned %zd revs with gen<%u from %@",
-                   pruned, minGenToKeep, docID);
+        LogVerbose(Database, @"    pruned %ld revs with gen<%u from %@",
+                   (long)pruned, minGenToKeep, docID);
         return pruned;
 
     } else {
