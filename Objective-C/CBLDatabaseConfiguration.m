@@ -26,8 +26,6 @@
 }
 
 @synthesize directory=_directory;
-@synthesize conflictResolver =_conflictResolver;
-
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
 #endif
@@ -52,14 +50,11 @@
         
         if (config) {
             _directory = config.directory;
-            _conflictResolver = config.conflictResolver;
 #ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
 #endif
-        } else {
+        } else
             _directory = [CBLDatabaseConfiguration defaultDirectory];
-            _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
-        }
     }
     return self;
 }
@@ -70,15 +65,6 @@
     
     if (_directory != directory) {
         _directory = directory;
-    }
-}
-
-
-- (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
-    [self checkReadonly];
-    
-    if (_conflictResolver != conflictResolver) {
-        _conflictResolver = conflictResolver;
     }
 }
 

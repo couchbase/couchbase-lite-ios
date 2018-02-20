@@ -34,7 +34,6 @@
 
 @synthesize database=_database, target=_target;
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
-@synthesize conflictResolver=_conflictResolver;
 @synthesize authenticator=_authenticator;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
@@ -53,7 +52,6 @@
         _database = database;
         _target = target;
         _replicatorType = kCBLReplicatorTypePushAndPull;
-        _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
     }
     return self;
 }
@@ -73,12 +71,6 @@
 - (void) setContinuous: (BOOL)continuous {
     [self checkReadonly];
     _continuous = continuous;
-}
-
-
-- (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
-    [self checkReadonly];
-    _conflictResolver = conflictResolver;
 }
 
 
@@ -131,7 +123,6 @@
         _target = config.target;
         _replicatorType = config.replicatorType;
         _continuous = config.continuous;
-        _conflictResolver = config.conflictResolver;
         _authenticator = config.authenticator;
         _pinnedServerCertificate = config.pinnedServerCertificate;
         _headers = config.headers;

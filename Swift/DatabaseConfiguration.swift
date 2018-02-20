@@ -55,13 +55,6 @@ public class DatabaseConfiguration {
         }
     }
     
-    /// The conflict resolver for this database.
-    public var conflictResolver: ConflictResolver = DefaultConflictResolver() {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
-    
     #if COUCHBASE_ENTERPRISE
     /// The key to encrypt the database with.
     public var encryptionKey: EncryptionKey? {
@@ -88,8 +81,6 @@ public class DatabaseConfiguration {
     init(config: DatabaseConfiguration?, readonly: Bool) {
         if let c = config {
             self.directory = c.directory
-            self.conflictResolver = c.conflictResolver
-            
             #if COUCHBASE_ENTERPRISE
             self.encryptionKey = c.encryptionKey
             #endif
@@ -106,10 +97,6 @@ public class DatabaseConfiguration {
     func toImpl() -> CBLDatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
         config.directory = self.directory
-        if !(self.conflictResolver is DefaultConflictResolver) {
-            config.conflictResolver =
-                BridgingConflictResolver(resolver: self.conflictResolver)
-        }
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = self.encryptionKey?.impl
         #endif

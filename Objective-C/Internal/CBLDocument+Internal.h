@@ -44,13 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) setEncodingError: (NSError*)error;
 
-/** For conflict resolver to know that the document is being deleted. */
-- (void) markAsDeleted;
-
-/** For making as invalidated. The invalidated document is not allowed
-    to save or delete. */
-- (void) markAsInvalidated;
-
 @end
 
 //////////////////
@@ -66,9 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
 
-@property (nonatomic, nullable) CBLC4Document* c4Doc;
-
-@property (nonatomic, readonly) BOOL exists;
+@property (atomic, nullable) CBLC4Document* c4Doc;
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
@@ -76,9 +67,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSUInteger generation;
 
-@property (nonatomic, readonly, nullable) FLDict fleeceData;
+@property (nonatomic, readonly) BOOL isDeleted;
 
-@property (nonatomic, readonly) BOOL isInvalidated;
+@property (nonatomic, readonly, nullable) FLDict fleeceData;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -94,6 +85,9 @@ NS_ASSUME_NONNULL_BEGIN
                             andDoc: (CBLDocument*)doc2;
 
 - (nullable NSData*) encode: (NSError**)outError;
+
+// Replace c4doc without updating the document data
+- (void) replaceC4Doc: (CBLC4Document*)c4doc;
 
 @end
 

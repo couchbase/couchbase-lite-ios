@@ -18,8 +18,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#ifdef COUCHBASE_ENTERPRISE
 @class CBLEncryptionKey;
-@protocol CBLConflictResolver;
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,13 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
  You won't usually need to change this.
  */
 @property (nonatomic, copy) NSString* directory;
-
-
-/**
- The conflict resolver for this database. Without setting the default conflict
- resolver, where the revision with more history wins, will be used.
- */
-@property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
 
 #ifdef COUCHBASE_ENTERPRISE

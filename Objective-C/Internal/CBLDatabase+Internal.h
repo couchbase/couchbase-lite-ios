@@ -21,7 +21,6 @@
 #import "c4.h"
 #import "Fleece.h"
 #import "CBLBlob.h"
-#import "CBLConflictResolver.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabaseChange.h"
@@ -53,9 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
-- (bool) resolveConflictInDocument: (NSString*)docID
-                     usingResolver: (id<CBLConflictResolver>)resolver
-                             error: (NSError**)outError;
+- (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError;
 
 @end
 
@@ -83,24 +80,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)installInDatabase: (CBLDatabase *)db error:(NSError **)error;
 
-@end
-
-
-// CBLConflict:
-
-@interface CBLConflict ()
-
-- (instancetype) initWithMine: (CBLDocument*)mine
-                       theirs: (CBLDocument*)theirs
-                         base: (nullable CBLDocument*)base;
-
-@end
-
-
-// CBLDefaultConflictResolver:
-
-
-@interface CBLDefaultConflictResolver : NSObject <CBLConflictResolver>
 @end
 
 

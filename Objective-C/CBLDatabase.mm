@@ -176,15 +176,39 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - SAVE
 
 
-- (CBLDocument*) saveDocument: (CBLMutableDocument*)document error: (NSError**)error {
-    CBLDocument* outDocument = nil;
-    [self saveDocument: document into: &outDocument asDeletion: NO error: error];
-    return outDocument;
+- (BOOL) saveDocument: (CBLMutableDocument *)document error:(NSError **)error {
+    return [self saveDocument: document
+           concurrencyControl: kCBLConcurrencyControlNone
+                        error: error];
+}
+
+
+- (BOOL) saveDocument: (CBLMutableDocument*)document
+   concurrencyControl: (CBLConcurrencyControl)concurrencyControl
+                error: (NSError**)error
+{
+    return [self saveDocument: document
+           concurrencyControl: concurrencyControl
+                   asDeletion: NO
+                        error: error];
 }
 
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    return [self saveDocument: document into: nil asDeletion: YES error: error];
+    return [self deleteDocument: document
+             concurrencyControl: kCBLConcurrencyControlNone
+                          error: error];
+}
+
+
+- (BOOL) deleteDocument: (CBLDocument*)document
+     concurrencyControl: (CBLConcurrencyControl)concurrencyControl
+                  error: (NSError**)error
+{
+    return [self saveDocument: document
+           concurrencyControl: concurrencyControl
+                   asDeletion: YES
+                        error: error];
 }
 
 
@@ -790,13 +814,107 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-#pragma mark - DOCUMENT SAVE AND CONFLICT RESOLUTION
+#pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING
+
+
+- (BOOL) saveDocument: (CBLDocument*)document
+   concurrencyControl: (CBLConcurrencyControl)concurrencyControl
+           asDeletion: (BOOL)deletion
+                error: (NSError**)outError
+{
+    if (deletion && !document.revID) {
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Do not allow to delete a newly created document "
+         "that has not been saved into the database."];
+        return NO;
+    }
+    
+    CBL_LOCK(self) {
+        if (![self prepareDocument: document error: outError])
+            return NO;
+        
+        // Begin a db transaction:
+        C4Transaction transaction(_c4db);
+        if (!transaction.begin())
+            return convertError(transaction.error(), outError);
+        
+        C4Document* curDoc = nil;
+        if (deletion) {
+            // Check existing, NO-OPS if the document doesn't exist:
+            CBLStringBytes bDocID(document.id);
+            C4Error err;
+            curDoc = c4doc_get(_c4db, bDocID, true, &err);
+            if (!curDoc) {
+                if (err.code == kC4ErrorNotFound)
+                    return YES;
+                return convertError(err, outError);
+            }
+        }
+        
+        C4Document* newDoc = nil;
+        if (![self saveDocument: document into: &newDoc
+               withBaseDocument: nil asDeletion: deletion error: outError]) {
+            if (curDoc)
+                c4doc_free(curDoc);
+            return NO;
+        }
+        
+        if (newDoc) {
+            if (curDoc)
+                c4doc_free(curDoc);
+            
+            // Save succeeded; now commit the transaction:
+            if (!transaction.commit()) {
+                c4doc_free(newDoc);
+                return convertError(transaction.error(), outError);
+            }
+            
+            [document replaceC4Doc: [CBLC4Document document: newDoc]];
+            return YES;
+        }
+        
+        // Handle conflict:
+        if (concurrencyControl == kCBLConcurrencyControlOptimistic) {
+            if (curDoc)
+                c4doc_free(curDoc);
+            return createError(CBLErrorConflict, outError);
+        }
+        
+        if (!curDoc) {
+            CBLStringBytes bDocID(document.id);
+            curDoc = c4doc_get(_c4db, bDocID, true, nil);
+            assert(curDoc);
+        }
+        
+        // If deletion and the current doc has already been deleted:
+        if (deletion) {
+            if ((curDoc->flags & kDocDeleted) != 0) {
+                [document replaceC4Doc: [CBLC4Document document: curDoc]];
+                return YES;
+            }
+        }
+
+        // Save changes on the current branch:
+        BOOL success = [self saveDocument: document into: &newDoc
+                         withBaseDocument: curDoc asDeletion: deletion error: outError];
+        c4doc_free(curDoc);
+        if (!success)
+            return NO;
+        
+        if (!transaction.commit()) {
+            c4doc_free(newDoc);
+            return convertError(transaction.error(), outError);
+        }
+        [document replaceC4Doc: [CBLC4Document document: newDoc]];
+        return YES;
+    }
+}
 
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
 - (BOOL) saveDocument: (CBLDocument*)document
                  into: (C4Document **)outDoc
-             withBase: (nullable C4Document*)base
+     withBaseDocument: (nullable C4Document*)base
            asDeletion: (BOOL)deletion
                 error: (NSError **)outError
 {
@@ -836,252 +954,101 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-// Main save document
-- (BOOL) saveDocument: (CBLDocument*)document
-                 into: (CBLDocument**)outDoc
-           asDeletion: (BOOL)deletion
-                error: (NSError**)outError
-{
-    if (document.isInvalidated) {
-        [NSException raise: NSInvalidArgumentException
-                    format: @"Do not allow to save or delete the MutableDocument "
-                             "that has already been used to save or delete."];
-        return NO;
-    }
-    
-    if (deletion && !document.revID) {
-        [NSException raise: NSInvalidArgumentException
-                    format: @"Do not allow to delete a newly created document "
-                             "that has not been saved into the database."];
-        return NO;
-    }
-    
-    // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
-    NSString* docID = document.id;
-    CBLDocument* doc = document, *baseDoc, *otherDoc;
-    C4Document* baseRev = nil, *newDoc = nil;
-    
-    // Reset output document to nil:
-    if (outDoc) *outDoc = nil;
-    
-    while (true) {
-        CBL_LOCK(self) {
-            if (![self prepareDocument: doc error: outError])
-                return NO;
-            
-            // Begin a db transaction:
-            C4Transaction transaction(_c4db);
-            if (!transaction.begin()) {
-                return convertError(transaction.error(), outError);
-            }
-            
-            if (deletion) {
-                // Check existing, NO-OPS if the document doesn't exist:
-                CBLStringBytes bDocID(docID);
-                C4Error err;
-                auto curDoc = c4doc_get(_c4db, bDocID, true, &err);
-                if (!curDoc) {
-                    if (err.code == kC4ErrorNotFound) {
-                        [$castIf(CBLMutableDocument, document) markAsInvalidated];
-                        return YES;
-                    }
-                    return convertError(err, outError);
-                }
-                c4doc_free(curDoc);
-            }
-            
-            if (![self saveDocument: doc into: &newDoc withBase: baseRev
-                         asDeletion: deletion error: outError])
-                return NO;
-            
-            if (newDoc) {
-                // Save succeeded; now commit the transaction:
-                if (!transaction.commit()) {
-                    c4doc_free(newDoc);
-                    return convertError(transaction.error(), outError);
-                }
-                
-                [$castIf(CBLMutableDocument, document) markAsInvalidated];
-                auto newC4Doc = [CBLC4Document document: newDoc];
-                if (outDoc)
-                    *outDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                         documentID: docID
-                                                              c4Doc: newC4Doc];
-                return YES;
-            }
-            
-            // Save not succeeded as conflicting:
-            if (deletion && !doc.isDeleted) {
-                // Copy and mark as deleted:
-                CBLMutableDocument* deletedDoc = [doc toMutable];
-                [deletedDoc markAsDeleted];
-                doc = deletedDoc;
-            }
-            
-            if (doc.c4Doc)
-                baseDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                     documentID: docID
-                                                          c4Doc: doc.c4Doc];
-            
-            otherDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                  documentID: docID
-                                              includeDeleted: YES
-                                                       error: outError];
-            if (!otherDoc)
-                return NO;
-            
-            // Abort transaction:
-            if (!transaction.abort()) {
-                return convertError(transaction.error(), outError);
-            }
-        }
-        
-        // Resolve conflict:
-        id<CBLConflictResolver> resolver = self.config.conflictResolver;
-        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: doc
-                                                           theirs: otherDoc
-                                                             base: baseDoc];
-        CBLDocument* resolved = [resolver resolve: conflict];
-        if (!resolved) {
-            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-        }
-        
-        CBL_LOCK(self) {
-            CBLDocument* current = [[CBLDocument alloc] initWithDatabase: self
-                                                              documentID: docID
-                                                          includeDeleted: YES
-                                                                   error: outError];
-            if ($equal(resolved.revID, current.revID)) {
-                [$castIf(CBLMutableDocument, document) markAsInvalidated];
-                if (outDoc)
-                    *outDoc = resolved; // Same as current
-                return YES;
-            }
-            
-            // For saving:
-            doc = resolved;
-            baseRev = current.c4Doc.rawDoc;
-            deletion = resolved.isDeleted;
-        }
-    }
-}
-
-
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 
 
-- (bool) resolveConflictInDocument: (NSString*)docID
-                     usingResolver: (id<CBLConflictResolver>)resolver
-                             error: (NSError**)outError
-{
-    CBLDocument* doc, *otherDoc, *baseDoc;
-    while (true) {
-        CBL_LOCK(self) {
-            // Open a transaction as a workaround to make sure that
-            // the replicator commits the current changes before we
-            // try to read the documents.
-            // https://github.com/couchbase/couchbase-lite-core/issues/322
-            C4Transaction t(_c4db);
-            if (!t.begin())
-                return convertError(t.error(), outError);
-            
-            doc = [[CBLDocument alloc] initWithDatabase: self
-                                             documentID: docID
-                                         includeDeleted: YES
-                                                  error: outError];
-            if (!doc)
-                return false;
-            
-            // Read the conflicting remote revision:
-            otherDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                  documentID: docID
-                                              includeDeleted: YES
-                                                       error: outError];
-            if (!otherDoc || ![otherDoc selectConflictingRevision])
-                return false;
-            
-            // Read the common ancestor revision (if it's available):
-            baseDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                 documentID: docID
-                                             includeDeleted: YES
-                                                      error: outError];
-            if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] ||
-                ![baseDoc toDictionary]) {
-                baseDoc = nil;
-            }
-            
-            if (!t.commit())
-                return convertError(t.error(), outError);
-        }
-        
-        // Call the conflict resolver:
-        auto conflict = [[CBLConflict alloc] initWithMine: doc
-                                                   theirs: otherDoc
-                                                     base: baseDoc];
-        CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
-               docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
-        CBLDocument* resolved = [resolver resolve: conflict];
-        if (!resolved)
-            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-        
-        NSError* err;
-        BOOL success = [self saveResolvedDocument: resolved
-                                      forConflict: conflict
-                                            error: &err];
-        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
-            continue;
-        
-        if (outError)
-            *outError = err;
-        
-        return success;
-    }
-}
-
-
-- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
-                  forConflict: (CBLConflict*)conflict
-                        error: (NSError**)outError
-{
+- (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError {
     CBL_LOCK(self) {
         C4Transaction t(_c4db);
         if (!t.begin())
             return convertError(t.error(), outError);
         
-        auto localDoc = conflict.mine;
-        auto remoteDoc = conflict.theirs;
-        if (resolvedDoc != localDoc)
-            resolvedDoc.database = self;
-
-        // The remote branch has to win, so that the doc revision history matches the server's.
-        CBLStringBytes winningRevID = remoteDoc.revID;
-        CBLStringBytes losingRevID = localDoc.revID;
-
-        NSData* mergedBody = nil;
-        if (resolvedDoc != remoteDoc) {
-            // Unless the remote revision is being used as-is, we need a new revision:
-            mergedBody = [resolvedDoc encode: outError];
-            if (!mergedBody)
-                return false;
-        }
+        // Read local document:
+        CBLDocument* localDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                           documentID: docID
+                                                       includeDeleted: YES
+                                                                error: outError];
+        if (!localDoc)
+            return false;
         
-        // Tell LiteCore to do the resolution:
-        C4Document *rawDoc = localDoc.c4Doc.rawDoc;
-        C4Error c4err;
-        if (!c4doc_resolveConflict(rawDoc,
-                                   winningRevID,
-                                   losingRevID,
-                                   data2slice(mergedBody),
-                                   &c4err)
-                || !c4doc_save(rawDoc, 0, &c4err)) {
-            return convertError(c4err, outError);
-        }
-        CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
-               localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+        // Read the conflicting remote revision:
+        CBLDocument* remoteDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                            documentID: docID
+                                                        includeDeleted: YES
+                                                                 error: outError];
+        if (!remoteDoc || ![remoteDoc selectConflictingRevision])
+            return false;
+        
+        // Resolve conflict:
+        CBLLog(Database, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
+               docID, localDoc.revID, remoteDoc.revID);
+        
+        CBLDocument* resolvedDoc = [self resolveConflictBetweenLocalDoc: localDoc
+                                                           andRemoteDoc: remoteDoc];
+        
+        // Save resolved document:
+        if (![self saveResolvedDocument: resolvedDoc
+                           withLocalDoc: localDoc
+                              remoteDoc: remoteDoc
+                                  error: outError])
+            return false;
         
         return t.commit() || convertError(t.error(), outError);
     }
 }
 
-@end
 
+- (CBLDocument*) resolveConflictBetweenLocalDoc: (CBLDocument*)localDoc
+                                   andRemoteDoc: (CBLDocument*)remoteDoc {
+    if (remoteDoc.isDeleted)
+        return remoteDoc;
+    else if (localDoc.isDeleted)
+        return localDoc;
+    else if (localDoc.generation > remoteDoc.generation)
+        return localDoc;
+    else if (localDoc.generation < remoteDoc.generation)
+        return remoteDoc;
+    else if ([localDoc.revID compare: remoteDoc.revID] > 0)
+        return localDoc;
+    else
+        return remoteDoc;
+}
+
+
+- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
+                 withLocalDoc: (CBLDocument*)localDoc
+                    remoteDoc: (CBLDocument*)remoteDoc
+                        error: (NSError**)outError
+{
+    if (resolvedDoc != localDoc)
+        resolvedDoc.database = self;
+    
+    // The remote branch has to win, so that the doc revision history matches the server's.
+    CBLStringBytes winningRevID = remoteDoc.revID;
+    CBLStringBytes losingRevID = localDoc.revID;
+    
+    NSData* mergedBody = nil;
+    if (resolvedDoc != remoteDoc) {
+        // Unless the remote revision is being used as-is, we need a new revision:
+        mergedBody = [resolvedDoc encode: outError];
+        if (!mergedBody)
+            return false;
+    }
+    
+    // Tell LiteCore to do the resolution:
+    C4Document *rawDoc = localDoc.c4Doc.rawDoc;
+    C4Error c4err;
+    if (!c4doc_resolveConflict(rawDoc,
+                               winningRevID,
+                               losingRevID,
+                               data2slice(mergedBody),
+                               &c4err)
+        || !c4doc_save(rawDoc, 0, &c4err)) {
+        return convertError(c4err, outError);
+    }
+    CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
+           localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+    return YES;
+}
+
+@end

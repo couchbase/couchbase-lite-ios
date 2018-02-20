@@ -487,9 +487,7 @@ static void onDocError(C4Replicator *repl,
         // Conflict pulling a document -- the revision was added but app needs to resolve it:
         CBLLog(Sync, @"%@: pulled conflicting version of '%@'", self, docID);
         NSError* error;
-        if (![_config.database resolveConflictInDocument: docID
-                                           usingResolver: _config.conflictResolver
-                                                   error: &error]) {
+        if (![_config.database resolveConflictInDocument: docID error: &error]) {
             CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, docID, error);
             // TODO: Should pass error along to listener
         }

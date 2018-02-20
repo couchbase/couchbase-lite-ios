@@ -40,6 +40,16 @@ public enum LogLevel: UInt8 {
 }
 
 
+/// Concurruncy control type used when saving or deleting a document.
+///
+/// - none: The last write operation will win if there is a conflict.
+/// - optimistic: The operation will fail if there is a conflict.
+public enum ConcurrencyControl: UInt8 {
+    case none = 0
+    case optimistic
+}
+
+
 /// A Couchbase Lite database.
 public final class Database {
     
@@ -89,32 +99,81 @@ public final class Database {
     }
     
     
-    /// Saves the given mutable document to the database.
-    /// If the document in the database has been updated since it was read by
-    /// this Document, a conflict occurs, which will be resolved by invoking
-    /// the conflict handler. This can happen if multiple application threads
-    /// are writing to the database, or a pull replication is copying changes
-    /// from a server.
+    /// Saves a document to the database. When write operations are executed
+    /// concurrently, the last writer will overwrite all other written values.
+    /// Calling this function is the same as calling the saveDocument(document,
+    /// concurrencyControl) function with ConcurrencyControl.none.
     ///
     /// - Parameter document: The document.
-    /// - Returns: The saved Document.
     /// - Throws: An error on a failure.
-    @discardableResult public func saveDocument(_ document: MutableDocument) throws -> Document {
-        let doc = try _impl.save(document._impl as! CBLMutableDocument)
-        return Document(doc)
+    public func saveDocument(_ document: MutableDocument) throws {
+        try _impl.save(document._impl as! CBLMutableDocument)
     }
     
     
-    /// Deletes the given document. All properties are removed, and subsequent calls
-    /// to the getDocument(id) method will return nil.
-    /// Deletion adds a special "tombstone" revision to the database, as bookkeeping so that the
-    /// change can be replicated to other databases. Thus, it does not free up all of the disk 
-    /// space occupied by the document.
+    /// Saves a document to the database. When used with none concurrency control,
+    /// the last write operation will win if there is a conflict. When used
+    /// with optimistic concurrency control, save will fail with 'false' value
+    /// returned.
+    ///
+    /// - Parameters:
+    ///   - document: The document.
+    ///   - concurrencyControl: The concurrency control.
+    /// - Returns: True if successful. False if the optimistic concurrency
+    ///            control is used, and there is a conflict.
+    /// - Throws: An error on a failure.
+    @discardableResult public func saveDocument(
+        _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        do {
+            let cc = concurrencyControl == .none ?
+                CBLConcurrencyControl.none : CBLConcurrencyControl.optimistic;
+            try _impl.save(document._impl as! CBLMutableDocument, concurrencyControl: cc)
+            return true
+        } catch let err as NSError {
+            if err.code == CBLErrorConflict {
+                return false
+            }
+            throw err
+        }
+    }
+    
+    
+    /// Deletes a document from the database. When write operations are executed
+    /// concurrently, the last writer will overwrite all other written values.
+    /// Calling this function is the same as calling the deleteDocument(document,
+    /// concurrencyControl) function with ConcurrencyControl.none.
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func deleteDocument(_ document: Document) throws {
         try _impl.delete(document._impl)
+    }
+    
+    
+    /// Deletes a document from the database. When used with none concurrency
+    /// control, the last write operation will win if there is a conflict.
+    /// When used with optimistic concurrency control, save will fail with
+    /// 'false' value returned.
+    ///
+    /// - Parameters:
+    ///   - document: The document.
+    ///   - concurrencyControl: The concurrency control.
+    /// - Returns: True if successful. False if the optimistic concurrency
+    ///            control is used, and there is a conflict.
+    /// - Throws: An error on a failure.
+    @discardableResult public func deleteDocument(
+        _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        do {
+            let cc = concurrencyControl == .none ?
+                CBLConcurrencyControl.none : CBLConcurrencyControl.optimistic;
+            try _impl.delete(document._impl, concurrencyControl: cc)
+            return true
+        } catch let err as NSError {
+            if err.code == CBLErrorConflict {
+                return false
+            }
+            throw err
+        }
     }
     
     
