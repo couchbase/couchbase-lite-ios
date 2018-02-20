@@ -3415,7 +3415,7 @@
 		};
 		2791EA5D20327D5600BD813C /* Release-EE */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */;
+			baseConfigurationReference = 2791EA6720327E8B00BD813C /* Project_Release_EE.xcconfig */;
 			buildSettings = {
 			};
 			name = "Release-EE";

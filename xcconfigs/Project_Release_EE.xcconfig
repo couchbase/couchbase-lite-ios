@@ -5,5 +5,6 @@
 //
 
 EE_PP_DEFS = COUCHBASE_ENTERPRISE
+OTHER_SWIFT_FLAGS = -D$(EE_PP_DEFS)
 
 #include "Project_Release.xcconfig"
