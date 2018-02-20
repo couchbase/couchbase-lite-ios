@@ -21,9 +21,9 @@
 
 #import "CBLEncryptionKey.h"
 #import "CBLEncryptionKey+Internal.h"
+#import "c4Database.h"
 #import <CommonCrypto/CommonCrypto.h>
 
-#define kKeySize kCCKeySizeAES256
 #define kDefaultSalt @"Salty McNaCl"
 #define kDefaultPBKDFRounds 64000 // Same as what SQLCipher uses
 
@@ -35,9 +35,9 @@
 - (instancetype) initWithKey: (NSData*)key {
     self = [super init];
     if (self) {
-        if (key.length != kKeySize) {
+        if (key.length != kC4EncryptionKeySizeAES128) {
             [NSException raise: NSInternalInconsistencyException
-                        format: @"Key size is invalid. Key must be a 256-bit (32-byte) key."];
+                        format: @"Key size is invalid. Key must be a 128-bit (16-byte) key."];
         }
         _key = [key copy];
     }
@@ -59,7 +59,7 @@
     Assert(password);
     Assert(salt.length > 4, @"Insufficient salt");
     Assert(rounds > 200, @"Insufficient rounds");
-    NSMutableData* keyData = [NSMutableData dataWithLength: kKeySize];
+    NSMutableData* keyData = [NSMutableData dataWithLength: kC4EncryptionKeySizeAES128];
     NSData* passwordData = [password dataUsingEncoding: NSUTF8StringEncoding];
     int status = CCKeyDerivationPBKDF(kCCPBKDF2,
                                       passwordData.bytes, passwordData.length,

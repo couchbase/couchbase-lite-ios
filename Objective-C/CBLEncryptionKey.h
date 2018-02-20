@@ -24,18 +24,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- The encryption key, a raw AES-256 key data which has exactly 32 bytes in length
- or a password string. If the password string is given, it will be internally converted to a
- raw AES key using 64,000 rounds of PBKDF2 hashing.
+ An encryption key for a database. This is a symmetric key that be kept secret.
+ It should be stored either in the Keychain, or in the user's memory (hopefully not a sticky note.)
  */
 @interface CBLEncryptionKey : NSObject
 
 /**
- Initializes the encryption key with a raw AES-256 key data which has 32 bytes in length.
+ Initializes the encryption key with a raw AES-128 key 16 bytes in length.
  To create a key, generate random data using a secure cryptographic randomizer like
  SecRandomCopyBytes or CCRandomGenerateBytes.
  
- @param key The raw AES-256 key data.
+ @param key The raw AES-128 key data.
  @return The CBLEncryptionKey object.
  */
 - (instancetype) initWithKey: (NSData*)key;
@@ -43,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Initializes the encryption key with the given password string. The password string will be
- internally converted to a raw AES-256 key using 64,000 rounds of PBKDF2 hashing.
+ internally converted to a raw AES-128 key using 64,000 rounds of PBKDF2 hashing.
 
  @param password The password string.
  @return The CBLEncryptionKey object.

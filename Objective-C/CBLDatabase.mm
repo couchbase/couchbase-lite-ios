@@ -580,9 +580,9 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     C4EncryptionKey cKey;
     if (key) {
-        cKey.algorithm = kC4EncryptionAES256;
-        Assert(key.key.length == sizeof(cKey.bytes), @"Invalid key size");
-        memcpy(cKey.bytes, key.key.bytes, sizeof(cKey.bytes));
+        cKey.algorithm = kC4EncryptionAES128;
+        Assert(key.key.length == kC4EncryptionKeySizeAES128, @"Invalid key size");
+        memcpy(cKey.bytes, key.key.bytes, kC4EncryptionKeySizeAES128);
     } else
         cKey.algorithm = kC4EncryptionNone;
     return cKey;
