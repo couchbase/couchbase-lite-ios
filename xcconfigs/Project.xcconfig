@@ -19,6 +19,7 @@
 
 CBL_VERSION_STRING                 = 2.0.0
 CBL_BUILD_NUMBER                   = 0
+CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 
 IPHONEOS_DEPLOYMENT_TARGET         = 9.0
 MACOSX_DEPLOYMENT_TARGET           = 10.11

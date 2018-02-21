@@ -19,4 +19,4 @@
 
 #include "CBL ObjC.xcconfig"
 
-EXPORTED_SYMBOLS_FILE     = Objective-C/CouchbaseLite.exp
+EXPORTED_SYMBOLS_FILE     = $(CBL_EXPORTED_SYMBOLS_FILE)

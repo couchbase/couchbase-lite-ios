@@ -1101,6 +1101,10 @@
 		93C18E7E1FB638E80029B567 /* CBLDatabaseConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseConfiguration.h; sourceTree = "<group>"; };
 		93C18E7F1FB638E80029B567 /* CBLDatabaseConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseConfiguration.m; sourceTree = "<group>"; };
 		93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DictionaryTest.swift; sourceTree = "<group>"; };
+		93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = "CouchbaseLite-EE.exp"; sourceTree = "<group>"; };
+		93C65C9F203D0C6400384F6E /* CBLDatabase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
+		93C65CA0203D0C6400384F6E /* CBLDatabaseConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseConfiguration.h; sourceTree = "<group>"; };
+		93C65CA1203D0C6400384F6E /* CBLDatabaseEndpoint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseEndpoint.h; sourceTree = "<group>"; };
 		93CD02491E9DA0AC00AFB3FA /* CBLC4Document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLC4Document.h; sourceTree = "<group>"; };
 		93CD024A1E9DA0AC00AFB3FA /* CBLC4Document.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLC4Document.mm; sourceTree = "<group>"; };
 		93CD02601E9FFEC500AFB3FA /* CBLMutableArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMutableArray.h; sourceTree = "<group>"; };
@@ -1699,8 +1703,10 @@
 				93CD02261E9D8E6200AFB3FA /* Query */,
 				938195D91EBCD5F70032CC51 /* Replicator */,
 				934F4C931E241FB500F90659 /* Internal */,
+				93C65C9E203D0C6400384F6E /* EE */,
 				9398D9FD1E03531A00464432 /* CouchbaseLite.h */,
 				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
+				93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 				93BFCD931E0380A300E52F8A /* Tests */,
 			);
@@ -1751,6 +1757,16 @@
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		93C65C9E203D0C6400384F6E /* EE */ = {
+			isa = PBXGroup;
+			children = (
+				93C65C9F203D0C6400384F6E /* CBLDatabase.h */,
+				93C65CA0203D0C6400384F6E /* CBLDatabaseConfiguration.h */,
+				93C65CA1203D0C6400384F6E /* CBLDatabaseEndpoint.h */,
+			);
+			path = EE;
 			sourceTree = "<group>";
 		};
 		93CD021B1E9D8E3700AFB3FA /* Document */ = {
