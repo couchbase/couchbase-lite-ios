@@ -824,8 +824,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 {
     if (deletion && !document.revID) {
         [NSException raise: NSInvalidArgumentException
-                    format: @"Do not allow to delete a newly created document "
-         "that has not been saved into the database."];
+                    format: @"Document doesn't exist in the database."];
         return NO;
     }
     
@@ -859,47 +858,39 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             return NO;
         }
         
-        if (newDoc) {
-            if (curDoc)
-                c4doc_free(curDoc);
-            
-            // Save succeeded; now commit the transaction:
-            if (!transaction.commit()) {
-                c4doc_free(newDoc);
-                return convertError(transaction.error(), outError);
+        if (!newDoc) {
+            // Handle conflict:
+            if (concurrencyControl == kCBLConcurrencyControlOptimistic) {
+                if (curDoc)
+                    c4doc_free(curDoc);
+                return createError(CBLErrorConflict, outError);
             }
             
-            [document replaceC4Doc: [CBLC4Document document: newDoc]];
-            return YES;
-        }
-        
-        // Handle conflict:
-        if (concurrencyControl == kCBLConcurrencyControlOptimistic) {
-            if (curDoc)
-                c4doc_free(curDoc);
-            return createError(CBLErrorConflict, outError);
-        }
-        
-        if (!curDoc) {
-            CBLStringBytes bDocID(document.id);
-            curDoc = c4doc_get(_c4db, bDocID, true, nil);
-            assert(curDoc);
-        }
-        
-        // If deletion and the current doc has already been deleted:
-        if (deletion) {
-            if ((curDoc->flags & kDocDeleted) != 0) {
-                [document replaceC4Doc: [CBLC4Document document: curDoc]];
-                return YES;
+            if (!curDoc) {
+                CBLStringBytes bDocID(document.id);
+                curDoc = c4doc_get(_c4db, bDocID, true, nil);
+                assert(curDoc);
             }
+            
+            // If deletion and the current doc has already been deleted:
+            if (deletion) {
+                if ((curDoc->flags & kDocDeleted) != 0) {
+                    [document replaceC4Doc: [CBLC4Document document: curDoc]];
+                    return YES;
+                }
+            }
+            
+            // Save changes on the current branch:
+            BOOL success = [self saveDocument: document into: &newDoc
+                             withBaseDocument: curDoc asDeletion: deletion error: outError];
+            c4doc_free(curDoc);
+            curDoc = nil;
+            if (!success)
+                return NO;
         }
-
-        // Save changes on the current branch:
-        BOOL success = [self saveDocument: document into: &newDoc
-                         withBaseDocument: curDoc asDeletion: deletion error: outError];
-        c4doc_free(curDoc);
-        if (!success)
-            return NO;
+        
+        if (curDoc)
+            c4doc_free(curDoc);
         
         if (!transaction.commit()) {
             c4doc_free(newDoc);
