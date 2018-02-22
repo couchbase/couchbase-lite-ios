@@ -94,6 +94,8 @@ NS_ASSUME_NONNULL_BEGIN
     given name or not. */
 - (void) expectException: (NSString*)name in: (void (^) (void))block;
 
+- (void) mayHaveException: (NSString*)name in: (void (^) (void))block;
+
 @end
 
 NS_ASSUME_NONNULL_END

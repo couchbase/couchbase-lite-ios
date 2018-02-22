@@ -227,4 +227,16 @@
     --gC4ExpectExceptions;
 }
 
+- (void) mayHaveException: (NSString*)name in: (void (^) (void))block {
+    @try {
+        ++gC4ExpectExceptions;
+        block();
+    }
+    @catch (NSException* e) {
+        AssertEqualObjects(e.name, name);
+    }
+    @finally {
+        --gC4ExpectExceptions;
+    }
+}
 @end

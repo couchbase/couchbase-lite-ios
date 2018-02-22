@@ -274,9 +274,9 @@
     
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
-            NSError* error;
-            if (![self.db purgeDocument: doc error: &error])
-                AssertEqual(error.code, 404);
+            [self mayHaveException: NSInvalidArgumentException in: ^{
+                [self.db purgeDocument: doc error: nil];
+            }];
         }
     }];
     AssertEqual(self.db.count, 0u);

@@ -235,6 +235,12 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                 if (!transaction.commit())
                     return convertError(transaction.error(), error);
                 
+                // Reload c4doc, still preserve the document data:
+                CBLStringBytes bDocID(document.id);
+                auto newDoc = c4doc_get(_c4db, bDocID, false, &err);
+                if (!newDoc)
+                    return convertError(err, error);
+                [document replaceC4Doc: [CBLC4Document document: newDoc]];
                 return YES;
             }
         }

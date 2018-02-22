@@ -682,10 +682,9 @@
     AssertNil([self.db documentWithID: doc1a.id]);
     
     // Delete doc1a, no-ops:
-    Assert([self.db deleteDocument: doc1a error: &error]);
-    AssertNil(error);
-    AssertEqual(self.db.count, 0u);
-    AssertNil([self.db documentWithID: doc1a.id]);
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        [self.db deleteDocument: doc1a error: nil];
+    }];
     
     // Delete doc1b, no-ops:
     Assert([self.db deleteDocument: doc1b error: &error]);
@@ -918,8 +917,9 @@
     AssertEqual(0, (long)self.db.count);
     
     // Purge Doc second time
-    [self purgeDocAndVerify: doc];
-    AssertEqual(0, (long)self.db.count);
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        [self.db purgeDocument: doc error: nil];
+    }];
 }
 
 
