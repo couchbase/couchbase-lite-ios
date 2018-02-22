@@ -67,7 +67,7 @@ class DatabaseTest: CBLTestCase {
         var success = true
         if let cc = concurrencyControl {
             success = try db.saveDocument(document, concurrencyControl: cc)
-            if cc == .optimistic {
+            if cc == .failOnConflict {
                 XCTAssertFalse(success)
             } else {
                 XCTAssertTrue(success)
@@ -84,7 +84,7 @@ class DatabaseTest: CBLTestCase {
         var success = true
         if let cc = concurrencyControl {
             success = try db.deleteDocument(document, concurrencyControl: cc)
-            if cc == .optimistic {
+            if cc == .failOnConflict {
                 XCTAssertFalse(success)
             } else {
                 XCTAssertTrue(success)
@@ -285,8 +285,8 @@ class DatabaseTest: CBLTestCase {
     
     func testSaveDocWithConflict() throws {
         try testSaveDocWithConflict(usingConcurrencyControl: nil)
-        try testSaveDocWithConflict(usingConcurrencyControl: .none)
-        try testSaveDocWithConflict(usingConcurrencyControl: .optimistic)
+        try testSaveDocWithConflict(usingConcurrencyControl: .lastWriteWins)
+        try testSaveDocWithConflict(usingConcurrencyControl: .failOnConflict)
     }
     
     func testSaveDocWithConflict(usingConcurrencyControl cc: ConcurrencyControl?) throws
@@ -323,8 +323,8 @@ class DatabaseTest: CBLTestCase {
     
     func testSaveDocWithNoParentConflict() throws {
         try testSaveDocWithNoParentConflict(usingConcurrencyControl: nil)
-        try testSaveDocWithNoParentConflict(usingConcurrencyControl: .none)
-        try testSaveDocWithNoParentConflict(usingConcurrencyControl: .optimistic)
+        try testSaveDocWithNoParentConflict(usingConcurrencyControl: .lastWriteWins)
+        try testSaveDocWithNoParentConflict(usingConcurrencyControl: .failOnConflict)
     }
     
     func testSaveDocWithNoParentConflict(usingConcurrencyControl cc: ConcurrencyControl?) throws
@@ -352,8 +352,8 @@ class DatabaseTest: CBLTestCase {
     
     func testSaveDocWithDeletedConflict() throws {
         try testSaveDocWithDeletedConflict(usingConcurrencyControl: nil)
-        try testSaveDocWithDeletedConflict(usingConcurrencyControl: .none)
-        try testSaveDocWithDeletedConflict(usingConcurrencyControl: .optimistic)
+        try testSaveDocWithDeletedConflict(usingConcurrencyControl: .lastWriteWins)
+        try testSaveDocWithDeletedConflict(usingConcurrencyControl: .failOnConflict)
     }
     
     func testSaveDocWithDeletedConflict(usingConcurrencyControl cc: ConcurrencyControl?) throws
@@ -409,18 +409,19 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(doc.sequence, 3)
     }
     
-    func testDeleteNonExistingDoc() throws {
-        let doc = try generateDocument(withID: "doc1")
+    func testDeleteNoneExistingDoc() throws {
+        let doc1a = try generateDocument(withID: "doc1")
+        let doc1b = db.document(withID: doc1a.id)!
         
         // Purge doc:
-        try db.purgeDocument(doc)
+        try db.purgeDocument(doc1a)
         XCTAssertEqual(db.count, 0)
-        XCTAssertNil(db.document(withID: doc.id))
+        XCTAssertNil(db.document(withID: doc1a.id))
         
         // Delete doc, no-ops:
-        try db.deleteDocument(doc)
+        try db.deleteDocument(doc1b)
         XCTAssertEqual(db.count, 0)
-        XCTAssertNil(db.document(withID: doc.id))
+        XCTAssertNil(db.document(withID: doc1b.id))
     }
     
     func testDeleteDocInBatch() throws {
@@ -498,8 +499,8 @@ class DatabaseTest: CBLTestCase {
     
     func testDeleteDocWithConflict() throws {
         try testDeleteDocWithConflict(usingConcurrencyControl: nil)
-        try testDeleteDocWithConflict(usingConcurrencyControl: .none)
-        try testDeleteDocWithConflict(usingConcurrencyControl: .optimistic)
+        try testDeleteDocWithConflict(usingConcurrencyControl: .lastWriteWins)
+        try testDeleteDocWithConflict(usingConcurrencyControl: .failOnConflict)
     }
     
     func testDeleteDocWithConflict(usingConcurrencyControl cc: ConcurrencyControl?) throws {

@@ -58,8 +58,8 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 Concurruncy control type used when saving or deleting a document.
 */
 typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
-    kCBLConcurrencyControlNone,         ///< The last write operation will win if there is a conflict.
-    kCBLConcurrencyControlOptimistic    ///< The operation will fail if there is a conflict.
+    kCBLConcurrencyControlLastWriteWins,    ///< The last write operation will win if there is a conflict.
+    kCBLConcurrencyControlFailOnConflict    ///< The operation will fail if there is a conflict.
 };
 
 /** A Couchbase Lite database. */
@@ -143,7 +143,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
  Saves a document to the database. When write operations are executed
  concurrently, the last writer will overwrite all other written values.
  Calling this method is the same as calling the -saveDocument:concurrencyControl:error:
- method with kCBLConcurrencyControlNone concurrency control.
+ method with kCBLConcurrencyControlLastWriteWins concurrency control.
 
  @param document The document.
  @param error On return, the error if any.
@@ -152,10 +152,10 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 - (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error;
 
 /**
- Saves a document to the database. When used with none concurrency control,
- the last write operation will win if there is a conflict. When used
- with optimistic concurrency control, save will fail with 'CBLErrorConflict'
- error code returned.
+ Saves a document to the database. When used with kCBLConcurrencyControlLastWriteWins
+ concurrency control, the last write operation will win if there is a conflict.
+ When used with kCBLConcurrencyControlFailOnConflict concurrency control,
+ save will fail with 'CBLErrorConflict' error code returned.
 
  @param document The document.
  @param concurrencyControl The concurrency control.
@@ -170,7 +170,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
  Deletes a document from the database. When write operations are executed
  concurrently, the last writer will overwrite all other written values.
  Calling this method is the same as calling the -deleteDocument:concurrencyControl:error:
- method with kCBLConcurrencyControlNone concurrency control.
+ method with kCBLConcurrencyControlLastWriteWins concurrency control.
 
  @param document The document.
  @param error On return, the error if any.
@@ -179,10 +179,10 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 
 /**
- Deletes a document from the database. When used with none concurrency control,
- the last write operation will win if there is a conflict. When used
- with optimistic concurrency control, delete will fail with 'CBLErrorConflict'
- error code returned.
+ Deletes a document from the database. When used with kCBLConcurrencyControlLastWriteWins
+ concurrency control, the last write operation will win if there is a conflict.
+ When used with kCBLConcurrencyControlFailOnConflict concurrency control,
+ delete will fail with 'CBLErrorConflict' error code returned.
 
  @param document The document.
  @param concurrencyControl The concurrency control.

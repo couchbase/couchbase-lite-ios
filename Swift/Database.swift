@@ -36,17 +36,17 @@ public enum LogLevel: UInt8 {
     case info
     case warning
     case error
-    case none
+    case lastWriteWins
 }
 
 
 /// Concurruncy control type used when saving or deleting a document.
 ///
-/// - none: The last write operation will win if there is a conflict.
-/// - optimistic: The operation will fail if there is a conflict.
+/// - lastWriteWins: The last write operation will win if there is a conflict.
+/// - failOnConflict: The operation will fail if there is a conflict.
 public enum ConcurrencyControl: UInt8 {
-    case none = 0
-    case optimistic
+    case lastWriteWins = 0
+    case failOnConflict
 }
 
 
@@ -102,7 +102,7 @@ public final class Database {
     /// Saves a document to the database. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the saveDocument(document,
-    /// concurrencyControl) function with ConcurrencyControl.none.
+    /// concurrencyControl) function with ConcurrencyControl.lastWriteWins.
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
@@ -111,22 +111,22 @@ public final class Database {
     }
     
     
-    /// Saves a document to the database. When used with none concurrency control,
-    /// the last write operation will win if there is a conflict. When used
-    /// with optimistic concurrency control, save will fail with 'false' value
+    /// Saves a document to the database. When used with lastWriteWins concurrency
+    /// control, the last write operation will win if there is a conflict. When used
+    /// with failOnConflict concurrency control, save will fail with 'false' value
     /// returned.
     ///
     /// - Parameters:
     ///   - document: The document.
     ///   - concurrencyControl: The concurrency control.
-    /// - Returns: True if successful. False if the optimistic concurrency
+    /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
     @discardableResult public func saveDocument(
         _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
-            let cc = concurrencyControl == .none ?
-                CBLConcurrencyControl.none : CBLConcurrencyControl.optimistic;
+            let cc = concurrencyControl == .lastWriteWins ?
+                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
             try _impl.save(document._impl as! CBLMutableDocument, concurrencyControl: cc)
             return true
         } catch let err as NSError {
@@ -141,7 +141,7 @@ public final class Database {
     /// Deletes a document from the database. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the deleteDocument(document,
-    /// concurrencyControl) function with ConcurrencyControl.none.
+    /// concurrencyControl) function with ConcurrencyControl.lastWriteWins.
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
@@ -150,22 +150,22 @@ public final class Database {
     }
     
     
-    /// Deletes a document from the database. When used with none concurrency
+    /// Deletes a document from the database. When used with lastWriteWins concurrency
     /// control, the last write operation will win if there is a conflict.
-    /// When used with optimistic concurrency control, save will fail with
+    /// When used with failOnConflict concurrency control, save will fail with
     /// 'false' value returned.
     ///
     /// - Parameters:
     ///   - document: The document.
     ///   - concurrencyControl: The concurrency control.
-    /// - Returns: True if successful. False if the optimistic concurrency
+    /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
     @discardableResult public func deleteDocument(
         _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
-            let cc = concurrencyControl == .none ?
-                CBLConcurrencyControl.none : CBLConcurrencyControl.optimistic;
+            let cc = concurrencyControl == .lastWriteWins ?
+                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
             try _impl.delete(document._impl, concurrencyControl: cc)
             return true
         } catch let err as NSError {

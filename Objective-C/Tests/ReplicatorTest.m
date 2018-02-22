@@ -349,7 +349,7 @@
     // Most-Active Win:
     NSDictionary* expectedResult = @{@"species": @"Tiger",
                                      @"pattern": @"striped",
-                                     @"color": @"back-yellow"};
+                                     @"color": @"black-yellow"};
     AssertEqualObjects(savedDoc.toDictionary, expectedResult);
     
     // Push to otherDB again to verify there is no replication conflict now,
@@ -390,7 +390,7 @@
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
                                                  @"pattern": @"striped",
-                                                 @"color": @"back-yellow"}));
+                                                 @"color": @"black-yellow"}));
 }
 
 

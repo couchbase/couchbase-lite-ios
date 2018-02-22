@@ -109,7 +109,7 @@
     if (concurrencyControl >= 0) {
         success = [self.db saveDocument: document
                      concurrencyControl: concurrencyControl error: &error];
-        if (concurrencyControl == kCBLConcurrencyControlOptimistic) {
+        if (concurrencyControl == kCBLConcurrencyControlFailOnConflict) {
             AssertFalse(success);
             AssertEqual(error.domain, CBLErrorDomain);
             AssertEqual(error.code, CBLErrorConflict);
@@ -132,7 +132,7 @@
     if (concurrencyControl >= 0) {
         success = [self.db deleteDocument: document
                      concurrencyControl: concurrencyControl error: &error];
-        if (concurrencyControl == kCBLConcurrencyControlOptimistic) {
+        if (concurrencyControl == kCBLConcurrencyControlFailOnConflict) {
             AssertFalse(success);
             AssertEqual(error.domain, CBLErrorDomain);
             AssertEqual(error.code, CBLErrorConflict);
@@ -517,8 +517,8 @@
 
 - (void) testSaveDocWithConflict {
     [self testSaveDocWithConflictUsingConcurrencyControl: -1];
-    [self testSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlNone];
-    [self testSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlOptimistic];
+    [self testSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    [self testSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
 }
 
 
@@ -558,8 +558,8 @@
 
 - (void) testSaveDocWithNoParentConflict {
     [self testSaveDocWithNoParentConflictUsingConcurrencyControl: -1];
-    [self testSaveDocWithNoParentConflictUsingConcurrencyControl: kCBLConcurrencyControlNone];
-    [self testSaveDocWithNoParentConflictUsingConcurrencyControl: kCBLConcurrencyControlOptimistic];
+    [self testSaveDocWithNoParentConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    [self testSaveDocWithNoParentConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
 }
 
 
@@ -591,8 +591,8 @@
 
 - (void) testSaveDocWithDeletedConflict {
     [self testSaveDocWithDeletedConflictUsingConcurrencyControl: -1];
-    [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlNone];
-    [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlOptimistic];
+    [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
 }
 
 
@@ -790,8 +790,8 @@
 
 - (void) testDeleteDocWithConflict {
     [self testDeleteDocWithConflictUsingConcurrencyControl: -1];
-    [self testDeleteDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlNone];
-    [self testDeleteDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlOptimistic];
+    [self testDeleteDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    [self testDeleteDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
 }
 
 

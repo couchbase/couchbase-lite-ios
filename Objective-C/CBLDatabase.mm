@@ -178,7 +178,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (BOOL) saveDocument: (CBLMutableDocument *)document error:(NSError **)error {
     return [self saveDocument: document
-           concurrencyControl: kCBLConcurrencyControlNone
+           concurrencyControl: kCBLConcurrencyControlLastWriteWins
                         error: error];
 }
 
@@ -196,7 +196,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
     return [self deleteDocument: document
-             concurrencyControl: kCBLConcurrencyControlNone
+             concurrencyControl: kCBLConcurrencyControlLastWriteWins
                           error: error];
 }
 
@@ -846,37 +846,27 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             if (!transaction.begin())
                 return convertError(transaction.error(), outError);
             
-            if (deletion) {
-                // Check existing, NO-OPS if the document doesn't exist:
-                CBLStringBytes bDocID(document.id);
-                C4Error err;
-                curDoc = c4doc_get(_c4db, bDocID, true, &err);
-                if (!curDoc) {
-                    if (err.code == kC4ErrorNotFound)
-                        return YES;
-                    return convertError(err, outError);
-                }
-            }
-            
             if (![self saveDocument: document into: &newDoc
                    withBaseDocument: nil asDeletion: deletion error: outError])
                 return NO;
             
             if (!newDoc) {
                 // Handle conflict:
-                if (concurrencyControl == kCBLConcurrencyControlOptimistic)
+                if (concurrencyControl == kCBLConcurrencyControlFailOnConflict)
                     return createError(CBLErrorConflict, outError);
                 
-                if (!curDoc) {
-                    CBLStringBytes bDocID(document.id);
-                    C4Error err;
-                    curDoc = c4doc_get(_c4db, bDocID, true, &err);
-                    assert(curDoc);
-                }
+                C4Error err;
+                CBLStringBytes bDocID(document.id);
+                curDoc = c4doc_get(_c4db, bDocID, true, &err);
                 
-                // If deletion and the current doc has already been deleted:
+                // If deletion and the current doc has already been deleted
+                // or doesn't exist:
                 if (deletion) {
-                   if ((curDoc->flags & kDocDeleted) != 0) {
+                    if (!curDoc) {
+                        if (err.code == kC4ErrorNotFound)
+                            return YES;
+                        return convertError(err, outError);
+                    } else if ((curDoc->flags & kDocDeleted) != 0) {
                         [document replaceC4Doc: [CBLC4Document document: curDoc]];
                         curDoc = nil;
                         return YES;
@@ -884,6 +874,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 }
                 
                 // Save changes on the current branch:
+                assert(curDoc);
                 if (![self saveDocument: document into: &newDoc
                        withBaseDocument: curDoc asDeletion: deletion error: outError])
                     return NO;
