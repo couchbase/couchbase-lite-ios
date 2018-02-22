@@ -672,19 +672,26 @@
 
 
 - (void) testDeleteNonExistingDoc {
-    CBLDocument* doc = [self generateDocumentWithID: @"doc1"];
+    CBLDocument* doc1a = [self generateDocumentWithID: @"doc1"];
+    CBLDocument* doc1b = [self.db documentWithID: doc1a.id];
     
     // Purge doc:
     NSError* error;
-    Assert([self.db purgeDocument: doc error: &error]);
+    Assert([self.db purgeDocument: doc1a error: &error]);
     AssertEqual(self.db.count, 0u);
-    AssertNil([self.db documentWithID: doc.id]);
+    AssertNil([self.db documentWithID: doc1a.id]);
     
-    // Delete doc, no-ops:
-    Assert([self.db deleteDocument: doc error: &error]);
+    // Delete doc1a, no-ops:
+    Assert([self.db deleteDocument: doc1a error: &error]);
     AssertNil(error);
     AssertEqual(self.db.count, 0u);
-    AssertNil([self.db documentWithID: doc.id]);
+    AssertNil([self.db documentWithID: doc1a.id]);
+    
+    // Delete doc1b, no-ops:
+    Assert([self.db deleteDocument: doc1b error: &error]);
+    AssertNil(error);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: doc1b.id]);
 }
 
 
@@ -777,7 +784,7 @@
     
     // Delete doc1b:
     Assert([self.db deleteDocument: doc1b error: &error], @"Error: %@", error);
-    AssertEqual(doc1a.sequence, 2u);
+    AssertEqual(doc1b.sequence, 2u);
     AssertNil([self.db documentWithID: doc.id]);
 }
 
