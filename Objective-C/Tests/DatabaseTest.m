@@ -632,8 +632,8 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @1 forKey: @"key"];
     
-    [self expectException: @"NSInvalidArgumentException" in: ^{
-        [self.db deleteDocument: doc error: nil];
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: doc error: err];
     }];
     
     AssertEqual(self.db.count, 0u);
@@ -681,9 +681,9 @@
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: doc1a.id]);
     
-    // Delete doc1a, no-ops:
-    [self expectException: @"NSInvalidArgumentException" in: ^{
-        [self.db deleteDocument: doc1a error: nil];
+    // Delete doc1a, 404 error:
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: doc1a error: err];
     }];
     
     // Delete doc1b, no-ops:
@@ -832,12 +832,10 @@
 
 - (void) testPurgePreSaveDoc {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    
-    [self expectException: @"NSInvalidArgumentException" in: ^{
-        [self.db purgeDocument: doc error: nil];
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter
+                   in: ^BOOL(NSError ** error) {
+        return [self.db purgeDocument: doc error: error];
     }];
-    
-    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -847,7 +845,7 @@
     
     // Purge Doc:
     [self purgeDocAndVerify: doc];
-    AssertEqual(0, (long)self.db.count);
+    AssertEqual(self.db.count, 0u);
 }
 
 
@@ -908,17 +906,13 @@
     NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocumentWithID: docID];
     
-    // get document for second purge
-    CBLDocument* doc1 = [self.db documentWithID: docID];
-    AssertNotNil(doc1);
-    
     // Purge Doc first time
     [self purgeDocAndVerify: doc];
     AssertEqual(0, (long)self.db.count);
     
     // Purge Doc second time
-    [self expectException: @"NSInvalidArgumentException" in: ^{
-        [self.db purgeDocument: doc error: nil];
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error) {
+        return [self.db purgeDocument: doc error: error];
     }];
 }
 
@@ -929,7 +923,7 @@
 
     NSError* error;
     BOOL success = [self.db inBatch: &error usingBlock: ^{
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 10; i++) {
             //NSError* err;
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
             CBLDocument* doc = [self.db documentWithID: docID];

@@ -1432,8 +1432,8 @@
     [doc1 setValue: @"Scott" forKey: @"name"];
  
     // Purge before save:
-    [self expectException: @"NSInvalidArgumentException" in: ^{
-        [_db purgeDocument: doc1 error: nil];
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+        return [_db purgeDocument: doc1 error: err];
     }];
     
     // Save:

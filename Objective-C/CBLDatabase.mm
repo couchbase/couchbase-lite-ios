@@ -217,12 +217,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         if (![self prepareDocument: document error: error])
             return NO;
         
-        if (!document.revID) {
-            [NSException raise: NSInvalidArgumentException
-                        format: @"Do not allow to purge a newly created document "
-                                 "that has not been saved into the database."];
-            return NO;
-        }
+        if (!document.revID)
+            return createError(CBLErrorInvalidParameter,
+                               @"Document doesn't exist in the database.", error);
         
         C4Transaction transaction(self.c4db);
         if (!transaction.begin())
@@ -828,11 +825,9 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
            asDeletion: (BOOL)deletion
                 error: (NSError**)outError
 {
-    if (deletion && !document.revID) {
-        [NSException raise: NSInvalidArgumentException
-                    format: @"Document doesn't exist in the database."];
-        return NO;
-    }
+    if (deletion && !document.revID)
+        return createError(CBLErrorInvalidParameter,
+                           @"Document doesn't exist in the database.", outError);
     
     CBL_LOCK(self) {
         if (![self prepareDocument: document error: outError])
@@ -888,10 +883,8 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             return YES;
         }
         @finally {
-            if (curDoc)
-                c4doc_free(curDoc);
-            if (newDoc)
-                c4doc_free(newDoc);
+            c4doc_free(curDoc);
+            c4doc_free(newDoc);
         }
     }
 }

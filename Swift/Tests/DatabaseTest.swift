@@ -386,6 +386,14 @@ class DatabaseTest: CBLTestCase {
     
     // MARK: Delete Document
     
+    func testDeletePreSaveDoc() throws {
+        let doc = MutableDocument(id: "doc1")
+        doc.setValue(1, forKey: "key")
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try self.db.deleteDocument(doc)
+        }
+    }
+    
     func testDeleteDoc() throws {
         let doc = try generateDocument(withID: "doc1")
         try db.deleteDocument(doc)
@@ -417,6 +425,11 @@ class DatabaseTest: CBLTestCase {
         try db.purgeDocument(doc1a)
         XCTAssertEqual(db.count, 0)
         XCTAssertNil(db.document(withID: doc1a.id))
+        
+        // Delete doc1a, 404 error:
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try self.db.deleteDocument(doc1a)
+        }
         
         // Delete doc, no-ops:
         try db.deleteDocument(doc1b)
@@ -529,6 +542,66 @@ class DatabaseTest: CBLTestCase {
         
         // Cleanup
         try cleanDB()
+    }
+    
+    // MARK: Purge Document
+    
+    func testPurgePreSaveDoc() throws {
+        let doc = createDocument("doc1")
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try self.db.purgeDocument(doc)
+        }
+    }
+    
+    func testPurgeDoc() throws {
+        let doc = try generateDocument(withID: "doc1")
+        try db.purgeDocument(doc)
+        XCTAssertNil(db.document(withID: "doc1"))
+        XCTAssertEqual(db.count, 0)
+    }
+    
+    func testPurgeDocInDifferentDBInstance() throws {
+        let doc = try generateDocument(withID: "doc1")
+        let otherDB = try openDB(name: db.name)
+        XCTAssertNotNil(otherDB.document(withID: doc.id))
+        XCTAssertEqual(otherDB.count, 1)
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try otherDB.purgeDocument(doc)
+        }
+        try otherDB.close()
+    }
+    
+    func testPurgeDocInDifferentDB() throws {
+        let doc = try generateDocument(withID: "doc1")
+        let otherDB = try openDB(name: "otherDB")
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try otherDB.purgeDocument(doc)
+        }
+        try otherDB.delete()
+    }
+    
+    func testPurgeSameDocTwice() throws {
+        let doc = try generateDocument(withID: "doc1")
+        try db.purgeDocument(doc)
+        XCTAssertNil(db.document(withID: "doc1"))
+        XCTAssertEqual(db.count, 0)
+        
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try self.db.purgeDocument(doc)
+        }
+    }
+    
+    func testPurgeDocInBatch() throws {
+        try createDocs(10)
+        try db.inBatch {
+            for i in 0..<10 {
+                let docID = String(format: "doc_%03d", i)
+                let doc = db.document(withID: docID)!
+                try self.db.purgeDocument(doc)
+                XCTAssertNil(db.document(withID: docID))
+                XCTAssertEqual(self.db.count, UInt64(9 - i))
+            }
+        }
     }
     
     // MARK: Index

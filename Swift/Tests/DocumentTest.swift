@@ -1258,6 +1258,12 @@ class DocumentTest: CBLTestCase {
         let doc1 = createDocument("doc1")
         doc1.setValue("profile", forKey: "type")
         doc1.setValue("Scott", forKey: "name")
+        
+        // Purge before save:
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+            try self.db.purgeDocument(doc1)
+        }
+        
         try saveDocument(doc1)
         
         // Purge:
