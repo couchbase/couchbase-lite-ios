@@ -87,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSData*) encode: (NSError**)outError;
 
 // Replace c4doc without updating the document data
-- (void) replaceC4Doc: (CBLC4Document*)c4doc;
+- (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;
 
 @end
 
