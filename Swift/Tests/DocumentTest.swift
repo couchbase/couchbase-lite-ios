@@ -1260,7 +1260,7 @@ class DocumentTest: CBLTestCase {
         doc1.setValue("Scott", forKey: "name")
         
         // Purge before save:
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
             try self.db.purgeDocument(doc1)
         }
         

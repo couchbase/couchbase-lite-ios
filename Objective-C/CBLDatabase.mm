@@ -218,7 +218,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             return NO;
         
         if (!document.revID)
-            return createError(CBLErrorInvalidParameter,
+            return createError(CBLErrorNotFound,
                                @"Document doesn't exist in the database.", error);
         
         C4Transaction transaction(self.c4db);
@@ -821,7 +821,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 error: (NSError**)outError
 {
     if (deletion && !document.revID)
-        return createError(CBLErrorInvalidParameter,
+        return createError(CBLErrorNotFound,
                            @"Document doesn't exist in the database.", outError);
     
     CBL_LOCK(self) {

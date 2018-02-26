@@ -389,7 +389,7 @@ class DatabaseTest: CBLTestCase {
     func testDeletePreSaveDoc() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setValue(1, forKey: "key")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
             try self.db.deleteDocument(doc)
         }
     }
@@ -427,7 +427,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: doc1a.id))
         
         // Delete doc1a, 404 error:
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
             try self.db.deleteDocument(doc1a)
         }
         
@@ -548,7 +548,7 @@ class DatabaseTest: CBLTestCase {
     
     func testPurgePreSaveDoc() throws {
         let doc = createDocument("doc1")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
             try self.db.purgeDocument(doc)
         }
     }
@@ -586,7 +586,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc1"))
         XCTAssertEqual(db.count, 0)
         
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
             try self.db.purgeDocument(doc)
         }
     }

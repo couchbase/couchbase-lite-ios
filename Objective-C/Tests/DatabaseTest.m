@@ -632,7 +632,7 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @1 forKey: @"key"];
     
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [self.db deleteDocument: doc error: err];
     }];
     
@@ -682,7 +682,7 @@
     AssertNil([self.db documentWithID: doc1a.id]);
     
     // Delete doc1a, 404 error:
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [self.db deleteDocument: doc1a error: err];
     }];
     
@@ -832,7 +832,7 @@
 
 - (void) testPurgePreSaveDoc {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound
                    in: ^BOOL(NSError ** error) {
         return [self.db purgeDocument: doc error: error];
     }];
@@ -911,7 +911,7 @@
     AssertEqual(0, (long)self.db.count);
     
     // Purge Doc second time
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** error) {
         return [self.db purgeDocument: doc error: error];
     }];
 }

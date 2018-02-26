@@ -1432,7 +1432,7 @@
     [doc1 setValue: @"Scott" forKey: @"name"];
  
     // Purge before save:
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [_db purgeDocument: doc1 error: err];
     }];
     

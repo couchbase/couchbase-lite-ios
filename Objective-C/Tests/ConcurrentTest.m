@@ -277,7 +277,7 @@
             NSError* error;
             if (![self.db purgeDocument: doc error: &error]) {
                 AssertEqualObjects(error.domain, CBLErrorDomain);
-                AssertEqual(error.code, CBLErrorInvalidParameter);
+                AssertEqual(error.code, CBLErrorNotFound);
             }
         }
     }];
