@@ -864,7 +864,9 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 }
                 
                 // Save changes on the current branch:
-                assert(curDoc);
+                if (!curDoc)
+                    return convertError(err, outError);
+                
                 if (![self saveDocument: document into: &newDoc
                        withBaseDocument: curDoc asDeletion: deletion error: outError])
                     return NO;
