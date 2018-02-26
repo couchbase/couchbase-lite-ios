@@ -40,6 +40,15 @@ public final class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
     public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return orderBy(orderings)
+    }
+    
+    
+    /// Creates and chains an OrderBy object for specifying the orderings of the query result.
+    ///
+    /// - Parameter orderings: The Ordering objects.
+    /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
+    public func orderBy(_ orderings: [OrderingProtocol]) -> OrderBy {
         return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     

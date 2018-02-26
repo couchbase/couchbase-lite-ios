@@ -29,4 +29,10 @@ protocol JoinRouter {
     /// - Returns: The Joins object.
     func join(_ join: JoinProtocol...) -> Joins
     
+    /// Create and chain the JOIN components to specify a query JOIN clause.
+    ///
+    /// - Parameter join: The join objects.
+    /// - Returns: The Joins object.
+    func join(_ join: [JoinProtocol]) -> Joins
+    
 }

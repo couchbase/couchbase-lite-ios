@@ -117,17 +117,24 @@ class DatabaseTest: CBLTestCase {
         let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
         try db.createIndex(index1, withName: "index1")
         
-        // Create FTS index:
-        let detailItem = FullTextIndexItem.property("detail")
-        let index2 = IndexBuilder.fullTextIndex(items: detailItem)
+        let index2 = IndexBuilder.valueIndex(items: [fNameItem, lNameItem])
         try db.createIndex(index2, withName: "index2")
         
-        let detailItem2 = FullTextIndexItem.property("es-detail")
-        let index3 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
+        // Create FTS index:
+        let detailItem = FullTextIndexItem.property("detail")
+        let index3 = IndexBuilder.fullTextIndex(items: detailItem)
         try db.createIndex(index3, withName: "index3")
         
-        XCTAssertEqual(db.indexes.count, 3)
-        XCTAssertEqual(db.indexes, ["index1", "index2", "index3"])
+        let detailItem2 = FullTextIndexItem.property("es-detail")
+        let index4 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
+        try db.createIndex(index4, withName: "index4")
+        
+        let nameItem = FullTextIndexItem.property("name")
+        let index5 = IndexBuilder.fullTextIndex(items: [nameItem, detailItem])
+        try db.createIndex(index5, withName: "index5")
+        
+        XCTAssertEqual(db.indexes.count, 5)
+        XCTAssertEqual(db.indexes, ["index1", "index2", "index3", "index4", "index5"])
     }
     
     func testCreateSameIndexTwice() throws {

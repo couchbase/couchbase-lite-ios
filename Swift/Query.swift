@@ -237,12 +237,23 @@ public class Query {
 
 /// A factory class to create a Select instance.
 public final class QueryBuilder {
+    
     /// Create a SELECT statement instance that you can use further
     /// (e.g. calling the from() function) to construct the complete query statement.
     ///
     /// - Parameter results: The array of the SelectResult object for specifying the returned values.
     /// - Returns: A Select object.
     public static func select(_ results: SelectResultProtocol...) -> Select {
+        return select(results)
+    }
+    
+    
+    /// Create a SELECT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select object.
+    public static func select(_ results: [SelectResultProtocol]) -> Select {
         return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
     }
     
@@ -253,8 +264,19 @@ public final class QueryBuilder {
     /// - Parameter results: The array of the SelectResult object for specifying the returned values.
     /// - Returns: A Select distinct object.
     public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
+        return selectDistinct(results)
+    }
+    
+    
+    /// Create a SELECT DISTINCT statement instance that you can use further
+    /// (e.g. calling the from() function) to construct the complete query statement.
+    ///
+    /// - Parameter results: The array of the SelectResult object for specifying the returned values.
+    /// - Returns: A Select distinct object.
+    public static func selectDistinct(_ results: [SelectResultProtocol]) -> Select {
         return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
     }
+    
 }
 
 

@@ -27,6 +27,15 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     /// - Parameter orderings: The ordering objects.
     /// - Returns: The OrderBy object.
     public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return orderBy(orderings)
+    }
+    
+    
+    /// Create and chain an ORDER BY component for specifying the orderings of the query result.
+    ///
+    /// - Parameter orderings: The ordering objects.
+    /// - Returns: The OrderBy object.
+    public func orderBy(_ orderings: [OrderingProtocol]) -> OrderBy {
         return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
@@ -36,6 +45,15 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     /// - Parameter expressions: The expression objects.
     /// - Returns: The GroupBy object.
     public func groupBy(_ expressions: ExpressionProtocol...) -> GroupBy {
+        return groupBy(expressions)
+    }
+    
+    
+    /// Create and chain a GROUP BY component to group the query result.
+    ///
+    /// - Parameter expressions: The expression objects.
+    /// - Returns: The GroupBy object.
+    public func groupBy(_ expressions: [ExpressionProtocol]) -> GroupBy {
         return GroupBy(query: self, impl: QueryExpression.toImpl(expressions: expressions))
     }
     

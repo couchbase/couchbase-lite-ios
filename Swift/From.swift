@@ -28,6 +28,15 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     /// - Parameter joins: The Join objects.
     /// - Returns: The Joins object that represents the JOIN clause of the query.
     public func join(_ joins: JoinProtocol...) -> Joins {
+        return join(joins)
+    }
+    
+    
+    /// Creates and chains a Joins object for specifying the JOIN clause of the query.
+    ///
+    /// - Parameter joins: The Join objects.
+    /// - Returns: The Joins object that represents the JOIN clause of the query.
+    public func join(_ joins: [JoinProtocol]) -> Joins {
         return Joins(query: self, impl: QueryJoin.toImpl(joins: joins))
     }
     
@@ -46,6 +55,15 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     /// - Parameter expressions: The group by expression.
     /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
     public func groupBy(_ expressions: ExpressionProtocol...) -> GroupBy {
+        return groupBy(expressions)
+    }
+    
+    
+    /// Creates and chains a GroupBy object to group the query result.
+    ///
+    /// - Parameter expressions: The group by expression.
+    /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
+    public func groupBy(_ expressions: [ExpressionProtocol]) -> GroupBy {
         return GroupBy(query: self, impl: QueryExpression.toImpl(expressions: expressions))
     }
     
@@ -55,6 +73,15 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
     public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return orderBy(orderings)
+    }
+    
+    
+    /// Creates and chains an OrderBy object for specifying the orderings of the query result.
+    ///
+    /// - Parameter orderings: The Ordering objects.
+    /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
+    public func orderBy(_ orderings: [OrderingProtocol]) -> OrderBy {
         return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
