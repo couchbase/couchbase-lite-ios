@@ -21,7 +21,6 @@
 #import <Security/SecCertificate.h>
 @class CBLDatabase;
 @class CBLAuthenticator;
-@protocol CBLConflictResolver;
 @protocol CBLEndpoint;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -55,12 +54,6 @@ typedef enum {
  default value is NO.
  */
 @property (nonatomic) BOOL continuous;
-
-/**
- The conflict resolver for this replicator. Without setting the default conflict
- resolver, where the revision with more history wins, will be used.
- */
-@property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
 /**
  An Authenticator to authenticate with a remote server. Currently there are two types of

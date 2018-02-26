@@ -23,11 +23,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
 		272850A81E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
-		273E55471F79AF5E000182F1 /* ConflictTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F731EB14ABA00976B41 /* ConflictTest.m */; };
 		273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		273E555E1F79AF79000182F1 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
 		2747666420191BFA007B39D1 /* CBLErrors.h in Headers */ = {isa = PBXBuildFile; fileRef = 27476651201912B5007B39D1 /* CBLErrors.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -47,7 +44,6 @@
 		275F929D1E4D377C007FD5A2 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F929F1E4D377C007FD5A2 /* CBLMutableDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6ED1E15B8C20011E8CB /* CBLMutableDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F92A21E4D377C007FD5A2 /* CBLQueryRow.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF66E1E43E013005F90DD /* CBLQueryRow.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F92A61E4D3A91007FD5A2 /* MutableDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F92A51E4D3A91007FD5A2 /* MutableDocument.swift */; };
@@ -94,7 +90,6 @@
 		27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A911E8C4F4300E103F9 /* Replicator.swift */; };
 		27E35A9C1E8C522200E103F9 /* CBLReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E35A9D1E8C539600E103F9 /* CBLReplicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplicator.mm */; };
-		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		27F961991ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
@@ -165,7 +160,6 @@
 		9332081B1E77415E000D9993 /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 933208111E77415E000D9993 /* CBLQuery.mm */; };
 		9332082A1E774171000D9993 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
 		9332082C1E774419000D9993 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
-		93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F731EB14ABA00976B41 /* ConflictTest.m */; };
 		93384F8C1EB151C100976B41 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
 		933F45F51EC29EF100863ECB /* MutableFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EA91EC17FEA005E4050 /* MutableFragment.swift */; };
 		933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EAB1EC17FFE005E4050 /* DocumentFragment.swift */; };
@@ -255,6 +249,8 @@
 		9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
 		9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
 		9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
+		937980A9203AB22C0057F35C /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
+		937980AA203AB22C0057F35C /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		937A69031F0731230058277F /* CBLQueryFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 937A69011F0731230058277F /* CBLQueryFunction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		937A69041F0731230058277F /* CBLQueryFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 937A69011F0731230058277F /* CBLQueryFunction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		937A69051F0731230058277F /* CBLQueryFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 937A69021F0731230058277F /* CBLQueryFunction.m */; };
@@ -446,7 +442,6 @@
 		93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B41D7C1F05B3A800A7F114 /* Join.swift */; };
 		93B41D7F1F05B60000A7F114 /* CBLQueryJoin.h in Headers */ = {isa = PBXBuildFile; fileRef = 93B41D621F0580E700A7F114 /* CBLQueryJoin.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93B5035B1E64B053002C4680 /* CBLDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */; };
-		93B5035E1E64B063002C4680 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		93B503611E64B06E002C4680 /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
 		93B503621E64B073002C4680 /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		93B503631E64B079002C4680 /* CBLCoreBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C971E241FB500F90659 /* CBLCoreBridge.mm */; };
@@ -484,7 +479,6 @@
 		93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */; };
 		93CD016E1E94923900AFB3FA /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
 		93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
-		93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
 		93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
 		93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
@@ -525,8 +519,6 @@
 		93DED01D201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
 		93DED01E201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
 		93DED032201B14DB00F44953 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DED030201B120500F44953 /* SampleCodeTest.swift */; };
-		93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */; };
-		93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */; };
 		93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93E17EF91ED3ABE200671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
 		93E17F0B1ED3AC8100671CA1 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -808,8 +800,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
-		2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
 		27476651201912B5007B39D1 /* CBLErrors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLErrors.h; sourceTree = "<group>"; };
 		274D6C272011529D00DAB7DD /* CBLLog+Admin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLog+Admin.h"; sourceTree = "<group>"; };
@@ -865,7 +855,6 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
-		27FDBF411F02FE5C0087CC1C /* ConflictTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConflictTest.h; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
 		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
@@ -910,7 +899,6 @@
 		933208111E77415E000D9993 /* CBLQuery.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQuery.mm; sourceTree = "<group>"; };
 		933208291E774171000D9993 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		9332082B1E774419000D9993 /* QueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QueryTest.m; sourceTree = "<group>"; };
-		93384F731EB14ABA00976B41 /* ConflictTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConflictTest.m; sourceTree = "<group>"; };
 		93384F8B1EB151C100976B41 /* MiscTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MiscTest.m; sourceTree = "<group>"; };
 		933F45F91EC2B47500863ECB /* DataConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataConverter.swift; sourceTree = "<group>"; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
@@ -1132,8 +1120,6 @@
 		93DECF3E200DBE5800F44953 /* Support */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Support; sourceTree = "<group>"; };
 		93DED01C201AEFE400F44953 /* SampleCodeTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleCodeTest.m; sourceTree = "<group>"; };
 		93DED030201B120500F44953 /* SampleCodeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeTest.swift; sourceTree = "<group>"; };
-		93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
-		93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictTest.swift; sourceTree = "<group>"; };
 		93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocumentChange.h; sourceTree = "<group>"; };
 		93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocumentChange.m; sourceTree = "<group>"; };
 		93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
@@ -1288,7 +1274,6 @@
 				934C2CDA1F4FC0610010316F /* Bridge */,
 				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
-				93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				934C2CC51F4FBFE20010316F /* DatabaseEncryptionTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
@@ -1340,7 +1325,6 @@
 		9338BED21ED5473300634873 /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */,
 				275F928B1E4D3119007FD5A2 /* Database.swift */,
 				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				93C18E691FB638620029B567 /* DatabaseConfiguration.swift */,
@@ -1362,8 +1346,6 @@
 		933A42E81EA6CB8200AE9084 /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */,
-				2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */,
 				93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */,
 				93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */,
 				93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */,
@@ -1737,8 +1719,6 @@
 				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
-				27FDBF411F02FE5C0087CC1C /* ConflictTest.h */,
-				93384F731EB14ABA00976B41 /* ConflictTest.m */,
 				9385F3021FC645AE00032037 /* ConcurrentTest.m */,
 				932A88561F4CDDAD0005AFB8 /* DatabaseEncryptionTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
@@ -2009,7 +1989,6 @@
 				939B1B5B2009C04100FAA3CB /* CBLQueryVariableExpression.h in Headers */,
 				934A279A1F30E5FA003946A7 /* CBLCompoundExpression.h in Headers */,
 				934A278D1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */,
-				275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */,
 				9322DCE01F14603400C4ACF7 /* CBLQueryLimit.h in Headers */,
 				937F02A31EFC7DCC00060D64 /* CBLChangeListenerToken.h in Headers */,
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
@@ -2081,7 +2060,6 @@
 				93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */,
 				9374A8A6201FC53600BA0D9E /* CBLReplicator+Backgrounding.h in Headers */,
 				27D721991F8E97F400AA4458 /* CBLFleece.hh in Headers */,
-				2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */,
 				933208161E77415E000D9993 /* CBLQueryOrdering.h in Headers */,
 				93DBCFF62004B5FD0017CA83 /* CBLEndpoint.h in Headers */,
 				9384D8461FC407BA00FE89D8 /* CBLFullTextMatchExpression.h in Headers */,
@@ -2627,11 +2605,9 @@
 				937A693F1F1065610058277F /* CBLQueryMeta.m in Sources */,
 				93248DE82005E72A00C15B00 /* Endpoint.swift in Sources */,
 				9380D2641F0D7BD6007DD84A /* GroupBy.swift in Sources */,
-				93B5035E1E64B063002C4680 /* CBLConflictResolver.m in Sources */,
 				27D7219C1F8E97F400AA4458 /* CBLFleece.mm in Sources */,
 				93B5036C1E64B096002C4680 /* CBLJSON.m in Sources */,
 				27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */,
-				93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */,
 				938CDF201E807F45002EE790 /* DataSource.swift in Sources */,
 				93EC42D41FB3801E00D54BB4 /* CBLValueIndex.m in Sources */,
 				932A88281F4CCB3E0005AFB8 /* CBLEncryptionKey.m in Sources */,
@@ -2775,7 +2751,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
-				93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */,
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				93DB80031ED8FE5100C4F845 /* ReplicatorTest.swift in Sources */,
 				93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */,
@@ -2823,12 +2798,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
-				273E55471F79AF5E000182F1 /* ConflictTest.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				932A88581F4CDDB60005AFB8 /* DatabaseEncryptionTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
-				93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
@@ -2836,6 +2809,7 @@
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
 				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
+				937980AA203AB22C0057F35C /* PredicateQueryTest.m in Sources */,
 				938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2899,7 +2873,6 @@
 				9374A89D201FC47E00BA0D9E /* MYBackgroundMonitor.m in Sources */,
 				93EC42DC1FB384D200D54BB4 /* CBLFunctionExpression.m in Sources */,
 				93B41D661F0580E700A7F114 /* CBLQueryJoin.m in Sources */,
-				2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */,
 				93CD024C1E9DA0AC00AFB3FA /* CBLC4Document.mm in Sources */,
 				934A27A11F30E61B003946A7 /* CBLPropertyExpression.m in Sources */,
 				93B41CB21F04706100A7F114 /* CBLReplicatorChange.m in Sources */,
@@ -2945,14 +2918,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */,
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
-				93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */,
+				937980A9203AB22C0057F35C /* PredicateQueryTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
 				9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */,
 				932A88571F4CDDAD0005AFB8 /* DatabaseEncryptionTest.m in Sources */,

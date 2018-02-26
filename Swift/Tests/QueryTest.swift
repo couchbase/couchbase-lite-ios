@@ -1106,7 +1106,7 @@ class QueryTest: CBLTestCase {
         for data in testCases {
             let doc = createDocument()
             doc.setValue(data.0, forKey: "value")
-            let savedDoc = try saveDocument(doc)
+            try saveDocument(doc)
             
             let VALUE = Expression.property("value")
             let comparison = data.2 ?
@@ -1117,7 +1117,7 @@ class QueryTest: CBLTestCase {
             let numRow = try verifyQuery(q, block: { (n, r) in })
             XCTAssertEqual(numRow, 1)
             
-            try db.deleteDocument(savedDoc)
+            try db.deleteDocument(doc)
         }
     }
     

@@ -38,7 +38,6 @@ using namespace fleeceapi;
 
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
-@synthesize isInvalidated=_isInvalidated;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -91,13 +90,10 @@ using namespace fleeceapi;
 }
 
 
-- (BOOL) isDeleted {
-    return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
-}
-
-
 - (uint64_t) sequence {
-    return _c4Doc != nil ? _c4Doc.sequence : 0;
+    CBL_LOCK(self) {
+        return _c4Doc != nil ? _c4Doc.sequence : 0;
+    }
 }
 
 
@@ -147,57 +143,32 @@ using namespace fleeceapi;
 }
 
 
-- (void) setC4Doc: (CBLC4Document*)c4doc {
-    _c4Doc = c4doc;
-    _fleeceData = nullptr;
-
-    if (c4doc) {
-        C4Slice body = c4doc.selectedRev.body;
-        if (body.size > 0)
-            _fleeceData = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+- (CBLC4Document*) c4Doc {
+    CBL_LOCK(self) {
+        return _c4Doc;
     }
-    [self updateDictionary];
 }
 
 
-- (BOOL) selectConflictingRevision {
-    if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
-        return NO;
-    self.c4Doc = _c4Doc;     // This will update to the selected revision
-    return YES;
+- (void) setC4Doc: (CBLC4Document*)c4doc {
+    CBL_LOCK(self) {
+        _c4Doc = c4doc;
+        _fleeceData = nullptr;
+        
+        if (c4doc) {
+            C4Slice body = c4doc.selectedRev.body;
+            if (body.size > 0)
+                _fleeceData = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+        }
+        [self updateDictionary];
+    }
 }
 
 
-- (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
-                            andDoc: (CBLDocument*)doc2
-{
-    CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
-    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
-                || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
-        return NO;
-    self.c4Doc = _c4Doc;     // This will update to the selected revision
-    return YES;
-}
-
-
-- (NSString*) revID {
-    return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
-}
-
-
-- (NSUInteger) generation {
-    // CBLMutableDocument overrides this
-    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
-}
-
-
-- (BOOL) exists {
-    return _c4Doc != nil ? (_c4Doc.flags & kDocExists) != 0 : NO;
-}
-
-
-- (id<CBLConflictResolver>) effectiveConflictResolver {
-    return self.database.config.conflictResolver ?: [CBLDefaultConflictResolver new];
+- (void) replaceC4Doc: (CBLC4Document*)c4doc {
+    CBL_LOCK(self) {
+        _c4Doc = c4doc;
+    }
 }
 
 
@@ -205,6 +176,56 @@ using namespace fleeceapi;
     // CBLMutableDocument overrides this
     fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
     return body ? body.copiedNSData() : [NSData data];
+}
+
+
+#pragma mark - For Replication's conflict resolution
+
+
+- (BOOL) selectConflictingRevision {
+    CBL_LOCK(self) {
+        if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
+            return NO;
+        
+        self.c4Doc = _c4Doc;     // This will update to the selected revision
+        return YES;
+    }
+}
+
+
+- (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
+                            andDoc: (CBLDocument*)doc2
+{
+    CBL_LOCK(self) {
+        CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
+        if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
+            || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
+            return NO;
+        self.c4Doc = _c4Doc;     // This will update to the selected revision
+        return YES;
+    }
+}
+
+
+- (NSString*) revID {
+    CBL_LOCK(self) {
+        return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+    }
+}
+
+
+- (NSUInteger) generation {
+    // CBLMutableDocument overrides this
+    CBL_LOCK(self) {
+        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
+    }
+}
+
+
+- (BOOL) isDeleted {
+    CBL_LOCK(self) {
+        return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
+    }
 }
 
 

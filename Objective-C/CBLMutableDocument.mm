@@ -19,7 +19,6 @@
 #import "CBLMutableDocument.h"
 #import "CBLMutableArray.h"
 #import "CBLC4Document.h"
-#import "CBLConflictResolver.h"
 #import "CBLData.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
@@ -33,7 +32,6 @@
 @implementation CBLMutableDocument
 {
     NSError* _encodingError;
-    BOOL _isDeleted;
 }
 
 
@@ -183,31 +181,18 @@
 }
 
 
+// TODO: This value is incorrect after the document is saved as self.changed
+// doesn't get reset. However this is currently being used during replication's
+// conflict resolution so the generation value is correct in that circumstance.
 - (NSUInteger) generation {
     return super.generation + !!self.changed;
-}
-
-
-- (void) markAsDeleted {
-    _isDeleted = YES;
-}
-
-
-- (void) markAsInvalidated {
-    _isInvalidated = YES;
-}
-
-
-- (BOOL) isDeleted {
-    return _isDeleted ? _isDeleted : super.isDeleted;
 }
 
 
 #pragma mark - Private
 
 
-// Reflects only direct changes to the document. Changes on sub dictionaries or arrays will
-// not be propagated here.
+// TODO: Need to be reset after the document is saved.
 - (BOOL) changed {
     return ((CBLMutableDictionary*)_dict).changed;
 }

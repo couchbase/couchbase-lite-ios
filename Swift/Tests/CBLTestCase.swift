@@ -25,8 +25,6 @@ import CouchbaseLiteSwift
 class CBLTestCase: XCTestCase {
 
     var db: Database!
-    
-    var conflictResolver: ConflictResolver?
 
     let databaseName = "testdb"
     
@@ -51,9 +49,6 @@ class CBLTestCase: XCTestCase {
     func openDB(name: String) throws -> Database {
         let config = DatabaseConfiguration()
         config.directory = self.directory
-        if let resolver = self.conflictResolver {
-            config.conflictResolver = resolver
-        }
         return try Database(name: name, config: config)
     }
     
@@ -67,6 +62,12 @@ class CBLTestCase: XCTestCase {
         try db.close()
         db = nil
         try openDB()
+    }
+    
+    
+    func cleanDB() throws {
+        try db.delete()
+        try reopenDB()
     }
     
     
@@ -85,16 +86,21 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    @discardableResult func saveDocument(_ document: MutableDocument) throws -> Document {
-        return try db.saveDocument(document)
+    func saveDocument(_ document: MutableDocument) throws {
+        try db.saveDocument(document)
+        let savedDoc = db.document(withID: document.id)
+        XCTAssertNotNil(savedDoc)
+        XCTAssertEqual(savedDoc!.id, document.id)
+        XCTAssertTrue(savedDoc!.toDictionary() == document.toDictionary())
     }
     
     
-    @discardableResult func saveDocument(_ document: MutableDocument, eval: (Document) -> Void) throws -> Document {
+    func saveDocument(_ document: MutableDocument, eval: (Document) -> Void) throws {
         eval(document)
-        let doc = try saveDocument(document)
-        eval(doc)
-        return doc
+        try saveDocument(document)
+        eval(document)
+        let savedDoc = db.document(withID: document.id)!
+        eval(savedDoc)
     }
     
     

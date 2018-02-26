@@ -29,9 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* id;
 
-/** Is the document deleted? */
-@property (readonly, nonatomic) BOOL isDeleted;
-
 /** 
  Sequence number of the document in the database.
  This indicates how recently the document has been changed: every time any document is updated,

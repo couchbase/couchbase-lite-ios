@@ -28,7 +28,7 @@
     int _c4ObjectCount;
 }
 
-@synthesize db=_db, conflictResolver=_conflictResolver;
+@synthesize db=_db;
 
 
 + (void) initialize {
@@ -90,8 +90,6 @@
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     config.directory = self.directory;
-    if (self.conflictResolver)
-        config.conflictResolver = self.conflictResolver;
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }
 
@@ -107,9 +105,16 @@
 
 - (void) reopenDB {
     NSError *error;
-    Assert([_db close: &error]);
+    Assert([_db close: &error], @"Close error: %@", error);
     _db = nil;
     [self openDB];
+}
+
+
+- (void) cleanDB {
+    NSError *error;
+    Assert([_db delete: &error], @"Delete error: %@", error);
+    [self reopenDB];
 }
 
 
@@ -128,19 +133,23 @@
 }
 
 
-- (CBLDocument*) saveDocument: (CBLMutableDocument*)document {
+- (void) saveDocument: (CBLMutableDocument*)document {
     NSError* error;
-    CBLDocument* newDoc = [_db saveDocument: document error: &error];
-    Assert(newDoc != nil, @"Saving error: %@", error);
-    return newDoc;
+    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
+    
+    CBLDocument* savedDoc = [_db documentWithID: document.id];
+    AssertNotNil(savedDoc);
+    AssertEqualObjects(savedDoc.id, document.id);
+    AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
 }
 
 
-- (CBLDocument*) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block {
-    block(doc);
-    CBLDocument* newDoc = [self saveDocument: doc];
-    block(newDoc);
-    return newDoc;
+- (void) saveDocument: (CBLMutableDocument*)document eval: (void(^)(CBLDocument*))block {
+    NSError* error;
+    block(document);
+    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
+    block(document);
+    block([_db documentWithID: document.id]);
 }
 
 
@@ -187,8 +196,7 @@
                                                                      options: 0 error: &error];
                 Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
                 [doc setData: dict];
-                BOOL saved = [_db saveDocument: doc error: &error] != nil;
-                Assert(saved, @"Couldn't save document: %@", error);
+                Assert([_db saveDocument: doc error: &error], @"Couldn't save document: %@", error);
             }];
         }];
         Assert(ok, @"loadJSONString failed: %@", batchError);
@@ -208,7 +216,7 @@
     } else {
         XCTAssert([domain isEqualToString: error.domain] && code == error.code,
                   "Block expected to return error (%@ %ld), but instead returned %@",
-                  domain, code, error);
+                  domain, (long)code, error);
     }
 }
 
@@ -219,4 +227,16 @@
     --gC4ExpectExceptions;
 }
 
+- (void) mayHaveException: (NSString*)name in: (void (^) (void))block {
+    @try {
+        ++gC4ExpectExceptions;
+        block();
+    }
+    @catch (NSException* e) {
+        AssertEqualObjects(e.name, name);
+    }
+    @finally {
+        --gC4ExpectExceptions;
+    }
+}
 @end

@@ -70,10 +70,9 @@
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: nDocs];
     for (NSUInteger i = 0; i < nDocs; i++) {
         CBLMutableDocument* doc = [self createDoc];
-        CBLDocument* savedDoc = [self.db saveDocument: doc error: error];
-        if (!savedDoc)
+        if (![self.db saveDocument: doc error: error])
             return nil;
-        [docs addObject: savedDoc];
+        [docs addObject: doc];
     }
     return docs;
 }
@@ -84,7 +83,7 @@
              error: (NSError**)error
 {
     [self setProperties: doc custom: custom];
-    return [self.db saveDocument: doc error: error] != nil;
+    return [self.db saveDocument: doc error: error];
 }
 
 
@@ -276,8 +275,10 @@
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
             NSError* error;
-            if (![self.db purgeDocument: doc error: &error])
-                AssertEqual(error.code, 404);
+            if (![self.db purgeDocument: doc error: &error]) {
+                AssertEqualObjects(error.domain, CBLErrorDomain);
+                AssertEqual(error.code, CBLErrorInvalidParameter);
+            }
         }
     }];
     AssertEqual(self.db.count, 0u);

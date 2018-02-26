@@ -22,7 +22,6 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
-#import "ConflictTest.h"
 #import "CollectionUtils.h"
 
 
@@ -145,21 +144,7 @@
     return [self configWithTarget: target
                              type: type
                        continuous: continuous
-                    authenticator: nil
-                 conflictResolver: nil];
-}
-
-
-- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
-                                            type: (CBLReplicatorType)type
-                                      continuous: (BOOL)continuous
-                                conflictResolver: (nullable id <CBLConflictResolver>)resolver
-{
-    return [self configWithTarget: target
-                             type: type
-                       continuous: continuous
-                    authenticator: nil
-                 conflictResolver: resolver];
+                    authenticator: nil];
 }
 
 
@@ -167,15 +152,12 @@
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (CBLAuthenticator*)authenticator
-                                conflictResolver: (nullable id <CBLConflictResolver>)resolver
 {
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                   target: target];
     c.replicatorType = type;
     c.continuous = continuous;
     c.authenticator = authenticator;
-    if (resolver)
-        c.conflictResolver = resolver;
     
     if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"] && _pinServerCert)
         c.pinnedServerCertificate = self.secureServerCert;
@@ -332,30 +314,7 @@
 }
 
 
-- (void) testPullConflict_MineWins {
-    [self testPullConflictWithResolver: [MineWins new]
-                        expectedResult: @{@"species": @"Tiger",
-                                          @"name": @"Hobbes"}];
-}
-
-- (void) testPullConflict_TheirsWins {
-    [self testPullConflictWithResolver: [TheirsWins new]
-                        expectedResult: @{@"species": @"Tiger",
-                                          @"pattern": @"striped"}];
-}
-
-- (void) testPullConflict_MergeThenTheirsWins {
-    MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
-    resolver.requireBaseRevision = true;
-    [self testPullConflictWithResolver: resolver
-                        expectedResult: @{@"species": @"Tiger",
-                                          @"name": @"Hobbes",
-                                          @"pattern": @"striped"}];
-}
-
-- (void) testPullConflictWithResolver: (TestResolver*)resolver
-                       expectedResult: (NSDictionary*)expectedResult
-{
+- (void) testPullConflict {
     // Create a document and push it to otherDB:
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
@@ -376,15 +335,21 @@
     [doc2 setValue: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
     // Pull from otherDB, creating a conflict to resolve:
-    id pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO
-                          conflictResolver: resolver];
+    id pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved:
-    Assert(resolver.wasCalled);
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    
+    // Most-Active Win:
+    NSDictionary* expectedResult = @{@"species": @"Tiger",
+                                     @"pattern": @"striped",
+                                     @"color": @"black-yellow"};
     AssertEqualObjects(savedDoc.toDictionary, expectedResult);
     
     // Push to otherDB again to verify there is no replication conflict now,
@@ -405,29 +370,27 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    
-    doc1 = [[self.db saveDocument: doc1 error: &error] toMutable];
-    Assert(doc1);
+    Assert([self.db saveDocument: doc1 error: &error]);
     [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc2 setValue: @"Tiger" forKey: @"species"];
-    doc2 = [[otherDB saveDocument: doc2 error: &error] toMutable];
-    Assert(doc2);
+    Assert([otherDB saveDocument: doc2 error: &error]);
     [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO
-                      conflictResolver: [MergeThenTheirsWins new]];
+    id config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
-                                                 @"name": @"Hobbes",
-                                                 @"pattern": @"striped"}));
+                                                 @"pattern": @"striped",
+                                                 @"color": @"black-yellow"}));
 }
 
 
@@ -721,8 +684,7 @@
     if (!target)
         return;
     id auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull
-                            continuous: NO authenticator: auth conflictResolver: nil];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO authenticator: auth];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 

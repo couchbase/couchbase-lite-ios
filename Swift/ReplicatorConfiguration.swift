@@ -56,13 +56,6 @@ public class ReplicatorConfiguration {
         }
     }
     
-    /// The conflict resolver for this replicator.
-    public var conflictResolver: ConflictResolver = DefaultConflictResolver() {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
-    
     /// The Authenticator to authenticate with a remote target.
     public var authenticator: Authenticator? {
         willSet(newValue) {
@@ -148,7 +141,6 @@ public class ReplicatorConfiguration {
         self.target = config.target
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
-        self.conflictResolver = config.conflictResolver
         self.authenticator = config.authenticator
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
@@ -170,10 +162,6 @@ public class ReplicatorConfiguration {
         let c = CBLReplicatorConfiguration(database: self.database._impl, target: t.toImpl())
         c.replicatorType = CBLReplicatorType(rawValue:
             UInt32(self.replicatorType.rawValue))
-        if !(self.conflictResolver is DefaultConflictResolver) {
-            c.conflictResolver =
-                BridgingConflictResolver(resolver: self.conflictResolver)
-        }
         c.continuous = self.continuous
         c.authenticator = self.authenticator
         c.pinnedServerCertificate = self.pinnedServerCertificate
