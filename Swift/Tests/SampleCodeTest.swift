@@ -39,16 +39,6 @@ class SampleCodeTest: CBLTestCase {
         // </doc>
     }
     
-    #if COUCHBASE_ENTERPRISE
-    func dontTestEncryption() throws {
-        // <doc>
-        let config = DatabaseConfiguration()
-        config.encryptionKey = EncryptionKey.password("secretpassword")
-        self.database = try Database(name: "my-database", config: config)
-        // </doc>
-    }
-    #endif
-    
     func dontTestLogging() throws {
         // <doc>
         Database.setLogLevel(.verbose, domain: .replicator)

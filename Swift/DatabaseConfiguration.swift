@@ -20,31 +20,6 @@
 import Foundation
 
 
-#if COUCHBASE_ENTERPRISE
-/// The encryption key, a raw AES-256 key data which has exactly 32 bytes in length
-/// or a password string. If the password string is given, it will be internally converted to a
-/// raw AES key using 64,000 rounds of PBKDF2 hashing.
-///
-/// - key: 32-byte AES-256 data key. To create a key, generate random data using a secure
-///        cryptographic randomizer like SecRandomCopyBytes or CCRandomGenerateBytes.
-/// - password: Password string that will be internally converted to a raw AES-256 key
-///             using 64,000 rounds of PBKDF2 hashing.
-public enum EncryptionKey {
-    case key (Data)
-    case password (String)
-    
-    var impl: CBLEncryptionKey {
-        switch (self) {
-        case .key (let data):
-            return CBLEncryptionKey(key: data)
-        case .password(let pwd):
-            return CBLEncryptionKey(password: pwd)
-        }
-    }
-}
-#endif
-
-
 /// Configuration for opening a database.
 public class DatabaseConfiguration {
     
@@ -72,9 +47,6 @@ public class DatabaseConfiguration {
     init(config: DatabaseConfiguration?, readonly: Bool) {
         if let c = config {
             self.directory = c.directory
-            #if COUCHBASE_ENTERPRISE
-            self.encryptionKey = c.encryptionKey
-            #endif
         }
         self.readonly = readonly
     }
@@ -88,9 +60,6 @@ public class DatabaseConfiguration {
     func toImpl() -> CBLDatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
         config.directory = self.directory
-        #if COUCHBASE_ENTERPRISE
-        config.encryptionKey = self.encryptionKey?.impl
-        #endif
         return config
     }
 
