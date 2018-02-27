@@ -37,21 +37,6 @@
     // </doc>
 }
 
-#ifdef COUCHBASE_ENTERPRISE
-- (void) dontTestEncryption {
-    // <doc>
-    CBLDatabaseConfiguration *config = [[CBLDatabaseConfiguration alloc] init];
-    config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword:@"secretpassword"];
-    
-    NSError *error;
-    CBLDatabase *database = [[CBLDatabase alloc] initWithName:@"my-database" config: config error:&error];
-    if (!database) {
-        NSLog(@"Cannot open the database: %@", error);
-    }
-    // </doc>
-}
-#endif
-
 - (void) dontTestLogging {
     // <doc>
     [CBLDatabase setLogLevel: kCBLLogLevelVerbose domain: kCBLLogDomainReplicator];

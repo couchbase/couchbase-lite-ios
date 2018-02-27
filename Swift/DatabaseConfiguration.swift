@@ -55,15 +55,6 @@ public class DatabaseConfiguration {
         }
     }
     
-    #if COUCHBASE_ENTERPRISE
-    /// The key to encrypt the database with.
-    public var encryptionKey: EncryptionKey? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
-    #endif
-    
     /// Initializes a DatabaseConfiguration's builder with default values.
     public convenience init() {
         self.init(config: nil, readonly: false)

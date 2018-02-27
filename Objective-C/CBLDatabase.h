@@ -21,7 +21,6 @@
 @class CBLDatabaseConfiguration;
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
-@class CBLEncryptionKey;
 @class CBLIndex;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
@@ -247,17 +246,6 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
  @return True on success, false on failure.
  */
 - (BOOL) compact: (NSError**)error;
-
-#ifdef COUCHBASE_ENTERPRISE
-/**
- Changes the database's encryption key, or removes encryption if the new key is nil.
- 
- @param key  The encryption key.
- @param error On return, the error if any.
- @return True if the database was successfully re-keyed, or false on failure.
- */
-- (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)error;
-#endif
 
 /**
  Deletes a database of the given name in the given directory.

@@ -155,21 +155,10 @@
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
     
-#ifdef COUCHBASE_ENTERPRISE
-    AssertNil(config1.encryptionKey);
-    AssertNil(config1.encryptionKey);
-#endif
-    
     // Custom:
     CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
     config2.directory = @"/tmp/mydb";
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
-    
-#ifdef COUCHBASE_ENTERPRISE
-    CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
-    config2.encryptionKey = key;
-    AssertEqualObjects(config2.encryptionKey, key);
-#endif
 }
 
 

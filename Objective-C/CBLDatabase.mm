@@ -32,10 +32,6 @@
 #import "CBLStatus.h"
 #import "CBLLog+Admin.h"
 
-#ifdef COUCHBASE_ENTERPRISE
-#import "CBLEncryptionKey+Internal.h"
-#endif
-
 using namespace fleece;
 
 #define kDBExtension @"cblite2"
@@ -341,22 +337,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-#ifdef COUCHBASE_ENTERPRISE
-- (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)outError {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        C4Error err;
-        C4EncryptionKey encKey = c4EncryptionKey(key);
-        if (!c4db_rekey(_c4db, &encKey, &err))
-            return convertError(err, outError);
-        
-        return YES;
-    }
-}
-#endif
-
-
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError
@@ -590,26 +570,8 @@ static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
 
 static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4DatabaseConfig c4config = kDBConfig;
-#ifdef COUCHBASE_ENTERPRISE
-    if (config.encryptionKey != nil)
-        c4config.encryptionKey = c4EncryptionKey(config.encryptionKey);
-#endif
     return c4config;
 }
-
-
-#ifdef COUCHBASE_ENTERPRISE
-static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
-    C4EncryptionKey cKey;
-    if (key) {
-        cKey.algorithm = kC4EncryptionAES128;
-        Assert(key.key.length == kC4EncryptionKeySizeAES128, @"Invalid key size");
-        memcpy(cKey.bytes, key.key.bytes, kC4EncryptionKeySizeAES128);
-    } else
-        cKey.algorithm = kC4EncryptionNone;
-    return cKey;
-}
-#endif
 
 
 - (void) mustBeOpen {

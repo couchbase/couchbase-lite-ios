@@ -302,16 +302,7 @@ public final class Database {
     public func compact() throws {
         try _impl.compact()
     }
-
-    #if COUCHBASE_ENTERPRISE
-    /// Changes the database's encryption key, or removes encryption if the new key is nil.
-    ///
-    /// - Parameter key: The encryption key.
-    /// - Throws: An error on a failure.
-    public func setEncryptionKey(_ key: EncryptionKey?) throws {
-        try _impl.setEncryptionKey(key?.impl)
-    }
-    #endif
+    
 
     /// Deletes a database of the given name in the given directory.
     ///

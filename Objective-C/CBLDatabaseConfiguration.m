@@ -26,9 +26,6 @@
 }
 
 @synthesize directory=_directory;
-#ifdef COUCHBASE_ENTERPRISE
-@synthesize encryptionKey=_encryptionKey;
-#endif
 
 
 - (instancetype) init {
@@ -50,9 +47,6 @@
         
         if (config) {
             _directory = config.directory;
-#ifdef COUCHBASE_ENTERPRISE
-            _encryptionKey = config.encryptionKey;
-#endif
         } else
             _directory = [CBLDatabaseConfiguration defaultDirectory];
     }
@@ -67,17 +61,6 @@
         _directory = directory;
     }
 }
-
-
-#ifdef COUCHBASE_ENTERPRISE
-- (void) setEncryptionKey: (CBLEncryptionKey *)encryptionKey {
-    [self checkReadonly];
-    
-    if (_encryptionKey != encryptionKey) {
-        _encryptionKey = encryptionKey;
-    }
-}
-#endif
 
 
 #pragma mark - Internal
