@@ -34,12 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- The conflict resolver for this database. Without setting the default conflict
- resolver, where the revision with more history wins, will be used.
- */
-@property (nonatomic) id<CBLConflictResolver> conflictResolver;
-
-/**
  A key to encrypt the database with. If the database does not exist and is being created, it
  will use this key, and the same key must be given every time it's opened.
  
