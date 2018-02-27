@@ -243,7 +243,7 @@
 
 - (void) testCreateWithCustomDirectory {
     [CBLDatabase deleteDatabase: @"db" inDirectory: self.directory error: nil];
-    AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: dir]);
+    AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
     
     // create db with custom directory
     NSError* error;
@@ -255,8 +255,8 @@
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertEqualObjects(db.name, @"db");
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
-    Assert([db.path containsString: dir]);
-    Assert([CBLDatabase databaseExists: @"db" inDirectory: dir]);
+    Assert([db.path containsString: self.directory]);
+    Assert([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
     AssertEqual(0, (long)db.count);
 
     // delete database
@@ -1214,7 +1214,7 @@
     // close db before delete
     [self closeDatabase: db];
     
-    Assert([CBLDatabase deleteDatabase: @"db" inDirectory: dir error:&error]);
+    Assert([CBLDatabase deleteDatabase: @"db" inDirectory: self.directory error:&error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
@@ -1230,7 +1230,7 @@
     AssertNil(error);
     
     [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
-        return [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: error2];
+        return [CBLDatabase deleteDatabase: @"db" inDirectory: self.directory error: error2];
     }];
 }
 
@@ -1286,15 +1286,15 @@
     AssertNil(error);
     NSString* path = db.path;
     
-    Assert([CBLDatabase databaseExists: @"db" inDirectory: dir]);
+    Assert([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
     
     // close db
     [self closeDatabase: db];
     
-    Assert([CBLDatabase databaseExists: @"db" inDirectory: dir]);
+    Assert([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
     
     // delete db
-    Assert([CBLDatabase deleteDatabase: @"db" inDirectory: dir error: &error]);
+    Assert([CBLDatabase deleteDatabase: @"db" inDirectory: self.directory error: &error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
