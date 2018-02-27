@@ -59,7 +59,6 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
-NO_TEST=YES
 if [ -z "$NO_TEST" ]
 then
   echo "Check devices ..."
