@@ -127,7 +127,11 @@ vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecorelog' -o "$TOOLS_DIR" 
 echo "Make Objective-C framework zip file ..."
 mkdir -p "$OUTPUT_OBJC_DIR"
 cp -R "$BUILD_DIR/$SCHEME_PREFIX ObjC"/* "$OUTPUT_OBJC_DIR"
-cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
+if [[ -z ${WORKSPACE} ]]; then
+    cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
+else # official Jenkins build's license
+    cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
+fi
 cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_DIR"
 pushd "$OUTPUT_OBJC_DIR"
 zip -ry "$OUTPUT_OBJC__ZIP" *
@@ -137,7 +141,11 @@ popd
 echo "Make Swift framework zip file ..."
 mkdir -p "$OUTPUT_SWIFT_DIR"
 cp -R "$BUILD_DIR/$SCHEME_PREFIX Swift"/* "$OUTPUT_SWIFT_DIR"
-cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
+if [[ -z ${WORKSPACE} ]]; then
+    cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
+else # official Jenkins build's license
+    cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
+fi
 cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_DIR"
 pushd "$OUTPUT_SWIFT_DIR"
 zip -ry "$OUTPUT_SWIFT_ZIP" *

@@ -6,7 +6,7 @@ IMPORTANT-READ CAREFULLY: BY CLICKING THE “I ACCEPT” BOX OR INSTALLING, DOWN
 
 Couchbase ®
 http://www.couchbase.com
-Copyright 2011 Couchbase, Inc.
+Copyright 2018 Couchbase, Inc.
 
 As used in this Agreement, “Software” means the object code version of the applicable elastic data management server software provided by Couchbase, Inc.
 
