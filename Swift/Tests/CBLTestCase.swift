@@ -28,8 +28,12 @@ class CBLTestCase: XCTestCase {
 
     let databaseName = "testdb"
     
-    let directory = NSTemporaryDirectory().appending("CouchbaseLite")
-
+    #if COUCHBASE_ENTERPRISE
+        let directory = NSTemporaryDirectory().appending("CouchbaseLite-EE")
+    #else
+        let directory = NSTemporaryDirectory().appending("CouchbaseLite")
+    #endif
+    
     override func setUp() {
         super.setUp()
         

@@ -22,6 +22,14 @@
 
 #define kDatabaseName @"testdb"
 
+#ifdef COUCHBASE_ENTERPRISE
+#define kLogFileName @"CouchbaseLiteTests_EE.c4log"
+#define kDatabaseDirName @"CouchbaseLite_EE"
+#else
+#define kLogFileName @"CouchbaseLiteTests.c4log"
+#define kDatabaseDirName @"CouchbaseLite"
+#endif
+
 
 @implementation CBLTestCase
 {
@@ -33,7 +41,7 @@
 
 + (void) initialize {
     if (self == [CBLTestCase class]) {
-        NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLiteTests.c4log"];
+        NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: kLogFileName];
         C4Error error;
         NSAssert(c4log_writeToBinaryFile(kC4LogVerbose, c4str(path.UTF8String), &error), @"Couldn't initialize logging");
         NSLog(@"Writing log to %@", path);
@@ -83,7 +91,7 @@
 
 
 - (NSString*) directory {
-    return [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
+    return [NSTemporaryDirectory() stringByAppendingPathComponent: kDatabaseDirName];
 }
 
 
