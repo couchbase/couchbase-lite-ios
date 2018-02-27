@@ -242,14 +242,13 @@
 
 
 - (void) testCreateWithCustomDirectory {
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: nil];
+    [CBLDatabase deleteDatabase: @"db" inDirectory: self.directory error: nil];
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: dir]);
     
     // create db with custom directory
     NSError* error;
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    config.directory = self.directory;
     
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNil(error);
@@ -1202,13 +1201,10 @@
 
 
 - (void) testDeleteByStaticMethod {
-    // create db with custom directory
-    NSError* error;
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    config.directory = self.directory;
     
+    NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1225,13 +1221,10 @@
 
 
 - (void) testDeleteOpeningDBByStaticMethod {
-    // create db with custom directory
-    NSError* error;
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    config.directory = self.directory;
     
+    NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1255,8 +1248,7 @@
 - (void) testDeleteNonExistingDB {
     // Expectation: No operation
     NSError* error;
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    Assert([CBLDatabase deleteDatabase: @"notexistdb" inDirectory: dir error: &error]);
+    Assert([CBLDatabase deleteDatabase: @"notexistdb" inDirectory: self.directory error: &error]);
     AssertNil(error);
 }
 
@@ -1282,15 +1274,13 @@
 
 
 - (void) testDatabaseExistsWithDir {
-    NSError* error;
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    
-    AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
+    AssertFalse([CBLDatabase databaseExists:@"db" inDirectory: self.directory]);
     
     // create db with custom directory
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    config.directory = self.directory;
     
+    NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1307,8 +1297,7 @@
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: dir error: &error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
-    
-    AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: dir]);
+    AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: self.directory]);
 }
 
 
@@ -1320,8 +1309,7 @@
 
 
 - (void) testDatabaseExistsAgainstNonExistDB {
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    AssertFalse([CBLDatabase databaseExists: @"nonexist" inDirectory: dir]);
+    AssertFalse([CBLDatabase databaseExists: @"nonexist" inDirectory: self.directory]);
 }
 
 
