@@ -1,0 +1,75 @@
+#  CouchbaseLite.exp
+#  CouchbaseLite
+#
+#  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+#  All public global symbols -- classes, functions, constants -- need to be declared here.
+
+#  Public classes:
+.objc_class_name_CBLArray
+.objc_class_name_CBLAuthenticator
+.objc_class_name_CBLBasicAuthenticator
+.objc_class_name_CBLBlob
+.objc_class_name_CBLDatabase
+.objc_class_name_CBLDatabaseChange
+.objc_class_name_CBLDatabaseConfiguration
+.objc_class_name_CBLDictionary
+.objc_class_name_CBLDocument
+.objc_class_name_CBLDocumentChange
+.objc_class_name_CBLDocumentFragment
+.objc_class_name_CBLFullTextIndex
+.objc_class_name_CBLFullTextIndexItem
+.objc_class_name_CBLFragment
+.objc_class_name_CBLIndex
+.objc_class_name_CBLIndexBuilder
+.objc_class_name_CBLMutableArray
+.objc_class_name_CBLMutableDictionary
+.objc_class_name_CBLMutableDocument
+.objc_class_name_CBLMutableFragment
+.objc_class_name_CBLQuery
+.objc_class_name_CBLQueryArrayExpression
+.objc_class_name_CBLQueryArrayFunction
+.objc_class_name_CBLQueryBuilder
+.objc_class_name_CBLQueryChange
+.objc_class_name_CBLQueryCollation
+.objc_class_name_CBLQueryDataSource
+.objc_class_name_CBLQueryExpression
+.objc_class_name_CBLQueryFullTextExpression
+.objc_class_name_CBLQueryFullTextFunction
+.objc_class_name_CBLQueryFunction
+.objc_class_name_CBLQueryJoin
+.objc_class_name_CBLQueryLimit
+.objc_class_name_CBLQueryMeta
+.objc_class_name_CBLQueryOrdering
+.objc_class_name_CBLQueryParameters
+.objc_class_name_CBLQueryResult
+.objc_class_name_CBLQueryResultSet
+.objc_class_name_CBLQueryRow
+.objc_class_name_CBLQuerySelectResult
+.objc_class_name_CBLQueryVariableExpression
+.objc_class_name_CBLReplicator
+.objc_class_name_CBLReplicatorChange
+.objc_class_name_CBLReplicatorConfiguration
+.objc_class_name_CBLSessionAuthenticator
+.objc_class_name_CBLURLEndpoint
+.objc_class_name_CBLValueIndex
+.objc_class_name_CBLValueIndexItem
+
+# NSString constants:
+_CBLErrorDomain
+_kCBLAllPropertiesName
+
+# EE Only:
+.objc_class_name_CBLDatabaseEndpoint

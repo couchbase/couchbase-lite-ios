@@ -1,0 +1,10 @@
+//
+//  Project_Debug_EE.xcconfig
+//
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//
+
+EE_PP_DEFS = COUCHBASE_ENTERPRISE
+OTHER_SWIFT_FLAGS = -D$(EE_PP_DEFS)
+
+#include "Project_Debug.xcconfig"

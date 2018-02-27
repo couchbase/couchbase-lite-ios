@@ -1,0 +1,12 @@
+//
+//  Project_Release_EE.xcconfig
+//
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//
+
+EE_PP_DEFS = COUCHBASE_ENTERPRISE
+OTHER_SWIFT_FLAGS = -D$(EE_PP_DEFS)
+
+#include "Project_Release.xcconfig"
+
+CBL_EXPORTED_SYMBOLS_FILE = Objective-C/CouchbaseLite-EE.exp

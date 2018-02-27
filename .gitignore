@@ -12,3 +12,6 @@ xcuserdata/
 DerivedData/
 obj/
 derived_src/
+
+# CBL files:
+vendor/couchbase-lite-core-EE
