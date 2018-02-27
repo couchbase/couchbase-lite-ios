@@ -45,11 +45,13 @@ then
   CONFIGURATION="Release"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
 else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 6"
 fi
 
 #Clean output directory:
@@ -68,13 +70,13 @@ then
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx
 
   echo "Run ObjC iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
 
   echo "Run Swift macOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx
 
   echo "Run Swift iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
 
   echo "Generate Test Coverage Reports ..."
   OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
