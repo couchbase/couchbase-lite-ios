@@ -502,7 +502,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
 #pragma mark - BACKGROUND TASKS:
 
 
-- (void) doAsync: (void (^)(void))block {
+- (void) doAsync: (void (^)())block {
     if (_dispatchQueue)
         dispatch_async(_dispatchQueue, block);
     else

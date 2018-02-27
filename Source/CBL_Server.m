@@ -68,7 +68,7 @@ DefineLogDomain(Server);
     return [NSString stringWithFormat: @"%@[%p]", self.class, self];
 }
 
-- (void) queue: (void(^)(void))block {
+- (void) queue: (void(^)())block {
     AssertAbstractMethod();
 }
 
@@ -116,7 +116,7 @@ DefineLogDomain(Server);
     return self;
 }
 
-- (void) queue: (void(^)(void))block {
+- (void) queue: (void(^)())block {
     dispatch_async(_queue, block);
 }
 
@@ -217,7 +217,7 @@ DefineLogDomain(Server);
 }
 
 
-- (void) queue: (void(^)(void))block {
+- (void) queue: (void(^)())block {
     Assert(_serverThread, @"-queue: called after -close");
     MYOnThread(_serverThread, block);
 }

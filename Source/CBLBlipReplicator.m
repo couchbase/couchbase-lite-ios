@@ -51,7 +51,7 @@
     BOOL _suspended;
     CBLSyncConnection* _sync;
     NSProgress* _progress;
-    void (^_updateProgressSoon)(void);
+    void (^_updateProgressSoon)();
 }
 
 @synthesize db=_db, settings=_settings, error=_error, sessionID=_sessionID;

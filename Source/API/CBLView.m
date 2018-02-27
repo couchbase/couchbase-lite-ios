@@ -266,7 +266,7 @@ static id<CBLViewCompiler> sCompiler;
         Warn(@"Error %d updating index of %@", status, self);
 }
 
-- (void) updateIndexAsync: (void (^)(void))onComplete {
+- (void) updateIndexAsync: (void (^)())onComplete {
     CBLDatabase* db = self.database;
     [db.manager backgroundTellDatabaseNamed: db.name to: ^(CBLDatabase *bgdb)
      {

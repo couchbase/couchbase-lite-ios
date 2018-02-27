@@ -131,7 +131,7 @@
         [self onSyncQueue: ^{
             BOOL delayNext = (_changeListsInFlight >= kMaxChangeMessagesInFlight);
             [self sendChanges: changes
-                       onSent: ^void (BLIPMessage* message) {
+                       onSent: ^{
                            if (changes.count > 0 && !delayNext)
                                [self sendChangesSince: lastSequence];
                        }
@@ -149,8 +149,8 @@
 
 
 - (void) sendChanges: (NSArray*)changes
-              onSent: (void(^)(BLIPMessage*))onSent
-          onComplete: (void(^)(void))onComplete
+              onSent: (void(^)())onSent
+          onComplete: (void(^)())onComplete
 {
     BLIPRequest* request = [_connection request];
     request.profile = @"changes";

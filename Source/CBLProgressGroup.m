@@ -17,7 +17,7 @@
 {
     NSMutableArray* _progresses;
     int64_t _completed, _total;
-    void (^_noteProgress)(void);
+    void (^_noteProgress)();
 }
 @synthesize cancellationHandler=_cancellationHandler;
 
@@ -59,7 +59,7 @@
         return;
     [_progresses removeObject: progress];
     if (_progresses.count == 0) {
-        void (^handler)(void) = _cancellationHandler;
+        void (^handler)() = _cancellationHandler;
         _cancellationHandler = nil;
         if (handler)
             handler();
