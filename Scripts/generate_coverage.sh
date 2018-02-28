@@ -50,7 +50,7 @@ BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug$CONFIG_SUFFIX/CouchbaseLite.
 OUTPUT_COVERAGE_DIR="$OUTPUT_DIR/CouchbaseLite"
 
 mkdir -p "$OUTPUT_COVERAGE_DIR"
-xcodebuild -scheme "$SCHEME" -enableCodeCoverage YES clean test -derivedDataPath "$DERIVED_DATA_DIR" -verbose
+xcodebuild -scheme "$SCHEME" -enableCodeCoverage YES clean test -derivedDataPath "$DERIVED_DATA_DIR"
 PROFILE_DATA_FILE=$(find ${DERIVED_DATA_DIR} -name "Coverage.profdata")
 xcrun llvm-cov report -instr-profile="$PROFILE_DATA_FILE" "$BINARY_FILE" | grep -v "vendor/*" | grep -v "TOTAL" > "$OUTPUT_COVERAGE_DIR"/summary.txt
 xcrun llvm-cov report -instr-profile="$PROFILE_DATA_FILE" "$BINARY_FILE" Objective-C/*.{m,mm} Objective-C/Internal/*.{m,mm} > "$OUTPUT_COVERAGE_DIR"/summary-detail.txt
