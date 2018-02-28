@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -o <Output Directory> [--EE]\n" 
+  echo "Usage: ${0} -o <Output Directory> [--EE]" 
 }
 
 while [[ $# -gt 0 ]]
@@ -35,16 +35,18 @@ fi
 if [ -z "$EE" ]
 then
   SCHEME_PREFIX="CBL"
+  CONFIG_SUFFIX=""
 else
   SCHEME_PREFIX="CBL-EE"
+  CONFIG_SUFFIX="-EE"
 fi
 
 # DerivedData Directory
-DERIVED_DATA_DIR="${SCHEME_PREFIX}_Coverage_DerivedData"
+DERIVED_DATA_DIR="Coverage_DerivedData"
 
 # Objective-C
 SCHEME="$SCHEME_PREFIX ObjC"
-BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug/CouchbaseLite.framework/CouchbaseLite"
+BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug$CONFIG_SUFFIX/CouchbaseLite.framework/CouchbaseLite"
 OUTPUT_COVERAGE_DIR="$OUTPUT_DIR/CouchbaseLite"
 
 mkdir -p "$OUTPUT_COVERAGE_DIR"
@@ -57,7 +59,7 @@ rm -rf "$DERIVED_DATA_DIR"
 
 # Swift
 SCHEME="$SCHEME_PREFIX Swift"
-BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug/CouchbaseLiteSwift.framework/CouchbaseLiteSwift"
+BINARY_FILE="$DERIVED_DATA_DIR/Build/Products/Debug$CONFIG_SUFFIX/CouchbaseLiteSwift.framework/CouchbaseLiteSwift"
 OUTPUT_COVERAGE_DIR="$OUTPUT_DIR/CouchbaseLiteSwift"
 
 mkdir -p "$OUTPUT_COVERAGE_DIR"
