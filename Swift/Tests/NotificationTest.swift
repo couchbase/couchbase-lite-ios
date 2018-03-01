@@ -124,7 +124,7 @@ class NotificationTest: CBLTestCase {
     
     
     func testRemoveDocumentChangeListener() throws {
-        var doc1 = createDocument("doc1")
+        let doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
         try saveDocument(doc1)
         

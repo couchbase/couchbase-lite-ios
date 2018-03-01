@@ -25,13 +25,13 @@ public protocol Endpoint {
     // Opaque
 }
 
-/* internal */ protocol InternalEndpoint: Endpoint {
+/* internal */ protocol IEndpoint: Endpoint {
     func toImpl() -> CBLEndpoint;
 }
 
 #if COUCHBASE_ENTERPRISE
 /// Database based replication target endpoint.
-public struct DatabaseEndpoint: InternalEndpoint {
+public struct DatabaseEndpoint: IEndpoint {
     
     /// The database object.
     public let database: Database
@@ -52,7 +52,7 @@ public struct DatabaseEndpoint: InternalEndpoint {
 #endif
 
 /// URL based replication target endpoint.
-public struct URLEndpoint: InternalEndpoint {
+public struct URLEndpoint: IEndpoint {
     
     /// The URL.
     public let url: URL

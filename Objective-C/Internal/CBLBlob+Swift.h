@@ -1,5 +1,5 @@
 //
-//  CBL Swift.xcconfig
+//  CBLBlob+Swift.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,9 +17,11 @@
 //  limitations under the License.
 //
 
-#include "CBL ObjC.xcconfig"
+#import "CBLBlob.h"
 
-INFOPLIST_FILE               = Swift/Info.plist
-PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
-PRODUCT_NAME                 = CouchbaseLiteSwift
-MODULEMAP_FILE               = Swift/CouchbaseLite.modulemap
+@interface CBLBlob ()
+
+@property (weak, nonatomic, nullable) id swiftObject;
+
+@end
+

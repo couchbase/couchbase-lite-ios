@@ -156,7 +156,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Blob object or nil.
     public func blob(forKey key: String) -> Blob? {
-        return _impl.blob(forKey: key)
+        return value(forKey: key) as? Blob
     }
     
     

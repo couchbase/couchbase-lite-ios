@@ -74,7 +74,7 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             return DataConverter.convertGETValue(fragmentImpl.value)
         }
         set {
-            fragmentImpl.value = (DataConverter.convertSETValue(newValue) as! NSObject)
+            fragmentImpl.value = (DataConverter.convertSETValue(newValue) as? NSObject)
         }
     }
     
@@ -170,10 +170,10 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
     /// Gets the value as blob or sets the blob value to the fragment object.
     public override var blob: Blob? {
         get {
-            return fragmentImpl.blob
+            return DataConverter.convertGETValue(fragmentImpl.blob) as? Blob
         }
         set {
-            fragmentImpl.blob = newValue
+            fragmentImpl.blob = (DataConverter.convertSETValue(newValue) as? CBLBlob)
         }
     }
     
@@ -185,7 +185,7 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             return DataConverter.convertGETValue(fragmentImpl.array) as? MutableArrayObject
         }
         set {
-            fragmentImpl.array = (DataConverter.convertSETValue(newValue) as! CBLMutableArray)
+            fragmentImpl.array = (DataConverter.convertSETValue(newValue) as? CBLMutableArray)
         }
     }
     
@@ -197,7 +197,7 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             return DataConverter.convertGETValue(fragmentImpl.dictionary) as? MutableDictionaryObject
         }
         set {
-            fragmentImpl.dictionary = (DataConverter.convertSETValue(newValue) as! CBLMutableDictionary)
+            fragmentImpl.dictionary = (DataConverter.convertSETValue(newValue) as? CBLMutableDictionary)
         }
     }
     

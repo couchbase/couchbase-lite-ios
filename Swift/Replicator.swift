@@ -114,9 +114,7 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
-        return _impl.addChangeListener({ [unowned self] change in
-            listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
-        })
+        return self.addChangeListener(withQueue: nil, listener);
     }
     
     
@@ -130,9 +128,10 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
-        return _impl.addChangeListener(with: queue, listener: { (change) in
+        let token = _impl.addChangeListener(with: queue, listener: { (change) in
             listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
+        return ListenerToken(token)
     }
     
     
@@ -140,7 +139,7 @@ public final class Replicator {
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
-        _impl.removeChangeListener(with: token)
+        _impl.removeChangeListener(with: token._impl)
     }
     
     
@@ -176,7 +175,7 @@ public final class Replicator {
     
     private let _config: ReplicatorConfiguration
     
-    private var _listenerToken: ListenerToken?
+    private var _listenerToken: CBLListenerToken?
     
     private let _lock = NSLock()
 }

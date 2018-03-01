@@ -302,5 +302,3 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     }
     
 }
-
-public typealias Blob = CBLBlob

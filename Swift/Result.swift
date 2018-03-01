@@ -127,7 +127,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     /// - Parameter index: The select result index.
     /// - Returns: The Blob value or nil.
     public func blob(at index: Int) -> Blob? {
-        return impl.blob(at: UInt(index))
+        return value(at: index) as? Blob
     }
     
     
@@ -278,7 +278,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     /// - Parameter key: The select result key.
     /// - Returns: The Blob value or nil.
     public func blob(forKey key: String) -> Blob? {
-        return impl.blob(forKey: key)
+        return value(forKey: key) as? Blob
     }
     
     

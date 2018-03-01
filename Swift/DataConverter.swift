@@ -23,26 +23,31 @@ import Foundation
 /* internal */ class DataConverter {
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
-        case let implDict as CBLMutableDictionary:
-            if let dict = implDict.swiftObject {
+        case let impl as CBLMutableDictionary:
+            if let dict = impl.swiftObject {
                 return dict
             }
-            return MutableDictionaryObject(implDict)
-        case let implArray as CBLMutableArray:
-            if let array = implArray.swiftObject {
+            return MutableDictionaryObject(impl)
+        case let impl as CBLMutableArray:
+            if let array = impl.swiftObject {
                 return array
             }
-            return MutableArrayObject(implArray)
-        case let implDict as CBLDictionary:
-            if let dict = implDict.swiftObject {
+            return MutableArrayObject(impl)
+        case let impl as CBLDictionary:
+            if let dict = impl.swiftObject {
                 return dict
             }
-            return DictionaryObject(implDict)
-        case let implArray as CBLArray:
-            if let array = implArray.swiftObject {
+            return DictionaryObject(impl)
+        case let impl as CBLArray:
+            if let array = impl.swiftObject {
                 return array
             }
-            return ArrayObject(implArray)
+            return ArrayObject(impl)
+        case let impl as CBLBlob:
+            if let blob = impl.swiftObject {
+                return blob
+            }
+            return Blob(impl)
         default:
             return value
         }
@@ -55,6 +60,8 @@ import Foundation
             return dict._impl
         case let array as MutableArrayObject:
             return array._impl
+        case let blob as Blob:
+            return blob._impl
         default:
             return value
         }
@@ -86,3 +93,4 @@ import Foundation
         return result
     }
 }
+

@@ -25,6 +25,4 @@ FOUNDATION_EXPORT double CouchbaseLiteSwiftVersionNumber;
 //! Project version string for CouchbaseLiteSwift.
 FOUNDATION_EXPORT const unsigned char CouchbaseLiteSwiftVersionString[];
 
-#import "CouchbaseLite.h"
-#import "CBLArray+Swift.h"
-#import "CBLDictionary+Swift.h"
+#import "CBLErrors.h"

@@ -18,6 +18,7 @@
 //
 
 #import "CBLBlob.h"
+#import "CBLBlob+Swift.h"
 #import "CBLBlobStream.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
@@ -57,7 +58,8 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     // A blob loaded from the database will have _db and _properties, and _digest unless invalid
 }
 
-@synthesize contentType = _contentType, length = _length, digest = _digest;
+@synthesize contentType=_contentType, length=_length, digest=_digest;
+@synthesize swiftObject=_swiftObject;
 
 
 - (instancetype)initWithContentType:(NSString *)contentType

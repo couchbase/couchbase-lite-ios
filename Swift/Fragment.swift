@@ -144,7 +144,7 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
     /// Get the value as a Blob.
     /// Returns nil if the value is nil, or the value is not a Blob.
     public var blob: Blob? {
-        return _impl.blob
+        return DataConverter.convertGETValue(_impl.blob) as? Blob
     }
     
     

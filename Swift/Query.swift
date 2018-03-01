@@ -118,8 +118,9 @@ public class Query {
             database!.addQuery(self)
         }
         
-        tokens.add(token)
-        return token
+        let listenerToken = ListenerToken(token)
+        tokens.add(listenerToken)
+        return listenerToken
     }
     
     
@@ -129,7 +130,7 @@ public class Query {
     public func removeChangeListener(withToken token: ListenerToken) {
         lock.lock()
         prepareQuery()
-        queryImpl!.removeChangeListener(with: token)
+        queryImpl!.removeChangeListener(with: token._impl)
         tokens.remove(token)
         
         if tokens.count == 0 {

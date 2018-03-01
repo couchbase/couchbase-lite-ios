@@ -161,7 +161,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The Blob value located at the index.
     public func blob(at index: Int) -> Blob? {
-        return _impl.blob(at: UInt(index))
+        return value(at: index) as? Blob
     }
     
     

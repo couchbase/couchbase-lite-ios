@@ -26,8 +26,8 @@
 /** The database. */
 @property (readonly, nonatomic) CBLDatabase* database;
 
-/** The ID of the document that changed. */
-@property (readonly, nonatomic) NSArray* documentIDs;
+/** The IDs of the document that changed. */
+@property (readonly, nonatomic) NSArray<NSString*>* documentIDs;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

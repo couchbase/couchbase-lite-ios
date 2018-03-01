@@ -1,5 +1,5 @@
 //
-//  CBL Swift.xcconfig
+//  DocumentChange.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,9 +17,16 @@
 //  limitations under the License.
 //
 
-#include "CBL ObjC.xcconfig"
+import Foundation
 
-INFOPLIST_FILE               = Swift/Info.plist
-PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
-PRODUCT_NAME                 = CouchbaseLiteSwift
-MODULEMAP_FILE               = Swift/CouchbaseLite.modulemap
+/// Document change information.
+public struct DocumentChange {
+    
+    /// The database.
+    public let database: Database
+    
+    /// The ID of the document that changed.
+    public let documentID: String
+    
+}
+

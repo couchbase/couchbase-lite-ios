@@ -23,8 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** 
- A CBLBlob appears as a property of a CBLMutableDocument; it contains arbitrary binary data,
- tagged with a MIME type.
+ A CBLBlob contains arbitrary binary data, tagged with a MIME type.
  Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`
  or `contentStream` properties are accessed), not when the document is loaded.
  The document's raw JSON form only contains the CBLBlob's metadata (type, length and a digest of
@@ -35,7 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Initializes a CBLBlob with the given in-memory data.
- The blob can then be added as a property of a CBLMutableDocument.
  
  @param contentType The type of content this CBLBlob will represent.
  @param data The data that this CBLBlob will contain.
@@ -46,7 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Initializes a CBLBlob with the given stream of data.
- The blob can then be added as a property of a CBLMutableDocument.
  
  @param contentType The type of content this CBLBlob will represent.
  @param stream The stream of data that this CBLBlob will consume.
@@ -57,7 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Initializes a CBLBlob with the contents of a file.
- The blob can then be added as a property of a CBLMutableDocument.
  
  @param contentType The type of content this CBLBlob will represent.
  @param fileURL A URL to a file containing the data that this CBLBlob will represent.
