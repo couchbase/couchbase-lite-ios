@@ -41,8 +41,10 @@ using namespace fleeceapi;
 
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
 static constexpr NSTimeInterval kConnectTimeout = 15.0;
-static constexpr NSTimeInterval kIdleTimeout = 300.0;
 
+// The value should be greater than the heartbeat to avoid read/write timeout;
+// the current default heartbeat is 300 sec:
+static constexpr NSTimeInterval kIdleTimeout = 320.0;
 
 @implementation CBLWebSocket
 {
@@ -60,6 +62,7 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
     BOOL _requestedClose;
+    BOOL _closeOnError;
 }
 
 
@@ -467,10 +470,11 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 }
 
 - (void) streamClosed: (BOOL)isWrite {
+    BOOL expectedClose = _requestedClose || _closeOnError;
     CBLLog(WebSocket, @"CBLWebSocket %s stream closed%s",
            (isWrite ? "write" : "read"),
-           (_requestedClose ? "" : " unexpectedly"));
-    if (!_requestedClose) {
+           (expectedClose ? "" : " unexpectedly"));
+    if (!expectedClose) {
         _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain, @"Network connection lost");
         [_task cancel];
     }
@@ -506,7 +510,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
     if (!_task)
         return;
-    _task = nil;
+    
+    [self closeTaskOnError];
 
     CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH STATUS %d \"%@\"", (int)code, reason);
     nsstring_slice reasonSlice(reason);
@@ -518,7 +523,11 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 - (void) didCloseWithError: (NSError*)error {
     if (!_task)
         return;
-    _task = nil;
+    
+    if (error)
+        [self closeTaskOnError];
+    else
+        _task = nil;
 
     // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
     if (_requestedClose && [error my_hasDomain: NSPOSIXErrorDomain code: ENOTCONN]) {
@@ -537,6 +546,18 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         c4err = {};
     }
     c4socket_closed(_c4socket, c4err);
+}
+
+
+// Workaround to ensure that the socket will be closed when an error occurs.
+// From https://github.com/couchbase/couchbase-lite-ios/issues/2078,
+// the socket might not be closed after getting the operation timed out error
+// (Domain=NSPOSIXErrorDomain Code=60 "Operation timed out").
+- (void) closeTaskOnError {
+    _closeOnError = YES;
+    [_task closeRead];
+    [_task closeWrite];
+    _task = nil;
 }
 
 
