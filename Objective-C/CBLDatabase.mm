@@ -680,6 +680,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                 NSString *docID =slice2string(changes[i].docID);
                 [docIDs addObject: docID];
             }
+            c4dbobs_releaseChanges(changes, nChanges);
         } while(nChanges > 0);
     }
 }
