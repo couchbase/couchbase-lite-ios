@@ -59,8 +59,7 @@ using namespace fleeceapi;
 
 
 - (NSUInteger) count {
-    CBLDatabase* db = _rs.database;
-    CBL_LOCK(db) {
+    CBL_LOCK(_rs.database) {
         return c4query_columnCount(_rs.c4Query);
     }
 }
@@ -285,13 +284,6 @@ using namespace fleeceapi;
 #pragma mark - Private
 
 
-- (CBLDatabase*) database {
-    CBLDatabase* database = _rs.database;
-    Assert(database);
-    return database;
-}
-
-
 - (NSArray*) extractColumns: (FLArrayIterator)columns {
     NSUInteger count = _rs.columnNames.count;
     NSMutableArray* values = [NSMutableArray arrayWithCapacity: count];
@@ -319,8 +311,10 @@ using namespace fleeceapi;
     if (value == nullptr || FLValue_GetType(value) == kFLNull)
         return nil;
     
-    MRoot<id> root(_context, value, false);
-    return root.asNative();
+    CBL_LOCK(_rs.database) {
+        MRoot<id> root(_context, value, false);
+        return root.asNative();
+    }
 }
 
 
