@@ -25,7 +25,7 @@ import Foundation
 /// The document's raw JSON form only contains the Blob's metadata (type, length and a digest of
 /// the data) in a small object. The data itself is stored externally to the document, keyed by
 /// the digest.
-public class Blob {
+public final class Blob: Equatable, Hashable {
     
     /// Initializes a Blob with the given in-memory data.
     ///
@@ -93,6 +93,23 @@ public class Blob {
     public var properties: [String: Any] {
         return _impl.properties
     }
+    
+    
+    // MARK: Equality
+    
+    
+    /// Equal to operator for comparing two Blob objects.
+    public static func == (blob1: Blob, blob2: Blob) -> Bool {
+        return blob1._impl == blob2._impl
+    }
+    
+    
+    // MARK: Hashable
+    
+    public var hashValue: Int {
+        return _impl.hash;
+    }
+    
     
     // MARK: Internal
     
