@@ -43,6 +43,17 @@ public struct BasicAuthenticator: IAuthenticator {
     public let password: String
     
     
+    /// Initializes with the username and password.
+    ///
+    /// - Parameters:
+    ///   - username: The username
+    ///   - password: The password
+    public init(username: String, password: String) {
+        self.username = username
+        self.password = password
+    }
+    
+    
     // MARK: Internal
     
     
