@@ -1098,7 +1098,7 @@
 		93CD02DD1EA037B200AFB3FA /* CBLDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDictionary.mm; sourceTree = "<group>"; };
 		93CD02E41EA0382C00AFB3FA /* CBLMutableDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMutableDictionary.h; sourceTree = "<group>"; };
 		93CD02E51EA0382D00AFB3FA /* CBLMutableDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLMutableDictionary.mm; sourceTree = "<group>"; };
-		93CED8B620488B9200E6F0A4 /* CouchbaseLite.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLite.modulemap; sourceTree = "<group>"; };
+		93CED8B620488B9200E6F0A4 /* CouchbaseLiteSwift.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.modulemap; sourceTree = "<group>"; };
 		93CED8C820488BC900E6F0A4 /* DatabaseChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseChange.swift; sourceTree = "<group>"; };
 		93CED8CA20488BD400E6F0A4 /* DocumentChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentChange.swift; sourceTree = "<group>"; };
 		93CED8CC20488C1300E6F0A4 /* Blob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Blob.swift; sourceTree = "<group>"; };
@@ -1248,7 +1248,7 @@
 				9338BEE21ED5475200634873 /* Replication */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				93CED8B620488B9200E6F0A4 /* CouchbaseLite.modulemap */,
+				93CED8B620488B9200E6F0A4 /* CouchbaseLiteSwift.modulemap */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Swift;
