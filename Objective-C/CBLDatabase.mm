@@ -919,7 +919,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             return false;
         
         // Resolve conflict:
-        CBLLog(Database, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
+        CBLLog(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
                docID, localDoc.revID, remoteDoc.revID);
         
         CBLDocument* resolvedDoc = [self resolveConflictBetweenLocalDoc: localDoc
@@ -985,7 +985,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         || !c4doc_save(rawDoc, 0, &c4err)) {
         return convertError(c4err, outError);
     }
-    CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
+    CBLLog(Sync, @"Conflict resolved as doc '%@' rev %.*s",
            localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
     return YES;
 }

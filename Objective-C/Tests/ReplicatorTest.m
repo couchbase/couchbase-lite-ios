@@ -18,6 +18,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLJSON.h"
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLURLEndpoint+Internal.h"
@@ -89,42 +90,69 @@
 }
 
 
-- (BOOL) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
+- (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
+    Assert([endpoint.url.path isEqualToString: @"/scratch"], @"Only scratch db should be erased");
+    [self sendRequestToEndpoint: endpoint method: @"POST" path: @"_flush" body: nil];
+    Log(@"Erased remote database %@", endpoint.url);
+}
+
+
+- (id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
+                      method: (NSString*)method
+                        path: (nullable NSString*)path
+                        body: (nullable id)body
+{
     NSURL* endpointURL = endpoint.url;
-    
-    Assert([endpointURL.path isEqualToString: @"/scratch"], @"Only scratch db should be erased");
     NSURLComponents *comp = [NSURLComponents new];
     comp.scheme = [endpointURL.scheme isEqualToString: kCBLURLEndpointTLSScheme] ? @"https" : @"http";
     comp.host = endpointURL.host;
-    comp.port = @([endpointURL.port intValue] + 1);   // assuming admin port is at usual offset
-    comp.path = [NSString stringWithFormat: @"%@/_flush", endpointURL.path];
+    comp.port = @([endpointURL.port intValue] + 1);   // assuming admin port is at usual offse
+    path = path ? ([path hasPrefix: @"/"] ? path : [@"/" stringByAppendingString: path]) : @"";
+    comp.path = [NSString stringWithFormat: @"%@%@", endpointURL.path, path];
     NSURL* url = comp.URL;
     Assert(url);
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
-    request.HTTPMethod = @"POST";
-
+    request.HTTPMethod = method;
+    if (body) {
+        if ([body isKindOfClass: [NSData class]]) {
+            request.HTTPBody = body;
+        } else {
+            NSError* err = nil;
+            request.HTTPBody = [CBLJSON dataWithJSONObject: body options:0 error: &err];
+            AssertNil(err);
+        }
+    }
+    
     __block NSError* error = nil;
     __block NSInteger status = 0;
+    __block NSData* data = nil;
     XCTestExpectation* x = [self expectationWithDescription: @"Complete Request"];
     NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest: request
                                                                  completionHandler:
-                                  ^(NSData *data, NSURLResponse *response, NSError *err)
-    {
-        error = err;
-        status = ((NSHTTPURLResponse*)response).statusCode;
-        [x fulfill];
-    }];
+                                  ^(NSData *d, NSURLResponse *r, NSError *e)
+                                  {
+                                      error = e;
+                                      data = d;
+                                      status = ((NSHTTPURLResponse*)r).statusCode;
+                                      [x fulfill];
+                                  }];
     [task resume];
     [self waitForExpectations: @[x] timeout: timeout];
     
     if (error != nil || status >= 300) {
-        XCTFail(@"Failed to delete remote db; URL=<%@>, status=%ld, error=%@",
-                url, (long)status, error);
-        return NO;
+        XCTFail(@"Failed to send request; URL=<%@>, Method=<%@>, Status=%ld, Error=%@",
+                url, method, (long)status, error);
+        return nil;
     } else {
-        Log(@"Erased remote database %@", url);
-        return YES;
+        Log(@"Send request succeeded; URL=<%@>, Method=<%@>, Status=%ld",
+            url, method, status);
+        id result = nil;
+        if (data && data.length > 0) {
+            result = [CBLJSON JSONObjectWithData: data options: 0 error: &error];
+            Assert(result, @"Couldn't parse JSON response: %@", error);
+        }
+        return result;
     }
 }
 
@@ -190,7 +218,7 @@
     }];
     
     [repl start];
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[x] timeout: timeout];
     [repl removeChangeListenerWithToken: token];
 }
 
@@ -391,6 +419,40 @@
     AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
                                                  @"pattern": @"striped",
                                                  @"color": @"black-yellow"}));
+}
+
+
+- (void) failing_testPullConflictDeleteWins {
+    // Create a document and push it to otherDB:
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Delete the document from db:
+    Assert([self.db deleteDocument: doc1 error: &error]);
+    AssertNil([self.db documentWithID: doc1.id]);
+    
+    // Update the document in otherDB:
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: doc1.id] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    // Pull from otherDB, creating a conflict to resolve:
+    id pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved as delete wins:
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db documentWithID: doc1.id]);
 }
 
 
@@ -670,7 +732,7 @@
 #pragma mark - Sync Gateway Tests
 
 
-- (void) testAuthenticationFailure {
+- (void) testAuthenticationFailure_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     if (!target)
         return;
@@ -679,7 +741,7 @@
 }
 
 
-- (void) testAuthenticatedPull {
+- (void) testAuthenticatedPull_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     if (!target)
         return;
@@ -689,7 +751,7 @@
 }
 
 
-- (void) testPushBlobToSyncGateway {
+- (void) testPushBlob_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -704,14 +766,13 @@
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
 
-    if (![self eraseRemoteEndpoint: target])
-        return;
+    [self eraseRemoteEndpoint: target];
     id config = [self configWithTarget: target type : kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
-- (void) dontTestMissingHost {
+- (void) dontTestMissingHost_SG {
     // Note: The replication doesn't fail with an error; because the unknown-host error is
     // considered transient, the replicator just stays offline and waits for a network change.
     // This causes the test to time out.
@@ -725,7 +786,7 @@
 }
 
 
-- (void) testSelfSignedSSLFailure {
+- (void) testSelfSignedSSLFailure_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
@@ -735,7 +796,7 @@
 }
 
 
-- (void) testSelfSignedSSLPinned {
+- (void) testSelfSignedSSLPinned_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
@@ -744,7 +805,7 @@
 }
 
 
-- (void) dontTestContinuousPushNeverending {
+- (void) dontTestContinuousPushNeverending_SG {
     // NOTE: This test never stops even after the replication goes idle.
     // It can be used to test the response to connectivity issues like killing the remote server.
     [CBLDatabase setLogLevel: kCBLLogLevelVerbose domain: kCBLLogDomainNetwork];
@@ -761,7 +822,7 @@
 }
 
 
-- (void) testStopReplicatorAfterOffline {
+- (void) testStopReplicatorAfterOffline_SG {
     timeout = 200;
     
     id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
@@ -786,6 +847,47 @@
     [r start];
     [self waitForExpectations: @[x1, x2] timeout: 10.0];
     [repl removeChangeListenerWithToken: token];
+}
+
+
+- (void) failing_testPullConflictDeleteWins_SG {
+    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
+    
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    [self eraseRemoteEndpoint: target];
+    
+    // Push to SG:
+    id config = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Get doc form SG:
+    NSDictionary* data = [self sendRequestToEndpoint: target method: @"GET" path: doc1.id body: nil];
+    Assert(data);
+    
+    // Update doc on SG:
+    NSMutableDictionary* nuData = [data mutableCopy];
+    nuData[@"species"] = @"Cat";
+    data = [self sendRequestToEndpoint: target method: @"PUT" path: doc1.id body: nuData];
+    Assert(data);
+    
+    // Delete local doc:
+    Assert([self.db deleteDocument: doc1 error: &error]);
+    AssertNil([self.db documentWithID: doc1.id]);
+    
+    // Start pull replicator:
+    config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Verify local doc should be nil:
+    AssertNil([self.db documentWithID: doc1.id]);
 }
 
 @end
