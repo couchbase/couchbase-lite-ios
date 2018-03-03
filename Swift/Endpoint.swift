@@ -62,16 +62,13 @@ public struct URLEndpoint: IEndpoint {
     ///
     /// - Parameter url: The URL object.
     public init(url: URL) {
-        impl = CBLURLEndpoint(url: url)
         self.url = url
     }
     
     // MARK: Internal
     
-    private let impl: CBLURLEndpoint
-    
     func toImpl() -> CBLEndpoint {
-        return impl
+        return CBLURLEndpoint(url: url)
     }
     
 }
