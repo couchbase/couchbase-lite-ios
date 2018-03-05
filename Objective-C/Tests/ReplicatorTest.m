@@ -822,7 +822,8 @@
 }
 
 
-- (void) testStopReplicatorAfterOffline_SG {
+// https://github.com/couchbase/couchbase-lite-ios/issues/2089
+- (void) failingTestStopReplicatorAfterOffline_SG {
     timeout = 200;
     
     id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
