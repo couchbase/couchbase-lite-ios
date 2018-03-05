@@ -235,10 +235,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
              completionHandler: ^(NSData* data, BOOL atEOF, NSError* error)
     {
         CBLLogVerbose(WebSocket, @"Received %zu bytes of HTTP response", (size_t)data.length);
-        if (error) {
-            [self didCloseWithError: error];
+        if ([self checkError: error])
             return;
-        }
+        
         if (!CFHTTPMessageAppendBytes(httpResponse, (const UInt8*)data.bytes, data.length)) {
             // Error reading response!
             [self didCloseWithCode: kWebSocketCloseProtocolError
@@ -491,7 +490,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 - (bool) checkError: (NSError*)error {
-    if (!error)
+    if (!error || [self ignoreError: error])
         return false;
     
     _cancelError = error;
@@ -522,11 +521,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         return;
     _task = nil;
 
-    // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
-    if (_requestedClose && [error my_hasDomain: NSPOSIXErrorDomain code: ENOTCONN]) {
-        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error.my_compactDescription);
+    if ([self ignoreError: error])
         error = nil;
-    }
 
     C4Error c4err;
     if (error) {
@@ -541,6 +537,15 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     c4socket_closed(_c4socket, c4err);
 }
 
+
+- (BOOL) ignoreError: (NSError*)error {
+    // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
+    if (_requestedClose && [error my_hasDomain: NSPOSIXErrorDomain code: ENOTCONN]) {
+        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error.my_compactDescription);
+        return YES;
+    }
+    return NO;
+}
 
 #pragma mark - UTILITIES:
 
