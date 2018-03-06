@@ -218,8 +218,13 @@
     }];
     
     [repl start];
-    [self waitForExpectations: @[x] timeout: timeout];
-    [repl removeChangeListenerWithToken: token];
+    @try {
+        [self waitForExpectations: @[x] timeout: timeout];
+    }
+    @finally {
+        [repl stop];
+        [repl removeChangeListenerWithToken: token];
+    }
 }
 
 
@@ -822,13 +827,8 @@
 }
 
 
-// https://github.com/couchbase/couchbase-lite-ios/issues/2089
-- (void) failingTestStopReplicatorAfterOffline_SG {
-    timeout = 200;
-    
-    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
-    if (!target)
-        return;
+- (void) testStopReplicatorAfterOffline_SG {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
@@ -836,8 +836,8 @@
     XCTestExpectation* x2 = [self expectationWithDescription: @"Stopped"];
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
         if (change.status.activity == kCBLReplicatorOffline) {
-            [x1 fulfill];
             [change.replicator stop];
+            [x1 fulfill];
         }
         
         if (change.status.activity == kCBLReplicatorStopped) {
