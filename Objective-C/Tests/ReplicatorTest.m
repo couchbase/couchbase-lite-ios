@@ -851,7 +851,7 @@
 }
 
 
-- (void) failing_testPullConflictDeleteWins_SG {
+- (void) testPullConflictDeleteWins_SG {
     [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
     
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
@@ -870,20 +870,23 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Get doc form SG:
-    NSDictionary* data = [self sendRequestToEndpoint: target method: @"GET" path: doc1.id body: nil];
-    Assert(data);
+    NSDictionary* json = [self sendRequestToEndpoint: target method: @"GET" path: doc1.id body: nil];
+    Assert(json);
+    Log(@"----> Common ancestor revision is %@", json[@"_rev"]);
     
     // Update doc on SG:
-    NSMutableDictionary* nuData = [data mutableCopy];
+    NSMutableDictionary* nuData = [json mutableCopy];
     nuData[@"species"] = @"Cat";
-    data = [self sendRequestToEndpoint: target method: @"PUT" path: doc1.id body: nuData];
-    Assert(data);
-    
+    json = [self sendRequestToEndpoint: target method: @"PUT" path: doc1.id body: nuData];
+    Assert(json);
+    Log(@"----> Conflicting server revision is %@", json[@"rev"]);
+
     // Delete local doc:
     Assert([self.db deleteDocument: doc1 error: &error]);
     AssertNil([self.db documentWithID: doc1.id]);
     
     // Start pull replicator:
+    Log(@"-------- Starting pull replication to pick up conflict --------");
     config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     

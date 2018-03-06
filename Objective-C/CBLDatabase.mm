@@ -967,11 +967,14 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     CBLStringBytes losingRevID = localDoc.revID;
     
     NSData* mergedBody = nil;
+    C4RevisionFlags mergedFlags = 0;
     if (resolvedDoc != remoteDoc) {
         // Unless the remote revision is being used as-is, we need a new revision:
         mergedBody = [resolvedDoc encode: outError];
         if (!mergedBody)
             return false;
+        if (resolvedDoc.isDeleted)
+            mergedFlags |= kRevDeleted;
     }
     
     // Tell LiteCore to do the resolution:
@@ -981,6 +984,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                                winningRevID,
                                losingRevID,
                                data2slice(mergedBody),
+                               mergedFlags,
                                &c4err)
         || !c4doc_save(rawDoc, 0, &c4err)) {
         return convertError(c4err, outError);

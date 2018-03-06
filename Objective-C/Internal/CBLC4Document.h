@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) C4String revID;
 
-@property (readonly, nonatomic) C4Revision selectedRev;
+@property (readonly, nonatomic) C4Slice body;
 
 + (instancetype) document: (C4Document*)document;
 
