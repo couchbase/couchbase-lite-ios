@@ -156,7 +156,7 @@ using namespace fleeceapi;
         _fleeceData = nullptr;
         
         if (c4doc) {
-            C4Slice body = c4doc.selectedRev.body;
+            C4Slice body = c4doc.body;
             if (body.size > 0)
                 _fleeceData = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
         }
@@ -174,7 +174,7 @@ using namespace fleeceapi;
 
 - (NSData*) encode: (NSError**)outError {
     // CBLMutableDocument overrides this
-    fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
+    fleece::slice body = _c4Doc.body;
     return body ? body.copiedNSData() : [NSData data];
 }
 
@@ -209,7 +209,7 @@ using namespace fleeceapi;
 
 - (NSString*) revID {
     CBL_LOCK(self) {
-        return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+        return _c4Doc != nil ?  slice2string(_c4Doc.revID) : nil;
     }
 }
 
@@ -217,7 +217,7 @@ using namespace fleeceapi;
 - (NSUInteger) generation {
     // CBLMutableDocument overrides this
     CBL_LOCK(self) {
-        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
+        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
     }
 }
 

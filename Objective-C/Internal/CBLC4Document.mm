@@ -44,22 +44,22 @@
 
 
 - (C4DocumentFlags) flags {
-    return _rawDoc->flags;
+    return _rawDoc->selectedRev.flags;
 }
 
 
 - (C4SequenceNumber) sequence {
-    return _rawDoc->sequence;
+    return _rawDoc->selectedRev.sequence;
 }
 
 
 - (C4String) revID {
-    return _rawDoc->revID;
+    return _rawDoc->selectedRev.revID;
 }
 
 
-- (C4Revision) selectedRev {
-    return _rawDoc->selectedRev;
+- (C4Slice) body {
+    return _rawDoc->selectedRev.body;
 }
 
 
