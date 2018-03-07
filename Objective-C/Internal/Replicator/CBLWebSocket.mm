@@ -432,7 +432,6 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                  challenge.protectionSpace, error.localizedDescription);
             disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
         }
-
     } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
         // Server is checking client cert:
         if (_clientCertID) {
@@ -471,7 +470,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
            (isWrite ? "write" : "read"),
            (_requestedClose ? "" : " unexpectedly"));
     if (task == _task && !_requestedClose) {
-        _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain, @"Network connection lost");
+        if (!_cancelError)
+            _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain,
+                                   @"Network connection lost");
         [_task cancel];
     }
 }
