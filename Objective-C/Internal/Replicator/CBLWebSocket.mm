@@ -391,8 +391,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     [_queue addOperationWithBlock: ^{
         CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
         _requestedClose = YES;
-        [self->_task closeWrite];
-        [self->_task closeRead];
+        [self closeTask];
     }];
 }
 
@@ -457,19 +456,21 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 - (void)URLSession:(NSURLSession *)session readClosedForStreamTask:(NSURLSessionStreamTask *)task
 {
-    [self streamClosed: NO];
+    [self streamClosedForTask: task isWrite: NO];
 }
+
 
 - (void)URLSession:(NSURLSession *)session writeClosedForStreamTask:(NSURLSessionStreamTask *)task
 {
-    [self streamClosed: YES];
+    [self streamClosedForTask: task isWrite: YES];
 }
 
-- (void) streamClosed: (BOOL)isWrite {
+
+- (void) streamClosedForTask: (NSURLSessionStreamTask *)task isWrite: (BOOL)isWrite {
     CBLLog(WebSocket, @"CBLWebSocket %s stream closed%s",
            (isWrite ? "write" : "read"),
            (_requestedClose ? "" : " unexpectedly"));
-    if (!_requestedClose) {
+    if (task == _task && !_requestedClose) {
         _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain, @"Network connection lost");
         [_task cancel];
     }
@@ -480,9 +481,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
               task:(NSURLSessionTask *)task
         didCompleteWithError:(nullable NSError *)error
 {
-    if (task == _task) {
+    if (task == _task)
         [self didCloseWithError: error];
-    }
 }
 
 
@@ -493,8 +493,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     if (!error || [self ignoreError: error])
         return false;
     
-    _cancelError = error;
-    [_task cancel];
+    [self closeTask];
+    [self didCloseWithError: error];
     return true;
 }
 
@@ -507,6 +507,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     
     if (!_task)
         return;
+    [self closeTask];
     _task = nil;
 
     CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH STATUS %d \"%@\"", (int)code, reason);
@@ -535,6 +536,15 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         c4err = {};
     }
     c4socket_closed(_c4socket, c4err);
+}
+
+
+// TODO: We could reset the current task to nil here but
+// need to make sure that the logic in didCloseWithError: is still
+// correct as it could be called from multiple places more than one time.
+- (void) closeTask {
+    [_task closeWrite];
+    [_task closeRead];
 }
 
 
