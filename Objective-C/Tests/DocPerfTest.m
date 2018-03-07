@@ -41,7 +41,7 @@
             @autoreleasepool {
                 [doc setValue: @(i) forKey: @"count"];
                 NSError *error2;
-                doc = [[self.db saveDocument: doc error: &error2] mutableCopy];
+                [self.db saveDocument: doc error: &error2];
                 Assert(doc, @"Save failed: %@", error2);
             }
         }
