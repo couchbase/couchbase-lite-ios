@@ -81,7 +81,7 @@ static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel lev
 
 static C4LogLevel getLogLevel(C4LogLevel level, C4LogLevel maxLogLevel) {
     return level <= maxLogLevel ? level : (C4LogLevel) MAX(level, kC4LogWarning);
-}`
+}
 
 
 void CBLLog_Init() {
