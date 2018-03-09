@@ -89,7 +89,7 @@ void CBLLog_Init() {
     C4LogLevel defaultLevel = string2level([NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"]);
     c4log_writeToCallback(defaultLevel, &logCallback, false);
     if (defaultLevel != kC4LogWarning)
-        NSLog(@"CouchbaseLite default log level is %s and above", kLevelNames[defaultLevel]);
+        NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[defaultLevel]);
 
     C4LogLevel domainLevel = (C4LogLevel) MAX(defaultLevel, kC4LogWarning);
     kCBL_LogDomainDatabase  = setNamedLogDomainLevel("DB", domainLevel);
