@@ -894,4 +894,49 @@
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
+
+- (void) failing_testPushAndPullBigBodyDocument_SG {
+    timeout = 200;
+    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainAll];
+    
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    // Create a big document (~500KB)
+    CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
+    for (int i = 0; i < 1000; i++) {
+        NSString *text =
+            @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+            "Ut lobortis turpis odio, eget imperdiet arcu consectetur ut. "
+            "Mauris imperdiet sit amet mauris quis tempus. Vivamus rhoncus, "
+            "nisl vitae gravida varius, magna augue sagittis enim, vel "
+            "blandit velit tortor vel est. Pellentesque finibus nunc diam, "
+            "id hendrerit sapien sollicitudin et. Integer eu turpis lorem. "
+            "Praesent ut purus eu nisi faucibus facilisis. Mauris posuere "
+            "pretium erat, et euismod mauris euismod vitae. Nam ut mauris "
+            "vel augue ultrices finibus lacinia non diam.";
+        [doc setValue:text forKey:[NSString stringWithFormat:@"text-%d", i]];
+    }
+    
+    NSError* error;
+    Assert([self.db saveDocument: doc error: &error], @"Save Error: %@", error);
+    
+    // Erase remote data:
+    [self eraseRemoteEndpoint: target];
+    
+    // PUSH to SG:
+    Log(@"-------- Starting push replication --------");
+    id config = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Clean database:
+    [self cleanDB];
+    
+    // PULL from SG:
+    Log(@"-------- Starting pull replication --------");
+    config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
 @end
