@@ -77,6 +77,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Reads a bundle resource file into an NSString. */
 - (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type;
 
+/** Generates a random string with the given length. */
+- (NSString*) randomStringWithLength: (NSUInteger)length;
+
 /** Loads the database with documents read from a multiline JSON string.
     Each line of the string should be a complete JSON object, which will become a document.
     The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */

@@ -183,6 +183,17 @@
 }
 
 
+- (NSString*) randomStringWithLength: (NSUInteger)length {
+    static NSString *chars = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789";
+    NSMutableString *s = [NSMutableString stringWithCapacity: length];
+    for (NSUInteger i = 0; i < length; i++) {
+        [s appendFormat:@"%C",
+            [chars characterAtIndex: (arc4random() % [chars length])]];
+    }
+    return s;
+}
+
+
 - (void) loadJSONResource: (NSString*)resourceName {
     @autoreleasepool {
         NSString* contents = [self stringFromResource: resourceName ofType: @"json"];

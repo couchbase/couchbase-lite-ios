@@ -427,7 +427,7 @@
 }
 
 
-- (void) failing_testPullConflictDeleteWins {
+- (void) testPullConflictDeleteWins {
     // Create a document and push it to otherDB:
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
@@ -456,7 +456,7 @@
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved as delete wins:
-    AssertEqual(self.db.count, 1u);
+    AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
@@ -895,9 +895,9 @@
 }
 
 
-- (void) failing_testPushAndPullBigBodyDocument_SG {
+- (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
-    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainAll];
+    [CBLDatabase setLogLevel:kCBLLogLevelDebug domain:kCBLLogDomainAll];
     
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
@@ -906,16 +906,7 @@
     // Create a big document (~500KB)
     CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
     for (int i = 0; i < 1000; i++) {
-        NSString *text =
-            @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-            "Ut lobortis turpis odio, eget imperdiet arcu consectetur ut. "
-            "Mauris imperdiet sit amet mauris quis tempus. Vivamus rhoncus, "
-            "nisl vitae gravida varius, magna augue sagittis enim, vel "
-            "blandit velit tortor vel est. Pellentesque finibus nunc diam, "
-            "id hendrerit sapien sollicitudin et. Integer eu turpis lorem. "
-            "Praesent ut purus eu nisi faucibus facilisis. Mauris posuere "
-            "pretium erat, et euismod mauris euismod vitae. Nam ut mauris "
-            "vel augue ultrices finibus lacinia non diam.";
+        NSString *text = [self randomStringWithLength: 512];
         [doc setValue:text forKey:[NSString stringWithFormat:@"text-%d", i]];
     }
     
