@@ -79,6 +79,11 @@ static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel lev
 }
 
 
+static C4LogLevel getLogLevel(C4LogLevel level, C4LogLevel maxLogLevel) {
+    return level <= maxLogLevel ? level : (C4LogLevel) MAX(level, kC4LogWarning);
+}`
+
+
 void CBLLog_Init() {
     // First set the default log level, and register the log callback:
     C4LogLevel defaultLevel = string2level([NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"]);
@@ -118,8 +123,9 @@ void CBLLog_SetLevel(CBLLogDomain domain, CBLLogLevel level)  {
             c4log_setLevel(kCBL_LogDomainDatabase, c4level);
             c4log_setLevel(kCBL_LogDomainQuery, c4level);
             c4log_setLevel(kCBL_LogDomainSync, c4level);
-            setNamedLogDomainLevel("BLIP", c4level);
             c4log_setLevel(kCBL_LogDomainWebSocket, c4level);
+            setNamedLogDomainLevel("BLIP", c4level);
+            setNamedLogDomainLevel("SyncBusy", getLogLevel(c4level, kC4LogVerbose));
             break;
         case kCBLLogDomainDatabase:
             c4log_setLevel(kCBL_LogDomainDatabase, c4level);
@@ -129,6 +135,7 @@ void CBLLog_SetLevel(CBLLogDomain domain, CBLLogLevel level)  {
             break;
         case kCBLLogDomainReplicator:
             c4log_setLevel(kCBL_LogDomainSync, c4level);
+            setNamedLogDomainLevel("SyncBusy", getLogLevel(c4level, kC4LogVerbose));
             break;
         case kCBLLogDomainNetwork:
             setNamedLogDomainLevel("BLIP", c4level);
