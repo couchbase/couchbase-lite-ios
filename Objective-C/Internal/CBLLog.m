@@ -87,13 +87,13 @@ void CBLLog_Init() {
         NSLog(@"CouchbaseLite default log level is %s and above", kLevelNames[defaultLevel]);
 
     C4LogLevel domainLevel = (C4LogLevel) MAX(defaultLevel, kC4LogWarning);
-    
-    // TODO: Sync Lite and LiteCore log domains:
-    
     kCBL_LogDomainDatabase  = setNamedLogDomainLevel("DB", domainLevel);
     kCBL_LogDomainQuery     = setNamedLogDomainLevel("Query", domainLevel);
     kCBL_LogDomainSync      = setNamedLogDomainLevel("Sync", domainLevel);
     kCBL_LogDomainWebSocket = setNamedLogDomainLevel("WS", domainLevel);
+    
+    // Workaround for https://github.com/couchbase/couchbase-lite-ios/issues/2095
+    setNamedLogDomainLevel("SQL", kC4LogWarning);
 
     // Now map user defaults starting with CBLLog... to log levels:
     NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];
