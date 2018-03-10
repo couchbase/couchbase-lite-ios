@@ -34,7 +34,7 @@ static bool c4ToCFNetworkError(C4Error err, NSString* __autoreleasing *outDomain
 BOOL convertError(const C4Error &c4err, NSError** outError) {
     NSCAssert(c4err.code != 0 && c4err.domain != 0, @"No C4Error");
     static NSErrorDomain const kNSErrorDomains[kC4MaxErrorDomainPlus1] =
-        {nil, CBLErrorDomain, NSPOSIXErrorDomain, nil, SQLiteErrorDomain,
+        {nil, CBLErrorDomain, NSPOSIXErrorDomain, SQLiteErrorDomain,
          FleeceErrorDomain, nil, CBLErrorDomain};
     if (outError) {
         NSString* msgStr = sliceResult2string(c4error_getMessage(c4err));
@@ -131,6 +131,9 @@ static const struct {int code; C4Error c4err;} kCFNetworkErrorMap[] = {
     {kCFURLErrorClientCertificateRequired,      {NetworkDomain, kC4NetErrTLSClientCertRequired}},
     {kCFURLErrorClientCertificateRejected,      {NetworkDomain, kC4NetErrTLSClientCertRejected}},
     {kCFURLErrorServerCertificateHasUnknownRoot,{NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
+    {kCFURLErrorRedirectToNonExistentLocation,  {NetworkDomain, kC4NetErrInvalidRedirect}},
+    {kCFErrorHTTPRedirectionLoopDetected,       {NetworkDomain, kC4NetErrInvalidRedirect}},
+    {kCFURLErrorHTTPTooManyRedirects,           {NetworkDomain, kC4NetErrInvalidRedirect}},
     {kCFErrorHTTPBadProxyCredentials,           {WebSocketDomain, 407}},
     {0}
     // This list is incomplete but covers most of what will actually occur
