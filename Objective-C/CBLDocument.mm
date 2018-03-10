@@ -184,11 +184,15 @@ using namespace fleeceapi;
 
 - (BOOL) selectConflictingRevision {
     CBL_LOCK(self) {
-        if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
-            return NO;
-        
-        self.c4Doc = _c4Doc;     // This will update to the selected revision
-        return YES;
+        BOOL foundConflict = NO;
+        if (_c4Doc) {
+            while(!foundConflict && c4doc_selectNextLeafRevision(_c4Doc.rawDoc, true, true, nullptr)) {
+                foundConflict = (_c4Doc.flags & kRevIsConflict) != 0;
+            }
+        }
+        if (foundConflict)
+            self.c4Doc = _c4Doc;     // This will update to the selected revision
+        return foundConflict;
     }
 }
 
