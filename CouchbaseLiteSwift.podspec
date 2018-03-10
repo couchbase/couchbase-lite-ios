@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version               = '2.0DB021'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'http://mobile.couchbase.com'
-  s.summary               = 'An embedded syncable NoSQL database for iOS, tvOS, and MacOS apps.'
+  s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
   s.author                = 'Couchbase'
   s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => s.version, :submodules => true }
 
@@ -14,13 +14,9 @@ Pod::Spec.new do |s|
   s.ios.preserve_paths = 'frameworks/CBL Swift/iOS/CouchbaseLiteSwift.framework'
   s.ios.vendored_frameworks = 'frameworks/CBL Swift/iOS/CouchbaseLiteSwift.framework'
 
-  s.tvos.preserve_paths = 'frameworks/CBL Swift/tvOS/CouchbaseLiteSwift.framework'
-  s.tvos.vendored_frameworks = 'frameworks/CBL Swift/tvOS/CouchbaseLiteSwift.framework'
-
   s.osx.preserve_paths = 'frameworks/CBL Swift/macOS/CouchbaseLiteSwift.framework'
   s.osx.vendored_frameworks = 'frameworks/CBL Swift/macOS/CouchbaseLiteSwift.framework'
 
   s.ios.deployment_target  = '9.0'
-  s.tvos.deployment_target = '9.0'
   s.osx.deployment_target  = '10.11'
 end
