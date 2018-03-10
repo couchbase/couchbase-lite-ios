@@ -122,7 +122,6 @@ TOOLS_DIR="$BUILD_DIR/Tools"
 mkdir "$TOOLS_DIR"
 cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
 vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'cblite' -o "$TOOLS_DIR" -v "$VERSION"
-vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecorelog' -o "$TOOLS_DIR" -v "$VERSION"
 
 # Objective-C
 echo "Make Objective-C framework zip file ..."
