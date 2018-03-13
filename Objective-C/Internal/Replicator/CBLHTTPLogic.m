@@ -20,9 +20,6 @@
 #import "CBLHTTPLogic.h"
 
 
-#define Log NSLog
-#define Warn NSLog
-
 #define kMaxRedirects 10
 
 
@@ -160,12 +157,12 @@
             // For some reason the password sometimes isn't accessible, even though we checked
             // .hasPassword when setting _credential earlier. (See #195.) Keychain bug??
             // If this happens, try looking up the credential again:
-            Log(@"Huh, couldn't get password of %@; trying again", _credential);
+            CBLLog(WebSocket, @"Couldn't get password of %@; trying again", _credential);
             _credential = [self credentialForAuthHeader:
                                                 getHeader(_responseMsg, @"WWW-Authenticate")];
             password = _credential.password;
             if (!password)
-                Warn(@"%@: Unable to get password of credential %@", self, _credential);
+                CBLWarn(WebSocket, @"%@: Unable to get password of credential %@", self, _credential);
         }
         if (!password ||
             (!CFHTTPMessageAddAuthentication(httpMsg, _responseMsg,
@@ -180,7 +177,7 @@
                                                 _httpStatus == 407)))
         {
             // The 2nd call above works around a bug where it can fail if the auth scheme is NULL.
-            Warn(@"%@: Unable to add authentication", self);
+            CBLWarn(WebSocket, @"%@: Unable to add authentication", self);
             _credential = nil;
             CFRelease(_responseMsg);
             _responseMsg = NULL;
@@ -244,14 +241,14 @@
             if (!_authorizationHeader) {
                 if (!_credential)
                     _credential = [self credentialForAuthHeader: authResponse];
-                Log(@"%@: Auth challenge; credential = %@", self, _credential);
+                CBLLog(WebSocket, @"%@: Auth challenge; credential = %@", self, _credential);
                 if (_credential) {
                     // Recoverable auth failure -- try again with new _credential:
                     _shouldRetry = YES;
                     break;
                 }
             }
-            Log(@"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
+            CBLLog(WebSocket, @"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
                 self, _authorizationHeader, authResponse);
             NSDictionary* challengeInfo = [[self class] parseAuthHeader: authResponse];
             
