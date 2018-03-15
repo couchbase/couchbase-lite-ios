@@ -56,9 +56,9 @@ import Foundation
     
     static func convertSETValue(_ value: Any?) -> Any? {
         switch value {
-        case let dict as MutableDictionaryObject:
+        case let dict as DictionaryObject:
             return dict._impl
-        case let array as MutableArrayObject:
+        case let array as ArrayObject:
             return array._impl
         case let blob as Blob:
             return blob._impl

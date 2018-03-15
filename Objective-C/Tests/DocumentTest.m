@@ -693,6 +693,31 @@
 }
 
 
+- (void) testSetImmutableDictionary {
+    CBLMutableDictionary* dict1 = [[CBLMutableDictionary alloc] init];
+    [dict1 setValue: @"n1" forKey: @"name"];
+    
+    CBLMutableDocument* doc1a = [self createDocument: @"doc1"];
+    [doc1a setDictionary: dict1 forKey: @"dict1"];
+    [self saveDocument: doc1a];
+    
+    CBLDocument* doc1 = [self.db documentWithID: doc1a.id];
+    CBLMutableDocument* doc1b = [doc1 toMutable];
+    [doc1b setDictionary:[doc1 dictionaryForKey: @"dict1"] forKey: @"dict1b"];
+    
+    CBLMutableDictionary* dict2 = [[CBLMutableDictionary alloc] init];
+    [dict2 setValue: @"n2" forKey: @"name"];
+    [doc1b setDictionary: dict2 forKey: @"dict2"];
+    
+    // Save:
+    [self saveDocument: doc1b eval: ^(CBLDocument* d) {
+        AssertEqualObjects([d toDictionary], (@{@"dict1": @{@"name": @"n1"},
+                                                @"dict1b": @{@"name": @"n1"},
+                                                @"dict2": @{@"name": @"n2"}}));
+    }];
+}
+
+
 - (void) testGetDictionary {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [self populateData: doc];
@@ -743,6 +768,33 @@
     [array addValue: @"item6"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([[d arrayForKey: @"array"] toArray], [array toArray]);
+    }];
+}
+
+
+- (void) testSetImmutableArray {
+    CBLMutableArray* array1 = [[CBLMutableArray alloc] init];
+    [array1 addString: @"a1"];
+    [array1 addDictionary: [[CBLMutableDictionary alloc] initWithData: @{@"name": @"n1"}]];
+    
+    CBLMutableDocument* doc1a = [self createDocument: @"doc1"];
+    [doc1a setArray: array1 forKey: @"array1"];
+    [self saveDocument: doc1a];
+    
+    CBLDocument* doc1 = [self.db documentWithID: doc1a.id];
+    CBLMutableDocument* doc1b = [doc1 toMutable];
+    [doc1b setArray: [doc1 arrayForKey: @"array1"] forKey: @"array1b"];
+    
+    CBLMutableArray* array2 = [[CBLMutableArray alloc] init];
+    [array2 addString: @"a2"];
+    [array2 addDictionary: [[CBLMutableDictionary alloc] initWithData: @{@"name": @"n2"}]];
+     [doc1b setArray: array2 forKey: @"array2"];
+    
+    // Save:
+    [self saveDocument: doc1b eval: ^(CBLDocument* d) {
+        AssertEqualObjects([d toDictionary], (@{@"array1": @[@"a1", @{@"name": @"n1"}],
+                                                @"array1b": @[@"a1", @{@"name": @"n1"}],
+                                                @"array2": @[@"a2", @{@"name": @"n2"}]}));
     }];
 }
 

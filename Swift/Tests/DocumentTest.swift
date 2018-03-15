@@ -622,6 +622,31 @@ class DocumentTest: CBLTestCase {
     }
     
     
+    func testSetImmutableDictionary() throws {
+        let dict1 = MutableDictionaryObject()
+        dict1.setValue("n1", forKey: "name")
+        
+        let doc1a = createDocument("doc1")
+        doc1a.setDictionary(dict1, forKey: "dict1")
+        try saveDocument(doc1a)
+        
+        let doc1 = db.document(withID: doc1a.id)!
+        let doc1b = doc1.toMutable()
+        doc1b.setDictionary(doc1.dictionary(forKey: "dict1"), forKey: "dict1b")
+        
+        let dict2 = MutableDictionaryObject()
+        dict2.setValue("n2", forKey: "name")
+        doc1b.setDictionary(dict2, forKey: "dict2")
+        
+        let dict: [String: Any] = ["dict1": ["name": "n1"],
+                                   "dict1b": ["name": "n1"],
+                                   "dict2": ["name": "n2"]]
+        try saveDocument(doc1b, eval: { (d) in
+            XCTAssert(d.toDictionary() == dict)
+        })
+    }
+    
+    
     func testGetDictionary() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -675,6 +700,33 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc, eval: { (d) in
             let savedArray = doc.value(forKey: "array") as! ArrayObject
             XCTAssertTrue(savedArray.toArray() == array.toArray())
+        })
+    }
+    
+    
+    func testSetImmutableArray() throws {
+        let array1 = MutableArrayObject()
+        array1.addString("a1")
+        array1.addDictionary(MutableDictionaryObject(data: ["name": "n1"]))
+        
+        let doc1a = createDocument("doc1")
+        doc1a.setArray(array1, forKey: "array1")
+        try saveDocument(doc1a)
+        
+        let doc1 = db.document(withID: doc1a.id)!
+        let doc1b = doc1.toMutable()
+        doc1b.setArray(doc1.array(forKey: "array1"), forKey: "array1b")
+        
+        let array2 = MutableArrayObject()
+        array2.addString("a2")
+        array2.addDictionary(MutableDictionaryObject(data: ["name": "n2"]))
+        doc1b.setArray(array2, forKey: "array2")
+        
+        let dict: [String: Any] = ["array1": ["a1", ["name": "n1"]],
+                                   "array1b": ["a1", ["name": "n1"]],
+                                   "array2": ["a2", ["name": "n2"]]]
+        try saveDocument(doc1b, eval: { (d) in
+            XCTAssert(d.toDictionary() == dict)
         })
     }
     
