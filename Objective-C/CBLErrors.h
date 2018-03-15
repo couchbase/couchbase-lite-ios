@@ -27,34 +27,25 @@ extern NSErrorDomain const CBLErrorDomain;
 NS_ERROR_ENUM(CBLErrorDomain) {
     CBLErrorAssertionFailed = 1,    // Internal assertion failure
     CBLErrorUnimplemented,          // Oops, an unimplemented API call
-    CBLErrorNoSequences,            // This KeyStore does not support sequences
     CBLErrorUnsupportedEncryption,  // Unsupported encryption algorithm
-    CBLErrorNoTransaction,          // Function must be called within a transaction
     CBLErrorBadRevisionID,          // Invalid revision ID syntax
-    CBLErrorBadVersionVector,       // Invalid version vector syntax
-    CBLErrorCorruptRevisionData,    // Revision contains corrupted/unreadable data
-    CBLErrorCorruptIndexData,       // Index contains corrupted/unreadable data
-    CBLErrorTokenizerError, /*10*/  // can't create text tokenizer for FTS
+    CBLErrorCorruptRevisionData,    // Document contains corrupted/unreadable data
     CBLErrorNotOpen,                // Database/KeyStore/index is not open
     CBLErrorNotFound,               // Document not found
-    CBLErrorDeleted,                // Document has been deleted
     CBLErrorConflict,               // Document update conflict
     CBLErrorInvalidParameter,       // Invalid function parameter or struct value
-    CBLErrorDatabaseError,          // Lower-level database error (SQLite)
     CBLErrorUnexpectedError,        // Internal unexpected C++ exception
     CBLErrorCantOpenFile,           // Database file can't be opened; may not exist
     CBLErrorIOError,                // File I/O error
-    CBLErrorCommitFailed, /*20*/    // Transaction commit failed
     CBLErrorMemoryError,            // Memory allocation failed (out of memory?)
     CBLErrorNotWriteable,           // File is not writeable
     CBLErrorCorruptData,            // Data is corrupted
     CBLErrorBusy,                   // Database is busy/locked
-    CBLErrorNotInTransaction,       // Function cannot be called while in a transaction
+    CBLErrorNotInTransaction,       // Function must be called while in a transaction
     CBLErrorTransactionNotClosed,   // Database can't be closed while a transaction is open
-    CBLErrorIndexBusy,              // (unused)
     CBLErrorUnsupported,            // Operation not supported in this database
     CBLErrorUnreadableDatabase,     // File is not a database, or encryption key is wrong
-    CBLErrorWrongFormat, /*30*/     // Database exists but not in the format/storage requested
+    CBLErrorWrongFormat,            // Database exists but not in the format/storage requested
     CBLErrorCrypto,                 // Encryption/decryption error
     CBLErrorInvalidQuery,           // Invalid query
     CBLErrorMissingIndex,           // No such index, or query requires a nonexistent index
