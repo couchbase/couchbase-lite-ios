@@ -30,24 +30,24 @@ class SampleCodeTest: CBLTestCase {
     // MARK: Database
     
     func dontTestNewDatabase() throws {
-        // <doc>
+        // # tag::new-database[]
         do {
             self.database = try Database(name: "my-database")
         } catch {
             print(error)
         }
-        // </doc>
+        // # end::new-database[]
     }
-    
+
     func dontTestLogging() throws {
-        // <doc>
+        // # tag::logging[]
         Database.setLogLevel(.verbose, domain: .replicator)
         Database.setLogLevel(.verbose, domain: .query)
-        // </doc>
+        // # end::logging[]
     }
-    
+
     func dontTestLoadingPrebuilt() throws {
-        // <doc>
+        // # tag::prebuilt-database[]
         let path = Bundle.main.path(forResource: "travel-sample", ofType: "cblite2")!
         if !Database.exists(withName: "travel-sample") {
             do {
@@ -56,47 +56,47 @@ class SampleCodeTest: CBLTestCase {
                 fatalError("Could not load pre-built database")
             }
         }
-        // </doc>
+        // # end::prebuilt-database[]
     }
-    
+
     // MARK: Document
-    
+
     func dontTestInitializer() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::initializer[]
         let newTask = MutableDocument()
             .setString("task", forKey: "type")
             .setString("todo", forKey: "owner")
             .setDate(Date(), forKey: "createdAt")
         try database.saveDocument(newTask)
-        // </doc>
+        // # end::initializer[]
     }
-    
+
     func dontTestMutability() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::update-document[]
         guard let document = database.document(withID: "xyz") else { return }
         let mutableDocument = document.toMutable()
         mutableDocument.setString("apples", forKey: "name")
         try database.saveDocument(mutableDocument)
-        // </doc>
+        // # end::update-document[]
     }
-    
+
     func dontTestTypedAcessors() throws {
         let newTask = MutableDocument()
-        
-        // <doc>
+
+        // # tag::date-getter[]
         newTask.setValue(Date(), forKey: "createdAt")
         let date = newTask.date(forKey: "createdAt")
-        // </doc>
-        
+        // # end::date-getter[]
+
         print("\(date!)")
     }
-    
+
     func dontTestBatchOperations() throws {
-        // <doc>
+        // # tag::batch[]
         do {
             try database.inBatch {
                 for i in 0...10 {
@@ -111,49 +111,49 @@ class SampleCodeTest: CBLTestCase {
         } catch let error {
             print(error.localizedDescription)
         }
-        // </doc>
+        // # end::batch[]
     }
-    
+
     func dontTestBlob() throws {
     #if TARGET_OS_IPHONE
         database = self.db
         let newTask = MutableDocument()
         var image: UIImage!
-        
-        // <doc>
+
+        // # tag::blob[]
         let appleImage = UIImage(named: "avatar.jpg")!
         let imageData = UIImageJPEGRepresentation(appleImage, 1)!
-        
+
         let blob = Blob(contentType: "image/jpeg", data: imageData)
         newTask.setBlob(blob, forKey: "avatar")
         try database.saveDocument(newTask)
-        
+
         if let taskBlob = newTask.blob(forKey: "image") {
             image = UIImage(data: taskBlob.content!)
         }
-        // </doc>
-        
+        // # end::blob[]
+
         print("\(image)")
     #endif
     }
-    
+
     // MARK: Query
-    
+
     func dontTestIndexing() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-index[]
         let index = IndexBuilder.valueIndex(items:
             ValueIndexItem.expression(Expression.property("type")),
             ValueIndexItem.expression(Expression.property("name")))
         try database.createIndex(index, withName: "TypeNameIndex")
-        // </doc>
+        // # end::query-index[]
     }
-    
+
     func dontTestSelect() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-select-meta[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -170,31 +170,31 @@ class SampleCodeTest: CBLTestCase {
         } catch {
             print(error)
         }
-        // </doc>
+        // # end::query-select-meta[]
     }
-    
+
     func dontTestSelectAll() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-select-all[]
         let query = QueryBuilder
             .select(SelectResult.all())
             .from(DataSource.database(database))
-        // </doc>
-        
+        // # end::query-select-all[]
+
         print("\(query)")
     }
-    
+
     func dontTestWhere() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-where[]
         let query = QueryBuilder
             .select(SelectResult.all())
             .from(DataSource.database(database))
             .where(Expression.property("type").equalTo(Expression.string("hotel")))
             .limit(Expression.int(10))
-        
+
         do {
             for result in try query.execute() {
                 if let dict = result.dictionary(forKey: "travel-sample") {
@@ -204,13 +204,13 @@ class SampleCodeTest: CBLTestCase {
         } catch {
             print(error)
         }
-        // </doc>
+        // # end::query-where[]
     }
-    
+
     func dontTestCollectionOperator() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-collection-operator[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -221,19 +221,19 @@ class SampleCodeTest: CBLTestCase {
             .where(Expression.property("type").equalTo(Expression.string("hotel"))
                 .and(ArrayFunction.contains(Expression.property("public_likes"), value: Expression.string("Armani Langworth")))
         )
-        
+
         do {
              for result in try query.execute() {
                 print("public_likes :: \(result.array(forKey: "public_likes")!.toArray())")
             }
         }
-        // </doc>
+        // # end::query-collection-operator[]
     }
-    
+
     func dontTestLikeOperator() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-like-operator[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -245,19 +245,19 @@ class SampleCodeTest: CBLTestCase {
                 .and( Expression.property("name").like(Expression.string("Royal engineers museum")))
             )
             .limit(Expression.int(10))
-        
+
         do {
             for result in try query.execute() {
                 print("name property :: \(result.string(forKey: "name")!)")
             }
         }
-        // </doc>
+        // # end::query-like-operator[]
     }
-    
+
     func dontTestWildCardMatch() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-like-operator-wildcard-match[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -269,19 +269,19 @@ class SampleCodeTest: CBLTestCase {
                 .and(Expression.property("name").like(Expression.string("eng%e%")))
             )
             .limit(Expression.int(10))
-        // </doc>
-        
+        // # end::query-like-operator-wildcard-match[]
+
         do {
             for result in try query.execute() {
                 print("name property :: \(result.string(forKey: "name")!)")
             }
         }
     }
-    
+
     func dontTestWildCardCharacterMatch() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-like-operator-wildcard-character-match[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -293,19 +293,19 @@ class SampleCodeTest: CBLTestCase {
                 .and(Expression.property("name").like(Expression.string("eng____r")))
             )
             .limit(Expression.int(10))
-        // </doc>
-        
+        // # end::query-like-operator-wildcard-character-match[]
+
         do {
             for result in try query.execute() {
                 print("name property :: \(result.string(forKey: "name")!)")
             }
         }
     }
-    
+
     func dontTestRegexMatch() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-regex-operator[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -316,19 +316,19 @@ class SampleCodeTest: CBLTestCase {
                 .and(Expression.property("name").like(Expression.string("\\bEng.*e\\b")))
             )
             .limit(Expression.int(10))
-        // </doc>
-        
+        // # end::query-regex-operator[]
+
         do {
             for result in try query.execute() {
                 print("name property :: \(result.string(forKey: "name")!)")
             }
         }
     }
-    
+
     func dontTestJoin() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-join[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Expression.property("name").from("airline")),
@@ -352,19 +352,19 @@ class SampleCodeTest: CBLTestCase {
                     .and(Expression.property("type").from("airline").equalTo(Expression.string("airline")))
                     .and(Expression.property("sourceairport").from("route").equalTo(Expression.string("RIX")))
         )
-        // </doc>
-        
+        // # end::query-join[]
+
         do {
             for result in try query.execute() {
                 print("name property :: \(result.string(forKey: "name")!)")
             }
         }
     }
-    
+
     func dontTestGroupBy() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-groupby[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Function.count(Expression.all())),
@@ -378,19 +378,19 @@ class SampleCodeTest: CBLTestCase {
                 Expression.property("country"),
                 Expression.property("tz")
         )
-        
+
         do {
             for result in try query.execute() {
                 print("There are \(result.int(forKey: "$1")) airports on the \(result.string(forKey: "tz")!) timezone located in \(result.string(forKey: "country")!) and above 300 ft")
             }
         }
-        // </doc>
+        // # end::query-groupby[]
     }
-    
+
     func dontTestOrderBy() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::query-orderby[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -399,15 +399,15 @@ class SampleCodeTest: CBLTestCase {
             .where(Expression.property("type").equalTo(Expression.string("hotel")))
             .orderBy(Ordering.property("title").ascending())
             .limit(Expression.int(10))
-        // </doc>
-        
+        // # end::query-orderby[]
+
         print("\(query)")
     }
-    
+
     func dontTestCreateFullTextIndex() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::fts-index[]
         // Insert documents
         let tasks = ["buy groceries", "play chess", "book travels", "buy museum tickets"]
         for task in tasks {
@@ -416,7 +416,7 @@ class SampleCodeTest: CBLTestCase {
             doc.setString(task, forKey: "name")
             try database.saveDocument(doc)
         }
-        
+
         // Create index
         do {
             let index = IndexBuilder.fullTextIndex(items: FullTextIndexItem.property("name")).ignoreAccents(false)
@@ -424,19 +424,19 @@ class SampleCodeTest: CBLTestCase {
         } catch let error {
             print(error.localizedDescription)
         }
-        // </doc>
+        // # end::fts-index[]
     }
-    
+
     func dontTestFullTextSearch() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::fts-query[]
         let whereClause = FullTextExpression.index("nameFTSIndex").match("'buy'")
         let query = QueryBuilder
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(database))
             .where(whereClause)
-        
+
         do {
             for result in try query.execute() {
                 print("document id \(result.string(at: 0)!)")
@@ -444,67 +444,81 @@ class SampleCodeTest: CBLTestCase {
         } catch let error {
             print(error.localizedDescription)
         }
-        // </doc>
+        // # end::fts-query[]
     }
-    
+
     // MARK: Replication
-    
+
     func dontTestStartReplication() throws {
         database = self.db
-        
-        // <doc>
+
+        // # tag::replication[]
         let url = URL(string: "ws://localhost:4984/db")!
         let target = URLEndpoint(url: url)
         let config = ReplicatorConfiguration(database: database, target: target)
         config.replicatorType = .pull
-        
+
         self.replicator = Replicator(config: config)
         self.replicator.start()
-        // </doc>
+        // # end::replication[]
     }
-    
+
     func dontTestEnableReplicatorLogging() throws {
-        // <doc>
+        // # tag::replication-logging[]
         // Replicator
         Database.setLogLevel(.verbose, domain: .replicator)
         // Network
         Database.setLogLevel(.verbose, domain: .network)
-        // </doc>
+        // # end::replication-logging[]
     }
-    
+
     func dontTestReplicatorStatus() throws {
-        // <doc>
+        // # tag::replication-status[]
         self.replicator.addChangeListener { (change) in
             if change.status.activity == .stopped {
                 print("Replication stopped")
             }
         }
-        // </doc>
+        // # end::replication-status[]
     }
-    
+
     func dontTestHandlingReplicationError() throws {
-        // <doc>
+        // # tag::replication-error-handling[]
         self.replicator.addChangeListener { (change) in
             if let error = change.status.error as NSError? {
                 print("Error code :: \(error.code)")
             }
         }
-        // </doc>
+        // # end::replication-error-handling[]
     }
-    
+
+    func dontTestDatabaseReplica() throws {
+        let database2: Database
+        /* EE feature: code below might throw a compilation error
+         if it's compiled against CBL Swift Community. */
+        // # tag::database-replica[]
+        let targetDatabase = DatabaseEndpoint(database: database2)
+        let config = ReplicatorConfiguration(database: database, target: targetDatabase)
+        config.replicatorType = .push
+
+        self.replicator = Replicator(config: config)
+        self.replicator.start()
+        // # end::database-replica[]
+    }
+
     func dontTestCertificatePinning() throws {
         let url = URL(string: "wss://localhost:4985/db")!
         let target = URLEndpoint(url: url)
-        
-        // <doc>
+
+        // # tag::certificate-pinning[]
         let data = try self.dataFromResource(name: "cert", ofType: "cer")
         let certificate = SecCertificateCreateWithData(nil, data)
 
         let config = ReplicatorConfiguration(database: database, target: target)
         config.pinnedServerCertificate = certificate
-        // </doc>
-        
+        // # end::certificate-pinning[]
+
         print("\(config)")
     }
-    
+
 }

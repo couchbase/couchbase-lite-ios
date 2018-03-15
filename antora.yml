@@ -1,0 +1,6 @@
+name: couchbase-lite-ios
+title: Couchbase Lite Swift
+version: '2.0'
+start_page: ROOT:swift.adoc
+nav:
+- modules/docs/nav.adoc
