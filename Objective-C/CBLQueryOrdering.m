@@ -26,11 +26,15 @@
 @synthesize expression=_expression;
 
 + (CBLQuerySortOrder *) property: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     return [[self class] expression: [CBLQueryExpression property: name]];
 }
 
 
 + (CBLQuerySortOrder *) expression: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLQuerySortOrder alloc] initWithExpression: expression];
 }
 

@@ -62,10 +62,12 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 @synthesize swiftObject=_swiftObject;
 
 
-- (instancetype)initWithContentType:(NSString *)contentType
-                               data:(NSData *)data
+- (instancetype) initWithContentType: (NSString*)contentType
+                                data: (NSData*)data
 {
-    Assert(data != nil);
+    CBLAssertNotNil(contentType);
+    CBLAssertNotNil(data);
+    
     self = [super init];
     if(self) {
         _contentType = [contentType copy];
@@ -77,10 +79,12 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 
-- (instancetype)initWithContentType:(NSString *)contentType
-                      contentStream:(NSInputStream *)stream
+- (instancetype) initWithContentType: (NSString*)contentType
+                       contentStream: (NSInputStream*)stream
 {
-    Assert(stream != nil);
+    CBLAssertNotNil(contentType);
+    CBLAssertNotNil(stream);
+    
     self = [super init];
     if(self) {
         _contentType = [contentType copy];
@@ -91,14 +95,18 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 
-- (instancetype)initWithContentType:(NSString *)contentType
-                            fileURL:(NSURL *)url
-                              error:(NSError**)outError
+- (instancetype) initWithContentType: (NSString*)contentType
+                             fileURL: (NSURL*)url
+                               error: (NSError**)outError
 {
+    CBLAssertNotNil(contentType);
+    CBLAssertNotNil(url);
+    NSAssert(url.isFileURL, @"url must be a file-based URL");
+    
     NSInputStream* stream = [[NSInputStream alloc] initWithURL: url];
     if (!stream) {
         MYReturnError(outError, NSURLErrorFileDoesNotExist, NSURLErrorDomain,
-                      @"Couldn't create stream on %@", url.absoluteURL);
+                      @"File doesn't exist on %@", url.absoluteURL);
         return nil;
     }
     return [self initWithContentType: contentType
@@ -175,7 +183,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         return content;
     } else {
         // No recourse but to read the initial stream into memory:
-        Assert(_initialContentStream);
+        if (!_initialContentStream) {
+            [NSException raise: NSInternalInconsistencyException
+                    format: @"Blob has no data available"];
+        }
+        
         NSMutableData *result = [NSMutableData new];
         uint8_t buffer[kReadBufferSize];
         NSInteger bytesRead;
@@ -247,7 +259,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 - (BOOL) installInDatabase: (CBLDatabase *)db error:(NSError **)outError {
     Assert(db);
     if (_db) {
-        Assert(_db == db, @"Blob belongs to a different database");
+        if (_db != db) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"A document contains a blob that was saved "
+                                 "to a different database; the save operation cannot complete"];
+        }
         return YES;
     }
 

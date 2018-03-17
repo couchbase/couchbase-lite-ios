@@ -27,6 +27,8 @@
 
 
 - (instancetype) initWithIdentityID: (NSString*)identityID {
+    CBLAssertNotNil(identityID);
+    
     self = [super initWithNone];
     if (self) {
         _identityID = [identityID copy];

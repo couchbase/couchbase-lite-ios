@@ -34,6 +34,8 @@
 + (CBLQueryLimit*) limit: (CBLQueryExpression*)limit
                   offset: (nullable CBLQueryExpression*)offset
 {
+    CBLAssertNotNil(limit);
+    
     return [[self alloc] initWithLimit: limit offset: offset];
 }
 

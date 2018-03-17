@@ -28,30 +28,40 @@
 
 
 + (CBLQueryExpression*) avg: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"AVG()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) count: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"COUNT()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) min: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"MIN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) max: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"MAX()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) sum: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"SUM()"
                                                     params: @[expression]];
 }
@@ -61,48 +71,65 @@
 
 
 + (CBLQueryExpression*) abs: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ABS()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) acos: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ACOS()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) asin: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ASIN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) atan: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ATAN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) atan2: (CBLQueryExpression*)x y: (CBLQueryExpression*)y {
+    CBLAssertNotNil(x);
+    CBLAssertNotNil(y);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ATAN2()"
                                                     params: @[x, y]];
 }
 
 
 + (CBLQueryExpression*) ceil: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"CEIL()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) cos: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"COS()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) degrees: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"DEGREES()"
                                                     params: @[expression]];
 }
@@ -115,24 +142,32 @@
 
 
 + (CBLQueryExpression*) exp: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"EXP()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) floor: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"FLOOR()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) ln: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"LN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) log: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"LOG()"
                                                     params: @[expression]];
 }
@@ -145,60 +180,83 @@
 
 
 + (CBLQueryExpression*) power: (id)base exponent: (CBLQueryExpression*)exponent {
+    CBLAssertNotNil(base);
+    CBLAssertNotNil(exponent);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"POWER()"
                                                     params: @[base, exponent]];
 }
 
 
 + (CBLQueryExpression*) radians: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"RADIANS()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) round: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ROUND()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) round: (CBLQueryExpression*)expression digits: (CBLQueryExpression*)digits {
+    CBLAssertNotNil(expression);
+    CBLAssertNotNil(digits);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ROUND()"
                                                     params: @[expression, digits]];
 }
 
 
 + (CBLQueryExpression*) sign: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"SIGN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) sin: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"SIN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) sqrt: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"SQRT()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) tan: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"TAN()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) trunc: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"TRUNC()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) trunc: (CBLQueryExpression*)expression digits: (CBLQueryExpression*)digits {
+    CBLAssertNotNil(expression);
+    CBLAssertNotNil(digits);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"TRUNC()"
                                                     params: @[expression, digits]];
 }
@@ -208,42 +266,57 @@
 
 
 + (CBLQueryExpression*) contains: (CBLQueryExpression*)expression substring: (CBLQueryExpression*)substring {
+    CBLAssertNotNil(expression);
+    CBLAssertNotNil(substring);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"CONTAINS()"
                                                     params: @[expression, substring]];
 }
 
 
 + (CBLQueryExpression*) length: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"LENGTH()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) lower: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"LOWER()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) ltrim: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"LTRIM()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) rtrim: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"RTRIM()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) trim: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"TRIM()"
                                                     params: @[expression]];
 }
 
 
 + (CBLQueryExpression*) upper: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"UPPER()"
                                                     params: @[expression]];
 }

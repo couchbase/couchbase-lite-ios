@@ -381,7 +381,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (instancetype) initWithData: (NSArray*)data;
+- (instancetype) initWithData: (nullable NSArray*)data;
 
 @end
 

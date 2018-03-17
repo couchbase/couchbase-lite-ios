@@ -41,13 +41,16 @@
 
 
 + (CBLQueryFullTextExpression*) indexWithName: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     return [[self alloc] initWithIndexName: name];
 }
 
 
-- (CBLQueryExpression*) match: (NSString*)text {
-    return [[CBLFullTextMatchExpression alloc] initWithIndexName: _name
-                                                            text: text];
+- (CBLQueryExpression*) match: (NSString*)query {
+    CBLAssertNotNil(query);
+    
+    return [[CBLFullTextMatchExpression alloc] initWithIndexName: _name query: query];
 }
 
 @end

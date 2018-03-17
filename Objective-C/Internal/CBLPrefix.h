@@ -31,7 +31,8 @@ extern "C" {
 #ifndef CBL_THREADSAFE
 #define CBL_THREADSAFE 1
 #endif
-    
+
+#import "CBLException.h"
 #import "CBLLock.h"
 #import "CollectionUtils.h"
 #import "Test.h"

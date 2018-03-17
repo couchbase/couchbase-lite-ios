@@ -28,14 +28,19 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
 @synthesize url=_url;
 
 - (instancetype) initWithURL: (NSURL*)url {
+    CBLAssertNotNil(url);
+    
+    NSAssert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
+             [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
+             @"Invalid scheme for URLEndpoint url (%@); must be either %@ or %@",
+             url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme);
+    
+    NSAssert(!url.user && !url.password,
+             @"Embedded credentials in a URL (username:password@url) "
+             "are not allowed; use the BasicAuthenticator class instead");
+    
     self = [super init];
     if (self) {
-        if (!([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
-              [url.scheme isEqualToString: kCBLURLEndpointTLSScheme])) {
-            [NSException raise: NSInvalidArgumentException
-                        format: @"The URL parameter has an unsupported URL scheme (%@). The supported URL schemes are %@ and %@",
-                                url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme];
-        }
         _url = url;
     }
     return self;

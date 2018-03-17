@@ -73,6 +73,8 @@ using namespace fleeceapi;
 
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(self.sharedLock) {
         CBLStringBytes keySlice(key);
         const MValue<id> &oldValue = _dict.get(keySlice);
@@ -143,6 +145,8 @@ using namespace fleeceapi;
 
 
 - (void) removeValueForKey: (NSString *)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(self.sharedLock) {
         CBLStringBytes keySlice(key);
         _dict.remove(keySlice);
@@ -168,6 +172,7 @@ using namespace fleeceapi;
 
 
 - (CBLMutableFragment*) objectForKeyedSubscript: (NSString*)key {
+    CBLAssertNotNil(key);
     return [[CBLMutableFragment alloc] initWithParent: self key: key];
 }
 
