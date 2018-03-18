@@ -487,10 +487,11 @@
         [r start];
         [self waitForExpectations: @[x] timeout: 5.0];
         [r removeChangeListenerWithToken: token];
-
+        
         // Add some delay:
-        [NSThread sleepForTimeInterval: 0.1];
+        [NSThread sleepForTimeInterval: 0.5];
     }
+    r = nil;
 }
 
 
@@ -518,10 +519,10 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
-    XCTestExpectation *x1 = [self expectationWithDescription: @"Connect"];
+    XCTestExpectation *x1 = [self expectationWithDescription: @"Idle"];
     XCTestExpectation *x2 = [self expectationWithDescription: @"Stop"];
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
-        if (change.status.activity == kCBLReplicatorConnecting)
+        if (change.status.activity == kCBLReplicatorIdle)
             [x1 fulfill];
         
         if (change.status.activity == kCBLReplicatorStopped)
@@ -530,7 +531,7 @@
     
     [r start];
     AssertEqual(self.db.activeReplications.count,(unsigned long)1);
-    [self waitForExpectations: @[x1] timeout: 2.0];
+    [self waitForExpectations: @[x1] timeout: 5.0];
     
     // Close Database:
     [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
@@ -540,11 +541,8 @@
     [r stop];
     [self waitForExpectations: @[x2] timeout: 5.0];
     [r removeChangeListenerWithToken: token];
-    
-    NSError* error;
-    Assert([self.db close:&error], @"Cannot close database: %@", error);
-    
-    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
+    r = nil;
+    AssertEqual(self.db.activeReplications.count, (unsigned long)0);
 }
 
 
@@ -568,7 +566,7 @@
     
     [r start];
     AssertEqual(self.db.activeReplications.count,(unsigned long)1);
-    [self waitForExpectations: @[x1] timeout: 2.0];
+    [self waitForExpectations: @[x1] timeout: 5.0];
     
     // Close Database:
     [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** err) {
