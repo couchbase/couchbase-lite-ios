@@ -465,22 +465,24 @@
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
-
+    
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
                           @(kCBLReplicatorIdle), @(kCBLReplicatorIdle)];
+    NSArray* activities = @[@"stopped", @"offline", @"connecting", @"idle", @"busy"];
     for (id when in stopWhen) {
         XCTestExpectation* x = [self expectationWithDescription: @"Replicator Change"];
         __weak typeof(self) wSelf = self;
         id token = [r addChangeListener: ^(CBLReplicatorChange *change) {
             [wSelf verifyChange: change errorCode: 0 errorDomain: nil];
-            if (change.status.activity == [when intValue]) {
-                NSLog(@"***** Stop Replicator ******");
+            int whenValue = [when intValue];
+            if (change.status.activity == whenValue) {
+                NSLog(@"***** Stop Replicator (when %@) ******", activities[whenValue]);
                 [change.replicator stop];
             } else if (change.status.activity == kCBLReplicatorStopped) {
                 [x fulfill];
             }
         }];
-
+        
         NSLog(@"***** Start Replicator ******");
         [r start];
         [self waitForExpectations: @[x] timeout: 5.0];
