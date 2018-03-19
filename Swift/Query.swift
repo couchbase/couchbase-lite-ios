@@ -104,7 +104,8 @@ public class Query {
         }
         
         prepareQuery()
-        let token = self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
+        let token = self.queryImpl!.addChangeListener(with: queue, listener: {
+            [unowned self] (change) in
             let rows: ResultSet?;
             if let rs = change.results {
                 rows = ResultSet(impl: rs)

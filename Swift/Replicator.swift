@@ -128,7 +128,7 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
-        let token = _impl.addChangeListener(with: queue, listener: { (change) in
+        let token = _impl.addChangeListener(with: queue, listener: { [unowned self] (change) in
             listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
         return ListenerToken(token)
@@ -150,7 +150,7 @@ public final class Replicator {
         _lock.lock()
         if _listenerToken == nil {
             _config.database.addReplicator(self)
-            _listenerToken = _impl.addChangeListener({ (change) in
+            _listenerToken = _impl.addChangeListener({ [unowned self] (change) in
                 if change.status.activity == kCBLReplicatorStopped {
                     self.unregisterActiveReplicator()
                 }

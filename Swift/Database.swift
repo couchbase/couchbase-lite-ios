@@ -231,7 +231,7 @@ public final class Database {
     @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
         listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addChangeListener(with: queue) { (change) in
+        let token = _impl.addChangeListener(with: queue) { [unowned self] (change) in
             listener(DatabaseChange(database: self, documentIDs: change.documentIDs))
         }
         return ListenerToken(token)
@@ -264,7 +264,8 @@ public final class Database {
     @discardableResult public func addDocumentChangeListener(withID id: String,
         queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
+        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
+            [unowned self] (change) in
             listener(DocumentChange(database: self, documentID: change.documentID))
         }
         return ListenerToken(token)
