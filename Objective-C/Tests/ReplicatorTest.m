@@ -485,11 +485,11 @@
         
         NSLog(@"***** Start Replicator ******");
         [r start];
-        [self waitForExpectations: @[x] timeout: 5.0];
+        [self waitForExpectations: @[x] timeout: 10.0];
         [r removeChangeListenerWithToken: token];
         
         // Add some delay:
-        [NSThread sleepForTimeInterval: 0.5];
+        [NSThread sleepForTimeInterval: 1.0];
     }
     r = nil;
 }
@@ -576,6 +576,7 @@
     [r stop];
     [self waitForExpectations: @[x2] timeout: 5.0];
     [r removeChangeListenerWithToken: token];
+    r = nil;
     
     // Close Database - This should trigger a replication stop which should be caught by listener
     NSError* error;
@@ -848,6 +849,7 @@
     [r start];
     [self waitForExpectations: @[x1, x2] timeout: 10.0];
     [repl removeChangeListenerWithToken: token];
+    r = nil;
 }
 
 
