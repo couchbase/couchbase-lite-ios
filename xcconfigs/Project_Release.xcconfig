@@ -31,5 +31,5 @@ LD_GENERATE_MAP_FILE            = YES                   // Generate link map, to
 LLVM_LTO                        = YES                   // Link-time optimization FTW!
 MTL_ENABLE_DEBUG_INFO           = NO                    // ???
 STRIP_INSTALLED_PRODUCT         = YES                   // Strip debug symbols
-SWIFT_OPTIMIZATION_LEVEL        = -O                    // Fast, single file
+SWIFT_OPTIMIZATION_LEVEL        = -Onone                // No Optimization
 VALIDATE_PRODUCT                = YES                   // Perform validation checks on the product
