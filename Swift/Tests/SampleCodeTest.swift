@@ -492,10 +492,12 @@ class SampleCodeTest: CBLTestCase {
         // # end::replication-error-handling[]
     }
 
+    #if COUCHBASE_ENTERPRISE
     func dontTestDatabaseReplica() throws {
-        let database2: Database
+        let database2 = try self.openDB(name: "db2")
+        
         /* EE feature: code below might throw a compilation error
-         if it's compiled against CBL Swift Community. */
+           if it's compiled against CBL Swift Community. */
         // # tag::database-replica[]
         let targetDatabase = DatabaseEndpoint(database: database2)
         let config = ReplicatorConfiguration(database: database, target: targetDatabase)
@@ -504,7 +506,10 @@ class SampleCodeTest: CBLTestCase {
         self.replicator = Replicator(config: config)
         self.replicator.start()
         // # end::database-replica[]
+        
+        try database2.delete()
     }
+    #endif
 
     func dontTestCertificatePinning() throws {
         let url = URL(string: "wss://localhost:4985/db")!
