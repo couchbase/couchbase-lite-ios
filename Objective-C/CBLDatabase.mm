@@ -313,13 +313,13 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         
         if (_activeReplications.count > 0) {
             NSString* err = @"Cannot delete the database. "
-                "Please stop all of the replicators before closing the database.";
+                "Please stop all of the replicators before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
         
         if (_liveQueries.count > 0) {
             NSString* err = @"Cannot delete the database. "
-                "Please remove all of the query listeners before closing the database.";
+                "Please remove all of the query listeners before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
         
