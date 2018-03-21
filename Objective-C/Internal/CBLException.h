@@ -1,5 +1,5 @@
 //
-//  CBLDatabaseEndpoint.m
+//  CBLException.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2018 Couchbase, Inc All rights reserved.
@@ -17,28 +17,7 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-#import "CBLDatabaseEndpoint.h"
-#import "CBLDatabase.h"
 
-@implementation CBLDatabaseEndpoint
+#pragma once
 
-@synthesize database=_database;
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database {
-    CBLAssertNotNil(database);
-    
-    self = [super init];
-    if (self) {
-        _database = database;
-    }
-    return self;
-}
-
-
-- (NSString*) description {
-    return [NSString stringWithFormat: @"DB[%@]", _database.name];
-}
-
-@end
-#endif
+#define CBLAssertNotNil(parameter) Assert((parameter != nil), @"%@ cannot be nil", @#parameter)

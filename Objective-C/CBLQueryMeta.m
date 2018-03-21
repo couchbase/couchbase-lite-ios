@@ -35,7 +35,7 @@
 }
 
 
-+ (CBLQueryExpression*) idFrom: (NSString *)alias {
++ (CBLQueryExpression*) idFrom: (nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIDKeyPath
                                                columnName: kCBLQueryMetaIDColumnName
                                                      from: alias];
@@ -47,7 +47,7 @@
 }
 
 
-+ (CBLQueryExpression*) sequenceFrom:(NSString *)alias {
++ (CBLQueryExpression*) sequenceFrom:(nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
                                                columnName: kCBLQueryMetaSequenceColumnName
                                                      from: alias];

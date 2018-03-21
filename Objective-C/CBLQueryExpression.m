@@ -40,7 +40,9 @@
 }
 
 
-+ (CBLQueryExpression*) property: (NSString*)property from: (NSString *)alias {
++ (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString *)alias {
+    CBLAssertNotNil(property);
+    
     return [[CBLPropertyExpression alloc] initWithKeyPath: property
                                                columnName: nil
                                                      from: alias];
@@ -52,7 +54,7 @@
 }
 
 
-+ (CBLQueryExpression*) allFrom: (NSString*)alias {
++ (CBLQueryExpression*) allFrom: (nullable NSString*)alias {
     return [CBLPropertyExpression allFrom: alias];
 }
 
@@ -109,6 +111,8 @@
 
 
 + (CBLQueryExpression*) parameterNamed: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     return [[CBLParameterExpression alloc] initWithName: name];
 }
 
@@ -117,12 +121,16 @@
 
 
 + (CBLQueryExpression*) negated: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLCompoundExpression alloc] initWithExpressions: @[expression]
                                                          type: CBLNotCompundExpType];
 }
 
 
 + (CBLQueryExpression*) not: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [self negated: expression];
 }
 
@@ -131,6 +139,8 @@
 
 
 - (CBLQueryExpression*) multiply: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLMultiplyBinaryExpType];
@@ -138,6 +148,8 @@
 
 
 - (CBLQueryExpression*) divide: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLDivideBinaryExpType];
@@ -145,6 +157,8 @@
 
 
 - (CBLQueryExpression*) modulo: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLModulusBinaryExpType];
@@ -152,6 +166,8 @@
 
 
 - (CBLQueryExpression*) add: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLAddBinaryExpType];
@@ -169,6 +185,8 @@
 
 
 - (CBLQueryExpression*) lessThan: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanBinaryExpType];
@@ -176,6 +194,8 @@
 
 
 - (CBLQueryExpression*) lessThanOrEqualTo: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanOrEqualToBinaryExpType];
@@ -183,6 +203,8 @@
 
 
 - (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLGreaterThanBinaryExpType];
@@ -190,6 +212,8 @@
 
 
 - (CBLQueryExpression*) greaterThanOrEqualTo: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLGreaterThanOrEqualToBinaryExpType];
@@ -197,6 +221,8 @@
 
 
 - (CBLQueryExpression*) equalTo: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLEqualToBinaryExpType];
@@ -204,6 +230,8 @@
 
 
 - (CBLQueryExpression*) notEqualTo: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLNotEqualToBinaryExpType];
@@ -214,6 +242,8 @@
 
 
 - (CBLQueryExpression*) like: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLikeBinaryExpType];
@@ -224,6 +254,8 @@
 
 
 - (CBLQueryExpression*) regex: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLRegexLikeBinaryExpType];
@@ -234,6 +266,8 @@
 
 
 - (CBLQueryExpression*) is: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLIsBinaryExpType];
@@ -241,6 +275,8 @@
 
 
 - (CBLQueryExpression*) isNot: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLIsNotBinaryExpType];
@@ -265,12 +301,16 @@
 
 
 - (CBLQueryExpression*) andExpression: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLAndCompundExpType];
 }
 
 
 - (CBLQueryExpression*) orExpression: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLOrCompundExpType];
 }
@@ -280,6 +320,9 @@
 
 
 - (CBLQueryExpression*) between: (CBLQueryExpression*)expression1 and: (CBLQueryExpression*)expression2 {
+    CBLAssertNotNil(expression1);
+    CBLAssertNotNil(expression2);
+    
     CBLQueryExpression* aggr =
         [[CBLAggregateExpression alloc] initWithExpressions: @[expression1, expression2]];
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
@@ -292,6 +335,8 @@
 
 
 - (CBLQueryExpression*) in: (NSArray<CBLQueryExpression*>*)expressions {
+    CBLAssertNotNil(expressions);
+    
     CBLQueryExpression* aggr =
         [[CBLAggregateExpression alloc] initWithExpressions: expressions];
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
@@ -304,6 +349,8 @@
 
 
 - (CBLQueryExpression*) collate: (CBLQueryCollation*)collation {
+    CBLAssertNotNil(collation);
+    
     return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
 }
 
@@ -321,14 +368,6 @@
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
-/*
-- (id) jsonValue: (id)value {
-    if ([value isKindOfClass: [CBLQueryExpression class]])
-        return [value asJSON];
-    else
-        return value;
-}
-*/
 
 - (id) asJSON {
     // Subclass needs to implement this method:

@@ -28,6 +28,9 @@
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: nil
@@ -41,6 +44,9 @@
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: nil
@@ -56,8 +62,11 @@
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
-               where: (CBLQueryExpression*)where
+               where: (nullable CBLQueryExpression*)where
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: where
@@ -70,8 +79,11 @@
 
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
-                       where: (CBLQueryExpression*)where
+                       where: (nullable CBLQueryExpression*)where
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: where
@@ -90,6 +102,9 @@
                where: (nullable CBLQueryExpression*)where
              groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: where
@@ -105,6 +120,9 @@
                        where: (nullable CBLQueryExpression*)where
                      groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: where
@@ -124,6 +142,9 @@
              groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
               having: (nullable CBLQueryExpression*)having
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: where
@@ -140,6 +161,9 @@
                      groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                       having: (nullable CBLQueryExpression*)having
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: where
@@ -158,6 +182,9 @@
                where: (nullable CBLQueryExpression*)where
              orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: where
@@ -173,6 +200,9 @@
                        where: (nullable CBLQueryExpression*)where
                      orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: where
@@ -194,6 +224,9 @@
              orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                limit: (nullable CBLQueryLimit*)limit
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: nil
                                       where: where
@@ -212,6 +245,9 @@
                      orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                        limit: (nullable CBLQueryLimit*)limit
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: nil
                                       where: where
@@ -229,6 +265,9 @@
                 from: (CBLQueryDataSource*)from
                 join: (nullable NSArray<CBLQueryJoin*>*)join
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: nil
@@ -243,6 +282,9 @@
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: nil
@@ -261,6 +303,9 @@
                 join: (nullable NSArray<CBLQueryJoin*>*)join
                where: (nullable CBLQueryExpression*)where
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: where
@@ -276,6 +321,9 @@
                         join: (nullable NSArray<CBLQueryJoin*>*)join
                        where: (nullable CBLQueryExpression*)where
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: where
@@ -295,6 +343,9 @@
                where: (nullable CBLQueryExpression*)where
              groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: where
@@ -311,6 +362,9 @@
                        where: (nullable CBLQueryExpression*)where
                      groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: where
@@ -331,6 +385,9 @@
              groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
               having: (nullable CBLQueryExpression*)having
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: where
@@ -348,6 +405,9 @@
                      groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                       having: (nullable CBLQueryExpression*)having
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: where
@@ -367,6 +427,9 @@
                where: (nullable CBLQueryExpression*)where
              orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: where
@@ -383,6 +446,9 @@
                        where: (nullable CBLQueryExpression*)where
                      orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: where
@@ -405,6 +471,9 @@
              orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                limit: (nullable CBLQueryLimit*)limit
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: NO from: from
                                        join: join
                                       where: where
@@ -424,6 +493,9 @@
                      orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                        limit: (nullable CBLQueryLimit*)limit
 {
+    CBLAssertNotNil(select);
+    CBLAssertNotNil(from);
+    
     return [[CBLQuery alloc] initWithSelect: select distinct: YES from: from
                                        join: join
                                       where: where

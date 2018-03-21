@@ -26,6 +26,9 @@
 
 
 - (instancetype) initWithUsername: (NSString*)username password: (NSString*)password {
+    CBLAssertNotNil(username);
+    CBLAssertNotNil(password);
+    
     self = [super initWithNone];
     if (self) {
         _username = username;

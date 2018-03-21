@@ -24,12 +24,17 @@
 
 
 + (CBLQueryExpression*) contains: (id)expression value: (CBLQueryExpression*)value {
+    CBLAssertNotNil(expression);
+    CBLAssertNotNil(value);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ARRAY_CONTAINS()"
                                                     params: @[expression, value]];
 }
 
 
 + (CBLQueryExpression*) length: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLFunctionExpression alloc] initWithFunction: @"ARRAY_LENGTH()"
                                                     params: @[expression]];
 }

@@ -28,7 +28,6 @@ static NSErrorDomain const FleeceErrorDomain    = @"CouchbaseLite.Fleece";
 
 
 static bool cfNetworkToC4Error(int cfNetworkErrorCode, C4Error *outError);
-static bool c4ToCFNetworkError(C4Error err, NSString* __autoreleasing *outDomain, int *outCode);
 
 
 BOOL convertError(const C4Error &c4err, NSError** outError) {
@@ -38,15 +37,12 @@ BOOL convertError(const C4Error &c4err, NSError** outError) {
          FleeceErrorDomain, nil, CBLErrorDomain};
     if (outError) {
         NSString* msgStr = sliceResult2string(c4error_getMessage(c4err));
-        NSString* domain;
-        int code;
-
-        if (!c4ToCFNetworkError(c4err, &domain, &code)) {
-            domain = kNSErrorDomains[c4err.domain];
-            code = c4err.code;
-            if (c4err.domain == WebSocketDomain)
-                code += CBLErrorHTTPBase;   // WebSocket and HTTP statuses are offset by 10000
-        }
+        NSString* domain = kNSErrorDomains[c4err.domain];
+        int code = c4err.code;
+        if (c4err.domain == NetworkDomain)
+            code += CBLErrorNetworkBase; // Network error statuses are offset by 5000
+        else if (c4err.domain == WebSocketDomain)
+            code += CBLErrorHTTPBase;    // WebSocket and HTTP statuses are offset by 10000
 
         if (domain == nil) {
             C4Warn("Unable to map C4Error(%d,%d) to an NSError", c4err.domain, c4err.code);
@@ -146,30 +142,6 @@ static bool cfNetworkToC4Error(int code, C4Error *outError) {
             *outError = kCFNetworkErrorMap[i].c4err;
             return true;
         }
-    }
-    return false;
-}
-
-
-static bool c4ToCFNetworkError(C4Error err, NSString* __autoreleasing *outDomain, int *outCode) {
-    for (auto map = kCFNetworkErrorMap; map->code; ++map) {
-        if (map->c4err.code == err.code && map->c4err.domain == err.domain) {
-            *outCode = map->code;
-            // NSURLDomain is more commonly seen in Cocoa APIs, but kCFErrorDomainCFNetwork is a
-            // superset with more error codes. Use the former if the code is in range:
-            if (map->code <= -995 && map->code >= -3007)
-                *outDomain = NSURLErrorDomain;
-            else
-                *outDomain = (__bridge id)kCFErrorDomainCFNetwork;
-            return true;
-        }
-    }
-    if (err.domain == NetworkDomain) {
-        // Make sure that all NetworkDomain errors are converted
-        C4Warn("Unable to map C4Error(NetworkDomain,%d) to a specific NSURLErrorDomain code", err.code);
-        *outCode = NSURLErrorUnknown;
-        *outDomain = NSURLErrorDomain;
-        return true;
     }
     return false;
 }

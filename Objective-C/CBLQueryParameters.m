@@ -53,6 +53,8 @@
 
 
 - (void) setValue: (id)value forName: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     [self checkReadonly];
     
     if (!_data)
@@ -105,7 +107,9 @@
 }
 
 
-- (nullable id) valueForName:(NSString *)name {
+- (nullable id) valueForName: (NSString *)name {
+    CBLAssertNotNil(name);
+    
     return [_data objectForKey: name];
 }
 

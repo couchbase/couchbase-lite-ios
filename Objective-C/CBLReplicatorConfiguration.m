@@ -47,6 +47,9 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            target: (id<CBLEndpoint>)target
 {
+    CBLAssertNotNil(database);
+    CBLAssertNotNil(target);
+    
     self = [super init];
     if (self) {
         _database = database;
@@ -58,6 +61,8 @@
 
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config {
+    CBLAssertNotNil(config);
+    
     return [self initWithConfig: config readonly: NO];
 }
 

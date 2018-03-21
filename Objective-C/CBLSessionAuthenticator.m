@@ -36,6 +36,8 @@
 - (instancetype) initWithSessionID: (NSString*)sessionID
                         cookieName: (nullable NSString*)cookieName
 {
+    CBLAssertNotNil(sessionID);
+    
     self = [super initWithNone];
     if (self) {
         _sessionID = sessionID;

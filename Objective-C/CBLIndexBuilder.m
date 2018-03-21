@@ -23,11 +23,15 @@
 @implementation CBLIndexBuilder
 
 + (CBLValueIndex*) valueIndexWithItems: (NSArray<CBLValueIndexItem*>*)items {
+    CBLAssertNotNil(items);
+    
     return [[CBLValueIndex alloc] initWithItems: items];
 }
 
 
 + (CBLFullTextIndex*) fullTextIndexWithItems: (NSArray<CBLFullTextIndexItem*>*)items {
+    CBLAssertNotNil(items);
+    
     return [[CBLFullTextIndex alloc] initWithItems: items];
 }
 

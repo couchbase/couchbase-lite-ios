@@ -94,7 +94,7 @@
 #pragma mark - Edit
 
 
-- (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
+- (CBLMutableDocument*) mutableCopyWithZone: (NSZone *)zone {
     return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: _dict];
 }
 
@@ -113,7 +113,7 @@
 
 
 - (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setNumber: value forKey: key];
+    [((CBLMutableDictionary*)_dict) setNumber: value forKey: key];
 }
 
 

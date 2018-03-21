@@ -41,7 +41,7 @@
 }
 
 
-- (instancetype) initWithData: (NSArray*)data {
+- (instancetype) initWithData: (nullable NSArray*)data {
     self = [self init];
     if (self) {
         [self setData: data];

@@ -27,12 +27,13 @@
 }
 
 + (instancetype) property: (NSString*)property {
-    return [[self alloc] initWithExpression: [CBLQueryExpression property: property]
-                                         as: nil];
+    return [self property: property as: nil];
 }
 
 
 + (instancetype) property: (NSString*)property as: (nullable NSString*)alias {
+    CBLAssertNotNil(property);
+    
     return [[self alloc] initWithExpression: [CBLQueryExpression property: property]
                                          as: alias];
 }
@@ -44,6 +45,8 @@
 
 
 + (instancetype) expression: (CBLQueryExpression*)expression as: (nullable NSString*)alias {
+    CBLAssertNotNil(expression);
+    
     return [[self alloc] initWithExpression: expression as: alias];
 }
 

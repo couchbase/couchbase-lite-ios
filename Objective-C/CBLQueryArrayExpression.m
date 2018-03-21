@@ -25,6 +25,8 @@
 
 
 + (CBLQueryVariableExpression*) variableWithName: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     return [[CBLQueryVariableExpression alloc] initWithName: name];
 }
 
@@ -33,6 +35,10 @@
                          in: (CBLQueryExpression*)inExpression
                   satisfies: (CBLQueryExpression*)satisfies
 {
+    CBLAssertNotNil(variable);
+    CBLAssertNotNil(inExpression);
+    CBLAssertNotNil(satisfies);
+    
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAny
                                                 variable: variable
                                                       in: inExpression
@@ -44,6 +50,10 @@
                                  in: (CBLQueryExpression*)inExpression
                           satisfies: (CBLQueryExpression*)satisfies
 {
+    CBLAssertNotNil(variable);
+    CBLAssertNotNil(inExpression);
+    CBLAssertNotNil(satisfies);
+    
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAnyAndEvery
                                                 variable: variable
                                                       in: inExpression
@@ -55,6 +65,10 @@
                            in: (CBLQueryExpression*)inExpression
                     satisfies: (CBLQueryExpression*)satisfies
 {
+    CBLAssertNotNil(variable);
+    CBLAssertNotNil(inExpression);
+    CBLAssertNotNil(satisfies);
+    
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeEvery
                                                 variable: variable
                                                       in: inExpression

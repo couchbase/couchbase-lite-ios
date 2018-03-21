@@ -70,12 +70,16 @@
 
 
 + (CBLValueIndexItem*) property: (NSString*)property{
+    CBLAssertNotNil(property);
+    
     return [[CBLValueIndexItem alloc] initWithExpression:
             [CBLQueryExpression property: property]];
 }
 
 
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
+    CBLAssertNotNil(expression);
+    
     return [[CBLValueIndexItem alloc] initWithExpression: expression];
 }
 

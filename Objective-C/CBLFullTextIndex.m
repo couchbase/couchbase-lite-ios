@@ -75,6 +75,8 @@
 }
 
 + (CBLFullTextIndexItem*) property: (NSString*)property {
+    CBLAssertNotNil(property);
+    
     return [[CBLFullTextIndexItem alloc] initWithExpression:
             [CBLQueryExpression property: property]];
 }

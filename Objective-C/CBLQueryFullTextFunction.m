@@ -23,6 +23,8 @@
 @implementation CBLQueryFullTextFunction
 
 + (CBLQueryExpression*) rank: (NSString*)indexName {
+    CBLAssertNotNil(indexName);
+    
     CBLQueryExpression* indexNameExpr = [CBLQueryExpression string: indexName];
     return [[CBLFunctionExpression alloc] initWithFunction: @"RANK()"
                                                     params: @[indexNameExpr]];

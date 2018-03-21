@@ -25,7 +25,7 @@
     NSString* _query;
 }
 
-- (instancetype) initWithIndexName: (NSString*)indexName text: (NSString*)query
+- (instancetype) initWithIndexName: (NSString*)indexName query: (NSString*)query
 {
     self = [super initWithNone];
     if (self) {

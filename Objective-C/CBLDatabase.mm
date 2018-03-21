@@ -97,6 +97,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (instancetype) initWithName: (NSString*)name
                        config: (nullable CBLDatabaseConfiguration*)config
                         error: (NSError**)outError {
+    CBLAssertNotNil(name);
+    
     self = [super init];
     if (self) {
         _name = name;
@@ -183,6 +185,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                 error: (NSError**)error
 {
+    CBLAssertNotNil(document);
+    
     return [self saveDocument: document
            concurrencyControl: concurrencyControl
                    asDeletion: NO
@@ -201,6 +205,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                   error: (NSError**)error
 {
+    CBLAssertNotNil(document);
+    
     return [self saveDocument: document
            concurrencyControl: concurrencyControl
                    asDeletion: YES
@@ -209,6 +215,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
+    CBLAssertNotNil(document);
+    
     CBL_LOCK(self) {
         if (![self prepareDocument: document error: error])
             return NO;
@@ -241,6 +249,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) inBatch: (NSError**)outError usingBlock: (void (^)())block {
+    CBLAssertNotNil(block);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -274,14 +284,14 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         CBLLog(Database, @"Closing %@ at path %@", self, self.path);
     
         if (_activeReplications.count > 0) {
-            NSString* err = @"Cannot close the database. Please stop all of "
-                "the replicators before closing the database.";
+            NSString* err = @"Cannot close the database. "
+                "Please stop all of the replicators before closing the database.";
             return createError(CBLErrorBusy, err, outError);
         }
         
         if (_liveQueries.count > 0) {
-            NSString* err = @"Cannot close the database. Please remove all of "
-                "the query listeners before closing the database";
+            NSString* err = @"Cannot close the database. "
+                "Please remove all of the query listeners before closing the database.";
             return createError(CBLErrorBusy, err, outError);
         }
     
@@ -302,14 +312,14 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         [self mustBeOpen];
         
         if (_activeReplications.count > 0) {
-            NSString* err = @"Cannot delete the database. Please stop all of "
-            "the replicators before closing the database.";
+            NSString* err = @"Cannot delete the database. "
+                "Please stop all of the replicators before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
         
         if (_liveQueries.count > 0) {
-            NSString* err = @"Cannot delete the database. Please remove all of "
-            "the query listeners before deleting the database";
+            NSString* err = @"Cannot delete the database. "
+                "Please remove all of the query listeners before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
         
@@ -341,6 +351,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError
 {
+    CBLAssertNotNil(name);
+    
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     slice bPath(path.fileSystemRepresentation);
     C4Error err;
@@ -349,7 +361,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 + (BOOL) databaseExists: (NSString*)name
-            inDirectory: (nullable NSString*)directory {
+            inDirectory: (nullable NSString*)directory
+{
+    CBLAssertNotNil(name);
+    
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     return [[NSFileManager defaultManager] fileExistsAtPath: path];
 }
@@ -360,6 +375,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)outError
 {
+    CBLAssertNotNil(path);
+    CBLAssertNotNil(name);
+    
     NSString* dir = config.directory ?: defaultDirectory();
     if (!setupDatabaseDirectory(dir, outError))
         return NO;
@@ -399,6 +417,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLDatabaseChange*))listener
 {
+    CBLAssertNotNil(listener);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -418,6 +438,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener
 {
+    CBLAssertNotNil(id);
+    CBLAssertNotNil(listener);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -453,6 +476,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)outError {
+    CBLAssertNotNil(index);
+    CBLAssertNotNil(name);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -474,6 +500,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) deleteIndexForName:(NSString *)name error:(NSError **)outError {
+    CBLAssertNotNil(name);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -577,7 +605,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 - (void) mustBeOpen {
     if (_c4db == nullptr) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Database is not open."];
+                    format: @"Attempt to perform an operation on a closed database."];
     }
 }
 
@@ -592,7 +620,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 {
     CBL_LOCK(self) {
         [self mustBeOpen];
-        
         return [[CBLDocument alloc] initWithDatabase: self
                                           documentID: documentID
                                       includeDeleted: NO
@@ -609,7 +636,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         document.database = self;
     } else if (document.database != self) {
         return createError(CBLErrorInvalidParameter,
-                           @"The document is from a different database.", error);
+                           @"Cannot operate on a document from another database", error);
     }
     return YES;
 }
@@ -785,7 +812,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 {
     if (deletion && !document.revID)
         return createError(CBLErrorNotFound,
-                           @"Document doesn't exist in the database.", outError);
+                           @"Cannot delete a document that has not yet been saved", outError);
     
     CBL_LOCK(self) {
         if (![self prepareDocument: document error: outError])

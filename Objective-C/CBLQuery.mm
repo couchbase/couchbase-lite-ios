@@ -150,6 +150,8 @@
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
 {
+    CBLAssertNotNil(listener);
+    
     CBL_LOCK(self) {
         if (!_liveQuery)
             _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
@@ -159,6 +161,8 @@
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    CBLAssertNotNil(token);
+    
     CBL_LOCK(self) {
         [_liveQuery removeChangeListenerWithToken: token];
     }

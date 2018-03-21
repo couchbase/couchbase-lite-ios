@@ -37,8 +37,9 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 - (id) cbl_toCBLObject {
     if (self != kCBLRemovedValue) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Instances of %@ cannot be added to Couchbase Lite documents",
-                             [self class]];
+                    format: @"%@ is not a valid type. You may only pass NSNumber, "
+                             "NSString, NSDate, CBLBlob, CBLDictionary, CBLArray or "
+                             "NSDictionary/NSArray containing the above types.", [self class]];
     }
     return self;
 }

@@ -55,6 +55,8 @@
 
 
 - (void) setDirectory: (NSString *)directory {
+    CBLAssertNotNil(directory);
+    
     [self checkReadonly];
     
     if (_directory != directory) {

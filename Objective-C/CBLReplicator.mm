@@ -99,6 +99,8 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
+    CBLAssertNotNil(config);
+    
     self = [super init];
     if (self) {
         NSParameterAssert(config.database != nil && config.target != nil);
@@ -320,6 +322,8 @@ static BOOL isPull(CBLReplicatorType type) {
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
 {
+    CBLAssertNotNil(listener);
+    
     CBL_LOCK(self) {
         if (!_listenerTokens) {
             _listenerTokens = [NSMutableSet set];
@@ -334,6 +338,8 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    CBLAssertNotNil(token);
+    
     CBL_LOCK(self) {
         [_listenerTokens removeObject: token];
     }
