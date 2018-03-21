@@ -97,16 +97,16 @@ echo "Build CouchbaseLite framework ..."
 BUILD_DIR=$OUTPUT_DIR/build
 
 OUTPUT_OBJC_DIR=$OUTPUT_DIR/objc_$EDITION
-OUTPUT_OBJC__ZIP=../couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip
+OUTPUT_OBJC_ZIP=../couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip
 
 OUTPUT_SWIFT_DIR=$OUTPUT_DIR/swift_$EDITION
 OUTPUT_SWIFT_ZIP=../couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip
 
 OUTPUT_DOCS_DIR=$OUTPUT_DIR/docs
 OUTPUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
-OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation$VERSION_SUFFIX.zip
+OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc$EDITION-documentation$VERSION_SUFFIX.zip
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
-OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation$VERSION_SUFFIX.zip
+OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift$EDITION-documentation$VERSION_SUFFIX.zip
 
 sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
@@ -132,7 +132,7 @@ else # official Jenkins build's license
 fi
 cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_DIR"
 pushd "$OUTPUT_OBJC_DIR"
-zip -ry "$OUTPUT_OBJC__ZIP" *
+zip -ry "$OUTPUT_OBJC_ZIP" *
 popd
 
 # Swift
@@ -149,7 +149,7 @@ pushd "$OUTPUT_SWIFT_DIR"
 zip -ry "$OUTPUT_SWIFT_ZIP" *
 popd
 
-# Generate MD5 file:
+# Generate MD5 files:
 echo "Generate MD5 files ..."
 pushd "$OUTPUT_DIR"
 md5 couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip.md5
@@ -158,7 +158,8 @@ popd
 
 # Generate API docs:
 echo "Generate API docs ..."
-sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR" $EXTRA_CMD_OPTIONS
+OBJC_UMBRELLA_HEADER=`find $OUTPUT_OBJC_DIR -name "CouchbaseLite.h"`
+sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR" -h "$OBJC_UMBRELLA_HEADER" $EXTRA_CMD_OPTIONS
 # >> Objective-C API
 pushd "$OUTPUT_OBJC_DOCS_DIR"
 zip -ry "$OUTPUT_OBJC_DOCS_ZIP" *

@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -o <Output Directory> [--EE]\n" 
+  echo "Usage: ${0} -o <Output Directory> -h <Umbrella header for Objective-C> [--EE]" 
 }
 
 if ! gem query -i -n jazzy 1>/dev/null;
@@ -21,6 +21,10 @@ do
       OUTPUT_DIR=${2}
       shift
       ;;
+      -h)
+      OBJC_HEADER=${2}
+      shift
+      ;;
       --EE)
       EE="Y"
       ;;
@@ -32,7 +36,7 @@ do
   shift
 done
 
-if [ -z "$OUTPUT_DIR" ]
+if [ -z "$OUTPUT_DIR" ] || [ -z "$OBJC_HEADER" ]
 then
   usage
   exit 4
@@ -45,5 +49,5 @@ else
   SCHEME="CBL-EE Swift"
 fi
 
-jazzy --clean --xcodebuild-arguments "-scheme,$SCHEME,-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
-jazzy --clean --objc --xcodebuild-arguments --objc,Objective-C/CouchbaseLite.h,--,-x,objective-c,-isysroot,$(xcrun --show-sdk-path --sdk iphonesimulator),-I,$(pwd) --module CouchbaseLite --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLite
+jazzy --clean --xcodebuild-arguments "-scheme,$SCHEME,-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme Scripts/Support/Docs/README.md --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
+jazzy --clean --objc --umbrella-header ${OBJC_HEADER} --module CouchbaseLite --theme Scripts/Support/Docs/Theme --readme Scripts/Support/Docs/README.md --output ${OUTPUT_DIR}/CouchbaseLite
