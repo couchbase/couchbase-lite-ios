@@ -31,6 +31,7 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "CBLLog+Admin.h"
+#import "CBLVersion.h"
 
 using namespace fleece;
 
@@ -83,6 +84,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
+        NSLog(@"%@", [CBLVersion userAgent]);
         CBLLog_Init();
     }
 }
