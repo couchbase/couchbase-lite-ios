@@ -30,7 +30,7 @@ public protocol Endpoint {
 }
 
 #if COUCHBASE_ENTERPRISE
-/// Database based replication target endpoint.
+/// Database based replication target endpoint. Available in the Enterprise Edition only.
 public struct DatabaseEndpoint: IEndpoint {
     
     /// The database object.

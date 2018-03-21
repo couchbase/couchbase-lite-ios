@@ -24,7 +24,7 @@
 @class CBLDatabase;
 
 /**
- Database based replication target endpoint.
+ Database based replication target endpoint. Available in the Enterprise Edition only.
  */
 @interface CBLDatabaseEndpoint : NSObject <CBLEndpoint>
 
