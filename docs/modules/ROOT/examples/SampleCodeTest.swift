@@ -136,6 +136,17 @@ class SampleCodeTest: CBLTestCase {
         print("\(image)")
     #endif
     }
+    
+    func dontTest1xAttachment() throws {
+        database = self.db
+        let document = MutableDocument()
+        
+        // # tag::1x-attachment[]
+        let attachments = document.dictionary(forKey: "_attachments")
+        let avatar = attachments?.blob(forKey: "avatar")
+        let content = avatar?.content
+        // # end::1x-attachment[]
+    }
 
     // MARK: Query
 

@@ -109,6 +109,56 @@ API References
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022[Swift
 SDK API References]
 
+Upgrading
+~~~~~~~~~
+
+Xcode
+^^^^^
+
+The public facing API has completely changed in Couchbase Lite 2.0 and will require a re-write to upgrade an application that is using Couchbase Lite 1.x. To update an Xcode project built with Couchbase Lite 1.x:
+
+* Remove the existing *CouchbaseLite.framework* dependency from the Xcode project.
+* Remove all the Couchbase Lite 1.x dependencies (see the link:https://developer.couchbase.com/documentation/mobile/1.5/installation/ios/index.html#ios-amp-tvos[1.x installation guide]).
+* Install the Couchbase Lite 2.0 framework in your project (see the link:swift.html#_frameworks[installation options]). At this point, there will be many compiler warnings. Refer to the examples on this page to learn about the new API.
+* Build & run your application.
+
+Database Upgrade
+^^^^^^^^^^^^^^^^
+
+Databases that were created with Couchbase Lite 1.2 or later can be
+read using the 2.0 API. Upon detecting it is a 1.x database file format,
+Couchbase Lite will automatically upgrade it to the new format used in
+2.0. This feature is only available for the default storage type (i.e
+not for ForestDB databases). Additionally, the automatic migration
+feature does not support encrypted databases, so if the 1.x database is
+encrypted you will first need to disable encryption using the Couchbase
+Lite 1.x API (see the
+https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/database/index.html#step-2-enabling-encryption[1.x
+Database Guide]).
+
+===== Handling of Existing Conflicts
+
+The automatic upgrade functionality does not copy any conflicting
+revisions to the new database. The motivation for this functionality is
+related to the way conflicts are being handled in Couchbase Lite 2.0
+(see link:swift.html#_handling_conflicts[Handling Conflicts]).
+
+===== Handling of Existing Attachments
+
+Attachments that were persisted in the 1.x database file will be copied to the 2.0 database file. Note that in Couchbase Lite 2.0, the `Attachment` API has been renamed to `Blob` API. The functionally is essentially identical but the internal schema for attachments has changed. In 1.x they were stored under the `_attachments` field and in Couchbase Lite 2.0 they will be stored like other value types. The automatic upgrade functionality will not update the internal schema for attachments, so they will still be accessible under the `_attachments` field. The following example shows how to retrieve an attachment that was created in a 1.x database with the 2.0 API.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=1x-attachment]
+----
+
+Replication
+^^^^^^^^^^^
+
+The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefor, to use replication with Couchbase Lite 2.0, the target Sync Gateway instance must also be upgraded to 2.0.
+
+Sync Gateway 2.0 will continue to accept clients that connect through the 1.x protocol. It will automatically use the 1.x replication protocol when a Couchbase Lite 1.x client connects through "http://localhost:4984/db" and the 2.0 replication protocol when a Couchbase Lite 2.0 client connects through "ws://localhost:4984/db". This allows for a smoother transition to get all your user base onto a version of your application built with Couchbase Lite 2.0.
+
 Database
 ~~~~~~~~
 
@@ -131,25 +181,6 @@ Alternatively, the
 can be used to provide specific options in the
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/DatabaseConfiguration.html[`DatabaseConfiguration`]
 object such as the database directory.
-
-Migrating from 1.x Databases
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Databases that were created with Couchbase Mobile 1.2 or later can be
-read using the 2.0 API. Upon detecting it is a 1.x database file format,
-Couchbase Lite will automatically upgrade it to the new format used in
-2.0. This feature is only available for the default storage type (i.e
-not for ForestDB databases). Additionally, the automatic migration
-feature does not support encrypted databases, so if the 1.x database is
-encrypted you will first need to disable encryption using the Couchbase
-Lite 1.x SDK (see the
-https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/database/index.html#step-2-enabling-encryption[1.x
-Database Guide]).
-
-The automatic upgrade functionality does not copy any conflicting
-revisions to the new database. The motivation for this functionality is
-related to the way conflicts are being handled in Couchbase Lite 2.0
-(see link:swift.html#handling-conflicts[Handling Conflicts]).
 
 Finding a Database File
 ^^^^^^^^^^^^^^^^^^^^^^^
