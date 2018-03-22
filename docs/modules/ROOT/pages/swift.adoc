@@ -141,7 +141,7 @@ Database Guide]).
 The automatic upgrade functionality does not copy any conflicting
 revisions to the new database. The motivation for this functionality is
 related to the way conflicts are being handled in Couchbase Lite 2.0
-(see link:swift.html#_handling_conflicts[Handling Conflicts]).
+(see link:swift.html#_handling_conflicts[Handling Conflicts]). Optionally, existing conflicts in the 1.x database can be resolved with the link:https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/revision/index.html[1.x API] prior to the database being upgraded to 2.0.
 
 ===== Handling of Existing Attachments
 
@@ -155,7 +155,7 @@ include::{examplesdir}/SampleCodeTest.swift[tags=1x-attachment]
 Replication
 ^^^^^^^^^^^
 
-The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefor, to use replication with Couchbase Lite 2.0, the target Sync Gateway instance must also be upgraded to 2.0.
+The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefore, to use replication with Couchbase Lite 2.0, the target Sync Gateway instance must also be upgraded to 2.0.
 
 Sync Gateway 2.0 will continue to accept clients that connect through the 1.x protocol. It will automatically use the 1.x replication protocol when a Couchbase Lite 1.x client connects through "http://localhost:4984/db" and the 2.0 replication protocol when a Couchbase Lite 2.0 client connects through "ws://localhost:4984/db". This allows for a smoother transition to get all your user base onto a version of your application built with Couchbase Lite 2.0.
 
