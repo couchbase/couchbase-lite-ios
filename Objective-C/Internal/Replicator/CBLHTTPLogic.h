@@ -39,10 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
     If enabled, redirects are handled by updating the URL and setting shouldRetry. */
 @property (nonatomic) BOOL handleRedirects;
 
-@property (readonly, nonatomic) NSURLRequest* URLRequest;
+@property (nonatomic, nullable) NSDictionary* proxySettings;
 
-/** Creates an HTTP request message to send. Caller is responsible for releasing it. */
-- (CFHTTPMessageRef) newHTTPRequest;
+@property (nonatomic) BOOL useProxyCONNECT;
+
+//@property (readonly, nonatomic) NSURLRequest* URLRequest;
 
 /** Returns an encoded HTTP request. */
 - (NSData*) HTTPRequestData;
@@ -67,6 +68,15 @@ NS_ASSUME_NONNULL_BEGIN
 /** Yes if TLS/SSL should be used (based on the URL). */
 @property (readonly, nonatomic) BOOL useTLS;
 
+/** YES if the connection must be made to an HTTP proxy. */
+@property (readonly, nonatomic) BOOL usingHTTPProxy;
+
+/** The direct hostname to open a socket to -- this will be the proxy's, if a proxy is used. */
+@property (readonly, nonatomic) NSString* directHost;
+
+/** The direct port number to open a socket to -- this will be the proxy's, if a proxy is used. */
+@property (readonly, nonatomic) UInt16 directPort;
+
 /** The auth credential being used. */
 @property (readwrite, nullable, nonatomic) NSURLCredential* credential;
 
@@ -77,6 +87,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The HTTP status code of the response. */
 @property (readonly, nonatomic) int httpStatus;
 
+/** The HTTP status message ("OK", "Not Found", ...) of the response. */
+@property (readonly, nonatomic) NSString* httpStatusMessage;
+
 /** The error from a failed redirect or authentication. This isn't set for regular non-success
     HTTP statuses like 404, only for failures to redirect or authenticate. */
 @property (readonly, nullable, nonatomic) NSError* error;
@@ -86,6 +99,11 @@ NS_ASSUME_NONNULL_BEGIN
     word), and the first parameter and value will appear as an extra key/value. (Only the first
     parameter is parsed; this could be improved.) */
 + (nullable NSDictionary*) parseAuthHeader: (NSString*)authHeader;
+
+#if DEBUG
+// Exposed for testing. Registers proxy settings to use regardless of OS settings.
++ (void) setOverrideProxySettings: (nullable NSDictionary*)proxySettings;
+#endif
 
 @end
 

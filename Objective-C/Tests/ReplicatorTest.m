@@ -23,6 +23,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLHTTPLogic.h"
 #import "CollectionUtils.h"
 
 
@@ -66,7 +67,8 @@
     "CBL_TEST_HOST".
     The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
     variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
-    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag. */
+    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
+    To force use of an HTTP proxy, set CBL_TEST_PROXY_HOST and CBL_TEST_PROXY_PORT. */
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
     NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
     if (!host) {
@@ -86,6 +88,16 @@
     comp.path = [NSString stringWithFormat:@"/%@", dbName];
     NSURL* url = comp.URL;
     Assert(url);
+
+    NSString* proxy = NSProcessInfo.processInfo.environment[@"CBL_TEST_PROXY_HOST"];
+    int proxyPort = [NSProcessInfo.processInfo.environment[@"CBL_TEST_PROXY_PORT"] intValue] ?: 80;
+    if (proxy) {
+        Log(@"Using proxy server %@:%d", proxy, proxyPort);
+        [CBLHTTPLogic setOverrideProxySettings: @{(id)kCFProxyTypeKey: (id)kCFProxyTypeHTTP,
+                                                  (id)kCFProxyHostNameKey: proxy,
+                                                  (id)kCFProxyPortNumberKey: @(proxyPort)}];
+    }
+
     return [[CBLURLEndpoint alloc] initWithURL: url];
 }
 
@@ -852,8 +864,6 @@
 
 
 - (void) testPullConflictDeleteWins_SG {
-    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
-    
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -897,8 +907,7 @@
 
 - (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
-    [CBLDatabase setLogLevel:kCBLLogLevelDebug domain:kCBLLogDomainAll];
-    
+
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;

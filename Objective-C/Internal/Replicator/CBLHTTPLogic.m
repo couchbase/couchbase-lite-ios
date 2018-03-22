@@ -18,6 +18,7 @@
 //
 
 #import "CBLHTTPLogic.h"
+#import "MYURLUtils.h"
 
 
 #define kMaxRedirects 10
@@ -26,6 +27,7 @@
 @implementation CBLHTTPLogic
 {
     NSMutableURLRequest* _urlRequest;
+    NSDictionary* _proxySettings;
     NSString* _nonceKey;
     NSString* _authorizationHeader;
     CFHTTPMessageRef _responseMsg;
@@ -34,8 +36,12 @@
 }
 
 
-@synthesize handleRedirects=_handleRedirects, shouldContinue=_shouldContinue,
-            shouldRetry=_shouldRetry, credential=_credential, httpStatus=_httpStatus, error=_error;
+@synthesize handleRedirects=_handleRedirects, shouldContinue=_shouldContinue;
+@synthesize shouldRetry=_shouldRetry, credential=_credential, httpStatus=_httpStatus, error=_error;
+@synthesize proxySettings=_proxySettings, useProxyCONNECT=_useProxyCONNECT;
+
+
+static NSDictionary* sOverrideProxySettings;
 
 
 - (instancetype) initWithURLRequest:(NSURLRequest *)urlRequest {
@@ -44,6 +50,7 @@
     if (self) {
         _urlRequest = [urlRequest mutableCopy];
         _handleRedirects = YES;
+        _proxySettings = sOverrideProxySettings ?: urlRequest.URL.my_proxySettings;
     }
     return self;
 }
@@ -59,6 +66,37 @@
 }
 
 
++ (void) setOverrideProxySettings: (NSDictionary*)proxySettings {
+    sOverrideProxySettings = [proxySettings copy];
+}
+
+
+- (BOOL) usingHTTPProxy {
+    NSString* type = _proxySettings[(id)kCFProxyTypeKey];
+    return [type isEqualToString: (id)kCFProxyTypeHTTP]
+        || [type isEqualToString: (id)kCFProxyTypeHTTPS];
+}
+
+
+- (NSString*) directHost {
+    if (self.usingHTTPProxy) {
+        NSString* host = _proxySettings[(id)kCFProxyHostNameKey];
+        if (host)
+            return host;
+    }
+    return self.URL.host;
+}
+
+
+- (UInt16) directPort {
+    if (self.usingHTTPProxy) {
+        NSNumber* port = _proxySettings[(id)kCFProxyPortNumberKey];
+        return port ? port.unsignedShortValue : 80;
+    }
+    return self.port;
+}
+
+
 - (UInt16) port {
     NSNumber* portObj = self.URL.port;
     if (portObj)
@@ -68,18 +106,23 @@
 }
 
 - (BOOL) useTLS {
-    NSString* scheme = self.URL.scheme.lowercaseString;
-    return [scheme isEqualToString: @"https"] || [scheme isEqualToString: @"wss"]
-                                              || [scheme isEqualToString: @"blips"];
+    if (self.usingHTTPProxy) {
+        return [_proxySettings[(id)kCFProxyTypeKey] isEqualToString: (id)kCFProxyTypeHTTPS]
+            || self.directPort == 443;
+    } else {
+        NSString* scheme = self.URL.scheme.lowercaseString;
+        return [scheme isEqualToString: @"https"] || [scheme isEqualToString: @"wss"]
+                                                  || [scheme isEqualToString: @"blips"];
+    }
 }
 
 
 + (NSString*) userAgent {
     NSProcessInfo* process = [NSProcessInfo processInfo];
-    NSString* appVers = (__bridge NSString*)CFBundleGetValueForInfoDictionaryKey
-    (CFBundleGetMainBundle(), kCFBundleVersionKey);
+    NSString* appVers = (__bridge NSString*)CFBundleGetValueForInfoDictionaryKey(
+                                                 CFBundleGetMainBundle(), kCFBundleVersionKey);
     return [NSString stringWithFormat: @"%@/%@ (%@ %@)",
-                    process.processName, appVers,
+                    process.processName, (appVers ?: @"0.0"),
 #if TARGET_OS_IPHONE
                     @"iOS",
 #else
@@ -102,18 +145,18 @@
 }
 
 
-- (NSURLRequest*) URLRequest {
-    CFHTTPMessageRef httpMessage = [self newHTTPRequest];
-
-    NSMutableURLRequest* request = [_urlRequest mutableCopy];
-    NSDictionary* headers = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpMessage));
-    for (NSString* headerName in headers) {
-        if (![request valueForHTTPHeaderField: headerName])
-            [request setValue: headers[headerName] forHTTPHeaderField: headerName];
-    }
-    CFRelease(httpMessage);
-    return request;
-}
+//- (NSURLRequest*) URLRequest {
+//    CFHTTPMessageRef httpMessage = [self newHTTPRequest];
+//
+//    NSMutableURLRequest* request = [_urlRequest mutableCopy];
+//    NSDictionary* headers = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpMessage));
+//    for (NSString* headerName in headers) {
+//        if (![request valueForHTTPHeaderField: headerName])
+//            [request setValue: headers[headerName] forHTTPHeaderField: headerName];
+//    }
+//    CFRelease(httpMessage);
+//    return request;
+//}
 
 
 - (CFHTTPMessageRef) newHTTPRequest {
@@ -125,10 +168,20 @@
     [self setValue: host forHTTPHeaderField: @"Host"];
 
     // Create the CFHTTPMessage:
-    CFHTTPMessageRef httpMsg = CFHTTPMessageCreateRequest(NULL,
-                                                      (__bridge CFStringRef)_urlRequest.HTTPMethod,
-                                                      (__bridge CFURLRef)url,
-                                                      kCFHTTPVersion1_1);
+    CFHTTPMessageRef httpMsg;
+    if (_useProxyCONNECT && self.usingHTTPProxy) {
+        NSURL *requestURL = [NSURL URLWithString: $sprintf(@"%@:%d", url.host, url.my_effectivePort)];
+        httpMsg = CFHTTPMessageCreateRequest(NULL,
+                                             CFSTR("CONNECT"),
+                                             (__bridge CFURLRef)requestURL,
+                                             kCFHTTPVersion1_1);
+    } else {
+        httpMsg = CFHTTPMessageCreateRequest(NULL,
+                                             (__bridge CFStringRef)_urlRequest.HTTPMethod,
+                                             (__bridge CFURLRef)url,
+                                             kCFHTTPVersion1_1);
+    }
+
     NSDictionary* headers = _urlRequest.allHTTPHeaderFields;
     for (NSString* header in headers)
         CFHTTPMessageSetHeaderFieldValue(httpMsg, (__bridge CFStringRef)header,
@@ -203,6 +256,21 @@
     CFHTTPMessageRef rq = [self newHTTPRequest];
     NSData* data = CFBridgingRelease(CFHTTPMessageCopySerializedMessage(rq));
     CFRelease(rq);
+
+    if (self.usingHTTPProxy && !_useProxyCONNECT) {
+        // CFHTTPMessage doesn't know how to create a proxy form of a request, where the request
+        // line contains the entire URL. So splice in the scheme/host/port in front of the path:
+        NSMutableData* mdata = [data mutableCopy];
+        NSUInteger insertAt = _urlRequest.HTTPMethod.length + 1;    // before the "/"
+        CFRange pathRange;
+        NSData* urlData = self.URL.dataRepresentation;
+        CFURLGetByteRangeForComponent((__bridge CFURLRef)self.URL, kCFURLComponentPath, &pathRange);
+        NSData* schemeAndHost = [urlData subdataWithRange: NSMakeRange(0, pathRange.location)];
+        [mdata replaceBytesInRange: NSMakeRange(insertAt, 0)
+                         withBytes: schemeAndHost.bytes
+                            length: schemeAndHost.length];
+        data = mdata;
+    }
     return data;
 }
 
@@ -268,6 +336,20 @@
                 _shouldContinue = YES;
             break;
     }
+}
+
+
+- (NSString*) httpStatusMessage {
+    NSString* line = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(_responseMsg));
+    NSRegularExpression* re = [NSRegularExpression
+            regularExpressionWithPattern: @"^HTTP/\\d.\\d\\s+\\d+\\s+(.*)" options: 0 error: NULL];
+    Assert(re);
+    NSTextCheckingResult *match = [re firstMatchInString: line options: 0
+                                                   range: NSMakeRange(0, line.length)];
+    if (match.numberOfRanges >= 2)
+        return [line substringWithRange: [match rangeAtIndex: 1]];
+    else
+        return line;
 }
 
 

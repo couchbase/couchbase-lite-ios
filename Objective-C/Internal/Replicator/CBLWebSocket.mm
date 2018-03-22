@@ -26,6 +26,7 @@
 #import "CBLLog.h"
 #import "CBLReplicator+Internal.h"
 #import "c4Socket.h"
+#import "MYURLUtils.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
@@ -62,6 +63,8 @@ static constexpr NSTimeInterval kIdleTimeout = 320.0;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
     BOOL _requestedClose;
+    BOOL _connectingToProxy;
+    NSDictionary* _proxySettings;
 }
 
 
@@ -122,6 +125,22 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
 
+        slice proxy = _options["HTTPProxy"_sl].asString();      //TODO: Add to c4Replicator.h
+        if (proxy) {
+            NSURL* proxyURL = [NSURL URLWithDataRepresentation: proxy.uncopiedNSData()
+                                                 relativeToURL: nil];
+            NSString* host = proxyURL.host;
+            if ([proxyURL.scheme.lowercaseString hasPrefix: @"http"] && host) {
+                _logic.proxySettings = @{(id)kCFProxyTypeKey:       (id)kCFProxyTypeHTTP,
+                                         (id)kCFProxyHostNameKey:   host,
+                                         (id)kCFProxyPortNumberKey: @(proxyURL.my_effectivePort)};
+            } else {
+                CBLWarn(Sync, @"Invalid replicator HTTPProxy setting <%.*s>",
+                     (int)proxy.size, proxy.buf);
+            }
+        }
+        _proxySettings = _logic.proxySettings;
+
         [self setupAuth];
 
         _queue = [[NSOperationQueue alloc] init];
@@ -180,12 +199,38 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 - (void) start {
     [_queue addOperationWithBlock: ^{
-        [self _start];
+        _logic.proxySettings = _proxySettings;
+        _logic.useProxyCONNECT = YES;
+        _connectingToProxy = _logic.usingHTTPProxy;
+
+        _task = [_session streamTaskWithHostName: _logic.directHost
+                                            port: _logic.directPort];
+        [_task resume];
+
+        if (_logic.useTLS)
+            [_task startSecureConnection];
+
+        if (_connectingToProxy)
+            [self _connectToProxy];
+        else
+            [self _connectToServer];
     }];
 }
 
 
-- (void) _start {
+- (void) _connectToProxy {
+    CBLLog(WebSocket, @"CBLWebSocket connecting to HTTP proxy %@:%d...",
+           _logic.directHost, _logic.directPort);
+    [_task writeData: _logic.HTTPRequestData timeout: kConnectTimeout
+           completionHandler: ^(NSError* error) {
+       CBLLogVerbose(WebSocket, @"CBLWebSocket Sent CONNECT request to proxy...");
+       if (![self checkError: error])
+           [self readHTTPResponse];
+   }];
+}
+
+
+- (void) _connectToServer {
     CBLLog(WebSocket, @"CBLWebSocket connecting to %@:%d...", _logic.URL.host, _logic.port);
     _cancelError = nil;
 
@@ -213,13 +258,6 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     if (protocols)
         _logic[@"Sec-WebSocket-Protocol"] = protocols.asNSString();
 
-    _task = [_session streamTaskWithHostName: (NSString*)_logic.URL.host
-                                        port: _logic.port];
-    [_task resume];
-
-    if (_logic.useTLS)
-        [_task startSecureConnection];
-
     [_task writeData: _logic.HTTPRequestData timeout: kConnectTimeout
            completionHandler: ^(NSError* error) {
        CBLLogVerbose(WebSocket, @"CBLWebSocket Sent HTTP request...");
@@ -245,12 +283,31 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
             return;
         }
         if (CFHTTPMessageIsHeaderComplete(httpResponse)) {
-            [self receivedHTTPResponse: httpResponse];
+            if (_connectingToProxy)
+                [self receivedProxyHTTPResponse: httpResponse];
+            else
+                [self receivedHTTPResponse: httpResponse];
             CFRelease(httpResponse);
         } else {
             [self readHTTPResponse];        // wait for more data
         }
     }];
+}
+
+
+- (void) receivedProxyHTTPResponse: (CFHTTPMessageRef)httpResponse {
+    [_logic receivedResponse: httpResponse];
+    NSInteger httpStatus = _logic.httpStatus;
+    if (httpStatus == 200) {
+        // Now send the actual WebSocket GET request:
+        _connectingToProxy = NO;
+        _logic.proxySettings = nil;
+        _logic.useProxyCONNECT = NO;
+        [self _connectToServer];
+    } else {
+        [self didCloseWithCode: (C4WebSocketCloseCode)httpStatus
+                        reason: $sprintf(@"Proxy: %@", _logic.httpStatusMessage)];
+    }
 }
 
 
@@ -288,8 +345,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         C4WebSocketCloseCode closeCode = kWebSocketClosePolicyError;
         if (httpStatus >= 300 && httpStatus < 1000)
             closeCode = (C4WebSocketCloseCode)httpStatus;
-        NSString* reason = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(httpResponse));
-        [self didCloseWithCode: closeCode reason: reason];
+        [self didCloseWithCode: closeCode reason: _logic.httpStatusMessage];
 
     } else if (!checkHeader(headers, @"Connection", @"Upgrade", NO)) {
         [self didCloseWithCode: kWebSocketCloseProtocolError
