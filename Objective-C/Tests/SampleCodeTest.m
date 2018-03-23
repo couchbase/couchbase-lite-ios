@@ -485,13 +485,14 @@
 }
 
 #if COUCHBASE_ENTERPRISE
-- (void) dontTestCertificatePinning {
+- (void) dontTestDatabaseReplica {
+    CBLDatabase *database = self.db;
     CBLDatabase *database2 = self.db;
     
     /* EE feature: code below might throw a compilation error
      if it's compiled against CBL Swift Community. */
     // # tag::database-replica[]
-    CBLDatabase *targetDatabase = [[CBLDatabaseEndpoint alloc] initWithDatabase:databas2];
+    CBLDatabaseEndpoint *targetDatabase = [[CBLDatabaseEndpoint alloc] initWithDatabase:database2];
     CBLReplicatorConfiguration *config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database target:targetDatabase];
     config.replicatorType = kCBLReplicatorTypePush;
     
