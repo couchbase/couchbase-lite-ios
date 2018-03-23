@@ -348,6 +348,8 @@ In the example above, "image/jpeg" is the MIME type and "avatar" is the
 key which references that `Blob`. That key can be used to retrieve the
 `Blob` object at a later time.
 
+On Couchbase Lite, blobs can be arbitrarily large, and are only read on demand, not when you load a `Document` object. On Sync Gateway, the maximum content size is 20 MB per blob. If a document's blob is over 20 MB, the document will be replicated but not the blob.
+
 When a document is synchronized, the Couchbase Lite replicator will add
 an `_attachments` dictionary to the document's properties if it contains
 a blob. A random access name will be generated for each `Blob` which is
