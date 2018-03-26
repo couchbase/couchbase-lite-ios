@@ -30,14 +30,14 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
 - (instancetype) initWithURL: (NSURL*)url {
     CBLAssertNotNil(url);
     
-    NSAssert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
-             [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
-             @"Invalid scheme for URLEndpoint url (%@); must be either %@ or %@",
-             url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme);
+    Assert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
+           [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
+           @"Invalid scheme for URLEndpoint url (%@); must be either %@ or %@",
+           url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme);
     
-    NSAssert(!url.user && !url.password,
-             @"Embedded credentials in a URL (username:password@url) "
-             "are not allowed; use the BasicAuthenticator class instead");
+    Assert(!url.user && !url.password,
+           @"Embedded credentials in a URL (username:password@url) "
+           "are not allowed; use the BasicAuthenticator class instead");
     
     self = [super init];
     if (self) {

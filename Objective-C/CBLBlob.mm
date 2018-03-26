@@ -101,7 +101,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 {
     CBLAssertNotNil(contentType);
     CBLAssertNotNil(url);
-    NSAssert(url.isFileURL, @"url must be a file-based URL");
+    Assert(url.isFileURL, @"url must be a file-based URL");
     
     NSInputStream* stream = [[NSInputStream alloc] initWithURL: url];
     if (!stream) {
