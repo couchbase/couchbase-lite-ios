@@ -99,7 +99,6 @@ Supported Versions
 |============================
 |Platform |Minimum OS version
 |iOS |10.3.1
-|tvOS |10.0.1
 |macOS |10.9
 |============================
 
