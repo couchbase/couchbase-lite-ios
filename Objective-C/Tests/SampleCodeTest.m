@@ -532,6 +532,12 @@
     NSLog(@"%@", config);
 }
 
+- (void) dontTestGettingStarted {
+    // # tag::getting-started[]
+    /* TODO */
+    // # end::getting-started[]
+}
+
 @end
 
 

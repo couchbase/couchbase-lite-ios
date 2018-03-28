@@ -62,6 +62,39 @@ Cocoapods.
 pod install
 ----
 
+Starter code
+^^^^^^^^^^^^
+
+Open *ViewController.m* in Xcode and copy the following code in the `viewDidLoad` method. This snippet demonstrates
+how to run basic CRUD operations, a simple Query and running
+bi-directional replications with Sync Gateway.
+
+[source,objectivec]
+----
+include::{examplesdir}/SampleCodeTest.m[tags=getting-started]
+----
+
+Build and run. You should see the document ID and property printed to
+the console. The document was successfully persisted to the database.
+
+image:getting-started-ios.png[image]
+
+Before synchronizing documents to Sync Gateway you will need to disable
+App Transport Security. In the Xcode navigator, right-click on
+*Info.plist* and open it as a source file.
+
+image:info-plist.png[image]
+
+Append the following inside of the `<dict>` XML tags to disable ATS.
+
+[source,xml]
+----
+<key>NSAppTransportSecurity</key>
+<dict>
+<key>NSAllowsArbitraryLoads</key><true/>
+</dict>
+----
+
 Supported Versions
 ~~~~~~~~~~~~~~~~~~
 

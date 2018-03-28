@@ -65,11 +65,14 @@ pod install
 Starter code
 ^^^^^^^^^^^^
 
-Open *ViewController.swift* in Xcode and copy
-https://github.com/couchbaselabs/couchbase-mobile-portal/blob/master/md-docs/_20/example.swift[the
-following] code in the `viewDidLoad` method. This snippet demonstrates
+Open *ViewController.swift* in Xcode and copy the following code in the `viewDidLoad` method. This snippet demonstrates
 how to run basic CRUD operations, a simple Query and running
 bi-directional replications with Sync Gateway.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=getting-started]
+----
 
 Build and run. You should see the document ID and property printed to
 the console. The document was successfully persisted to the database.
