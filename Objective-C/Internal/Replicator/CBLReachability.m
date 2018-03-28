@@ -133,13 +133,28 @@ static BOOL sAlwaysAssumeProxy = NO;
 
 - (BOOL) started {
     // See whether status is already known:
-    if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags)) {
-        _reachabilityKnown = YES;
-        CBLLog(Sync, @"%@: flags=%x; starting...", self, _reachabilityFlags);
+    SCNetworkReachabilityFlags flag;
+    if (SCNetworkReachabilityGetFlags(_ref, &flag)) {
+        CBLLog(Sync, @"%@: flags=%x; starting...", self, flag);
+        [self notifyFlagsChanged: flag];
     } else {
         CBLLog(Sync, @"%@: starting...", self);
     }
     return YES;
+}
+
+
+- (void) notifyFlagsChanged: (SCNetworkReachabilityFlags)flags {
+    if (_queue) {
+        dispatch_async(_queue, ^{
+            [self flagsChanged: flags];
+        });
+    } else {
+        Assert(_runLoop);
+        CFRunLoopPerformBlock(_runLoop, kCFRunLoopCommonModes, ^{
+            [self flagsChanged: flags];
+        });
+    }
 }
 
 
