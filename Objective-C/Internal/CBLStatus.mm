@@ -34,7 +34,7 @@ BOOL convertError(const C4Error &c4err, NSError** outError) {
     NSCAssert(c4err.code != 0 && c4err.domain != 0, @"No C4Error");
     static NSErrorDomain const kNSErrorDomains[kC4MaxErrorDomainPlus1] =
         {nil, CBLErrorDomain, NSPOSIXErrorDomain, SQLiteErrorDomain,
-         FleeceErrorDomain, nil, CBLErrorDomain};
+         FleeceErrorDomain, CBLErrorDomain, CBLErrorDomain};
     if (outError) {
         NSString* msgStr = sliceResult2string(c4error_getMessage(c4err));
         NSString* domain = kNSErrorDomains[c4err.domain];

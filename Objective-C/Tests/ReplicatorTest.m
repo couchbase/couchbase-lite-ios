@@ -798,7 +798,7 @@
         return;
     _pinServerCert = NO;    // without this, SSL handshake will fail
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
+    [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
 }
 
 
