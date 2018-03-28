@@ -30,15 +30,11 @@ import CouchbaseLiteSwift
 Carthage
 ^^^^^^^^
 
-1.  https://github.com/Carthage/Carthage#installing-carthage[Install
-Carthage]
-2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your
-*Cartfile*.
+1.  https://github.com/Carthage/Carthage#installing-carthage[Install Carthage]
+2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your *Cartfile*.
 3.  Run `carthage update --platform ios`.
-4.  Drag *CouchbaseLiteSwift.framework* from *Carthage/Build/* to the
-Xcode navigator.
-5.  Click on Project > General > Embedded Binary and add
-*CouchbaseLiteSwift.framework* to this section.
+4.  Drag *CouchbaseLiteSwift.framework* from *Carthage/Build/* to the Xcode navigator.
+5.  Click on Project > General > Embedded Binary and add *CouchbaseLiteSwift.framework* to this section.
 
 CocoaPods
 ^^^^^^^^^
