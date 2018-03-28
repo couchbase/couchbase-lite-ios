@@ -192,6 +192,19 @@ class SampleCodeTest: CBLTestCase {
             .select(SelectResult.all())
             .from(DataSource.database(database))
         // # end::query-select-all[]
+        
+        // # tag::live-query[]
+        let token = query.addChangeListener { (change) in
+            for result in change.results! { // <1>
+                print(result.keys)
+                /* Update UI */
+            }
+        }
+        // # end::live-query[]
+        
+        // # tag::stop-live-query[]
+        query.removeChangeListener(withToken: token)
+        // # end::stop-live-query[]
 
         print("\(query)")
     }
