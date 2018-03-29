@@ -793,7 +793,7 @@ the result.
 Live Query
 ~~~~~~~~~~
 
-A live query stays active and monitors the database and query index for changes. When there's a change it re-runs itself automatically, and if the query results changed it notifies any observers. A live query is a great way to build reactive user interfaces, especially table/list views, that keep themselves up to date. For example, as the replicator runs and pulls new data from the server, a live query-driven UI will automatically update to show the data without the user having to manually refresh. This helps your app feel quick and responsive.
+A live query stays active and monitors the database for changes. When there's a change it re-runs itself automatically, and if the query results changed it notifies any observers. A live query is a great way to build reactive user interfaces, especially table/list views, that keep themselves up to date. For example, as the replicator runs and pulls new data from the server, a live query-driven UI will automatically update to show the data without the user having to manually refresh. This helps your app feel quick and responsive.
 
 [source,objectivec]
 ----
