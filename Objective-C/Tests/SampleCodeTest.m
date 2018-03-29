@@ -187,6 +187,20 @@
                                          from:[CBLQueryDataSource database:database]];
     // # end::query-select-all[]
     
+    // # tag::live-query[]
+    id<CBLListenerToken> token = [query addChangeListener:^(CBLQueryChange * _Nonnull change) {
+        for (CBLQueryResultSet *result in [change results])
+        {
+            NSLog(@"%@", result);
+            /* Update UI */
+        }
+    }];
+    // # end::live-query[]
+    
+    // # tag::stop-live-query[]
+    [query removeChangeListenerWithToken:token];
+    // # end::stop-live-query[]
+    
     NSLog(@"%@", query);
 }
 

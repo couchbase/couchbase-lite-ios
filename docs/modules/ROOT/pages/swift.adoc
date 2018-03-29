@@ -1,6 +1,10 @@
+:toc: left
+:toclevels: 3
 = Couchbase
 
 == Swift Documentation
+
+toc::[]
 
 Getting Started
 ~~~~~~~~~~~~~~~
@@ -30,15 +34,11 @@ import CouchbaseLiteSwift
 Carthage
 ^^^^^^^^
 
-1.  https://github.com/Carthage/Carthage#installing-carthage[Install
-Carthage]
-2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your
-*Cartfile*.
+1.  https://github.com/Carthage/Carthage#installing-carthage[Install Carthage]
+2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your *Cartfile*.
 3.  Run `carthage update --platform ios`.
-4.  Drag *CouchbaseLiteSwift.framework* from *Carthage/Build/* to the
-Xcode navigator.
-5.  Click on Project > General > Embedded Binary and add
-*CouchbaseLiteSwift.framework* to this section.
+4.  Drag *CouchbaseLiteSwift.framework* from *Carthage/Build/* to the Xcode navigator.
+5.  Click on Project > General > Embedded Binary and add *CouchbaseLiteSwift.framework* to this section.
 
 CocoaPods
 ^^^^^^^^^
@@ -823,6 +823,24 @@ Couchbase Lite comes with a fairly simple ranking function you can use.
 In the `OrderBy` array, use a string of the form `Rank(X)`, where `X` is
 the property or expression being searched, to represent the ranking of
 the result.
+
+Live Query
+~~~~~~~~~~
+
+A live query stays active and monitors the database for changes. When there's a change it re-runs itself automatically, and if the query results changed it notifies any observers. A live query is a great way to build reactive user interfaces, especially table/list views, that keep themselves up to date. For example, as the replicator runs and pulls new data from the server, a live query-driven UI will automatically update to show the data without the user having to manually refresh. This helps your app feel quick and responsive.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=live-query]
+----
+<1> The live query starts immediately and changes are posted asynchronously.
+
+The following example stops the live query with the token from the previous example.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=stop-live-query]
+----
 
 Replication
 ~~~~~~~~~~~
