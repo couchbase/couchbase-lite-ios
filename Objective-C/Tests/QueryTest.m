@@ -499,7 +499,7 @@
 
 
 // https://github.com/couchbase/couchbase-lite-core/issues/497
-- (void) failingTestLeftJoinWithSelectAll {
+- (void) testLeftJoinWithSelectAll {
     [self loadNumbers: 100];
     
     CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
