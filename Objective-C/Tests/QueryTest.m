@@ -466,7 +466,6 @@
     [joinme setValue: @42 forKey: @"theone"];
     [self saveDocument: joinme];
     
-    
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
     
@@ -479,8 +478,6 @@
     NSArray* results = @[[CBLQuerySelectResult expression: NUMBER1],
                          [CBLQuerySelectResult expression: NUMBER2]];
     
-    
-    
     CBLQuery* q = [CBLQueryBuilder select: results
                                      from: [CBLQueryDataSource database: self.db as: @"main"]
                                      join: @[join]];
@@ -489,19 +486,56 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
-
-        if (n == 41) {
-            AssertEqual ([r integerAtIndex: 0], 59);
-            AssertNil ([r valueAtIndex: 1]);
-        }
-        if (n == 42) {
+        if ([r integerAtIndex: 1] == 42) {
             AssertEqual ([r integerAtIndex: 0], 58);
             AssertEqual ([r integerAtIndex: 1], 42);
+        } else {
+            AssertNil ([r valueAtIndex: 1]);
         }
     }];
     
     AssertEqual(numRows, 101u);
 }
+
+
+// https://github.com/couchbase/couchbase-lite-core/issues/497
+- (void) failingTestLeftJoinWithSelectAll {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
+    [joinme setValue: @42 forKey: @"theone"];
+    [self saveDocument: joinme];
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    
+    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                             on: on];
+    
+    NSArray* results = @[[CBLQuerySelectResult allFrom: @"main"],
+                         [CBLQuerySelectResult allFrom: @"secondary"]];
+    
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     join: @[join]];
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        CBLDictionary* main = [r dictionaryAtIndex: 0];
+        CBLDictionary* secondary = [r dictionaryAtIndex: 1];
+        
+        NSInteger number1 = [main integerForKey: @"number1"];
+        if (number1 == 42) {
+            AssertNotNil(secondary);
+            AssertEqual ([secondary integerForKey: @"theone"], number1);
+        } else {
+            AssertNil(secondary);
+        }
+    }];
+    AssertEqual(numRows, 101u);
+}
+
 
 - (void) testCrossJoin {
     [self loadNumbers: 10];
