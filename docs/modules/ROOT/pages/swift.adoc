@@ -79,9 +79,7 @@ the console. The document was successfully persisted to the database.
 
 image:getting-started-ios.png[image]
 
-Before synchronizing documents to Sync Gateway you will need to disable
-App Transport Security. In the Xcode navigator, right-click on
-*Info.plist* and open it as a source file.
+In the next step, you will setup Sync Gateway. Before synchronizing documents to Sync Gateway you will need to disable App Transport Security (ATS) on iOS. App Transport Security is enabled by default since iOS 9 and enforces applications to use HTTPS exclusively. For this getting started guide, you will disable it but we recommend to enable it in production (and [enable HTTPS on Sync Gateway](../../guides/sync-gateway/configuring-ssl/index.html)). In the Xcode navigator, right-click on *Info.plist* and open it as a source file.
 
 image:info-plist.png[image]
 
