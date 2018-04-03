@@ -63,12 +63,16 @@ public struct URLEndpoint: IEndpoint {
     /// - Parameter url: The URL object.
     public init(url: URL) {
         self.url = url
+        self.impl = CBLURLEndpoint(url: self.url)
     }
     
     // MARK: Internal
     
+    // Use Any to workaround string interpolation crash
+    private var impl: Any
+    
     func toImpl() -> CBLEndpoint {
-        return CBLURLEndpoint(url: url)
+        return self.impl as! CBLEndpoint
     }
     
 }
