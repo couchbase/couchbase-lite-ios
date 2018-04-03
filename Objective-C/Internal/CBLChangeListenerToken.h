@@ -22,28 +22,25 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLChangeListenerToken : NSObject <CBLListenerToken>
-
-/**
- The listener block for posting changes.
- */
-@property (nonatomic, readonly, copy) id listener;
-
-/**
- The dispatch queue to post changes onto.
- */
-@property (nonatomic, readonly) dispatch_queue_t queue;
+@interface CBLChangeListenerToken<ChangeType> : NSObject <CBLListenerToken>
 
 /**
  Initialize with the given listener block and the dispatch queue.
- Without specifying the dispatch queue, the main queue will be used.
 
  @param listener The listener block.
- @param queue The dispatch queue.
+ @param queue The dispatch queue; if nil, the main queue will be used.
  @return The CBLChangeListenerToken object.
  */
-- (instancetype) initWithListener: (id)listener
+- (instancetype) initWithListener: (void (^)(ChangeType))listener
                             queue: (nullable dispatch_queue_t)queue;
+
+/** An arbitrary value that can be associated by the client, such as a document ID. */
+@property (nonatomic) id key;
+
+/**
+ Posts an asynchronous change notification to the listener block on its dispatch queue.
+ */
+- (void) postChange: (ChangeType)change;
 
 @end
 

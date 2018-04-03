@@ -19,28 +19,33 @@
 
 #import "CBLChangeListenerToken.h"
 
+
 @implementation CBLChangeListenerToken
+{
+    void (^_listener)(id);
+    dispatch_queue_t _queue;
+}
 
-@synthesize listener=_listener;
-@synthesize queue=_queue;
+@synthesize key=_key;
 
 
-- (instancetype) initWithListener: (id)listener
+- (instancetype) initWithListener: (void (^)(id))listener
                             queue: (nullable dispatch_queue_t)queue
 {
     self = [super init];
     if (self) {
         _listener = listener;
-        _queue = queue;
+        _queue = queue ?: dispatch_get_main_queue();
     }
     return self;
 }
 
 
-- (dispatch_queue_t) queue {
-    if (_queue)
-        return _queue;
-    return dispatch_get_main_queue();
+- (void) postChange: (id)change {
+    void (^listener)(id) = _listener;
+    dispatch_async(_queue, ^{
+        listener(change);
+    });
 }
 
 
