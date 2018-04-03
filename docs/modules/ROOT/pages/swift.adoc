@@ -292,9 +292,11 @@ using the `document.date(forKey: String)` accessor method.
 include::{examplesdir}/SampleCodeTest.swift[tags=date-getter]
 ----
 
-If the property doesn't exist in the document it will return the default
-value for that getter method (0 for `getInt`, 0.0 for `getFloat` etc.). If you need to determine whether a given property exists in the document, you should use the http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/s:18CouchbaseLiteSwift8DocumentC8containsSbSS3key_tF[`Document.Contains(key: String)`]
-method.
+If the property doesn't exist in the document it will return the default value for that
+ getter method (0 for `getInt`, 0.0 for `getFloat` etc.).
+
+If you need to determine whether a given property exists in the document, you should
+use the http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/s:18CouchbaseLiteSwift8DocumentC8containsSbSS3key_tF[`Document.Contains(key: String)`] method.
 
 Batch operations
 ^^^^^^^^^^^^^^^^
