@@ -1,7 +1,9 @@
 :idprefix:
 :idseparator: -
+ifndef::env-site,env-github[]
 :toc: left
 :toclevels: 3
+endif::[]
 
 toc::[]
 
