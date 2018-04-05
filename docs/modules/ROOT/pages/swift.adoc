@@ -1,22 +1,20 @@
+:idprefix:
+:idseparator: -
+ifndef::env-site,env-github[]
 :toc: left
 :toclevels: 3
-= Couchbase
-
-== Swift Documentation
+endif::[]
 
 toc::[]
 
-Getting Started
-~~~~~~~~~~~~~~~
+== Getting Started
 
-Xcode project
-^^^^^^^^^^^^^
+=== Xcode project
 
 Create or open an existing Xcode project and install Couchbase Lite
 using one of the following methods.
 
-Frameworks
-^^^^^^^^^^
+==== Frameworks
 
 * https://www.couchbase.com/downloads[Download] Couchbase Lite.
 * Unzip the file and drag *CouchbaseLiteSwift.framework* from your
@@ -31,8 +29,7 @@ import CouchbaseLiteSwift
 ...
 ----
 
-Carthage
-^^^^^^^^
+==== Carthage
 
 1.  https://github.com/Carthage/Carthage#installing-carthage[Install Carthage]
 2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your *Cartfile*.
@@ -40,8 +37,7 @@ Carthage
 4.  Drag *CouchbaseLiteSwift.framework* from *Carthage/Build/* to the Xcode navigator.
 5.  Click on Project > General > Embedded Binary and add *CouchbaseLiteSwift.framework* to this section.
 
-CocoaPods
-^^^^^^^^^
+==== CocoaPods
 
 1.  https://guides.cocoapods.org/using/getting-started.html[Install
 Cocoapods]
@@ -62,23 +58,23 @@ Cocoapods.
 pod install
 ----
 
-Starter code
-^^^^^^^^^^^^
+=== Starter code
 
-Open *ViewController.swift* in Xcode and copy
-https://github.com/couchbaselabs/couchbase-mobile-portal/blob/master/md-docs/_20/example.swift[the
-following] code in the `viewDidLoad` method. This snippet demonstrates
+Open *ViewController.swift* in Xcode and copy the following code in the `viewDidLoad` method. This snippet demonstrates
 how to run basic CRUD operations, a simple Query and running
 bi-directional replications with Sync Gateway.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=getting-started]
+----
 
 Build and run. You should see the document ID and property printed to
 the console. The document was successfully persisted to the database.
 
 image:getting-started-ios.png[image]
 
-Before synchronizing documents to Sync Gateway you will need to disable
-App Transport Security. In the Xcode navigator, right-click on
-*Info.plist* and open it as a source file.
+In the next step, you will setup Sync Gateway. Before synchronizing documents to Sync Gateway you will need to disable App Transport Security (ATS) on iOS. App Transport Security is enabled by default since iOS 9 and enforces applications to use HTTPS exclusively. For this getting started guide, you will disable it but we recommend to enable it in production (and [enable HTTPS on Sync Gateway](../../guides/sync-gateway/configuring-ssl/index.html)). In the Xcode navigator, right-click on *Info.plist* and open it as a source file.
 
 image:info-plist.png[image]
 
@@ -92,8 +88,7 @@ Append the following inside of the `<dict>` XML tags to disable ATS.
 </dict>
 ----
 
-Supported Versions
-~~~~~~~~~~~~~~~~~~
+== Supported Versions
 
 [cols=",",options="header",]
 |============================
@@ -102,67 +97,55 @@ Supported Versions
 |macOS |10.9
 |============================
 
-API References
-~~~~~~~~~~~~~~
+== API References
 
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022[Swift
 SDK API References]
 
-Upgrading
-~~~~~~~~~
+== Upgrading
 
-Xcode
-^^^^^
+=== Xcode
 
-The public facing API has completely changed in Couchbase Lite 2.0 and will require a re-write to upgrade an application that is using Couchbase Lite 1.x. To update an Xcode project built with Couchbase Lite 1.x:
+The API has changed in Couchbase Lite 2.0 and will require porting an application that is using Couchbase Lite 1.x API to the Couchbase Lite 2.0 API. To update an Xcode project built with Couchbase Lite 1.x:
 
 * Remove the existing *CouchbaseLite.framework* dependency from the Xcode project.
 * Remove all the Couchbase Lite 1.x dependencies (see the link:https://developer.couchbase.com/documentation/mobile/1.5/installation/ios/index.html#ios-amp-tvos[1.x installation guide]).
 * Install the Couchbase Lite 2.0 framework in your project (see the link:swift.html#_frameworks[installation options]). At this point, there will be many compiler warnings. Refer to the examples on this page to learn about the new API.
 * Build & run your application.
 
-Database Upgrade
-^^^^^^^^^^^^^^^^
+=== Database Upgrade
 
-Databases that were created with Couchbase Lite 1.2 or later can be
-read using the 2.0 API. Upon detecting it is a 1.x database file format,
-Couchbase Lite will automatically upgrade it to the new format used in
-2.0. This feature is only available for the default storage type (i.e
-not for ForestDB databases). Additionally, the automatic migration
+Databases that were created with Couchbase Lite 1.2 or later can be used with Couchbase Lite 2.0. Upon detecting it is a 1.x database file,
+Couchbase Lite will automatically upgrade it to 2.0. This feature is only available for the default storage type (i.e
+not a ForestDB database). Additionally, the automatic migration
 feature does not support encrypted databases, so if the 1.x database is
 encrypted you will first need to disable encryption using the Couchbase
 Lite 1.x API (see the
 https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/database/index.html#step-2-enabling-encryption[1.x
 Database Guide]).
 
-===== Handling of Existing Conflicts
+==== Handling of Existing Conflicts
 
-The automatic upgrade functionality does not copy any conflicting
-revisions to the new database. The motivation for this functionality is
-related to the way conflicts are being handled in Couchbase Lite 2.0
-(see link:swift.html#_handling_conflicts[Handling Conflicts]). Optionally, existing conflicts in the 1.x database can be resolved with the link:https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/revision/index.html[1.x API] prior to the database being upgraded to 2.0.
+For conflicts in the 1.x database, the automatic upgrade process copies the default winning revision to the new 2.0 database and does NOT copy any conflicting revisions. This functionality is related to the way conflicts are being handled in Couchbase Lite 2.0 (see link:swift.html#_handling_conflicts[Handling Conflicts]). Optionally, existing conflicts in the 1.x database can be resolved with the link:https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/revision/index.html[1.x API] prior to the database being upgraded to 2.0.
 
-===== Handling of Existing Attachments
+==== Handling of Existing Attachments
 
-Attachments that were persisted in the 1.x database file will be copied to the 2.0 database file. Note that in Couchbase Lite 2.0, the `Attachment` API has been renamed to `Blob` API. The functionally is essentially identical but the internal schema for attachments has changed. In 1.x they were stored under the `_attachments` field and in Couchbase Lite 2.0 they will be stored like other value types. The automatic upgrade functionality will not update the internal schema for attachments, so they will still be accessible under the `_attachments` field. The following example shows how to retrieve an attachment that was created in a 1.x database with the 2.0 API.
+Attachments that were persisted in the 1.x database will be copied to the 2.0 database. In Couchbase Lite 2.0, the `Attachment` API has been renamed to `Blob` API. The functionally is identical but the internal schema for attachments has changed. In 1.x they were stored under the `_attachments` field and in Couchbase Lite 2.0 they are stored anywhere in the document like other value types. The automatic upgrade functionality will not update the internal schema for attachments, so they will still be accessible under the `_attachments` field. The following example shows how to retrieve an attachment that was created in a 1.x database with the 2.0 API.
 
 [source,swift]
 ----
 include::{examplesdir}/SampleCodeTest.swift[tags=1x-attachment]
 ----
 
-Replication
-^^^^^^^^^^^
+=== Replication
 
-The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefore, to use replication with Couchbase Lite 2.0, the target Sync Gateway instance must also be upgraded to 2.0.
+The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefore, to use replication with Couchbase Lite 2.x, the target Sync Gateway instance must also be upgraded to 2.x.
 
-Sync Gateway 2.0 will continue to accept clients that connect through the 1.x protocol. It will automatically use the 1.x replication protocol when a Couchbase Lite 1.x client connects through "http://localhost:4984/db" and the 2.0 replication protocol when a Couchbase Lite 2.0 client connects through "ws://localhost:4984/db". This allows for a smoother transition to get all your user base onto a version of your application built with Couchbase Lite 2.0.
+Sync Gateway 2.x will continue to accept clients that connect through the 1.x protocol. It will automatically use the 1.x replication protocol when a Couchbase Lite 1.x client connects through "http://localhost:4984/db" and the 2.0 replication protocol when a Couchbase Lite 2.0 client connects through "ws://localhost:4984/db". This allows for a smoother transition to get all your user base onto a version of your application built with Couchbase Lite 2.x.
 
-Database
-~~~~~~~~
+== Database
 
-New Database
-^^^^^^^^^^^^
+=== New Database
 
 As the top-level entity in the API, new databases can be created using
 the `Database` class by passing in a name, configuration, or both. The
@@ -181,22 +164,17 @@ can be used to provide specific options in the
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/DatabaseConfiguration.html[`DatabaseConfiguration`]
 object such as the database directory.
 
-Finding a Database File
-^^^^^^^^^^^^^^^^^^^^^^^
+=== Finding a Database File
 
-When the application is running on the iOS simulator, you can easily
-locate the application's sandbox directory using the
-https://simpholders.com/3/[SimPholders] utility.
+When the application is running on the iOS simulator, you can locate the application's sandbox directory using the https://simpholders.com/3/[SimPholders] utility.
 
-CLI tool
-^^^^^^^^
+=== CLI tool
 
 The Couchbase Lite `.zip` file available from the
 https://www.couchbase.com/downloads[downloads page] contains a CLI which
 can be used on *.cblite2* files.
 
-Logging
-^^^^^^^
+=== Logging
 
 The log messages are split into different domains (`LogDomains`) which
 can be tuned to different log levels. The following example enables
@@ -207,8 +185,7 @@ can be tuned to different log levels. The following example enables
 include::{examplesdir}/SampleCodeTest.swift[tags=logging]
 ----
 
-Loading a pre-built database
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=== Loading a pre-built database
 
 If your app needs to sync a lot of data initially, but that data is
 fairly static and won't change much, it can be a lot more efficient to
@@ -230,19 +207,17 @@ method as shown below.
 include::{examplesdir}/SampleCodeTest.swift[tags=prebuilt-database]
 ----
 
-Document
-~~~~~~~~
+== Document
 
 In Couchbase Lite, a document's body takes the form of a JSON object — a
 collection of key/value pairs where the values can be different types of
 data such as numbers, strings, arrays or even nested objects. Every
 document is identified by a document ID, which can be automatically
-generated (as a UUID) or determined by the application; the only
+generated (as a UUID) or specified programmatically; the only
 constraints are that it must be unique within the database, and it can't
 be changed.
 
-Initializers
-^^^^^^^^^^^^
+=== Initializers
 
 The following methods/initializers can be used:
 
@@ -263,8 +238,7 @@ database.
 include::{examplesdir}/SampleCodeTest.swift[tags=initializer]
 ----
 
-Mutability
-^^^^^^^^^^
+=== Mutability
 
 By default, when a document is read from the database it is immutable.
 The `document.toMutable()` method should be used to create an instance
@@ -278,8 +252,7 @@ include::{examplesdir}/SampleCodeTest.swift[tags=update-document]
 Changes to the document are persisted to the database when the
 `saveDocument` method is called.
 
-Typed Accessors
-^^^^^^^^^^^^^^^
+=== Typed Accessors
 
 The `Document` class now offers a set of
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/DictionaryProtocol[`property accessors`]
@@ -298,15 +271,13 @@ using the `document.date(forKey: String)` accessor method.
 include::{examplesdir}/SampleCodeTest.swift[tags=date-getter]
 ----
 
-If the property doesn't exist in the document it will return the default
-value for that getter method (0 for `getInt`, 0.0 for `getFloat` etc.).
-To check whether a given property exists in the document, you should use
-the
-http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/s:18CouchbaseLiteSwift8DocumentC8containsSbSS3key_tF[`Document.Contains(key: String)`]
-method.
+If the property doesn't exist in the document it will return the default value for that
+ getter method (0 for `getInt`, 0.0 for `getFloat` etc.).
 
-Batch operations
-^^^^^^^^^^^^^^^^
+If you need to determine whether a given property exists in the document, you should
+use the http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/s:18CouchbaseLiteSwift8DocumentC8containsSbSS3key_tF[`Document.Contains(key: String)`] method.
+
+=== Batch operations
 
 If you're making multiple changes to a database at once, it's faster to
 group them together. The following example persists a few documents in
@@ -324,10 +295,9 @@ see partial changes. But Couchbase Mobile is a distributed system, and
 due to the way replication works, there's no guarantee that Sync Gateway
 or other devices will receive your changes all at once.
 
-Blobs
-^^^^^
+== Blobs
 
-We've renamed "attachments" to "blobs", for clarity. The new behavior
+We've renamed "attachments" to "blobs". The new behavior
 should be clearer too: a `Blob` is now a normal object that can appear
 in a document as a property value. In other words, you just instantiate
 a `Blob` and set it as the value of a property, and then later you can
@@ -368,13 +338,12 @@ http://localhost:4984/justdoit/user.david/blob_1[localhost:4984/justdoit/user.da
 Notice that the blob identifier in the URL path is "blob_1" (not
 "avatar").
 
-Query
-~~~~~
+== Query
 
 Database queries have changed significantly. Instead of the map/reduce
-algorithm used in 1.x, they're now based on expressions, of the form
+views used in 1.x, they're now based on expressions, of the form
 "return ____ from documents where ____, ordered by ____", with semantics
-based on Couchbase Server's N1QL query language.
+based on Couchbase's N1QL query language.
 
 There are several parts to specifying a query:
 
@@ -387,47 +356,11 @@ documents.
 * GROUP BY: specifies the query criteria to group rows by.
 * ORDER BY: specifies the query criteria to sort the rows in the result.
 
-Indexing
-^^^^^^^^
-
-Before we begin querying documents, let's briefly mention the importance
-of having a query index. A query can only be fast if there's a
-pre-existing database index it can search to narrow down the set of
-documents to examine.
-
-The following example creates a new index for the `type` and `name`
-properties.
-
-[source,json]
-----
-{
-    "_id": "hotel123",
-    "type": "hotel",
-    "name": "Apple Droid"
-}
-----
-
-[source,swift]
-----
-include::{examplesdir}/SampleCodeTest.swift[tags=query-index]
-----
-
-If there are multiple expressions, the first one will be the primary
-key, the second the secondary key, etc.
-
-*Note:* Every index has to be updated whenever a document is updated, so
-too many indexes can hurt performance. Thus, good performance depends on
-designing and creating the _right_ indexes to go along with your
-queries.
-
-SELECT statement
-^^^^^^^^^^^^^^^^
+=== SELECT statement
 
 With the SELECT statement, you can query and manipulate JSON data. With
 projections, you retrieve just the fields that you need and not the
-entire document. This is especially useful when querying for a large
-dataset as it results in shorter processing times and better
-performance.
+entire document.
 
 A SelectResult represents a single return value of the query statement.
 Documents in Couchbase Lite comprise of the document properties
@@ -504,16 +437,14 @@ include::{examplesdir}/SampleCodeTest.swift[tags=query-select-all]
 ]
 ----
 
-WHERE statement
-^^^^^^^^^^^^^^^
+=== WHERE statement
 
 Similar to SQL, you can use the where clause to filter the documents to
 be returned as part of the query. The select statement takes in an
 `Expression`. You can chain any number of Expressions in order to
 implement sophisticated filtering capabilities.
 
-Comparison
-++++++++++
+==== Comparison
 
 The `Expression`'s
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/Comparison%20Operators[comparison
@@ -535,8 +466,7 @@ operator to query documents where the `type` property equals "hotel".
 include::{examplesdir}/SampleCodeTest.swift[tags=query-where]
 ----
 
-Collection Operators
-++++++++++++++++++++
+==== Collection Operators
 
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/Collection%20operators:[Collection
 operators] are useful to check if a given value is present in an array.
@@ -558,12 +488,11 @@ documents whose `public_likes` array property contain a value equal to
 include::{examplesdir}/SampleCodeTest.swift[tags=query-collection-operator]
 ----
 
-Like Operator
-+++++++++++++
+==== Like Operator
 
 The
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/s:18CouchbaseLiteSwift10ExpressionC4likeACypF[`like`]
-operator can be used for string matching. It is recommended to use the
+operator can be used for string matching. Use the
 `like` operator for case insensitive matches and the `regex` operator
 (see below) for case sensitive matches.
 
@@ -614,8 +543,7 @@ The following query will return "landmark" `type` documents with the
 include::{examplesdir}/SampleCodeTest.swift[tags=query-like-operator-wildcard-character-match]
 ----
 
-Regex Operator
-++++++++++++++
+==== Regex Operator
 
 The
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/s:18CouchbaseLiteSwift10ExpressionC5regexACypF[`regex`]
@@ -635,8 +563,7 @@ documents with name matching "Engine", "engine" and so on. Note that the
 include::{examplesdir}/SampleCodeTest.swift[tags=query-regex-operator]
 ----
 
-JOIN statement
-^^^^^^^^^^^^^^
+=== JOIN statement
 
 The JOIN clause enables you to create new input objects by combining two
 or more source objects.
@@ -652,8 +579,7 @@ document.
 include::{examplesdir}/SampleCodeTest.swift[tags=query-join]
 ----
 
-GROUP BY statement
-^^^^^^^^^^^^^^^^^^
+=== GROUP BY statement
 
 You can perform further processing on the data in your result set before
 the final projection is generated. The following example looks for the
@@ -685,8 +611,7 @@ There are 279 airports on the America/Chicago timezone located in United States 
 There are 123 airports on the America/Denver timezone located in United States and above 300 ft
 ----
 
-ORDER BY statement
-^^^^^^^^^^^^^^^^^^
+=== ORDER BY statement
 
 It is possible to sort the results of a query based on a given
 expression result. The example below returns documents of type equal to
@@ -709,11 +634,56 @@ Armagh
 Avignon
 ----
 
-Full-Text Search
-~~~~~~~~~~~~~~~~
+== Indexing
+
+Creating indexes can speed up the performance of queries. While indexes make queries faster, they also make writes slightly slower, and the Couchbase Lite database file slightly larger. As such, it is best to only create indexes when you need to optimize a specific case for better query performance.
+
+The following example creates a new index for the `type` and `name`
+properties.
+
+[source,json]
+----
+{
+    "_id": "hotel123",
+    "type": "hotel",
+    "name": "Apple Droid"
+}
+----
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=query-index]
+----
+
+If there are multiple expressions, the first one will be the primary
+key, the second the secondary key, etc.
+
+*Note:* Every index has to be updated whenever a document is updated, so
+too many indexes can hurt performance. Thus, good performance depends on
+designing and creating the _right_ indexes to go along with your
+queries.
+
+=== Change Events
+
+A live query stays active and monitors the database for changes. When there's a change it re-runs itself automatically, and if the query results changed it notifies any observers. A live query is a great way to build reactive user interfaces, especially table/list views, that keep themselves up to date. For example, as the replicator runs and pulls new data from the server, a live query-driven UI will automatically update to show the data without the user having to manually refresh. This helps your app feel quick and responsive.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=live-query]
+----
+<1> The live query starts immediately and changes are posted asynchronously.
+
+The following example stops the live query with the token from the previous example.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=stop-live-query]
+----
+
+== Full-Text Search
 
 To run a full-text search (FTS) query, you must have created a full-text
-index on the expression being matched. Unlike regular queries, the index
+index on the expression being matched. Unlike queries, the index
 is not optional. The following example inserts documents and creates an
 FTS index on the `name` property.
 
@@ -814,43 +784,21 @@ the precedence of the various operators. For example:
 -- one of the phrases "couchbase database" and "sqlite library".
 ....
 
-Ordering results
-^^^^^^^^^^^^^^^^
+=== Ordering results
 
 It's very common to sort full-text results in descending order of
 relevance. This can be a very difficult heuristic to define, but
-Couchbase Lite comes with a fairly simple ranking function you can use.
+Couchbase Lite comes with a ranking function you can use.
 In the `OrderBy` array, use a string of the form `Rank(X)`, where `X` is
 the property or expression being searched, to represent the ranking of
 the result.
 
-Live Query
-~~~~~~~~~~
-
-A live query stays active and monitors the database for changes. When there's a change it re-runs itself automatically, and if the query results changed it notifies any observers. A live query is a great way to build reactive user interfaces, especially table/list views, that keep themselves up to date. For example, as the replicator runs and pulls new data from the server, a live query-driven UI will automatically update to show the data without the user having to manually refresh. This helps your app feel quick and responsive.
-
-[source,swift]
-----
-include::{examplesdir}/SampleCodeTest.swift[tags=live-query]
-----
-<1> The live query starts immediately and changes are posted asynchronously.
-
-The following example stops the live query with the token from the previous example.
-
-[source,swift]
-----
-include::{examplesdir}/SampleCodeTest.swift[tags=stop-live-query]
-----
-
-Replication
-~~~~~~~~~~~
+== Replication
 
 Couchbase Mobile 2.0 uses a new replication protocol based on
-WebSockets. This protocol has been designed to be fast, efficient,
-easier to implement, and symmetrical between the client and server.
+WebSockets.
 
-Compatibility
-^^^^^^^^^^^^^
+=== Compatibility
 
 ⚠️ The new protocol is *incompatible* with CouchDB-based databases. And
 since Couchbase Lite 2 only supports the new protocol, you will need to
@@ -866,8 +814,7 @@ the 1.x replication protocol when a Couchbase Lite 1.x client connects
 through "http://localhost:4984/db" and the 2.0 replication protocol when
 a Couchbase Lite 2.0 client connects through "ws://localhost:4984/db".
 
-Starting Sync Gateway
-^^^^^^^^^^^^^^^^^^^^^
+=== Starting Sync Gateway
 
 https://www.couchbase.com/downloads[Download Sync Gateway] and start it
 from the command line with the configuration file created above.
@@ -882,10 +829,9 @@ Gateway
 https://developer.couchbase.com/documentation/mobile/1.5/installation/sync-gateway/index.html[installation
 guide].
 
-Starting a Replication
-^^^^^^^^^^^^^^^^^^^^^^
+=== Starting a Replication
 
-Replication objects are now bidirectional, this means you can start a
+Replication can be bidirectional, this means you can start a
 `push`/`pull` replication with a single instance. The replication's
 parameters can be specified through the
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/ReplicatorConfiguration.html[`ReplicatorConfiguration`]
@@ -912,13 +858,12 @@ explicitly enable them in the load balancer's configuration (see
 https://developer.couchbase.com/documentation/mobile/1.5/guides/sync-gateway/nginx/index.html[Load
 Balancers]).
 
-By default, the WebSocket protocol uses compression to optimize over
-speed and bandwidth. The level of compression is set on Sync Gateway and
+By default, the WebSocket protocol uses compression to optimize for
+speed and bandwidth utilization. The level of compression is set on Sync Gateway and
 can be tuned in the configuration file
 (link:../guides/sync-gateway/config-properties/index.html#2.0/replicator_compression[`replicator_compression`]).
 
-Troubleshooting
-^^^^^^^^^^^^^^^
+=== Troubleshooting
 
 As always, when there is a problem with replication, logging is your
 friend. The following example increases the log output for activity
@@ -929,8 +874,7 @@ related to replication with Sync Gateway.
 include::{examplesdir}/SampleCodeTest.swift[tags=replication-logging]
 ----
 
-Replication Status
-^^^^^^^^^^^^^^^^^^
+=== Replication Status
 
 The `replication.status.activity` property can be used to check the
 status of a replication. For example, when the replication is actively
@@ -959,8 +903,7 @@ the server. The `IDLE` state is only used in continuous replications.
 |`BUSY` |The replication is actively transferring data.
 |=======================================================================
 
-Handling Network Errors
-^^^^^^^^^^^^^^^^^^^^^^^
+=== Handling Network Errors
 
 If an error occurs, the replication status will be updated with an
 `Error` which follows the standard HTTP error codes. The following
@@ -988,11 +931,9 @@ Couchbase Lite replicator and thus will trigger a connection retry.
 - `504`: Gateway Timeout
 - `1001`: DNS resolution error
 
-Handling Conflicts
-~~~~~~~~~~~~~~~~~~
+== Handling Conflicts
 
-Starting in Couchbase Lite 2.0, document conflicts must be resolved
-using automatic conflict resolution or in the application. This
+In Couchbase Lite 2.0, document conflicts are automatically resolved. This
 functionality aims to simplify the default behavior of conflict handling
 and save disk space (conflicting revisions will no longer be stored in
 the database). There are 2 different `save` method signatures to specify
@@ -1019,14 +960,12 @@ concurrency control parameter has two possible values:
 ** `lastWriteWins`: The last operation wins if there is a conflict.
 ** `failOnConflict`: The operation will fail if there is a conflict.
 
-Database Replicas
-~~~~~~~~~~~~~~~~~
+== Database Replicas
 
 Database replicas is available in the *Enterprise Edition* only
 (https://www.couchbase.com/downloads). Starting in Couchbase Lite 2.0,
 replication between two local databases is now supported. It allows a
-Couchbase Lite replicator to store data on secondary storage that can
-then be ported to a different device. It would be especially useful in
+Couchbase Lite replicator to store data on secondary storage. It would be especially useful in
 scenarios where a user's device is damaged and the data needs to be
 moved to a different device. Note that the code below won't compile if
 you're running the *Community Edition* of Couchbase Lite.
@@ -1036,8 +975,7 @@ you're running the *Community Edition* of Couchbase Lite.
 include::{examplesdir}/SampleCodeTest.swift[tags=database-replica]
 ----
 
-Certificate Pinning
-~~~~~~~~~~~~~~~~~~~
+== Certificate Pinning
 
 Couchbase Lite supports certificate pinning. Certificate pinning is a
 technique that can be used by applications to "pin" a host to it's
