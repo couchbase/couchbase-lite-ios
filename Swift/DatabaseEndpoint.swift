@@ -1,5 +1,5 @@
 //
-//  CBLDatabaseEndpoint.m
+//  DatabaseEndpoint.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2018 Couchbase, Inc. All rights reserved.
@@ -16,28 +16,27 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-#import "CBLDatabaseEndpoint.h"
-#import "CBLDatabase.h"
 
-@implementation CBLDatabaseEndpoint
+import Foundation
 
-@synthesize database=_database;
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database {
-    CBLAssertNotNil(database);
+#if COUCHBASE_ENTERPRISE
+/// Database based replication target endpoint. Available in the Enterprise Edition only.
+public struct DatabaseEndpoint: IEndpoint {
     
-    self = [super init];
-    if (self) {
-        _database = database;
+    /// The database object.
+    public let database: Database
+    
+    /// Initializes the DatabaseEndpoint with the database object.
+    ///
+    /// - Parameter database: The database object.
+    public init(database: Database) {
+        self.database = database
     }
-    return self;
+    
+    // MARK: Internal
+    
+    func toImpl() -> CBLEndpoint {
+        return CBLDatabaseEndpoint(database: self.database._impl)
+    }
 }
-
-
-- (NSString*) description {
-    return [NSString stringWithFormat: @"DB[%@]", _database.name];
-}
-
-@end
 #endif
