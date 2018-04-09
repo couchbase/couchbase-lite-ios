@@ -97,7 +97,7 @@ Supported Versions
 [cols=",",options="header",]
 |============================
 |Platform |Minimum OS version
-|iOS |10.3.1
+|iOS |9.0
 |macOS |10.9
 |============================
 
