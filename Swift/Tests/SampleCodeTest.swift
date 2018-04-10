@@ -496,6 +496,30 @@ class SampleCodeTest: CBLTestCase {
         // # end::replication-logging[]
     }
 
+    func dontTestReplicationBasicAuthentication() throws {
+        // # tag::basic-authentication[]
+        let url = URL(string: "ws://localhost:4984/mydatabase")!
+        let target = URLEndpoint(url: url)
+        let config = ReplicatorConfiguration(database: database, target: target)
+        config.authenticator = BasicAuthenticator(username: "john", password: "pass")
+
+        self.replicator = Replicator(config: config)
+        self.replicator.start()
+        // # end::basic-authentication[]
+    }
+
+    func dontTestReplicationSessionAuthentication() throws {
+        // # tag::session-authentication[]
+        let url = URL(string: "ws://localhost:4984/mydatabase")!
+        let target = URLEndpoint(url: url)
+        let config = ReplicatorConfiguration(database: database, target: target)
+        config.headers = ["Cookie" : "SyncGatewaySession=904ac010862f37c8dd99015a33ab5a3565fd8447;"]
+
+        self.replicator = Replicator(config: config)
+        self.replicator.start()
+        // # end::session-authentication[]
+    }
+
     func dontTestReplicatorStatus() throws {
         // # tag::replication-status[]
         self.replicator.addChangeListener { (change) in
