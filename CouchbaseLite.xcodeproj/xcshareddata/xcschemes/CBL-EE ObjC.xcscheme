@@ -14,9 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D9111E03434200464432"
+               BlueprintIdentifier = "9343EF2A207D611600F19A89"
                BuildableName = "CouchbaseLite.framework"
-               BlueprintName = "CBL ObjC"
+               BlueprintName = "CBL-EE ObjC"
+               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9343F135207D61EC00F19A89"
+               BuildableName = "CouchbaseLiteTests.xctest"
+               BlueprintName = "CBL-EE ObjC Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -34,9 +48,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D91A1E03434200464432"
+               BlueprintIdentifier = "9343F135207D61EC00F19A89"
                BuildableName = "CouchbaseLiteTests.xctest"
-               BlueprintName = "CBL ObjC Tests"
+               BlueprintName = "CBL-EE ObjC Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -71,9 +85,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
+            BlueprintIdentifier = "9343EF2A207D611600F19A89"
             BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintName = "CBL-EE ObjC"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -86,15 +100,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
-            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug-EE">

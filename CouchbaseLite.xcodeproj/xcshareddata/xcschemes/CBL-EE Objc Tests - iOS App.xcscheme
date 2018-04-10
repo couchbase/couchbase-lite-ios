@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0920"
+   LastUpgradeVersion = "0930"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,29 +14,41 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D9111E03434200464432"
-               BuildableName = "CouchbaseLite.framework"
-               BlueprintName = "CBL ObjC"
+               BlueprintIdentifier = "9343F153207D62C900F19A89"
+               BuildableName = "CBL Tests.app"
+               BlueprintName = "CBL-EE Objc Tests - iOS App"
+               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9343F16F207D633300F19A89"
+               BuildableName = "CBL-EE Objc Tests - iOS.xctest"
+               BlueprintName = "CBL-EE Objc Tests - iOS"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Debug-EE"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      enableAddressSanitizer = "YES"
-      enableASanStackUseAfterReturn = "YES"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D91A1E03434200464432"
+               BlueprintIdentifier = "9343F135207D61EC00F19A89"
                BuildableName = "CouchbaseLiteTests.xctest"
-               BlueprintName = "CBL ObjC Tests"
+               BlueprintName = "CBL-EE ObjC Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -44,22 +56,17 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintIdentifier = "9343F153207D62C900F19A89"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL-EE Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
-         <AdditionalOption
-            key = "MallocScribble"
-            value = ""
-            isEnabled = "YES">
-         </AdditionalOption>
       </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Debug-EE"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -68,39 +75,41 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintIdentifier = "9343F153207D62C900F19A89"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL-EE Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Release-EE"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintIdentifier = "9343F153207D62C900F19A89"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL-EE Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug">
+      buildConfiguration = "Debug-EE">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Release-EE"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

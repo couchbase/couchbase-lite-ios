@@ -14,9 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "275F92731E4D30A4007FD5A2"
+               BlueprintIdentifier = "9343F011207D61AB00F19A89"
                BuildableName = "CouchbaseLiteSwift.framework"
-               BlueprintName = "CBL Swift"
+               BlueprintName = "CBL-EE Swift"
+               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9343F18A207D636300F19A89"
+               BuildableName = "CouchbaseLiteSwiftTests.xctest"
+               BlueprintName = "CBL-EE Swift Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,16 +42,15 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
-      language = ""
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "275F927B1E4D30A4007FD5A2"
+               BlueprintIdentifier = "9343F18A207D636300F19A89"
                BuildableName = "CouchbaseLiteSwiftTests.xctest"
-               BlueprintName = "CBL Swift Tests"
+               BlueprintName = "CBL-EE Swift Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -63,7 +76,6 @@
       buildConfiguration = "Debug-EE"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      language = ""
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -73,9 +85,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "275F92731E4D30A4007FD5A2"
+            BlueprintIdentifier = "9343F011207D61AB00F19A89"
             BuildableName = "CouchbaseLiteSwift.framework"
-            BlueprintName = "CBL Swift"
+            BlueprintName = "CBL-EE Swift"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -88,15 +100,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "275F92731E4D30A4007FD5A2"
-            BuildableName = "CouchbaseLiteSwift.framework"
-            BlueprintName = "CBL Swift"
-            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug-EE">
