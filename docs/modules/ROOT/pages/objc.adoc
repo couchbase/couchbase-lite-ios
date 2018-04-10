@@ -91,6 +91,8 @@ Append the following inside of the `<dict>` XML tags to disable ATS.
 </dict>
 ----
 
+link:../installation/sync-gateway/index.html[Installing Sync Gateway ⟶]
+
 Supported Versions
 ~~~~~~~~~~~~~~~~~~
 
@@ -365,23 +367,7 @@ With the SELECT statement, you can query and manipulate JSON data. With
 projections, you retrieve just the fields that you need and not the
 entire document.
 
-A SelectResult represents a single return value of the query statement.
-Documents in Couchbase Lite comprise of the document properties
-specified as a Dictionary of Key-Value pairs and associated metadata.
-The metadata consists of document Id and sequence Id associated with the
-Document. When you query for a document, the document metadata is not
-returned by default. You will need to explicitly query for the metadata.
-
-* http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQuerySelectResult.html#/c:objc(cs)CBLQuerySelectResult(cm)all[`[CBLQuerySelectResult all]`]:
-Returns all properties associated with a document.
-* `[CBLQuerySelectResult expression:[`http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQueryExpression.html[`CBLQueryExpression`]`property:"name"]`:
-Returns the `name` property associated with a document.
-* `[CBLQuerySelectResult expression:`http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQueryMeta.html[`CBLQueryMeta`]`.id]`:
-Returns the document ID.
-* `SelectResult.expression(Expression.meta().sequence)`: Returns the
-sequence ID (used in replications).
-
-You can specify a comma separated list of `SelectResult` expressions in
+A SelectResult represents a single return value of the query statement. You can specify a comma separated list of `SelectResult` expressions in
 the select statement of your query. For instance the following select
 statement queries for the document `_id` as well as the `type` and
 `name` properties of all documents in the database. In the query result,
@@ -449,9 +435,7 @@ implement sophisticated filtering capabilities.
 
 ==== Comparison
 
-The `Expression`'s
-http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQueryExpression.html[comparison
-operators] can be used in the WHERE statement to specify on which
+The http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQueryExpression.html[comparison operators] can be used in the WHERE statement to specify on which
 property to match documents. In the example below, we use the `equalTo`
 operator to query documents where the `type` property equals "hotel".
 
