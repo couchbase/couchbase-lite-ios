@@ -32,7 +32,22 @@ navigator.
 ==== Carthage
 
 1.  https://github.com/Carthage/Carthage#installing-carthage[Install Carthage]
-2.  Add `github "couchbase/couchbase-lite-ios" "2.0DB023"` to your Cartfile.
+2.  In your *Cartfile*, add the following.
++
+*Couchbase Lite Community Edition*
++
+[source,ruby]
+----
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Carthage/CouchbaseLite-Community.json" ~> 2.0.0
+----
++
+*Couchbase Lite Enterprise Edition*
++
+[source,ruby]
+----
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
+----
++
 3.  Run `carthage update --platform ios`.
 4.  Drag *CouchbaseLite.framework* from *Carthage/Build/* to the Xcode navigator.
 5.  Click on Project > General > Embedded Binary and add *CouchbaseLite.framework* to this section.
@@ -41,7 +56,7 @@ navigator.
 
 1.  https://guides.cocoapods.org/using/getting-started.html[Install
 Cocoapods]
-2.  In your `Podfile`, add the following.
+2.  In your *Podfile*, add the following.
 +
 *Couchbase Lite Community Edition*
 +
@@ -59,7 +74,7 @@ end
 ----
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-EE', '~> 2.0.0'
+  pod 'CouchbaseLite-Enterprise', '~> 2.0.0'
 end
 ----
 +
