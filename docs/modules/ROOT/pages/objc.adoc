@@ -203,9 +203,11 @@ When the application is running on the iOS simulator, you can locate the applica
 
 === CLI tool
 
-The Couchbase Lite `.zip` file available from the
-https://www.couchbase.com/downloads[downloads page] contains a CLI which
-can be used on *.cblite2* files.
+`cblite` is a command-line tool for inspecting and querying Couchbase Lite 2.x databases. To use it, download Couchbase Lite from the https://www.couchbase.com/downloads[downloads page] and navigate to the *Tools* folder.
+
+image:cblite-tool.png[image,,300]
+
+Instructions for various commands are available in *Tools/README.md*.
 
 === Logging
 
