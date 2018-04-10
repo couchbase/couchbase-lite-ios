@@ -1,8 +1,8 @@
 //
-//  CBLDocumentChangeListenerToken.h
+//  CBLDocumentChangeNotifier.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,18 +17,24 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "CBLChangeListenerToken.h"
+#import "CBLChangeNotifier.h"
+@class CBLDatabase;
+@class CBLDocumentChange;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLDocumentChangeListenerToken : CBLChangeListenerToken
 
-@property (nonatomic, readonly, copy) NSString* documentID;
+/**
+ A subclass of CBLChangeNotifier that manages document change notifications.
+ It manages the underlying C4DocumentObserver and posts the CBLDocumentChange notifications itself.
+*/
+@interface CBLDocumentChangeNotifier : CBLChangeNotifier<CBLDocumentChange*>
 
-- (instancetype) initWithDocumentID: (NSString*)documentID
-                           listener: (id)listener
-                              queue: (nullable dispatch_queue_t)queue;
+- (instancetype) initWithDatabase: (CBLDatabase*)db
+                       documentID: (NSString*)documentID;
+
+/** Immediately stops the C4DocumentObserver. No more notifications will be sent. */
+- (void) stop;
 
 @end
 

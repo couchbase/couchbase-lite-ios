@@ -18,12 +18,12 @@
 //
 
 #import "CBLLiveQuery.h"
-#import "CBLChangeListenerToken.h"
 #import "CBLLog.h"
 #import "CBLQuery.h"
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
+#import "CBLChangeNotifier.h"
 
 
 // Default value of CBLLiveQuery.updateInterval
@@ -39,7 +39,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBLQueryResultSet* _rs;
     id _dbListenerToken;
     
-    NSMutableSet* _listenerTokens;
+    CBLChangeNotifier<CBLQueryChange*>* _changeNotifier;
 }
 
 
@@ -105,7 +105,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
     
     _observing = NO;
-    _listenerTokens = nil;
+    _changeNotifier = nil;
     
     CBL_LOCK(self) {
         _willUpdate = NO; // cancels the delayed update started by -databaseChanged
@@ -129,24 +129,17 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
 {
-    if (!_listenerTokens) {
-        _listenerTokens = [NSMutableSet set];
-    }
-    
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: queue];
-    [_listenerTokens addObject: token];
-    
     if (!_observing)
         [self start];
-    
-    return token;
+
+    if (!_changeNotifier)
+        _changeNotifier = [CBLChangeNotifier new];
+    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
 }
 
 
-- (void) removeChangeListenerWithToken: (id<NSObject>)listener {
-    [_listenerTokens removeObject: listener];
-    if (_listenerTokens.count == 0)
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
         [self stop];
 }
 
@@ -215,19 +208,10 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         CBLLogVerbose(Query, @"%@: ...no change", self);
     }
     
-    if (changed)
-        [self notifyChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
-                                                          results: newRs
-                                                            error: error]];
-}
-
-
-- (void) notifyChange: (CBLQueryChange*)change {
-    for (CBLChangeListenerToken* token in _listenerTokens) {
-        void (^listener)(CBLQueryChange*) = token.listener;
-        dispatch_async(token.queue, ^{
-            listener(change);
-        });
+    if (changed) {
+        [_changeNotifier postChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
+                                                                   results: newRs
+                                                                     error: error]];
     }
 }
 
