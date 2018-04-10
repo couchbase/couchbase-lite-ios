@@ -118,7 +118,7 @@ Supported Versions
 
 == API References
 
-http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022[Objective-C
+http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc[Objective-C
 SDK API References]
 
 == Upgrading

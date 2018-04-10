@@ -112,7 +112,7 @@ link:../installation/sync-gateway/index.html[Installing Sync Gateway ⟶]
 
 == API References
 
-http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022[Swift
+http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift[Swift
 SDK API References]
 
 == Upgrading
