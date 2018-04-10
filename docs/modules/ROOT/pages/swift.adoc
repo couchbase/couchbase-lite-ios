@@ -1,7 +1,5 @@
 :idprefix:
 :idseparator: -
-ifndef::env-site,env-github[]
-:toc: left
 :toclevels: 3
 endif::[]
 
@@ -74,7 +72,7 @@ the console. The document was successfully persisted to the database.
 
 image:getting-started-ios.png[image]
 
-In the next step, you will setup Sync Gateway. Before synchronizing documents to Sync Gateway you will need to disable App Transport Security (ATS) on iOS. App Transport Security is enabled by default since iOS 9 and enforces applications to use HTTPS exclusively. For this getting started guide, you will disable it but we recommend to enable it in production (and [enable HTTPS on Sync Gateway](../../guides/sync-gateway/configuring-ssl/index.html)). In the Xcode navigator, right-click on *Info.plist* and open it as a source file.
+In the next step, you will setup Sync Gateway. Before synchronizing documents to Sync Gateway you will need to disable App Transport Security (ATS) on iOS. App Transport Security is enabled by default since iOS 9 and enforces applications to use HTTPS exclusively. For this getting started guide, you will disable it but we recommend to enable it in production (and link:../guides/sync-gateway/configuring-ssl/index.html[enable HTTPS on Sync Gateway]). In the Xcode navigator, right-click on *Info.plist* and open it as a source file.
 
 image:info-plist.png[image]
 
@@ -87,6 +85,8 @@ Append the following inside of the `<dict>` XML tags to disable ATS.
 <key>NSAllowsArbitraryLoads</key><true/>
 </dict>
 ----
+
+link:../installation/sync-gateway/index.html[Installing Sync Gateway ⟶]
 
 == Supported Versions
 
@@ -110,7 +110,7 @@ The API has changed in Couchbase Lite 2.0 and will require porting an applicatio
 
 * Remove the existing *CouchbaseLite.framework* dependency from the Xcode project.
 * Remove all the Couchbase Lite 1.x dependencies (see the link:https://developer.couchbase.com/documentation/mobile/1.5/installation/ios/index.html#ios-amp-tvos[1.x installation guide]).
-* Install the Couchbase Lite 2.0 framework in your project (see the link:swift.html#_frameworks[installation options]). At this point, there will be many compiler warnings. Refer to the examples on this page to learn about the new API.
+* Install the Couchbase Lite 2.0 framework in your project (see the link:swift.html#frameworks[installation options]). At this point, there will be many compiler warnings. Refer to the examples on this page to learn about the new API.
 * Build & run your application.
 
 === Database Upgrade
@@ -126,7 +126,7 @@ Database Guide]).
 
 ==== Handling of Existing Conflicts
 
-For conflicts in the 1.x database, the automatic upgrade process copies the default winning revision to the new 2.0 database and does NOT copy any conflicting revisions. This functionality is related to the way conflicts are being handled in Couchbase Lite 2.0 (see link:swift.html#_handling_conflicts[Handling Conflicts]). Optionally, existing conflicts in the 1.x database can be resolved with the link:https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/revision/index.html[1.x API] prior to the database being upgraded to 2.0.
+For conflicts in the 1.x database, the automatic upgrade process copies the default winning revision to the new 2.0 database and does NOT copy any conflicting revisions. This functionality is related to the way conflicts are being handled in Couchbase Lite 2.0 (see link:swift.html#handling-conflicts[Handling Conflicts]). Optionally, existing conflicts in the 1.x database can be resolved with the link:https://developer.couchbase.com/documentation/mobile/1.5/guides/couchbase-lite/native-api/revision/index.html[1.x API] prior to the database being upgraded to 2.0.
 
 ==== Handling of Existing Attachments
 
@@ -362,23 +362,7 @@ With the SELECT statement, you can query and manipulate JSON data. With
 projections, you retrieve just the fields that you need and not the
 entire document.
 
-A SelectResult represents a single return value of the query statement.
-Documents in Couchbase Lite comprise of the document properties
-specified as a Dictionary of Key-Value pairs and associated metadata.
-The metadata consists of document Id and sequence Id associated with the
-Document. When you query for a document, the document metadata is not
-returned by default. You will need to explicitly query for the metadata.
-
-* http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/SelectResult.html#/s:18CouchbaseLiteSwift12SelectResultC3allAC4FromCyFZ[`SelectResult.all()`]:
-Returns all properties associated with a document.
-* `SelectResult(`http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html[`Expression`]`.property("name"))`:
-Returns the `name` property associated with a document.
-* `SelectResult.expression(`http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Meta.html[`Meta`]`.id`)`:
-Returns the document ID.
-* `SelectResult.expression(Expression.meta().sequence)`: Returns the
-sequence ID (used in replications).
-
-You can specify a comma separated list of `SelectResult` expressions in
+A SelectResult represents a single return value of the query statement. You can specify a comma separated list of `SelectResult` expressions in
 the select statement of your query. For instance the following select
 statement queries for the document `_id` as well as the `type` and
 `name` properties of all documents in the database. In the query result,
@@ -446,9 +430,7 @@ implement sophisticated filtering capabilities.
 
 ==== Comparison
 
-The `Expression`'s
-http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/Comparison%20Operators[comparison
-operators] can be used in the WHERE statement to specify on which
+The http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/Comparison%20Operators[comparison operators] can be used in the WHERE statement to specify on which
 property to match documents. In the example below, we use the `equalTo`
 operator to query documents where the `type` property equals "hotel".
 
