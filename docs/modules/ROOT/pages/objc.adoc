@@ -59,7 +59,7 @@ end
 ----
 target '<your target name>' do
   use_frameworks!
-  pod ‘CouchbaseLite-EE', '~> 2.0.0'
+  pod 'CouchbaseLite-EE', '~> 2.0.0'
 end
 ----
 +
