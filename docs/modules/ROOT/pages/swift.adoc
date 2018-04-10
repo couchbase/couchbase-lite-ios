@@ -36,14 +36,14 @@ import CouchbaseLiteSwift
 +
 [source,ruby]
 ----
-binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Carthage/CouchbaseLite-Community.json" ~> 2.0.0
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Community.json" ~> 2.0.0
 ----
 +
 *Couchbase Lite Enterprise Edition*
 +
 [source,ruby]
 ----
-binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
 ----
 +
 3.  Run `carthage update --platform ios`.
