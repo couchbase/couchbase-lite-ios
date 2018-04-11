@@ -62,7 +62,7 @@ Cocoapods]
 ----
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift', '~> 2.0.0'
+  pod 'CouchbaseLite-Swift', '~> 2.0.0'
 end
 ----
 +
@@ -72,7 +72,7 @@ end
 ----
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift-Enterprise', '~> 2.0.0'
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.0.0'
 end
 ----
 +
