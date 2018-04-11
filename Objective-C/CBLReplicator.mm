@@ -78,6 +78,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     unsigned _retryCount;
     CBLReachability* _reachability;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
+    BOOL _resetCheckpoint;
     
     // TODO: Instead of having multiple boolean variables, we could
     // have a enum based variable to represent the replicator state.
@@ -199,6 +200,15 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     // Encode the options:
     alloc_slice optionsFleece;
     NSDictionary* options = _config.effectiveOptions;
+    
+    // Update resetCheckpoint flag if needed:
+    if (_resetCheckpoint) {
+        NSMutableDictionary* newOptions = [options mutableCopy];
+        newOptions[@kC4ReplicatorResetCheckpoint] = @(YES);
+        options = newOptions;
+        _resetCheckpoint = NO;
+    }
+    
     if (options.count) {
         Encoder enc;
         enc << options;
@@ -311,6 +321,18 @@ static BOOL isPull(CBLReplicatorType type) {
             _retryCount = 0;
             [self retry];
         }
+    }
+}
+
+
+- (void) resetCheckpoint {
+    CBL_LOCK(self) {
+        if (_rawStatus.level != kC4Stopped) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"Replicator is not stopped. Resetting checkpoint"
+                                 "is only allowed when the replicator is in the stopped state."];
+        }
+        _resetCheckpoint = YES;
     }
 }
 

@@ -38,10 +38,16 @@ class ReplicatorTest: CBLTestCase {
     func run(type: ReplicatorType, target: Endpoint, expectedError: Int?) {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
-        run(config: config, expectedError: expectedError)
+        run(config: config, reset: false, expectedError: expectedError)
     }
     
-    func run(config: ReplicatorConfiguration, expectedError: Int?) {
+    func run(type: ReplicatorType, target: Endpoint, reset: Bool, expectedError: Int?) {
+        let config = ReplicatorConfiguration(database: self.db, target: target)
+        config.replicatorType = type
+        run(config: config, reset: reset, expectedError: expectedError)
+    }
+    
+    func run(config: ReplicatorConfiguration, reset: Bool, expectedError: Int?) {
         let x = self.expectation(description: "change")
         let repl = Replicator(config: config)
         let token = repl.addChangeListener { (change) in
@@ -56,15 +62,58 @@ class ReplicatorTest: CBLTestCase {
             }
         }
         
+        if reset {
+            repl.resetCheckpoint()
+        }
+        
         repl.start()
         wait(for: [x], timeout: 5.0)
         repl.removeChangeListener(withToken: token)
     }
 
     #if COUCHBASE_ENTERPRISE
-    func testEmptyPush() {
+    
+    func testEmptyPush() throws {
         let target = DatabaseEndpoint(database: otherDB)
         run(type: .push, target: target, expectedError: nil)
     }
+    
+    func testResetCheckpoint() throws {
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Hobbes", forKey: "name")
+        try self.db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("Tiger", forKey: "species")
+        doc2.setString("striped", forKey: "pattern")
+        try self.db.saveDocument(doc2)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: otherDB)
+        run(type: .push, target: target, expectedError: nil)
+        
+        // Pull:
+        run(type: .pull, target: target, expectedError: nil)
+        
+        XCTAssertEqual(self.db.count, 2)
+        
+        var doc = self.db.document(withID: "doc1")!
+        try self.db.purgeDocument(doc)
+        
+        doc = self.db.document(withID: "doc2")!
+        try self.db.purgeDocument(doc)
+        
+        XCTAssertEqual(self.db.count, 0)
+        
+        // Pull again, shouldn't have any new changes:
+        run(type: .pull, target: target, expectedError: nil)
+        XCTAssertEqual(self.db.count, 0)
+        
+        // Reset and pull:
+        run(type: .pull, target: target, reset: true, expectedError: nil)
+        XCTAssertEqual(self.db.count, 2)
+    }
+    
     #endif
 }
