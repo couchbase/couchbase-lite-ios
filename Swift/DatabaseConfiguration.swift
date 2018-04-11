@@ -30,6 +30,15 @@ public class DatabaseConfiguration {
         }
     }
     
+    #if COUCHBASE_ENTERPRISE
+    /// The key to encrypt the database with.
+    public var encryptionKey: EncryptionKey? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    #endif
+    
     /// Initializes a DatabaseConfiguration's builder with default values.
     public convenience init() {
         self.init(config: nil, readonly: false)
@@ -47,6 +56,9 @@ public class DatabaseConfiguration {
     init(config: DatabaseConfiguration?, readonly: Bool) {
         if let c = config {
             self.directory = c.directory
+            #if COUCHBASE_ENTERPRISE
+            self.encryptionKey = c.encryptionKey
+            #endif
         }
         self.readonly = readonly
     }
@@ -60,7 +72,10 @@ public class DatabaseConfiguration {
     func toImpl() -> CBLDatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
         config.directory = self.directory
+        #if COUCHBASE_ENTERPRISE
+        config.encryptionKey = self.encryptionKey?.impl
+        #endif
         return config
     }
-
+    
 }

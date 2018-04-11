@@ -31,9 +31,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
         super.tearDown()
     }
-    
-    #if COUCHBASE_ENTERPRISE
-    
+
     func openSeekrit(password: String?) throws -> Database {
         let config = DatabaseConfiguration()
         config.encryptionKey = password != nil ? EncryptionKey.password(password!) : nil
@@ -112,10 +110,10 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: "letmein")
         
         // Create a doc and then update it:
-        var doc = createDocument(nil, data: ["answer": 42])
-        doc = try seekrit!.saveDocument(doc).toMutable()
+        let doc = createDocument(nil, data: ["answer": 42])
+        try seekrit!.saveDocument(doc)
         doc.setValue(84, forKey: "answer")
-        doc = try seekrit!.saveDocument(doc).toMutable()
+        try seekrit!.saveDocument(doc)
         
         // Compact:
         try seekrit!.compact()
@@ -218,7 +216,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Query documents:
         let seq = Expression.property("seq")
-        let query = Query
+        let query = QueryBuilder
             .select(SelectResult.expression(seq))
             .from(DataSource.database(seekrit!))
             .where(seq.notNullOrMissing())
@@ -232,5 +230,5 @@ class DatabaseEncryptionTest: CBLTestCase {
             i = i + 1
         }
     }
-    #endif
+    
 }

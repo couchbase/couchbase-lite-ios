@@ -30,6 +30,9 @@
 #import "CBLReplicator.h"
 #import "CBLLiveQuery.h"
 
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLEncryptionKey.h"
+#endif
 
 struct c4BlobStore;
 
@@ -51,16 +54,20 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) NSMutableSet<CBLLiveQuery*>* liveQueries;
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
+- (void) mustBeOpen;
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError;
 
 @end
 
+/// CBLDatabaseConfiguration:
 
-/// CBLDatabaseConfigurationBuilder:
 
+@interface CBLDatabaseConfiguration ()
 
-@interface CBLDatabaseConfiguration()
+#ifdef COUCHBASE_ENTERPRISE
+@property (nonatomic, nullable) CBLEncryptionKey* encryptionKey;
+#endif
 
 - (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
                        readonly: (BOOL)readonly;

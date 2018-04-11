@@ -34,8 +34,6 @@
     [super tearDown];
 }
 
-#ifdef COUCHBASE_ENTERPRISE
-
 - (CBLDatabase*) openSeekritWithPassword: (nullable NSString*)password error: (NSError**)error {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     if (password)
@@ -266,8 +264,5 @@
     }
 }
 
-#endif // COUCHBASE_ENTERPRISE
-
 
 @end
-

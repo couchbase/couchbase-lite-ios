@@ -1,5 +1,5 @@
 //
-//  CBLEncryptionKey+Internal.h
+//  CBLDatabase+EncryptionInternal.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,18 +17,21 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
+#pragma once
+#import "CBLDatabase.h"
+#import "c4.h"
+@class CBLEncryptionKey;
 
-#import "CBLEncryptionKey.h"
+#ifndef COUCHBASE_ENTERPRISE
+#error Couchbase Lite EE Only
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLEncryptionKey ()
+@interface CBLDatabase (EncryptionInternal)
 
-@property (atomic, readonly) NSData* key;
++ (C4EncryptionKey) c4EncryptionKey: (nullable CBLEncryptionKey*)key;
 
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif

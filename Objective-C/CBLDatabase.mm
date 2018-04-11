@@ -34,6 +34,10 @@
 #import "CBLLog+Admin.h"
 #import "CBLVersion.h"
 
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLDatabase+EncryptionInternal.h"
+#endif
+
 using namespace fleece;
 
 #define kDBExtension @"cblite2"
@@ -506,6 +510,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - INTERNAL
 
 
+- (void) mustBeOpen {
+    if (_c4db == nullptr) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to perform an operation on a closed database."];
+    }
+}
+
+
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
     CBL_LOCK(self) {
         [self mustBeOpen];
@@ -589,15 +601,11 @@ static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
 
 static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4DatabaseConfig c4config = kDBConfig;
+#ifdef COUCHBASE_ENTERPRISE
+    if (config.encryptionKey)
+        c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
+#endif
     return c4config;
-}
-
-
-- (void) mustBeOpen {
-    if (_c4db == nullptr) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to perform an operation on a closed database."];
-    }
 }
 
 

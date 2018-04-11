@@ -498,7 +498,7 @@
     // # end::replication-error-handling[]
 }
 
-#if COUCHBASE_ENTERPRISE
+#ifdef COUCHBASE_ENTERPRISE
 - (void) dontTestDatabaseReplica {
     CBLDatabase *database = self.db;
     CBLDatabase *database2 = self.db;

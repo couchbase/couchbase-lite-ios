@@ -27,6 +27,9 @@
 
 @synthesize directory=_directory;
 
+#ifdef COUCHBASE_ENTERPRISE
+@synthesize encryptionKey=_encryptionKey;
+#endif
 
 - (instancetype) init {
     return [self initWithConfig: nil readonly: NO];
@@ -47,6 +50,9 @@
         
         if (config) {
             _directory = config.directory;
+#ifdef COUCHBASE_ENTERPRISE
+            _encryptionKey = config.encryptionKey;
+#endif
         } else
             _directory = [CBLDatabaseConfiguration defaultDirectory];
     }
@@ -59,9 +65,7 @@
     
     [self checkReadonly];
     
-    if (_directory != directory) {
-        _directory = directory;
-    }
+    _directory = directory;
 }
 
 
