@@ -71,6 +71,6 @@
 _CBLErrorDomain
 _kCBLAllPropertiesName
 
-// Enterprise Edition:
+# Enterprise Edition:
 .objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLEncryptionKey
