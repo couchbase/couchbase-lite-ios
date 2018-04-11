@@ -10,3 +10,4 @@ OTHER_SWIFT_FLAGS = -D$(EE_PP_DEFS)
 #include "Project_Release.xcconfig"
 
 CBL_EXPORTED_SYMBOLS_FILE = Objective-C/CouchbaseLite-EE.exp
+CBL_SWIFT_MODULEMAP_FILE = Swift/CouchbaseLiteSwift-EE.modulemap

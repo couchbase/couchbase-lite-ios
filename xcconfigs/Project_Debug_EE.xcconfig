@@ -8,3 +8,5 @@ EE_PP_DEFS = COUCHBASE_ENTERPRISE
 OTHER_SWIFT_FLAGS = -D$(EE_PP_DEFS)
 
 #include "Project_Debug.xcconfig"
+
+CBL_SWIFT_MODULEMAP_FILE = Swift/CouchbaseLiteSwift-EE.modulemap

@@ -22,4 +22,4 @@
 INFOPLIST_FILE               = Swift/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
 PRODUCT_NAME                 = CouchbaseLiteSwift
-MODULEMAP_FILE               = Swift/CouchbaseLiteSwift.modulemap
+MODULEMAP_FILE               = $(CBL_SWIFT_MODULEMAP_FILE)

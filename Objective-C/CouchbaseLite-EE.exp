@@ -71,5 +71,5 @@
 _CBLErrorDomain
 _kCBLAllPropertiesName
 
-# EE Only:
+// Enterprise Edition:
 .objc_class_name_CBLDatabaseEndpoint
