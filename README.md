@@ -8,7 +8,7 @@ Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on to
 
 ## Requirements
 - iOS 9.0+ | macOS 10.11+
-- Xcode 9
+- Xcode 9.3
 
 
 ## Installation
@@ -17,19 +17,39 @@ Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on to
 
 You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLiteSwift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
-#### CouchbaseLite (Objective-C API)
+#### Objective-C
+
+##### Community Edition
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB023', :submodules => true
+  pod 'CouchbaseLite', '~> 2.0.0'
 end
 ```
 
-#### CouchbaseLiteSwift (Swift API)
+##### Enterprise Edition
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB023', :submodules => true
+  pod 'CouchbaseLite-Enterprise', '~> 2.0.0'
+end
+```
+
+#### Swift
+
+##### Community Edition
+```
+target '<your target name>' do
+  use_frameworks!
+  pod 'CouchbaseLite-Swift', '~> 2.0.0'
+end
+```
+
+##### Enterprise Edition
+```
+target '<your target name>' do
+  use_frameworks!
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.0.0'
 end
 ```
 
@@ -37,8 +57,14 @@ end
 
 You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
+##### Community Edition
 ```
-github "couchbase/couchbase-lite-ios" "2.0DB023"
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Community.json" ~> 2.0.0
+```
+
+##### Enterprise Edition
+```
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
