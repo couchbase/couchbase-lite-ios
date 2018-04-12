@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
   s.name                  = 'CouchbaseLite'
   s.version               = '2.0.0'
   s.license               = 'Apache License, Version 2.0'
-  s.homepage              = 'http://mobile.couchbase.com'
+  s.homepage              = 'https://github.com/couchbase/couchbase-lite-ios'
   s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
   s.author                = 'Couchbase'
   s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => s.version, :submodules => true }

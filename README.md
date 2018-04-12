@@ -17,7 +17,9 @@ Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on to
 
 You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLiteSwift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
-#### CouchbaseLite (Objective-C API)
+#### Objective-C
+
+##### Community Edition
 ```
 target '<your target name>' do
   use_frameworks!
@@ -25,11 +27,29 @@ target '<your target name>' do
 end
 ```
 
-#### CouchbaseLiteSwift (Swift API)
+##### Enterprise Edition
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift', '~> 2.0.0'
+  pod 'CouchbaseLite-Enterprise', '~> 2.0.0'
+end
+```
+
+#### Swift
+
+##### Community Edition
+```
+target '<your target name>' do
+  use_frameworks!
+  pod 'CouchbaseLite-Swift', '~> 2.0.0'
+end
+```
+
+##### Enterprise Edition
+```
+target '<your target name>' do
+  use_frameworks!
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.0.0'
 end
 ```
 
@@ -37,8 +57,14 @@ end
 
 You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
+##### Community Edition
 ```
-github "couchbase/couchbase-lite-ios" "2.0.0"
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Community.json" ~> 2.0.0
+```
+
+##### Enterprise Edition
+```
+binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Release/Carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
@@ -53,7 +79,7 @@ $ git submodule update --init --recursive
 $ cd couchbase-lite-ios
 ```
 
-2. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS and macOS.
+2. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
 
 ```
 $ ./Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o output    // For building the ObjC framework for iOS
