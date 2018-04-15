@@ -178,7 +178,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Try rekey:
         let newKey = EncryptionKey.password("foobar")
-        try seekrit!.setEncryptionKey(newKey)
+        try seekrit!.changeEncryptionKey(newKey)
     }
     
     func rekey(oldPassword: String?, newPassword: String?) throws {
@@ -195,7 +195,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Rekey:
         let newKey = newPassword != nil ? EncryptionKey.password(newPassword!) : nil
-        try seekrit!.setEncryptionKey(newKey)
+        try seekrit!.changeEncryptionKey(newKey)
         
         // Close & reopen seekrit:
         try seekrit!.close()

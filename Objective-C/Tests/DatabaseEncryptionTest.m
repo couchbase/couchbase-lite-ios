@@ -205,7 +205,7 @@
     
     // Try rekey:
     CBLEncryptionKey* newKey = [[CBLEncryptionKey alloc] initWithPassword: @"foobar"];
-    Assert([_seekrit setEncryptionKey:newKey error: &error], @"Cannot rekey: %@", error);
+    Assert([_seekrit changeEncryptionKey:newKey error: &error], @"Cannot rekey: %@", error);
 }
 
 
@@ -229,7 +229,7 @@
     
     // Rekey:
     CBLEncryptionKey* newKey = newPass ? [[CBLEncryptionKey alloc] initWithPassword: newPass] : nil;
-    Assert([_seekrit setEncryptionKey: newKey error: &error],
+    Assert([_seekrit changeEncryptionKey: newKey error: &error],
            @"Error changing encryption key: %@", error);
     
     // Close & reopen seekrit:
