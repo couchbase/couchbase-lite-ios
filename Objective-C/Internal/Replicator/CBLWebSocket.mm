@@ -491,7 +491,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 - (bool) checkError: (NSError*)error {
-    if (!error || [self ignoreError: error])
+    if (!error)
         return false;
     
     [self closeTask];
