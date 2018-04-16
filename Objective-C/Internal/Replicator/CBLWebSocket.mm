@@ -238,7 +238,12 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         if ([self checkError: error])
             return;
         
-        if (!CFHTTPMessageAppendBytes(httpResponse, (const UInt8*)data.bytes, data.length)) {
+        // https://github.com/couchbase/couchbase-lite-ios/issues/2140
+        // In some condition that remote host cannot be reached (TIC 1:57), the
+        // completionHandler could be called with 0 bytes data in indefinite loop;
+        // explicitly check the condition and close the socket with error.
+        if ((data.length == 0 && atEOF) ||
+            !CFHTTPMessageAppendBytes(httpResponse, (const UInt8*)data.bytes, data.length)) {
             // Error reading response!
             [self didCloseWithCode: kWebSocketCloseProtocolError
                             reason: @"Unparseable HTTP response"];
