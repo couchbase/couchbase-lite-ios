@@ -91,6 +91,10 @@ class SampleCodeTest: CBLTestCase {
         newTask.setValue(Date(), forKey: "createdAt")
         let date = newTask.date(forKey: "createdAt")
         // # end::date-getter[]
+        
+        // # tag::to-dictionary[]
+        newTask.toDictionary() // returns a Dictionary<String, Any>
+        // # end::to-dictionary[]
 
         print("\(date!)")
     }
@@ -112,6 +116,18 @@ class SampleCodeTest: CBLTestCase {
             print(error.localizedDescription)
         }
         // # end::batch[]
+    }
+    
+    func dontTestChangeListener() throws {
+        database = self.db
+        
+        // # tag::document-listener[]
+        database.addDocumentChangeListener(withID: "user.john") { (change) in
+            if let document = self.database.document(withID: change.documentID) {
+                print("Status :: \(document.string(forKey: "verified_account")!)")
+            }
+        }
+        // # end::document-listener[]
     }
 
     func dontTestBlob() throws {

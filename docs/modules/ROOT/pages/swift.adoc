@@ -305,6 +305,14 @@ If the property doesn't exist in the document it will return the default value f
 If you need to determine whether a given property exists in the document, you should
 use the http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Document.html#/s:18CouchbaseLiteSwift8DocumentC8containsSbSS3key_tF[`Document.Contains(key: String)`] method.
 
+A `Document` can be converted to a plain dictionary type. That's often useful to pass the
+document contents as a plain object to another method.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=to-dictionary]
+----
+
 === Batch operations
 
 If you're making multiple changes to a database at once, it's faster to
@@ -322,6 +330,16 @@ changes during the execution of the block, and other instances will not
 see partial changes. But Couchbase Mobile is a distributed system, and
 due to the way replication works, there's no guarantee that Sync Gateway
 or other devices will receive your changes all at once.
+
+=== Document change events
+
+It's also possible to register for document changes. The following example registers for
+changes to the document with ID `user.john` and prints the `verified_account` property.
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=document-listener]
+----
 
 == Blobs
 
