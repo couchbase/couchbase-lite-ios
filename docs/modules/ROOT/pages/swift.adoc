@@ -875,7 +875,7 @@ can be tuned in the configuration file
 
 ==== Replication Ordering
 
- To optimize for speed, the replication protocol doesn't guarantee that documents will be received in a particular order. So we don't recommend to rely on that when using the replication or database change listeners for example.
+To optimize for speed, the replication protocol doesn't guarantee that documents will be received in a particular order. So we don't recommend to rely on that when using the replication or database change listeners for example.
 
 === Troubleshooting
 
