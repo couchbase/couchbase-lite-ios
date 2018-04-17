@@ -165,7 +165,7 @@ Attachments that were persisted in the 1.x database will be copied to the 2.0 da
 include::{examplesdir}/SampleCodeTest.swift[tags=1x-attachment]
 ----
 
-=== Replication
+=== Replication Compatibility
 
 The replication protocol used in Couchbase Lite 2.0 has been re-designed from the ground up and it is not backwards compatible with the 1.x replication protocol. Therefore, to use replication with Couchbase Lite 2.x, the target Sync Gateway instance must also be upgraded to 2.x.
 
@@ -872,6 +872,10 @@ By default, the WebSocket protocol uses compression to optimize for
 speed and bandwidth utilization. The level of compression is set on Sync Gateway and
 can be tuned in the configuration file
 (link:../guides/sync-gateway/config-properties/index.html#2.0/replicator_compression[`replicator_compression`]).
+
+==== Replication Ordering
+
+ To optimize for speed, the replication protocol doesn't guarantee that documents will be received in a particular order. So we don't recommend to rely on that when using the replication or database change listeners for example.
 
 === Troubleshooting
 
