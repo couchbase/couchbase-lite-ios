@@ -313,6 +313,10 @@ public final class Expression {
     
     /// Creates a negated expression representing the negated result of the given expression.
     ///
+    /// If the operand isn't a boolean type, it gets coerced to a boolean. The number 0 is coerced to false,
+    /// the number 1 is coerced to `true`, strings are coerced to `false` (but strings prefixed with a number
+    /// are coerced to `true`, for example "2willowroad@nationaltrust.org.uk").
+    ///
     /// - Parameter expression: The expression to be negated.
     /// - Returns: A negated expression
     public static func not(_ expression: ExpressionProtocol) -> ExpressionProtocol {
@@ -486,6 +490,10 @@ public final class Expression {
     /// Creates a logical AND expression that performs logical AND operation with the current
     /// expression.
     ///
+    /// If the operand isn't a boolean type, it gets coerced to a boolean. The number 0 is coerced to false,
+    /// the number 1 is coerced to `true`, strings are coerced to `false` (but strings prefixed with a number
+    /// are coerced to `true`, for example "2willowroad@nationaltrust.org.uk").
+    ///
     /// - Parameter expression: The expression to AND with the current expression.
     /// - Returns: A logical AND expression.
     public func and(_ expression: ExpressionProtocol) -> ExpressionProtocol {
@@ -494,6 +502,10 @@ public final class Expression {
     
     /// Creates a logical OR expression that performs logical OR operation with the current
     /// expression.
+    ///
+    /// If the operand isn't a boolean type, it gets coerced to a boolean. The number 0 is coerced to false,
+    /// the number 1 is coerced to `true`, strings are coerced to `false` (but strings prefixed with a number
+    /// are coerced to `true`, for example "2willowroad@nationaltrust.org.uk").
     ///
     /// - Parameter expression: The expression to OR with the current expression.
     /// - Returns: A logical OR Expression.
