@@ -91,6 +91,10 @@ class SampleCodeTest: CBLTestCase {
         newTask.setValue(Date(), forKey: "createdAt")
         let date = newTask.date(forKey: "createdAt")
         // # end::date-getter[]
+        
+        // # tag::to-dictionary[]
+        newTask.toDictionary() // returns a Dictionary<String, Any>
+        // # end::to-dictionary[]
 
         print("\(date!)")
     }
@@ -112,6 +116,18 @@ class SampleCodeTest: CBLTestCase {
             print(error.localizedDescription)
         }
         // # end::batch[]
+    }
+    
+    func dontTestChangeListener() throws {
+        database = self.db
+        
+        // # tag::document-listener[]
+        database.addDocumentChangeListener(withID: "user.john") { (change) in
+            if let document = self.database.document(withID: change.documentID) {
+                print("Status :: \(document.string(forKey: "verified_account")!)")
+            }
+        }
+        // # end::document-listener[]
     }
 
     func dontTestBlob() throws {
@@ -496,6 +512,30 @@ class SampleCodeTest: CBLTestCase {
         // Network
         Database.setLogLevel(.verbose, domain: .network)
         // # end::replication-logging[]
+    }
+
+    func dontTestReplicationBasicAuthentication() throws {
+        // # tag::basic-authentication[]
+        let url = URL(string: "ws://localhost:4984/mydatabase")!
+        let target = URLEndpoint(url: url)
+        let config = ReplicatorConfiguration(database: database, target: target)
+        config.authenticator = BasicAuthenticator(username: "john", password: "pass")
+
+        self.replicator = Replicator(config: config)
+        self.replicator.start()
+        // # end::basic-authentication[]
+    }
+
+    func dontTestReplicationSessionAuthentication() throws {
+        // # tag::session-authentication[]
+        let url = URL(string: "ws://localhost:4984/mydatabase")!
+        let target = URLEndpoint(url: url)
+        let config = ReplicatorConfiguration(database: database, target: target)
+        config.authenticator = SessionAuthenticator(sessionID: "904ac010862f37c8dd99015a33ab5a3565fd8447")
+
+        self.replicator = Replicator(config: config)
+        self.replicator.start()
+        // # end::session-authentication[]
     }
 
     func dontTestReplicatorStatus() throws {
