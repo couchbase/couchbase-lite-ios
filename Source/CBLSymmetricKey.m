@@ -301,6 +301,17 @@ static BOOL decryptStreamSync(NSInputStream* encryptedStream, NSOutputStream *wr
 }
 
 
+static dispatch_queue_t decryptingQueue;
+
++ (dispatch_queue_t) decryptingQueue {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        decryptingQueue = dispatch_queue_create("CBLSymmetricKey", DISPATCH_QUEUE_SERIAL);
+    });
+    return decryptingQueue;
+}
+
+
 - (NSInputStream*) decryptStream: (NSInputStream*)encryptedStream {
     CFReadStreamRef cfRead;
     CFWriteStreamRef cfWrite;
@@ -311,7 +322,7 @@ static BOOL decryptStreamSync(NSInputStream* encryptedStream, NSOutputStream *wr
     [writer open];
 
     NSData* keyData = _keyData;
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async([self.class decryptingQueue], ^{
         if (!decryptStreamSync(encryptedStream, writer, keyData))
             Warn(@"CBLSymmetricKey: decryptStream failed (bad input?)");
         [writer close];
