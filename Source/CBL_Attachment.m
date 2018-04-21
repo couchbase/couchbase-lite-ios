@@ -238,6 +238,10 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
+- (uint64_t) blobStreamLength {
+    return [_database.attachmentStore blobStreamLengthForKey: _blobKey];
+}
+
 - (NSInputStream*) getContentStreamDecoded: (BOOL)decoded
                                  andLength: (uint64_t*)outLength
 {

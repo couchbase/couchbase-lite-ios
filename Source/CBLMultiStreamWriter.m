@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLMultiStreamWriter.h"
+#import "CBL_Attachment.h"
 
 
 DefineLogDomain(MultiStreamWriter);
@@ -177,6 +178,8 @@ DefineLogDomain(MultiStreamWriter);
         return [NSInputStream inputStreamWithFileAtPath: [input path]];
     else if ([input isKindOfClass: [NSInputStream class]])
         return input;
+    else if ([input isKindOfClass: [CBL_Attachment class]])
+        return [(CBL_Attachment*)input getContentStreamDecoded: NO andLength: nil];
     else {
         Assert(NO, @"Invalid input class %@ for CBLMultiStreamWriter", [input class]);
         return nil;
