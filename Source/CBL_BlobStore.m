@@ -212,6 +212,14 @@ UsingLogDomain(Database);
     return blob;
 }
 
+
+- (uint64_t) blobStreamLengthForKey: (CBLBlobKey)key {
+    if (_encryptionKey)
+        return 0;
+    return [self lengthOfBlobForKey: key];
+}
+
+
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key
                                   length: (UInt64*)outLength
 {

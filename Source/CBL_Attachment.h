@@ -51,6 +51,9 @@
 /** Equal to the encodedLength if there is an encoding, else length. */
 @property (readwrite) uint64_t possiblyEncodedLength;
 
+/** Length of the blob file; zero if encrypted. */
+@property (readonly, nonatomic) uint64_t blobStreamLength;
+
 - (NSInputStream*) getContentStreamDecoded: (BOOL)decoded
                                  andLength: (uint64_t*)outLength;
 

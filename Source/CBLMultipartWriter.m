@@ -104,12 +104,11 @@
     [self setNextPartsHeaders: $dict({@"Content-Disposition", disposition},
                                      {@"Content-Type", attachment.contentType},
                                      {@"Content-Encoding", attachment.encodingName})];
-    uint64_t contentLength;
-    NSInputStream *contentStream = [attachment getContentStreamDecoded: NO
-                                                             andLength: &contentLength];
-    if (!contentStream)
+    
+    if (!attachment.hasContent)
         return kCBLStatusAttachmentNotFound;
     
+    uint64_t contentLength = attachment.blobStreamLength;
     uint64_t declaredLength = attachment.possiblyEncodedLength;
     if (contentLength == 0)
         contentLength = declaredLength;
@@ -117,7 +116,7 @@
         Warn(@"Attachment '%@' length mismatch; actually %llu, declared %llu",
              attachment.name, contentLength, declaredLength);
     
-    [self addStream: contentStream length: contentLength];
+    [self addInput: attachment length: contentLength];
     return kCBLStatusOK;
 }
 

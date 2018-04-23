@@ -42,6 +42,7 @@ typedef struct CBLBlobKey {
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (uint64_t) lengthOfBlobForKey: (CBLBlobKey)key;
+- (uint64_t) blobStreamLengthForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key
                                   length: (UInt64*)outLength;
 
