@@ -40,12 +40,14 @@ doxygen "Documentation/Doxyfile"
 mkdir -p "$TARGET_BUILD_DIR"
 mv -f "$DOXY_OUTPUT_DIRECTORY/html" "$TARGET_BUILD_DIR/Documentation"
 
-# Generate XCode- and Dash-compatible DocSet bundle:
 
-export DOXY_OUTPUT_DIRECTORY="$DERIVED_FILE_DIR/DocSet"
-mkdir -p "$DOXY_OUTPUT_DIRECTORY"
-doxygen "Documentation/Doxyfile-DocSet"
-(cd "$DOXY_OUTPUT_DIRECTORY/html" && make)                        # postprocess Doxygen output to create docset
-DOCSET="$DOXY_OUTPUT_DIRECTORY/html/$DOCSET_FILENAME"
-cp "Documentation/logo-small.png" "$DOCSET/icon.png"
-mv -f "$DOCSET" "$TARGET_BUILD_DIR/$DOCSET_FILENAME"
+# Generate XCode- and Dash-compatible DocSet bundle:
+if [[ -e "/Applications/Xcode.app/Contents/Developer/usr/bin/docsetutil" ]]; then
+    export DOXY_OUTPUT_DIRECTORY="$DERIVED_FILE_DIR/DocSet"
+    mkdir -p "$DOXY_OUTPUT_DIRECTORY"
+    doxygen "Documentation/Doxyfile-DocSet"
+    (cd "$DOXY_OUTPUT_DIRECTORY/html" && make)                     # postprocess Doxygen output to create docset
+    DOCSET="$DOXY_OUTPUT_DIRECTORY/html/$DOCSET_FILENAME"
+    cp "Documentation/logo-small.png" "$DOCSET/icon.png"
+    mv -f "$DOCSET" "$TARGET_BUILD_DIR/$DOCSET_FILENAME"
+fi
