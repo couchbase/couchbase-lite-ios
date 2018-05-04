@@ -35,16 +35,15 @@ class ReplicatorTest: CBLTestCase {
         super.tearDown()
     }
     
-    func run(type: ReplicatorType, target: Endpoint, expectedError: Int?) {
+    func config(target: Endpoint, type: ReplicatorType, continuous: Bool) -> ReplicatorConfiguration {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
-        run(config: config, reset: false, expectedError: expectedError)
+        config.continuous = continuous
+        return config
     }
     
-    func run(type: ReplicatorType, target: Endpoint, reset: Bool, expectedError: Int?) {
-        let config = ReplicatorConfiguration(database: self.db, target: target)
-        config.replicatorType = type
-        run(config: config, reset: reset, expectedError: expectedError)
+    func run(config: ReplicatorConfiguration, expectedError: Int?) {
+        run(config: config, reset: false, expectedError: expectedError)
     }
     
     func run(config: ReplicatorConfiguration, reset: Bool, expectedError: Int?) {
@@ -52,6 +51,11 @@ class ReplicatorTest: CBLTestCase {
         let repl = Replicator(config: config)
         let token = repl.addChangeListener { (change) in
             let status = change.status
+            if config.continuous && status.activity == .idle &&
+                status.progress.completed == status.progress.total {
+                repl.stop()
+            }
+            
             if status.activity == .stopped {
                 if let err = expectedError {
                     let error = status.error as NSError?
@@ -75,7 +79,8 @@ class ReplicatorTest: CBLTestCase {
     
     func testEmptyPush() throws {
         let target = DatabaseEndpoint(database: otherDB)
-        run(type: .push, target: target, expectedError: nil)
+        let config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
     }
     
     func testResetCheckpoint() throws {
@@ -91,10 +96,12 @@ class ReplicatorTest: CBLTestCase {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB)
-        run(type: .push, target: target, expectedError: nil)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
         
         // Pull:
-        run(type: .pull, target: target, expectedError: nil)
+        config = self.config(target: target, type: .pull, continuous: false)
+        run(config: config, expectedError: nil)
         
         XCTAssertEqual(self.db.count, 2)
         
@@ -107,11 +114,50 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(self.db.count, 0)
         
         // Pull again, shouldn't have any new changes:
-        run(type: .pull, target: target, expectedError: nil)
+        run(config: config, expectedError: nil)
         XCTAssertEqual(self.db.count, 0)
         
         // Reset and pull:
-        run(type: .pull, target: target, reset: true, expectedError: nil)
+        run(config: config, reset: true, expectedError: nil)
+        XCTAssertEqual(self.db.count, 2)
+    }
+    
+    func testResetCheckpointContinuous() throws {
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Hobbes", forKey: "name")
+        try self.db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("Tiger", forKey: "species")
+        doc2.setString("striped", forKey: "pattern")
+        try self.db.saveDocument(doc2)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: true)
+        run(config: config, expectedError: nil)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: true)
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(self.db.count, 2)
+        
+        var doc = self.db.document(withID: "doc1")!
+        try self.db.purgeDocument(doc)
+        
+        doc = self.db.document(withID: "doc2")!
+        try self.db.purgeDocument(doc)
+        
+        XCTAssertEqual(self.db.count, 0)
+        
+        // Pull again, shouldn't have any new changes:
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(self.db.count, 0)
+        
+        // Reset and pull:
+        run(config: config, reset: true, expectedError: nil)
         XCTAssertEqual(self.db.count, 2)
     }
     

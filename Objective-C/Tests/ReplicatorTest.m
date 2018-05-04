@@ -784,6 +784,48 @@
 }
 
 
+- (void) testResetCheckpointContinuous {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Tiger" forKey: @"species"];
+    [doc2 setString: @"striped" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Pull:
+    config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.db.count, 2u);
+    
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    Assert([self.db purgeDocument: doc error: &error]);
+    
+    doc = [self.db documentWithID: @"doc2"];
+    Assert([self.db purgeDocument: doc error: &error]);
+    
+    AssertEqual(self.db.count, 0u);
+    
+    // Pull again, shouldn't have any new changes:
+    [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(self.db.count, 0u);
+    
+    // Reset and pull:
+    [self run: config reset: YES errorCode: 0 errorDomain: nil];
+    AssertEqual(self.db.count, 2u);
+}
+
+
+
 #endif // COUCHBASE_ENTERPRISE
 
 
