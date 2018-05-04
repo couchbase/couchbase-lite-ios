@@ -178,4 +178,29 @@ class DictionaryTest: CBLTestCase {
         }
     }
     
+    
+    func testToMutable() throws {
+        let mDict1 = MutableDictionaryObject()
+        mDict1.setValue("Scott", forKey: "name")
+        
+        let mDict2 = mDict1.toMutable()
+        XCTAssert(mDict1 !== mDict2)
+        XCTAssert(mDict1.toDictionary() == mDict2.toDictionary())
+        mDict2.setValue("Daniel", forKey: "name")
+        XCTAssertEqual(mDict2.string(forKey: "name"), "Daniel")
+        
+        let mDoc = createDocument("doc1")
+        mDoc.setValue(mDict2, forKey: "dict")
+        try saveDocument(mDoc)
+        
+        let doc = self.db.document(withID: "doc1")!
+        let dict = doc.dictionary(forKey: "dict")!
+        XCTAssertEqual(dict.string(forKey: "name"), "Daniel")
+        
+        let mDict3 = dict.toMutable()
+        XCTAssertEqual(mDict3.string(forKey: "name"), "Daniel")
+        mDict3.setValue("Thomas", forKey: "name")
+        XCTAssertEqual(mDict3.string(forKey: "name"), "Thomas")
+    }
+    
 }

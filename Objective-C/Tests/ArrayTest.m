@@ -942,4 +942,29 @@
 }
 
 
+- (void) testToMutable {
+    CBLMutableArray* mArray1 = [[CBLMutableArray alloc] init];
+    [mArray1 addValue: @"Scott"];
+    
+    CBLMutableArray* mArray2 = [mArray1 toMutable];
+    Assert(mArray1 != mArray2);
+    AssertEqualObjects([mArray1 toArray], [mArray2 toArray]);
+    [mArray2 addValue: @"Daniel"];
+    AssertEqualObjects([mArray2 toArray], (@[@"Scott", @"Daniel"]));
+    
+    CBLMutableDocument* mDoc = [self createDocument: @"doc1"];
+    [mDoc setValue: mArray2 forKey: @"array"];
+    [self saveDocument: mDoc];
+    
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    CBLArray* array = [doc arrayForKey: @"array"];
+    AssertEqualObjects([array toArray], (@[@"Scott", @"Daniel"]));
+    
+    CBLMutableArray* mArray3 = [array toMutable];
+    AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel"]));
+    [mArray3 addValue: @"Thomas"];
+    AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel", @"Thomas"]));
+}
+
+
 @end

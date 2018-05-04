@@ -301,4 +301,29 @@
 }
 
 
+- (void) testToMutable {
+    CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
+    [mDict1 setValue: @"Scott" forKey: @"name"];
+    
+    CBLMutableDictionary* mDict2 = [mDict1 toMutable];
+    Assert(mDict1 != mDict2);
+    AssertEqualObjects([mDict1 toDictionary], [mDict2 toDictionary]);
+    [mDict2 setValue: @"Daniel" forKey: @"name"];
+    AssertEqualObjects([mDict2 valueForKey: @"name"], @"Daniel");
+    
+    CBLMutableDocument* mDoc = [self createDocument: @"doc1"];
+    [mDoc setValue: mDict2 forKey: @"dict"];
+    [self saveDocument: mDoc];
+    
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    CBLDictionary* dict = [doc dictionaryForKey: @"dict"];
+    AssertEqualObjects([dict valueForKey: @"name"], @"Daniel");
+    
+    CBLMutableDictionary* mDict3 = [dict toMutable];
+    AssertEqualObjects([mDict3 valueForKey: @"name"], @"Daniel");
+    [mDict3 setValue: @"Thomas" forKey: @"name"];
+    AssertEqualObjects([mDict3 valueForKey: @"name"], @"Thomas");
+}
+
+
 @end

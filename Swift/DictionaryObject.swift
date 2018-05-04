@@ -225,6 +225,17 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     }
     
     
+    // MARK: Edit
+    
+    
+    /// Returns a mutable copy of the dictionary object.
+    ///
+    /// - Returns: The MutableDocument object.
+    public func toMutable() -> MutableDictionaryObject {
+        return MutableDictionaryObject(_impl.toMutable())
+    }
+    
+    
     // MARK: Sequence
     
     

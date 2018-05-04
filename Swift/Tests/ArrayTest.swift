@@ -59,5 +59,29 @@ class ArrayTest: CBLTestCase {
             XCTAssert(result == content)
         }
     }
+    
+    func testToMutable() throws {
+        let mArray1 = MutableArrayObject()
+        mArray1.addValue("Scott")
+        
+        let mArray2 = mArray1.toMutable()
+        XCTAssert(mArray1 !== mArray2)
+        XCTAssert(mArray1.toArray() == mArray2.toArray())
+        mArray2.addValue("Daniel")
+        XCTAssert(mArray2.toArray() == (["Scott", "Daniel"]))
+        
+        let mDoc = createDocument("doc1")
+        mDoc.setValue(mArray2, forKey: "array")
+        try saveDocument(mDoc)
+        
+        let doc = self.db.document(withID: "doc1")!
+        let array = doc.array(forKey: "array")!
+        XCTAssert(array.toArray() == (["Scott", "Daniel"]))
+        
+        let mArray3 = array.toMutable()
+        XCTAssert(mArray3.toArray() == (["Scott", "Daniel"]))
+        mArray3.addValue("Thomas")
+        XCTAssert(mArray3.toArray() == (["Scott", "Daniel", "Thomas"]))
+    }
 }
 

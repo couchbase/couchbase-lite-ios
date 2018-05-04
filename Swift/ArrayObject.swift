@@ -197,6 +197,17 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     }
     
     
+    // MARK: Edit
+    
+    
+    /// Returns a mutable copy of the array object.
+    ///
+    /// - Returns: The MutableDocument object.
+    public func toMutable() -> MutableArrayObject {
+        return MutableArrayObject(_impl.toMutable())
+    }
+    
+    
     // MARK: Sequence
     
     
