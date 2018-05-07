@@ -2064,16 +2064,10 @@
 		932CC551207D9ED2000B4B78 /* Objective-C */ = {
 			isa = PBXGroup;
 			children = (
-				9369A69C207DBAA9009B5B83 /* CBLDatabase+Encryption.h */,
-				9369A69D207DBAA9009B5B83 /* CBLDatabase+Encryption.mm */,
-				9369A696207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.h */,
-				9369A697207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.m */,
-				932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */,
-				932CC554207D9ED2000B4B78 /* CBLDatabaseEndpoint.m */,
-				9369A678207DB3D4009B5B83 /* CBLEncryptionKey.h */,
-				9369A677207DB3D4009B5B83 /* CBLEncryptionKey.m */,
-				932CC553207D9ED2000B4B78 /* CouchbaseLite.h */,
+				9392607920A0C8BD00E5748C /* Database */,
 				9369A675207DB3D4009B5B83 /* Internal */,
+				9392608B20A0C8DF00E5748C /* Replicator */,
+				932CC553207D9ED2000B4B78 /* CouchbaseLite.h */,
 			);
 			name = "Objective-C";
 			path = "../Sources/Objective-C";
@@ -2082,9 +2076,8 @@
 		932CC555207D9ED2000B4B78 /* Swift */ = {
 			isa = PBXGroup;
 			children = (
-				9369A6B4207DE722009B5B83 /* EncryptionKey.swift */,
-				9369A6B2207DDBE7009B5B83 /* Database+Encryption.swift */,
-				932CC556207D9ED2000B4B78 /* DatabaseEndpoint.swift */,
+				9392608D20A0C93200E5748C /* Database */,
+				9392608E20A0C94100E5748C /* Replicator */,
 			);
 			name = Swift;
 			path = ../Sources/Swift;
@@ -2250,8 +2243,7 @@
 		9369A675207DB3D4009B5B83 /* Internal */ = {
 			isa = PBXGroup;
 			children = (
-				9369A6A9207DC8CA009B5B83 /* CBLDatabase+EncryptionInternal.mm */,
-				9369A676207DB3D4009B5B83 /* CBLEncryptionKey+Internal.h */,
+				9392608C20A0C90600E5748C /* Database */,
 			);
 			path = Internal;
 			sourceTree = "<group>";
@@ -2410,6 +2402,54 @@
 				938CDF1B1E807F23002EE790 /* Where.swift */,
 			);
 			name = Query;
+			sourceTree = "<group>";
+		};
+		9392607920A0C8BD00E5748C /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				9369A69C207DBAA9009B5B83 /* CBLDatabase+Encryption.h */,
+				9369A69D207DBAA9009B5B83 /* CBLDatabase+Encryption.mm */,
+				9369A696207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.h */,
+				9369A697207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.m */,
+				9369A678207DB3D4009B5B83 /* CBLEncryptionKey.h */,
+				9369A677207DB3D4009B5B83 /* CBLEncryptionKey.m */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		9392608B20A0C8DF00E5748C /* Replicator */ = {
+			isa = PBXGroup;
+			children = (
+				932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */,
+				932CC554207D9ED2000B4B78 /* CBLDatabaseEndpoint.m */,
+			);
+			path = Replicator;
+			sourceTree = "<group>";
+		};
+		9392608C20A0C90600E5748C /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				9369A6A9207DC8CA009B5B83 /* CBLDatabase+EncryptionInternal.mm */,
+				9369A676207DB3D4009B5B83 /* CBLEncryptionKey+Internal.h */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		9392608D20A0C93200E5748C /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				9369A6B2207DDBE7009B5B83 /* Database+Encryption.swift */,
+				9369A6B4207DE722009B5B83 /* EncryptionKey.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		9392608E20A0C94100E5748C /* Replicator */ = {
+			isa = PBXGroup;
+			children = (
+				932CC556207D9ED2000B4B78 /* DatabaseEndpoint.swift */,
+			);
+			path = Replicator;
 			sourceTree = "<group>";
 		};
 		9398D9081E03434200464432 = {
