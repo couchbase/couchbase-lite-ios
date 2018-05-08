@@ -37,6 +37,10 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+@interface CBLReplicatorStatus ()
+- (instancetype) initWithStatus: (C4ReplicatorStatus)c4Status;
+@end
+
 @interface CBLReplicator () {
     // For CBLReplicator+Backgrounding:
     BOOL _deepBackground;
@@ -46,6 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, atomic) BOOL active;
 @property (atomic) BOOL suspended;
 @property (nonatomic) MYBackgroundMonitor* bgMonitor;
+@property (readonly, atomic) dispatch_queue_t dispatchQueue;
 
 @end
 

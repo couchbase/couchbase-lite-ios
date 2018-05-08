@@ -24,6 +24,7 @@
 #import "CBLURLEndpoint.h"
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabaseEndpoint.h"
+#import "CBLMessageEndpoint+Internal.h"
 #endif
 
 #import "CBLChangeNotifier.h"
@@ -58,14 +59,6 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     return min(delay, kMaxRetryDelay);
 }
 
-
-@interface CBLReplicatorStatus ()
-- (instancetype) initWithActivity: (CBLReplicatorActivityLevel)activity
-                         progress: (CBLReplicatorProgress)progress
-                            error: (NSError*)error;
-@end
-
-
 @interface CBLReplicator ()
 @property (readwrite, nonatomic) CBLReplicatorStatus* status;
 @end
@@ -78,6 +71,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     NSString* _desc;
     C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
+    BOOL _allowReachability;
     CBLReachability* _reachability;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
     BOOL _resetCheckpoint;
@@ -92,13 +86,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 @synthesize status=_status;
 @synthesize bgMonitor=_bgMonitor;
 @synthesize suspended=_suspended;
-
-+ (void) initialize {
-    if (self == [CBLReplicator class]) {
-        kCBL_LogDomainSync = c4log_getDomain("Sync", true);
-        [CBLWebSocket registerWithC4];
-    }
-}
+@synthesize dispatchQueue=_dispatchQueue;
 
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
@@ -176,9 +164,10 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     _desc = self.description;   // cache description; it may be called a lot when logging
     
     // Target:
-    C4Address addr;
-    CBLDatabase* otherDB;
-    NSURL* remoteURL = $castIf(CBLURLEndpoint, _config.target).url;
+    id<CBLEndpoint> endpoint = _config.target;
+    C4Address addr = {};
+    CBLDatabase* otherDB = nil;
+    NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
     CBLStringBytes scheme(remoteURL.scheme);
     CBLStringBytes host(remoteURL.host);
@@ -194,8 +183,9 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         };
     } else {
 #ifdef COUCHBASE_ENTERPRISE
-        otherDB = ((CBLDatabaseEndpoint*)_config.target).database;
-        Assert(otherDB);
+        otherDB = $castIf(CBLDatabaseEndpoint, endpoint).database;
+#else
+        Assert(remoteURL, @"Endpoint has no URL");
 #endif
     }
 
@@ -217,6 +207,23 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         optionsFleece = enc.finish();
     }
     
+    _allowReachability = YES;
+    
+    C4SocketFactory socketFactory = { };
+#ifdef COUCHBASE_ENTERPRISE
+    auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
+    if (messageEndpoint) {
+        socketFactory = messageEndpoint.socketFactory;
+        addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
+        _allowReachability = NO;
+    } else
+#endif
+        if (remoteURL)
+            socketFactory = CBLWebSocket.socketFactory;
+    socketFactory.context = (__bridge void*)self;
+    
+    
+    
     // Create a C4Replicator:
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
@@ -225,6 +232,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         .onStatusChanged = &statusChanged,
         .onDocumentError = &onDocError,
         .callbackContext = (__bridge void*)self,
+        .socketFactory = &socketFactory,
         // TODO: Add .validationFunc (public API TBD)
     };
     
@@ -454,17 +462,10 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         convertError(c4Status.error, &error);
     
     _rawStatus = c4Status;
-    
-    // Note: c4Status.level is current matched with CBLReplicatorActivityLevel:
-    CBLReplicatorActivityLevel level = (CBLReplicatorActivityLevel)c4Status.level;
-    CBLReplicatorProgress progress = { c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal };
-    self.status = [[CBLReplicatorStatus alloc] initWithActivity: level
-                                                       progress: progress
-                                                          error: error];
-    
+    self.status = [[CBLReplicatorStatus alloc] initWithStatus: c4Status];
     CBLLog(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
            self, kC4ReplicatorActivityLevelNames[c4Status.level],
-           c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal, error);
+           c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal, self.status.error);
 }
 
 
@@ -571,15 +572,18 @@ static void onDocError(C4Replicator *repl,
 
 @synthesize activity=_activity, progress=_progress, error=_error;
 
-- (instancetype) initWithActivity: (CBLReplicatorActivityLevel)activity
-                         progress: (CBLReplicatorProgress)progress
-                            error: (NSError*)error
-{
+- (instancetype) initWithStatus: (C4ReplicatorStatus)c4Status {
     self = [super init];
     if (self) {
-        _activity = activity;
-        _progress = progress;
-        _error = error;
+        // Note: c4Status.level is current matched with CBLReplicatorActivityLevel:
+        _activity = (CBLReplicatorActivityLevel)c4Status.level;
+        _progress = { c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal };
+        if (c4Status.error.code) {
+            NSError* error;
+            convertError(c4Status.error, &error);
+            _error = error;
+            
+        }
     }
     return self;
 }
