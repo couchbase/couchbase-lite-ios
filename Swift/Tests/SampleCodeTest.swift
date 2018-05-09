@@ -569,6 +569,13 @@ class SampleCodeTest: CBLTestCase {
         }
         // # end::replication-error-handling[]
     }
+    
+    func dontTestReplicationResetCheckpoint() throws {
+        // # tag::replication-reset-checkpoint[]
+        self.replicator.resetCheckpoint()
+        self.replicator.start()
+        // # end::replication-reset-checkpoint[]
+    }
 
     #if COUCHBASE_ENTERPRISE
     func dontTestDatabaseReplica() throws {
