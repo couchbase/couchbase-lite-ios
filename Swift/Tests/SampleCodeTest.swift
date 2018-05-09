@@ -248,11 +248,11 @@ class SampleCodeTest: CBLTestCase {
         }
         // # end::query-where[]
     }
-
-    func dontTestCollectionOperator() throws {
+    
+    func dontTestCollectionOperatorContains() throws {
         database = self.db
 
-        // # tag::query-collection-operator[]
+        // # tag::query-collection-operator-contains[]
         let query = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id),
@@ -261,7 +261,7 @@ class SampleCodeTest: CBLTestCase {
             )
             .from(DataSource.database(database))
             .where(Expression.property("type").equalTo(Expression.string("hotel"))
-                .and(Expression.string("Armani Langworth").in([Expression.property("public_likes")]))
+                .and(ArrayFunction.contains(Expression.property("public_likes"), value: Expression.string("Armani Langworth")))
         )
 
         do {
@@ -269,8 +269,22 @@ class SampleCodeTest: CBLTestCase {
                 print("public_likes :: \(result.array(forKey: "public_likes")!.toArray())")
             }
         }
-        // # end::query-collection-operator[]
+        // # end::query-collection-operator-contains[]
     }
+    
+    func dontTestCollectionOperatorIn() throws {
+        database = self.db
+        
+        // # tag::query-collection-operator-in[]
+        let values = [Expression.property("first"), Expression.property("last"), Expression.property("username")]
+        
+        QueryBuilder
+            .select(SelectResult.all())
+            .from(DataSource.database(database))
+            .where(Expression.string("Armani").in(values))
+        // # end::query-collection-operator-in[]
+    }
+    
 
     func dontTestLikeOperator() throws {
         database = self.db

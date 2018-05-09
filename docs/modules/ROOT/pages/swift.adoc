@@ -502,6 +502,9 @@ include::{examplesdir}/SampleCodeTest.swift[tags=query-where]
 
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-swift/db022/Classes/Expression.html#/Collection%20operators:[Collection
 operators] are useful to check if a given value is present in an array.
+
+===== CONTAINS Operator
+
 The following example uses the `Function.arrayContains` to find
 documents whose `public_likes` array property contain a value equal to
 "Armani Langworth".
@@ -517,7 +520,16 @@ documents whose `public_likes` array property contain a value equal to
 
 [source,swift]
 ----
-include::{examplesdir}/SampleCodeTest.swift[tags=query-collection-operator]
+include::{examplesdir}/SampleCodeTest.swift[tags=query-collection-operator-contains]
+----
+
+===== IN Operator
+
+The `IN` operator is useful when you need to explicitly list out the values to test against. The following example looks for documents whose `first`, `last` or `username` property value equals "Armani".
+
+[source,swift]
+----
+include::{examplesdir}/SampleCodeTest.swift[tags=query-collection-operator-in]
 ----
 
 ==== Like Operator
