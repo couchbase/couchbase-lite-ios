@@ -261,7 +261,7 @@ class SampleCodeTest: CBLTestCase {
             )
             .from(DataSource.database(database))
             .where(Expression.property("type").equalTo(Expression.string("hotel"))
-                .and(ArrayFunction.contains(Expression.property("public_likes"), value: Expression.string("Armani Langworth")))
+                .and(Expression.string("Armani Langworth").in([Expression.property("public_likes")]))
         )
 
         do {
