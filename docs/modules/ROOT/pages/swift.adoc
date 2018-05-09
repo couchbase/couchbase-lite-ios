@@ -194,14 +194,16 @@ object such as the database directory.
 
 === Database Encryption
 
-Couchbase Lite 2.1 introduces database encryption, this functionality is only available in the Enterprise Edition.
+Couchbase Lite 2.1 introduces database encryption, this functionality is exclusively available in the Enterprise Edition.
 
-The code below opens or create an existing database with the specified encryption key. Note that this example will not compile if you are running the Community Edition of Couchbase Lite.
+The code below demonstrates how to open or create an existing database with an encryption key. This code will not compile if you are running the Community Edition of Couchbase Lite.
 
 [source,swift]
 ----
 include::{examplesdir}/SampleCodeTest.swift[tags=database-encryption]
 ----
+
+The xref:swift.adoc#database-upgrade[automatic database upgrade] functionality is not supported for encrypted databases. Furthermore, databases encrypted with one SDK (i.e Swift, C#, Java or Objective-C) cannot be opened with another SDK.
 
 === Finding a Database File
 
