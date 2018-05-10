@@ -1042,6 +1042,11 @@ include::{examplesdir}/SampleCodeTest.m[tags=certificate-pinning]
 This example loads the certificate from the application sandbox, then
 converts it to the appropriate type to configure the replication object.
 
+== Thread Safety
+
+The Couchbase Lite API is thread safe except for calls to mutable objects:
+`MutableDocument`, `MutableDictionary` and `MutableArray`.
+
 == Release Notes
 
 *Bugs*
