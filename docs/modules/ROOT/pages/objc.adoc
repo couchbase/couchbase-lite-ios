@@ -487,6 +487,9 @@ include::{examplesdir}/SampleCodeTest.m[tags=query-where]
 
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLQueryExpression.html#/Collection%20operators:[Collection
 operators] are useful to check if a given value is present in an array.
+
+===== CONTAINS Operator
+
 The following example uses the `Function.arrayContains` to find
 documents whose `public_likes` array property contain a value equal to
 "Armani Langworth".
@@ -502,7 +505,16 @@ documents whose `public_likes` array property contain a value equal to
 
 [source,objectivec]
 ----
-include::{examplesdir}/SampleCodeTest.m[tags=query-collection-operator]
+include::{examplesdir}/SampleCodeTest.m[tags=query-collection-operator-contains]
+----
+
+===== IN Operator
+
+The `IN` operator is useful when you need to explicitly list out the values to test against. The following example looks for documents whose `first`, `last` or `username` property value equals "Armani".
+
+[source,objectivec]
+----
+include::{examplesdir}/SampleCodeTest.m[tags=query-collection-operator-in]
 ----
 
 ==== Like Operator

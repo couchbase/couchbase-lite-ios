@@ -225,11 +225,11 @@
     NSLog(@"%@", query);
 }
 
-- (void) dontTestCollectionOperator {
+- (void) dontTestCollectionOperatorContains {
     NSError *error;
     CBLDatabase *database = self.db;
     
-    // # tag::query-collection-operator[]
+    // # tag::query-collection-operator-contains[]
     CBLQuerySelectResult *id = [CBLQuerySelectResult expression:[CBLQueryMeta id]];
     CBLQuerySelectResult *name = [CBLQuerySelectResult property:@"name"];
     CBLQuerySelectResult *likes = [CBLQuerySelectResult property:@"public_likes"];
@@ -246,7 +246,21 @@
     for (CBLQueryResult *result in rs) {
         NSLog(@"public_likes :: %@", [[result arrayForKey:@"public_likes"] toArray]);
     }
-    // # end::query-collection-operator[]
+    // # end::query-collection-operator-contains[]
+}
+
+- (void) dontTestCollectionOperatorIn {
+    CBLDatabase *database = self.db;
+    
+    // # tag::query-collection-operator-in[]
+    NSArray *values = @[[CBLQueryExpression property:@"first"],
+                       [CBLQueryExpression property:@"last"],
+                       [CBLQueryExpression property:@"username"]];
+                       
+    [CBLQueryBuilder select:@[[CBLQuerySelectResult all]]
+                       from:[CBLQueryDataSource database:database]
+                      where:[[CBLQueryExpression string:@"Armani"] in:values]];
+    // # end::query-collection-operator-in[]
 }
 
 - (void) dontTestLikeOperator {
