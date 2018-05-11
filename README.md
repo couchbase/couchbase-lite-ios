@@ -75,8 +75,8 @@ binary "https://raw.githubusercontent.com/couchbase/couchbase-lite-ios/master/Re
 
 ```
 $ git clone https://github.com/couchbase/couchbase-lite-ios.git
-$ git submodule update --init --recursive
 $ cd couchbase-lite-ios
+$ git submodule update --init --recursive
 ```
 
 2. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
