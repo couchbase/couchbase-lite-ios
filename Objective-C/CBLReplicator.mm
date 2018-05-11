@@ -426,7 +426,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 - (bool) handleError: (C4Error)c4err {
     // If this is a transient error, or if I'm continuous and the error might go away with a change
     // in network (i.e. network down, hostname unknown), then go offline and retry later.
-    bool transient = c4error_mayBeTransient(c4err);
+    bool transient = c4error_mayBeTransient(c4err) ||
+        (c4err.domain == WebSocketDomain && c4err.code == kWebSocketCloseCustomTransient);
     if (!transient && !(_config.continuous && c4error_mayBeNetworkDependent(c4err)))
         return false;   // nope, this is permanent
     if (!_config.continuous && _retryCount >= kMaxOneShotRetryCount)
