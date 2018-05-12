@@ -38,13 +38,16 @@
 }
 
 #if COUCHBASE_ENTERPRISE
-- (void) dontTestDatabaseEncryption() throws {
-    CBLDatabase *database = self.db;
-    
-    /* EE feature: code below might throw a compilation error
-     if it's compiled against CBL ObjC Community. */
+- (void) dontTestDatabaseEncryption {
     // # tag::database-encryption[]
-    // TODO
+    CBLDatabaseConfiguration *config = [[CBLDatabaseConfiguration alloc] init];
+    config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword:@"secretpassword"];
+    
+    NSError *error;
+    CBLDatabase *database = [[CBLDatabase alloc] initWithName:@"my-database" config:config error:&error];
+    if (!database) {
+        NSLog(@"Cannot open the database: %@", error);
+    }
     // # end::database-encryption[]
 }
 #endif
@@ -510,7 +513,7 @@
     // # end::replication-error-handling[]
 }
 
-- (void) dontTestReplicationResetCheckpoint() throws {
+- (void) dontTestReplicationResetCheckpoint {
     CBLDatabase *database = self.db;
     NSURL *url = [NSURL URLWithString:@"ws://localhost:4984/db"];
     CBLURLEndpoint *target = [[CBLURLEndpoint alloc] initWithURL: url];

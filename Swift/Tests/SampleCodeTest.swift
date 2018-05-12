@@ -41,12 +41,10 @@ class SampleCodeTest: CBLTestCase {
     
     #if COUCHBASE_ENTERPRISE
     func dontTestDatabaseEncryption() throws {
-        database = self.db
-        
-        /* EE feature: code below might throw a compilation error
-         if it's compiled against CBL Swift Community. */
         // # tag::database-encryption[]
-        // TODO
+        let config = DatabaseConfiguration()
+        config.encryptionKey = EncryptionKey.password("secretpassword")
+        self.database = try Database(name: "my-database", config: config)
         // # end::database-encryption[]
     }
     #endif
