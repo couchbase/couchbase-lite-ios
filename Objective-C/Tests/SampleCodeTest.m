@@ -37,6 +37,18 @@
     // # end::new-database[]
 }
 
+#if COUCHBASE_ENTERPRISE
+- (void) dontTestDatabaseEncryption() throws {
+    CBLDatabase *database = self.db;
+    
+    /* EE feature: code below might throw a compilation error
+     if it's compiled against CBL ObjC Community. */
+    // # tag::database-encryption[]
+    // TODO
+    // # end::database-encryption[]
+}
+#endif
+
 - (void) dontTestLogging {
     // # tag::logging[]
     [CBLDatabase setLogLevel: kCBLLogLevelVerbose domain: kCBLLogDomainReplicator];
@@ -496,6 +508,19 @@
         }
     }];
     // # end::replication-error-handling[]
+}
+
+- (void) dontTestReplicationResetCheckpoint() throws {
+    CBLDatabase *database = self.db;
+    NSURL *url = [NSURL URLWithString:@"ws://localhost:4984/db"];
+    CBLURLEndpoint *target = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration *config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database target:target];
+    CBLReplicator *replicator = [[CBLReplicator alloc] initWithConfig:config];
+    
+    // # tag::replication-reset-checkpoint[]
+    [replicator resetCheckpoint];
+    [replicator start];
+    // # end::replication-reset-checkpoint[]
 }
 
 #ifdef COUCHBASE_ENTERPRISE

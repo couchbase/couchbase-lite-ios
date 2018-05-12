@@ -38,6 +38,18 @@ class SampleCodeTest: CBLTestCase {
         }
         // # end::new-database[]
     }
+    
+    #if COUCHBASE_ENTERPRISE
+    func dontTestDatabaseEncryption() throws {
+        database = self.db
+        
+        /* EE feature: code below might throw a compilation error
+         if it's compiled against CBL Swift Community. */
+        // # tag::database-encryption[]
+        // TODO
+        // # end::database-encryption[]
+    }
+    #endif
 
     func dontTestLogging() throws {
         // # tag::logging[]
@@ -556,6 +568,13 @@ class SampleCodeTest: CBLTestCase {
             }
         }
         // # end::replication-error-handling[]
+    }
+    
+    func dontTestReplicationResetCheckpoint() throws {
+        // # tag::replication-reset-checkpoint[]
+        self.replicator.resetCheckpoint()
+        self.replicator.start()
+        // # end::replication-reset-checkpoint[]
     }
 
     #if COUCHBASE_ENTERPRISE

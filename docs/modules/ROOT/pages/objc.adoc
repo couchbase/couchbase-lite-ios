@@ -197,6 +197,19 @@ initializer can be used to provide specific options in the
 http://docs.couchbase.com/mobile/2.0/couchbase-lite-objc/db022/Classes/CBLDatabaseConfiguration.html[`DatabaseConfiguration`]
 object such as the database directory.
 
+=== Database Encryption
+
+Couchbase Lite 2.1 introduces database encryption, this functionality is exclusively available in the Enterprise Edition.
+
+The code below demonstrates how to open or create an existing database with an encryption key. This code will not compile if you are running the Community Edition of Couchbase Lite.
+
+[source,objectivec]
+----
+include::{examplesdir}/SampleCodeTest.m[tags=database-encryption]
+----
+
+The xref:swift.adoc#database-upgrade[automatic database upgrade] functionality is not supported for encrypted databases. Furthermore, databases encrypted with one SDK (i.e Swift, C#, Java or Objective-C) cannot be opened with another SDK.
+
 === Finding a Database File
 
 When the application is running on the iOS simulator, you can locate the application's sandbox directory using the https://simpholders.com/3/[SimPholders] utility.
@@ -951,6 +964,17 @@ Couchbase Lite replicator and thus will trigger a connection retry.
 - `503`: Service Unavailable
 - `504`: Gateway Timeout
 - `1001`: DNS resolution error
+
+=== Replication Checkpoints
+
+Checkpoints are used by the replicator to keep track of documents that are sent to the target database. Without checkpoints, Couchbase Lite would send the entire database content every time it connects to the target database, even though the target database may already have the majority of the database content from previous replications.
+
+This functionality is generally not a concern to application developers. But if you require the replication to start again from zero then you may call the checkpoint reset method before starting the replicator.
+
+[source,objectivec]
+----
+include::{examplesdir}/SampleCodeTest.m[tags=replication-reset-checkpoint]
+----
 
 == Handling Conflicts
 
