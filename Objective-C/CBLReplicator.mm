@@ -208,7 +208,6 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     }
     
     _allowReachability = YES;
-    
     C4SocketFactory socketFactory = { };
 #ifdef COUCHBASE_ENTERPRISE
     auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
@@ -300,7 +299,7 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) startReachabilityObserver {
-    if (_reachability)
+    if (!_allowReachability || _reachability)
         return;
     
     NSURL* remoteURL = $castIf(CBLURLEndpoint, _config.target).url;
