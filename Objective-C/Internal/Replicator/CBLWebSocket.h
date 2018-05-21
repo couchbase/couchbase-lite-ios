@@ -24,7 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLWebSocket : NSObject <NSURLSessionStreamDelegate>
 
-+ (void) registerWithC4;
++ (C4SocketFactory) socketFactory;
+
++ (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
 
 @end
 

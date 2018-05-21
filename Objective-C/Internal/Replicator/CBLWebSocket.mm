@@ -65,32 +65,32 @@ static constexpr NSTimeInterval kIdleTimeout = 320.0;
 }
 
 
-+ (void) registerWithC4 {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        c4socket_registerFactory({
-            .providesWebSockets = false,
-            .open = &doOpen,
-            .close = &doClose,
-            .write = &doWrite,
-            .completedReceive = &doCompletedReceive
-        });
-        CBLLog(WebSocket, @"CBLWebSocket registered as C4SocketFactory");
-    });
++ (C4SocketFactory) socketFactory {
+    return {
+        .framing = kC4WebSocketClientFraming,
+        .open = &doOpen,
+        .close = &doClose,
+        .write = &doWrite,
+        .completedReceive = &doCompletedReceive
+    };
 }
 
-static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece) {
+static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, void *context) {
     NSURLComponents* c = [NSURLComponents new];
     if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)
         c.scheme = @"https";
-    else
+    else if (addr->scheme == "blip"_sl || addr->scheme == "ws"_sl)
         c.scheme = @"http";
+    else {
+        c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
+        return;
+    }
     c.host = slice2string(addr->hostname);
     c.port = @(addr->port);
     c.path = slice2string(addr->path);
     NSURL* url = c.URL;
     if (!url) {
-        c4socket_closed(s, {LiteCoreDomain, kC4ErrorInvalidParameter});
+        c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
         return;
     }
     auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s options: optionsFleece];
@@ -194,9 +194,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
     NSData* nonceData = [NSData dataWithBytes: nonceBytes length: sizeof(nonceBytes)];
     NSString* nonceKey = [nonceData base64EncodedStringWithOptions: 0];
-    _expectedAcceptHeader = base64Digest([nonceKey stringByAppendingString:
-                                          @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"]);
-
+    _expectedAcceptHeader = [[self class] webSocketAcceptHeaderForKey: nonceKey];
+    
     // Construct the HTTP request:
     for (Dict::iterator header(_options[kC4ReplicatorOptionExtraHeaders].asDict()); header; ++header)
         _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
@@ -579,13 +578,17 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 
-static NSString* base64Digest(NSString* string) {
-    NSData* data = [string dataUsingEncoding: NSASCIIStringEncoding];
++ (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key {
+    key = [key stringByAppendingString: @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"];
+    NSData* data = [key dataUsingEncoding: NSASCIIStringEncoding];
+    if (!data)
+        return nil;
     unsigned char result[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1([data bytes], (CC_LONG)[data length], result);
     data = [NSData dataWithBytes:result length:CC_SHA1_DIGEST_LENGTH];
     return [data base64EncodedStringWithOptions: 0];
 }
+
 
 
 @end

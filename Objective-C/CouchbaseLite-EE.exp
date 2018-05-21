@@ -74,3 +74,7 @@ _kCBLAllPropertiesName
 # Enterprise Edition:
 .objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLEncryptionKey
+.objc_class_name_CBLMessage
+.objc_class_name_CBLMessageEndpoint
+.objc_class_name_CBLMessageEndpointListener
+.objc_class_name_CBLMessagingError
