@@ -98,8 +98,6 @@ MultipeerConnectionDelegate {
     }
     
     override func tearDown() {
-        try! otherDB.close()
-        
         listener?.closeAll()
         
         browser?.stopBrowsingForPeers()
@@ -107,6 +105,10 @@ MultipeerConnectionDelegate {
         
         clientSession?.disconnect()
         serverSession?.disconnect()
+        
+        try! otherDB.close()
+        try! deleteDB(name: otherDB.name)
+        otherDB = nil
         
         super.tearDown()
     }

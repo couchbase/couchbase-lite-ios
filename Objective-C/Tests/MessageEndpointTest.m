@@ -141,10 +141,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 
 
 - (void)tearDown {
-    NSError* error;
-    Assert([_otherDB close: &error]);
-    _otherDB = nil;
-    
     [_listener closeAll];
     
     [_browser stopBrowsingForPeers];
@@ -152,6 +148,11 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     
     [_clientSession disconnect];
     [_serverSession disconnect];
+    
+    NSError* error;
+    Assert([_otherDB close: &error]);
+    Assert([self deleteDBNamed: _otherDB.name error: &error]);
+    _otherDB = nil;
     
     [super tearDown];
 }

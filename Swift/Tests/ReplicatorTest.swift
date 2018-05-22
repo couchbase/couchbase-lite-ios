@@ -23,6 +23,7 @@ import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
     var otherDB: Database!
+    var repl: Replicator!
     
     override func setUp() {
         super.setUp()
@@ -32,6 +33,9 @@ class ReplicatorTest: CBLTestCase {
     
     override func tearDown() {
         try! otherDB.close()
+        try! deleteDB(name: otherDB.name)
+        otherDB = nil
+        repl = nil
         super.tearDown()
     }
     
@@ -48,12 +52,12 @@ class ReplicatorTest: CBLTestCase {
     
     func run(config: ReplicatorConfiguration, reset: Bool, expectedError: Int?) {
         let x = self.expectation(description: "change")
-        let repl = Replicator(config: config)
+        repl = Replicator(config: config)
         let token = repl.addChangeListener { (change) in
             let status = change.status
             if config.continuous && status.activity == .idle &&
                 status.progress.completed == status.progress.total {
-                repl.stop()
+                self.repl.stop()
             }
             
             if status.activity == .stopped {
@@ -72,6 +76,8 @@ class ReplicatorTest: CBLTestCase {
         
         repl.start()
         wait(for: [x], timeout: 5.0)
+        
+        repl.stop()
         repl.removeChangeListener(withToken: token)
     }
 

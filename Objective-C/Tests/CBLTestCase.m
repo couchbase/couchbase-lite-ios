@@ -68,6 +68,7 @@
         @autoreleasepool {
             NSError* error;
             Assert([_db close: &error]);
+            Assert([self deleteDBNamed: _db.name error: &error]);
             _db = nil;
         }
     }
@@ -123,6 +124,11 @@
     NSError *error;
     Assert([_db delete: &error], @"Delete error: %@", error);
     [self reopenDB];
+}
+
+
+- (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error {
+    return [CBLDatabase deleteDatabase: name inDirectory:self.directory error: error];
 }
 
 

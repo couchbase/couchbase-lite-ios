@@ -55,6 +55,7 @@
 - (void) tearDown {
     NSError* error;
     Assert([otherDB close: &error]);
+    Assert([self deleteDBNamed: otherDB.name error: &error]);
     otherDB = nil;
     repl = nil;
     [super tearDown];

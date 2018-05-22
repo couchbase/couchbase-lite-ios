@@ -54,6 +54,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Clean the default test database (.db property) */
 - (void) cleanDB;
 
+/** Delete the database with the given name. */
+- (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error;
+
 /** Create a new document */
 - (CBLMutableDocument*) createDocument;
 

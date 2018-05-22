@@ -36,7 +36,6 @@ class CBLTestCase: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        
         if FileManager.default.fileExists(atPath: self.directory) {
             try! FileManager.default.removeItem(atPath: self.directory)
         }
@@ -46,6 +45,7 @@ class CBLTestCase: XCTestCase {
     
     override func tearDown() {
         try! db.close()
+        try! deleteDB(name: db.name)
         super.tearDown()
     }
     
@@ -72,6 +72,11 @@ class CBLTestCase: XCTestCase {
     func cleanDB() throws {
         try db.delete()
         try reopenDB()
+    }
+    
+    
+    func deleteDB(name: String) throws {
+        try Database.delete(withName: name, inDirectory: self.directory)
     }
     
     
