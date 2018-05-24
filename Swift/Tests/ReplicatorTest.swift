@@ -33,9 +33,12 @@ class ReplicatorTest: CBLTestCase {
     
     override func tearDown() {
         try! otherDB.close()
-        try! deleteDB(name: otherDB.name)
         otherDB = nil
         repl = nil
+        
+        // Gracefully cleanup otherdb:
+        try! deleteDB(name: "otherdb");
+        
         super.tearDown()
     }
     

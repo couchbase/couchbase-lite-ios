@@ -149,10 +149,11 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     [_clientSession disconnect];
     [_serverSession disconnect];
     
-    NSError* error;
-    Assert([_otherDB close: &error]);
-    Assert([self deleteDBNamed: _otherDB.name error: &error]);
+    Assert([_otherDB close: nil]);
     _otherDB = nil;
+    
+    // Gracefully cleanup otherdb
+    Assert([self deleteDBNamed: @"otherdb" error: nil]);
     
     [super tearDown];
 }

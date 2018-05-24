@@ -107,8 +107,10 @@ MultipeerConnectionDelegate {
         serverSession?.disconnect()
         
         try! otherDB.close()
-        try! deleteDB(name: otherDB.name)
         otherDB = nil
+        
+        // Gracefully cleanup otherdb:
+        try! deleteDB(name: "otherdb");
         
         super.tearDown()
     }

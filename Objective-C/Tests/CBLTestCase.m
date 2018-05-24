@@ -51,7 +51,9 @@
 
 - (void) setUp {
     [super setUp];
-
+    
+    Assert([self deleteDBNamed: kDatabaseName error: nil]);
+    
     _c4ObjectCount = c4_getObjectCount();
     NSString* dir = self.directory;
     if ([[NSFileManager defaultManager] fileExistsAtPath: dir]) {
@@ -68,7 +70,6 @@
         @autoreleasepool {
             NSError* error;
             Assert([_db close: &error]);
-            Assert([self deleteDBNamed: _db.name error: &error]);
             _db = nil;
         }
     }
