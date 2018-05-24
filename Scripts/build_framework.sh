@@ -101,10 +101,10 @@ OUTPUT_FRAMEWORK_BUNDLE_DIR=${OUTPUT_BASE_DIR}/${FRAMEWORK_FILE_NAME}
 for SDK in "${SDKS[@]}"
   do
     echo "Running xcodebuild on scheme=${SCHEME} configuration=${CONFIGURATION} and sdk=${SDK} ..."
-    CLEAN_CMD=""
+    ACTION="build"
     if [[ ${ROUND} == 0 ]]
     then
-      CLEAN_CMD="clean"
+      ACTION="clean build"
     fi
 
     #Run xcodebuild:
@@ -122,7 +122,7 @@ for SDK in "${SDKS[@]}"
       fi
     fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} OTHER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} ${VERBOSE} build
+    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${ACTION} ${VERBOSE}
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`
