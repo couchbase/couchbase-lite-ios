@@ -42,6 +42,8 @@ class CBLTestCase: XCTestCase {
         if FileManager.default.fileExists(atPath: self.directory) {
             try! FileManager.default.removeItem(atPath: self.directory)
         }
+        XCTAssertTrue(!FileManager.default.fileExists(atPath: self.directory))
+        
         try! openDB()
     }
     

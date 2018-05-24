@@ -27,6 +27,7 @@ class ReplicatorTest: CBLTestCase {
     
     override func setUp() {
         super.setUp()
+        Database.setLogLevel(.debug, domain: .all)
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)
     }
@@ -37,8 +38,7 @@ class ReplicatorTest: CBLTestCase {
         repl = nil
         
         // Gracefully cleanup otherdb:
-        try! deleteDB(name: "otherdb");
-        
+        try! deleteDB(name: "otherdb")
         super.tearDown()
     }
     
