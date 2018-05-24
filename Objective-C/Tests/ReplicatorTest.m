@@ -53,12 +53,13 @@
 
 
 - (void) tearDown {
+    // Workaround to ensure that replicator's background cleaning task was done:
+    // https://github.com/couchbase/couchbase-lite-core/issues/520
+    [NSThread sleepForTimeInterval: 0.3];
+    
     Assert([otherDB close: nil]);
     otherDB = nil;
     repl = nil;
-    
-    // Gracefully cleanup otherdb:
-    Assert([self deleteDBNamed: @"otherdb" error: nil]);
     [super tearDown];
 }
 
@@ -824,8 +825,9 @@
     // Reset and pull:
     [self run: config reset: YES errorCode: 0 errorDomain: nil];
     AssertEqual(self.db.count, 2u);
+    
+    NSLog(@"Test Done");
 }
-
 
 
 #endif // COUCHBASE_ENTERPRISE

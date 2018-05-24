@@ -143,6 +143,10 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 - (void)tearDown {
     [_listener closeAll];
     
+    // Workaround to ensure that replicator's background cleaning task was done:
+    // https://github.com/couchbase/couchbase-lite-core/issues/520
+    [NSThread sleepForTimeInterval: 0.3];
+    
     [_browser stopBrowsingForPeers];
     [_advertiser stopAdvertisingPeer];
     
@@ -151,10 +155,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     
     Assert([_otherDB close: nil]);
     _otherDB = nil;
-    
-    // Gracefully cleanup otherdb
-    Assert([self deleteDBNamed: @"otherdb" error: nil]);
-    
     [super tearDown];
 }
 

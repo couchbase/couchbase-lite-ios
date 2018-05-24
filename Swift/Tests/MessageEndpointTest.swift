@@ -100,6 +100,10 @@ MultipeerConnectionDelegate {
     override func tearDown() {
         listener?.closeAll()
         
+        // Workaround to ensure that replicator's background cleaning task was done:
+        // https://github.com/couchbase/couchbase-lite-core/issues/520
+        Thread.sleep(forTimeInterval: 0.3);
+        
         browser?.stopBrowsingForPeers()
         advertiser?.stopAdvertisingPeer()
         
@@ -108,9 +112,6 @@ MultipeerConnectionDelegate {
         
         try! otherDB.close()
         otherDB = nil
-        
-        // Gracefully cleanup otherdb:
-        try! deleteDB(name: "otherdb");
         
         super.tearDown()
     }
