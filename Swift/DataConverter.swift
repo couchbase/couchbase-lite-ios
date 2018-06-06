@@ -62,6 +62,10 @@ import Foundation
             return array._impl
         case let blob as Blob:
             return blob._impl
+        case let dict as Dictionary<String, Any>:
+            return convertSETDictionary(dict)
+        case let array as Array<Any>:
+            return convertSETArray(array)
         default:
             return value
         }

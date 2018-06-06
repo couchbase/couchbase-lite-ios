@@ -215,7 +215,19 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Returns: The Dictionary representing the content of the current object.
     public func toDictionary() -> Dictionary<String, Any> {
-        return _impl.toDictionary()
+        var dict: [String: Any] = [:]
+        for key in keys {
+            let value = self.value(forKey: key)
+            switch value {
+            case let v as DictionaryObject:
+                dict[key] = v.toDictionary()
+            case let v as ArrayObject:
+                dict[key] = v.toArray()
+            default:
+                dict[key] = value
+            }
+        }
+        return dict
     }
 
 

@@ -782,9 +782,12 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetNativeDictionary() throws {
-        let dict = ["street": "1 Main street",
-                    "city": "Mountain View",
-                    "state": "CA"]
+        let content = kTestBlob.data(using: String.Encoding.utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        let dict: [String: Any] = ["street": "1 Main street",
+                                   "city": "Mountain View",
+                                   "state": "CA",
+                                   "attachments": ["attach1": blob]]
         
         let doc = createDocument("doc1")
         doc.setValue(dict, forKey: "address")
@@ -794,6 +797,8 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
+        let attachments = address.dictionary(forKey: "attachments")!
+        XCTAssertEqual(attachments.blob(forKey: "attach1"), blob)
         XCTAssertTrue(address.toDictionary() == dict)
         
         // Update with a new dictionary:
@@ -829,29 +834,30 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetNativeArray() throws {
-        let array = ["a", "b", "c"]
+        let content = kTestBlob.data(using: String.Encoding.utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        let array: [Any] = ["a", "b", "c", [blob]]
         
         let doc = createDocument("doc1")
         doc.setValue(array, forKey: "members")
         
         let members = doc.array(forKey: "members")!
         XCTAssertTrue(members === doc.value(forKey: "members") as! ArrayObject)
-        XCTAssertEqual(members.count, 3)
+        XCTAssertEqual(members.count, 4)
         XCTAssertEqual(members.string(at: 0), "a")
         XCTAssertEqual(members.string(at: 1), "b")
         XCTAssertEqual(members.string(at: 2), "c")
-        XCTAssertTrue(members.toArray() == ["a", "b", "c"])
+        let blobs = members.array(at: 3)!
+        XCTAssertEqual(blobs.count, 1)
+        XCTAssertEqual(blobs.blob(at: 0), blob)
+        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
         
         // Update with a new array:
         let nuArray = ["d", "e", "f"]
         doc.setValue(nuArray, forKey: "members")
         
         // Check whether the old members array is still accessible:
-        XCTAssertEqual(members.count, 3)
-        XCTAssertEqual(members.string(at: 0), "a")
-        XCTAssertEqual(members.string(at: 1), "b")
-        XCTAssertEqual(members.string(at: 2), "c")
-        XCTAssertTrue(members.toArray() == ["a", "b", "c"])
+        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
         
         // The old members array should be detached:
         let nuMembers = doc.array(forKey: "members")!

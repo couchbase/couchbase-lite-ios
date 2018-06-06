@@ -193,7 +193,18 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Returns: The Array representing the content of the current object.
     public func toArray() -> Array<Any> {
-        return _impl.toArray()
+        var array: [Any] = []
+        for value in self {
+            switch value {
+            case let v as DictionaryObject:
+                array.append(v.toDictionary())
+            case let v as ArrayObject:
+                array.append(v.toArray())
+            default:
+                array.append(value)
+            }
+        }
+        return array
     }
     
     
