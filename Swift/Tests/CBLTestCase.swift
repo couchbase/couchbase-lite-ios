@@ -104,7 +104,6 @@ class CBLTestCase: XCTestCase {
         let savedDoc = db.document(withID: document.id)
         XCTAssertNotNil(savedDoc)
         XCTAssertEqual(savedDoc!.id, document.id)
-        XCTAssertTrue(savedDoc!.toDictionary() == document.toDictionary())
     }
     
     
