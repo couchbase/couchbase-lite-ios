@@ -1187,8 +1187,6 @@
 		93FD618C2020757500E7F6A1 /* CBLIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61892020757500E7F6A1 /* CBLIndex.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		93FD618D2020757500E7F6A1 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
 		93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
-		BE75139720C95A8C00845405 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE75139620C95A8C00845405 /* SampleCodeTest.swift */; };
-		BE75139820C95A8C00845405 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE75139620C95A8C00845405 /* SampleCodeTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1875,7 +1873,6 @@
 		93FD6185202053BE00E7F6A1 /* CBLIndex+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLIndex+Internal.h"; sourceTree = "<group>"; };
 		93FD61892020757500E7F6A1 /* CBLIndex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndex.h; sourceTree = "<group>"; };
 		93FD618A2020757500E7F6A1 /* CBLIndex.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndex.m; sourceTree = "<group>"; };
-		BE75139620C95A8C00845405 /* SampleCodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SampleCodeTest.swift; path = ../../../../../swift/SampleCodeTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2066,7 +2063,6 @@
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
-				BE75139620C95A8C00845405 /* SampleCodeTest.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -4202,7 +4198,6 @@
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
-				BE75139720C95A8C00845405 /* SampleCodeTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4577,7 +4572,6 @@
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */,
-				BE75139820C95A8C00845405 /* SampleCodeTest.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 			);
