@@ -670,7 +670,6 @@
 		9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
 		9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
 		9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
-		9343F143207D61EC00F19A89 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
 		9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 931C14691EAAF08C0094F9B2 /* FragmentTest.m */; };
 		9343F146207D61EC00F19A89 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
@@ -698,7 +697,6 @@
 		9343F177207D633300F19A89 /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
 		9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
 		9343F179207D633300F19A89 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
-		9343F17A207D633300F19A89 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
 		9343F17B207D633300F19A89 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		9343F17C207D633300F19A89 /* FragmentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 931C14691EAAF08C0094F9B2 /* FragmentTest.m */; };
 		9343F17D207D633300F19A89 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
@@ -714,7 +712,6 @@
 		9343F194207D636300F19A89 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
 		9343F195207D636300F19A89 /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */; };
 		9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */; };
-		9343F197207D636300F19A89 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DED030201B120500F44953 /* SampleCodeTest.swift */; };
 		9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		9343F19A207D636300F19A89 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; };
 		9343F19C207D636300F19A89 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
@@ -1120,9 +1117,6 @@
 		93DECF3F200DBE5900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		93DECF40200DBE5900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		93DECF41200DBE6900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
-		93DED01D201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
-		93DED01E201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
-		93DED032201B14DB00F44953 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DED030201B120500F44953 /* SampleCodeTest.swift */; };
 		93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93E17EF91ED3ABE200671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
 		93E17F0B1ED3AC8100671CA1 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1193,6 +1187,10 @@
 		93FD618C2020757500E7F6A1 /* CBLIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61892020757500E7F6A1 /* CBLIndex.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		93FD618D2020757500E7F6A1 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
 		93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
+		BE75139720C95A8C00845405 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE75139620C95A8C00845405 /* SampleCodeTest.swift */; };
+		BE75139820C95A8C00845405 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE75139620C95A8C00845405 /* SampleCodeTest.swift */; };
+		BE75139A20C95B4200845405 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = BE75139920C95B4200845405 /* SampleCodeTest.m */; };
+		BE75139B20C95B4200845405 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = BE75139920C95B4200845405 /* SampleCodeTest.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1840,8 +1838,6 @@
 		93DECEB5200A6EAA00F44953 /* ValueExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueExpression.swift; sourceTree = "<group>"; };
 		93DECEDE200A9BFC00F44953 /* VariableExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariableExpression.swift; sourceTree = "<group>"; };
 		93DECF3E200DBE5800F44953 /* Support */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Support; sourceTree = "<group>"; };
-		93DED01C201AEFE400F44953 /* SampleCodeTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleCodeTest.m; sourceTree = "<group>"; };
-		93DED030201B120500F44953 /* SampleCodeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeTest.swift; sourceTree = "<group>"; };
 		93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocumentChange.h; sourceTree = "<group>"; };
 		93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocumentChange.m; sourceTree = "<group>"; };
 		93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
@@ -1881,6 +1877,8 @@
 		93FD6185202053BE00E7F6A1 /* CBLIndex+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLIndex+Internal.h"; sourceTree = "<group>"; };
 		93FD61892020757500E7F6A1 /* CBLIndex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndex.h; sourceTree = "<group>"; };
 		93FD618A2020757500E7F6A1 /* CBLIndex.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndex.m; sourceTree = "<group>"; };
+		BE75139620C95A8C00845405 /* SampleCodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SampleCodeTest.swift; path = ../../../../../swift/SampleCodeTest.swift; sourceTree = "<group>"; };
+		BE75139920C95B4200845405 /* SampleCodeTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SampleCodeTest.m; path = ../../../../../objc/SampleCodeTest.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2071,7 +2069,7 @@
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
-				93DED030201B120500F44953 /* SampleCodeTest.swift */,
+				BE75139620C95A8C00845405 /* SampleCodeTest.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -2652,7 +2650,7 @@
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
-				93DED01C201AEFE400F44953 /* SampleCodeTest.m */,
+				BE75139920C95B4200845405 /* SampleCodeTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -4207,8 +4205,8 @@
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
-				93DED032201B14DB00F44953 /* SampleCodeTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
+				BE75139720C95A8C00845405 /* SampleCodeTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4523,10 +4521,10 @@
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				939260B120A0FF0C00E5748C /* MessageEndpointTest.m in Sources */,
 				9343F13F207D61EC00F19A89 /* PredicateQueryTest.m in Sources */,
+				BE75139B20C95B4200845405 /* SampleCodeTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
-				9343F143207D61EC00F19A89 /* SampleCodeTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
 				9369A6AE207DD0FD009B5B83 /* DatabaseEncryptionTest.m in Sources */,
@@ -4561,7 +4559,6 @@
 				9343F177207D633300F19A89 /* DictionaryTest.m in Sources */,
 				9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */,
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
-				9343F17A207D633300F19A89 /* SampleCodeTest.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
 				939260B220A0FF1600E5748C /* MessageEndpointTest.m in Sources */,
@@ -4585,7 +4582,7 @@
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */,
-				9343F197207D636300F19A89 /* SampleCodeTest.swift in Sources */,
+				BE75139820C95A8C00845405 /* SampleCodeTest.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 			);
@@ -4630,7 +4627,6 @@
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
-				93DED01E201AEFE400F44953 /* SampleCodeTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
 				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
@@ -4753,7 +4749,7 @@
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
 				9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
-				93DED01D201AEFE400F44953 /* SampleCodeTest.m in Sources */,
+				BE75139A20C95B4200845405 /* SampleCodeTest.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
