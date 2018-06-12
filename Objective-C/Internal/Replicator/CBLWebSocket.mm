@@ -30,6 +30,7 @@
 #import <dispatch/dispatch.h>
 #import <memory>
 #import <netdb.h>
+#import <vector>
 
 extern "C" {
 #import "MYAnonymousIdentity.h"
@@ -39,29 +40,52 @@ extern "C" {
 using namespace fleece;
 using namespace fleeceapi;
 
+static constexpr size_t kReadBufferSize = 32 * 1024;
+
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
-static constexpr NSTimeInterval kConnectTimeout = 15.0;
+//TEMP static constexpr NSTimeInterval kConnectTimeout = 15.0;
 
 // The value should be greater than the heartbeat to avoid read/write timeout;
 // the current default heartbeat is 300 sec:
-static constexpr NSTimeInterval kIdleTimeout = 320.0;
+//TEMP static constexpr NSTimeInterval kIdleTimeout = 320.0;
+
+
+struct PendingWrite {
+    PendingWrite(NSData *d, void (^h)())
+    :data(d)
+    ,completionHandler(h)
+    { }
+
+    NSData *data;
+    size_t bytesWritten {0};
+    void (^completionHandler)();
+};
+
+
+@interface CBLWebSocket () <NSStreamDelegate>
+@end
+
 
 @implementation CBLWebSocket
 {
     AllocedDict _options;
-    NSOperationQueue* _queue;
-    dispatch_queue_t _c4Queue;
-    NSURLSession* _session;
-    NSURLSessionStreamTask *_task;
+    dispatch_queue_t _queue;
     NSString* _expectedAcceptHeader;
     CBLHTTPLogic* _logic;
     NSString* _clientCertID;
-    C4Socket* _c4socket;
-    NSError* _cancelError;
-    BOOL _receiving;
-    size_t _receivedBytesPending, _sentBytesPending;
+    std::atomic<C4Socket*> _c4socket;
+    CFHTTPMessageRef _httpResponse;
+    size_t _receivedBytesPending;
     CFAbsoluteTime _lastReadTime;
-    BOOL _requestedClose;
+    id _keepMeAlive;
+
+    NSInputStream* _in;
+    NSOutputStream* _out;
+    uint8_t* _readBuffer;
+    bool _checkSSLCert;
+    std::vector<PendingWrite> _pendingWrites;
+    bool _hasBytes, _hasSpace;
+    bool _gotResponseHeaders;
 }
 
 
@@ -71,31 +95,34 @@ static constexpr NSTimeInterval kIdleTimeout = 320.0;
         .open = &doOpen,
         .close = &doClose,
         .write = &doWrite,
-        .completedReceive = &doCompletedReceive
+        .completedReceive = &doCompletedReceive,
+        .dispose = &doDispose,
     };
 }
 
 static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, void *context) {
-    NSURLComponents* c = [NSURLComponents new];
-    if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)
-        c.scheme = @"https";
-    else if (addr->scheme == "blip"_sl || addr->scheme == "ws"_sl)
-        c.scheme = @"http";
-    else {
-        c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
-        return;
+    @autoreleasepool {
+        NSURLComponents* c = [NSURLComponents new];
+        if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)
+            c.scheme = @"https";
+        else if (addr->scheme == "blip"_sl || addr->scheme == "ws"_sl)
+            c.scheme = @"http";
+        else {
+            c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
+            return;
+        }
+        c.host = slice2string(addr->hostname);
+        c.port = @(addr->port);
+        c.path = slice2string(addr->path);
+        NSURL* url = c.URL;
+        if (!url) {
+            c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
+            return;
+        }
+        auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s options: optionsFleece];
+        s->nativeHandle = (__bridge void*)socket;
+        [socket start];
     }
-    c.host = slice2string(addr->hostname);
-    c.port = @(addr->port);
-    c.path = slice2string(addr->path);
-    NSURL* url = c.URL;
-    if (!url) {
-        c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
-        return;
-    }
-    auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s options: optionsFleece];
-    s->nativeHandle = (__bridge void*)socket;
-    [socket start];
 }
 
 static void doClose(C4Socket* s) {
@@ -108,6 +135,10 @@ static void doWrite(C4Socket* s, C4SliceResult allocatedData) {
 
 static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     [(__bridge CBLWebSocket*)s->nativeHandle completedReceive: byteCount];
+}
+
+static void doDispose(C4Socket* s) {
+    [(__bridge CBLWebSocket*)s->nativeHandle dispose];
 }
 
 
@@ -124,29 +155,34 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
         [self setupAuth];
 
-        _queue = [[NSOperationQueue alloc] init];
-        _queue.maxConcurrentOperationCount = 1;     // make it serial!
-        _queue.name = [NSString stringWithFormat: @"WebSocket to %@:%u", url.host, _logic.port];
+        auto queueName = [NSString stringWithFormat: @"WebSocket to %@:%u",
+                          url.host, _logic.port];
+        _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
 
-        _c4Queue = dispatch_queue_create("Websocket C4 dispatch", DISPATCH_QUEUE_SERIAL);
-
-        NSURLSessionConfiguration* conf = [NSURLSessionConfiguration defaultSessionConfiguration];
-        conf.HTTPShouldSetCookies = NO;
-        conf.HTTPCookieStorage = nil;
-        conf.URLCache = nil;
-        _session = [NSURLSession sessionWithConfiguration: conf
-                                                 delegate: self
-                                            delegateQueue: _queue];
+        _readBuffer = (uint8_t*)malloc(kReadBufferSize);
     }
     return self;
 }
 
 
-#if DEBUG
 - (void)dealloc {
-    CBLLogVerbose(WebSocket, @"DEALLOC CBLWebSocket");
+    CBLLogVerbose(WebSocket, @"DEALLOC %@", self);
+    Assert(!_in);
+    free(_readBuffer);
+    if (_httpResponse)
+        CFRelease(_httpResponse);
 }
-#endif
+
+
+- (void) dispose {
+    CBLLogVerbose(WebSocket, @"C4Socket of %@ is being disposed", self);
+    // This has to be done synchronously, because _c4socket will be freed when this method returns
+    auto socket = _c4socket.exchange(nullptr);
+    if (socket)
+        socket->nativeHandle = nullptr;
+    // Remove the self-reference, so this object will be dealloced:
+    _keepMeAlive = nil;
+}
 
 
 - (void) setupAuth {
@@ -175,19 +211,27 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 }
 
 
+- (void) callC4Socket: (void (^)(C4Socket*))callback {
+    auto socket = _c4socket.load();
+    if (socket)
+        callback(socket);
+}
+
+
 #pragma mark - HANDSHAKE:
 
 
 - (void) start {
-    [_queue addOperationWithBlock: ^{
-        [self _start];
-    }];
+    dispatch_async(_queue, ^{[self _start];});
 }
 
 
 - (void) _start {
     CBLLog(WebSocket, @"CBLWebSocket connecting to %@:%d...", _logic.URL.host, _logic.port);
-    _cancelError = nil;
+    _hasBytes = _hasSpace = _gotResponseHeaders = _checkSSLCert = false;
+    if (_httpResponse)
+        CFRelease(_httpResponse);
+    _httpResponse = CFHTTPMessageCreateEmpty(NULL, false);
 
     // Configure the nonce/key for the request:
     uint8_t nonceBytes[16];
@@ -212,52 +256,52 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     if (protocols)
         _logic[@"Sec-WebSocket-Protocol"] = protocols.asNSString();
 
-    _task = [_session streamTaskWithHostName: (NSString*)_logic.URL.host
-                                        port: _logic.port];
-    [_task resume];
+    // Open the streams:
+    NSInputStream *inStream;
+    NSOutputStream *outStream;
+    [NSStream getStreamsToHostWithName: _logic.URL.host port: _logic.port
+                           inputStream: &inStream outputStream: &outStream];
+    _in = inStream;
+    _out = outStream;
+    CFReadStreamSetDispatchQueue((__bridge CFReadStreamRef)_in, _queue);
+    CFWriteStreamSetDispatchQueue((__bridge CFWriteStreamRef)_out, _queue);
+    _in.delegate = _out.delegate = self;
+    if (_logic.useTLS) {
+        auto settings = CFDictionaryCreateMutable(nullptr, 0, nullptr, nullptr);
+        if (_options[kC4ReplicatorOptionPinnedServerCert])
+            CFDictionarySetValue(settings, kCFStreamSSLValidatesCertificateChain, kCFBooleanFalse);
+        CFReadStreamSetProperty((__bridge CFReadStreamRef)_in,
+                                kCFStreamPropertySSLSettings, settings);
+        CFRelease(settings);
+        _checkSSLCert = true;
+    }
+    [_in open];
+    [_out open];
 
-    if (_logic.useTLS)
-        [_task startSecureConnection];
-
-    [_task writeData: _logic.HTTPRequestData timeout: kConnectTimeout
-           completionHandler: ^(NSError* error) {
+    [self writeData: _logic.HTTPRequestData completionHandler: ^() {
        CBLLogVerbose(WebSocket, @"CBLWebSocket Sent HTTP request...");
-       if (![self checkError: error])
-           [self readHTTPResponse];
-   }];
+    }];
+
+    _keepMeAlive = self;
 }
 
 
-- (void) readHTTPResponse {
-    CFHTTPMessageRef httpResponse = CFHTTPMessageCreateEmpty(NULL, false);
-    [_task readDataOfMinLength: 1 maxLength: NSUIntegerMax timeout: kConnectTimeout
-             completionHandler: ^(NSData* data, BOOL atEOF, NSError* error)
-    {
-        CBLLogVerbose(WebSocket, @"Received %zu bytes of HTTP response", (size_t)data.length);
-        
-        // https://github.com/couchbase/couchbase-lite-ios/issues/2140
-        // In some condition that remote host cannot be reached (TIC 1:57), the
-        // completionHandler could be called with 0 bytes data in indefinite loop;
-        // explicitly check the condition and close the socket with error.
-        if (!error && data.length == 0 && atEOF)
-            error = MYError(ENOTCONN, NSPOSIXErrorDomain, @"Endpoint not connected");
-        
-        if ([self checkError: error])
-            return;
-        
-        if (!CFHTTPMessageAppendBytes(httpResponse, (const UInt8*)data.bytes, data.length)) {
-            // Error reading response!
-            [self didCloseWithCode: kWebSocketCloseProtocolError
-                            reason: @"Unparseable HTTP response"];
-            return;
-        }
-        if (CFHTTPMessageIsHeaderComplete(httpResponse)) {
-            [self receivedHTTPResponse: httpResponse];
-            CFRelease(httpResponse);
-        } else {
-            [self readHTTPResponse];        // wait for more data
-        }
-    }];
+- (void) receivedHTTPResponseBytes: (const void*)bytes length: (size_t)length {
+    CBLLogVerbose(WebSocket, @"Received %zu bytes of HTTP response", length);
+
+    if (!CFHTTPMessageAppendBytes(_httpResponse, (const UInt8*)bytes, length)) {
+        // Error reading response!
+        [self didCloseWithCode: kWebSocketCloseProtocolError
+                        reason: @"Unparseable HTTP response"];
+        return;
+    }
+    if (CFHTTPMessageIsHeaderComplete(_httpResponse)) {
+        _gotResponseHeaders = YES;
+        auto httpResponse = _httpResponse;
+        _httpResponse = nullptr;
+        [self receivedHTTPResponse: httpResponse];
+        CFRelease(httpResponse);
+    }
 }
 
 
@@ -267,8 +311,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
     if (_logic.shouldRetry) {
         // Retry the connection, due to a redirect or auth challenge:
-        [_task cancel];
-        _task = nil;
+        [self disconnect];
         [self start];
         return;
     }
@@ -285,10 +328,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     Encoder enc;
     enc << headers;
     alloc_slice headersFleece = enc.finish();
-    auto socket = _c4socket;
-    dispatch_async(_c4Queue, ^{
+    [self callC4Socket:^(C4Socket *socket) {
         c4socket_gotHTTPResponse(socket, (int)httpStatus, {headersFleece.buf, headersFleece.size});
-    });
+    }];
 
     if (httpStatus != 101) {
         // Unexpected HTTP status:
@@ -318,11 +360,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 - (void) connected: (NSDictionary*)responseHeaders {
     CBLLog(WebSocket, @"CBLWebSocket CONNECTED!");
     _lastReadTime = CFAbsoluteTimeGetCurrent();
-    [self receive];
-    auto socket = _c4socket;
-    dispatch_async(_c4Queue, ^{
+    [self callC4Socket:^(C4Socket *socket) {
         c4socket_opened(socket);
-    });
+    }];
 }
 
 
@@ -335,175 +375,64 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                                         length: allocatedData.size
                                   freeWhenDone: NO];
     CBLLogVerbose(WebSocket, @">>> sending %zu bytes...", allocatedData.size);
-    [_queue addOperationWithBlock: ^{
-        [self->_task writeData: data timeout: kIdleTimeout
-             completionHandler: ^(NSError* error)
-         {
-             size_t size = allocatedData.size;
-             c4slice_free(allocatedData);
-             if (![self checkError: error]) {
-                 CBLLogVerbose(WebSocket, @"    (...sent %zu bytes)", size);
-                 auto socket = self->_c4socket;
-                 dispatch_async(self->_c4Queue, ^{
-                     c4socket_completedWrite(socket, size);
-                 });
-             }
-         }];
-    }];
+    dispatch_async(_queue, ^{
+        [self writeData: data completionHandler: ^() {
+            size_t size = allocatedData.size;
+            c4slice_free(allocatedData);
+            CBLLogVerbose(WebSocket, @"    (...sent %zu bytes)", size);
+            [self callC4Socket:^(C4Socket *socket) {
+                c4socket_completedWrite(socket, size);
+            }];
+        }];
+    });
 }
 
 
-- (void) receive {
-    if(_receiving || !_task)
-        return;
-    _receiving = true;
-    [_task readDataOfMinLength: 1 maxLength: NSUIntegerMax timeout: kIdleTimeout
-             completionHandler: ^(NSData* data, BOOL atEOF, NSError* error)
-    {
-        self->_receiving = false;
-        self->_lastReadTime = CFAbsoluteTimeGetCurrent();
-        if (![self checkError: error]) {
-            self->_receivedBytesPending += data.length;
-            CBLLogVerbose(WebSocket, @"<<< received %zu bytes%s [now %zu pending]",
-                          (size_t)data.length, (atEOF ? " (EOF)" : ""), self->_receivedBytesPending);
-            if (data.length > 0) {
-                auto socket = self->_c4socket;
-                dispatch_async(self->_c4Queue, ^{
-                    c4socket_received(socket, {data.bytes, data.length});
-                });
-                if (!atEOF && self->_receivedBytesPending < kMaxReceivedBytesPending)
-                    [self receive];
-            }
-            if (atEOF && !_requestedClose) {
-                // The peer has closed the socket, but I still have to close my side, else my
-                // -readClosedForStreamTask:... delegate method won't be called:
-                [self->_task closeRead];
-            }
-        }
+- (BOOL) readThrottled {
+    return _receivedBytesPending >= kMaxReceivedBytesPending;
+}
+
+
+- (void) receivedBytes: (const void*)bytes length: (size_t)length {
+    self->_lastReadTime = CFAbsoluteTimeGetCurrent();
+    self->_receivedBytesPending += length;
+    CBLLogVerbose(WebSocket, @"<<< received %zu bytes [now %zu pending]",
+                  (size_t)length, self->_receivedBytesPending);
+    [self callC4Socket:^(C4Socket *socket) {
+        c4socket_received(socket, {bytes, length});
     }];
 }
 
 
 // callback from C4Socket
 - (void) completedReceive: (size_t)byteCount {
-    [_queue addOperationWithBlock: ^{
+    dispatch_async(_queue, ^{
+        bool wasThrottled = self.readThrottled;
         self->_receivedBytesPending -= byteCount;
-        [self receive];
-    }];
+        if (_hasBytes && wasThrottled && !self.readThrottled)
+            [self doRead];
+    });
 }
 
 
 // callback from C4Socket
 - (void) closeSocket {
-    [_queue addOperationWithBlock: ^{
-        CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
-        _requestedClose = YES;
-        [self closeTask];
-    }];
-}
-
-
-#pragma mark - URL SESSION DELEGATE:
-
-
-- (void) URLSession: (NSURLSession *)session
-         didReceiveChallenge: (NSURLAuthenticationChallenge *)challenge
-          completionHandler: (void (^)(NSURLSessionAuthChallengeDisposition,
-                                       NSURLCredential *))completionHandler
-{
-    auto disposition = NSURLSessionAuthChallengePerformDefaultHandling;
-    NSURLCredential* credential = nil;
-    NSString* authMethod = challenge.protectionSpace.authenticationMethod;
-    if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
-        // Check server's SSL cert:
-        auto check = [[CBLTrustCheck alloc] initWithChallenge: challenge];
-        Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
-        if (pin) {
-            check.pinnedCertData = slice(pin.asData()).copiedNSData();
-            if (!check.pinnedCertData) {
-                CBLWarn(WebSocket, @"Invalid value for replicator %s property (must be NSData)",
-                     kC4ReplicatorOptionPinnedServerCert);
-                completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
-                return;
-            }
+    CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
+    dispatch_async(_queue, ^{
+        if (_in || _out) {
+            [self disconnect];
+            [self didCloseWithError: nil];
         }
-
-        NSError* error;
-        credential = [check checkTrust: &error];
-        if (credential) {
-            CBLLog(WebSocket, @"    useCredential for trust: %@", credential);
-            disposition = NSURLSessionAuthChallengeUseCredential;
-        } else {
-            _cancelError = error;
-            CBLWarn(WebSocket, @"TLS handshake failed: %@: %@",
-                 challenge.protectionSpace, error.localizedDescription);
-            disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
-        }
-    } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
-        // Server is checking client cert:
-        if (_clientCertID) {
-            SecIdentityRef identity = MYFindIdentity(_clientCertID);
-            if (identity) {
-                credential = [NSURLCredential credentialWithIdentity: identity
-                                                        certificates: @[]
-                                                   persistence: NSURLCredentialPersistenceNone];
-                disposition = NSURLSessionAuthChallengeUseCredential;
-                CFRelease(identity);
-            } else {
-                CBLWarn(Sync, @"Can't find SecIdentityRef with id '%@'", _clientCertID);
-                disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
-            }
-        }
-    }
-
-    completionHandler(disposition, credential);
+    });
 }
 
 
-- (void)URLSession:(NSURLSession *)session readClosedForStreamTask:(NSURLSessionStreamTask *)task
-{
-    [self streamClosedForTask: task isWrite: NO];
-}
+#pragma mark - CLOSING / ERROR HANDLING:
 
 
-- (void)URLSession:(NSURLSession *)session writeClosedForStreamTask:(NSURLSessionStreamTask *)task
-{
-    [self streamClosedForTask: task isWrite: YES];
-}
-
-
-- (void) streamClosedForTask: (NSURLSessionStreamTask *)task isWrite: (BOOL)isWrite {
-    CBLLog(WebSocket, @"CBLWebSocket %s stream closed%s",
-           (isWrite ? "write" : "read"),
-           (_requestedClose ? "" : " unexpectedly"));
-    if (task == _task && !_requestedClose) {
-        if (!_cancelError)
-            _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain,
-                                   @"Network connection lost");
-        [_task cancel];
-    }
-}
-
-
-- (void)URLSession:(NSURLSession *)session
-              task:(NSURLSessionTask *)task
-        didCompleteWithError:(nullable NSError *)error
-{
-    if (task == _task)
-        [self didCloseWithError: error];
-}
-
-
-#pragma mark - ERROR HANDLING:
-
-
-- (bool) checkError: (NSError*)error {
-    if (!error || [self ignoreError: error])
-        return false;
-    
-    [self closeTask];
+- (void) closeWithError: (NSError*)error {
+    [self closeStreams];
     [self didCloseWithError: error];
-    return true;
 }
 
 
@@ -513,57 +442,39 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         return;
     }
     
-    if (!_task)
+    if (!_in)
         return;
-    [self closeTask];
-    _task = nil;
+    [self closeStreams];
+    _in = nil;
+    _out = nil;
 
     CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH STATUS %d \"%@\"", (int)code, reason);
     nsstring_slice reasonSlice(reason);
-    C4Error c4err = c4error_make(WebSocketDomain, code, reasonSlice);
-    c4socket_closed(_c4socket, c4err);
+    [self c4SocketClosed: c4error_make(WebSocketDomain, code, reasonSlice)];
 }
 
 
 - (void) didCloseWithError: (NSError*)error {
-    if (!_task)
-        return;
-    _task = nil;
-
-    if ([self ignoreError: error])
-        error = nil;
+    [self disconnect];
 
     C4Error c4err;
     if (error) {
-        if ([error my_hasDomain: NSURLErrorDomain code: kCFURLErrorCancelled] && _cancelError != nil)
-            error = _cancelError;
         CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@", error.my_compactDescription);
         convertError(error, &c4err);
     } else {
         CBLLog(WebSocket, @"CBLWebSocket CLOSED");
         c4err = {};
     }
-    c4socket_closed(_c4socket, c4err);
+    [self c4SocketClosed: c4err];
 }
 
 
-// TODO: We could reset the current task to nil here but
-// need to make sure that the logic in didCloseWithError: is still
-// correct as it could be called from multiple places more than one time.
-- (void) closeTask {
-    [_task closeWrite];
-    [_task closeRead];
+- (void) c4SocketClosed: (C4Error)c4err {
+    [self callC4Socket:^(C4Socket *socket) {
+        c4socket_closed(socket, c4err);
+    }];
 }
 
-
-- (BOOL) ignoreError: (NSError*)error {
-    // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
-    if (_requestedClose && [error my_hasDomain: NSPOSIXErrorDomain code: ENOTCONN]) {
-        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error.my_compactDescription);
-        return YES;
-    }
-    return NO;
-}
 
 #pragma mark - UTILITIES:
 
@@ -589,6 +500,139 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     return [data base64EncodedStringWithOptions: 0];
 }
 
+
+#pragma mark - NSSTREAM SUPPORT:
+
+
+- (BOOL) checkSSLCert {
+    SecTrustRef sslTrust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_in,
+                                                                  kCFStreamPropertySSLPeerTrust);
+    Assert(sslTrust);
+    _checkSSLCert = false;
+
+    NSURL* url = _logic.URL;
+    auto check = [[CBLTrustCheck alloc] initWithTrust: sslTrust
+                                                 host: url.host port: url.port.shortValue];
+    CFRelease(sslTrust);
+    Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
+    if (pin) {
+        check.pinnedCertData = slice(pin.asData()).copiedNSData();
+        Assert(check.pinnedCertData, @"Invalid value for replicator %s property (must be NSData)",
+               kC4ReplicatorOptionPinnedServerCert);
+    }
+
+    NSError* error;
+    if (![check checkTrust: &error]) {
+        CBLWarn(WebSocket, @"TLS handshake failed: %@", error.localizedDescription);
+        [self closeWithError: error];
+        return false;
+    } else {
+        CBLLogVerbose(WebSocket, @"TLS handshake succeeded");
+    }
+    return true;
+}
+
+
+- (void) writeData: (NSData*)data completionHandler: (void (^)())completionHandler {
+    _pendingWrites.emplace_back(data, completionHandler);
+    if (_hasSpace)
+        [self doWrite];
+}
+
+
+- (void) doWrite {
+    while (!_pendingWrites.empty()) {
+        auto &w = _pendingWrites.front();
+        auto nBytes = [_out write: (const uint8_t*)w.data.bytes + w.bytesWritten
+                        maxLength: w.data.length - w.bytesWritten];
+        if (nBytes <= 0) {
+            _hasSpace = false;
+            return;
+        }
+        w.bytesWritten += nBytes;
+        if (w.bytesWritten < w.data.length) {
+            _hasSpace = false;
+            return;
+        }
+        w.data = nil;
+        w.completionHandler();
+        _pendingWrites.erase(_pendingWrites.begin());
+    }
+}
+
+
+- (void) doRead {
+    CBLLogVerbose(WebSocket, @"DoRead...");
+    Assert(_hasBytes);
+    _hasBytes = false;
+    while (_in.hasBytesAvailable) {
+        if (self.readThrottled) {
+            _hasBytes = true;
+            break;
+        }
+        size_t nBytes = [_in read: _readBuffer maxLength: kReadBufferSize];
+        CBLLogVerbose(WebSocket, @"DoRead read %zu bytes", nBytes);
+        if (nBytes <= 0)
+            break;
+        if (!_gotResponseHeaders)
+            [self receivedHTTPResponseBytes: _readBuffer length: nBytes];
+        else
+            [self receivedBytes: _readBuffer length: nBytes];
+    }
+}
+
+
+- (void)stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
+    switch (eventCode) {
+        case NSStreamEventOpenCompleted:
+            CBLLogVerbose(WebSocket, @"%@: OpenCompleted on %@", self, stream);
+            break;
+        case NSStreamEventHasBytesAvailable:
+            Assert(stream == _in);
+            CBLLogVerbose(WebSocket, @"%@: HasBytesAvailable", self);
+            if (_checkSSLCert && ![self checkSSLCert])
+                break;
+            _hasBytes = true;
+            if (!self.readThrottled)
+                [self doRead];
+            break;
+        case NSStreamEventHasSpaceAvailable:
+            CBLLogVerbose(WebSocket, @"%@: HasSpaceAvailable", self);
+            if (_checkSSLCert && ![self checkSSLCert])
+                break;
+            _hasSpace = true;
+            [self doWrite];
+            break;
+        case NSStreamEventEndEncountered:
+            CBLLogVerbose(WebSocket, @"%@: EndEncountered on %s stream",
+                          self, ((stream == _out) ? "write" : "read"));
+            [self didCloseWithError: nil];
+            break;
+        case NSStreamEventErrorOccurred:
+            CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
+            [self didCloseWithError: stream.streamError];
+            break;
+        default:
+            break;
+    }
+}
+
+
+- (void) closeStreams {
+    CBLLogVerbose(WebSocket, @"%@: CloseStreams", self);
+    [_in close];
+    [_out close];
+}
+
+
+- (void) disconnect {
+    CBLLogVerbose(WebSocket, @"%@: Disconnect", self);
+    _in.delegate = _out.delegate = nil;
+    [_in close];
+    [_out close];
+    _in = nil;
+    _out = nil;
+}
 
 
 @end

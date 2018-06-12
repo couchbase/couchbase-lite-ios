@@ -69,7 +69,7 @@
     if (_db) {
         @autoreleasepool {
             NSError* error;
-            Assert([_db close: &error]);
+            Assert([_db close: &error], @"Failed to close db: %@", error);
             _db = nil;
         }
     }
