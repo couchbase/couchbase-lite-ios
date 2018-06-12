@@ -1,3 +1,4 @@
 {
     "2.0.0": "https://github.com/couchbase/couchbase-lite-ios/releases/download/2.0.0/CouchbaseLite-Enterprise.framework.zip",
+    "2.0.3": "https://packages.couchbase.com/releases/couchbase-lite-ios/2.0.3/couchbase-lite-carthage-enterprise-2.0.3.zip"
 }
