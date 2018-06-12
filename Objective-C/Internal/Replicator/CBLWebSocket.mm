@@ -44,11 +44,12 @@ using namespace fleeceapi;
 static constexpr size_t kReadBufferSize = 32 * 1024;
 
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
-//TEMP static constexpr NSTimeInterval kConnectTimeout = 15.0;
+
+static constexpr NSTimeInterval kConnectTimeout = 15.0;
 
 // The value should be greater than the heartbeat to avoid read/write timeout;
 // the current default heartbeat is 300 sec:
-//TEMP static constexpr NSTimeInterval kIdleTimeout = 320.0;
+static constexpr NSTimeInterval kIdleTimeout = 320.0;
 
 
 struct PendingWrite {
@@ -289,6 +290,9 @@ static void doDispose(C4Socket* s) {
         CBLLog(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
         [self _sendWebSocketRequest];
     }
+
+    _lastReadTime = CFAbsoluteTimeGetCurrent();
+    [self checkForTimeoutIn: kConnectTimeout];
 }
 
 
@@ -440,7 +444,6 @@ static void doDispose(C4Socket* s) {
 // Notifies LiteCore that the WebSocket is connected.
 - (void) connected: (NSDictionary*)responseHeaders {
     CBLLog(WebSocket, @"CBLWebSocket CONNECTED!");
-    _lastReadTime = CFAbsoluteTimeGetCurrent();
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_opened(socket);
     }];
@@ -501,7 +504,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // Called when WebSocket data is received (NOT necessarily an entire message.)
 - (void) receivedBytes: (const void*)bytes length: (size_t)length {
-    self->_lastReadTime = CFAbsoluteTimeGetCurrent();
     self->_receivedBytesPending += length;
     CBLLogVerbose(WebSocket, @"<<< received %zu bytes [now %zu pending]",
                   (size_t)length, self->_receivedBytesPending);
@@ -639,6 +641,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 - (void) doRead {
     CBLLogVerbose(WebSocket, @"DoRead...");
+    _lastReadTime = CFAbsoluteTimeGetCurrent();
     Assert(_hasBytes);
     _hasBytes = false;
     while (_in.hasBytesAvailable) {
@@ -690,6 +693,30 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         default:
             break;
+    }
+}
+
+
+- (void) checkForTimeoutIn: (NSTimeInterval)interval {
+    interval += 1.0; // sometimes the timer goes off early
+    CBLLogVerbose(WebSocket, @"%@: Checking for timeout in %.3f sec", self, interval);
+    __weak CBLWebSocket* weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), _queue, ^{
+        [weakSelf checkForTimeout];
+    });
+}
+
+
+- (void) checkForTimeout {
+    if (!_in)
+        return;
+    NSTimeInterval idleTime = CFAbsoluteTimeGetCurrent() - _lastReadTime;
+    NSTimeInterval timeout = _gotResponseHeaders ? kIdleTimeout : kConnectTimeout;
+    if (idleTime < timeout) {
+        [self checkForTimeoutIn: timeout - idleTime];
+    } else {
+        [self closeWithError: MYError(NSURLErrorTimedOut, NSURLErrorDomain,
+                                      @"Connection timed out")];
     }
 }
 
