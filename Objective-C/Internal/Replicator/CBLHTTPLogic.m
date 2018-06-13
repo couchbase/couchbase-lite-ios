@@ -30,9 +30,9 @@
     NSDictionary* _proxySettings;
     CBLProxyType _proxyType;
     NSString* _nonceKey;
-    NSString* _authorizationHeader;
     CFHTTPMessageRef _responseMsg;
-    NSURLCredential* _credential;
+    NSString* _authorizationHeader, *_proxyAuthorizationHeader;
+    NSURLCredential* _credential, *_proxyCredential;
     NSUInteger _redirectCount;
 }
 
@@ -234,39 +234,31 @@ static NSDictionary* sOverrideProxySettings;
         CFHTTPMessageSetHeaderFieldValue(httpMsg, CFSTR("User-Agent"),
                                          (__bridge CFStringRef)[[self class] userAgent]);
 
-    // If this is a retry, set auth headers from the credential we got:
-    if (_responseMsg && _credential.user) {
-        NSString* password = _credential.password;
-        if (!password) {
-            // For some reason the password sometimes isn't accessible, even though we checked
-            // .hasPassword when setting _credential earlier. (See #195.) Keychain bug??
-            // If this happens, try looking up the credential again:
-            CBLLog(WebSocket, @"Couldn't get password of %@; trying again", _credential);
-            _credential = [self credentialForAuthHeader:
-                                                getHeader(_responseMsg, @"WWW-Authenticate")];
-            password = _credential.password;
-            if (!password)
-                CBLWarn(WebSocket, @"%@: Unable to get password of credential %@", self, _credential);
-        }
-        if (!password ||
-            (!CFHTTPMessageAddAuthentication(httpMsg, _responseMsg,
-                                             (__bridge CFStringRef)_credential.user,
-                                             (__bridge CFStringRef)password,
-                                             NULL,
-                                             _httpStatus == 407)
-             && !CFHTTPMessageAddAuthentication(httpMsg, _responseMsg,
-                                                (__bridge CFStringRef)_credential.user,
-                                                (__bridge CFStringRef)password,
-                                                kCFHTTPAuthenticationSchemeBasic, // fallback
-                                                _httpStatus == 407)))
-        {
-            // The 2nd call above works around a bug where it can fail if the auth scheme is NULL.
-            CBLWarn(WebSocket, @"%@: Unable to add authentication", self);
-            _credential = nil;
-            CFRelease(_responseMsg);
-            _responseMsg = NULL;
+    // Proactively add HTTP proxy auth if it's been explicitly configured:
+    if (_proxyType == kCBLHTTPProxy) {
+        NSString* username = _proxySettings[(id)kCFProxyUsernameKey];
+        if (username) {
+            NSString* password = _proxySettings[(id)kCFProxyPasswordKey] ?: @"";
+            NSString* auth = $sprintf(@"%@:%@", username, password);
+            auth = [[auth dataUsingEncoding: NSUTF8StringEncoding] base64EncodedStringWithOptions: 0];
+            auth = $sprintf(@"Basic: %@", auth);
+            CFHTTPMessageSetHeaderFieldValue(httpMsg,
+                                             CFSTR("Proxy-Authorization"),
+                                             (__bridge CFStringRef)auth);
         }
     }
+
+    // Add authentication:
+    if (_responseMsg && _credential.user && !(_proxyType == kCBLHTTPProxy && _useProxyCONNECT)) {
+        if (![self addAuthentication: _credential toRequest: httpMsg forProxy: false])
+            _credential = nil;
+    }
+    if (_responseMsg && _proxyCredential.user && _proxyType == kCBLHTTPProxy) {
+        if (![self addAuthentication: _proxyCredential toRequest: httpMsg forProxy: true])
+            _proxyCredential = nil;
+    }
+    _authorizationHeader = getHeader(httpMsg, @"Authorization");
+    _proxyAuthorizationHeader = getHeader(httpMsg, @"Proxy-Authorization");
 
     NSData* body = _urlRequest.HTTPBody;
     if (body) {
@@ -275,7 +267,6 @@ static NSDictionary* sOverrideProxySettings;
         CFHTTPMessageSetBody(httpMsg, (__bridge CFDataRef)body);
     }
 
-    _authorizationHeader = getHeader(httpMsg, @"Authorization");
     _shouldContinue = _shouldRetry = NO;
     _httpStatus = 0;
 
@@ -335,8 +326,7 @@ static NSDictionary* sOverrideProxySettings;
             break;
         }
 
-        case 401:
-        case 407: {
+        case 401: {
             NSString* authResponse = getHeader(_responseMsg, @"WWW-Authenticate");
             if (!_authorizationHeader) {
                 if (!_credential)
@@ -360,6 +350,25 @@ static NSDictionary* sOverrideProxySettings;
             if (challengeInfo)
                 errorInfo[@"AuthChallenge"] = challengeInfo;
             [self setErrorCode: NSURLErrorUserAuthenticationRequired userInfo: errorInfo];
+            break;
+        }
+
+        case 407: {
+            //TODO: Look up proxy credentials in Keychain and retry with those
+            NSString* authResponse = getHeader(_responseMsg, @"Proxy-Authenticate");
+            if (!_proxyAuthorizationHeader) {
+                if (!_proxyCredential)
+                    _proxyCredential = [self credentialForAuthHeader: authResponse];
+                CBLLog(WebSocket, @"%@: Proxy auth challenge; credential = %@", self, _proxyCredential);
+                if (_proxyCredential) {
+                    // Recoverable auth failure -- try again with new _proxyCredential:
+                    _shouldRetry = YES;
+                    break;
+                }
+            }
+            CBLLog(WebSocket, @"%@: HTTP proxy auth failed;  got Proxy-Authenticate: %@",
+                   self, authResponse);
+            [self setErrorCode: kCFErrorHTTPBadProxyCredentials userInfo: nil];
             break;
         }
 
@@ -455,6 +464,34 @@ static NSDictionary* sOverrideProxySettings;
     }
     challenge[@"WWW-Authenticate"] = authHeader;
     return challenge;
+}
+
+
+- (bool) addAuthentication: (NSURLCredential*)credential
+                 toRequest: (CFHTTPMessageRef)httpMsg
+                  forProxy: (bool)forProxy
+{
+    NSString* password = credential.password;
+    if (!password ||
+        (!CFHTTPMessageAddAuthentication(httpMsg, _responseMsg,
+                                         (__bridge CFStringRef)credential.user,
+                                         (__bridge CFStringRef)password,
+                                         NULL,
+                                         forProxy)
+         && !CFHTTPMessageAddAuthentication(httpMsg, _responseMsg,
+                                            (__bridge CFStringRef)credential.user,
+                                            (__bridge CFStringRef)password,
+                                            kCFHTTPAuthenticationSchemeBasic, // fallback
+                                            forProxy)))
+    {
+        // The 2nd call above works around a bug where it can fail if the auth scheme is NULL.
+        CBLWarn(WebSocket, @"%@: Unable to add HTTP authentication", self);
+        CFRelease(_responseMsg);
+        _responseMsg = NULL;
+        return false;
+    }
+
+    return true;
 }
 
 
