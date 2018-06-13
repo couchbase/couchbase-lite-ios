@@ -22,6 +22,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
+typedef enum CBLProxyType {
+    kCBLNoProxy,
+    kCBLHTTPProxy,
+    kCBLSOCKSProxy
+} CBLProxyType;
+
+
 /** Implements the core logic of HTTP request/response handling, especially processing
     redirects and authentication challenges, without actually doing any of the networking.
     It just tells you what HTTP request to send and how to interpret the response. */
@@ -39,10 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
     If enabled, redirects are handled by updating the URL and setting shouldRetry. */
 @property (nonatomic) BOOL handleRedirects;
 
-@property (readonly, nonatomic) NSURLRequest* URLRequest;
-
-/** Creates an HTTP request message to send. Caller is responsible for releasing it. */
-- (CFHTTPMessageRef) newHTTPRequest;
+//@property (readonly, nonatomic) NSURLRequest* URLRequest;
 
 /** Returns an encoded HTTP request. */
 - (NSData*) HTTPRequestData;
@@ -64,7 +68,14 @@ NS_ASSUME_NONNULL_BEGIN
 /** The TCP port number, based on the URL. */
 @property (readonly, nonatomic) UInt16 port;
 
-/** Yes if TLS/SSL should be used (based on the URL). */
+/** The direct hostname to open a socket to -- this will be the proxy's, if a proxy is used. */
+@property (readonly, nonatomic) NSString* directHost;
+
+/** The direct port number to open a socket to -- this will be the proxy's, if a proxy is used. */
+@property (readonly, nonatomic) UInt16 directPort;
+
+/** Yes if TLS/SSL should be used for the direct connection
+    (based on the URL or the proxy type/port.) */
 @property (readonly, nonatomic) BOOL useTLS;
 
 /** The auth credential being used. */
@@ -77,6 +88,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The HTTP status code of the response. */
 @property (readonly, nonatomic) int httpStatus;
 
+/** The HTTP status message ("OK", "Not Found", ...) of the response. */
+@property (readonly, nonatomic) NSString* httpStatusMessage;
+
 /** The error from a failed redirect or authentication. This isn't set for regular non-success
     HTTP statuses like 404, only for failures to redirect or authenticate. */
 @property (readonly, nullable, nonatomic) NSError* error;
@@ -86,6 +100,28 @@ NS_ASSUME_NONNULL_BEGIN
     word), and the first parameter and value will appear as an extra key/value. (Only the first
     parameter is parsed; this could be improved.) */
 + (nullable NSDictionary*) parseAuthHeader: (NSString*)authHeader;
+
+
+#pragma mark - PROXY SUPPORT:
+
+/** Proxy settings for this request. Will be initialized via CFNetworkCopyProxiesForURL, but
+    you can set your own. */
+@property (nonatomic, nullable) NSDictionary* proxySettings;
+
+/** Allows you to set a proxy as a URL. Only 'http:' and 'https:' schemes supported. */
+- (BOOL) setProxyURL: (nullable NSURL*)proxyURL;
+
+/** The type of proxy to connect to, based on the proxySettings. */
+@property (readonly, nonatomic) CBLProxyType proxyType;
+
+/** Set this to YES to force the use of the CONNECT method with an HTTP proxy, i.e. to create
+    a tunnel instead of proxying an HTTP request. */
+@property (nonatomic) BOOL useProxyCONNECT;
+
+#if DEBUG
+// Exposed for testing. Registers proxy settings to use regardless of OS settings.
++ (void) setOverrideProxySettings: (nullable NSDictionary*)proxySettings;
+#endif
 
 @end
 
