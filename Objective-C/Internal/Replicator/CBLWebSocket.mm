@@ -162,14 +162,9 @@ static void doDispose(C4Socket* s) {
         if (proxy) {
             NSURL* proxyURL = [NSURL URLWithDataRepresentation: proxy.uncopiedNSData()
                                                  relativeToURL: nil];
-            NSString* host = proxyURL.host;
-            if ([proxyURL.scheme.lowercaseString hasPrefix: @"http"] && host) {
-                _logic.proxySettings = @{(id)kCFProxyTypeKey:       (id)kCFProxyTypeHTTP,
-                                         (id)kCFProxyHostNameKey:   host,
-                                         (id)kCFProxyPortNumberKey: @(proxyURL.my_effectivePort)};
-            } else {
+            if (![_logic setProxyURL: proxyURL]) {
                 CBLWarn(Sync, @"Invalid replicator HTTPProxy setting <%.*s>",
-                     (int)proxy.size, proxy.buf);
+                        (int)proxy.size, proxy.buf);
             }
         }
         _proxySettings = _logic.proxySettings;
@@ -266,7 +261,7 @@ static void doDispose(C4Socket* s) {
 
     _logic.proxySettings = _proxySettings;
     _logic.useProxyCONNECT = YES;
-    _connectingToProxy = _logic.usingHTTPProxy;
+    _connectingToProxy = (_logic.proxyType == kCBLHTTPProxy);
 
     // Open the streams:
     NSInputStream *inStream;
@@ -278,6 +273,7 @@ static void doDispose(C4Socket* s) {
     CFReadStreamSetDispatchQueue((__bridge CFReadStreamRef)_in, _queue);
     CFWriteStreamSetDispatchQueue((__bridge CFWriteStreamRef)_out, _queue);
     _in.delegate = _out.delegate = self;
+    [self configureSOCKS];
     [self configureTLS];
     [_in open];
     [_out open];
@@ -293,6 +289,15 @@ static void doDispose(C4Socket* s) {
 
     _lastReadTime = CFAbsoluteTimeGetCurrent();
     [self checkForTimeoutIn: kConnectTimeout];
+}
+
+
+- (void) configureSOCKS {
+    if (_logic.proxyType == kCBLSOCKSProxy) {
+        CFReadStreamSetProperty((__bridge CFReadStreamRef)_in,
+                                kCFStreamPropertySOCKSProxy,
+                                (__bridge CFDictionaryRef)_logic.proxySettings);
+    }
 }
 
 
