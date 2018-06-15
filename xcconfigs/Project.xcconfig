@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-CBL_VERSION_STRING                 = 2.0.2
+CBL_VERSION_STRING                 = 2.0.4
 CBL_BUILD_NUMBER                   = 0
 CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 
