@@ -144,18 +144,26 @@
     NSString* proxyHost = env[@"CBL_TEST_PROXY_HOST"];
     NSString* proxyType = env[@"CBL_TEST_PROXY_TYPE"];
     int proxyPort = [env[@"CBL_TEST_PROXY_PORT"] intValue] ?: 80;
-    if (proxyHost) {
+    if (proxyHost || proxyType) {
         proxyType = [(proxyType ?: @"http") uppercaseString];
-        Log(@"Using %@ proxy server %@:%d", proxyType, proxyHost, proxyPort);
         if ([proxyType isEqualToString: @"HTTP"])
             proxyType = (id)kCFProxyTypeHTTP;
         else if ([proxyType isEqualToString: @"HTTPS"])
             proxyType = (id)kCFProxyTypeHTTPS;
         else if ([proxyType isEqualToString: @"SOCKS"])
             proxyType = (id)kCFProxyTypeSOCKS;
-        NSMutableDictionary* proxy = [@{(id)kCFProxyTypeKey: proxyType,
-                                        (id)kCFProxyHostNameKey: proxyHost,
-                                        (id)kCFProxyPortNumberKey: @(proxyPort)} mutableCopy];
+        else if ([proxyType isEqualToString: @"PAC"])
+            proxyType = (id)kCFProxyTypeAutoConfigurationURL;
+        NSMutableDictionary* proxy = [@{(id)kCFProxyTypeKey: proxyType} mutableCopy];
+        proxy[(id)kCFProxyHostNameKey] = proxyHost;
+        proxy[(id)kCFProxyPortNumberKey] = @(proxyPort);
+        if (proxyType == (id)kCFProxyTypeAutoConfigurationURL) {
+            NSURL* pacURL = [NSURL URLWithString:  env[@"CBL_TEST_PROXY_PAC_URL"]];
+            proxy[(id)kCFProxyAutoConfigurationURLKey] = pacURL;
+            Log(@"Using PAC proxy URL %@", pacURL);
+        } else {
+            Log(@"Using %@ proxy server %@:%d", proxyType, proxyHost, proxyPort);
+        }
         proxy[(id)kCFProxyUsernameKey] =  env[@"CBL_TEST_PROXY_USER"];
         proxy[(id)kCFProxyPasswordKey] =  env[@"CBL_TEST_PROXY_PASS"];
         [CBLHTTPLogic setOverrideProxySettings: proxy];
