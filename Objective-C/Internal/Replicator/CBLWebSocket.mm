@@ -40,6 +40,8 @@ using namespace fleece;
 using namespace fleeceapi;
 
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
+static constexpr size_t kInitialWriteBufferSize = 8 * 1024;
+
 static constexpr NSTimeInterval kConnectTimeout = 15.0;
 
 // The value should be greater than the heartbeat to avoid read/write timeout;
@@ -58,7 +60,8 @@ static constexpr NSTimeInterval kIdleTimeout = 320.0;
     NSString* _clientCertID;
     C4Socket* _c4socket;
     NSError* _cancelError;
-    BOOL _receiving;
+    BOOL _receiving, _writing;
+    NSMutableData* _pendingWrites;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
     BOOL _requestedClose;
@@ -324,25 +327,52 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 // callback from C4Socket
 - (void) writeAndFree: (C4SliceResult) allocatedData {
-    NSData* data = [NSData dataWithBytesNoCopy: (void*)allocatedData.buf
-                                        length: allocatedData.size
-                                  freeWhenDone: NO];
     CBLLogVerbose(WebSocket, @">>> sending %zu bytes...", allocatedData.size);
     [_queue addOperationWithBlock: ^{
-        [self->_task writeData: data timeout: kIdleTimeout
-             completionHandler: ^(NSError* error)
-         {
-             size_t size = allocatedData.size;
-             c4slice_free(allocatedData);
-             if (![self checkError: error]) {
-                 CBLLogVerbose(WebSocket, @"    (...sent %zu bytes)", size);
-                 auto socket = self->_c4socket;
-                 dispatch_async(self->_c4Queue, ^{
-                     c4socket_completedWrite(socket, size);
-                 });
-             }
-         }];
+        // CFNetwork in iOS 11 has a bug where multiple pending writes to an NSURLSessionStreamTask
+        // can be written in the wrong order (but only if going through an HTTP proxy...!)
+        // To work around this, we're ensuring that we only have one outstanding write at a time.
+        // (This was suggested by Apple DTS's Quinn.)
+        // `_writing` tracks this state. If it's true, we instead buffer the data into an
+        // NSMutableData object `_pendingWrites`. When the current write completes, the callback in
+        // our -writeNow: method checks `_pendingWrites` and writes it to the stream.
+        if (_writing) {
+            if (!_pendingWrites)
+                _pendingWrites = [NSMutableData dataWithCapacity: MAX(allocatedData.size,
+                                                                      kInitialWriteBufferSize)];
+            [_pendingWrites appendBytes: allocatedData.buf length: allocatedData.size];
+            c4slice_free(allocatedData);
+        } else {
+            [self writeNow: sliceResult2data(allocatedData)];
+        }
     }];
+}
+
+
+- (void) writeNow: (NSData*)data {
+    Assert(!_writing);
+    _writing = true;
+    [self->_task writeData: data timeout: kIdleTimeout
+         completionHandler: ^(NSError* error)
+     {
+         _writing = false;
+         if (![self checkError: error]) {
+             size_t size = data.length;
+             CBLLogVerbose(WebSocket, @"    (...sent %zu bytes)", size);
+             auto socket = self->_c4socket;
+             dispatch_async(self->_c4Queue, ^{
+                 c4socket_completedWrite(socket, size);
+             });
+
+             // Now that there are no pending write calls, issue a new one for any data that
+             // arrived from LiteCore in the meantime:
+             NSData* pending = _pendingWrites;
+             if (pending) {
+                 _pendingWrites = nil;
+                 [self writeNow: pending];
+             }
+         }
+     }];
 }
 
 
