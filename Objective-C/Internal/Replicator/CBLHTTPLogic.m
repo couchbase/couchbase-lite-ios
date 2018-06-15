@@ -140,8 +140,7 @@ static NSDictionary* sOverrideProxySettings;
             return [scheme isEqualToString: @"https"] || [scheme isEqualToString: @"wss"];
         }
         case kCBLHTTPProxy:
-            return [_proxySettings[(id)kCFProxyTypeKey] isEqualToString: (id)kCFProxyTypeHTTPS]
-                    || self.directPort == 443;
+            return NO; // TODO: How about TLS Connection from client to proxy?
         case kCBLSOCKSProxy:
             return NO;
     }
