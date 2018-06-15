@@ -18,6 +18,7 @@
 //
 
 #import "CBLHTTPLogic.h"
+#import "MYErrorUtils.h"
 #import "MYURLUtils.h"
 
 
@@ -64,46 +65,6 @@ static NSDictionary* sOverrideProxySettings;
 
 - (NSURL*) URL {
     return (NSURL*)_urlRequest.URL;
-}
-
-
-+ (void) setOverrideProxySettings: (NSDictionary*)proxySettings {
-    sOverrideProxySettings = [proxySettings copy];
-}
-
-
-- (void) lookupProxySettings {
-    self.proxySettings = sOverrideProxySettings ?: _urlRequest.URL.my_proxySettings;
-}
-
-
-- (void) setProxySettings: (NSDictionary*)settings {
-    NSString* type = settings[(id)kCFProxyTypeKey];
-    if ([type isEqualToString: (id)kCFProxyTypeHTTP]
-                || [type isEqualToString: (id)kCFProxyTypeHTTPS])
-        _proxyType = kCBLHTTPProxy;
-    else if ([type isEqualToString: (id)kCFProxyTypeSOCKS])
-        _proxyType = kCBLSOCKSProxy;
-    else {
-        _proxyType = kCBLNoProxy;
-        settings = nil;
-    }
-    _proxySettings = [settings copy];
-}
-
-
-- (BOOL) setProxyURL: (NSURL*)proxyURL {
-    NSString* host = proxyURL.host;
-    if ([proxyURL.scheme.lowercaseString hasPrefix: @"http"] && host) {
-        id type = proxyURL.my_isHTTPS ? (id)kCFProxyTypeHTTPS : (id)kCFProxyTypeHTTP;
-        self.proxySettings = @{(id)kCFProxyTypeKey:       type,
-                               (id)kCFProxyHostNameKey:   host,
-                               (id)kCFProxyPortNumberKey: @(proxyURL.my_effectivePort)};
-        return true;
-    } else {
-        self.proxySettings = nil;
-        return (proxyURL == nil);
-    }
 }
 
 
@@ -162,6 +123,17 @@ static NSDictionary* sOverrideProxySettings;
 }
 
 
+- (void) setErrorCode: (NSInteger)code userInfo: (NSDictionary*)userInfo {
+    NSMutableDictionary* info = [@{NSURLErrorFailingURLErrorKey: self.URL} mutableCopy];
+    if (userInfo)
+        [info addEntriesFromDictionary: userInfo];
+    _error = [NSError errorWithDomain: NSURLErrorDomain code: code userInfo: info];
+}
+
+
+#pragma mark - REQUEST:
+
+
 - (void) setValue: (NSString*)value forHTTPHeaderField:(NSString*)header {
     [_urlRequest setValue: value forHTTPHeaderField: header];
 }
@@ -173,20 +145,6 @@ static NSDictionary* sOverrideProxySettings;
 - (void) setObject: (NSString*)value forKeyedSubscript: (NSString*)key {
     [_urlRequest setValue: value forHTTPHeaderField: key];
 }
-
-
-//- (NSURLRequest*) URLRequest {
-//    CFHTTPMessageRef httpMessage = [self newHTTPRequest];
-//
-//    NSMutableURLRequest* request = [_urlRequest mutableCopy];
-//    NSDictionary* headers = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpMessage));
-//    for (NSString* headerName in headers) {
-//        if (![request valueForHTTPHeaderField: headerName])
-//            [request setValue: headers[headerName] forHTTPHeaderField: headerName];
-//    }
-//    CFRelease(httpMessage);
-//    return request;
-//}
 
 
 - (CFHTTPMessageRef) newHTTPRequest {
@@ -294,6 +252,9 @@ static NSDictionary* sOverrideProxySettings;
     }
     return data;
 }
+
+
+#pragma mark - RESPONSE HANDLING:
 
 
 - (void) receivedResponse: (CFHTTPMessageRef)response {
@@ -413,6 +374,15 @@ static NSDictionary* sOverrideProxySettings;
 }
 
 
+static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
+    return CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(message,
+                                                               (__bridge CFStringRef)header));
+}
+
+
+#pragma mark - AUTHENTICATION:
+
+
 - (NSURLCredential*) credentialForAuthHeader: (NSString*)authHeader {
     // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
     NSDictionary* challenge = [[self class] parseAuthHeader: authHeader];
@@ -494,14 +464,6 @@ static NSDictionary* sOverrideProxySettings;
 }
 
 
-- (void) setErrorCode: (NSInteger)code userInfo: (NSDictionary*)userInfo {
-    NSMutableDictionary* info = [@{NSURLErrorFailingURLErrorKey: self.URL} mutableCopy];
-    if (userInfo)
-        [info addEntriesFromDictionary: userInfo];
-    _error = [NSError errorWithDomain: NSURLErrorDomain code: code userInfo: info];
-}
-
-
 // Adapted from MYURLUtils.m
 - (NSURLProtectionSpace*) protectionSpaceWithRealm: (NSString*)realm
                                  authenticationMethod: (NSString*)authenticationMethod
@@ -539,45 +501,107 @@ static NSDictionary* sOverrideProxySettings;
 }
 
 
-static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
-    return CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(message,
-                                                               (__bridge CFStringRef)header));
+#pragma mark - PROXY SUPPORT:
+
+
++ (void) setOverrideProxySettings: (NSDictionary*)proxySettings {
+    sOverrideProxySettings = [proxySettings copy];
 }
 
-/*
-static NSURLProtectionSpace* getProtectionSpace(NSURL* url,
-                                                NSString* realm,
-                                                NSString*authenticationMethod)
-{
-    BOOL https = (0 == [url.scheme caseInsensitiveCompare: @"https"]);
-    NSString* protocol = https ? NSURLProtectionSpaceHTTPS
-                               : NSURLProtectionSpaceHTTP;
-    return [[NSURLProtectionSpace alloc] initWithHost: url.host
-                                                 port: url.my_effectivePort
-                                             protocol: protocol
-                                                realm: realm
-                                 authenticationMethod: authenticationMethod];
+
+- (void) lookupProxySettings {
+    self.proxySettings = sOverrideProxySettings ?: _urlRequest.URL.my_proxySettings;
 }
 
-static NSURLCredential* getCredential(NSURL *url,
-                                      NSString* realm,
-                                      NSString* authenticationMethod)
-{
-    if ([authenticationMethod isEqualToString: NSURLAuthenticationMethodServerTrust])
-        return nil;
-    NSString* username = url.user;
-    NSString* password = url.password;
-    if (username && password)
-        return [NSURLCredential credentialWithUser: username password: password
-                                       persistence: NSURLCredentialPersistenceNone];
 
-    NSURLProtectionSpace* space = getProtectionSpace(url, realm, authenticationMethod);
-    NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
-    if (username)
-        return [[storage credentialsForProtectionSpace: space] objectForKey: username];
-    else
-        return [storage defaultCredentialForProtectionSpace: space];
+- (void) setProxySettings: (NSDictionary*)settings {
+    _error = nil;       // Might get set if PAC resolution fails
+    NSString* type = settings[(id)kCFProxyTypeKey];
+    if ([type isEqualToString: (id)kCFProxyTypeAutoConfigurationURL])
+        settings = [self resolveProxyAutoConfig: settings isURL: YES];
+    else if ([type isEqualToString: (id)kCFProxyTypeAutoConfigurationJavaScript])
+        settings = [self resolveProxyAutoConfig: settings isURL: NO];
+
+    type = settings[(id)kCFProxyTypeKey];
+    if ([type isEqualToString: (id)kCFProxyTypeHTTP]
+                || [type isEqualToString: (id)kCFProxyTypeHTTPS])
+        _proxyType = kCBLHTTPProxy;
+    else if ([type isEqualToString: (id)kCFProxyTypeSOCKS])
+        _proxyType = kCBLSOCKSProxy;
+    else {
+        _proxyType = kCBLNoProxy;
+    }
+    _proxySettings = [settings copy];
 }
-*/
+
+
+- (BOOL) setProxyURL: (NSURL*)proxyURL {
+    NSString* host = proxyURL.host;
+    if ([proxyURL.scheme.lowercaseString hasPrefix: @"http"] && host) {
+        id type = proxyURL.my_isHTTPS ? (id)kCFProxyTypeHTTPS : (id)kCFProxyTypeHTTP;
+        self.proxySettings = @{(id)kCFProxyTypeKey:       type,
+                               (id)kCFProxyHostNameKey:   host,
+                               (id)kCFProxyPortNumberKey: @(proxyURL.my_effectivePort)};
+        return true;
+    } else {
+        self.proxySettings = nil;
+        return (proxyURL == nil);
+    }
+}
+
+
+#define kPrivatePACRunloopMode CFSTR("CBLPACResolution")
+
+
+static void pacCallback(void *client, CFArrayRef proxyList, CFErrorRef error) {
+    CFTypeRef* resultPtr = client;
+    *resultPtr = proxyList ? CFRetain(proxyList) : CFRetain(error);
+    CFRunLoopStop(CFRunLoopGetCurrent());
+}
+
+
+- (NSDictionary*) resolveProxyAutoConfig: (NSDictionary*)settings isURL: (BOOL)isURL {
+    CFArrayRef proxies = NULL;
+    CFErrorRef error = NULL;
+    NSURL* pacURL;
+    if (isURL) {
+        pacURL = settings[(id)kCFProxyAutoConfigurationURLKey];
+        // Request resolution of the PAC URL:
+        CFTypeRef result = NULL;
+        CFStreamClientContext ctx = {.info = &result};
+        CFRunLoopSourceRef src = CFNetworkExecuteProxyAutoConfigurationURL(
+                                    (__bridge CFURLRef)pacURL, (__bridge CFURLRef)self.URL,
+                                    pacCallback, &ctx);
+        // Wait for the result to arrive:
+        CBLLogVerbose(WebSocket, @"%@: Resolving proxy PAC script at <%@> ...", self, pacURL);
+        CFRunLoopRef rl = CFRunLoopGetCurrent();
+        CFRunLoopAddSource(rl, src, kPrivatePACRunloopMode);
+        CFRunLoopRunInMode(kPrivatePACRunloopMode, DBL_MAX, false);
+        CFRunLoopRemoveSource(rl, src, kPrivatePACRunloopMode);
+
+        if (CFGetTypeID(result) == CFErrorGetTypeID())
+            error = (CFErrorRef)result;
+        else
+            proxies = result;
+    } else {
+        CBLLogVerbose(WebSocket, @"%@: Resolving proxy PAC script ...", self);
+        NSString* js = settings[(id)kCFProxyAutoConfigurationJavaScriptKey];
+        Assert(js);
+        proxies = CFNetworkCopyProxiesForAutoConfigurationScript(
+                                    (__bridge CFStringRef)js, (__bridge CFURLRef)self.URL, &error);
+    }
+
+    if (!proxies) {
+        NSString* msg = [CFBridgingRelease(error) my_compactDescription];
+        CBLWarn(WebSocket, @"Failed to resolve proxy PAC script at <%@>: %@", pacURL, msg);
+        _error = MYError(kCFErrorPACFileError, (id)kCFErrorDomainCFNetwork,
+                         @"Error resolving proxy autoconnect (PAC): %@", msg);
+        return settings;
+    }
+
+    settings = [CFBridgingRelease(proxies) firstObject];
+    CBLLogVerbose(WebSocket, @"%@: ... PAC resolved to %@", self, settings);
+    return settings;
+}
 
 @end

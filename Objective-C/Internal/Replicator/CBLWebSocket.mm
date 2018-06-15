@@ -89,7 +89,6 @@ struct PendingWrite {
     size_t _receivedBytesPending;
     bool _gotResponseHeaders;
     BOOL _connectingToProxy;
-    NSDictionary* _proxySettings;
 }
 
 
@@ -160,6 +159,7 @@ static void doDispose(C4Socket* s) {
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
+        _logic.useProxyCONNECT = YES;
 
         slice proxy = _options["HTTPProxy"_sl].asString();      //TODO: Add to c4Replicator.h
         if (proxy) {
@@ -170,7 +170,6 @@ static void doDispose(C4Socket* s) {
                         (int)proxy.size, proxy.buf);
             }
         }
-        _proxySettings = _logic.proxySettings;
 
         [self setupAuth];
 
@@ -250,6 +249,11 @@ static void doDispose(C4Socket* s) {
 
 - (void) start {
     dispatch_async(_queue, ^{
+        if (_logic.error) {
+            // PAC resolution must have failed. Give up.
+            [self closeWithError: _logic.error];
+            return;
+        }
         [self _connect];
     });
 }
@@ -262,8 +266,6 @@ static void doDispose(C4Socket* s) {
     _pendingWrites.clear();
     [self clearHTTPState];
 
-    _logic.proxySettings = _proxySettings;
-    _logic.useProxyCONNECT = YES;
     _connectingToProxy = (_logic.proxyType == kCBLHTTPProxy);
 
     // Open the streams:
