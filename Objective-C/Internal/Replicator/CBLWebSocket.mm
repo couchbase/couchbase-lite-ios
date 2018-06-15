@@ -93,18 +93,22 @@ struct PendingWrite {
 }
 
 
-+ (C4SocketFactory) socketFactory {
-    return {
-        .framing = kC4WebSocketClientFraming,
-        .open = &doOpen,
-        .close = &doClose,
-        .write = &doWrite,
-        .completedReceive = &doCompletedReceive,
-        .dispose = &doDispose,
-    };
++ (void) registerWithC4 {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        c4socket_registerFactory({
+            .providesWebSockets = false,
+            .open = &doOpen,
+            .close = &doClose,
+            .write = &doWrite,
+            .completedReceive = &doCompletedReceive,
+            .dispose = &doDispose
+        });
+        CBLLog(WebSocket, @"CBLWebSocket registered as C4SocketFactory");
+    });
 }
 
-static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, void *context) {
+static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece) {
     @autoreleasepool {
         NSURLComponents* c = [NSURLComponents new];
         if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)
@@ -146,7 +150,6 @@ static void doDispose(C4Socket* s) {
     [(__bridge CBLWebSocket*)s->nativeHandle dispose];
 }
 
-
 - (instancetype) initWithURL: (NSURL*)url c4socket: (C4Socket*)c4socket options: (slice)options {
     self = [super init];
     if (self) {
@@ -181,7 +184,7 @@ static void doDispose(C4Socket* s) {
 }
 
 
-- (void)dealloc {
+- (void) dealloc {
     CBLLogVerbose(WebSocket, @"DEALLOC %@", self);
     Assert(!_in);
     free(_readBuffer);

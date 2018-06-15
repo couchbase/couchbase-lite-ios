@@ -23,6 +23,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLHTTPLogic.h"
 #import "CollectionUtils.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -79,7 +80,7 @@
 
 - (void) setUp {
     [super setUp];
-
+    
     timeout = 5.0;
     _pinServerCert = YES;
     NSError* error;
@@ -116,19 +117,21 @@
     "CBL_TEST_HOST".
     The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
     variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
-    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag. */
+    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
+    To force use of an HTTP proxy, set CBL_TEST_PROXY_HOST and CBL_TEST_PROXY_PORT.
+ */
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
     NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
     if (!host) {
         Log(@"NOTE: Skipping test: no CBL_TEST_HOST configured in environment");
         return nil;
     }
-
+    
     NSString* portKey = secure ? @"CBL_TEST_PORT_SSL" : @"CBL_TEST_PORT";
     NSInteger port = NSProcessInfo.processInfo.environment[portKey].integerValue;
     if (!port)
         port = secure ? 4994 : 4984;
-
+    
     NSURLComponents *comp = [NSURLComponents new];
     comp.scheme = secure ? kCBLURLEndpointTLSScheme : kCBLURLEndpointScheme;
     comp.host = host;
@@ -136,7 +139,7 @@
     comp.path = [NSString stringWithFormat:@"/%@", dbName];
     NSURL* url = comp.URL;
     Assert(url);
-
+    
     NSDictionary* env = NSProcessInfo.processInfo.environment;
     NSString* proxyHost = env[@"CBL_TEST_PROXY_HOST"];
     NSString* proxyType = env[@"CBL_TEST_PROXY_TYPE"];
@@ -269,7 +272,7 @@
 }
 
 
-- (void) run: (CBLReplicatorConfiguration*)config
+- (bool) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 {
@@ -283,17 +286,19 @@
 {
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
-    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Change"];
+    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
+    __block bool fulfilled = false;
     __weak typeof(self) wSelf = self;
     id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
         [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
         if (config.continuous && change.status.activity == kCBLReplicatorIdle
-                    && change.status.progress.completed == change.status.progress.total) {
+            && change.status.progress.completed == change.status.progress.total) {
             [strongSelf->repl stop];
         }
         if (change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
+            fulfilled = true;
         }
     }];
     
@@ -308,6 +313,7 @@
         [repl stop];
         [repl removeChangeListenerWithToken: token];
     }
+    return fulfilled;
 }
 
 
@@ -544,15 +550,15 @@
     [doc1 setValue: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
-
+    
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
-
+    
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
-
+    
     AssertEqual(self.db.count, 2u);
     CBLDocument* savedDoc2 = [self.db documentWithID:@"doc2"];
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
@@ -965,6 +971,7 @@
 
 #endif // TARGET_OS_IPHONE
 
+<<<<<<< HEAD
 
 - (void) testResetCheckpoint {
     NSError* error;
@@ -1320,7 +1327,7 @@
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
-
+    
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
@@ -1330,7 +1337,7 @@
     [doc1 setBlob: blob forKey: @"blob"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
-
+    
     [self eraseRemoteEndpoint: target];
     id config = [self configWithTarget: target type : kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
@@ -1379,7 +1386,7 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
     repl = [[CBLReplicator alloc] initWithConfig: config];
     [repl start];
-
+    
     XCTestExpectation* x = [self expectationWithDescription: @"When pigs fly"];
     [self waitForExpectations: @[x] timeout: 1e9];
 }
@@ -1424,7 +1431,8 @@
     
     // Push to SG:
     id config = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    if (![self run: config errorCode: 0 errorDomain: nil])
+        return;
     
     // Get doc form SG:
     NSDictionary* json = [self sendRequestToEndpoint: target method: @"GET" path: doc1.id body: nil];
@@ -1437,7 +1445,7 @@
     json = [self sendRequestToEndpoint: target method: @"PUT" path: doc1.id body: nuData];
     Assert(json);
     Log(@"----> Conflicting server revision is %@", json[@"rev"]);
-
+    
     // Delete local doc:
     Assert([self.db deleteDocument: doc1 error: &error]);
     AssertNil([self.db documentWithID: doc1.id]);
@@ -1454,6 +1462,7 @@
 
 - (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
+    
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
