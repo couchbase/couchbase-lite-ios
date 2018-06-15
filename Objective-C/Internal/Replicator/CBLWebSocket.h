@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void) registerWithC4;
 
++ (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
+
 @end
 
 
