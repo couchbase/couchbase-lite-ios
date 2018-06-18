@@ -89,6 +89,7 @@ struct PendingWrite {
     size_t _receivedBytesPending;
     bool _gotResponseHeaders;
     BOOL _connectingToProxy;
+    BOOL _connectedThruProxy;
 }
 
 
@@ -267,6 +268,7 @@ static void doDispose(C4Socket* s) {
     [self clearHTTPState];
 
     _connectingToProxy = (_logic.proxyType == kCBLHTTPProxy);
+    _connectedThruProxy = NO;
 
     // Open the streams:
     NSInputStream *inStream;
@@ -307,17 +309,20 @@ static void doDispose(C4Socket* s) {
 
 
 // Sets the TLS/SSL settings of the streams, if necessary.
-// This gets called again after connecting to a proxy, because the tunnel to the destination server
-// may have its own TLS settings.
-//FIX: What happens if the proxy connection and the destination both use TLS?
-// Do we then have two layers of TLS? I don't think this will work... --jpa
+// This gets called again after connecting to a proxy, to configure the TLS settings for the
+// actual server.
 - (void) configureTLS {
     _checkSSLCert = false;
     if (_logic.useTLS) {
         CBLLogVerbose(WebSocket, @"%@ enabling TLS", self);
         auto settings = CFDictionaryCreateMutable(nullptr, 0, nullptr, nullptr);
+        if (_connectedThruProxy) {
+            CFDictionarySetValue(settings, kCFStreamSSLPeerName,
+                                 (__bridge CFStringRef)_logic.directHost);
+        }
         if (_options[kC4ReplicatorOptionPinnedServerCert])
-            CFDictionarySetValue(settings, kCFStreamSSLValidatesCertificateChain, kCFBooleanFalse);
+            CFDictionarySetValue(settings, kCFStreamSSLValidatesCertificateChain,
+                                 kCFBooleanFalse);
         CFReadStreamSetProperty((__bridge CFReadStreamRef)_in,
                                 kCFStreamPropertySSLSettings, settings);
         CFRelease(settings);
@@ -368,10 +373,16 @@ static void doDispose(C4Socket* s) {
         _gotResponseHeaders = YES;
         auto httpResponse = _httpResponse;
         _httpResponse = nullptr;
-        if (_connectingToProxy)
+        [_logic receivedResponse: httpResponse];
+        if (_logic.shouldRetry) {
+            // Retry the connection, due to a redirect or auth challenge:
+            [self disconnect];
+            [self _connect];
+        } else if (_connectingToProxy) {
             [self receivedProxyHTTPResponse: httpResponse];
-        else
+        } else {
             [self receivedHTTPResponse: httpResponse];
+        }
         CFRelease(httpResponse);
     }
 }
@@ -379,15 +390,15 @@ static void doDispose(C4Socket* s) {
 
 // Handles a proxy HTTP response, triggering the WebSocket handshake if the tunnel is open.
 - (void) receivedProxyHTTPResponse: (CFHTTPMessageRef)httpResponse {
-    [_logic receivedResponse: httpResponse];
     NSInteger httpStatus = _logic.httpStatus;
     if (httpStatus != 200) {
         [self closeWithCode: (C4WebSocketCloseCode)httpStatus
-                        reason: $sprintf(@"Proxy: %@", _logic.httpStatusMessage)];
+                     reason: $sprintf(@"Proxy: %@", _logic.httpStatusMessage)];
         return;
     }
 
     // Now send the actual WebSocket GET request, over the open stream:
+    _connectedThruProxy = YES;
     _connectingToProxy = NO;
     _logic.proxySettings = nil;
     _logic.useProxyCONNECT = NO;
@@ -401,16 +412,6 @@ static void doDispose(C4Socket* s) {
 
 // Handles the WebSocket handshake HTTP response.
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
-    [_logic receivedResponse: httpResponse];
-    NSInteger httpStatus = _logic.httpStatus;
-
-    if (_logic.shouldRetry) {
-        // Retry the connection, due to a redirect or auth challenge:
-        [self disconnect];
-        [self start];
-        return;
-    }
-
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
     NSString* cookie = headers[@"Set-Cookie"];
@@ -420,6 +421,7 @@ static void doDispose(C4Socket* s) {
         newHeaders[@"Set-Cookie"] = [cookie componentsSeparatedByString: @", "];
         headers = newHeaders;
     }
+    NSInteger httpStatus = _logic.httpStatus;
     Encoder enc;
     enc << headers;
     alloc_slice headersFleece = enc.finish();
