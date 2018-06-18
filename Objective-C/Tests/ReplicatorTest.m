@@ -41,6 +41,46 @@
 }
 
 
++ (void) initialize {
+    if (self == [ReplicatorTest class]) {
+        // You can set environment variables to force use of a proxy:
+        // CBL_TEST_PROXY_TYPE      Proxy type: HTTP, SOCKS, PAC (defaults to HTTP)
+        // CBL_TEST_PROXY_HOST      Proxy hostname
+        // CBL_TEST_PROXY_PORT      Proxy port number
+        // CBL_TEST_PROXY_USER      Username for auth
+        // CBL_TEST_PROXY_PASS      Password for auth
+        // CBL_TEST_PROXY_PAC_URL   URL of PAC file
+
+        NSDictionary* env = NSProcessInfo.processInfo.environment;
+        NSString* proxyHost = env[@"CBL_TEST_PROXY_HOST"];
+        NSString* proxyType = env[@"CBL_TEST_PROXY_TYPE"];
+        int proxyPort = [env[@"CBL_TEST_PROXY_PORT"] intValue] ?: 80;
+        if (proxyHost || proxyType) {
+            proxyType = [(proxyType ?: @"http") uppercaseString];
+            if ([proxyType isEqualToString: @"HTTP"])
+                proxyType = (id)kCFProxyTypeHTTP;
+            else if ([proxyType isEqualToString: @"SOCKS"])
+                proxyType = (id)kCFProxyTypeSOCKS;
+            else if ([proxyType isEqualToString: @"PAC"])
+                proxyType = (id)kCFProxyTypeAutoConfigurationURL;
+            NSMutableDictionary* proxy = [@{(id)kCFProxyTypeKey: proxyType} mutableCopy];
+            proxy[(id)kCFProxyHostNameKey] = proxyHost;
+            proxy[(id)kCFProxyPortNumberKey] = @(proxyPort);
+            if (proxyType == (id)kCFProxyTypeAutoConfigurationURL) {
+                NSURL* pacURL = [NSURL URLWithString:  env[@"CBL_TEST_PROXY_PAC_URL"]];
+                proxy[(id)kCFProxyAutoConfigurationURLKey] = pacURL;
+                Log(@"Using PAC proxy URL %@", pacURL);
+            } else {
+                Log(@"Using %@ proxy server %@:%d", proxyType, proxyHost, proxyPort);
+            }
+            proxy[(id)kCFProxyUsernameKey] =  env[@"CBL_TEST_PROXY_USER"];
+            proxy[(id)kCFProxyPasswordKey] =  env[@"CBL_TEST_PROXY_PASS"];
+            [CBLHTTPLogic setOverrideProxySettings: proxy];
+        }
+    }
+}
+
+
 - (void) setUp {
     [super setUp];
     
@@ -71,7 +111,6 @@
     The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
     variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
     Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
-    To force use of an HTTP proxy, set CBL_TEST_PROXY_HOST and CBL_TEST_PROXY_PORT.
  */
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
     NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
@@ -92,35 +131,6 @@
     comp.path = [NSString stringWithFormat:@"/%@", dbName];
     NSURL* url = comp.URL;
     Assert(url);
-    
-    NSDictionary* env = NSProcessInfo.processInfo.environment;
-    NSString* proxyHost = env[@"CBL_TEST_PROXY_HOST"];
-    NSString* proxyType = env[@"CBL_TEST_PROXY_TYPE"];
-    int proxyPort = [env[@"CBL_TEST_PROXY_PORT"] intValue] ?: 80;
-    if (proxyHost || proxyType) {
-        proxyType = [(proxyType ?: @"http") uppercaseString];
-        if ([proxyType isEqualToString: @"HTTP"])
-            proxyType = (id)kCFProxyTypeHTTP;
-        else if ([proxyType isEqualToString: @"HTTPS"])
-            proxyType = (id)kCFProxyTypeHTTPS;
-        else if ([proxyType isEqualToString: @"SOCKS"])
-            proxyType = (id)kCFProxyTypeSOCKS;
-        else if ([proxyType isEqualToString: @"PAC"])
-            proxyType = (id)kCFProxyTypeAutoConfigurationURL;
-        NSMutableDictionary* proxy = [@{(id)kCFProxyTypeKey: proxyType} mutableCopy];
-        proxy[(id)kCFProxyHostNameKey] = proxyHost;
-        proxy[(id)kCFProxyPortNumberKey] = @(proxyPort);
-        if (proxyType == (id)kCFProxyTypeAutoConfigurationURL) {
-            NSURL* pacURL = [NSURL URLWithString:  env[@"CBL_TEST_PROXY_PAC_URL"]];
-            proxy[(id)kCFProxyAutoConfigurationURLKey] = pacURL;
-            Log(@"Using PAC proxy URL %@", pacURL);
-        } else {
-            Log(@"Using %@ proxy server %@:%d", proxyType, proxyHost, proxyPort);
-        }
-        proxy[(id)kCFProxyUsernameKey] =  env[@"CBL_TEST_PROXY_USER"];
-        proxy[(id)kCFProxyPasswordKey] =  env[@"CBL_TEST_PROXY_PASS"];
-        [CBLHTTPLogic setOverrideProxySettings: proxy];
-    }
     
     return [[CBLURLEndpoint alloc] initWithURL: url];
 }
