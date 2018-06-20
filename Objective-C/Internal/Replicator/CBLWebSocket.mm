@@ -695,9 +695,9 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             [self doWrite];
             break;
         case NSStreamEventEndEncountered:
-            CBLLogVerbose(WebSocket, @"%@: EndEncountered on %s stream (error=%@)",
-                          self, ((stream == _out) ? "write" : "read"), stream.streamError);
-            [self closeWithError: stream.streamError];
+            CBLLogVerbose(WebSocket, @"%@: EndEncountered on %s stream",
+                          self, ((stream == _out) ? "write" : "read"));
+            [self closeWithError: nil];
             break;
         case NSStreamEventErrorOccurred:
             CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
