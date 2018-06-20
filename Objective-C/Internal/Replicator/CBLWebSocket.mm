@@ -90,6 +90,7 @@ struct PendingWrite {
     bool _gotResponseHeaders;
     BOOL _connectingToProxy;
     BOOL _connectedThruProxy;
+    BOOL _closedRequest;
 }
 
 
@@ -538,7 +539,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // callback from C4Socket
 - (void) closeSocket {
+    // Called from the _queue's thread when the connection close is confirmed
+    // by the other peer.
     CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
+    _closedRequest = YES;
     dispatch_async(_queue, ^{
         if (_in || _out) {
             [self closeWithError: nil];
@@ -697,7 +701,9 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         case NSStreamEventEndEncountered:
             CBLLogVerbose(WebSocket, @"%@: EndEncountered on %s stream (error=%@)",
                           self, ((stream == _out) ? "write" : "read"), stream.streamError);
-            [self closeWithError: stream.streamError];
+            if (!_closedRequest)
+                [self closeWithError: MYError(ECONNRESET, NSPOSIXErrorDomain,
+                                              @"Connection reset by peer")];
             break;
         case NSStreamEventErrorOccurred:
             CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
