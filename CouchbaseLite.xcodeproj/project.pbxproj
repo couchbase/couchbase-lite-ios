@@ -101,10 +101,14 @@
 		27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
 		27F9619C1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
+		722EF15820DE0B8700FF3E82 /* CBLMockConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 722EF15720DE0B8700FF3E82 /* CBLMockConnection.m */; };
+		722EF15920DE0B8700FF3E82 /* CBLMockConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 722EF15720DE0B8700FF3E82 /* CBLMockConnection.m */; };
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A87A031E2E0E70008466FF /* CBLBlobStream.h */; };
 		72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
 		72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
+		72F8E81420DE11B700391B8C /* CBLMockConnectionErrorLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 72F8E81320DE11B700391B8C /* CBLMockConnectionErrorLogic.m */; };
+		72F8E81520DE11B700391B8C /* CBLMockConnectionErrorLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 72F8E81320DE11B700391B8C /* CBLMockConnectionErrorLogic.m */; };
 		9308F3F71E64B21D00F53EE4 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		9308F4031E64B21F00F53EE4 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		9308F4041E64B22200F53EE4 /* ExceptionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */; };
@@ -1533,11 +1537,16 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		722EF15720DE0B8700FF3E82 /* CBLMockConnection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLMockConnection.m; sourceTree = "<group>"; };
+		722EF15A20DE0B9D00FF3E82 /* CBLMockConnection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMockConnection.h; sourceTree = "<group>"; };
+		722EF15B20DE0E0800FF3E82 /* CBLMockConnectionLifecycleLocation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; path = CBLMockConnectionLifecycleLocation.h; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
 		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
 		72A87A041E2E0E70008466FF /* CBLBlobStream.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStream.mm; sourceTree = "<group>"; };
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
+		72F8E81220DE11B700391B8C /* CBLMockConnectionErrorLogic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMockConnectionErrorLogic.h; sourceTree = "<group>"; };
+		72F8E81320DE11B700391B8C /* CBLMockConnectionErrorLogic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLMockConnectionErrorLogic.m; sourceTree = "<group>"; };
 		930AE46B1EAA6C9100E92E9A /* CBLData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLData.h; sourceTree = "<group>"; };
 		930AE46C1EAA6C9100E92E9A /* CBLData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLData.mm; sourceTree = "<group>"; };
 		93140F001F22AA5E006E18EF /* ResultSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultSet.swift; sourceTree = "<group>"; };
@@ -2092,6 +2101,18 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		722EF14620DE0B5F00FF3E82 /* TestClasses */ = {
+			isa = PBXGroup;
+			children = (
+				722EF15720DE0B8700FF3E82 /* CBLMockConnection.m */,
+				722EF15A20DE0B9D00FF3E82 /* CBLMockConnection.h */,
+				722EF15B20DE0E0800FF3E82 /* CBLMockConnectionLifecycleLocation.h */,
+				72F8E81220DE11B700391B8C /* CBLMockConnectionErrorLogic.h */,
+				72F8E81320DE11B700391B8C /* CBLMockConnectionErrorLogic.m */,
+			);
+			path = TestClasses;
+			sourceTree = "<group>";
+		};
 		93140EEE1F22A99F006E18EF /* Predicate */ = {
 			isa = PBXGroup;
 			children = (
@@ -2114,6 +2135,7 @@
 		932CC551207D9ED2000B4B78 /* Objective-C */ = {
 			isa = PBXGroup;
 			children = (
+				722EF14620DE0B5F00FF3E82 /* TestClasses */,
 				9392607920A0C8BD00E5748C /* Database */,
 				9392608B20A0C8DF00E5748C /* Replicator */,
 				9369A675207DB3D4009B5B83 /* Internal */,
@@ -4519,9 +4541,11 @@
 				9343F139207D61EC00F19A89 /* NotificationTest.m in Sources */,
 				9343F13A207D61EC00F19A89 /* MiscTest.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
+				72F8E81420DE11B700391B8C /* CBLMockConnectionErrorLogic.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
+				722EF15820DE0B8700FF3E82 /* CBLMockConnection.m in Sources */,
 				939260B120A0FF0C00E5748C /* MessageEndpointTest.m in Sources */,
 				9343F13F207D61EC00F19A89 /* PredicateQueryTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
@@ -4561,10 +4585,13 @@
 				9343F177207D633300F19A89 /* DictionaryTest.m in Sources */,
 				9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */,
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
+				9343F17A207D633300F19A89 /* SampleCodeTest.m in Sources */,
+				722EF15920DE0B8700FF3E82 /* CBLMockConnection.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
 				939260B220A0FF1600E5748C /* MessageEndpointTest.m in Sources */,
 				9343F17D207D633300F19A89 /* MiscTest.m in Sources */,
+				72F8E81520DE11B700391B8C /* CBLMockConnectionErrorLogic.m in Sources */,
 				9343F17E207D633300F19A89 /* PredicateQueryTest.m in Sources */,
 				9343F17F207D633300F19A89 /* CBLTestCase.m in Sources */,
 			);

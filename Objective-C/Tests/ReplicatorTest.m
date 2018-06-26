@@ -24,11 +24,42 @@
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CollectionUtils.h"
-
+#import "CBLMockConnectionLifecycleLocation.h"
+#import "CBLMockConnectionErrorLogic.h"
+#import "CBLMockConnection.h"
+#import "CBLMessageEndpoint.h"
 
 @interface ReplicatorTest : CBLTestCase
 @end
 
+#ifdef COUCHBASE_ENTERPRISE
+
+@interface MockConnectionFactory : NSObject <CBLMessageEndpointDelegate>
+@end
+
+@implementation MockConnectionFactory
+{
+    id<CBLMockConnectionErrorLogic> _errorLogic;
+}
+
+- (instancetype)initWithErrorLogic:(id<CBLMockConnectionErrorLogic>)errorLogic {
+    self = [super init];
+    if(self) {
+        _errorLogic = errorLogic;
+    }
+    
+    return self;
+}
+
+- (id<CBLMessageEndpointConnection>)createConnectionForEndpoint:(CBLMessageEndpoint *)endpoint {
+    CBLMockClientConnection* retVal = [[CBLMockClientConnection alloc] initWithEndpoint:endpoint];
+    retVal.errorLogic = _errorLogic;
+    return retVal;
+}
+
+@end
+
+#endif
 
 @implementation ReplicatorTest
 {
@@ -37,6 +68,9 @@
     NSTimeInterval timeout;
     BOOL _stopped;
     BOOL _pinServerCert;
+#ifdef COUCHBASE_ENTERPRISE
+    MockConnectionFactory* _delegate;
+#endif
 }
 
 
@@ -263,6 +297,42 @@
     }
 }
 
+#ifdef COUCHBASE_ENTERPRISE
+
+- (CBLReplicatorConfiguration *)createFailureP2PConfigurationWithProtocol:(CBLProtocolType)protocolType atLocation:(CBLMockConnectionLifecycleLocation)location withRecoverability:(BOOL)isRecoverable {
+    NSInteger recoveryCount = isRecoverable ? 1 : 0;
+    CBLTestErrorLogic* errorLogic = [[CBLTestErrorLogic alloc] initAtLocation:location withRecoveryCount:recoveryCount];
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:protocolType];
+    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
+    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    server.errorLogic = errorLogic;
+    
+    _delegate = [[MockConnectionFactory alloc] initWithErrorLogic:errorLogic];
+    CBLMessageEndpoint* endpoint = [[CBLMessageEndpoint alloc] initWithUID:@"p2ptest1" target:server protocolType:protocolType delegate:_delegate];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:endpoint];
+    replConfig.replicatorType = kCBLReplicatorTypePush;
+    return replConfig;
+}
+
+- (void) runP2PErrorScenario:(CBLMockConnectionLifecycleLocation)location withRecoverability:(BOOL)isRecoverable {
+    NSTimeInterval oldTimeout = timeout;
+    timeout = 100.0;
+    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID:@"livesindb"];
+    [mdoc setString:@"db" forKey:@"name"];
+    NSError* error = nil;
+    [_db saveDocument:mdoc error:&error];
+    AssertNil(error);
+    
+    NSString* expectedDomain = isRecoverable ? nil : CBLErrorDomain;
+    NSInteger expectedCode = isRecoverable ? 0 : CBLErrorWebSocketAbnormalClose;
+    CBLReplicatorConfiguration* config = [self createFailureP2PConfigurationWithProtocol:kCBLProtocolTypeByteStream atLocation:location withRecoverability:isRecoverable];
+    [self run:config errorCode:expectedCode errorDomain:expectedDomain];
+    config = [self createFailureP2PConfigurationWithProtocol:kCBLProtocolTypeMessageStream atLocation:location withRecoverability:isRecoverable];
+    [self run:config reset:YES errorCode:expectedCode errorDomain:expectedDomain];
+    timeout = oldTimeout;
+}
+
+#endif
 
 #pragma mark - TESTS:
 
@@ -829,6 +899,29 @@
     NSLog(@"Test Done");
 }
 
+- (void) testP2PRecoverableFailureDuringOpen {
+    [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
+}
+
+- (void)testP2PRecoverableFailureDuringSend {
+    [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
+}
+
+- (void)testP2PRecoverableFailureDuringReceive {
+    [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
+}
+
+- (void)testP2PPermanentFailureDuringOpen {
+    [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:NO];
+}
+
+- (void)testP2PPermanentFailureDuringSend {
+    [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:NO];
+}
+
+- (void)testP2PPermanentFailureDuringReceive {
+    [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:NO];
+}
 
 #endif // COUCHBASE_ENTERPRISE
 
