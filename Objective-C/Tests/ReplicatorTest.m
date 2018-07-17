@@ -24,10 +24,13 @@
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CollectionUtils.h"
+
+#ifdef COUCHBASE_ENTERPRISE
 #import "CBLMockConnectionLifecycleLocation.h"
 #import "CBLMockConnectionErrorLogic.h"
 #import "CBLMockConnection.h"
 #import "CBLMessageEndpoint.h"
+#endif
 
 @interface ReplicatorTest : CBLTestCase
 @end
@@ -311,7 +314,7 @@
     __block id token = nil;
     __weak CBLReplicator* wReplicator = replicator;
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
-        if(change.status.progress.completed > progress && change.status.activity == kCBLReplicatorIdle) {
+        if(change.status.progress.completed >= progress && change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
             [wReplicator removeChangeListenerWithToken:token];
         }
@@ -1184,10 +1187,9 @@
     CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
     replConfig.continuous = YES;
     MockConnectionFactory* delegate2 = [[MockConnectionFactory alloc] initWithErrorLogic:errorLogic];
-    CBLMessageEndpoint* target2 = [[CBLMessageEndpoint alloc] initWithUID:@"p2ptest1" target:serverConnection2 protocolType:kCBLProtocolTypeMessageStream delegate:delegate2];
+    CBLMessageEndpoint* target2 = [[CBLMessageEndpoint alloc] initWithUID:@"p2ptest2" target:serverConnection2 protocolType:kCBLProtocolTypeMessageStream delegate:delegate2];
     CBLReplicatorConfiguration* replConfig2 = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target2];
     replConfig2.continuous = YES;
-    
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig:replConfig];
     CBLReplicator* replicator2 = [[CBLReplicator alloc] initWithConfig:replConfig2];
     XCTestExpectation* idle1 = [self waitForReplicatorIdle:replicator withProgressAtLeast:0];
