@@ -92,7 +92,8 @@
 - (void) tearDown {
     // Workaround to ensure that replicator's background cleaning task was done:
     // https://github.com/couchbase/couchbase-lite-core/issues/520
-    [NSThread sleepForTimeInterval: 0.3];
+    // https://github.com/couchbase/couchbase-lite-core/issues/539
+    [NSThread sleepForTimeInterval: 0.5];
     
     Assert([otherDB close: nil]);
     otherDB = nil;
@@ -1073,6 +1074,9 @@
         [self run:replConfig errorCode:0 errorDomain:nil];
         AssertEqual(_db.count, 2UL);
         
+        // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
+        [NSThread sleepForTimeInterval: 0.5];
+        
         CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
         Assert([savedDoc booleanForKey:@"modified"]);
         savedDoc = [otherDB documentWithID:@"livesinotherdb"];
@@ -1099,6 +1103,9 @@
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePush usingUID:@"p2ptest1"];
     
+    // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
+    [NSThread sleepForTimeInterval: 0.5];
+    
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
     Assert(success);
@@ -1106,6 +1113,9 @@
     Assert(success);
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePull usingUID:@"p2ptest2"];
+    
+    // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
+    [NSThread sleepForTimeInterval: 0.5];
     
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
@@ -1341,8 +1351,6 @@
 - (void) dontTestContinuousPushNeverending_SG {
     // NOTE: This test never stops even after the replication goes idle.
     // It can be used to test the response to connectivity issues like killing the remote server.
-    [CBLDatabase setLogLevel: kCBLLogLevelVerbose domain: kCBLLogDomainNetwork];
-    
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -1381,8 +1389,6 @@
 
 
 - (void) testPullConflictDeleteWins_SG {
-    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
-    
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -1426,8 +1432,6 @@
 
 - (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
-    [CBLDatabase setLogLevel:kCBLLogLevelDebug domain:kCBLLogDomainAll];
-    
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
