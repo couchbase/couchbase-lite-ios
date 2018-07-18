@@ -32,6 +32,8 @@
     CBLProtocolType _protocolType;
     BOOL _noCloseRequest;
     CBLMessageEndpointListener* _host;
+    dispatch_queue_t _dispatchQueue;
+    
 }
 @synthesize errorLogic=_errorLogic;
 
@@ -52,13 +54,14 @@
     if(self) {
         _protocolType = protocolType;
         _host = listener;
+        _dispatchQueue = dispatch_queue_create("CBLMockConnection", DISPATCH_QUEUE_SERIAL);
     }
     
     return self;
 }
 
 - (void)acceptBytes:(NSData *)message {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(_dispatchQueue, ^{
         if(self.isClient && [self.errorLogic shouldCloseAtLocation:kCBLMockConnectionReceive]) {
             CBLMessagingError* error = [self.errorLogic createError];
             [self connectionBroken:error];
@@ -85,11 +88,11 @@
     if(self.isClient && [_errorLogic shouldCloseAtLocation:kCBLMockConnectionConnect]) {
         CBLMessagingError* error = [_errorLogic createError];
         [self connectionBroken:error];
-         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+         dispatch_async(_dispatchQueue, ^{
              completion(NO, error);
          });
     } else {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(_dispatchQueue, ^{
             completion(YES, nil);
         });
     }
@@ -100,19 +103,19 @@
     if(self.isClient && [_errorLogic shouldCloseAtLocation:kCBLMockConnectionSend]) {
         CBLMessagingError* error = [_errorLogic createError];
         [self connectionBroken:error];
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(_dispatchQueue, ^{
             completion(NO, error);
         });
     } else {
         [self performWrite:[message toData]];
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(_dispatchQueue, ^{
             completion(YES, nil);
         });
     }
 }
 
 - (void) close:(NSError *)error completion:(void (^)(void))completion {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(_dispatchQueue, ^{
         completion();
     });
 }
@@ -151,7 +154,7 @@
 
 - (void)close:(NSError *)error completion:(void (^)(void))completion {
     if(!_connection) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(_dispatchQueue, ^{
             completion();
         });
         return;
@@ -160,7 +163,7 @@
     if([self.errorLogic shouldCloseAtLocation:kCBLMockConnectionClose]) {
         CBLMessagingError* e = [self.errorLogic createError];
         [self connectionBroken:e];
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(_dispatchQueue, ^{
             completion(); // FIXME: How to report this error?
         });
         return;
@@ -171,7 +174,7 @@
         [self connectionBroken:nil];
     }
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(_dispatchQueue, ^{
         completion();
     });
 }
