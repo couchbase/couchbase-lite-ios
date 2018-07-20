@@ -177,6 +177,10 @@ then
   done
 fi
 
+# Copy strip framework script
+mkdir "${OUTPUT_FRAMEWORK_BUNDLE_DIR}/Scripts"
+cp Scripts/strip_frameworks.sh "${OUTPUT_FRAMEWORK_BUNDLE_DIR}/Scripts"
+
 # Cleanup:
 for SDK in "${SDKS[@]}"
   do
