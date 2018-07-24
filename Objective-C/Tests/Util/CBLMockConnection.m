@@ -171,7 +171,6 @@
     if([self.errorLogic shouldCloseAtLocation: kCBLMockConnectionClose]) {
         error = [self.errorLogic createError];
     }
-    
     _server = nil;
     _noCloseRequest = YES;
     [_connection close: error];
@@ -196,6 +195,7 @@
 
 - (void)close: (NSError*)error completion: (void (^)(void))completion {
     dispatch_async(_dispatchQueue, ^{
+        _connection = nil;
         if(_protocolType == kCBLProtocolTypeMessageStream && !error) {
             [_client serverDisconnected];
         }
