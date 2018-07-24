@@ -59,12 +59,12 @@ You can use [Carthage](https://github.com/Carthage/Carthage) to install `Couchba
 
 ##### Community Edition
 ```
-binary "https://s3.amazonaws.com/cbmobile-carthage/CouchbaseLite-Community.json" ~> 2.0.0
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json" ~> 2.0.0
 ```
 
 ##### Enterprise Edition
 ```
-binary "https://s3.amazonaws.com/cbmobile-carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
