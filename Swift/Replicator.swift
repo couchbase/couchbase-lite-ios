@@ -136,7 +136,7 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
-        let token = _impl.addChangeListener(with: queue, listener: { [unowned self] (change) in
+        let token = _impl.addChangeListener(with: queue, listener: { (change) in
             listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
         return ListenerToken(token)
