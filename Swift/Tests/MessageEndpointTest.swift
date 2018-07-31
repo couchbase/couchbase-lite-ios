@@ -42,7 +42,7 @@ class MultipeerConnection: MessageEndpointConnection {
     }
     
     func receive(data: Data) {
-        replConnection.receive(messge: Message.fromData(data))
+        replConnection.receive(message: Message.fromData(data))
     }
     
     func open(connection: ReplicatorConnection, completion: @escaping (Bool, MessagingError?) -> Void) {

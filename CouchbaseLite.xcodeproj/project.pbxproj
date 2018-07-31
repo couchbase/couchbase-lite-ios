@@ -1552,8 +1552,6 @@
 		93140F001F22AA5E006E18EF /* ResultSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultSet.swift; sourceTree = "<group>"; };
 		93140F021F22AA68006E18EF /* Result.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLPredicateQuery+Internal.h"; sourceTree = "<group>"; };
-		9317953820F970C800353369 /* ReplicatorTcpConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpConnection.swift; sourceTree = "<group>"; };
-		9317953920F970C800353369 /* ReplicatorTcpListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpListener.swift; sourceTree = "<group>"; };
 		931C14511EAABCE70094F9B2 /* CBLFragment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFragment.h; sourceTree = "<group>"; };
 		931C14521EAABCE70094F9B2 /* CBLFragment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFragment.m; sourceTree = "<group>"; };
 		931C145D1EAACAAA0094F9B2 /* CBLDictionaryFragment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDictionaryFragment.h; sourceTree = "<group>"; };
@@ -2123,15 +2121,6 @@
 			name = Predicate;
 			sourceTree = "<group>";
 		};
-		9317953720F970C800353369 /* Extra */ = {
-			isa = PBXGroup;
-			children = (
-				9317953820F970C800353369 /* ReplicatorTcpConnection.swift */,
-				9317953920F970C800353369 /* ReplicatorTcpListener.swift */,
-			);
-			path = Extra;
-			sourceTree = "<group>";
-		};
 		932CC551207D9ED2000B4B78 /* Objective-C */ = {
 			isa = PBXGroup;
 			children = (
@@ -2149,7 +2138,6 @@
 			children = (
 				9392608D20A0C93200E5748C /* Database */,
 				9392608E20A0C94100E5748C /* Replicator */,
-				9317953720F970C800353369 /* Extra */,
 			);
 			name = Swift;
 			path = ../Sources/Swift;
