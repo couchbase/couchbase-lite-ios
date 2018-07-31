@@ -60,7 +60,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 }
 
 @interface CBLReplicator ()
-@property (readwrite, nonatomic) CBLReplicatorStatus* status;
+@property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
 
 
@@ -96,7 +96,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     if (self) {
         NSParameterAssert(config.database != nil && config.target != nil);
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
-        _dispatchQueue = dispatch_get_main_queue();
+        _dispatchQueue = config.database.dispatchQueue;
         _changeNotifier = [CBLChangeNotifier new];
     }
     return self;
@@ -393,7 +393,10 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         // Post change
         [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
                                                                               status: self.status]];
-
+        
+        // Prevent self to get released when removing from the active replications:
+        CBLReplicator* repl = self;
+        
         // Clear replicator:
         if (c4Status.level == kC4Offline && _isSuspending) {
             _isSuspending = NO;
@@ -409,7 +412,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self endBackgrounding];
         #endif
             CBL_LOCK(_config.database) {
-                [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+                [_config.database.activeReplications removeObject: repl];
             }
         }
         
