@@ -438,7 +438,7 @@
     AssertNil(error);
     
     NSString* expectedDomain = isRecoverable ? nil : CBLErrorDomain;
-    NSInteger expectedCode = isRecoverable ? 0 : CBLErrorWebSocketAbnormalClose;
+    NSInteger expectedCode = isRecoverable ? 0 : CBLErrorWebSocketCloseUserPermanent;
     CBLReplicatorConfiguration* config = [self createFailureP2PConfigurationWithProtocol:kCBLProtocolTypeByteStream atLocation:location withRecoverability:isRecoverable];
     [self run:config errorCode:expectedCode errorDomain:expectedDomain];
     config = [self createFailureP2PConfigurationWithProtocol:kCBLProtocolTypeMessageStream atLocation:location withRecoverability:isRecoverable];
@@ -987,8 +987,6 @@
 }
 
 #endif // TARGET_OS_IPHONE
-
-<<<<<<< HEAD
 
 - (void) testResetCheckpoint {
     NSError* error;
