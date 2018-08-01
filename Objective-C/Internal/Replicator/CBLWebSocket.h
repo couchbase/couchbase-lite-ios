@@ -28,8 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
 
-+ (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
-
 @end
 
 

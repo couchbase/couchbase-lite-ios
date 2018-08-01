@@ -92,23 +92,18 @@ struct PendingWrite {
     BOOL _connectedThruProxy;
 }
 
-
-+ (void) registerWithC4 {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        c4socket_registerFactory({
-            .providesWebSockets = false,
-            .open = &doOpen,
-            .close = &doClose,
-            .write = &doWrite,
-            .completedReceive = &doCompletedReceive,
-            .dispose = &doDispose
-        });
-        CBLLog(WebSocket, @"CBLWebSocket registered as C4SocketFactory");
-    });
++ (C4SocketFactory) socketFactory {
+    return {
+        .framing = kC4WebSocketClientFraming,
+        .open = &doOpen,
+        .close = &doClose,
+        .write = &doWrite,
+        .completedReceive = &doCompletedReceive,
+        .dispose = &doDispose,
+    };
 }
 
-static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece) {
+static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, void *context) {
     @autoreleasepool {
         NSURLComponents* c = [NSURLComponents new];
         if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)

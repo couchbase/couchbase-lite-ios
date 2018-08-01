@@ -290,14 +290,14 @@
 }
 
 
-- (bool) run: (CBLReplicatorConfiguration*)config
+- (BOOL) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 {
-    [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain];
+    return [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain];
 }
 
-- (void) run: (CBLReplicatorConfiguration*)config
+- (BOOL) run: (CBLReplicatorConfiguration*)config
        reset: (BOOL)reset
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
@@ -305,7 +305,7 @@
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
-    __block bool fulfilled = false;
+    __block BOOL fulfilled = NO;
     __weak typeof(self) wSelf = self;
     id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
@@ -316,7 +316,7 @@
         }
         if (change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
-            fulfilled = true;
+            fulfilled = YES;
         }
     }];
     
@@ -340,7 +340,6 @@
           errorDomain: (NSString*)domain
 {
     CBLReplicatorStatus* s = change.status;
-    
     static const char* const kActivityNames[5] = { "stopped", "offline", "connecting", "idle", "busy" };
     NSLog(@"---Status: %s (%llu / %llu), lastError = %@",
           kActivityNames[s.activity], s.progress.completed, s.progress.total,
