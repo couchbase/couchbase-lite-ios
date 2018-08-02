@@ -155,7 +155,6 @@ static void doDispose(C4Socket* s) {
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
-        _logic.useProxyCONNECT = YES;
 
         slice proxy = _options["HTTPProxy"_sl].asString();      //TODO: Add to c4Replicator.h
         if (proxy) {
@@ -283,6 +282,7 @@ static void doDispose(C4Socket* s) {
     if (_connectingToProxy) {
         CBLLog(WebSocket, @"%@ connecting to HTTP proxy %@:%d...",
                self, _logic.directHost, _logic.directPort);
+        _logic.useProxyCONNECT = YES;
         [self writeData: _logic.HTTPRequestData completionHandler: nil];
     } else {
         CBLLog(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
