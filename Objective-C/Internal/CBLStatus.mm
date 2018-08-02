@@ -28,6 +28,7 @@ static NSErrorDomain const FleeceErrorDomain    = @"CouchbaseLite.Fleece";
 
 
 static bool cfNetworkToC4Error(int cfNetworkErrorCode, C4Error *outError);
+static bool osStatusToC4Error(OSStatus, C4Error *outError);
 
 
 BOOL convertError(const C4Error &c4err, NSError** outError) {
@@ -84,6 +85,11 @@ void convertError(NSError* error, C4Error *outError) {
         } else {
             cfNetworkToC4Error(code, &c4err);
         }
+    } else if ([domain isEqualToString: NSOSStatusErrorDomain]) {
+        if (!osStatusToC4Error(code, &c4err)) {
+            if (code >= -9899 && code <= -9800)
+                c4err = {NetworkDomain, kC4NetErrTLSHandshakeFailed};   // SecureTransport errors
+        }
     }
     *outError = c4error_make(c4err.domain, c4err.code, c4str(message));
 }
@@ -109,39 +115,61 @@ BOOL createError(int status,  NSString* desc, NSError** outError) {
 }
 
 
-// Maps CFNetworkErrors <-> C4Errors ... see <CFNetwork/CFNetworkErrors.h>
-static const struct {int code; C4Error c4err;} kCFNetworkErrorMap[] = {
-    {kCFErrorHTTPConnectionLost,                {POSIXDomain, ECONNRESET}},
-    {kCFURLErrorCannotConnectToHost,            {POSIXDomain, ECONNREFUSED}},
-    {kCFURLErrorNetworkConnectionLost,          {POSIXDomain, ECONNRESET}},
-    {kCFURLErrorDNSLookupFailed,                {NetworkDomain, kC4NetErrDNSFailure}},
-    {kCFHostErrorHostNotFound,                  {NetworkDomain, kC4NetErrUnknownHost}},
-    {kCFURLErrorTimedOut,                       {NetworkDomain, kC4NetErrTimeout}},
-    {kCFErrorHTTPBadURL,                        {NetworkDomain, kC4NetErrInvalidURL}},
-    {kCFURLErrorHTTPTooManyRedirects,           {NetworkDomain, kC4NetErrTooManyRedirects}},
-    {kCFErrorHTTPRedirectionLoopDetected,       {NetworkDomain, kC4NetErrTooManyRedirects}},
-    {kCFURLErrorSecureConnectionFailed,         {NetworkDomain, kC4NetErrTLSHandshakeFailed}},
-    {kCFURLErrorServerCertificateHasBadDate,    {NetworkDomain, kC4NetErrTLSCertExpired}},
-    {kCFURLErrorServerCertificateNotYetValid,   {NetworkDomain, kC4NetErrTLSCertExpired}},
-    {kCFURLErrorServerCertificateUntrusted,     {NetworkDomain, kC4NetErrTLSCertUntrusted}},
-    {kCFURLErrorClientCertificateRequired,      {NetworkDomain, kC4NetErrTLSClientCertRequired}},
-    {kCFURLErrorClientCertificateRejected,      {NetworkDomain, kC4NetErrTLSClientCertRejected}},
-    {kCFURLErrorServerCertificateHasUnknownRoot,{NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
-    {kCFURLErrorRedirectToNonExistentLocation,  {NetworkDomain, kC4NetErrInvalidRedirect}},
-    {kCFErrorHTTPRedirectionLoopDetected,       {NetworkDomain, kC4NetErrInvalidRedirect}},
-    {kCFURLErrorHTTPTooManyRedirects,           {NetworkDomain, kC4NetErrInvalidRedirect}},
-    {kCFErrorHTTPBadProxyCredentials,           {WebSocketDomain, 407}},
-    {0}
-    // This list is incomplete but covers most of what will actually occur
-};
+struct ErrorMapping {int code; C4Error c4err;};
 
 
-static bool cfNetworkToC4Error(int code, C4Error *outError) {
-    for (int i = 0; kCFNetworkErrorMap[i].code; ++i) {
-        if (kCFNetworkErrorMap[i].code == code) {
-            *outError = kCFNetworkErrorMap[i].c4err;
+static bool mapToC4Error(int code, const ErrorMapping map[], C4Error *outError) {
+    for (int i = 0; map[i].code; ++i) {
+        if (map[i].code == code) {
+            *outError = map[i].c4err;
             return true;
         }
     }
     return false;
+}
+
+
+static bool cfNetworkToC4Error(int code, C4Error *outError) {
+    // Maps CFNetworkErrors <-> C4Errors ... see <CFNetwork/CFNetworkErrors.h>
+    static const ErrorMapping kCFNetworkErrorMap[] = {
+        {kCFErrorHTTPConnectionLost,                {POSIXDomain, ECONNRESET}},
+        {kCFURLErrorCannotConnectToHost,            {POSIXDomain, ECONNREFUSED}},
+        {kCFURLErrorNetworkConnectionLost,          {POSIXDomain, ECONNRESET}},
+        {kCFURLErrorDNSLookupFailed,                {NetworkDomain, kC4NetErrDNSFailure}},
+        {kCFHostErrorHostNotFound,                  {NetworkDomain, kC4NetErrUnknownHost}},
+        {kCFURLErrorTimedOut,                       {NetworkDomain, kC4NetErrTimeout}},
+        {kCFErrorHTTPBadURL,                        {NetworkDomain, kC4NetErrInvalidURL}},
+        {kCFURLErrorHTTPTooManyRedirects,           {NetworkDomain, kC4NetErrTooManyRedirects}},
+        {kCFErrorHTTPRedirectionLoopDetected,       {NetworkDomain, kC4NetErrTooManyRedirects}},
+        {kCFURLErrorSecureConnectionFailed,         {NetworkDomain, kC4NetErrTLSHandshakeFailed}},
+        {kCFURLErrorServerCertificateHasBadDate,    {NetworkDomain, kC4NetErrTLSCertExpired}},
+        {kCFURLErrorServerCertificateNotYetValid,   {NetworkDomain, kC4NetErrTLSCertExpired}},
+        {kCFURLErrorServerCertificateUntrusted,     {NetworkDomain, kC4NetErrTLSCertUntrusted}},
+        {kCFURLErrorClientCertificateRequired,      {NetworkDomain, kC4NetErrTLSClientCertRequired}},
+        {kCFURLErrorClientCertificateRejected,      {NetworkDomain, kC4NetErrTLSClientCertRejected}},
+        {kCFURLErrorServerCertificateHasUnknownRoot,{NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
+        {kCFURLErrorRedirectToNonExistentLocation,  {NetworkDomain, kC4NetErrInvalidRedirect}},
+        {kCFErrorHTTPRedirectionLoopDetected,       {NetworkDomain, kC4NetErrInvalidRedirect}},
+        {kCFURLErrorHTTPTooManyRedirects,           {NetworkDomain, kC4NetErrInvalidRedirect}},
+        {kCFErrorHTTPBadProxyCredentials,           {WebSocketDomain, 407}},
+        {0}
+        // This list is incomplete but covers most of what will actually occur
+    };
+    return mapToC4Error(code, kCFNetworkErrorMap, outError);
+}
+
+
+static bool osStatusToC4Error(OSStatus code, C4Error *outError) {
+    // Maps OSStatusErrorDomain errors <-> C4Errors ... see <Security/SecureTransport.h>
+    static const ErrorMapping kCFNetworkErrorMap[] = {
+        {errSSLXCertChainInvalid,                   {NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
+        {errSSLBadCert,                             {NetworkDomain, kC4NetErrTLSCertUntrusted}},
+        {errSSLUnknownRootCert,                     {NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
+        {errSSLNoRootCert,                          {NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
+        {errSSLCertExpired,                         {NetworkDomain, kC4NetErrTLSCertExpired}},
+        {errSSLCertNotYetValid,                     {NetworkDomain, kC4NetErrTLSCertExpired}},
+        {0}
+        // This list is incomplete. Any OSStatus in [-9865...-9800] is a TLS error.
+    };
+    return mapToC4Error(code, kCFNetworkErrorMap, outError);
 }

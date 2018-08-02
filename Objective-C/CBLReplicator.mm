@@ -387,15 +387,21 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self stopReachabilityObserver];
         }
         
+        // Prevent self to get released when removing from the active replications:
+        CBLReplicator* repl = self;
+        if (c4Status.level == kC4Stopped) {
+            CBL_LOCK(_config.database) {
+                // Remove from the active replications before posting change:
+                [_config.database.activeReplications removeObject: repl];
+            }
+        }
+        
         // Update my properties:
         [self updateStateProperties: c4Status];
         
         // Post change
         [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
                                                                               status: self.status]];
-        
-        // Prevent self to get released when removing from the active replications:
-        CBLReplicator* repl = self;
         
         // Clear replicator:
         if (c4Status.level == kC4Offline && _isSuspending) {
@@ -411,9 +417,6 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
-            CBL_LOCK(_config.database) {
-                [_config.database.activeReplications removeObject: repl];
-            }
         }
         
     #if TARGET_OS_IPHONE
@@ -429,7 +432,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     // If this is a transient error, or if I'm continuous and the error might go away with a change
     // in network (i.e. network down, hostname unknown), then go offline and retry later.
     bool transient = c4error_mayBeTransient(c4err) ||
-        (c4err.domain == WebSocketDomain && c4err.code == kWebSocketCloseCustomTransient);
+        (c4err.domain == WebSocketDomain && c4err.code == kCBLWebSocketCloseUserTransient);
     if (!transient && !(_config.continuous && c4error_mayBeNetworkDependent(c4err)))
         return false;   // nope, this is permanent
     if (!_config.continuous && _retryCount >= kMaxOneShotRetryCount)
