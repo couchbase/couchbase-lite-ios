@@ -239,7 +239,7 @@
         return nil;
     } else {
         Log(@"Send request succeeded; URL=<%@>, Method=<%@>, Status=%ld",
-            url, method, status);
+            url, method, (long)status);
         id result = nil;
         if (data && data.length > 0) {
             result = [CBLJSON JSONObjectWithData: data options: 0 error: &error];
