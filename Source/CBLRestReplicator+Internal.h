@@ -49,4 +49,5 @@
 - (BOOL) goOffline;
 - (BOOL) goOnline;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
+- (void) postProgressChanged;
 @end

@@ -120,7 +120,7 @@
         // Nothing to push, so stop. Use a delayed-perform, because various things like tests
         // don't expect the replicator to stop during the call to -start, before any async
         // activity occurs.
-        [self performSelector: @selector(stopped) withObject: nil afterDelay: 0.0];
+        [self performSelector: @selector(stoppedAndNotify) withObject: nil afterDelay: 0.0];
         return;
     }
     for (CBL_Revision* rev in unpushedRevisions)
@@ -165,6 +165,12 @@
     [_purgeQueue flushAll];
     [self stopObserving];
     [super stop];
+}
+
+
+- (void) stoppedAndNotify {
+    [self stopped];
+    [self postProgressChanged];
 }
 
 

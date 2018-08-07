@@ -77,6 +77,14 @@
 
 - (void) runReplication: (CBLReplication*)repl expectedChangesCount: (unsigned)expectedChangesCount
 {
+    [self runReplication: repl expectedChangesCount: expectedChangesCount waitUntilStopped: NO];
+}
+
+
+- (void) runReplication: (CBLReplication*)repl
+   expectedChangesCount: (unsigned)expectedChangesCount
+       waitUntilStopped: (BOOL)waitUntilStopped
+{
     Log(@"Waiting for %@ to finish...", repl);
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(replChanged:)
@@ -91,8 +99,11 @@
     bool done = [self wait: _timeout for: ^BOOL {
         if (repl.running)
             started = true;
-        return started && (repl.status == kCBLReplicationStopped ||
-                           repl.status == kCBLReplicationIdle);
+        
+        BOOL finished = repl.status == kCBLReplicationStopped ||
+            (!waitUntilStopped && repl.status == kCBLReplicationIdle);
+        
+        return started && finished;
     }];
     Assert(done, @"Replication failed to complete");
     Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
@@ -2003,6 +2014,26 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self runReplication: repl expectedChangesCount: 0];
     AssertNil(repl.lastError);
     [CBLManager setWarningsRaiseExceptions: YES];
+}
+
+
+- (void) test31_SingleShotPushPullNoChanges {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+    
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    for (int i = 0; i < 5; i++) {
+        [self runReplication: pusher expectedChangesCount: 0 waitUntilStopped: YES];
+        AssertNil(pusher.lastError);
+    }
+    
+    CBLReplication* puller = [db createPullReplication: remoteDbURL];
+    for (int i = 0; i < 5; i++) {
+        [self runReplication: puller expectedChangesCount: 0 waitUntilStopped: YES];
+        AssertNil(puller.lastError);
+    }
 }
 
 
