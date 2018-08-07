@@ -1313,6 +1313,101 @@
     Assert(statuses.count == 0UL);
 }
 
+- (void) testP2PPushWithDocIDsFilter {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"doc1" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"doc2" forKey: @"name"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"doc3" forKey: @"name"];
+    Assert([self.db saveDocument: doc3 error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config =
+        [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    config.documentIDs = @[@"doc1", @"doc3"];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(otherDB.count, 2u);
+    AssertNotNil([otherDB documentWithID: @"doc1"]);
+    AssertNotNil([otherDB documentWithID: @"doc3"]);
+    AssertNil([otherDB documentWithID: @"doc2"]);
+}
+
+- (void) testP2PPullWithDocIDsFilter {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"doc1" forKey: @"name"];
+    Assert([otherDB saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"doc2" forKey: @"name"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"doc3" forKey: @"name"];
+    Assert([otherDB saveDocument: doc3 error: &error]);
+    
+    // Pull:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config =
+    [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    config.documentIDs = @[@"doc1", @"doc3"];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.db.count, 2u);
+    AssertNotNil([self.db documentWithID: @"doc1"]);
+    AssertNotNil([self.db documentWithID: @"doc3"]);
+    AssertNil([self.db documentWithID: @"doc2"]);
+}
+
+- (void) testP2PPushAndPullWithDocIDsFilter {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"doc1" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"doc2" forKey: @"name"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"doc3" forKey: @"name"];
+    Assert([otherDB saveDocument: doc3 error: &error]);
+    
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
+    [doc4 setString: @"doc4" forKey: @"name"];
+    Assert([otherDB saveDocument: doc4 error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config =
+    [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    config.documentIDs = @[@"doc1", @"doc4"];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.db.count, 3u);
+    AssertNotNil([self.db documentWithID: @"doc1"]);
+    AssertNotNil([self.db documentWithID: @"doc2"]);
+    AssertNotNil([self.db documentWithID: @"doc4"]);
+    AssertNil([self.db documentWithID: @"doc3"]);
+    
+    AssertEqual(otherDB.count, 3u);
+    AssertNotNil([otherDB documentWithID: @"doc1"]);
+    AssertNotNil([otherDB documentWithID: @"doc3"]);
+    AssertNotNil([otherDB documentWithID: @"doc4"]);
+    AssertNil([otherDB documentWithID: @"doc2"]);
+}
+
 #endif // COUCHBASE_ENTERPRISE
 
 
