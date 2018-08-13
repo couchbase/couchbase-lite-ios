@@ -31,6 +31,7 @@ UsingLogDomain(Sync);
     NSMutableDictionary<NSNumber*, CBLRemoteRequest*>* _requestIDs; // Used on operation queue only
     NSMutableSet<CBLRemoteRequest*>* _allRequests;                  // Used on API thread only
     CBLCookieStorage* _cookieStorage;
+    BOOL _closed;
 }
 
 @synthesize authorizer=_authorizer;
@@ -96,6 +97,12 @@ UsingLogDomain(Sync);
 
 
 - (void) close {
+    @synchronized(self) {
+        if (_closed)
+            return;
+        _closed = true;
+    }
+    
     // Create a strong session in block to prevent race when _session
     // is set to nil in the -URLSession:didBecomeInvalidWithError: method.
     NSURLSession* session = _session;
@@ -110,6 +117,11 @@ UsingLogDomain(Sync);
 
 
 - (void) startRequest: (CBLRemoteRequest*)request {
+    @synchronized(self) {
+        if (_closed)
+            return;
+    }
+    
     request.session = self;
     request.delegate = _requestDelegate;
     if (_authorizer)
