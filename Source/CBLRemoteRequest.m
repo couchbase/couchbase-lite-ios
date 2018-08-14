@@ -83,6 +83,8 @@ typedef enum {
                 [_request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
             }
             _request.HTTPBody = body;
+            LogTo(RemoteRequest, @"%@:Added HTTP body of size %lu bytes",
+                  self, _request.HTTPBody.length);
         }
     }
     return self;
