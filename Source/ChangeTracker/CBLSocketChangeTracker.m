@@ -65,7 +65,7 @@ UsingLogDomain(Sync);
     LogVerbose(Sync, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     LogTo(ChangeTracker, @"%@: %@ %@ %@",
           self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier,
-          CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(request)));
+          CBLSanitizeHTTPHeaderFields(CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(request))));
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)

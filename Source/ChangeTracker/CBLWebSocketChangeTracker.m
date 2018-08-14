@@ -70,7 +70,8 @@ UsingLogDomain(Sync);
 
     LogVerbose(Sync, @"%@: %@ %@", self, request.HTTPMethod, request.URL.resourceSpecifier);
     LogTo(ChangeTracker, @"%@: %@ %@ %@",
-          self, request.HTTPMethod, request.URL.resourceSpecifier, request.allHTTPHeaderFields);
+          self, request.HTTPMethod, request.URL.resourceSpecifier,
+          CBLSanitizeHTTPHeaderFields(request.allHTTPHeaderFields));
     _ws = [PSWebSocket clientSocketWithRequest: request];
     _ws.delegate = self;
     NSDictionary* tls = self.TLSSettings;

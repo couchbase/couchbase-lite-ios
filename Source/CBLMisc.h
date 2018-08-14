@@ -123,6 +123,9 @@ id CBLKeyForPrefixMatch(id key, unsigned depth);
 /** Stemmer name to use for the sqlite3-unicodesn tokenizer, based on current locale's language. */
 NSString* CBLStemmerNameForCurrentLocale(void);
 
+/** Redact Authorization token from the HTTP headers fields. */
+NSDictionary* CBLSanitizeHTTPHeaderFields(NSDictionary* headers) __attribute__((nonnull));
+
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name);
 NSData* CBLContentsOfTestFile(NSString* name);

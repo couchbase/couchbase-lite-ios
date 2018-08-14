@@ -566,3 +566,13 @@ NSString* CBLStemmerNameForCurrentLocale(void) {
     // The tokenizer hardcodes language names; see unicodeSetStemmer() in fts3_unicodesn.c.
     return [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
 }
+
+
+NSDictionary* CBLSanitizeHTTPHeaderFields(NSDictionary* headers) {
+    return [headers my_dictionaryByUpdatingValues: ^id(NSString* key, id value) {
+        if ([key caseInsensitiveCompare:@"Authorization"] == NSOrderedSame)
+            return @"XXXX";
+        else
+            return value;
+    }];
+}
