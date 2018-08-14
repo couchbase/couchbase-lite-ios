@@ -377,8 +377,8 @@ BOOL CBLMayBeTransientError( NSError* error ) {
         return code == ENETDOWN || code == ENETUNREACH || code == ENETRESET || code == ECONNABORTED
             || code == ECONNRESET || code == ETIMEDOUT || code == ECONNREFUSED;
     } else if ($equal(domain, CBLHTTPErrorDomain)) {
-        // Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
-        return code == 500 || code == 502 || code == 503 || code == 504;
+        // Too Many Requests, Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
+        return code == 429 || code == 500 || code == 502 || code == 503 || code == 504;
     } else {
         return NO;
     }
