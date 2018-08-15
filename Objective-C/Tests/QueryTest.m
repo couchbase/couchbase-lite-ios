@@ -105,7 +105,6 @@
     }
 }
 
-
 - (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
     
@@ -1724,6 +1723,18 @@
         i++;
     }
     AssertEqual(i, 2);
+}
+
+- (void) testHighPrecisionFloat {
+    CBLMutableDocument* doc = [CBLMutableDocument new];
+    [doc setDouble:DBL_MAX forKey:@"high_value"];
+    [_db saveDocument:doc error:nil];
+    
+    CBLQuery* q = [CBLQueryBuilder select:@[[CBLQuerySelectResult all]]
+                                     from:[CBLQueryDataSource database:_db]
+                                    where:[[CBLQueryExpression property:@"high_value"] equalTo:[CBLQueryExpression value:@DBL_MAX]]];
+    
+    AssertEqual([[q execute:nil] allResults].count, 1UL);
 }
 
 
