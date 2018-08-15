@@ -84,7 +84,7 @@ typedef enum {
             }
             _request.HTTPBody = body;
             LogTo(RemoteRequest, @"%@:Added HTTP body of size %lu bytes",
-                  self, _request.HTTPBody.length);
+                  self, (unsigned long)_request.HTTPBody.length);
         }
     }
     return self;
