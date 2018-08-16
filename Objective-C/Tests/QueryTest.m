@@ -1735,6 +1735,16 @@
                                     where:[[CBLQueryExpression property:@"high_value"] equalTo:[CBLQueryExpression value:@DBL_MAX]]];
     
     AssertEqual([[q execute:nil] allResults].count, 1UL);
+    
+    doc = [CBLMutableDocument new];
+    [doc setFloat:FLT_MAX forKey:@"high_value"];
+    [_db saveDocument:doc error:nil];
+    
+    q = [CBLQueryBuilder select:@[[CBLQuerySelectResult all]]
+                                     from:[CBLQueryDataSource database:_db]
+                                    where:[[CBLQueryExpression property:@"high_value"] equalTo:[CBLQueryExpression value:@FLT_MAX]]];
+    
+    AssertEqual([[q execute:nil] allResults].count, 1UL);
 }
 
 
