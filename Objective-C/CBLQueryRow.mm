@@ -28,7 +28,7 @@
 
 #import "c4Document.h"
 #import "c4Query.h"
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 
 using namespace cbl;
 
@@ -83,7 +83,7 @@ using namespace cbl;
 }
 
 - (id) valueAtIndex: (NSUInteger)index {
-    return FLValue_GetNSObject([self flValueAtIndex: index], nullptr, nil);
+    return FLValue_GetNSObject([self flValueAtIndex: index], nil);
 }
 
 - (bool) booleanAtIndex: (NSUInteger)index {

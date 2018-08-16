@@ -27,6 +27,7 @@
 #import "CBLReplicator+Internal.h"
 #import "c4Socket.h"
 #import "MYURLUtils.h"
+#import "fleece/Fleece.hh"
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
@@ -39,7 +40,6 @@ extern "C" {
 }
 
 using namespace fleece;
-using namespace fleeceapi;
 
 static constexpr size_t kReadBufferSize = 32 * 1024;
 

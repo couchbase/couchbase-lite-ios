@@ -19,7 +19,7 @@
 
 #pragma once
 #import "c4.h"
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 #import "CBLBlob.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"

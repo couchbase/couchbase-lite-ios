@@ -30,7 +30,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 
-using namespace fleeceapi;
+using namespace fleece;
 
 
 namespace cbl {

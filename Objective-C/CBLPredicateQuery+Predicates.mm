@@ -20,7 +20,7 @@
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLCoreBridge.h"
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 
 extern "C" {
 #import "MYErrorUtils.h"

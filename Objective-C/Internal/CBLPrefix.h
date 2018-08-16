@@ -21,7 +21,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 #import "CBLLog.h"
 
 #ifdef __cplusplus

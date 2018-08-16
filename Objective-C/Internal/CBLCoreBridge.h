@@ -20,7 +20,7 @@
 
 #pragma once
 #import <Foundation/Foundation.h>
-#import "Fleece+CoreFoundation.h"
+#import "fleece/Fleece+CoreFoundation.h"
 #import "c4.h"
 #import "c4Document+Fleece.h"
 

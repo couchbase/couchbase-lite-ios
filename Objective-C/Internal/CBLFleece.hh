@@ -20,7 +20,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLMutableArray.h"
 #import "CBLMutableDictionary.h"
-#import "FleeceCpp.hh"
+#import "fleece/Fleece.hh"
 #import "MArray.hh"
 #import "MDict.hh"
 
@@ -33,16 +33,16 @@ namespace cbl {
 
     // Returns true if newValue is different from oldValue. May return false positives.
     bool valueWouldChange(id newValue,
-                          const fleeceapi::MValue<id> &oldValue,
-                          fleeceapi::MCollection<id> &container);
+                          const fleece::MValue<id> &oldValue,
+                          fleece::MCollection<id> &container);
 
-    bool      asBool    (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-    NSInteger asInteger (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-    long long asLongLong(const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-    float     asFloat   (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-    double    asDouble  (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    bool      asBool    (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
+    NSInteger asInteger (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
+    long long asLongLong(const fleece::MValue<id>&, const fleece::MCollection<id> &container);
+    float     asFloat   (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
+    double    asDouble  (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     
-    class DocContext : public fleeceapi::MContext {
+    class DocContext : public fleece::MContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
 
@@ -50,7 +50,7 @@ namespace cbl {
         CBLC4Document* __nullable document() const {return _doc;}
         NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
 
-        id toObject(fleeceapi::Value);
+        id toObject(fleece::Value);
 
     private:
         CBLDatabase *_db;
@@ -62,19 +62,19 @@ namespace cbl {
 
 
 @interface NSObject (CBLFleece)
-@property (readonly, nonatomic) fleeceapi::MCollection<id>* __nullable fl_collection;
+@property (readonly, nonatomic) fleece::MCollection<id>* __nullable fl_collection;
 @end
 
 
 @interface CBLArray ()
 {
     @protected
-    fleeceapi::MArray<id> _array;
+    fleece::MArray<id> _array;
 }
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent;
-- (instancetype) initWithCopyOfMArray: (const fleeceapi::MArray<id>&)mArray
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent;
+- (instancetype) initWithCopyOfMArray: (const fleece::MArray<id>&)mArray
                             isMutable: (bool)isMutable;
 @end
 
@@ -82,12 +82,12 @@ namespace cbl {
 @interface CBLDictionary ()
 {
     @protected
-    fleeceapi::MDict<id> _dict;
+    fleece::MDict<id> _dict;
 }
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent;
-- (instancetype) initWithCopyOfMDict: (const fleeceapi::MDict<id>&)mDict
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent;
+- (instancetype) initWithCopyOfMDict: (const fleece::MDict<id>&)mDict
                            isMutable: (bool)isMutable;
 @end
 

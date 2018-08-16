@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import "c4Base.h"
-#import "Fleece.h"
+#import "fleece/slice.hh"
 
 
 /** A slice holding the data of an NSString. If possible, it points the slice into the data of the

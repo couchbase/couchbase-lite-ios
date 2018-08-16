@@ -30,7 +30,7 @@
 #import "CBLDocument.h"
 #import "CBLDictionary.h"
 #import "CBLFragment.h"
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
