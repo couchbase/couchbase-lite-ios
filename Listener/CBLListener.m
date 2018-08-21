@@ -126,7 +126,7 @@ DefineLogDomain(Listener);
     SecIdentityCopyCertificate(_SSLIdentity, &cert);
     if (!cert)
         return nil;
-    NSData* digest = MYGetCertificateDigest(cert);
+    NSData* digest = MYGetCertificateDigestSHA1(cert);
     CFRelease(cert);
     return digest;
 }

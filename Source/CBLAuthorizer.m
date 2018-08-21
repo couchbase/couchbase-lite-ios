@@ -129,7 +129,7 @@ static BOOL certMatchesPinned(SecCertificateRef cert, NSData* pinnedCertData, NS
     if (!pinnedCertData)
         return NO;
     if (pinnedCertData.length == 20) {
-        NSData* certDigest = MYGetCertificateDigest(cert);
+        NSData* certDigest = MYGetCertificateDigestSHA1(cert);
         if (![certDigest isEqual: pinnedCertData]) {
             Warn(@"SSL cert for %@'s digest %@ doesn't match pinnedCert %@",
                  host, certDigest, pinnedCertData);
