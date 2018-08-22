@@ -158,7 +158,8 @@ static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
             // Check each problem with this cert and decide if it's acceptable:
             BOOL accept = NO;
             if ([problem isEqualToString: @"SSLHostname"] ||
-                        [problem isEqualToString: @"AnchorTrusted"])
+                [problem isEqualToString: @"AnchorTrusted"] ||
+                ([problem isEqualToString: @"MissingIntermediate"] && localDomain))
             {
                 // Accept a self-signed cert from a local host (".local" domain)
                 accept = (i == 0 && SecTrustGetCertificateCount(trust) == 1 && localDomain);
