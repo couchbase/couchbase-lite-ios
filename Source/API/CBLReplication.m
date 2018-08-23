@@ -27,6 +27,7 @@
 #import "CBLProgressGroup.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+#import "MYBackgroundMonitor.h"
 
 
 typedef void (^PendingAction)(id<CBL_Replicator>);
@@ -65,6 +66,12 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     id<CBL_Replicator> _bg_replicator;
     NSMutableArray<PendingAction>* _bg_pendingActions;
     NSConditionLock* _bg_stopLock;
+    
+#if TARGET_OS_IPHONE
+    // For starting background task to allow the replicator to be started while
+    // the app is in background.
+    MYBackgroundMonitor *_bgMonitor;
+#endif
 }
 
 
@@ -308,6 +315,16 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
              lastSeqPushed: 0 serverCert: NULL];
 
         [_database addReplication: self];
+        
+#if TARGET_OS_IPHONE
+        // https://github.com/couchbase/couchbase-lite-ios/issues/1747
+        // This will start a background task immediately if the app is in
+        // the background to ensure that the replicator can completely start
+        // before the app is suspended by the OS. This logic is in addition
+        // to the logic in CBLRestReplicator that keeps the replicator running
+        // in the background until the replicator is inactive.
+        [self setupBackgrounding];
+#endif
     }
 }
 
@@ -380,6 +397,13 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 {
     if (!_started)
         return;
+    
+#if TARGET_OS_IPHONE
+    // Stops backgrounding monitor as the background replicator should have been
+    // started and monitored app backgrouding at this point.
+    [self endBackgrounding];
+#endif
+    
     if (status == kCBLReplicationStopped) {
         _started = NO;
         [_database forgetReplication: self];
@@ -722,5 +746,41 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     }
 }
 
+
+#pragma mark - Backgrounding
+
+
+#if TARGET_OS_IPHONE
+
+- (void) setupBackgrounding {
+    @synchronized (self) {
+        AssertNil(_bgMonitor);
+        _bgMonitor = [[MYBackgroundMonitor alloc] init];
+        __weak CBLReplication* weakSelf = self;
+        _bgMonitor.onAppBackgrounding = ^{ id strongSelf = weakSelf; [strongSelf appBackgrounding]; };
+        _bgMonitor.onAppForegrounding = ^{ id strongSelf = weakSelf; [strongSelf appForegrounding]; };
+        [_bgMonitor start];
+    }
+}
+
+
+- (void) appBackgrounding {
+    [_bgMonitor beginBackgroundTaskNamed: [self description]];
+}
+
+
+- (void) appForegrounding {
+    [_bgMonitor endBackgroundTask];
+}
+
+
+- (void) endBackgrounding {
+    @synchronized (self) {
+        [_bgMonitor stop];
+        _bgMonitor = nil;
+    }
+}
+
+#endif
 
 @end
