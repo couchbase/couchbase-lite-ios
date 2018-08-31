@@ -24,13 +24,12 @@
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
 #import "CBLStringBytes.h"
-#import "PlatformCompat.hh"
 #import "CBLFleece.hh"
 #import "MDict.hh"
 #import "MDictIterator.hh"
 
 using namespace cbl;
-using namespace fleeceapi;
+using namespace fleece;
 
 
 @implementation CBLDictionary
@@ -53,8 +52,8 @@ using namespace fleeceapi;
 }
 
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent
 {
     self = [super init];
     if (self) {
@@ -99,9 +98,8 @@ using namespace fleeceapi;
 
 // Called under the database's lock:
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    Encoder encoder(enc);
+    SharedEncoder encoder(enc);
     _dict.encodeTo(encoder);
-    encoder.release();
 }
 
 

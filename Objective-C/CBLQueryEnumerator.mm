@@ -27,7 +27,7 @@
 
 #import "c4Document.h"
 #import "c4Query.h"
-#import "Fleece.h"
+#import "fleece/slice.hh"
 extern "C" {
 #import "MYErrorUtils.h"
 }

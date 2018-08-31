@@ -20,7 +20,7 @@
 #pragma once
 #import <Foundation/Foundation.h>
 #import "CBLErrors.h"
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 #import "c4.h"
 
 NS_ASSUME_NONNULL_BEGIN

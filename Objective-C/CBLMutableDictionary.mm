@@ -27,7 +27,7 @@
 #import "CBLStringBytes.h"
 #import "CBLFleece.hh"
 
-using namespace fleeceapi;
+using namespace fleece;
 
 
 @implementation CBLMutableDictionary

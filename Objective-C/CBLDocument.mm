@@ -28,7 +28,6 @@
 #import "MRoot.hh"
 
 using namespace fleece;
-using namespace fleeceapi;
 
 
 @implementation CBLDocument
@@ -158,7 +157,7 @@ using namespace fleeceapi;
         if (c4doc) {
             C4Slice body = c4doc.body;
             if (body.size > 0)
-                _fleeceData = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+                _fleeceData = FLValue_AsDict(FLValue_FromData(body, kFLTrusted));
         }
         [self updateDictionary];
     }

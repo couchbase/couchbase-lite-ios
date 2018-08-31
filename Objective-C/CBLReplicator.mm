@@ -38,12 +38,11 @@
 #import "c4Replicator.h"
 #import "c4Socket.h"
 #import "CBLWebSocket.h"
-#import "FleeceCpp.hh"
+#import "fleece/Fleece.hh"
 #import <algorithm>
 
 using namespace std;
 using namespace fleece;
-using namespace fleeceapi;
 
 
 // Maximum number of retries before a one-shot replication gives up

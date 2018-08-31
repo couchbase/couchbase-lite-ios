@@ -29,7 +29,6 @@
 
 using namespace cbl;
 using namespace fleece;
-using namespace fleeceapi;
 
 
 @implementation CBLQueryResult {

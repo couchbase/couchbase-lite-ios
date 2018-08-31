@@ -27,7 +27,7 @@
 
 
 @implementation NSObject (CBLFleece)
-- (fleeceapi::MCollection<id>*) fl_collection {
+- (fleece::MCollection<id>*) fl_collection {
     return nullptr;
 }
 @end
@@ -35,37 +35,35 @@
 
 namespace cbl {
     DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
-    :fleeceapi::MContext({}, db.sharedKeys)
+    :fleece::MContext(fleece::alloc_slice())
     ,_db(db)
     ,_doc(doc)
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
 
 
-    id DocContext::toObject(fleeceapi::Value value) {
-        return value.asNSObject(sharedKeys(), _fleeceToNSStrings);
+    id DocContext::toObject(fleece::Value value) {
+        return value.asNSObject(_fleeceToNSStrings);
     }
 }
 
 
-namespace fleeceapi {
+namespace fleece {
     using namespace cbl;
 
     // Check whether the dictionary is the old attachment or not:
     static bool isOldAttachment(Dict properties, DocContext *context) {
-        auto sk = context->sharedKeys();
-        if (properties.get(C4STR("digest"), sk) != nullptr &&
-            properties.get(C4STR("revpos"), sk) != nullptr &&
-            properties.get(C4STR("stub"), sk) != nullptr &&
-            properties.get(C4STR("length"), sk) != nullptr)
+        if (properties.get(C4STR("digest")) != nullptr &&
+            properties.get(C4STR("revpos")) != nullptr &&
+            properties.get(C4STR("stub")) != nullptr &&
+            properties.get(C4STR("length")) != nullptr)
             return true;
         return false;
     }
 
     // Instantiate an Objective-C object for a Fleece dictionary with an "@type" key. */
     static id createSpecialObjectOfType(Dict properties, DocContext *context) {
-        auto sk = context->sharedKeys();
-        slice type = properties.get(C4STR(kC4ObjectTypeProperty), sk).asString();
+        slice type = properties.get(C4STR(kC4ObjectTypeProperty)).asString();
         if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties, context)) {
             return [[CBLBlob alloc] initWithDatabase: context->database()
                                           properties: context->toObject(properties)];
@@ -125,7 +123,7 @@ namespace fleeceapi {
 
 
 namespace cbl {
-    using namespace fleeceapi;
+    using namespace fleece;
 
     bool valueWouldChange(id newValue, const MValue<id> &oldValue, MCollection<id> &container) {
         // As a simplification we assume that array and dict values are always different, to avoid

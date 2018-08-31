@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Fleece.h"
+#import "fleece/Fleece.h"
 @class CBLDatabase;
 @class CBLC4Document;
 @protocol CBLObjectChangeListener;

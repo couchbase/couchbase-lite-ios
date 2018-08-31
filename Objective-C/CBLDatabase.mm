@@ -33,6 +33,7 @@
 #import "CBLStatus.h"
 #import "CBLLog+Admin.h"
 #import "CBLVersion.h"
+#import "fleece/Fleece.hh"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -463,9 +464,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBL_LOCK(self) {
         [self mustBeOpen];
         
-        C4SliceResult data = c4db_getIndexes(_c4db, nullptr);
-        FLValue value = FLValue_FromTrustedData((FLSlice)data);
-        return FLValue_GetNSObject(value, _sharedKeys, nullptr);
+        Doc doc(c4db_getIndexes(_c4db, nullptr));
+        return FLValue_GetNSObject(doc.root(), nullptr);
     }
 }
 
@@ -843,8 +843,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             return NO;
         }
         bodySlice = data2slice(body);
-        auto root = FLValue_FromTrustedData(bodySlice);
-        if (c4doc_dictContainsBlobs((FLDict)root, self.sharedKeys))
+        Doc doc(bodySlice, kFLTrusted, self.sharedKeys);
+        if (c4doc_dictContainsBlobs(doc))
             revFlags |= kRevHasAttachments;
     }
     
