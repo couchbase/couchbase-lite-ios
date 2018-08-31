@@ -245,7 +245,7 @@
             return NO;
         }
         
-        assert(!_c4Query);
+        Assert(!_c4Query);
         _c4Query = query;
         return YES;
     }

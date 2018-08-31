@@ -656,7 +656,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             _hasBytes = true;
             break;
         }
-        size_t nBytes = [_in read: _readBuffer maxLength: kReadBufferSize];
+        NSInteger nBytes = [_in read: _readBuffer maxLength: kReadBufferSize];
         CBLLogVerbose(WebSocket, @"DoRead read %zu bytes", nBytes);
         if (nBytes <= 0)
             break;
