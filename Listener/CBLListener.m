@@ -113,6 +113,7 @@ DefineLogDomain(Listener);
 - (BOOL) setAnonymousSSLIdentityWithLabel: (NSString*)label error: (NSError**)outError {
     SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(label,
                                                      kMYAnonymousIdentityDefaultExpirationInterval,
+                                                     kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
                                                      outError);
     self.SSLIdentity = identity;
     self.SSLExtraCertificates = nil;

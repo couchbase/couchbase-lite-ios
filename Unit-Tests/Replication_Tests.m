@@ -415,7 +415,8 @@
 
     NSError* error;
     SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"SSLTest",
-                                            kMYAnonymousIdentityDefaultExpirationInterval, &error);
+                                                          kMYAnonymousIdentityDefaultExpirationInterval,
+                                                          NULL, &error);
     Assert(ident);
     repl.authenticator = [CBLAuthenticator SSLClientCertAuthenticatorWithIdentity: ident
                                                                   supportingCerts: nil];

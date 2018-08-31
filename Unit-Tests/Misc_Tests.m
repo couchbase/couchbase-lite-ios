@@ -306,7 +306,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
 - (void) test_AnonymousIdentity {
     NSError* error;
     MYDeleteAnonymousIdentity(@"CBLUnitTests");
-    SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests", 100, &error);
+    SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests", 100, NULL, &error);
     Assert(ident != NULL, @"Couldn't create identity: %@", error);
 
     SecCertificateRef cert = NULL;

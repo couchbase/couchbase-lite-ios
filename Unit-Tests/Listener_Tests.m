@@ -106,8 +106,9 @@ static UInt16 sPort = 60000;
 
     NSError* error;
     SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests-Client",
-                                                     kMYAnonymousIdentityDefaultExpirationInterval,
-                                                     &error);
+                                                             kMYAnonymousIdentityDefaultExpirationInterval,
+                                                             NULL,
+                                                             &error);
     Assert(identity, @"Couldn't create client identity: %@", error);
     clientCredential = [NSURLCredential credentialWithIdentity: identity certificates: nil
                                                    persistence: NSURLCredentialPersistenceNone];
