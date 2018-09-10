@@ -77,4 +77,5 @@ _kCBLAllPropertiesName
 .objc_class_name_CBLMessage
 .objc_class_name_CBLMessageEndpoint
 .objc_class_name_CBLMessageEndpointListener
+.objc_class_name_CBLMessageEndpointListenerConfiguration
 .objc_class_name_CBLMessagingError
