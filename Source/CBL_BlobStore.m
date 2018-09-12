@@ -133,10 +133,10 @@ UsingLogDomain(Database);
 + (CBLBlobKey) keyForBlob: (NSData*)blob {
     NSCParameterAssert(blob);
     CBLBlobKey key;
-    SHA_CTX ctx;
-    SHA1_Init(&ctx);
-    SHA1_Update(&ctx, blob.bytes, blob.length);
-    SHA1_Final(key.bytes, &ctx);
+    CC_SHA1_CTX ctx;
+    CC_SHA1_Init(&ctx);
+    CC_SHA1_Update(&ctx, blob.bytes, (CC_LONG)blob.length);
+    CC_SHA1_Final(key.bytes, &ctx);
     return key;
 }
 

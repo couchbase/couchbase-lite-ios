@@ -4090,8 +4090,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				270BDD6F15645127007D52F6 /* PBXTargetDependency */,
 				270BDD711564512A007D52F6 /* PBXTargetDependency */,
+				270BDD6F15645127007D52F6 /* PBXTargetDependency */,
 			);
 			name = LiteServ;
 			productName = LiteServ;

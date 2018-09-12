@@ -20,7 +20,7 @@
 
 
 typedef struct {
-    uint8_t bytes[MD5_DIGEST_LENGTH];
+    uint8_t bytes[CC_MD5_DIGEST_LENGTH];
 } CBLMD5Key;
 
 
@@ -31,8 +31,8 @@ typedef struct {
     NSString* _tempPath;
     NSFileHandle* _out;
     uint64_t _contentLength;
-    SHA_CTX _shaCtx;
-    MD5_CTX _md5Ctx;
+    CC_SHA1_CTX _shaCtx;
+    CC_MD5_CTX _md5Ctx;
     CBLMD5Key _MD5Digest;
     CBLCryptorBlock _encryptor;
     CBLProgressGroup* _progress;
@@ -45,8 +45,8 @@ typedef struct {
     self = [super init];
     if (self) {
         _store = store;
-        SHA1_Init(&_shaCtx);
-        MD5_Init(&_md5Ctx);
+        CC_SHA1_Init(&_shaCtx);
+        CC_MD5_Init(&_md5Ctx);
 
         if (![self openFile])
             return nil;
@@ -79,8 +79,8 @@ typedef struct {
     NSUInteger dataLen = data.length;
     _bytesWritten += dataLen;
     _progress.completedUnitCount = _bytesWritten;
-    SHA1_Update(&_shaCtx, data.bytes, dataLen);
-    MD5_Update(&_md5Ctx, data.bytes, dataLen);
+    CC_SHA1_Update(&_shaCtx, data.bytes, (CC_LONG)dataLen);
+    CC_MD5_Update(&_md5Ctx, data.bytes, (CC_LONG)dataLen);
 
     if (_encryptor)
         data = _encryptor(data);
@@ -159,8 +159,8 @@ typedef struct {
 
 - (void) reset {
     [_out truncateFileAtOffset: 0];
-    SHA1_Init(&_shaCtx);
-    MD5_Init(&_md5Ctx);
+    CC_SHA1_Init(&_shaCtx);
+    CC_MD5_Init(&_md5Ctx);
     _progress.completedUnitCount = 0;
 }
 
@@ -172,8 +172,8 @@ typedef struct {
         _encryptor = nil;
     }
     [self closeFile];
-    SHA1_Final(_blobKey.bytes, &_shaCtx);
-    MD5_Final(_MD5Digest.bytes, &_md5Ctx);
+    CC_SHA1_Final(_blobKey.bytes, &_shaCtx);
+    CC_MD5_Final(_MD5Digest.bytes, &_md5Ctx);
 }
 
 

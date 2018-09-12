@@ -20,7 +20,7 @@
 
 /** Key identifying a data blob. This happens to be a SHA-1 digest. */
 typedef struct CBLBlobKey {
-    uint8_t bytes[SHA_DIGEST_LENGTH];
+    uint8_t bytes[CC_SHA1_DIGEST_LENGTH];
 } CBLBlobKey;
 
 

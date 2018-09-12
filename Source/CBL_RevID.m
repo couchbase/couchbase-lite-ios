@@ -164,9 +164,10 @@ static unsigned parseDigits(const char* str, const char* end);
     // Generate a digest for this revision based on the previous revision ID, document JSON,
     // and attachment digests. This doesn't need to be secure; we just need to ensure that this
     // code consistently generates the same ID given equivalent revisions.
-    __block MD5_CTX ctx;
-    unsigned char digestBytes[MD5_DIGEST_LENGTH];
-    MD5_Init(&ctx);
+    
+    __block CC_MD5_CTX ctx;
+    unsigned char digestBytes[CC_MD5_DIGEST_LENGTH];
+    CC_MD5_Init(&ctx);
 
     if (prevID) {
         // (Note: It's not really correct to skip this entirely if prevID is nil -- we should be
@@ -178,18 +179,18 @@ static unsigned parseDigits(const char* str, const char* end);
         if (length > 0xFF)
             tooLong = YES;
         uint8_t lengthByte = length & 0xFF;
-        MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
+        CC_MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
         if (length > 0)
-            MD5_Update(&ctx, prevIDData.bytes, length);
+            CC_MD5_Update(&ctx, prevIDData.bytes, (CC_LONG)length);
     }
 
     uint8_t deletedByte = deleted != NO;
-    MD5_Update(&ctx, &deletedByte, 1);
+    CC_MD5_Update(&ctx, &deletedByte, 1);
 
-    MD5_Update(&ctx, json.bytes, json.length);
-    MD5_Final(digestBytes, &ctx);
+    CC_MD5_Update(&ctx, json.bytes, (CC_LONG)json.length);
+    CC_MD5_Final(digestBytes, &ctx);
 
-    char hex[11 + 2*MD5_DIGEST_LENGTH + 1];
+    char hex[11 + 2*CC_MD5_DIGEST_LENGTH + 1];
     char *dst = hex + CBLAppendDecimal(hex, generation+1);
     *dst++ = '-';
     dst = CBLAppendHex(dst, digestBytes, sizeof(digestBytes));
