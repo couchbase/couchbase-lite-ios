@@ -124,8 +124,11 @@
     NSMutableArray* expects = [NSMutableArray arrayWithCapacity: nRuns];
     for (NSUInteger i = 0; i < nRuns; i++) {
         NSString* name = [NSString stringWithFormat: @"Queue-%ld", (long)i];
-        XCTestExpectation* exp = [self expectationWithDescription: name];
-        [expects addObject: exp];
+        XCTestExpectation* exp = nil;
+        if (wait) {
+            exp = [self expectationWithDescription: name];
+            [expects addObject: exp];
+        }
         dispatch_queue_t queue = dispatch_queue_create([name UTF8String],  NULL);
         dispatch_async(queue, ^{
             block(i);
@@ -133,7 +136,7 @@
         });
     }
     
-    if (wait && expects.count > 0) {
+    if (expects.count > 0) {
         [self waitForExpectations: expects timeout: 60.0];
     }
 }
@@ -313,7 +316,7 @@
         [exp1 fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout: 10.0 handler:^(NSError * _Nullable error) { }];
+    [self waitForExpectations: @[exp2] timeout: 10.0]; // Test deadlock
 }
 
 
@@ -330,7 +333,7 @@
         [exp1 fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout: 10.0 handler:^(NSError * _Nullable error) { }];
+    [self waitForExpectations: @[exp2] timeout: 10.0]; // Test deadlock
 }
 
 @end
