@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
-- (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
+- (nullable CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
 
 /** Reopen the default test database (.db property). */
 - (void) reopenDB;

@@ -48,14 +48,14 @@ extern NSObject * const kCBLRemovedValue;
 
 #ifdef __cplusplus
 namespace cbl {
-    bool      asBool    (id);
-    NSInteger asInteger (id);
-    long long asLongLong(id);
-    float     asFloat   (id);
-    double    asDouble  (id);
-    NSNumber* asNumber  (id);
-    NSString* asString  (id);
-    NSDate*   asDate    (id);
+    bool      asBool    (__nullable id);
+    NSInteger asInteger (__nullable id);
+    long long asLongLong(__nullable id);
+    float     asFloat   (__nullable id);
+    double    asDouble  (__nullable id);
+    NSNumber* asNumber  (__nullable id);
+    NSString* asString  (__nullable id);
+    NSDate*   asDate    (__nullable id);
 }
 #endif
 

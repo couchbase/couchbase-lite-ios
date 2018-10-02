@@ -235,7 +235,7 @@
 
 - (void) testCreateWithEmptyDBNames {
     // create db with default configuration
-    [self expectError: CBLErrorDomain code: CBLErrorWrongFormat in: ^BOOL(NSError** error) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error) {
         return [self openDBNamed: @"" error: error] != nil;
     }];
 }

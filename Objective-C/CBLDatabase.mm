@@ -554,7 +554,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     Assert(dir != nil);
     if (!setupDatabaseDirectory(dir, outError))
         return NO;
-    
+
+    if (_name.length == 0)
+        return createError(CBLErrorInvalidParameter, outError);
     NSString* path = databasePath(_name, dir);
     slice bPath(path.fileSystemRepresentation);
 

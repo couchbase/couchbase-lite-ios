@@ -63,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
-@property (nonatomic, readonly) NSString* revID;
+@property (nonatomic, readonly, nullable) NSString* revID;
 
 @property (nonatomic, readonly) NSUInteger generation;
 
@@ -75,10 +75,10 @@ NS_ASSUME_NONNULL_BEGIN
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                   includeDeleted: (BOOL)includeDeleted
-                            error: (NSError**)outError;
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                                documentID: (NSString*)documentID
+                            includeDeleted: (BOOL)includeDeleted
+                                     error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
@@ -139,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocumentFragment ()
 
-- (instancetype) initWithDocument: (CBLDocument*)document;
+- (instancetype) initWithDocument: (nullable CBLDocument*)document;
 
 @end
 

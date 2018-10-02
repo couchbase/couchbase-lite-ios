@@ -103,6 +103,7 @@ WARNING_CFLAGS                                             = -Wall -Wformat-secu
 // Sanitizer Behaviors:
 CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW                 = YES    // range-check C++ STL containers
 CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY             = YES
+CLANG_UNDEFINED_BEHAVIOR_SANITIZER_INTEGER                 = NO     // don't flag int over/underflows
 
 // Static Analyzer - Analysis Policy
 RUN_CLANG_STATIC_ANALYZER                                  = YES // Run during 'Build' as well as 'Analyze'

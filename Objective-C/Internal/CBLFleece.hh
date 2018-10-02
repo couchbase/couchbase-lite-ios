@@ -54,7 +54,7 @@ namespace cbl {
 
     private:
         CBLDatabase *_db;
-        CBLC4Document* _doc;
+        CBLC4Document* __nullable _doc;
         NSMapTable* _fleeceToNSStrings;
     };
 
