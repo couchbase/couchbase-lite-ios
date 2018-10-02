@@ -18,6 +18,7 @@
 //
 
 #import "CBLCoreBridge.h"
+#import "fleece/slice.hh"
 
 NSString* slice2string(C4Slice s) {
     if (!s.buf)
@@ -36,12 +37,7 @@ NSString* sliceResult2string(C4SliceResult slice) {
 }
 
 NSData* sliceResult2data(C4SliceResult slice) {
-    if (!slice.buf)
-        return nil;
-    return [[NSData alloc] initWithBytesNoCopy: (void*)slice.buf length: slice.size
-                                   deallocator: ^(void *bytes, NSUInteger length) {
-                                       c4slice_free({bytes, length});
-                                   }];
+    return fleece::alloc_slice(slice).uncopiedNSData();
 }
 
 NSString* sliceResult2FilesystemPath(C4SliceResult str) {
