@@ -228,7 +228,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
         .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
         .onStatusChanged = &statusChanged,
-        .onDocumentError = &onDocError,
+        .onDocumentEnded = &onDocEnded,
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
         // TODO: Add .validationFunc (public API TBD)
@@ -477,19 +477,25 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 #pragma mark - DOCUMENT-LEVEL ERRORS:
 
 
-static void onDocError(C4Replicator *repl,
+static void onDocEnded(C4Replicator *repl,
                        bool pushing,
                        C4String docID,
                        C4Error error,
-                       bool transient,
+                       bool errorIsTransient,
                        void *context)
 {
     NSString* docIDStr = slice2string(docID);
     auto replicator = (__bridge CBLReplicator*)context;
     dispatch_async(replicator->_dispatchQueue, ^{
         CBL_LOCK(replicator) {
-            if (repl == replicator->_repl)
-                [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+            if (repl == replicator->_repl) {
+                if (error.code) {
+                    [replicator onDocError: error pushing: pushing docID: docIDStr
+                               isTransient: errorIsTransient];
+                } else {
+                    [replicator onDocEnded: docIDStr pushing: pushing];
+                }
+            }
         }
     });
 }
@@ -518,6 +524,14 @@ static void onDocError(C4Replicator *repl,
                docID, error);
         // TODO: Call an optional listener (API TBD)
     }
+}
+
+
+- (void) onDocEnded: (NSString*)docID
+            pushing: (bool)pushing
+{
+    // TODO: Send document-ended notifications thru public API
+    C4Warn("CBLReplicator received doc-ended event but doesn't handle them yet");
 }
 
 
