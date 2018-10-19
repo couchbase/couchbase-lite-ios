@@ -90,7 +90,10 @@
 
 
 - (id) asJSON {
-    return [_expression asJSON];
+    id json = [_expression asJSON];
+    if (_alias)
+        json = @[@"AS", json, _alias];
+    return json;
 }
 
 

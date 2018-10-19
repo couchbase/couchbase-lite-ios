@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLDatabase;
 @class CBLQueryParameters;
 @class CBLQueryResultSet;
 @class CBLQueryChange;
@@ -99,6 +100,23 @@ NS_ASSUME_NONNULL_BEGIN
  @param token The listener token.
  */
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+
+
+/**
+ Encoded representation of the query. Can be used to re-create the query by calling
+ -initWithDatabase:JSONRepresentation:.
+ */
+@property (nonatomic, readonly) NSData* JSONRepresentation;
+
+
+/**
+ Creates a query, given a previously-encoded JSON representation, as from the
+ JSONRepresentation property.
+ @param database  The database to query.
+ @param json  JSON data representing an encoded query description.
+ */
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+               JSONRepresentation: (NSData*)json NS_DESIGNATED_INITIALIZER;
 
 
 /** Not available */
