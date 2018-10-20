@@ -86,7 +86,11 @@
 
 - (void) setPinnedServerCertificate: (SecCertificateRef)pinnedServerCertificate {
     [self checkReadonly];
-    _pinnedServerCertificate = pinnedServerCertificate;
+    if (_pinnedServerCertificate != pinnedServerCertificate) {
+        cfrelease(_pinnedServerCertificate);
+        _pinnedServerCertificate = pinnedServerCertificate;
+        cfretain(_pinnedServerCertificate);
+    }
 }
 
 
@@ -184,6 +188,11 @@
 #endif
     
     return options;
+}
+
+
+- (void) dealloc {
+    cfrelease(_pinnedServerCertificate);
 }
 
 
