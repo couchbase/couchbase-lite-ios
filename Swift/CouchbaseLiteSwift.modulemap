@@ -70,7 +70,6 @@ framework module CouchbaseLiteSwift {
         header "CBLQueryParameters.h"
         header "CBLQueryResult.h"
         header "CBLQueryResultSet.h"
-        header "CBLQueryRow.h"
         header "CBLQuerySelectResult.h"
         header "CBLQueryVariableExpression.h"
         header "CBLReplicator.h"

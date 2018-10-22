@@ -518,17 +518,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
-        query.where = where;
-        return query;
-    }
-}
-
-
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
     CBL_LOCK(self) {
         if (![self mustBeOpen: outError])

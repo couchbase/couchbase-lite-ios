@@ -69,7 +69,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLQueryParameters.h"
 #import "CBLQueryResult.h"
 #import "CBLQueryResultSet.h"
-#import "CBLQueryRow.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryVariableExpression.h"
 #import "CBLReplicator.h"

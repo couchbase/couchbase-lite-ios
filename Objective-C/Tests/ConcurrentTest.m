@@ -103,7 +103,7 @@
 
 
 - (void) verifyWhere: (nullable CBLQueryExpression*)expr
-                test: (void (^)(uint64_t n, CBLQueryRow *row))block {
+                test: (void (^)(uint64_t n, CBLQueryResult *row))block {
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: expr];
@@ -111,7 +111,7 @@
     NSEnumerator* e = [q execute: &error];
     Assert(e, @"Query failed: %@", error);
     uint64_t n = 0;
-    for (CBLQueryRow *row in e) {
+    for (CBLQueryResult *row in e) {
         block(++n, row);
     }
 }
@@ -229,7 +229,7 @@
         NSString* tag = [NSString stringWithFormat:@"Update%ld", (long)i];
         CBLQueryExpression* expr = [[CBLQueryExpression property: @"tag"]
                                     equalTo: [CBLQueryExpression string: tag]];
-        [self verifyWhere: expr test: ^(uint64_t n, CBLQueryRow *row) {
+        [self verifyWhere: expr test: ^(uint64_t n, CBLQueryResult *row) {
             count++;
         }];
     }
