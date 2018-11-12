@@ -86,6 +86,19 @@
 		27D721BB1F904B2500AA4458 /* CBLNewDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D721B81F904B2500AA4458 /* CBLNewDictionary.h */; };
 		27D721BC1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721B91F904B2500AA4458 /* CBLNewDictionary.mm */; };
 		27D721BD1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721B91F904B2500AA4458 /* CBLNewDictionary.mm */; };
+		27DFACFD2199FDE800DF57EB /* CoreMLPredictiveModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DFACFB2199FDE800DF57EB /* CoreMLPredictiveModel.mm */; };
+		27DFACFE2199FDE800DF57EB /* CoreMLPredictiveModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DFACFB2199FDE800DF57EB /* CoreMLPredictiveModel.mm */; };
+		27DFACFF2199FDE800DF57EB /* CoreMLPredictiveModel.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27DFACFC2199FDE800DF57EB /* CoreMLPredictiveModel.hh */; };
+		27DFAD002199FDE800DF57EB /* CoreMLPredictiveModel.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27DFACFC2199FDE800DF57EB /* CoreMLPredictiveModel.hh */; };
+		27DFAD02219A02C100DF57EB /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DFAD01219A02C100DF57EB /* CoreML.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		27DFAD04219A02D300DF57EB /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DFAD03219A02D300DF57EB /* Vision.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		27DFAD05219A1D0E00DF57EB /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DFAD01219A02C100DF57EB /* CoreML.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		27DFAD06219A1D1300DF57EB /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DFAD03219A02D300DF57EB /* Vision.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		27DFAD0A219A1F0600DF57EB /* CBLPredictiveModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DFAD08219A1F0600DF57EB /* CBLPredictiveModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27DFAD0B219A1F0600DF57EB /* CBLPredictiveModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DFAD08219A1F0600DF57EB /* CBLPredictiveModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		27DFAD0C219A1F0600DF57EB /* CBLPredictiveModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DFAD09219A1F0600DF57EB /* CBLPredictiveModel.mm */; };
+		27DFAD0D219A1F0600DF57EB /* CBLPredictiveModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DFAD09219A1F0600DF57EB /* CBLPredictiveModel.mm */; };
+		27DFAD10219A21A500DF57EB /* PredictiveModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DFAD0F219A21A500DF57EB /* PredictiveModel.swift */; };
 		27E216801EFB03E2006AFDC5 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		27E216921EFB1993006AFDC5 /* PerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6381E3FFBC0005F90DD /* PerfTest.mm */; };
 		27E216931EFB1993006AFDC5 /* TunesPerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */; };
@@ -1540,6 +1553,13 @@
 		27D721981F8E97F400AA4458 /* CBLFleece.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLFleece.mm; sourceTree = "<group>"; };
 		27D721B81F904B2500AA4458 /* CBLNewDictionary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLNewDictionary.h; sourceTree = "<group>"; };
 		27D721B91F904B2500AA4458 /* CBLNewDictionary.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLNewDictionary.mm; sourceTree = "<group>"; };
+		27DFACFB2199FDE800DF57EB /* CoreMLPredictiveModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CoreMLPredictiveModel.mm; sourceTree = "<group>"; };
+		27DFACFC2199FDE800DF57EB /* CoreMLPredictiveModel.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CoreMLPredictiveModel.hh; sourceTree = "<group>"; };
+		27DFAD01219A02C100DF57EB /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		27DFAD03219A02D300DF57EB /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
+		27DFAD08219A1F0600DF57EB /* CBLPredictiveModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLPredictiveModel.h; sourceTree = "<group>"; };
+		27DFAD09219A1F0600DF57EB /* CBLPredictiveModel.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLPredictiveModel.mm; sourceTree = "<group>"; };
+		27DFAD0F219A21A500DF57EB /* PredictiveModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveModel.swift; sourceTree = "<group>"; };
 		27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReplicatorTest.m; sourceTree = "<group>"; };
 		27E35A911E8C4F4300E103F9 /* Replicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Replicator.swift; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
@@ -1924,6 +1944,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DFAD04219A02D300DF57EB /* Vision.framework in Frameworks */,
+				27DFAD02219A02C100DF57EB /* CoreML.framework in Frameworks */,
 				9343EF8E207D611600F19A89 /* libz.tbd in Frameworks */,
 				9343EF8F207D611600F19A89 /* libLiteCore-static.a in Frameworks */,
 			);
@@ -1933,6 +1955,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DFAD06219A1D1300DF57EB /* Vision.framework in Frameworks */,
+				27DFAD05219A1D0E00DF57EB /* CoreML.framework in Frameworks */,
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
 				9343F0B3207D61AB00F19A89 /* libLiteCore-static.a in Frameworks */,
 			);
@@ -2101,9 +2125,37 @@
 			name = Authenticators;
 			sourceTree = "<group>";
 		};
+		27DFACEA2199FDA300DF57EB /* Query */ = {
+			isa = PBXGroup;
+			children = (
+				27DFACFC2199FDE800DF57EB /* CoreMLPredictiveModel.hh */,
+				27DFACFB2199FDE800DF57EB /* CoreMLPredictiveModel.mm */,
+			);
+			path = Query;
+			sourceTree = "<group>";
+		};
+		27DFAD07219A1EDA00DF57EB /* Query */ = {
+			isa = PBXGroup;
+			children = (
+				27DFAD08219A1F0600DF57EB /* CBLPredictiveModel.h */,
+				27DFAD09219A1F0600DF57EB /* CBLPredictiveModel.mm */,
+			);
+			path = Query;
+			sourceTree = "<group>";
+		};
+		27DFAD0E219A217500DF57EB /* Query */ = {
+			isa = PBXGroup;
+			children = (
+				27DFAD0F219A21A500DF57EB /* PredictiveModel.swift */,
+			);
+			path = Query;
+			sourceTree = "<group>";
+		};
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27DFAD03219A02D300DF57EB /* Vision.framework */,
+				27DFAD01219A02C100DF57EB /* CoreML.framework */,
 				9399E4B21E932F4700B57600 /* libz.tbd */,
 			);
 			name = Frameworks;
@@ -2135,6 +2187,7 @@
 			isa = PBXGroup;
 			children = (
 				9392607920A0C8BD00E5748C /* Database */,
+				27DFAD07219A1EDA00DF57EB /* Query */,
 				9392608B20A0C8DF00E5748C /* Replicator */,
 				9369A675207DB3D4009B5B83 /* Internal */,
 				932CC553207D9ED2000B4B78 /* CouchbaseLite.h */,
@@ -2147,6 +2200,7 @@
 			isa = PBXGroup;
 			children = (
 				9392608D20A0C93200E5748C /* Database */,
+				27DFAD0E219A217500DF57EB /* Query */,
 				9392608E20A0C94100E5748C /* Replicator */,
 			);
 			name = Swift;
@@ -2316,6 +2370,7 @@
 			isa = PBXGroup;
 			children = (
 				9392608C20A0C90600E5748C /* Database */,
+				27DFACEA2199FDA300DF57EB /* Query */,
 				9392609220A0CACF00E5748C /* Replicator */,
 			);
 			path = Internal;
@@ -2994,6 +3049,7 @@
 			files = (
 				939260BE20A168B500E5748C /* CBLProtocolType.h in Headers */,
 				9343EF91207D611600F19A89 /* CBLErrors.h in Headers */,
+				27DFAD0A219A1F0600DF57EB /* CBLPredictiveModel.h in Headers */,
 				939260A020A0CBAC00E5748C /* CBLMessageEndpoint.h in Headers */,
 				9343EF92207D611600F19A89 /* CBLQueryResultArray.h in Headers */,
 				9343EF93207D611600F19A89 /* CBLQueryArrayExpression.h in Headers */,
@@ -3048,6 +3104,7 @@
 				9343EFC0207D611600F19A89 /* CBLChangeNotifier.h in Headers */,
 				9343EFC1207D611600F19A89 /* CBLQueryParameters.h in Headers */,
 				9369A69E207DBAA9009B5B83 /* CBLDatabase+Encryption.h in Headers */,
+				27DFACFF2199FDE800DF57EB /* CoreMLPredictiveModel.hh in Headers */,
 				9343EFC2207D611600F19A89 /* CBLVersion.h in Headers */,
 				932CC557207D9ED2000B4B78 /* CBLDatabaseEndpoint.h in Headers */,
 				9343EFC3207D611600F19A89 /* CBLMisc.h in Headers */,
@@ -3160,6 +3217,7 @@
 				9343F0CB207D61AB00F19A89 /* CBLJSONCoding.h in Headers */,
 				9343F0CC207D61AB00F19A89 /* CBLChangeNotifier.h in Headers */,
 				9343F0CD207D61AB00F19A89 /* CBLPrefix.h in Headers */,
+				27DFAD002199FDE800DF57EB /* CoreMLPredictiveModel.hh in Headers */,
 				9343F0CE207D61AB00F19A89 /* CBLFunctionExpression.h in Headers */,
 				9343F0CF207D61AB00F19A89 /* CBLException.h in Headers */,
 				93E8FEA720A366EB0061347F /* CBLMessageEndpointConnection.h in Headers */,
@@ -3184,6 +3242,7 @@
 				9343F0E0207D61AB00F19A89 /* CBLBasicAuthenticator.h in Headers */,
 				9369A699207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.h in Headers */,
 				9343F0E1207D61AB00F19A89 /* CBLMutableArray.h in Headers */,
+				27DFAD0B219A1F0600DF57EB /* CBLPredictiveModel.h in Headers */,
 				9369A69F207DBAA9009B5B83 /* CBLDatabase+Encryption.h in Headers */,
 				9343F0E2207D61AB00F19A89 /* CBLDocument.h in Headers */,
 				9343F0E3207D61AB00F19A89 /* CBLURLEndpoint.h in Headers */,
@@ -4331,6 +4390,7 @@
 				9343EF72207D611600F19A89 /* CBLQueryVariableExpression.m in Sources */,
 				9343EF73207D611600F19A89 /* CBLQuery.mm in Sources */,
 				9369A6AA207DC8CA009B5B83 /* CBLDatabase+EncryptionInternal.mm in Sources */,
+				27DFACFD2199FDE800DF57EB /* CoreMLPredictiveModel.mm in Sources */,
 				9343EF74207D611600F19A89 /* CBLArray.mm in Sources */,
 				9343EF75207D611600F19A89 /* CBLQuantifiedExpression.m in Sources */,
 				9343EF76207D611600F19A89 /* CBLCoreBridge.mm in Sources */,
@@ -4341,6 +4401,7 @@
 				9343EF79207D611600F19A89 /* CBLFullTextIndex.m in Sources */,
 				9343EF7A207D611600F19A89 /* CBLReplicatorConfiguration.m in Sources */,
 				9343EF7B207D611600F19A89 /* MYLogging.m in Sources */,
+				27DFAD0C219A1F0600DF57EB /* CBLPredictiveModel.mm in Sources */,
 				9343EF7C207D611600F19A89 /* CBLQueryArrayExpression.m in Sources */,
 				9343EF7D207D611600F19A89 /* Test_Assertions.m in Sources */,
 				9343EF7E207D611600F19A89 /* CBLQuerySelectResult.m in Sources */,
@@ -4449,6 +4510,7 @@
 				9343F062207D61AB00F19A89 /* ArrayExpressionIn.swift in Sources */,
 				93D7FA8D20A4CB0400EC54A4 /* MessageEndpointListener.swift in Sources */,
 				9369A6B5207DE722009B5B83 /* EncryptionKey.swift in Sources */,
+				27DFACFE2199FDE800DF57EB /* CoreMLPredictiveModel.mm in Sources */,
 				9343F063207D61AB00F19A89 /* Fragment.swift in Sources */,
 				9343F064207D61AB00F19A89 /* VariableExpression.swift in Sources */,
 				9343F065207D61AB00F19A89 /* Query.swift in Sources */,
@@ -4502,6 +4564,7 @@
 				9343F091207D61AB00F19A89 /* QueryChange.swift in Sources */,
 				9343F092207D61AB00F19A89 /* CBLSessionAuthenticator.m in Sources */,
 				9343F093207D61AB00F19A89 /* CBLQueryVariableExpression.m in Sources */,
+				27DFAD10219A21A500DF57EB /* PredictiveModel.swift in Sources */,
 				9343F094207D61AB00F19A89 /* Database.swift in Sources */,
 				9343F095207D61AB00F19A89 /* From.swift in Sources */,
 				9343F096207D61AB00F19A89 /* GroupByRouter.swift in Sources */,
@@ -4522,6 +4585,7 @@
 				9343F0A3207D61AB00F19A89 /* CBLReplicator.mm in Sources */,
 				9343F0A4207D61AB00F19A89 /* CBLMutableDictionary.mm in Sources */,
 				9343F0A5207D61AB00F19A89 /* MutableArrayObject.swift in Sources */,
+				27DFAD0D219A1F0600DF57EB /* CBLPredictiveModel.mm in Sources */,
 				932E913420A3F16800FB8EF0 /* MessageEndpointConnection.swift in Sources */,
 				9343F0A6207D61AB00F19A89 /* CBLBasicAuthenticator.m in Sources */,
 				9343F0A7207D61AB00F19A89 /* CBLVersion.m in Sources */,
