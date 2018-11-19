@@ -18,7 +18,7 @@
 //
 
 #import "CBLJSON.h"
-#import "CBLParseDate.h"
+#import "ParseDate.hh"
 
 @implementation CBLJSON
 
@@ -98,7 +98,10 @@ static NSDateFormatter* getISO8601Formatter() {
     NSString* string = [jsonObject isKindOfClass: NSString.class] ? jsonObject : nil;
     if (!string)
         return NAN;
-    return CBLParseISO8601Date(string.UTF8String) + k1970ToReferenceDate;
+    int64_t time = fleece::ParseISO8601Date(string.UTF8String);
+    if (time == fleece::kInvalidDate)
+        return NAN;
+    return time / 1000.0 + k1970ToReferenceDate;
 }
 
 

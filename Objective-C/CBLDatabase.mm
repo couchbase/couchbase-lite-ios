@@ -835,8 +835,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4RevisionFlags revFlags = 0;
     if (deletion)
         revFlags = kRevDeleted;
-    NSData* body = nil;
-    C4Slice bodySlice = {};
+    alloc_slice body;
     if (!deletion && !document.isEmpty) {
         // Encode properties to Fleece data:
         body = [document encode: outError];
@@ -844,8 +843,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             *outDoc = nullptr;
             return NO;
         }
-        bodySlice = data2slice(body);
-        Doc doc(bodySlice, kFLTrusted, self.sharedKeys);
+        Doc doc(body, kFLTrusted, self.sharedKeys);
         if (c4doc_dictContainsBlobs(doc))
             revFlags |= kRevHasAttachments;
     }
@@ -854,10 +852,10 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4Error err;
     C4Document *c4Doc = base != nullptr ? base : document.c4Doc.rawDoc;
     if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, bodySlice, revFlags, &err);
+        *outDoc = c4doc_update(c4Doc, body, revFlags, &err);
     } else {
         CBLStringBytes docID(document.id);
-        *outDoc = c4doc_create(_c4db, docID, data2slice(body), revFlags, &err);
+        *outDoc = c4doc_create(_c4db, docID, body, revFlags, &err);
     }
     
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
@@ -941,7 +939,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     CBLStringBytes winningRevID = remoteDoc.revID;
     CBLStringBytes losingRevID = localDoc.revID;
     
-    NSData* mergedBody = nil;
+    alloc_slice mergedBody;
     C4RevisionFlags mergedFlags = 0;
     if (resolvedDoc != remoteDoc) {
         // Unless the remote revision is being used as-is, we need a new revision:
@@ -958,7 +956,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     if (!c4doc_resolveConflict(rawDoc,
                                winningRevID,
                                losingRevID,
-                               data2slice(mergedBody),
+                               mergedBody,
                                mergedFlags,
                                &c4err)
         || !c4doc_save(rawDoc, 0, &c4err)) {

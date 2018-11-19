@@ -201,7 +201,7 @@
 #pragma mark - Fleece Encodable
 
 
-- (NSData*) encode: (NSError**)outError {
+- (C4SliceResult) encode: (NSError**)outError {
     _encodingError = nil;
     auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
     FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
@@ -211,13 +211,13 @@
         if (outError)
             *outError = _encodingError;
         _encodingError = nil;
-        return nil;
+        return {};
     }
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
     if (!body.buf)
         convertError(flErr, outError);
-    return sliceResult2data(body);
+    return body;
 }
 
 

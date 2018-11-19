@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
-- (nullable NSData*) encode: (NSError**)outError;
+- (FLSliceResult) encode: (NSError**)outError;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;

@@ -171,10 +171,10 @@ using namespace fleece;
 }
 
 
-- (NSData*) encode: (NSError**)outError {
+- (FLSliceResult) encode: (NSError**)outError {
     // CBLMutableDocument overrides this
     fleece::slice body = _c4Doc.body;
-    return body ? body.copiedNSData() : [NSData data];
+    return FLSliceResult(body ? alloc_slice(body) : alloc_slice(size_t(0)));
 }
 
 
