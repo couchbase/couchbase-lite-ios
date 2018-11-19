@@ -39,6 +39,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) CBLDatabase* database;
 
+@property (nonatomic, readonly) NSArray<CBLQuerySelectResult*>* select;
+
+@property (nonatomic, readonly) CBLQueryDataSource* from;
+
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryJoin*>* join;
+
+@property (nonatomic, readonly, nullable) CBLQueryExpression* where;
+
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryExpression*>* groupBy;
+
+@property (nonatomic, readonly, nullable) CBLQueryExpression* having;
+
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryOrdering*>* orderings;
+
+@property (nonatomic, readonly, nullable) CBLQueryLimit* limit;
+
+@property (nonatomic, readonly) BOOL distinct;
+
+/** Initializer. */
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
                        distinct: (BOOL)distinct
                            from: (CBLQueryDataSource*)from
@@ -48,6 +67,8 @@ NS_ASSUME_NONNULL_BEGIN
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                           limit: (nullable CBLQueryLimit*)limit;
+
++ (nullable NSData*) encodeExpressions: (NSArray*)expressions error: (NSError**)outError;
 
 @end
 

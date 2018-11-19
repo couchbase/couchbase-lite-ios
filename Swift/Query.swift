@@ -141,22 +141,6 @@ public class Query {
         lock.unlock()
     }
 
-    /// Encoded JSON representation of the query.
-    /// Can be used later to reconstruct an identical query.
-    public var JSONRepresentation : Data {
-        prepareQuery()
-        return queryImpl!.jsonRepresentation
-    }
-
-    /// Initialize a Query given a JSON-encoded representation.
-    /// - Parameters:
-    ///   - database: The database to query.
-    ///   - json: JSON data encoding the query. This can be obtained from a Query object's
-    //            JSONRepresentation property.
-    public init(database: Database, JSONRepresentation json: Data) {
-        queryImpl = CBLQuery(database: database._impl, jsonRepresentation: json)
-    }
-
     // MARK: Internal
     
     var params: Parameters?

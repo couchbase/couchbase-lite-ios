@@ -875,10 +875,10 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 5u);
-        AssertEqual([r doubleForKey: @"AVG()"], [r doubleAtIndex: 0]);
-        AssertEqual([r integerForKey: @"COUNT()"], [r integerAtIndex: 1]);
+        AssertEqual([r doubleForKey: @"$1"], [r doubleAtIndex: 0]);
+        AssertEqual([r integerForKey: @"$2"], [r integerAtIndex: 1]);
         AssertEqual([r integerForKey: @"min"], [r integerAtIndex: 2]);
-        AssertEqual([r integerForKey: @"MAX()"], [r integerAtIndex: 3]);
+        AssertEqual([r integerForKey: @"$3"], [r integerAtIndex: 3]);
         AssertEqual([r integerForKey: @"sum"], [r integerAtIndex: 4]);
     }];
     AssertEqual(numRows, 1u);
@@ -1726,36 +1726,5 @@
     AssertEqual(i, 2);
 }
 
-
-- (void) testJSONEncoding {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
-    [doc1 setValue: @"string" forKey: @"string"];
-    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
-
-    NSData* json;
-    {
-        CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
-                                        where: [[CBLQueryExpression property: @"string"] is: [CBLQueryExpression string: @"string"]]];
-        json = q.JSONRepresentation;
-        Assert(json);
-    }
-
-    // Reconstitute query from JSON data:
-    CBLQuery* q = [[CBLQuery alloc] initWithDatabase: _db JSONRepresentation: json];
-    Assert(q);
-    AssertEqualObjects(q.JSONRepresentation, json);
-
-    // Now test the reconstituted query:
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES
-                                    test: ^(uint64_t n, CBLQueryResult* r)
-                        {
-                            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
-                            AssertEqualObjects(doc.id, doc1.id);
-                            AssertEqualObjects([doc valueForKey: @"string"], @"string");
-                        }];
-    AssertEqual(numRows, 1u);
-}
 
 @end
