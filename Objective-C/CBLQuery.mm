@@ -27,44 +27,122 @@
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
+#import "fleece/slice.hh"
+
+using namespace fleece;
 
 
 @implementation CBLQuery
 {
+    NSData* _json;
     C4Query* _c4Query;
     NSDictionary* _columnNames;
     CBLLiveQuery* _liveQuery;
 }
 
-@synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings, limit=_limit;
-@synthesize groupBy=_groupBy, having=_having;
-@synthesize distinct=_distinct;
+@synthesize database=_database;
+@synthesize JSONRepresentation=_json;
 @synthesize parameters=_parameters;
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+               JSONRepresentation: (NSData*)json
+{
+    Assert(database);
+    Assert(json);
+    self = [super init];
+    if (self) {
+        _database = database;
+        _json = json;
+    }
+    return self;
+}
 
 
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
                        distinct: (BOOL)distinct
                            from: (CBLQueryDataSource*)from
-                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                           join: (nullable NSArray<CBLQueryJoin*>*)_join
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                           limit: (nullable CBLQueryLimit*)limit;
 {
-    self = [super init];
-    if (self) {
-        _select = select;
-        _distinct = distinct;
-        _from = from;
-        _join = join;
-        _where = where;
-        _groupBy = groupBy;
-        _having = having;
-        _orderings = orderings;
-        _limit = limit;
+    // Encode the query to JSON:
+    NSData* json;
+    @autoreleasepool {
+        NSMutableDictionary *root = [NSMutableDictionary dictionary];
+
+        // DISTINCT:
+        if (distinct)
+            root[@"DISTINCT"] = @(YES);
+
+        // JOIN / FROM:
+        NSMutableArray* fromArray;
+        NSDictionary* as = [from asJSON];
+        if (as.count > 0) {
+            if (!fromArray)
+                fromArray = [NSMutableArray array];
+            [fromArray addObject: as];
+        } if (_join) {
+            if (!fromArray)
+                fromArray = [NSMutableArray array];
+            for (CBLQueryJoin* join in _join) {
+                [fromArray addObject: [join asJSON]];
+            }
+        }
+        if (fromArray.count > 0)
+            root[@"FROM"] = fromArray;
+
+        // SELECT:
+        NSMutableArray* selects = [NSMutableArray array];
+        for (CBLQuerySelectResult* selected in select) {
+            [selects addObject: [selected asJSON]];
+        }
+        if (selects.count == 0) // Empty selects means SELECT *
+            [selects addObject: [[CBLQuerySelectResult allFrom: as[@"AS"]] asJSON]];
+        root[@"WHAT"] = selects;
+
+        // WHERE:
+        if (where)
+            root[@"WHERE"] = [where asJSON];
+
+        // GROUPBY:
+        if (groupBy) {
+            NSMutableArray* groupByArray = [NSMutableArray array];
+            for (CBLQueryExpression* expr in groupBy) {
+                [groupByArray addObject: [expr asJSON]];
+            }
+            root[@"GROUP_BY"] = groupByArray;
+        }
+
+        // HAVING:
+        if (having)
+            root[@"HAVING"] = [having asJSON];
+
+        // ORDERBY:
+        if (orderings) {
+            NSMutableArray* orderBy = [NSMutableArray array];
+            for (CBLQueryOrdering* o in orderings) {
+                [orderBy addObject: [o asJSON]];
+            }
+            root[@"ORDER_BY"] = orderBy;
+        }
+
+        // LIMIT/OFFSET:
+        if (limit) {
+            NSArray* limitObj = [limit asJSON];
+            root[@"LIMIT"] = limitObj[0];
+            if (limitObj.count > 1)
+                root[@"OFFSET"] = limitObj[1];
+        }
+
+        NSError* error;
+        json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
+        Assert(json, @"Failed to encode query as JSON: %@", error);
     }
-    return self;
+    return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
 }
 
 
@@ -78,8 +156,7 @@
 
 
 - (NSString*) description {
-    NSData* data = [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: nil];
-    NSString* desc = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    NSString* desc = [[NSString alloc] initWithData: _json encoding: NSUTF8StringEncoding];
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
@@ -173,44 +250,9 @@
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    CBLQuery* q =  [[[self class] alloc] initWithSelect: _select
-                                               distinct: _distinct
-                                                   from: _from
-                                                   join: _join
-                                                  where: _where
-                                                groupBy: _groupBy
-                                                 having: _having
-                                                orderBy: _orderings
-                                                  limit: _limit];
-    q.parameters = [_parameters copy];
+    CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
+    q.parameters = _parameters;
     return q;
-}
-
-
-- (CBLDatabase*) database {
-    return (CBLDatabase*)_from.source;
-}
-
-
-+ (NSData*) encodeExpressions: (NSArray*)expressions error: (NSError**)outError {
-    NSMutableArray* json = [NSMutableArray arrayWithCapacity: expressions.count];
-    for (id exp in expressions) {
-        if ([exp isKindOfClass: [CBLQueryExpression class]]) {
-            [json addObject: [exp asJSON]];
-        } else if ([exp isKindOfClass: [NSString class]]) {
-            NSExpression* e = [NSExpression expressionWithFormat: exp argumentArray: @[]];
-            id encoded = [CBLPredicateQuery encodeExpression: e aggregate: NO error: outError];
-            if (!encoded)
-                return nil;
-            [json addObject: encoded];
-        } else if ([exp isKindOfClass: [NSExpression class]]) {
-            id encoded = [CBLPredicateQuery encodeExpression: exp aggregate: NO error: outError];
-            if (!encoded)
-                return nil;
-            [json addObject: encoded];
-        }
-    }
-    return [NSJSONSerialization dataWithJSONObject: json options: 0 error: outError];
 }
 
 
@@ -221,23 +263,14 @@
     CBL_LOCK(self) {
         if (_c4Query)
             return YES;
-        
-        NSData* jsonData = [self encodeAsJSON: outError];
-        if (!jsonData)
-            return NO;
-        
-        if (!_columnNames) {
-            _columnNames = [self generateColumnNames: outError];
-            if (!_columnNames)
-                return NO;
-        }
-        
-        CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
-        
+
+        CBLLog(Query, @"Query encoded as %.*s", (int)_json.length, (char*)_json.bytes);
+
+        // Compile JSON query:
         C4Error c4Err;
         C4Query* query;
         CBL_LOCK(self.database) {
-            query = c4query_new(self.database.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
+            query = c4query_new(self.database.c4db, {_json.bytes, _json.length}, &c4Err);
         }
         
         if (!query) {
@@ -247,112 +280,23 @@
         
         Assert(!_c4Query);
         _c4Query = query;
+
+        // Generate column name dictionary:
+        NSMutableDictionary* cols = [NSMutableDictionary dictionary];
+        unsigned n = c4query_columnCount(_c4Query);
+        for (unsigned i = 0; i < n; ++i) {
+            slice title = c4query_columnTitle(_c4Query, i);
+            NSString* titleString;
+            if (title == "*"_sl)
+                titleString = _database.name;
+            else
+                titleString = slice2string(title);
+            cols[titleString] = @(i);
+        }
+        _columnNames = [cols copy];
+
         return YES;
     }
-}
-
-
-- (NSDictionary*) generateColumnNames: (NSError**)outError {
-    NSMutableDictionary* map = [NSMutableDictionary dictionary];
-    NSUInteger index = 0;
-    NSUInteger provisionKeyIndex = 0;
-    
-    for (CBLQuerySelectResult* select in _select) {
-        NSString* name = select.columnName;
-        
-        if ([name isEqualToString: kCBLAllPropertiesName])
-            name = _from.columnName;
-        
-        if (!name)
-            name = [NSString stringWithFormat:@"$%lu", (unsigned long)(++provisionKeyIndex)];
-        
-        if ([map objectForKey: name]) {
-            NSString* desc = [NSString stringWithFormat: @"Duplicate select result named %@", name];
-            createError(CBLErrorInvalidQuery, desc, outError);
-            return nil;
-        }
-        
-        [map setObject: @(index) forKey: name];
-        index++;
-    }
-    
-    return map;
-}
-
-
-- (nullable NSData*) encodeAsJSON: (NSError**)outError {
-    return [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: outError];
-}
-
-
-- (id) asJSON {
-    NSMutableDictionary *json = [NSMutableDictionary dictionary];
-    
-    // DISTINCT:
-    if (_distinct)
-        json[@"DISTINCT"] = @(YES);
-    
-    // JOIN / FROM:
-    NSMutableArray* from;
-    NSDictionary* as = [_from asJSON];
-    if (as.count > 0) {
-        if (!from)
-            from = [NSMutableArray array];
-        [from addObject: as];
-    } if (_join) {
-        if (!from)
-            from = [NSMutableArray array];
-        for (CBLQueryJoin* join in _join) {
-            [from addObject: [join asJSON]];
-        }
-    }
-    if (from.count > 0)
-        json[@"FROM"] = from;
-    
-    // SELECT:
-    NSMutableArray* selects = [NSMutableArray array];
-    for (CBLQuerySelectResult* select in _select) {
-        [selects addObject: [select asJSON]];
-    }
-    if (selects.count == 0) // Empty selects means SELECT *
-        [selects addObject: [[CBLQuerySelectResult allFrom: as[@"AS"]] asJSON]];
-    json[@"WHAT"] = selects;
-    
-    // WHERE:
-    if (_where)
-        json[@"WHERE"] = [_where asJSON];
-    
-    // GROUPBY:
-    if (_groupBy) {
-        NSMutableArray* groupBy = [NSMutableArray array];
-        for (CBLQueryExpression* expr in _groupBy) {
-            [groupBy addObject: [expr asJSON]];
-        }
-        json[@"GROUP_BY"] = groupBy;
-    }
-    
-    // HAVING:
-    if (_having)
-        json[@"HAVING"] = [_having asJSON];
-    
-    // ORDERBY:
-    if (_orderings) {
-        NSMutableArray* orderBy = [NSMutableArray array];
-        for (CBLQueryOrdering* o in _orderings) {
-            [orderBy addObject: [o asJSON]];
-        }
-        json[@"ORDER_BY"] = orderBy;
-    }
-    
-    // LIMIT/OFFSET:
-    if (_limit) {
-        NSArray* limit = [_limit asJSON];
-        json[@"LIMIT"] = limit[0];
-        if (limit.count > 1)
-            json[@"OFFSET"] = limit[1];
-    }
-    
-    return json;
 }
 
 
