@@ -173,6 +173,10 @@
 		9332082A1E774171000D9993 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
 		9332082C1E774419000D9993 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
 		93384F8C1EB151C100976B41 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
+		933BFE1621A3BE960094530D /* CBLQuery+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 933BFE1521A3BE960094530D /* CBLQuery+JSON.h */; };
+		933BFE1721A3BE960094530D /* CBLQuery+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 933BFE1521A3BE960094530D /* CBLQuery+JSON.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		933BFE1821A3BE960094530D /* CBLQuery+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 933BFE1521A3BE960094530D /* CBLQuery+JSON.h */; };
+		933BFE1921A3BE960094530D /* CBLQuery+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 933BFE1521A3BE960094530D /* CBLQuery+JSON.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		933F45F51EC29EF100863ECB /* MutableFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EA91EC17FEA005E4050 /* MutableFragment.swift */; };
 		933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EAB1EC17FFE005E4050 /* DocumentFragment.swift */; };
 		933F45FA1EC2B47500863ECB /* DataConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F45F91EC2B47500863ECB /* DataConverter.swift */; };
@@ -1588,6 +1592,7 @@
 		933208291E774171000D9993 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		9332082B1E774419000D9993 /* QueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QueryTest.m; sourceTree = "<group>"; };
 		93384F8B1EB151C100976B41 /* MiscTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MiscTest.m; sourceTree = "<group>"; };
+		933BFE1521A3BE960094530D /* CBLQuery+JSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+JSON.h"; sourceTree = "<group>"; };
 		933F45F91EC2B47500863ECB /* DataConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataConverter.swift; sourceTree = "<group>"; };
 		9343F00F207D611600F19A89 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2640,6 +2645,7 @@
 				93EC42EE1FB39DAD00D54BB4 /* CBLLiveQuery.mm */,
 				937F026E1EFC694900060D64 /* CBLQueryChange+Internal.h */,
 				933208291E774171000D9993 /* CBLQuery+Internal.h */,
+				933BFE1521A3BE960094530D /* CBLQuery+JSON.h */,
 				93EC42E11FB387AB00D54BB4 /* CBLQueryJSONEncoding.h */,
 				938B3690200745FE004485D8 /* CBLQueryResultArray.h */,
 				938B36A3200745FE004485D8 /* CBLQueryResultArray.m */,
@@ -2923,6 +2929,7 @@
 				939B1B5B2009C04100FAA3CB /* CBLQueryVariableExpression.h in Headers */,
 				9322DCE01F14603400C4ACF7 /* CBLQueryLimit.h in Headers */,
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
+				933BFE1721A3BE960094530D /* CBLQuery+JSON.h in Headers */,
 				93E17F0D1ED3BA6300671CA1 /* CBLDocumentChange.h in Headers */,
 				93DB7FED1ED8E1C000C4F845 /* CBLReplicatorConfiguration.h in Headers */,
 				938196191EC113770032CC51 /* CBLArrayFragment.h in Headers */,
@@ -3081,6 +3088,7 @@
 				9343EFE3207D611600F19A89 /* CBLQueryFullTextExpression.h in Headers */,
 				9343EFE4207D611600F19A89 /* CBLDatabase+Internal.h in Headers */,
 				9343EFE5207D611600F19A89 /* CBLDictionaryFragment.h in Headers */,
+				933BFE1821A3BE960094530D /* CBLQuery+JSON.h in Headers */,
 				9343EFE6207D611600F19A89 /* CBLReachability.h in Headers */,
 				9343EFE7207D611600F19A89 /* CBLQueryBuilder.h in Headers */,
 				9343EFE8207D611600F19A89 /* CBLLog.h in Headers */,
@@ -3225,6 +3233,7 @@
 				93E8FEAF20A3670E0061347F /* CBLMessageEndpoint+Internal.h in Headers */,
 				9343F10B207D61AB00F19A89 /* CBLQuery.h in Headers */,
 				9343F10C207D61AB00F19A89 /* CBLDocumentChangeNotifier.h in Headers */,
+				933BFE1921A3BE960094530D /* CBLQuery+JSON.h in Headers */,
 				9343F10D207D61AB00F19A89 /* CBLQueryChange.h in Headers */,
 				9343F10E207D61AB00F19A89 /* CBLQuantifiedExpression.h in Headers */,
 				9369A68B207DB3D4009B5B83 /* CBLEncryptionKey+Internal.h in Headers */,
@@ -3340,6 +3349,7 @@
 				934F4C5A1E1EF25E00F90659 /* Test.h in Headers */,
 				934A279F1F30E61B003946A7 /* CBLPropertyExpression.h in Headers */,
 				93CD02E61EA0382D00AFB3FA /* CBLMutableDictionary.h in Headers */,
+				933BFE1621A3BE960094530D /* CBLQuery+JSON.h in Headers */,
 				9317621F1E2D439700563506 /* CBLPredicateQuery+Internal.h in Headers */,
 				93CD02DE1EA037B200AFB3FA /* CBLDictionary.h in Headers */,
 				9381959C1EB9A6FC0032CC51 /* CBLStatus.h in Headers */,

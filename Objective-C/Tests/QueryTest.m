@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 #import "CBLLiveQuery.h"
 #import "CBLQuery+internal.h"
+#import "CBLQuery+JSON.h"
 #import "CBLQueryBuilder.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryDataSource.h"

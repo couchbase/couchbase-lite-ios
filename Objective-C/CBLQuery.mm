@@ -23,6 +23,7 @@
 #import "CBLLiveQuery.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
+#import "CBLQuery+JSON.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"

@@ -18,7 +18,8 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+
+@testable import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
     let kDOCID = SelectResult.expression(Meta.id)
@@ -1309,7 +1310,7 @@ class QueryTest: CBLTestCase {
 
         let q = Query(database: db, JSONRepresentation: json)
 
-        var numRows = try verifyQuery(q) { (n, r) in
+        let numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.id, doc1.id);
             XCTAssertEqual(doc.string(forKey: "string")!, "string");
