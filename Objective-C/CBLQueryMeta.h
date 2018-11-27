@@ -53,6 +53,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) sequence;
 
 /**
+ A metadata expression refering to the deleted boolean flag of the document.
+ 
+ @return The deleted boolean flag expression.
+ */
++ (CBLQueryExpression*) isDeleted;
+
+
+/**
  Sequence number expression. The sequence number indicates how recently
  the document has been changed. If one document's `sequence` is greater
  than another's, that means it was changed more recently.

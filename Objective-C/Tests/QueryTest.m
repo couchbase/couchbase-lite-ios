@@ -28,6 +28,7 @@
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
+#define kISDELETED  [CBLQuerySelectResult expression: [CBLQueryMeta isDeleted]]
 
 @interface QueryTest : CBLTestCase
 
@@ -1757,6 +1758,107 @@
                             AssertEqualObjects([doc valueForKey: @"string"], @"string");
                         }];
     AssertEqual(numRows, 1u);
+}
+
+- (void) testIsDeletedExpressionEmpty {
+    // fetch is-deleted condition should return empty
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [CBLQueryMeta isDeleted]];
+    
+    AssertNotNil(q);
+    NSError* error;
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 0u);
+}
+
+- (void) testDeleteSingleDocumentForIsDeletedExpression {
+    // save a new doc
+    NSError* error;
+    CBLMutableDocument* documentToSave = [[CBLMutableDocument alloc] init];
+    [documentToSave setValue: @"string" forKey: @"string"];
+    Assert([self.db saveDocument: documentToSave error: &error], @"Error when creating a document: %@", error);
+    AssertNil(error);
+    
+    // get no-of-deleted docs & make sure its empty
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [CBLQueryMeta isDeleted]];
+    
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 0u);
+    rs = nil;
+    q = nil;
+    
+    // delete the doc
+    [self.db deleteDocument:documentToSave error:&error];
+    AssertNil(error);
+    
+    // get no-of-deleted docs & make sure its NOT empty
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [CBLQueryMeta isDeleted]];
+    
+    AssertNotNil(q);
+    rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 1u);
+}
+
+- (void) testDeleteMultipleDocumentForIsDeletedExpression {
+    // create
+    NSUInteger documentsCount = 10;
+    NSError* batchError;
+    NSTimeInterval timeInterval = [[NSDate date] timeIntervalSince1970];
+    NSMutableArray* docs = [[NSMutableArray alloc] init];
+    [self.db inBatch:&batchError usingBlock:^{
+        for (NSUInteger i = 0; i < documentsCount; i++) {
+            NSError* saveDocError;
+            CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+            [doc setValue: [NSString stringWithFormat:@"%0.0f-%lu", timeInterval, (unsigned long)i]
+                   forKey: @"timestamp"];
+            [docs addObject:doc];
+            [self.db saveDocument:doc error:&saveDocError];
+            AssertNil(saveDocError, @"%@", saveDocError);
+        }
+    }];
+    AssertNil(batchError, @"%@", batchError);
+    
+    // validate deleted docs are empty
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [CBLQueryMeta isDeleted]];
+    AssertNotNil(q);
+    NSError* error;
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error, @"%@", error);
+    AssertEqual([[rs allObjects] count], 0u);
+    rs = nil;
+    q = nil;
+    
+    // delete all the docs
+    [self.db inBatch:&batchError usingBlock:^{
+        for (NSUInteger i = 0; i < docs.count; i++) {
+            NSError* saveDocError;
+            CBLDocument* doc = [docs objectAtIndex:i];
+            [self.db deleteDocument:doc error:&saveDocError];
+            AssertNil(saveDocError, @"%@", saveDocError);
+        }
+    }];
+    AssertNil(batchError, @"%@", batchError);
+    
+    // validate the total deleted doc count
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [CBLQueryMeta isDeleted]];
+    
+    AssertNotNil(q);
+    rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], documentsCount);
 }
 
 @end

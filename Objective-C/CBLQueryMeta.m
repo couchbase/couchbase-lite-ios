@@ -27,6 +27,9 @@
 #define kCBLQueryMetaSequenceKeyPath @"_sequence"
 #define kCBLQueryMetaSequenceColumnName @"sequence"
 
+#define kCBLQueryMetaIsDeletedKeyPath @"_deleted"
+#define kCBLQueryMetaIsDeletedColumnName @"deleted"
+
 @implementation CBLQueryMeta
 
 
@@ -44,6 +47,13 @@
 
 + (CBLQueryExpression*) sequence {
     return [self sequenceFrom: nil];
+}
+
+
++ (CBLQueryExpression*) isDeleted {
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
+                                               columnName: kCBLQueryMetaIsDeletedColumnName
+                                                     from: nil];
 }
 
 
