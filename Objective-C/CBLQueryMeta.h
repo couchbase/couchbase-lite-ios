@@ -53,14 +53,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) sequence;
 
 /**
- A metadata expression refering to the deleted boolean flag of the document.
- 
- @return The deleted boolean flag expression.
- */
-+ (CBLQueryExpression*) isDeleted;
-
-
-/**
  Sequence number expression. The sequence number indicates how recently
  the document has been changed. If one document's `sequence` is greater
  than another's, that means it was changed more recently.
@@ -69,6 +61,21 @@ NS_ASSUME_NONNULL_BEGIN
  @return The sequence number expression.
  */
 + (CBLQueryExpression*) sequenceFrom: (nullable NSString*)alias;
+
+/**
+ A metadata expression referring to the deleted boolean flag of the document.
+ 
+ @return The deleted boolean flag expression.
+ */
++ (CBLQueryExpression*) isDeleted;
+
+/**
+ A metadata expression referring to the deleted boolean flag of the document.
+ 
+ @param alias The data source alias name.
+ @return The deleted boolean flag expression.
+ */
++ (CBLQueryExpression*) isDeletedFrom: (nullable NSString*)alias;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

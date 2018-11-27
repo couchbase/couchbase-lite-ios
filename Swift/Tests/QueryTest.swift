@@ -1317,4 +1317,83 @@ class QueryTest: CBLTestCase {
         }
         XCTAssertEqual(numRows, 1);
     }
+    
+    func testMetaIsDeletedEmpty() throws {
+        try loadNumbers(5)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.isDeleted)
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 0)
+    }
+    
+    func testIsDeletedWithSingleDocumentDeletion() throws {
+        // create doc
+        let doc = MutableDocument().setString("somevalue", forKey: "somekey")
+        try db.saveDocument(doc)
+        
+        // check valid input
+        let selectAllDBQuery = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+        var selectAllResultSet = try selectAllDBQuery.execute()
+        XCTAssertEqual(selectAllResultSet.allResults().count, 1)
+        let selectDeletedOnlyQuery = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.isDeleted)
+        var selectDeletedOnlyResultSet = try selectDeletedOnlyQuery.execute()
+        XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, 0)
+        
+        // delete action
+        try db.deleteDocument(doc)
+        
+        // vertify result
+        selectAllResultSet = try selectAllDBQuery.execute()
+        XCTAssertEqual(selectAllResultSet.allResults().count, 0)
+        selectDeletedOnlyResultSet = try selectDeletedOnlyQuery.execute()
+        XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, 1)
+    }
+    
+    func testIsDeletedWithMultipleDocumentsDeletion() throws {
+        let documentsCount = 10
+        var docs = [MutableDocument]()
+        try db.inBatch {
+            for _ in 0..<documentsCount {
+                // create doc
+                let doc = MutableDocument().setString("somevalue", forKey: "somekey")
+                docs.append(doc)
+                try db.saveDocument(doc)
+            }
+        }
+        
+        // check valid input
+        let selectAllDBQuery = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+        var selectAllResultSet = try selectAllDBQuery.execute()
+        XCTAssertEqual(selectAllResultSet.allResults().count, documentsCount)
+        let selectDeletedOnlyQuery = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.isDeleted)
+        var selectDeletedOnlyResultSet = try selectDeletedOnlyQuery.execute()
+        XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, 0)
+        
+        // delete action
+        try db.inBatch {
+            for doc in docs {
+                try db.deleteDocument(doc)
+            }
+        }
+        
+        // vertify result
+        selectAllResultSet = try selectAllDBQuery.execute()
+        XCTAssertEqual(selectAllResultSet.allResults().count, 0)
+        selectDeletedOnlyResultSet = try selectDeletedOnlyQuery.execute()
+        XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, documentsCount)
+    }
 }

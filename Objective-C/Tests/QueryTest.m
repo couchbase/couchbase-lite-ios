@@ -28,7 +28,6 @@
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
-#define kISDELETED  [CBLQuerySelectResult expression: [CBLQueryMeta isDeleted]]
 
 @interface QueryTest : CBLTestCase
 
