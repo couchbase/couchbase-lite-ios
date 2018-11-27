@@ -50,16 +50,21 @@
 }
 
 
-+ (CBLQueryExpression*) isDeleted {
-    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
-                                               columnName: kCBLQueryMetaIsDeletedColumnName
-                                                     from: nil];
-}
-
-
 + (CBLQueryExpression*) sequenceFrom:(nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
                                                columnName: kCBLQueryMetaSequenceColumnName
+                                                     from: alias];
+}
+
+
++ (CBLQueryExpression*) isDeleted {
+    return [self isDeletedFrom: nil];
+}
+
+
++ (CBLQueryExpression*) isDeletedFrom: (nullable NSString *)alias {
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
+                                               columnName: kCBLQueryMetaIsDeletedColumnName
                                                      from: alias];
 }
 

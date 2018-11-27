@@ -44,10 +44,16 @@ public final class Meta {
     public static var sequence: MetaExpressionProtocol {
         return MetaExpression(type: .sequence)
     }
+    
+    
+    /// A metadata expression referring to the deleted boolean flag of the document.
+    public static var isDeleted: MetaExpressionProtocol {
+        return MetaExpression(type: .isDeleted)
+    }
 }
 
 /* internal */ enum MetaType {
-    case id, sequence
+    case id, sequence, isDeleted
 }
 
 /* internal */ class MetaExpression: QueryExpression, MetaExpressionProtocol {
@@ -75,6 +81,8 @@ public final class Meta {
             return CBLQueryMeta.id(from: from)
         case .sequence:
             return CBLQueryMeta.sequence(from: from)
+        case .isDeleted:
+            return CBLQueryMeta.isDeleted(from: from)
         }
     }
     
