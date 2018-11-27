@@ -26,15 +26,6 @@ class QueryTest: CBLTestCase {
     
     let kSEQUENCE = SelectResult.expression(Meta.sequence)
     
-    func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
-        var n: UInt64 = 0
-        for row in try query.execute() {
-            n += 1
-            try block(n, row)
-        }
-        return n
-    }
-    
     @discardableResult  func createDoc(numbered i: (Int), of number: (Int)) throws -> Document {
         let doc = createDocument("doc\(i)")
         doc.setValue(i, forKey: "number1")

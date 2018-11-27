@@ -107,6 +107,15 @@
 }
 
 
++ (CBLQueryExpression*) dictionary: (nullable NSDictionary<NSString*,id>*)value {
+    return [self value: value];
+}
+
+
++ (CBLQueryExpression*) array: (nullable NSArray*)value {
+    return [self value: value];
+}
+
 #pragma mark - Parameter:
 
 

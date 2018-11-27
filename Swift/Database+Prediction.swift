@@ -1,14 +1,13 @@
 //
-//  CBLQueryExpression+Internal.h
+//  Database+Prediction.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc. All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
+//  Licensed under the Couchbase License Agreement (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
+//  https://info.couchbase.com/rs/302-GJY-034/images/2017-10-30_License_Agreement.pdf
 //
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,16 +15,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-#import "CBLQueryExpression.h"
-#import "CBLQueryJSONEncoding.h"
 
-NS_ASSUME_NONNULL_BEGIN
+import Foundation
 
-@interface CBLQueryExpression () <CBLQueryJSONEncoding>
-
-/** This constructor is for hiding the public -init: */
-- (instancetype) initWithNone;
-
-@end
-
-NS_ASSUME_NONNULL_END
+extension Database {
+    
+    /// The predictive model manager for registering and unregistering predictive models.
+    public static let prediction = Prediction()
+    
+}

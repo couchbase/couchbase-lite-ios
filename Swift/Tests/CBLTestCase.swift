@@ -177,6 +177,12 @@ class CBLTestCase: XCTestCase {
     }
     
     
+    func blobForString(_ string: String) -> Blob {
+        let data = string.data(using: .utf8)!
+        return Blob(contentType: "text/plain", data: data)
+    }
+    
+    
     func expectError(domain: String, code: Int, block: @escaping () throws -> Void) {
         CBLTestHelper.allowException {
             var error: NSError?
@@ -191,6 +197,15 @@ class CBLTestCase: XCTestCase {
             XCTAssertEqual(error?.domain, domain)
             XCTAssertEqual(error?.code, code)
         }
+    }
+    
+    func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
+        var n: UInt64 = 0
+        for row in try query.execute() {
+            n += 1
+            try block(n, row)
+        }
+        return n
     }
 }
 

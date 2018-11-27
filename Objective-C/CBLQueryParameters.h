@@ -18,9 +18,14 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLBlob;
+@class CBLDictionary;
+@class CBLArray;
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+/** Query parameters used for setting values to the query parameters defined in the query. */
 @interface CBLQueryParameters : NSObject
 
 /**
@@ -103,6 +108,33 @@ NS_ASSUME_NONNULL_BEGIN
  @pram name The parameter name.
  */
 - (void) setDate: (nullable NSDate*)value forName: (NSString*)name;
+
+/**
+ Set the CBLBlob value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+
+ @param value The CBLBlob value.
+ @param name The parameter name.
+ */
+- (void) setBlob: (nullable CBLBlob*)value forName: (NSString*)name;
+
+/**
+ Set the CBLDictionary value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The CBLDictionary value.
+ @param name The parameter name.
+ */
+- (void) setDictionary: (nullable CBLDictionary*)value forName: (NSString*)name;
+
+/**
+ Set the CBLArray value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The CBLArray value.
+ @param name The parameter name.
+ */
+- (void) setArray: (nullable CBLArray*)value forName: (NSString*)name;
 
 /**
  Get the parameter value.

@@ -20,7 +20,7 @@
 import Foundation
 
 
-/// A Parameters object used for setting values to the query parameters defined in the query.
+/// Query parameters used for setting values to the query parameters defined in the query.
 public class Parameters {
     
     /// Initializes the Parameters's builder.
@@ -43,6 +43,28 @@ public class Parameters {
         return self.params[name];
     }
     
+    /// Set an ArrayObject value to the query parameter referenced by the given name. A query parameter
+    /// is defined by using the Expression's parameter(_ name: String) function.
+    ///
+    /// - Parameters:
+    ///   - value: The ArrayObject value.
+    ///   - name: The parameter name.
+    /// - Returns: The self object.
+    @discardableResult public func setArray(_ value: ArrayObject, forName name: String) -> Parameters {
+        return setValue(value, forName: name)
+    }
+    
+    /// Set a Blob value to the query parameter referenced by the given name. A query parameter
+    /// is defined by using the Expression's parameter(_ name: String) function.
+    ///
+    /// - Parameters:
+    ///   - value: The Blob value.
+    ///   - name: The parameter name.
+    /// - Returns: The self object.
+    @discardableResult public func setBlob(_ value: Blob, forName name: String) -> Parameters {
+        return setValue(value.content, forName: name)
+    }
+    
     /// Set a boolean value to the query parameter referenced by the given name. A query parameter
     /// is defined by using the Expression's parameter(_ name: String) function.
     ///
@@ -62,6 +84,17 @@ public class Parameters {
     ///   - name: The parameter name.
     /// - Returns: The self object.
     @discardableResult public func setDate(_ value: Date?, forName name: String) -> Parameters {
+        return setValue(value, forName: name)
+    }
+    
+    /// Set a DictionaryObject value to the query parameter referenced by the given name. A query parameter
+    /// is defined by using the Expression's parameter(_ name: String) function.
+    ///
+    /// - Parameters:
+    ///   - value: The DictionaryObject value.
+    ///   - name: The parameter name.
+    /// - Returns: The self object.
+    @discardableResult public func setDictionary(_ value: DictionaryObject, forName name: String) -> Parameters {
         return setValue(value, forName: name)
     }
     
@@ -153,7 +186,7 @@ public class Parameters {
     func toImpl() -> CBLQueryParameters {
         let params = CBLQueryParameters()
         for (name, value) in self.params {
-            params.setValue(value, forName: name)
+            params.setValue(DataConverter.convertSETValue(value), forName: name)
         }
         return params
     }

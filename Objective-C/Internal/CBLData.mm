@@ -59,6 +59,12 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 }
 @end
 
+@implementation NSData (CBLConversions)
+- (id) cbl_toCBLObject {
+    return [[CBLBlob alloc] initWithContentType: @"application/octet-stream" data: self];
+}
+@end
+
 @implementation NSDate (CBLConversions)
 - (id) cbl_toCBLObject {
     return [CBLJSON JSONObjectWithDate: self];

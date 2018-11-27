@@ -26,7 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
      This class is an optimization that does less work than the regular CBLMutableDictionary. */
 @interface CBLNewDictionary : NSObject <CBLMutableDictionary>
 
+@property (weak, nonatomic, nullable) id swiftObject;
+
 - (instancetype) initWithDictionary: (NSDictionary*)dictionary;
+
+- (CBLMutableDictionary*) toMutable;
 
 @end
 

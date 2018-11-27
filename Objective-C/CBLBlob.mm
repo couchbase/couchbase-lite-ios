@@ -326,21 +326,28 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
-    CBLMutableDocument *document = (__bridge CBLMutableDocument*)FLEncoder_GetExtraInfo(encoder);
-    CBLDatabase* database = document.database;
-    NSError *error;
-    if (![self installInDatabase: database error: &error]) {
-        [document setEncodingError: error];
-        return;
-    }
-    
-    NSDictionary* dict = self.jsonRepresentation;
-    FLEncoder_BeginDict(encoder, [dict count]);
-    for (NSString *key in dict) {
-        CBLStringBytes bKey(key);
-        FLEncoder_WriteKey(encoder, bKey);
-        id value = dict[key];
-        FLEncoder_WriteNSObject(encoder, value);
+    // Note: If CBLDictionary can be encoded independently of CBLDocument,
+    // so there could be no extra info:
+    id extra = (__bridge id) FLEncoder_GetExtraInfo(encoder);
+    CBLMutableDocument* document = $castIf(CBLMutableDocument, extra);
+    if (document) {
+        CBLDatabase* database = document.database;
+        NSError *error;
+        if (![self installInDatabase: database error: &error]) {
+            [document setEncodingError: error];
+            return;
+        }
+        
+        NSDictionary* dict = self.jsonRepresentation;
+        FLEncoder_BeginDict(encoder, [dict count]);
+        for (NSString *key in dict) {
+            CBLStringBytes bKey(key);
+            FLEncoder_WriteKey(encoder, bKey);
+            id value = dict[key];
+            FLEncoder_WriteNSObject(encoder, value);
+        }
+    } else {
+        FLEncoder_WriteNSObject(encoder, self.content);
     }
     FLEncoder_EndDict(encoder);
 }

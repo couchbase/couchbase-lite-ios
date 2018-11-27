@@ -291,6 +291,25 @@ public final class Expression {
         return ValueExpression(value: value)
     }
     
+    /// Creates a dictionary expression. The supported value types are String,
+    /// NSNumber, int, int64, float, double, boolean, Date, null and ExpressionProtocol.
+    ///
+    /// - Parameter value: The dictionary value.
+    /// - Returns: The dictionary expression.
+    public static func dictionary(_ value: Dictionary<String, Any>?) -> ExpressionProtocol {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates an array expression. The supported value types are String,
+    /// NSNumber, int, int64, float, double, boolean, Date, null and ExpressionProtocol.
+    ///
+    /// - Parameter value: The array value.
+    /// - Returns: The array expression.
+    public static func array(_ value: Array<Any>?) -> ExpressionProtocol {
+        return ValueExpression(value: value)
+    }
+    
     // MARK: Parameter
     
     /// Creates a parameter expression with the given parameter name.

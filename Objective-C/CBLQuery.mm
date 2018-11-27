@@ -138,7 +138,7 @@ using namespace fleece;
             if (limitObj.count > 1)
                 root[@"OFFSET"] = limitObj[1];
         }
-
+        
         NSError* error;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
@@ -198,14 +198,14 @@ using namespace fleece;
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
-    NSData* paramJSON = [_parameters encodeAsJSON: outError];
-    if (_parameters && !paramJSON)
+    NSData* params = [_parameters encode: outError];
+    if (_parameters && !params)
         return nil;
     
     C4Error c4Err;
     C4QueryEnumerator* e;
     CBL_LOCK(self.database) {
-        e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
+        e = c4query_run(_c4Query, &options, {params.bytes, params.length}, &c4Err);
     }
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);

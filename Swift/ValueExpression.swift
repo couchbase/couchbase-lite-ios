@@ -22,6 +22,35 @@ import Foundation
 /// Value Expression.
 /* internal */ class ValueExpression: QueryExpression {
     init(value: Any?) {
-        super.init(CBLQueryExpression.value(value))
+        super.init(CBLQueryExpression.value(ValueExpression.convertValue(value)))
+    }
+    
+    static func convertValue(_ value: Any?) -> Any? {
+        switch value {
+        case let v as [String: Any]:
+            return ValueExpression.convertDictionary(v)
+        case let v as [Any]:
+            return ValueExpression.convertArray(v)
+        case let v as ExpressionProtocol:
+            return v.toImpl()
+        default:
+            return value
+        }
+    }
+    
+    static func convertDictionary(_ dictionary: [String: Any]) -> [String: Any] {
+        var result: [String: Any] = [:]
+        for (key, value) in dictionary {
+            result[key] = ValueExpression.convertValue(value)!
+        }
+        return result
+    }
+    
+    static func convertArray(_ array: [Any]) -> [Any] {
+        var result: [Any] = [];
+        for v in array {
+            result.append(ValueExpression.convertValue(v)!)
+        }
+        return result
     }
 }

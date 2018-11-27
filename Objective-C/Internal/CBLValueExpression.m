@@ -18,6 +18,7 @@
 //
 
 #import "CBLValueExpression.h"
+#import "CBLBlob.h"
 #import "CBLJSON.h"
 #import "CBLQueryExpression+Internal.h"
 
@@ -41,6 +42,9 @@
         [value isKindOfClass: [NSString class]] ||
         [value isKindOfClass: [NSNumber class]] ||
         [value isKindOfClass: [NSDate class]] ||
+        [value isKindOfClass: [NSDictionary class]] ||
+        [value isKindOfClass: [NSArray class]] ||
+        [value isKindOfClass: [CBLQueryExpression class]] ||
         value == [NSNull null]) {
         return;
     }
@@ -50,14 +54,43 @@
 }
 
 
-- (id) asJSON {
-    if (!_value)
+static id valueAsJSON(id value) {
+    if (!value)
         return [NSNull null];
-    
-    if ([_value isKindOfClass: [NSDate class]])
-        return [CBLJSON JSONObjectWithDate:_value];
+    if ([value isKindOfClass: [NSDate class]])
+        return [CBLJSON JSONObjectWithDate: value];
+    else if ([value isKindOfClass: [NSDictionary class]])
+        return dictionaryAsJSON(value);
+    else if ([value isKindOfClass: [NSArray class]])
+        return arrayAsJSON(value);
+    else if ([value isKindOfClass: [CBLQueryExpression class]])
+        return [((CBLQueryExpression*)value) asJSON];
     else
-        return _value;
+        return value;
+}
+
+
+static id dictionaryAsJSON(NSDictionary* dict) {
+    NSMutableDictionary *json =
+        [NSMutableDictionary dictionaryWithCapacity: dict.count];
+    for (NSString *key in dict) {
+        json[key] = valueAsJSON(dict[key]);
+    }
+    return json;
+}
+
+
+static id arrayAsJSON(NSArray* array) {
+    NSMutableArray *json = [NSMutableArray arrayWithCapacity: array.count];
+    for (id value in array) {
+        [json addObject: valueAsJSON(value)];
+    }
+    return json;
+}
+
+
+- (id) asJSON {
+    return valueAsJSON(_value);
 }
 
 

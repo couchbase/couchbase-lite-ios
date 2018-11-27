@@ -244,7 +244,14 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     ///
     /// - Returns: The MutableDocument object.
     public func toMutable() -> MutableDictionaryObject {
-        return MutableDictionaryObject(_impl.toMutable())
+        switch _impl {
+        case let impl as CBLDictionary:
+            return MutableDictionaryObject(impl.toMutable())
+        case let impl as CBLNewDictionary:
+            return MutableDictionaryObject(impl.toMutable())
+        default:
+            fatalError("Invalid dictionary!!!")
+        }
     }
     
     
@@ -273,9 +280,9 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     // MARK: Equality
     
     
-    /// Equal to operator for comparing two Array objects.
+    /// Equal to operator for comparing two Dictionary objects.
     public static func == (dict1: DictionaryObject, dict2: DictionaryObject) -> Bool {
-        return dict1._impl == dict2._impl
+        return (dict1._impl as! NSObject) == (dict2._impl as! NSObject)
     }
     
     
@@ -289,17 +296,32 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     // MARK: Internal
     
     
-    init(_ impl: CBLDictionary) {
+    init(_ impl: CBLDictionaryProtocol) {
         _impl = impl
-        _impl.swiftObject = self
+        
+        switch _impl {
+        case let dict as CBLDictionary:
+            dict.swiftObject = self
+        case let dict as CBLNewDictionary:
+            dict.swiftObject = self
+        default:
+            fatalError("Invalid dictionary!!!")
+        }
     }
     
     
     deinit {
-        _impl.swiftObject = nil
+        switch _impl {
+        case let dict as CBLDictionary:
+            dict.swiftObject = nil
+        case let dict as CBLNewDictionary:
+            dict.swiftObject = nil
+        default:
+            fatalError("Invalid dictionary!!!")
+        }
     }
     
     
-    let _impl: CBLDictionary
+    let _impl: CBLDictionaryProtocol
     
 }

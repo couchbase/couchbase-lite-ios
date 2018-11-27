@@ -18,13 +18,15 @@
 //
 
 #import "CBLDictionary.h"
-#import "CBLDictionary+Swift.h"
+#import "CBLCoreBridge.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDictionary+Swift.h"
 #import "CBLDocument+Internal.h"
+#import "CBLFleece.hh"
 #import "CBLJSON.h"
 #import "CBLStringBytes.h"
-#import "CBLFleece.hh"
+#import "CBLStatus.h"
 #import "MDict.hh"
 #import "MDictIterator.hh"
 
@@ -40,7 +42,6 @@ using namespace fleece;
 
 
 @synthesize swiftObject=_swiftObject;
-
 
 
 - (instancetype) initEmpty {
@@ -93,13 +94,6 @@ using namespace fleece;
     CBL_LOCK(_sharedLock) {
         return [[CBLMutableDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
     }
-}
-
-
-// Called under the database's lock:
-- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    SharedEncoder encoder(enc);
-    _dict.encodeTo(encoder);
 }
 
 
@@ -356,6 +350,45 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 - (id) cbl_toCBLObject {
     return [self mutableCopy];
+}
+
+
+#pragma mark Fleece
+
+
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    CBL_LOCK(_sharedLock) {
+        SharedEncoder encoder(enc);
+        _dict.encodeTo(encoder);
+    }
+}
+
+
+#pragma mark - FLEncodable
+
+
+// Encode independently of the document. CBLBlob objects will not be installed
+// in the database and will be encoded with their content directly.
+- (FLSliceResult) encode: (NSError**)outError {
+    CBL_LOCK(_sharedLock) {
+        FLEncoder enc;
+        if (_dict.context() != MContext::gNullContext) {
+            CBLDatabase* db = ((DocContext*)_dict.context())->database();
+            enc = c4db_getSharedFleeceEncoder(db.c4db);
+        } else
+            enc = FLEncoder_New();
+        
+        FLError err;
+        [self fl_encodeToFLEncoder: enc];
+        FLSliceResult body = FLEncoder_Finish(enc, &err);
+        
+        if (_dict.context() != MContext::gNullContext)
+            FLEncoder_Free(enc);
+        
+        if (!body.buf)
+            convertError(err, outError);
+        return body;
+    }
 }
 
 

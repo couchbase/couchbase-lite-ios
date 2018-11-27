@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLBlob;
 @class CBLQueryCollation;
 @class CBLVariableExpression;
 
@@ -67,8 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Creates a value expresion. The supported value types are NSString,
- NSNumber, NSInteger, long long, float, double, boolean, NSDate and
- null.
+ NSNumber, NSInteger, long long, float, double, boolean, NSDate, NSDictionary,
+ NSArray, and null.
 
  @param value The value.
  @return The value expression.
@@ -138,6 +139,26 @@ NS_ASSUME_NONNULL_BEGIN
  @return The date expression.
  */
 + (CBLQueryExpression*) date: (nullable NSDate*)value;
+
+/**
+ Creates a dictionary expression. The supported value types are NSString,
+ NSNumber, NSInteger, long long, float, double, boolean, NSDate, NSDictionary,
+ NSArray, null, and CBLQueryExpression.
+ 
+ @param value The dictionary value.
+ @return The dictionary expression.
+ */
++ (CBLQueryExpression*) dictionary: (nullable NSDictionary*)value;
+
+/**
+ Creates an array expression. The supported value types are NSString,
+ NSNumber, NSInteger, long long, float, double, boolean, NSDate, NSDictionary,
+ NSArray, null, and CBLQueryExpression.
+
+ @param value The array value.
+ @return The array expression
+ */
++ (CBLQueryExpression*) array: (nullable NSArray*)value;
 
 #pragma mark - Parameter:
 

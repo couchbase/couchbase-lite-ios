@@ -38,6 +38,11 @@ import Foundation
                 return dict
             }
             return DictionaryObject(impl)
+        case let impl as CBLNewDictionary:
+            if let dict = impl.swiftObject {
+                return dict
+            }
+            return DictionaryObject(impl)
         case let impl as CBLArray:
             if let array = impl.swiftObject {
                 return array

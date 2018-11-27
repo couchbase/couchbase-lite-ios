@@ -37,6 +37,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
+@protocol FLEncodable <NSObject>
+- (FLSliceResult) encode: (NSError**)outError;
+@end
+
 @interface CBLMutableDocument ()
 
 - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
@@ -48,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLDocument ()
+@interface CBLDocument () <FLEncodable>
 {
     @protected
     CBLDictionary* _dict;
@@ -88,8 +92,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
-- (FLSliceResult) encode: (NSError**)outError;
-
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;
 
@@ -115,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLDictionary ()
+@interface CBLDictionary () <FLEncodable>
 
 @property (atomic, readonly) NSObject* sharedLock;
 

@@ -57,6 +57,7 @@ framework module CouchbaseLiteSwift {
         header "CBLMutableDictionaryFragment.h"
         header "CBLMutableDocument.h"
         header "CBLMutableFragment.h"
+        header "CBLNewDictionary.h"
         header "CBLQuery.h"
         header "CBLQuery+JSON.h"
         header "CBLQueryArrayExpression.h"

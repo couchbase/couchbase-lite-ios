@@ -1,5 +1,5 @@
 //
-//  CBLQueryParameters.m
+//  CBLQueryParameters.mm
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -19,7 +19,12 @@
 
 #import "CBLQueryParameters.h"
 #import "CBLQuery+Internal.h"
+#import "CBLArray.h"
+#import "CBLBlob.h"
+#import "CBLStatus.h"
+#import "fleece/Fleece.hh"
 
+using namespace fleece;
 
 @interface CBLQueryParameters()
 @property (readonly, nonatomic, nullable) NSDictionary* data;
@@ -107,6 +112,21 @@
 }
 
 
+- (void) setBlob: (nullable CBLBlob*)value forName:(NSString *)name {
+    [self setValue: value.content forName: name];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary*)value forName: (NSString*)name {
+    [self setValue: [value toDictionary] forKey: name];
+}
+
+
+- (void) setArray: (nullable CBLArray*)value forName: (NSString*)name {
+    [self setValue: [value toArray] forKey: name];
+}
+
+
 - (nullable id) valueForName: (NSString *)name {
     CBLAssertNotNil(name);
     
@@ -130,11 +150,19 @@
 }
 
 
-- (nullable NSData*) encodeAsJSON: (NSError**)outError {
-    if (_data)
-        return [NSJSONSerialization dataWithJSONObject: _data options: 0 error: outError];
-    else
+- (nullable NSData*) encode: (NSError**)outError {
+    Encoder enc;
+    if (_data) {
+        enc.writeNSObject(_data);
+    } else {
+        enc.beginDict();
+        enc.endDict();
+    }
+    if (enc.error()) {
+        convertError(enc.error(), outError);
         return nil;
+    }
+    return enc.finish().uncopiedNSData();
 }
 
 @end
