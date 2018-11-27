@@ -1776,9 +1776,9 @@
 - (void) testDeleteSingleDocumentForIsDeletedExpression {
     // save a new doc
     NSError* error;
-    CBLMutableDocument* docmentToSave = [[CBLMutableDocument alloc] init];
-    [docmentToSave setValue: @"string" forKey: @"string"];
-    Assert([self.db saveDocument: docmentToSave error: &error], @"Error when creating a document: %@", error);
+    CBLMutableDocument* documentToSave = [[CBLMutableDocument alloc] init];
+    [documentToSave setValue: @"string" forKey: @"string"];
+    Assert([self.db saveDocument: documentToSave error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     // get no-of-deleted docs & make sure its empty
@@ -1794,13 +1794,13 @@
     q = nil;
     
     // delete the doc
-    [self.db deleteDocument:docmentToSave error:&error];
+    [self.db deleteDocument:documentToSave error:&error];
     AssertNil(error);
     
     // get no-of-deleted docs & make sure its NOT empty
     q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [CBLQueryMeta isDeleted]];
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [CBLQueryMeta isDeleted]];
     
     AssertNotNil(q);
     rs = [q execute:&error];
