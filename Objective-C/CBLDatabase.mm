@@ -213,31 +213,18 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
     CBLAssertNotNil(document);
     
-    CBL_LOCK(self) {
-        if (![self prepareDocument: document error: error])
-            return NO;
-        
-        if (!document.revID)
-            return createError(CBLErrorNotFound,
-                               @"Document doesn't exist in the database.", error);
-        
-        C4Transaction transaction(self.c4db);
-        if (!transaction.begin())
-            return convertError(transaction.error(),  error);
-        
-        C4Error err;
-        if (c4doc_purgeRevision(document.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
-            if (c4doc_save(document.c4Doc.rawDoc, 0, &err)) {
-                // Save succeeded; now commit:
-                if (!transaction.commit())
-                    return convertError(transaction.error(), error);
-                // Reset c4doc:
-                [document replaceC4Doc: nil];
-                return YES;
-            }
-        }
-        return convertError(err, error);
-    }
+    return [self purgeDocumentWithID: document.id
+                        baseDocument: document
+                               error: error];
+}
+
+
+- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    return [self purgeDocumentWithID: documentID
+                        baseDocument: nil
+                               error: error];
 }
 
 
@@ -629,6 +616,41 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                            @"Cannot operate on a document from another database", error);
     }
     return YES;
+}
+
+
+- (BOOL) purgeDocumentWithID: (NSString*)documentID
+                baseDocument: (nullable CBLDocument*)document
+                       error: (NSError**)error
+{
+    CBL_LOCK(self) {
+        
+        CBLDocument* doc = document != nil ? document : [self documentWithID: documentID];
+        
+        if (!doc) {
+            return createError(CBLErrorNotFound, @"Document doesn't exist in the database.", error);
+        }
+        
+        if (![self prepareDocument: doc error: error]) {
+            return NO;
+        }
+        
+        C4Transaction transaction(self.c4db);
+        if (!transaction.begin())
+            return convertError(transaction.error(),  error);
+        
+        C4Error err;
+        CBLStringBytes docID(documentID);
+        if (c4db_purgeDoc(_c4db, docID, &err)) {
+            if (!transaction.commit()) {
+                return convertError(transaction.error(), error);
+            }
+            // Reset C4 doc
+            [document replaceC4Doc: nil];
+            return YES;
+        }
+        return convertError(err, error);
+    }
 }
 
 

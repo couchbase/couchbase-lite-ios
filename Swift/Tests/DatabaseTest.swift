@@ -604,6 +604,92 @@ class DatabaseTest: CBLTestCase {
         }
     }
     
+    // MARK: Purge Document With ID
+    
+    func testPreSavePurgeDocumentWithID() throws {
+        let documentID = "\(Date().timeIntervalSince1970)"
+        let _ = createDocument(documentID)
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            try self.db.purgeDocument(withID: documentID)
+        }
+    }
+    
+    func testPurgeDocumentWithID() throws {
+        let doc = try generateDocument(withID: nil)
+        
+        try self.db.purgeDocument(doc)
+        
+        XCTAssertNil(db.document(withID: doc.id))
+        XCTAssertEqual(db.count, 0)
+    }
+    
+    func testPurgeDocumentWithIDInDifferentDBInstance() throws {
+        let document = try generateDocument(withID: nil)
+        let documentID = document.id
+        let otherDB = try openDB(name: db.name)
+        XCTAssertNotNil(otherDB.document(withID: documentID))
+        XCTAssertEqual(otherDB.count, 1)
+        
+        // should delete it without any errors
+        try otherDB.purgeDocument(withID: documentID)
+        
+        try otherDB.close()
+    }
+    
+    func testPurgeDocumentWithIDInDifferentDB() throws {
+        let document = try generateDocument(withID: nil)
+        let documentID = document.id
+        let otherDB = try openDB(name: "otherDB")
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            try otherDB.purgeDocument(withID: documentID)
+        }
+        try otherDB.delete()
+    }
+    
+    func testCallPurgeDocumentWithIDTwice() throws {
+        let document = try generateDocument(withID: nil)
+        let documentID = document.id
+        try db.purgeDocument(withID: documentID)
+        XCTAssertNil(db.document(withID: documentID))
+        XCTAssertEqual(db.count, 0)
+        
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) { [unowned self] in
+            try self.db.purgeDocument(withID: documentID)
+        }
+    }
+    
+    func testPurgeDocumentWithIDInBatch() throws {
+        let totalDocumentsCount = 10
+        try createDocs(totalDocumentsCount)
+        try db.inBatch { [unowned self] in
+            for i in 0..<totalDocumentsCount {
+                let documentID = String(format: "doc_%03d", i)
+                try self.db.purgeDocument(withID: documentID)
+                XCTAssertNil(db.document(withID: documentID))
+                XCTAssertEqual(self.db.count, UInt64((totalDocumentsCount - 1) - i))
+            }
+        }
+        XCTAssertEqual(db.count, 0)
+    }
+    
+    func testDeletePurgedDocumentWithID() throws {
+        let document = try generateDocument(withID: nil)
+        let documentID = document.id
+        let anotherDocumentReference = db.document(withID: documentID)!
+        
+        // Purge doc
+        try db.purgeDocument(withID: documentID)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: documentID))
+        
+        // Delete document & anotherDocumentReference -> no-ops
+        try self.db.deleteDocument(document)
+        try db.deleteDocument(anotherDocumentReference)
+        
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: documentID))
+    }
+    
     // MARK: Index
     
     func testCreateIndex() throws {
