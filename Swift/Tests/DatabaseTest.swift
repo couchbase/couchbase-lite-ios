@@ -604,6 +604,18 @@ class DatabaseTest: CBLTestCase {
         }
     }
     
+    func testPurgeDocumentOnADeletedDocument() throws {
+        let document = try generateDocument(withID: nil)
+        
+        // Delete document
+        try self.db.deleteDocument(document)
+        
+        // Purge doc
+        try db.purgeDocument(document)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: document.id))
+    }
+    
     // MARK: Purge Document With ID
     
     func testPreSavePurgeDocumentWithID() throws {
@@ -686,6 +698,19 @@ class DatabaseTest: CBLTestCase {
         try self.db.deleteDocument(document)
         try db.deleteDocument(anotherDocumentReference)
         
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: documentID))
+    }
+    
+    func testPurgeDocumentWithIDOnADeletedDocument() throws {
+        let document = try generateDocument(withID: nil)
+        let documentID = document.id
+        
+        // Delete document
+        try self.db.deleteDocument(document)
+        
+        // Purge doc
+        try db.purgeDocument(withID: documentID)
         XCTAssertEqual(db.count, 0)
         XCTAssertNil(db.document(withID: documentID))
     }

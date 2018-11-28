@@ -952,6 +952,24 @@
     }];
 }
 
+- (void) testPurgeDocumentOnADeletedDocument {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // Delete doc
+    NSError* errorWhileDeletion;
+    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    
+    // Purge doc on the deleted document
+    NSError* errorWhilePurging;
+    Assert([self.db purgeDocument: document error: &errorWhilePurging]);
+    AssertNil(errorWhilePurging);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: documentID]);
+}
+
 #pragma mark - Purge Document WithID
 
 
@@ -1147,6 +1165,25 @@
     AssertEqual(self.db.count, 0u);
     
     anotherDBReturnedDocument = nil;
+}
+
+
+- (void) testPurgeDocumentWithIDOnADeletedDocument {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // Delete document
+    NSError* errorWhileDeletion;
+    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    
+    // Purge the deleted document
+    NSError* errorWhilePurging;
+    Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
+    AssertNil(errorWhilePurging);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: documentID]);
 }
 
 

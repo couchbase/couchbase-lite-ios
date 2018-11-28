@@ -627,10 +627,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         CBLDocument* doc = document != nil ? document : [self documentWithID: documentID];
         
-        if (!doc) {
-            return createError(CBLErrorNotFound, @"Document doesn't exist in the database.", error);
-        }
-        
         if (![self prepareDocument: doc error: error]) {
             return NO;
         }
