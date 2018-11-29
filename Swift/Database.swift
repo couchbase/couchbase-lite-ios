@@ -191,8 +191,6 @@ public final class Database {
     /// Purges the document for the given documentID from the database.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
-    /// Calling this method is the same as calling the -purgeDocument:error: method
-    /// but without invalidating the document reference passing to this method.
     ///
     /// - Parameter documentID: The document.
     /// - Throws: An error on a failure.

@@ -207,9 +207,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 /**
  Purges the document for the given documentID from the database.
  This is more drastic than deletion: it removes all traces of the document.
- The purge will NOT be replicated to other databases. Calling this method is
- the same as calling the -purgeDocument:error: method but without invalidating
- the document reference passing to this method.
+ The purge will NOT be replicated to other databases.
  
  @param documentID The ID of the document to be purged.
  @param error On return, the error if any.

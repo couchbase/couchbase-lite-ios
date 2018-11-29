@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocument+Internal.h"
 
 
 @interface DatabaseTest : CBLTestCase
@@ -961,11 +962,22 @@
     NSError* errorWhileDeletion;
     Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
     AssertNil(errorWhileDeletion);
+    NSError* documentReadError;
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                                            documentID: documentID
+                                                        includeDeleted: YES
+                                                                 error: &documentReadError];
+    AssertNotNil(savedDocument);
     
     // Purge doc on the deleted document
     NSError* errorWhilePurging;
     Assert([self.db purgeDocument: document error: &errorWhilePurging]);
     AssertNil(errorWhilePurging);
+    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                               documentID: documentID
+                                           includeDeleted: YES
+                                                    error: &documentReadError];
+    AssertNil(savedDocument);
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
 }
@@ -1178,10 +1190,24 @@
     Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
     AssertNil(errorWhileDeletion);
     
+    NSError* documentReadError;
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                                            documentID: documentID
+                                                        includeDeleted: YES
+                                                                 error: &documentReadError];
+    
+    AssertNotNil(savedDocument);
+    
     // Purge the deleted document
     NSError* errorWhilePurging;
     Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
     AssertNil(errorWhilePurging);
+    
+    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                               documentID: documentID
+                                           includeDeleted: YES
+                                                    error: &documentReadError];
+    AssertNil(savedDocument);
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
 }
