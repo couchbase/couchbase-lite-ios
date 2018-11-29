@@ -29,6 +29,7 @@
 .objc_class_name_CBLDocument
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
+.objc_class_name_CBLDocumentReplication
 .objc_class_name_CBLFullTextIndex
 .objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment

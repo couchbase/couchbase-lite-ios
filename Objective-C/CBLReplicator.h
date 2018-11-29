@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDatabase;
+@class CBLDocumentReplication;
 @class CBLReplicatorChange;
 @class CBLReplicatorConfiguration;
 @protocol CBLListenerToken;
@@ -125,6 +126,26 @@ typedef struct {
  */
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener;
+
+/**
+ Adds a replication event listener. The replication event will be posted on the main queue.
+ 
+ @param listener The listener to post replication events.
+ @return An opaque listener token object for removing the listener.
+ */
+- (id<CBLListenerToken>) addReplicationListener: (void (^)(CBLDocumentReplication*))listener;
+
+/**
+ Adds a replication event listener with the dispatch queue on which replication events
+ will be posted. If the dispatch queue is not specified, the replication events will be
+ posted on the main queue.
+ 
+ @param queue The dispatch queue.
+ @param listener The listener to post replication events.
+ @return An opaque listener token object for removing the listener.
+ */
+- (id<CBLListenerToken>) addReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
+                                                listener: (void (^)(CBLDocumentReplication*))listener;
 
 /** 
  Removes a change listener with the given listener token.

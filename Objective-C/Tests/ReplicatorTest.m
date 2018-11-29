@@ -289,28 +289,50 @@
     return c;
 }
 
-
 - (BOOL) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 {
-    return [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain];
+    return [self run: config reset: NO
+           errorCode: errorCode errorDomain: errorDomain onReady: nil];
 }
 
-- (BOOL) run: (CBLReplicatorConfiguration*)config
-       reset: (BOOL)reset
-   errorCode: (NSInteger)errorCode
- errorDomain: (NSString*)errorDomain
+- (BOOL)  run: (CBLReplicatorConfiguration*)config
+        reset: (BOOL)reset
+    errorCode: (NSInteger)errorCode
+  errorDomain: (NSString*)errorDomain
+{
+    return [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain onReady: nil];
+}
+
+- (BOOL)  run: (CBLReplicatorConfiguration*)config
+        reset: (BOOL)reset
+    errorCode: (NSInteger)errorCode
+  errorDomain: (NSString*)errorDomain
+      onReady: (nullable void (^)(CBLReplicator*))onReady
 {
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
+    if (onReady)
+        onReady(repl);
+    
+    if (reset)
+        [repl resetCheckpoint];
+    
+    return [self runWithReplicator: repl errorCode: errorCode errorDomain: errorDomain];
+}
+
+- (BOOL) runWithReplicator: (CBLReplicator*)replicator
+                 errorCode: (NSInteger)errorCode
+               errorDomain: (NSString*)errorDomain
+{
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
     __block BOOL fulfilled = NO;
     __weak typeof(self) wSelf = self;
     id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
         [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
-        if (config.continuous && change.status.activity == kCBLReplicatorIdle
+        if (replicator.config.continuous && change.status.activity == kCBLReplicatorIdle
             && change.status.progress.completed == change.status.progress.total) {
             [strongSelf->repl stop];
         }
@@ -320,20 +342,17 @@
         }
     }];
     
-    if (reset)
-        [repl resetCheckpoint];
+    [replicator start];
     
-    [repl start];
     @try {
         [self waitForExpectations: @[x] timeout: timeout];
     }
     @finally {
-        [repl stop];
-        [repl removeChangeListenerWithToken: token];
+        [replicator stop];
+        [replicator removeChangeListenerWithToken: token];
     }
     return fulfilled;
 }
-
 
 - (void) verifyChange: (CBLReplicatorChange*)change
             errorCode: (NSInteger)code
@@ -1406,6 +1425,66 @@
     AssertNotNil([otherDB documentWithID: @"doc3"]);
     AssertNotNil([otherDB documentWithID: @"doc4"]);
     AssertNil([otherDB documentWithID: @"doc2"]);
+}
+
+- (void) testDocumentReplicationListener {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Tiger" forKey: @"species"];
+    [doc2 setString: @"striped" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            [docIds addObject: docReplication.documentID];
+        }];
+    }];
+    
+    // Check if getting two document replication events:
+    AssertEqual(docIds.count, 2u);
+    Assert([docIds containsObject: @"doc1"]);
+    Assert([docIds containsObject: @"doc2"]);
+    
+    // Add another doc:
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"Tiger" forKey: @"species"];
+    [doc3 setString: @"Star" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc3 error: &error]);
+    
+    // Run the replicator again:
+    [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
+    
+    // Check if getting a new document replication event:
+    AssertEqual(docIds.count, 3u);
+    Assert([docIds containsObject: @"doc3"]);
+    
+    // Add another doc:
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
+    [doc4 setString: @"Tiger" forKey: @"species"];
+    [doc4 setString: @"WhiteStriped" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc4 error: &error]);
+    
+    // Remove document replication listener:
+    [replicator removeChangeListenerWithToken: token];
+    
+    // Run the replicator again:
+    [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
+    
+    // Should not getting a new document replication event:
+    AssertEqual(docIds.count, 3u);
 }
 
 #endif // COUCHBASE_ENTERPRISE

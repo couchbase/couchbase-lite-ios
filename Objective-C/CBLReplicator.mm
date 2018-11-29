@@ -18,10 +18,12 @@
 //
 
 #import "CBLReplicator+Backgrounding.h"
+#import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
 #import "CBLURLEndpoint.h"
+
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabaseEndpoint.h"
 #import "CBLMessageEndpoint+Internal.h"
@@ -58,6 +60,11 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     return min(delay, kMaxRetryDelay);
 }
 
+typedef enum {
+    kCBLProgressLevelBasic = 0,
+    kCBLProgressLevelDocument
+} CBLReplicatorProgressLevel;
+
 @interface CBLReplicator ()
 @property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
@@ -72,7 +79,9 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     unsigned _retryCount;
     BOOL _allowReachability;
     CBLReachability* _reachability;
+    CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
+    CBLChangeNotifier<CBLDocumentReplication*>* _docReplicationNotifier;
     BOOL _resetCheckpoint;
     
     // TODO: Instead of having multiple boolean variables, we could
@@ -96,7 +105,9 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         NSParameterAssert(config.database != nil && config.target != nil);
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
         _dispatchQueue = config.database.dispatchQueue;
+        _progressLevel = kCBLProgressLevelBasic;
         _changeNotifier = [CBLChangeNotifier new];
+        _docReplicationNotifier = [CBLChangeNotifier new];
     }
     return self;
 }
@@ -190,13 +201,13 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
     // Encode the options:
     alloc_slice optionsFleece;
-    NSDictionary* options = _config.effectiveOptions;
+    
+    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
     
     // Update resetCheckpoint flag if needed:
     if (_resetCheckpoint) {
-        NSMutableDictionary* newOptions = [options mutableCopy];
-        newOptions[@kC4ReplicatorResetCheckpoint] = @(YES);
-        options = newOptions;
+        options[@kC4ReplicatorResetCheckpoint] = @(YES);
         _resetCheckpoint = NO;
     }
     
@@ -357,8 +368,28 @@ static BOOL isPull(CBLReplicatorType type) {
 }
 
 
+- (id<CBLListenerToken>) addReplicationListener: (void (^)(CBLDocumentReplication*))listener {
+    return [self addReplicationListenerWithQueue: nil listener: listener];
+}
+
+
+- (id<CBLListenerToken>) addReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
+                                                listener: (void (^)(CBLDocumentReplication*))listener
+{
+    CBL_LOCK(self) {
+        _progressLevel = kCBLProgressLevelDocument;
+        return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener];
+    }
+}
+
+
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     [_changeNotifier removeChangeListenerWithToken: token];
+    
+    CBL_LOCK(self) {
+        if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
+            _progressLevel = kCBLProgressLevelBasic;
+    }
 }
 
 
@@ -479,7 +510,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 static void onDocEnded(C4Replicator *repl,
                        bool pushing,
-                       C4String docID,
+                       C4HeapString docID,
+                       C4HeapString revID,
+                       C4RevisionFlags flags,
                        C4Error error,
                        bool errorIsTransient,
                        void *context)
@@ -489,12 +522,11 @@ static void onDocEnded(C4Replicator *repl,
     dispatch_async(replicator->_dispatchQueue, ^{
         CBL_LOCK(replicator) {
             if (repl == replicator->_repl) {
-                if (error.code) {
+                if (error.code)
                     [replicator onDocError: error pushing: pushing docID: docIDStr
                                isTransient: errorIsTransient];
-                } else {
-                    [replicator onDocEnded: docIDStr pushing: pushing];
-                }
+                else
+                    [replicator onDocEnded: docIDStr pushing: pushing error: nil];
             }
         }
     });
@@ -506,32 +538,31 @@ static void onDocEnded(C4Replicator *repl,
               docID: (NSString*)docID
         isTransient: (bool)isTransient
 {
+    NSError* error;
+    
     if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
         // Conflict pulling a document -- the revision was added but app needs to resolve it:
         CBLLog(Sync, @"%@: pulled conflicting version of '%@'", self, docID);
-        NSError* error;
-        if (![_config.database resolveConflictInDocument: docID error: &error]) {
+        if (![_config.database resolveConflictInDocument: docID error: &error])
             CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, docID, error);
-            // TODO: Should pass error along to listener
-        }
-    } else {
-        NSError* error;
+    } else
         convertError(c4err, &error);
-        CBLLog(Sync, @"%@: %serror %s '%@': %@",
-               self,
-               (isTransient ? "transient " : ""),
-               (pushing ? "pushing" : "pulling"),
-               docID, error);
-        // TODO: Call an optional listener (API TBD)
-    }
+    
+    CBLLog(Sync, @"%@: %serror %s '%@': %@",
+           self,
+           (isTransient ? "transient " : ""),
+           (pushing ? "pushing" : "pulling"),
+           docID, error);
+    
+    [self onDocEnded: docID pushing: pushing error: error];
 }
 
 
-- (void) onDocEnded: (NSString*)docID
-            pushing: (bool)pushing
-{
-    // TODO: Send document-ended notifications thru public API
-    C4Warn("CBLReplicator received doc-ended event but doesn't handle them yet");
+- (void) onDocEnded: (NSString*)docID pushing: (BOOL)pushing error: (nullable NSError*)error {
+    [_docReplicationNotifier postChange: [[CBLDocumentReplication alloc] initWithReplicator: self
+                                                                                     isPush: pushing
+                                                                                 documentID: docID
+                                                                                      error: nil]];
 }
 
 
