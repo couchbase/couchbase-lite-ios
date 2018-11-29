@@ -214,14 +214,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(document);
     
     CBL_LOCK(self) {
-        if (![self prepareDocument: document error: error]) {
+        if (![self prepareDocument: document error: error])
             return NO;
-        }
         
-        if (!document.revID) {
+        if (!document.revID)
             return createError(CBLErrorNotFound,
                                @"Document doesn't exist in the database.", error);
-        }
         
         if ([self purgeDocumentWithID:document.id error:error]) {
             [document replaceC4Doc: nil];
