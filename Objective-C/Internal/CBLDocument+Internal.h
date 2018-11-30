@@ -67,13 +67,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSUInteger generation;
 
-@property (nonatomic, readonly) BOOL isDeleted;
-
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
+
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                             body: (nullable FLDict)body;
 
 - (nullable instancetype) initWithDatabase: (CBLDatabase*)database
                                 documentID: (NSString*)documentID

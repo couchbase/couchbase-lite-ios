@@ -37,6 +37,7 @@
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize documentIDs=_documentIDs, channels=_channels;
+@synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
 
 #if TARGET_OS_IPHONE
@@ -136,6 +137,8 @@
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
+        _pushFilter = config.pushFilter;
+        _pullFilter = config.pullFilter;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif

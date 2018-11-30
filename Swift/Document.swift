@@ -39,6 +39,11 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     }
     
     
+    /// Flag indicating that the document has been deleted.
+    public var isDeleted: Bool {
+        return _impl.isDeleted
+    }
+    
     // MARK: Edit
     
     
