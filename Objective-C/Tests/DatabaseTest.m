@@ -2017,20 +2017,203 @@
 }
 
 
-- (void) testExpiryAfterDBClosed {
+- (void) testUnScheduleAfterDBClosed {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
     NSString* docID = doc.id;
     AssertEqual(self.db.count, 1u);
     AssertNil([self.db getDocumentExpirationWithID: docID]);
     
+    // set expiry
     NSTimeInterval expiryTime = 3;
+    NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
     Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
     AssertNil(err);
     
-    Assert([self.db close: &err]);
+    [self closeDatabase:self.db];
+    
+    // validate its not crashing due during the expiry timer!!
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime) handler: ^(NSError *error) {
+        AssertNil(error);
+    }];
+}
+
+
+- (void) testReScheduleOfPurgeDocuments {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 5;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
     AssertNil(err);
+    AssertNotNil([self.db documentWithID: docID]);
+    
+    [self closeDatabase:self.db];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)(bufferTime * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [self reopenDB];
+                       AssertNotNil([self.db documentWithID: docID]);
+                   });
+    
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       AssertNil([self.db documentWithID: docID]);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime) handler: ^(NSError *error) {
+        AssertNil(error);
+    }];
+}
+
+
+- (void) testExpiryDocumentRemovesDocFromDifferentDBInstance {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // store doc on default DB
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* docID = document.id;
+    AssertNotNil(docID);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 5;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    AssertNil(err);
+    AssertNotNil([self.db documentWithID: docID]);
+    
+    // create db instance with same name
+    NSError* errorWhileOpeningDB;
+    CBLDatabase* otherDB = [self openDBNamed: self.db.name error: &errorWhileOpeningDB];
+    AssertNil(errorWhileOpeningDB);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
+    AssertNotNil([otherDB documentWithID: docID]);
+    AssertEqual(1, (long)otherDB.count);
+    
+    // validate it is being removed from all instances
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       AssertNil([self.db documentWithID: docID]);
+                       AssertNil([otherDB documentWithID: docID]);
+                       AssertEqual(0, (long)otherDB.count);
+                       AssertEqual(0, (long)self.db.count);
+                       
+                       // close otherDB
+                       [self closeDatabase: otherDB];
+                       
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime) handler: ^(NSError *error) {
+        AssertNil(error);
+    }];
+}
+
+
+- (void) testOverrideExpirationWithFartherDateIsValid {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 4;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    
+    // override
+    expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime * 2)];
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    
+    // validate
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // should NOT be removed in the first expiry
+                       AssertNotNil([self.db documentWithID: docID]);
+                   });
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)(((2 * expiryTime) + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // should be removed in the first expiry
+                       AssertNil([self.db documentWithID: docID]);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: (2 * expiryTime) + (2 * bufferTime)
+                                 handler: ^(NSError *error) {
+                                     AssertNil(error);
+    }];
+}
+
+
+- (void) testOverrideExpirationWithCloserDateIsValid {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 10;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    
+    // override
+    expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime / 2)];
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    
+    // validate
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)(((expiryTime / 2) + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // should be removed at closer date
+                       AssertNil([self.db documentWithID: docID]);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime)
+                                 handler: ^(NSError *error) {
+                                     AssertNil(error);
+                                 }];
 }
 
 @end
