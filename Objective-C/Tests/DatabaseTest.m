@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocument+Internal.h"
 
 
 @interface DatabaseTest : CBLTestCase
@@ -950,6 +951,265 @@
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         [self.db purgeDocument: doc error: nil];
     }];
+}
+
+- (void) testPurgeDocumentOnADeletedDocument {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // Delete doc
+    NSError* errorWhileDeletion;
+    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    NSError* documentReadError;
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                                            documentID: documentID
+                                                        includeDeleted: YES
+                                                                 error: &documentReadError];
+    AssertNotNil(savedDocument);
+    
+    // Purge doc on the deleted document
+    NSError* errorWhilePurging;
+    Assert([self.db purgeDocument: document error: &errorWhilePurging]);
+    AssertNil(errorWhilePurging);
+    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                               documentID: documentID
+                                           includeDeleted: YES
+                                                    error: &documentReadError];
+    AssertNil(savedDocument);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: documentID]);
+}
+
+#pragma mark - Purge Document WithID
+
+
+- (void) testPurgeDocumentWithIDPreSave {
+    AssertEqual(0, (long)self.db.count);
+    
+    // create a doc & not save
+    NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
+    NSString* documentID = [NSString stringWithFormat:@"%0.0f", timestamp];
+    CBLMutableDocument* doc = [self createDocument: documentID];
+    
+    // not found
+    [self expectError: CBLErrorDomain
+                 code: CBLErrorNotFound
+                   in: ^BOOL(NSError** errorWhilePurging) {
+                       return [self.db purgeDocumentWithID: documentID error: errorWhilePurging];
+                   }];
+    
+    documentID = nil;
+    doc = nil;
+    AssertEqual(0, (long)self.db.count);
+}
+
+
+- (void) testPurgeDocumentWithID {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    NSError* errorWhilePurging;
+    [self.db purgeDocumentWithID: documentID error: &errorWhilePurging];
+    AssertNil(errorWhilePurging);
+    
+    AssertNil([self.db documentWithID: documentID]);
+    AssertEqual(self.db.count, 0u);
+}
+
+
+- (void) testPurgeDocumentWithIDInDifferentDBInstance {
+    // store doc
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // create db instance with same name
+    NSError* errorWhileOpeningDB;
+    CBLDatabase* otherDB = [self openDBNamed: self.db.name error: &errorWhileOpeningDB];
+    AssertNil(errorWhileOpeningDB);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
+    AssertNotNil([otherDB documentWithID: documentID]);
+    AssertEqual(1, (long)otherDB.count);
+    
+    // purge document from other db instance
+    NSError* errorWhilePurging;
+    [otherDB purgeDocumentWithID: documentID error: &errorWhilePurging];
+    
+    // should remove doc from both DB instances
+    AssertNil(errorWhilePurging);
+    AssertNil([self.db documentWithID: documentID]);
+    AssertNil([otherDB documentWithID: documentID]);
+    AssertEqual(0, (long)otherDB.count);
+    AssertEqual(0, (long)self.db.count);
+    
+    // close otherDB
+    [self closeDatabase: otherDB];
+}
+
+
+- (void) testPurgeDocumentWithIDFromUnknownDB {
+    // store doc
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // create db with different name
+    NSError* errorWhileOpeningDB;
+    CBLDatabase* otherDB =  [self openDBNamed: @"otherDB" error: &errorWhileOpeningDB];
+    AssertNil(errorWhileOpeningDB);
+    
+    // validate the otherDB
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
+    AssertNil([otherDB documentWithID: documentID]);
+    AssertEqual(0, (long)otherDB.count);
+    
+    // purge document from other db - where no document exists
+    [self expectError: CBLErrorDomain
+                 code: CBLErrorNotFound
+                   in: ^BOOL(NSError** errorWhilePurging) {
+                       return [otherDB purgeDocumentWithID: documentID error: errorWhilePurging];
+    }];
+    
+    AssertEqual(0, (long)otherDB.count);
+    AssertEqual(1, (long)self.db.count);
+    
+    [self deleteDatabase: otherDB];
+}
+
+
+- (void) testCallPurgeDocumentWithIDTwice {
+    // store doc
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+
+    // Purge Doc first time
+    NSError* errorWhilePurging;
+    [self.db purgeDocumentWithID: documentID error: &errorWhilePurging];
+    AssertNil(errorWhilePurging);
+    AssertEqual(0, (long)self.db.count);
+
+    // Purge Doc second time
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** error) {
+        return [self.db purgeDocumentWithID: documentID error: error];
+    }];
+}
+
+
+- (void) testPurgeDocumentWithIDInBatch {
+    int totalDocumentsCount = 10;
+    [self createDocs: totalDocumentsCount];
+
+    NSError* error;
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
+        for(int i = 0; i < totalDocumentsCount; i++) {
+            NSString* documentID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
+            NSError* errorWhilePurging;
+            [self.db purgeDocumentWithID: documentID error: &errorWhilePurging];
+            AssertNil(errorWhilePurging);
+            AssertEqual((totalDocumentsCount - 1) - i, (long)self.db.count);
+        }
+    }];
+    Assert(success);
+    AssertNil(error);
+    AssertEqual(0, (long)self.db.count);
+}
+
+
+- (void) testPurgeDocumentWithIDOnClosedDB {
+    // store doc
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+
+    // close db
+    [self closeDatabase: self.db];
+
+    // purge doc
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db purgeDocumentWithID: documentID error: nil];
+    }];
+}
+
+
+- (void) testPurgeDocumentWithIDOnDeletedDB {
+    // store doc
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+
+    // delete db
+    [self deleteDatabase: self.db];
+
+    // purge doc
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db purgeDocumentWithID: documentID error: nil];
+    }];
+}
+
+- (void) testDeletePurgedDocumentWithID {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    CBLDocument* anotherDBReturnedDocument = [self.db documentWithID: documentID];
+    
+    // Purge doc
+    NSError* errorWhilePurging;
+    Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
+    AssertNil(errorWhilePurging);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: documentID]);
+    
+    // Delete doc no-ops:
+    NSError* errorWhileDeletion;
+    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    
+    // Delete another DB returned document, no-ops:
+    Assert([self.db deleteDocument: anotherDBReturnedDocument error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    AssertEqual(self.db.count, 0u);
+    
+    anotherDBReturnedDocument = nil;
+}
+
+
+- (void) testPurgeDocumentWithIDOnADeletedDocument {
+    CBLDocument* document = [self generateDocumentWithID: nil];
+    NSString* documentID = document.id;
+    AssertNotNil(documentID);
+    
+    // Delete document
+    NSError* errorWhileDeletion;
+    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
+    AssertNil(errorWhileDeletion);
+    
+    NSError* documentReadError;
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                                            documentID: documentID
+                                                        includeDeleted: YES
+                                                                 error: &documentReadError];
+    
+    AssertNotNil(savedDocument);
+    
+    // Purge the deleted document
+    NSError* errorWhilePurging;
+    Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
+    AssertNil(errorWhilePurging);
+    
+    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
+                                               documentID: documentID
+                                           includeDeleted: YES
+                                                    error: &documentReadError];
+    AssertNil(savedDocument);
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: documentID]);
 }
 
 

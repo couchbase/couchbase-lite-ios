@@ -188,6 +188,17 @@ public final class Database {
     }
     
     
+    /// Purges the document for the given documentID from the database.
+    /// This is more drastic than deletion: it removes all traces of the document.
+    /// The purge will NOT be replicated to other databases.
+    ///
+    /// - Parameter documentID: The document.
+    /// - Throws: An error on a failure.
+    public func purgeDocument(withID documentID: String) throws {
+        try _impl.purgeDocument(withID: documentID)
+    }
+    
+    
     /// Runs a group of database operations in a batch. Use this when performing bulk write 
     /// operations like multiple inserts/updates; it saves the overhead of multiple database 
     /// commits, greatly improving performance.
