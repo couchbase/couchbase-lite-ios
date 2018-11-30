@@ -382,6 +382,29 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error;
 
 
+#pragma mark - DOCUMENT EXPIRATION
+
+/**
+ Sets an expiration date on a document.
+ After this time the document will be purged from the database.
+ 
+ @param documentID The ID of the document to set the expiration date for
+ @param date The expiration date. Set nil date will reset the document expiration.
+ @param error error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
+                                date: (nullable NSDate*)date
+                               error: (NSError**)error;
+
+/**
+ Returns the expiration time of a document, if exists, else nil.
+ 
+ @param documentID The ID of the document to set the expiration date for
+ @return the expiration time of a document, if one has been set, else nil.
+ */
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+
 @end
 
 NS_ASSUME_NONNULL_END
