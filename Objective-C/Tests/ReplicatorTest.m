@@ -294,7 +294,7 @@
  errorDomain: (NSString*)errorDomain
 {
     return [self run: config reset: NO
-           errorCode: errorCode errorDomain: errorDomain onReady: nil];
+           errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
 }
 
 - (BOOL)  run: (CBLReplicatorConfiguration*)config
@@ -302,11 +302,12 @@
     errorCode: (NSInteger)errorCode
   errorDomain: (NSString*)errorDomain
 {
-    return [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain onReady: nil];
+    return [self run: config reset: NO
+           errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
 }
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
-       reset: (BOOL)rese
+       reset: (BOOL)reset
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
