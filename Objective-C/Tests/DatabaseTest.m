@@ -1974,7 +1974,8 @@
     Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
     
     // validate
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
                        AssertNil([self.db documentWithID: docID]);
                        [expectation fulfill];
@@ -1984,6 +1985,37 @@
         AssertNil(error);
     }];
 }
+
+
+- (void) testWhetherDocumentNotRemovedBeforeExpiry {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 4;
+    NSTimeInterval bufferTime = 1;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    
+    // validate
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime - bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       AssertNotNil([self.db documentWithID: docID]);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime handler: ^(NSError *error) {
+        AssertNil(error);
+    }];
+}
+
 
 
 @end
