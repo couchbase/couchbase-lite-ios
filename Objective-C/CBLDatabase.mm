@@ -535,6 +535,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         C4Error err;
         CBLStringBytes docID(documentID);
         if (c4doc_setExpiration(_c4db, docID, timestamp, &err)) {
+            [self scheduleDocumentExpiration: 0.0];
             return TRUE;
         }
         return convertError(err, error);
@@ -1003,6 +1004,38 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     CBLLog(Sync, @"Conflict resolved as doc '%@' rev %.*s",
            localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
     return YES;
+}
+
+
+- (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(purgeExpiredDocuments)
+                                               object: nil];
+    UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
+    if (nextExpiration > 0) {
+        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
+        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow + 1.0, minimumDelay);
+        NSLog(@"Scheduling next doc expiration in %.3g sec", delay);
+        CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self performSelector: @selector(purgeExpiredDocuments)
+                       withObject: nil
+                       afterDelay: delay];
+        });
+    } else {
+        CBLLog(Database, @"No pending doc expirations");
+    }
+}
+
+
+- (void) purgeExpiredDocuments {
+    dispatch_async(_dispatchQueue, ^{
+        CBLLog(Database, @"Purging expired documents...");
+        C4Error err;
+        NSUInteger nPurged = c4db_purgeExpiredDocs(_c4db, &err);
+        CBLLog(Database, @"Purged %lu expired documents", (unsigned long)nPurged);
+        [self scheduleDocumentExpiration: 1.0];
+    });
 }
 
 @end

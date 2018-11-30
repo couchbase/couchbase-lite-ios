@@ -1967,19 +1967,20 @@
     AssertNil([self.db getDocumentExpirationWithID: docID]);
     
     // set expiry
-    NSTimeInterval expiryTime = 3;
+    NSTimeInterval expiryTime = 4;
+    NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
     Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
     
     // validate
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(expiryTime + 1 * NSEC_PER_SEC)),
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
                        AssertNil([self.db documentWithID: docID]);
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: expiryTime + 2 handler: ^(NSError *error) {
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime) handler: ^(NSError *error) {
         AssertNil(error);
     }];
 }
