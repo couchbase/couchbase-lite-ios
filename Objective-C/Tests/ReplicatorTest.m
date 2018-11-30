@@ -302,8 +302,7 @@
     errorCode: (NSInteger)errorCode
   errorDomain: (NSString*)errorDomain
 {
-    return [self run: config reset: NO
-           errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
+    return [self run: config reset: reset errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
 }
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
@@ -1432,7 +1431,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
-    [doc1 setString: @"Hobbes" forKey: @"name"];
+    [doc1 setString: @"Hobbes" forKey: @"pattern"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
@@ -1487,6 +1486,152 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // Should not getting a new document replication event:
     AssertEqual(docIds.count, 3u);
 }
+
+- (void) testPushFilter {
+    // Create documents:
+    NSError* error;
+    NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Hobbes" forKey: @"pattern"];
+    [doc1 setBlob: blob forKey: @"photo"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Tiger" forKey: @"species"];
+    [doc2 setString: @"Striped" forKey: @"pattern"];
+    [doc2 setBlob: blob forKey: @"photo"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"Tiger" forKey: @"species"];
+    [doc3 setString: @"Star" forKey: @"pattern"];
+    [doc3 setBlob: blob forKey: @"photo"];
+    Assert([self.db saveDocument: doc3 error: &error]);
+    Assert([self.db deleteDocument: doc3 error: &error]);
+    
+    // Create replicator with push filter:
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.pushFilter = ^BOOL(CBLDocument* document) {
+        // Check document ID:
+        AssertNotNil(document.id);
+        // Check deleted flag:
+        Assert([document.id isEqualToString: @"doc3"] ? document.isDeleted : !document.isDeleted);
+        if (!document.isDeleted) {
+            // Check content:
+            AssertNotNil([document valueForKey: @"pattern"]);
+            AssertEqualObjects([document valueForKey: @"species"], @"Tiger");
+            
+            // Check blob:
+            CBLBlob *photo = [document blobForKey: @"photo"];
+            AssertNotNil(photo);
+            AssertEqualObjects(photo.content, photo.content);
+        } else
+            AssertEqualObjects(document.toDictionary, @{});
+        
+        // Gather document ID:
+        [docIds addObject: document.id];
+        
+        // Reject doc2:
+        return [document.id isEqualToString: @"doc2"] ? NO : YES;
+    };
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(docIds.count, 3u);
+    Assert([docIds containsObject: @"doc1"]);
+    Assert([docIds containsObject: @"doc2"]);
+    Assert([docIds containsObject: @"doc3"]);
+    
+    // Check replicated documents:
+    AssertNotNil([otherDB documentWithID: @"doc1"]);
+    AssertNil([otherDB documentWithID: @"doc2"]);
+    AssertNil([otherDB documentWithID: @"doc3"]);
+}
+
+- (void) testPullFilter {
+    // Add a document to db database so that it can pull the deleted docs from:
+    NSError* error;
+    CBLMutableDocument* doc0 = [[CBLMutableDocument alloc] initWithID: @"doc0"];
+    [doc0 setString: @"Cat" forKey: @"species"];
+    Assert([self.db saveDocument: doc0 error: &error]);
+    
+    // Create documents to otherDB:
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpeg" data: data];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Hobbes" forKey: @"pattern"];
+    [doc1 setBlob: blob forKey: @"photo"];
+    Assert([otherDB saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Tiger" forKey: @"species"];
+    [doc2 setString: @"Striped" forKey: @"pattern"];
+    [doc2 setBlob: blob forKey: @"photo"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"Tiger" forKey: @"species"];
+    [doc3 setString: @"Star" forKey: @"pattern"];
+    [doc2 setBlob: blob forKey: @"photo"];
+    Assert([otherDB saveDocument: doc3 error: &error]);
+    Assert([otherDB deleteDocument: doc3 error: &error]);
+    
+    // Create replicator with pull filter:
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: NO];
+    config.pullFilter = ^BOOL(CBLDocument* document) {
+        // Check document ID:
+        AssertNotNil(document.id);
+        // Check deleted flag:
+        Assert([document.id isEqualToString: @"doc3"] ? document.isDeleted : !document.isDeleted);
+        if (!document.isDeleted) {
+            // Check content:
+            AssertNotNil([document valueForKey: @"pattern"]);
+            AssertEqualObjects([document valueForKey: @"species"], @"Tiger");
+            
+            // Check Blob:
+            CBLBlob *photo = [document blobForKey: @"photo"];
+            AssertNotNil(photo);
+            
+            // Note: Cannot access content because there is no actual blob file saved on disk yet.
+            // AssertEqualObjects(photo.content, photo.content);
+        } else
+            AssertEqualObjects(document.toDictionary, @{});
+        
+        // Gather document ID:
+        [docIds addObject: document.id];
+        
+        // Reject doc2:
+        return [document.id isEqualToString: @"doc2"] ? NO : YES;
+    };
+    
+    // Run the replicator:
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(docIds.count, 3u);
+    Assert([docIds containsObject: @"doc1"]);
+    Assert([docIds containsObject: @"doc2"]);
+    Assert([docIds containsObject: @"doc3"]);
+    
+    // Check replicated documents:
+    AssertNotNil([self.db documentWithID: @"doc1"]);
+    AssertNil([self.db documentWithID: @"doc2"]);
+    AssertNil([self.db documentWithID: @"doc3"]);
+}
+
 
 #endif // COUCHBASE_ENTERPRISE
 

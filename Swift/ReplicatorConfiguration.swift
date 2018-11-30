@@ -31,6 +31,8 @@ public enum ReplicatorType: UInt8 {
     case pull
 }
 
+/// Replication Filter.
+public typealias ReplicationFilter = (Document) -> Bool
 
 /// Replicator configuration.
 public class ReplicatorConfiguration {
@@ -90,6 +92,26 @@ public class ReplicatorConfiguration {
     /// A set of document IDs to filter by: if given, only documents with
     /// these IDs will be pushed and/or pulled.
     public var documentIDs: [String]? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    
+    /**
+     Filter closure for validating whether the documents can be pushed to the remote endpoint.
+     Only documents for which the closure returns true are replicated.
+     */
+    public var pushFilter: ReplicationFilter? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    
+    /**
+     Filter closure for validating whether the documents can be pulled from the remote endpoint.
+     Only documents for which the closure returns true are replicated.
+     */
+    public var pullFilter: ReplicationFilter? {
         willSet(newValue) {
             checkReadOnly()
         }
@@ -158,19 +180,27 @@ public class ReplicatorConfiguration {
     }
     
     func toImpl() -> CBLReplicatorConfiguration {
-        let t = self.target as! IEndpoint
-        let c = CBLReplicatorConfiguration(database: self.database._impl, target: t.toImpl())
-        c.replicatorType = CBLReplicatorType(rawValue:
-            UInt32(self.replicatorType.rawValue))
+        let target = self.target as! IEndpoint
+        let c = CBLReplicatorConfiguration(database: self.database._impl, target: target.toImpl())
+        c.replicatorType = CBLReplicatorType(rawValue: UInt32(self.replicatorType.rawValue))
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.channels = self.channels
         c.documentIDs = self.documentIDs
+        c.pushFilter = self.filter(push: true)
+        c.pullFilter = self.filter(push: false)
     #if os(iOS)
         c.allowReplicatingInBackground = self.allowReplicatingInBackground
     #endif
         return c
+    }
+    
+    func filter(push: Bool) -> CBLReplicationFilter? {
+        guard let filter = push ? self.pushFilter : self.pullFilter else {
+            return nil
+        }
+        return { (doc) in return filter(Document(doc)) }
     }
 }

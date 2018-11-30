@@ -99,7 +99,6 @@ typedef struct {
  */
 - (void) stop;
 
-
 /**
  Resets the local checkpoint of the replicator, meaning that it will read all
  changes since the beginning of time from the remote database. This can only be

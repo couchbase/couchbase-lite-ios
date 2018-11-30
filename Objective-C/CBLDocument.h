@@ -38,6 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (readonly, nonatomic) uint64_t sequence;
 
+/** Flag indicating that the document has been deleted. */
+@property (readonly, nonatomic) BOOL isDeleted;
+
 /**
  Returns a mutable copy of the document.
  

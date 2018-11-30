@@ -19,8 +19,9 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
-@class CBLDatabase;
 @class CBLAuthenticator;
+@class CBLDatabase;
+@class CBLDocument;
 @protocol CBLEndpoint;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,7 +33,10 @@ typedef enum {
     kCBLReplicatorTypePull                ///< Pulling changes from the target
 } CBLReplicatorType;
 
+/** Replication Filter */
+typedef BOOL (^CBLReplicationFilter) (CBLDocument* document);
 
+/** Replicator Configuration */
 @interface CBLReplicatorConfiguration: NSObject
 
 /** The local database to replicate with the target endpoint. */
@@ -85,6 +89,17 @@ typedef enum {
  */
 @property (nonatomic, nullable) NSArray<NSString*>* documentIDs;
 
+/**
+ Filter block for validating whether the documents can be pushed to the remote endpoint.
+ Only documents for which the block returns true are replicated.
+ */
+@property (nonatomic, nullable) CBLReplicationFilter pushFilter;
+
+/**
+ Filter block for validating whether the documents can be pulled from the remote endpoint.
+ Only documents for which the block returns true are replicated.
+ */
+@property (nonatomic, nullable) CBLReplicationFilter pullFilter;
 
 #if TARGET_OS_IPHONE
 /**
