@@ -938,6 +938,8 @@
 		9385F2CA1FC5FF4D00032037 /* CBLLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 9385F2C81FC5FF4D00032037 /* CBLLock.h */; };
 		9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
 		9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
+		9386852921B09C5400BB1242 /* DocumentReplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9386852821B09C5400BB1242 /* DocumentReplication.swift */; };
+		9386852A21B09C5400BB1242 /* DocumentReplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9386852821B09C5400BB1242 /* DocumentReplication.swift */; };
 		938B36A4200745FF004485D8 /* CBLQueryResultArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 938B3690200745FE004485D8 /* CBLQueryResultArray.h */; };
 		938B36A5200745FF004485D8 /* CBLQueryResultArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 938B3690200745FE004485D8 /* CBLQueryResultArray.h */; };
 		938B36A6200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
@@ -1711,6 +1713,7 @@
 		9385F2651FC38F8900032037 /* CBLListenerToken.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLListenerToken.h; sourceTree = "<group>"; };
 		9385F2C81FC5FF4D00032037 /* CBLLock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLLock.h; sourceTree = "<group>"; };
 		9385F3021FC645AE00032037 /* ConcurrentTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConcurrentTest.m; sourceTree = "<group>"; };
+		9386852821B09C5400BB1242 /* DocumentReplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentReplication.swift; sourceTree = "<group>"; };
 		938B3690200745FE004485D8 /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		938B36A3200745FE004485D8 /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
 		938B3701200D7D1D004485D8 /* MigrationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MigrationTest.m; sourceTree = "<group>"; };
@@ -2117,6 +2120,7 @@
 				27E35A911E8C4F4300E103F9 /* Replicator.swift */,
 				93DB80001ED8FCE200C4F845 /* ReplicatorConfiguration.swift */,
 				93B41CCE1F04813C00A7F114 /* ReplicatorChange.swift */,
+				9386852821B09C5400BB1242 /* DocumentReplication.swift */,
 			);
 			name = Replication;
 			sourceTree = "<group>";
@@ -3983,6 +3987,7 @@
 				27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */,
 				938CDF201E807F45002EE790 /* DataSource.swift in Sources */,
 				93CED8CB20488BD400E6F0A4 /* DocumentChange.swift in Sources */,
+				9386852921B09C5400BB1242 /* DocumentReplication.swift in Sources */,
 				93EC42D41FB3801E00D54BB4 /* CBLValueIndex.m in Sources */,
 				937A69061F0731230058277F /* CBLQueryFunction.m in Sources */,
 				93FD616420204E3600E7F6A1 /* CBLIndexBuilder.m in Sources */,
@@ -4297,6 +4302,7 @@
 				9343F037207D61AB00F19A89 /* Replicator.swift in Sources */,
 				9343F038207D61AB00F19A89 /* FromRouter.swift in Sources */,
 				9343F039207D61AB00F19A89 /* CBLQueryFullTextFunction.m in Sources */,
+				9386852A21B09C5400BB1242 /* DocumentReplication.swift in Sources */,
 				9343F03A207D61AB00F19A89 /* CBLDocumentChange.m in Sources */,
 				9343F03B207D61AB00F19A89 /* CBLParseDate.c in Sources */,
 				9343F03C207D61AB00F19A89 /* CBLUnaryExpression.m in Sources */,

@@ -221,20 +221,33 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorNotFound,
                                @"Document doesn't exist in the database.", error);
         
-        C4Transaction transaction(self.c4db);
+        if ([self purgeDocumentWithID:document.id error:error]) {
+            [document replaceC4Doc: nil];
+            return TRUE;
+        }
+        
+        return NO;
+    }
+}
+
+
+- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4Transaction transaction(_c4db);
         if (!transaction.begin())
             return convertError(transaction.error(),  error);
         
         C4Error err;
-        if (c4doc_purgeRevision(document.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
-            if (c4doc_save(document.c4Doc.rawDoc, 0, &err)) {
-                // Save succeeded; now commit:
-                if (!transaction.commit())
-                    return convertError(transaction.error(), error);
-                // Reset c4doc:
-                [document replaceC4Doc: nil];
-                return YES;
+        CBLStringBytes docID(documentID);
+        if (c4db_purgeDoc(_c4db, docID, &err)) {
+            if (!transaction.commit()) {
+                return convertError(transaction.error(), error);
             }
+            return YES;
         }
         return convertError(err, error);
     }

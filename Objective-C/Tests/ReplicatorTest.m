@@ -305,19 +305,19 @@
     return [self run: config reset: NO errorCode: errorCode errorDomain: errorDomain onReady: nil];
 }
 
-- (BOOL)  run: (CBLReplicatorConfiguration*)config
-        reset: (BOOL)reset
-    errorCode: (NSInteger)errorCode
-  errorDomain: (NSString*)errorDomain
-      onReady: (nullable void (^)(CBLReplicator*))onReady
+- (BOOL) run: (CBLReplicatorConfiguration*)config
+       reset: (BOOL)rese
+   errorCode: (NSInteger)errorCode
+ errorDomain: (NSString*)errorDomain
+onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 {
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
-    if (onReady)
-        onReady(repl);
-    
     if (reset)
         [repl resetCheckpoint];
+    
+    if (onReplicatorReady)
+        onReplicatorReady(repl);
     
     return [self runWithReplicator: repl errorCode: errorCode errorDomain: errorDomain];
 }
@@ -1436,7 +1436,7 @@
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Tiger" forKey: @"species"];
-    [doc2 setString: @"striped" forKey: @"pattern"];
+    [doc2 setString: @"Striped" forKey: @"pattern"];
     Assert([self.db saveDocument: doc2 error: &error]);
     
     // Push:
@@ -1446,7 +1446,7 @@
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
-    [self run: config reset: NO errorCode: 0 errorDomain: nil onReady: ^(CBLReplicator* r) {
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         replicator = r;
         token = [r addReplicationListener: ^(CBLDocumentReplication *docReplication) {
             [docIds addObject: docReplication.documentID];

@@ -143,6 +143,37 @@ public final class Replicator {
     }
     
     
+    /// Adds a document replication event listener. The document replication events will be posted
+    /// on the main queue.
+    ///
+    /// - Parameter listener: The listener to post document replication events.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addReplicationListener(
+        _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
+        return self.addReplicationListener(withQueue: nil, listener);
+    }
+    
+    
+    /// Adds a document replication event listener with the dispatch queue on which events
+    /// will be posted. If the dispatch queue is not specified, the document replication
+    /// events will be posted on the main queue.
+    ///
+    /// - Parameters:
+    ///   - queue: The dispatch queue.
+    ///   - listener: The listener to post document replication events.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addReplicationListener(withQueue queue: DispatchQueue?,
+        _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
+        let token = _impl.addReplicationListener(with: queue, listener: { (replication) in
+            listener(DocumentReplication(replicator: self,
+                                         isPush: replication.isPush,
+                                         documentID: replication.documentID,
+                                         error: replication.error))
+        })
+        return ListenerToken(token)
+    }
+    
+    
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
