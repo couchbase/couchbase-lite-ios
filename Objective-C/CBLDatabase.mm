@@ -43,6 +43,9 @@ using namespace fleece;
 
 #define kDBExtension @"cblite2"
 
+// How long to wait after a database opens before expiring docs
+#define kHousekeepingDelayAfterOpening 3.0
+
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseConfiguration* _config;
@@ -303,6 +306,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 "Please remove all of the query listeners before closing the database.";
             return createError(CBLErrorBusy, err, outError);
         }
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                 selector: @selector(purgeExpiredDocuments)
+                                                   object: nil];
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -331,6 +338,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 "Please remove all of the query listeners before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                 selector: @selector(purgeExpiredDocuments)
+                                                   object: nil];
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -607,6 +618,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(err, outError);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
+    
+    [self scheduleDocumentExpiration: kHousekeepingDelayAfterOpening];
     
     return YES;
 }
@@ -1015,7 +1028,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     if (nextExpiration > 0) {
         NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
         NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow + 1.0, minimumDelay);
-        NSLog(@"Scheduling next doc expiration in %.3g sec", delay);
         CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
         dispatch_async(dispatch_get_main_queue(), ^{
             [self performSelector: @selector(purgeExpiredDocuments)

@@ -2017,5 +2017,20 @@
 }
 
 
+- (void) testExpiryAfterDBClosed {
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    NSTimeInterval expiryTime = 3;
+    NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    AssertNil(err);
+    
+    Assert([self.db close: &err]);
+    AssertNil(err);
+}
 
 @end
