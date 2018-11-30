@@ -56,6 +56,21 @@ using namespace fleece;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
+                             body: (nullable FLDict)body {
+    NSParameterAssert(documentID != nil);
+    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    if (self) {
+        _database = database;
+        _id = documentID;
+        _fleeceData = body;
+        [self updateDictionary];
+    }
+    return self;
+}
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
                    includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError
 {

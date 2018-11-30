@@ -19,6 +19,7 @@
 
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLDocumentReplication+Internal.h"
+#import "CBLRevisionDocument.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
@@ -231,18 +232,17 @@ typedef enum {
             socketFactory = CBLWebSocket.socketFactory;
     socketFactory.context = (__bridge void*)self;
     
-    
-    
     // Create a C4Replicator:
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+        .pushFilter = filter(_config.pushFilter, true),
+        .validationFunc = filter(_config.pullFilter, false),
         .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
         .onStatusChanged = &statusChanged,
         .onDocumentEnded = &onDocEnded,
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
-        // TODO: Add .validationFunc (public API TBD)
     };
     
     C4Error err;
@@ -284,6 +284,11 @@ static BOOL isPush(CBLReplicatorType type) {
 
 static BOOL isPull(CBLReplicatorType type) {
     return type == kCBLReplicatorTypePushAndPull || type == kCBLReplicatorTypePull;
+}
+
+
+static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool isPush) {
+    return filter != nil ? (isPush ? &pushFilter : &pullFilter) : NULL;
 }
 
 
@@ -558,11 +563,37 @@ static void onDocEnded(C4Replicator *repl,
 }
 
 
-- (void) onDocEnded: (NSString*)docID pushing: (BOOL)pushing error: (nullable NSError*)error {
+- (void) onDocEnded: (NSString*)docID pushing: (bool)pushing error: (nullable NSError*)error {
     [_docReplicationNotifier postChange: [[CBLDocumentReplication alloc] initWithReplicator: self
                                                                                      isPush: pushing
                                                                                  documentID: docID
                                                                                       error: nil]];
+}
+
+
+#pragma mark - Push/Pull Filter
+
+
+static bool pushFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
+    auto replicator = (__bridge CBLReplicator*)context;
+    return [replicator filterDocument: docID flags: flags body: flbody pushing: true];
+}
+
+
+static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
+    auto replicator = (__bridge CBLReplicator*)context;
+    return [replicator filterDocument: docID flags: flags body: flbody pushing: false];
+}
+
+
+- (bool) filterDocument: (C4String)docID
+                  flags: (C4RevisionFlags)flags
+                   body: (FLDict)body
+                pushing: (bool)pushing
+{
+    auto doc = [[CBLRevisionDocument alloc] initWithDatabase: _config.database
+                                                  documentID: docID flags: flags body: body];
+    return pushing ? _config.pushFilter(doc) : _config.pullFilter(doc);
 }
 
 
