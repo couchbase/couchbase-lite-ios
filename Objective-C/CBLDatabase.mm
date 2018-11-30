@@ -307,9 +307,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(purgeExpiredDocuments)
-                                                   object: nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                     selector: @selector(purgeExpiredDocuments)
+                                                       object: nil];
+        });
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -339,9 +341,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(purgeExpiredDocuments)
-                                                   object: nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                     selector: @selector(purgeExpiredDocuments)
+                                                       object: nil];
+        });
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -1021,9 +1025,11 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 
 - (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                             selector: @selector(purgeExpiredDocuments)
-                                               object: nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                 selector: @selector(purgeExpiredDocuments)
+                                                   object: nil];
+    });
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
         NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
