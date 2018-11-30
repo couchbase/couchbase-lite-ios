@@ -520,6 +520,42 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+#pragma mark - DOCUMENT EXPIRATION
+
+
+- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
+                                date: (nullable NSDate*)date
+                               error: (NSError**)error
+{
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(self) {
+        UInt64 timestamp = date ? (UInt64)date.timeIntervalSince1970 : 0;
+        
+        C4Error err;
+        CBLStringBytes docID(documentID);
+        if (c4doc_setExpiration(_c4db, docID, timestamp, &err)) {
+            return TRUE;
+        }
+        return convertError(err, error);
+    }
+}
+
+
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(self) {
+        CBLStringBytes docID(documentID);
+        UInt64 timestamp = c4doc_getExpiration(_c4db, docID);
+        if (timestamp == 0) {
+            return nil;
+        }
+        return [NSDate dateWithTimeIntervalSince1970: timestamp];
+    }
+}
+
+
 #pragma mark - INTERNAL
 
 
