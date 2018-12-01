@@ -203,7 +203,7 @@ class ReplicatorTest: CBLTestCase {
         let docIds = NSMutableSet()
         self.run(config: config, reset: false, expectedError: nil) { (r) in
             replicator = r
-            token = r.addReplicationListener({ (replication) in
+            token = r.addDocumentReplicationListener({ (replication) in
                 docIds.add(replication.documentID)
             })
         }
@@ -270,10 +270,10 @@ class ReplicatorTest: CBLTestCase {
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
         let config = self.config(target: target, type: .push, continuous: false)
-        config.pushFilter = { (doc) in
+        config.pushFilter = { (doc, del) in
             XCTAssertNotNil(doc.id)
-            XCTAssert(doc.id == "doc3" ? doc.isDeleted : !doc.isDeleted)
-            if !doc.isDeleted {
+            XCTAssert(doc.id == "doc3" ? del : !del)
+            if !del {
                 // Check content:
                 XCTAssertNotNil(doc.value(forKey: "pattern"))
                 XCTAssertEqual(doc.string(forKey: "species")!, "Tiger")
@@ -341,10 +341,10 @@ class ReplicatorTest: CBLTestCase {
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
         let config = self.config(target: target, type: .pull, continuous: false)
-        config.pullFilter = { (doc) in
+        config.pullFilter = { (doc, del) in
             XCTAssertNotNil(doc.id)
-            XCTAssert(doc.id == "doc3" ? doc.isDeleted : !doc.isDeleted)
-            if !doc.isDeleted {
+            XCTAssert(doc.id == "doc3" ? del : !del)
+            if !del {
                 // Check content:
                 XCTAssertNotNil(doc.value(forKey: "pattern"))
                 XCTAssertEqual(doc.string(forKey: "species")!, "Tiger")
