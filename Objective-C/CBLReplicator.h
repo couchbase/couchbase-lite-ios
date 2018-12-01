@@ -132,7 +132,7 @@ typedef struct {
  @param listener The listener to post replication events.
  @return An opaque listener token object for removing the listener.
  */
-- (id<CBLListenerToken>) addReplicationListener: (void (^)(CBLDocumentReplication*))listener;
+- (id<CBLListenerToken>) addDocumentReplicationListener: (void (^)(CBLDocumentReplication*))listener;
 
 /**
  Adds a replication event listener with the dispatch queue on which replication events
@@ -143,8 +143,8 @@ typedef struct {
  @param listener The listener to post replication events.
  @return An opaque listener token object for removing the listener.
  */
-- (id<CBLListenerToken>) addReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentReplication*))listener;
+- (id<CBLListenerToken>) addDocumentReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
+                                                        listener: (void (^)(CBLDocumentReplication*))listener;
 
 /** 
  Removes a change listener with the given listener token.

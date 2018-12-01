@@ -34,7 +34,7 @@ typedef enum {
 } CBLReplicatorType;
 
 /** Replication Filter */
-typedef BOOL (^CBLReplicationFilter) (CBLDocument* document);
+typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, BOOL isDeleted);
 
 /** Replicator Configuration */
 @interface CBLReplicatorConfiguration: NSObject

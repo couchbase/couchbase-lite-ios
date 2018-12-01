@@ -32,7 +32,7 @@ public enum ReplicatorType: UInt8 {
 }
 
 /// Replication Filter.
-public typealias ReplicationFilter = (Document) -> Bool
+public typealias ReplicationFilter = (Document, Bool) -> Bool
 
 /// Replicator configuration.
 public class ReplicatorConfiguration {
@@ -201,6 +201,6 @@ public class ReplicatorConfiguration {
         guard let filter = push ? self.pushFilter : self.pullFilter else {
             return nil
         }
-        return { (doc) in return filter(Document(doc)) }
+        return { (doc, del) in return filter(Document(doc), del) }
     }
 }
