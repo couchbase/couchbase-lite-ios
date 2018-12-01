@@ -148,9 +148,9 @@ public final class Replicator {
     ///
     /// - Parameter listener: The listener to post document replication events.
     /// - Returns: An opaque listener token object for removing the listener.
-    @discardableResult public func addReplicationListener(
+    @discardableResult public func addDocumentReplicationListener(
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
-        return self.addReplicationListener(withQueue: nil, listener);
+        return self.addDocumentReplicationListener(withQueue: nil, listener);
     }
     
     
@@ -162,9 +162,9 @@ public final class Replicator {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post document replication events.
     /// - Returns: An opaque listener token object for removing the listener.
-    @discardableResult public func addReplicationListener(withQueue queue: DispatchQueue?,
+    @discardableResult public func addDocumentReplicationListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
-        let token = _impl.addReplicationListener(with: queue, listener: { (replication) in
+        let token = _impl.addDocumentReplicationListener(with: queue, listener: { (replication) in
             listener(DocumentReplication(replicator: self,
                                          isPush: replication.isPush,
                                          documentID: replication.documentID,

@@ -1448,7 +1448,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     __block CBLReplicator* replicator;
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         replicator = r;
-        token = [r addReplicationListener: ^(CBLDocumentReplication *docReplication) {
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
             [docIds addObject: docReplication.documentID];
         }];
     }];
@@ -1518,12 +1518,12 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.pushFilter = ^BOOL(CBLDocument* document) {
+    config.pushFilter = ^BOOL(CBLDocument* document, BOOL isDeleted) {
         // Check document ID:
         AssertNotNil(document.id);
         // Check deleted flag:
-        Assert([document.id isEqualToString: @"doc3"] ? document.isDeleted : !document.isDeleted);
-        if (!document.isDeleted) {
+        Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
+        if (!isDeleted) {
             // Check content:
             AssertNotNil([document valueForKey: @"pattern"]);
             AssertEqualObjects([document valueForKey: @"species"], @"Tiger");
@@ -1591,12 +1591,12 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePull
                                                      continuous: NO];
-    config.pullFilter = ^BOOL(CBLDocument* document) {
+    config.pullFilter = ^BOOL(CBLDocument* document, BOOL isDeleted) {
         // Check document ID:
         AssertNotNil(document.id);
         // Check deleted flag:
-        Assert([document.id isEqualToString: @"doc3"] ? document.isDeleted : !document.isDeleted);
-        if (!document.isDeleted) {
+        Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
+        if (!isDeleted) {
             // Check content:
             AssertNotNil([document valueForKey: @"pattern"]);
             AssertEqualObjects([document valueForKey: @"species"], @"Tiger");

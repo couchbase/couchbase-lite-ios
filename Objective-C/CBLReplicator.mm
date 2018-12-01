@@ -19,7 +19,6 @@
 
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLDocumentReplication+Internal.h"
-#import "CBLRevisionDocument.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
@@ -373,13 +372,13 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 
-- (id<CBLListenerToken>) addReplicationListener: (void (^)(CBLDocumentReplication*))listener {
-    return [self addReplicationListenerWithQueue: nil listener: listener];
+- (id<CBLListenerToken>) addDocumentReplicationListener: (void (^)(CBLDocumentReplication*))listener {
+    return [self addDocumentReplicationListenerWithQueue: nil listener: listener];
 }
 
 
-- (id<CBLListenerToken>) addReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentReplication*))listener
+- (id<CBLListenerToken>) addDocumentReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
+                                                        listener: (void (^)(CBLDocumentReplication*))listener
 {
     CBL_LOCK(self) {
         _progressLevel = kCBLProgressLevelDocument;
@@ -591,9 +590,11 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
-    auto doc = [[CBLRevisionDocument alloc] initWithDatabase: _config.database
-                                                  documentID: docID flags: flags body: body];
-    return pushing ? _config.pushFilter(doc) : _config.pullFilter(doc);
+    auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
+                                          documentID: slice2string(docID)
+                                                body: body];
+    bool isDeleted = (flags & kRevDeleted) != 0;
+    return pushing ? _config.pushFilter(doc, isDeleted) : _config.pullFilter(doc, isDeleted);
 }
 
 
