@@ -307,11 +307,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                     selector: @selector(purgeExpiredDocuments)
-                                                       object: nil];
-        });
+        [self cancelPreviousPerformRequestsForPurgeExpiry];
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -341,11 +337,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                     selector: @selector(purgeExpiredDocuments)
-                                                       object: nil];
-        });
+        [self cancelPreviousPerformRequestsForPurgeExpiry];
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -1024,12 +1016,12 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 }
 
 
+# pragma mark DOCUMENT EXPIRATION 
+
+
 - (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(purgeExpiredDocuments)
-                                                   object: nil];
-    });
+    [self cancelPreviousPerformRequestsForPurgeExpiry];
+    
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
         NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
@@ -1047,12 +1039,25 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 
 - (void) purgeExpiredDocuments {
-    dispatch_async(_dispatchQueue, ^{
+    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         CBLLog(Database, @"Purging expired documents...");
         C4Error err;
         NSUInteger nPurged = c4db_purgeExpiredDocs(_c4db, &err);
         CBLLog(Database, @"Purged %lu expired documents", (unsigned long)nPurged);
         [self scheduleDocumentExpiration: 1.0];
+    });
+}
+
+
+- (void) cancelPreviousPerformRequestsForPurgeExpiry {
+    __weak CBLDatabase *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        CBLDatabase *strongSelf = weakSelf;
+        if (strongSelf) {
+            [NSObject cancelPreviousPerformRequestsWithTarget: strongSelf
+                                                     selector: @selector(purgeExpiredDocuments)
+                                                       object: nil];
+        }
     });
 }
 
