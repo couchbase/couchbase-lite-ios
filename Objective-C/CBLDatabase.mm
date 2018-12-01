@@ -307,7 +307,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [self cancelPreviousPerformRequestsForPurgeExpiry];
+        [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -337,7 +337,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [self cancelPreviousPerformRequestsForPurgeExpiry];
+        [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -1016,11 +1016,11 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 }
 
 
-# pragma mark DOCUMENT EXPIRATION 
+# pragma mark DOCUMENT EXPIRATION
 
 
 - (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
-    [self cancelPreviousPerformRequestsForPurgeExpiry];
+    [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
     
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
@@ -1049,7 +1049,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 }
 
 
-- (void) cancelPreviousPerformRequestsForPurgeExpiry {
+- (void) cancelPreviousPerformRequestsForPurgingExpiredDocuments {
     __weak CBLDatabase *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         CBLDatabase *strongSelf = weakSelf;
