@@ -30,6 +30,9 @@
 #define kCBLQueryMetaIsDeletedKeyPath @"_deleted"
 #define kCBLQueryMetaIsDeletedColumnName @"deleted"
 
+#define kCBLQueryMetaExpiredKeyPath @"_expired"
+#define kCBLQueryMetaExpiredColumnName @"expired"
+
 @implementation CBLQueryMeta
 
 
@@ -65,6 +68,18 @@
 + (CBLQueryExpression*) isDeletedFrom: (nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
                                                columnName: kCBLQueryMetaIsDeletedColumnName
+                                                     from: alias];
+}
+
+
++ (CBLQueryExpression*) expired {
+    return [self isDeletedFrom: nil];
+}
+
+
++ (CBLQueryExpression*) expired: (NSString *)alias {
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaExpiredKeyPath
+                                               columnName: kCBLQueryMetaExpiredColumnName
                                                      from: alias];
 }
 

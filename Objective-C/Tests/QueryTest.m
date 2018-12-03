@@ -1759,6 +1759,8 @@
     AssertEqual(numRows, 1u);
 }
 
+# pragma mark - META - IsDeleted
+
 - (void) testIsDeletedExpressionEmpty {
     // fetch is-deleted condition should return empty
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -1859,5 +1861,21 @@
     AssertNil(error);
     AssertEqual([[rs allObjects] count], documentsCount);
 }
+
+
+#pragma mark - META - expired
+
+- (void) testExpiredExpressionOnEmptyDB {
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [CBLQueryMeta expired]];
+    
+    AssertNotNil(q);
+    NSError* error;
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 0u);
+}
+
 
 @end
