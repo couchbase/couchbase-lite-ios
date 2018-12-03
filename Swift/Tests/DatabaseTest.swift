@@ -830,4 +830,238 @@ class DatabaseTest: CBLTestCase {
         try db.deleteIndex(forName: "index2")
         try db.deleteIndex(forName: "index3")
     }
+    
+    // MARK: Document Expiration
+    
+    func testGetExpirationPreSave() {
+        let doc = createDocument(nil)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.getDocumentExpiration(id: doc.id))
+    }
+    
+    func testExpirationFromDocumentWithoutExpiry() throws {
+        let doc = try generateDocument(withID: nil)
+        
+        XCTAssertEqual(db.count, 1)
+        XCTAssertNil(db.getDocumentExpiration(id: doc.id))
+    }
+    
+    func testSetAndGetExpiration() throws {
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 3.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        let savedDate = db.getDocumentExpiration(id: doc.id)
+        XCTAssertNotNil(savedDate)
+        XCTAssert(expiryDate.timeIntervalSince(savedDate!) < 1)
+    }
+    
+    func testSetExpiryToNonExistingDocument() {
+        let expiryDate = Date(timeIntervalSinceNow: 30)
+        
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) { [unowned self] in
+            try self.db.setDocumentExpiration(id: "someInvalidID", date: expiryDate)
+        }
+    }
+    
+    func testWhetherDocumentRemovedAfterExpiry() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 4.0
+        let bufferTime: TimeInterval = 2.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + expiryTime + bufferTime) { [unowned self] in
+            XCTAssertNil(self.db.document(withID: doc.id))
+            promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + bufferTime) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testWhetherDocumentNotRemovedBeforeExpiry() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 4.0
+        let bufferTime: TimeInterval = 1.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + expiryTime - bufferTime) { [unowned self] in
+            XCTAssertNotNil(self.db.document(withID: doc.id))
+            promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + bufferTime) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testUnScheduleAfterDBClosed() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 5.0
+        let bufferTime: TimeInterval = 2.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        try db.close()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + expiryTime + bufferTime) {
+            // crash, if not removed!
+            promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testReScheduleOfPurgeDocuments() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 5.0
+        let bufferTime: TimeInterval = 2.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        try db.close()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + bufferTime) { [unowned self] in
+            try! self.reopenDB()
+            XCTAssertNotNil(self.db.document(withID: doc.id))
+        }
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + expiryTime + bufferTime) { [unowned self] in
+                XCTAssertNil(self.db.document(withID: doc.id))
+                promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testExpiryDocumentRemovesDocFromDifferentDBInstance() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 3.0
+        let bufferTime: TimeInterval = 2.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        
+        let otherDB = try self.openDB(name: db.name)
+        XCTAssertNotNil(otherDB)
+        XCTAssertEqual(otherDB.count, 1)
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + expiryTime + bufferTime) { [unowned self] in
+                XCTAssertNil(self.db.document(withID: doc.id))
+                XCTAssertNil(otherDB.document(withID: doc.id))
+                promise.fulfill()
+                XCTAssertEqual(self.db.count, 0)
+                XCTAssertEqual(otherDB.count, 0)
+                
+                try! otherDB.close()
+        }
+        
+        waitForExpectations(timeout: expiryTime + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testOverrideExpirationWithFartherDateIsValid() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 3.0
+        let bufferTime: TimeInterval = 2.0
+        let initialExpiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: initialExpiryDate)
+        
+        // override
+        let secondaryExpiryDate = initialExpiryDate.addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: secondaryExpiryDate)
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + expiryTime + bufferTime) { [unowned self] in
+                XCTAssertNotNil(self.db.document(withID: doc.id))
+        }
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + (2 * expiryTime) +  bufferTime) { [unowned self] in
+                XCTAssertNil(self.db.document(withID: doc.id))
+                promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: (2 * expiryTime) + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testOverrideExpirationWithCloserDateIsValid() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 10.0
+        let bufferTime: TimeInterval = 2.0
+        let initialExpiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: initialExpiryDate)
+        
+        // override
+        let secondaryExpiryDate = initialExpiryDate.addingTimeInterval(-expiryTime/2)
+        try db.setDocumentExpiration(id: doc.id, date: secondaryExpiryDate)
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + (expiryTime/2) +  bufferTime) { [unowned self] in
+                XCTAssertNil(self.db.document(withID: doc.id))
+                promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
+    
+    func testRemoveExpirationDate() throws {
+        let promise = expectation(description: "document expiry expectation")
+        let doc = try generateDocument(withID: nil)
+        
+        let expiryTime: TimeInterval = 10.0
+        let bufferTime: TimeInterval = 2.0
+        let expiryDate = Date().addingTimeInterval(expiryTime)
+        try db.setDocumentExpiration(id: doc.id, date: expiryDate)
+        XCTAssertNotNil(db.getDocumentExpiration(id: doc.id))
+        
+        // override
+        try db.setDocumentExpiration(id: doc.id, date: nil)
+        XCTAssertNil(db.getDocumentExpiration(id: doc.id))
+        
+        DispatchQueue
+            .main
+            .asyncAfter(deadline: .now() + (expiryTime) +  bufferTime) { [unowned self] in
+                XCTAssertNotNil(self.db.document(withID: doc.id))
+                promise.fulfill()
+        }
+        
+        waitForExpectations(timeout: expiryTime + (2 * bufferTime)) { (error) in
+            XCTAssertNil(error)
+        }
+    }
 }
