@@ -2216,4 +2216,41 @@
                                  }];
 }
 
+
+- (void) testRemoveExpiration {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 5;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    AssertNil(err);
+    
+    Assert([self.db setDocumentExpirationWithID: docID date: nil error: &err]);
+    AssertNil(err);
+    
+    AssertNil([self.db getDocumentExpirationWithID: docID]);
+    
+    // validate
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // should not be removed
+                       AssertNotNil([self.db documentWithID: docID]);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime)
+                                 handler: ^(NSError *error) {
+                                     AssertNil(error);
+                                 }];
+}
+
 @end
