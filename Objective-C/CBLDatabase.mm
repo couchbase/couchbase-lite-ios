@@ -531,7 +531,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
-                                date: (nullable NSDate*)date
+                          expiration: (nullable NSDate*)date
                                error: (NSError**)error
 {
     CBLAssertNotNil(documentID);
