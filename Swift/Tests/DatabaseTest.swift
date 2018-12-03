@@ -851,7 +851,7 @@ class DatabaseTest: CBLTestCase {
         
         let expiryTime: TimeInterval = 3.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         let savedDate = db.getDocumentExpiration(withID: doc.id)
         XCTAssertNotNil(savedDate)
@@ -862,7 +862,7 @@ class DatabaseTest: CBLTestCase {
         let expiryDate = Date(timeIntervalSinceNow: 30)
         
         expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) { [unowned self] in
-            try self.db.setDocumentExpiration(withID: "someInvalidID", date: expiryDate)
+            try self.db.setDocumentExpiration(withID: "someInvalidID", expiration: expiryDate)
         }
     }
     
@@ -873,7 +873,7 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 4.0
         let bufferTime: TimeInterval = 2.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + expiryTime + bufferTime) { [unowned self] in
             XCTAssertNil(self.db.document(withID: doc.id))
@@ -892,7 +892,7 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 4.0
         let bufferTime: TimeInterval = 1.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + expiryTime - bufferTime) { [unowned self] in
             XCTAssertNotNil(self.db.document(withID: doc.id))
@@ -911,7 +911,7 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 5.0
         let bufferTime: TimeInterval = 2.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         try db.close()
         
@@ -932,7 +932,7 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 5.0
         let bufferTime: TimeInterval = 2.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         try db.close()
         
@@ -960,7 +960,7 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 3.0
         let bufferTime: TimeInterval = 2.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         
         let otherDB = try self.openDB(name: db.name)
         XCTAssertNotNil(otherDB)
@@ -990,11 +990,11 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 3.0
         let bufferTime: TimeInterval = 2.0
         let initialExpiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: initialExpiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: initialExpiryDate)
         
         // override
         let secondaryExpiryDate = initialExpiryDate.addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: secondaryExpiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: secondaryExpiryDate)
         
         DispatchQueue
             .main
@@ -1021,11 +1021,11 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 10.0
         let bufferTime: TimeInterval = 2.0
         let initialExpiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: initialExpiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: initialExpiryDate)
         
         // override
         let secondaryExpiryDate = initialExpiryDate.addingTimeInterval(-expiryTime/2)
-        try db.setDocumentExpiration(withID: doc.id, date: secondaryExpiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: secondaryExpiryDate)
         
         DispatchQueue
             .main
@@ -1046,11 +1046,11 @@ class DatabaseTest: CBLTestCase {
         let expiryTime: TimeInterval = 10.0
         let bufferTime: TimeInterval = 2.0
         let expiryDate = Date().addingTimeInterval(expiryTime)
-        try db.setDocumentExpiration(withID: doc.id, date: expiryDate)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
         XCTAssertNotNil(db.getDocumentExpiration(withID: doc.id))
         
         // override
-        try db.setDocumentExpiration(withID: doc.id, date: nil)
+        try db.setDocumentExpiration(withID: doc.id, expiration: nil)
         XCTAssertNil(db.getDocumentExpiration(withID: doc.id))
         
         DispatchQueue

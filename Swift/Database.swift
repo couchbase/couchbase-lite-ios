@@ -225,10 +225,10 @@ public final class Database {
     ///
     /// - Parameters:
     ///     - documentID: The ID of the document to set the expiration date for
-    ///     - date: The expiration date. Set nil date will reset the document expiration.
+    ///     - expiration: The expiration date. Set nil date will reset the document expiration.
     /// - Throws: An error on a failure.
-    public func setDocumentExpiration(withID documentID: String, date: Date?) throws {
-        try _impl.setDocumentExpirationWithID(documentID, date: date)
+    public func setDocumentExpiration(withID documentID: String, expiration: Date?) throws {
+        try _impl.setDocumentExpirationWithID(documentID, expiration: expiration)
     }
     
     
