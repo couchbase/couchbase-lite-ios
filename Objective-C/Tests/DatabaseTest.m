@@ -1938,7 +1938,7 @@
     NSTimeInterval expiryTime = 3;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate result
     Assert([expiryDate timeIntervalSinceDate:[self.db getDocumentExpirationWithID: docID]] < 1);
@@ -1951,7 +1951,7 @@
                  code: CBLErrorNotFound
                    in: ^BOOL(NSError** err) {
                        return [self.db setDocumentExpirationWithID: @"someNonExistingDocumentID"
-                                                              date: expiry
+                                                        expiration: expiry
                                                              error: err];
                    }];
 }
@@ -1971,7 +1971,7 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
@@ -2001,7 +2001,7 @@
     NSTimeInterval bufferTime = 1;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
@@ -2031,7 +2031,7 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(err);
     
     [self closeDatabase:self.db];
@@ -2063,7 +2063,7 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(err);
     AssertNotNil([self.db documentWithID: docID]);
     
@@ -2104,7 +2104,7 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(err);
     AssertNotNil([self.db documentWithID: docID]);
     
@@ -2152,11 +2152,11 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // override
     expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime * 2)];
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
@@ -2195,11 +2195,11 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // override
     expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime / 2)];
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
@@ -2230,10 +2230,10 @@
     NSTimeInterval bufferTime = 2;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(err);
     
-    Assert([self.db setDocumentExpirationWithID: docID date: nil error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: nil error: &err]);
     AssertNil(err);
     
     AssertNil([self.db getDocumentExpirationWithID: docID]);

@@ -406,7 +406,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
  @return True on success, false on failure.
  */
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
-                                date: (nullable NSDate*)date
+                          expiration: (nullable NSDate*)date
                                error: (NSError**)error;
 
 /**
