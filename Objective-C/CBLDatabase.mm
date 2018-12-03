@@ -1025,7 +1025,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
         NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
-        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow + 1.0, minimumDelay);
+        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow, minimumDelay);
         CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
         dispatch_async(dispatch_get_main_queue(), ^{
             [self performSelector: @selector(purgeExpiredDocuments)
@@ -1044,7 +1044,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         C4Error err;
         NSUInteger nPurged = c4db_purgeExpiredDocs(_c4db, &err);
         CBLLog(Database, @"Purged %lu expired documents", (unsigned long)nPurged);
-        [self scheduleDocumentExpiration: 1.0];
+        [self scheduleDocumentExpiration: 0.0];
     });
 }
 
