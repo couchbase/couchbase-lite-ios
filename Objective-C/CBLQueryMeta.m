@@ -30,8 +30,8 @@
 #define kCBLQueryMetaIsDeletedKeyPath @"_deleted"
 #define kCBLQueryMetaIsDeletedColumnName @"deleted"
 
-#define kCBLQueryMetaExpiredKeyPath @"_expired"
-#define kCBLQueryMetaExpiredColumnName @"expired"
+#define kCBLQueryMetaExpiredKeyPath @"_expiration"
+#define kCBLQueryMetaExpiredColumnName @"expiration"
 
 @implementation CBLQueryMeta
 
@@ -73,7 +73,7 @@
 
 
 + (CBLQueryExpression*) expired {
-    return [self isDeletedFrom: nil];
+    return [self expiredFrom: nil];
 }
 
 

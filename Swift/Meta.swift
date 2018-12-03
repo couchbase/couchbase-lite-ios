@@ -52,7 +52,7 @@ public final class Meta {
     }
     
     
-    /// A metadata expression refering to the expiration date of the document.
+    /// A metadata expression refering to the expiration timestamp of the document.
     public static var expired: MetaExpressionProtocol {
         return MetaExpression(type: .expired)
     }

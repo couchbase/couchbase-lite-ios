@@ -1877,5 +1877,121 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
+- (void) testExpiryLessThanDate {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+    NSString* docID = doc.id;
+    [doc setValue: @"string" forKey: @"string"];
+    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    AssertNil(error);
+    
+    NSTimeInterval expiryTime = 120;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    NSDate* savedDate = [self.db getDocumentExpirationWithID: docID];
+    Assert(savedDate.timeIntervalSince1970 - expiryDate.timeIntervalSince1970 < 1);
+    
+    NSDate* futureDate = [expiryDate dateByAddingTimeInterval: expiryTime];
+    NSLog(@"expiry: %@", expiryDate);
+    NSLog(@"savedDate: %@", savedDate);
+    NSLog(@"futureDate: %@", futureDate);
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryMeta expired]
+                                            lessThan: [CBLQueryExpression double:
+                                                       futureDate.timeIntervalSince1970]]];
+    
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 1u);
+}
+
+- (void) testExpiryNoLessThanDate {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+    NSString* docID = doc.id;
+    [doc setValue: @"someValue" forKey: @"someKey"];
+    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    AssertNil(error);
+    
+    NSTimeInterval expiryTime = 120;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    AssertNil(error);
+    
+    NSDate* earlierDate = [expiryDate dateByAddingTimeInterval: -100];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryMeta expired]
+                                            lessThan: [CBLQueryExpression double:
+                                                       earlierDate.timeIntervalSince1970]]];
+    
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 0u);
+}
+
+- (void) testExpiryGreaterThanDate {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+    NSString* docID = doc.id;
+    [doc setValue: @"someValue" forKey: @"someKey"];
+    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    AssertNil(error);
+    
+    NSTimeInterval expiryTime = 120;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    AssertNil(error);
+    NSTimeInterval savedTimestamp = [self.db
+                                     getDocumentExpirationWithID: docID].timeIntervalSince1970;
+    Assert(savedTimestamp - expiryDate.timeIntervalSince1970 < 1);
+    
+    NSDate* earlierDate = [expiryDate dateByAddingTimeInterval: -60];
+    NSLog(@"expiry: %@", expiryDate);
+    NSLog(@"earlierDate: %@", earlierDate);
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryMeta expired]
+                                            greaterThan: [CBLQueryExpression double:
+                                                          earlierDate.timeIntervalSince1970]]];
+    
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 1u);
+}
+
+- (void) testExpiryNoGreaterThanDate {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+    NSString* docID = doc.id;
+    [doc setValue: @"someValue" forKey: @"someKey"];
+    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    AssertNil(error);
+    
+    NSTimeInterval expiryTime = 120;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    AssertNil(error);
+    NSTimeInterval savedTimestamp = [self.db
+                                     getDocumentExpirationWithID: docID].timeIntervalSince1970;
+    Assert(savedTimestamp - expiryDate.timeIntervalSince1970 < 1);
+    
+    NSDate* futureDate = [expiryDate dateByAddingTimeInterval: 60];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryMeta expired]
+                                            greaterThan: [CBLQueryExpression double:
+                                                          futureDate.timeIntervalSince1970]]];
+    
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 0u);
+}
 
 @end
