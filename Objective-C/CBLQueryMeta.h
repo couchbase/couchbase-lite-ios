@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @return The expired flag expression.
  */
-+ (CBLQueryExpression*) expired;
++ (CBLQueryExpression*) expiration;
 
 /**
  A metadata expression refering to the expiration timestamp of the document.
@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param alias The data source alias name.
  @return The expired flag expression.
  */
-+ (CBLQueryExpression*) expiredFrom: (nullable NSString*)alias;
++ (CBLQueryExpression*) expirationFrom: (nullable NSString*)alias;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

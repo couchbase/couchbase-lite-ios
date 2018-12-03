@@ -72,12 +72,12 @@
 }
 
 
-+ (CBLQueryExpression*) expired {
-    return [self expiredFrom: nil];
++ (CBLQueryExpression*) expiration {
+    return [self expirationFrom: nil];
 }
 
 
-+ (CBLQueryExpression*) expiredFrom: (NSString *)alias {
++ (CBLQueryExpression*) expirationFrom: (NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaExpiredKeyPath
                                                columnName: kCBLQueryMetaExpiredColumnName
                                                      from: alias];

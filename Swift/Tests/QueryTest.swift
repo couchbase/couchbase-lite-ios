@@ -1403,13 +1403,79 @@ class QueryTest: CBLTestCase {
     
     // MARK: META - expired
     
-    func testMetaExpiredEmpty() throws {
+    func testMetaExpirationWithNoDocumentWithExpiration() throws {
         try loadNumbers(5)
         
         let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
-            .where(Meta.expired)
+            .where(Meta.expiration.greaterThan(Expression.int(0)))
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 0)
+    }
+    
+    func testMetaExpirationWithValidLessThan() throws {
+        let doc = MutableDocument()
+        try db.saveDocument(doc)
+        let expiry = Date(timeIntervalSinceNow: 120)
+        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.expiration
+                .lessThan(Expression.double(expiry.addingTimeInterval(1).timeIntervalSince1970)))
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 1)
+    }
+    
+    func testMetaExpirationWithInvalidLessThan() throws {
+        let doc = MutableDocument()
+        try db.saveDocument(doc)
+        let expiry = Date(timeIntervalSinceNow: 120)
+        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.expiration
+                .lessThan(Expression.double(expiry.addingTimeInterval(-1).timeIntervalSince1970)))
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 0)
+    }
+    
+    func testMetaExpirationWithValidGreaterThan() throws {
+        let doc = MutableDocument()
+        try db.saveDocument(doc)
+        let expiry = Date(timeIntervalSinceNow: 120)
+        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.expiration
+                .greaterThan(Expression
+                    .double(expiry.addingTimeInterval(-1).timeIntervalSince1970)))
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 1)
+    }
+    
+    func testMetaExpirationWithInvalidGreaterThan() throws {
+        let doc = MutableDocument()
+        try db.saveDocument(doc)
+        let expiry = Date(timeIntervalSinceNow: 120)
+        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.expiration
+                .greaterThan(Expression
+                    .double(expiry.addingTimeInterval(1).timeIntervalSince1970)))
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 0)
