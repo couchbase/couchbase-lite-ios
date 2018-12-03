@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param alias The data source alias name.
  @return The expired boolean flag expression.
  */
-+ (CBLQueryExpression*) expired: (nullable NSString*)alias;
++ (CBLQueryExpression*) expiredFrom: (nullable NSString*)alias;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

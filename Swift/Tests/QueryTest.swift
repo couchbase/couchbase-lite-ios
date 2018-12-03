@@ -1318,6 +1318,9 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 1);
     }
     
+    
+    // MARK: META - isDeleted
+    
     func testMetaIsDeletedEmpty() throws {
         try loadNumbers(5)
         
@@ -1395,5 +1398,20 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(selectAllResultSet.allResults().count, 0)
         selectDeletedOnlyResultSet = try selectDeletedOnlyQuery.execute()
         XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, documentsCount)
+    }
+    
+    
+    // MARK: META - expired
+    
+    func testMetaExpiredEmpty() throws {
+        try loadNumbers(5)
+        
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.expired)
+        let rs = try q.execute()
+        
+        XCTAssertEqual(rs.allResults().count, 0)
     }
 }

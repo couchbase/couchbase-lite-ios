@@ -50,10 +50,16 @@ public final class Meta {
     public static var isDeleted: MetaExpressionProtocol {
         return MetaExpression(type: .isDeleted)
     }
+    
+    
+    /// A metadata expression refering to the expiration date of the document.
+    public static var expired: MetaExpressionProtocol {
+        return MetaExpression(type: .expired)
+    }
 }
 
 /* internal */ enum MetaType {
-    case id, sequence, isDeleted
+    case id, sequence, isDeleted, expired
 }
 
 /* internal */ class MetaExpression: QueryExpression, MetaExpressionProtocol {
@@ -83,6 +89,8 @@ public final class Meta {
             return CBLQueryMeta.sequence(from: from)
         case .isDeleted:
             return CBLQueryMeta.isDeleted(from: from)
+        case .expired:
+            return CBLQueryMeta.expired(from: from)
         }
     }
     

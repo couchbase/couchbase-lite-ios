@@ -77,7 +77,7 @@
 }
 
 
-+ (CBLQueryExpression*) expired: (NSString *)alias {
++ (CBLQueryExpression*) expiredFrom: (NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaExpiredKeyPath
                                                columnName: kCBLQueryMetaExpiredColumnName
                                                      from: alias];
