@@ -1889,7 +1889,7 @@
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &err]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     NSDate* savedDate = [self.db getDocumentExpirationWithID: docID];
     Assert(savedDate.timeIntervalSince1970 - expiryDate.timeIntervalSince1970 < 1);
     
@@ -1915,7 +1915,7 @@
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
     NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970;
@@ -1940,7 +1940,7 @@
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     NSTimeInterval savedTimestamp = [self.db
                                      getDocumentExpirationWithID: docID].timeIntervalSince1970;
@@ -1968,7 +1968,7 @@
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID date: expiryDate error: &error]);
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     NSTimeInterval savedTimestamp = [self.db
                                      getDocumentExpirationWithID: docID].timeIntervalSince1970;
