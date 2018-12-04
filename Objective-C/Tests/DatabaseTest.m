@@ -2247,7 +2247,7 @@
 }
 
 
-- (void) testExpirationAfterDeletion {
+- (void) testSettingExpirationAndDeletionAfterwards {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // create doc
@@ -2281,11 +2281,62 @@
                                  (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
                        // should be removed
-                       NSError* errorWhileFetchingDoc;
+                       NSError* errorFetch;
                        CBLDocument* fetchDoc = [[CBLDocument alloc] initWithDatabase: weakSelf.db
-                                                                            documentID: docID
-                                                                        includeDeleted: TRUE
-                                                                                 error: &errorWhileFetchingDoc];
+                                                                          documentID: docID
+                                                                      includeDeleted: TRUE
+                                                                               error: &errorFetch];
+                       AssertNil(fetchDoc);
+                       [expectation fulfill];
+                   });
+    
+    [self waitForExpectationsWithTimeout: expiryTime + (2 * bufferTime)
+                                 handler: ^(NSError *error) {
+                                     AssertNil(error);
+                                 }];
+}
+
+
+- (void) testExpirationOnADeletedDocument {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    NSString* docID = doc.id;
+    AssertEqual(self.db.count, 1u);
+    
+    // delete doc
+    NSError* err;
+    Assert([self.db deleteDocument: doc error: &err]);
+    AssertNil(err);
+    AssertNil([self.db documentWithID: docID]);
+    AssertEqual(self.db.count, 0u);
+    
+    // set expiry
+    NSTimeInterval expiryTime = 1;
+    NSTimeInterval bufferTime = 2;
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    
+    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
+    AssertNil(err);
+    
+    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithDatabase: self.db
+                                                         documentID: docID
+                                                     includeDeleted: TRUE
+                                                              error: &err];
+    AssertNotNil(deletedDoc);
+    
+    // validate
+    __weak DatabaseTest *weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)((expiryTime + bufferTime) * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // should be removed
+                       NSError* errorFetch;
+                       CBLDocument* fetchDoc = [[CBLDocument alloc] initWithDatabase: weakSelf.db
+                                                                          documentID: docID
+                                                                      includeDeleted: TRUE
+                                                                               error: &errorFetch];
                        AssertNil(fetchDoc);
                        [expectation fulfill];
                    });
