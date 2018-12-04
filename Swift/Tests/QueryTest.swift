@@ -1419,7 +1419,7 @@ class QueryTest: CBLTestCase {
         let doc = MutableDocument()
         try db.saveDocument(doc)
         let expiry = Date(timeIntervalSinceNow: 120)
-        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
         let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
@@ -1435,7 +1435,7 @@ class QueryTest: CBLTestCase {
         let doc = MutableDocument()
         try db.saveDocument(doc)
         let expiry = Date(timeIntervalSinceNow: 120)
-        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
         let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
@@ -1451,7 +1451,7 @@ class QueryTest: CBLTestCase {
         let doc = MutableDocument()
         try db.saveDocument(doc)
         let expiry = Date(timeIntervalSinceNow: 120)
-        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
         let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
@@ -1468,7 +1468,7 @@ class QueryTest: CBLTestCase {
         let doc = MutableDocument()
         try db.saveDocument(doc)
         let expiry = Date(timeIntervalSinceNow: 120)
-        try db.setDocumentExpiration(id: doc.id, date: expiry)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
         let q = QueryBuilder
             .select(SelectResult.expression(Meta.id))
