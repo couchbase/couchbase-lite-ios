@@ -43,6 +43,9 @@ using namespace fleece;
 
 #define kDBExtension @"cblite2"
 
+// How long to wait after a database opens before expiring docs
+#define kHousekeepingDelayAfterOpening 3.0
+
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseConfiguration* _config;
@@ -303,6 +306,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 "Please remove all of the query listeners before closing the database.";
             return createError(CBLErrorBusy, err, outError);
         }
+        
+        [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -331,6 +336,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 "Please remove all of the query listeners before deleting the database.";
             return createError(CBLErrorBusy, err, outError);
         }
+        
+        [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -520,6 +527,43 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+#pragma mark - DOCUMENT EXPIRATION
+
+
+- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
+                          expiration: (nullable NSDate*)date
+                               error: (NSError**)error
+{
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(self) {
+        UInt64 timestamp = date ? (UInt64)date.timeIntervalSince1970 : 0;
+        
+        C4Error err;
+        CBLStringBytes docID(documentID);
+        if (c4doc_setExpiration(_c4db, docID, timestamp, &err)) {
+            [self scheduleDocumentExpiration: 0.0];
+            return TRUE;
+        }
+        return convertError(err, error);
+    }
+}
+
+
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(self) {
+        CBLStringBytes docID(documentID);
+        UInt64 timestamp = c4doc_getExpiration(_c4db, docID);
+        if (timestamp == 0) {
+            return nil;
+        }
+        return [NSDate dateWithTimeIntervalSince1970: timestamp];
+    }
+}
+
+
 #pragma mark - INTERNAL
 
 
@@ -570,6 +614,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(err, outError);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
+    
+    [self scheduleDocumentExpiration: kHousekeepingDelayAfterOpening];
     
     return YES;
 }
@@ -967,6 +1013,52 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     CBLLog(Sync, @"Conflict resolved as doc '%@' rev %.*s",
            localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
     return YES;
+}
+
+
+# pragma mark DOCUMENT EXPIRATION
+
+
+- (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
+    [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
+    
+    UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
+    if (nextExpiration > 0) {
+        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
+        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow, minimumDelay);
+        CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self performSelector: @selector(purgeExpiredDocuments)
+                       withObject: nil
+                       afterDelay: delay];
+        });
+    } else {
+        CBLLog(Database, @"No pending doc expirations");
+    }
+}
+
+
+- (void) purgeExpiredDocuments {
+    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        CBLLog(Database, @"Purging expired documents...");
+        C4Error err;
+        NSUInteger nPurged = c4db_purgeExpiredDocs(_c4db, &err);
+        CBLLog(Database, @"Purged %lu expired documents", (unsigned long)nPurged);
+        [self scheduleDocumentExpiration: 1.0];
+    });
+}
+
+
+- (void) cancelPreviousPerformRequestsForPurgingExpiredDocuments {
+    __weak CBLDatabase *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        CBLDatabase *strongSelf = weakSelf;
+        if (strongSelf) {
+            [NSObject cancelPreviousPerformRequestsWithTarget: strongSelf
+                                                     selector: @selector(purgeExpiredDocuments)
+                                                       object: nil];
+        }
+    });
 }
 
 @end
