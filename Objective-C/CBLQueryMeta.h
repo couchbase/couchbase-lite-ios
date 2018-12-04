@@ -77,6 +77,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) isDeletedFrom: (nullable NSString*)alias;
 
+/**
+ A metadata expression refering to the expiration timestamp of the document.
+ 
+ @return The expired flag expression.
+ */
++ (CBLQueryExpression*) expiration;
+
+/**
+ A metadata expression refering to the expiration timestamp of the document.
+ 
+ @param alias The data source alias name.
+ @return The expired flag expression.
+ */
++ (CBLQueryExpression*) expirationFrom: (nullable NSString*)alias;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
