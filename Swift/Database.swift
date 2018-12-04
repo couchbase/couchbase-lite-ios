@@ -220,6 +220,27 @@ public final class Database {
     }
     
     
+    /// Sets an expiration date on a document.
+    /// After this time the document will be purged from the database.
+    ///
+    /// - Parameters:
+    ///     - documentID: The ID of the document to set the expiration date for
+    ///     - expiration: The expiration date. Set nil date will reset the document expiration.
+    /// - Throws: An error on a failure.
+    public func setDocumentExpiration(withID documentID: String, expiration: Date?) throws {
+        try _impl.setDocumentExpirationWithID(documentID, expiration: expiration)
+    }
+    
+    
+    /// Returns the expiration time of a document, if exists, else nil.
+    ///
+    /// - Parameter documentID: The ID of the document to set the expiration date for.
+    /// - Returns: the expiration time of a document, if one has been set, else nil.
+    public func getDocumentExpiration(withID documentID: String) -> Date? {
+        return _impl.getDocumentExpiration(withID: documentID)
+    }
+    
+    
     /// Adds a database change listener. Changes will be posted on the main queue.
     ///
     /// - Parameter listener: The listener to post changes.
