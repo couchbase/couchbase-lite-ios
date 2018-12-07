@@ -134,6 +134,7 @@
         _continuous = config.continuous;
         _authenticator = config.authenticator;
         _pinnedServerCertificate = config.pinnedServerCertificate;
+        cfretain(_pinnedServerCertificate);
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
