@@ -2011,7 +2011,7 @@
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: expiryTime handler: ^(NSError *error) {
+    [self waitForExpectationsWithTimeout: expiryTime + bufferTime handler: ^(NSError *error) {
         AssertNil(error);
     }];
 }
