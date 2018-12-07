@@ -2011,7 +2011,7 @@
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: expiryTime handler: ^(NSError *error) {
+    [self waitForExpectationsWithTimeout: expiryTime + bufferTime handler: ^(NSError *error) {
         AssertNil(error);
     }];
 }
@@ -2060,7 +2060,7 @@
     
     // set expiry
     NSTimeInterval expiryTime = 1;
-    NSTimeInterval bufferTime = 2;
+    NSTimeInterval bufferTime = 3; // since the delay in purging after opening the DB is 3secs.
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
@@ -2143,12 +2143,13 @@
     // set expiry
     NSTimeInterval expiryTime = 3;
     NSTimeInterval bufferTime = 2;
+    NSTimeInterval noOfTimes = 3; // it will increase the expiry 3 times than current
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: expiryTime];
     NSError* err;
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // override
-    expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime * 2)];
+    expiryDate = [[NSDate date] dateByAddingTimeInterval: (expiryTime * noOfTimes)];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     
     // validate
@@ -2160,14 +2161,14 @@
                    });
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                 (int64_t)(((2 * expiryTime) + bufferTime) * NSEC_PER_SEC)),
+                                 (int64_t)(((noOfTimes * expiryTime) + bufferTime) * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
                        // should be removed in the first expiry
                        AssertNil([self.db documentWithID: docID]);
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: (2 * expiryTime) + (2 * bufferTime)
+    [self waitForExpectationsWithTimeout: (noOfTimes * expiryTime) + (2 * bufferTime)
                                  handler: ^(NSError *error) {
                                      AssertNil(error);
     }];
