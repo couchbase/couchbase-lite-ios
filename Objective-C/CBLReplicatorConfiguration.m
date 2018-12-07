@@ -133,7 +133,7 @@
         _replicatorType = config.replicatorType;
         _continuous = config.continuous;
         _authenticator = config.authenticator;
-        _pinnedServerCertificate = config.pinnedServerCertificate;
+        _pinnedServerCertificate = cfretain(config.pinnedServerCertificate);
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
