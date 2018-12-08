@@ -143,7 +143,7 @@ typedef enum {
 
 - (void) start {
     CBL_LOCK(self) {
-        if (_repl || !_suspended) {
+        if (_repl) {
             CBLWarn(Sync, @"%@ has already started (status = %d)", self,  _rawStatus.level);
             return;
         }
