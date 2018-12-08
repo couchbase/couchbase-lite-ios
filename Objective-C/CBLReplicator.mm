@@ -143,7 +143,7 @@ typedef enum {
 
 - (void) start {
     CBL_LOCK(self) {
-        if (_repl || _rawStatus.level == kC4Offline) {
+        if (_repl || !_suspended) {
             CBLWarn(Sync, @"%@ has already started (status = %d)", self,  _rawStatus.level);
             return;
         }
@@ -336,7 +336,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     [_reachability startOnQueue: _dispatchQueue];
 }
 
-// Should be called inside _dispatchQueue
+// Should be called from _dispatchQueue
 - (void) stopReachabilityObserver {
     [_reachability stop];
     _reachability = nil;
@@ -415,7 +415,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     });
 }
 
-
+// Should be called from the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
         if (c4Status.level == kC4Stopped && !_isStopping) {
