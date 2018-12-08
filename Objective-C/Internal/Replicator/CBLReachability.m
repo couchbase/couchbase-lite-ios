@@ -74,10 +74,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     self = [super init];
     if (self) {
         _ref = ref;
-        SCNetworkReachabilityContext context = {0, (__bridge void *)(self)};
-        if (!_ref || !SCNetworkReachabilitySetCallback(_ref, ClientCallback, &context)) {
-            return nil;
-        }
     }
     return self;
 }
@@ -111,9 +107,22 @@ static BOOL sAlwaysAssumeProxy = NO;
 }
 
 
+- (BOOL) setupCallback {
+    SCNetworkReachabilityContext context = {0, (__bridge void *)(self)};
+    return _ref && SCNetworkReachabilitySetCallback(_ref, ClientCallback, &context);
+}
+
+
+- (BOOL) removeCallback {
+    return _ref && SCNetworkReachabilitySetCallback(_ref, NULL, NULL);
+}
+
+
 - (BOOL) startOnRunLoop: (CFRunLoopRef)runLoop {
     if (_runLoop || _queue)
         return (_runLoop == runLoop);
+    if (![self setupCallback])
+        return NO;
     if (!SCNetworkReachabilityScheduleWithRunLoop(_ref, runLoop, kCFRunLoopCommonModes))
         return NO;
     _runLoop = (CFRunLoopRef) CFRetain(runLoop);
@@ -124,6 +133,8 @@ static BOOL sAlwaysAssumeProxy = NO;
 - (BOOL) startOnQueue: (dispatch_queue_t)queue {
     if (_runLoop || _queue)
         return _queue == queue;
+    if (![self setupCallback])
+        return NO;
     if (!SCNetworkReachabilitySetDispatchQueue(_ref, queue))
         return NO;
     _queue = queue;
@@ -162,6 +173,10 @@ static BOOL sAlwaysAssumeProxy = NO;
     _reachabilityKnown = NO;
     if (_runLoop || _queue)
         CBLLog(Sync, @"%@: stopped", self);
+    
+    if (![self removeCallback])
+        CBLWarn(Sync, @"%@: cannot remove reachability callback", self);
+    
     if (_runLoop) {
         SCNetworkReachabilityUnscheduleFromRunLoop(_ref, _runLoop, kCFRunLoopCommonModes);
         CFRelease(_runLoop);

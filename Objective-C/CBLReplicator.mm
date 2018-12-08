@@ -143,8 +143,8 @@ typedef enum {
 
 - (void) start {
     CBL_LOCK(self) {
-        if (_repl) {
-            CBLWarn(Sync, @"%@ has already started", self);
+        if (_repl || _rawStatus.level == kC4Offline) {
+            CBLWarn(Sync, @"%@ has already started (status = %d)", self,  _rawStatus.level);
             return;
         }
         
@@ -302,13 +302,20 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 
 - (void) _stop {
+    BOOL offline = NO;
     if (_repl)
         c4repl_stop(_repl);     // this is async; status will change when repl actually stops
     else if (_rawStatus.level == kC4Offline)
-        [self c4StatusChanged: {.level = kC4Stopped}];
-    else if (_isStopping)
+        offline = YES;
+    else if (_isStopping)       // no ops, already stopped
         _isStopping = NO;
-    [self stopReachabilityObserver];
+    
+    if (offline) {
+        dispatch_async(_dispatchQueue, ^{
+            [self stopReachabilityObserver];
+            [self c4StatusChanged: {.level = kC4Stopped}];
+        });
+    }
 }
 
 
@@ -329,7 +336,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     [_reachability startOnQueue: _dispatchQueue];
 }
 
-
+// Should be called inside _dispatchQueue
 - (void) stopReachabilityObserver {
     [_reachability stop];
     _reachability = nil;
@@ -339,7 +346,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
-        if (reachable && !_repl) {
+        if (!reachable && !_repl && !_isStopping) {
             CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
             _retryCount = 0;
             [self retry];
