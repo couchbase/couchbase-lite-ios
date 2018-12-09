@@ -1890,10 +1890,9 @@
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     NSError* err;
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
-    NSDate* savedDate = [self.db getDocumentExpirationWithID: docID];
-    Assert(savedDate.timeIntervalSince1970 - expiryDate.timeIntervalSince1970 < 1);
+    AssertNil(error);
     
-    NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970;
+    NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
@@ -1918,7 +1917,7 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970;
+    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
@@ -1942,11 +1941,8 @@
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
-    NSTimeInterval savedTimestamp = [self.db
-                                     getDocumentExpirationWithID: docID].timeIntervalSince1970;
-    Assert(savedTimestamp - expiryDate.timeIntervalSince1970 < 1);
     
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970;
+    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
@@ -1970,11 +1966,8 @@
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
-    NSTimeInterval savedTimestamp = [self.db
-                                     getDocumentExpirationWithID: docID].timeIntervalSince1970;
-    Assert(savedTimestamp - expiryDate.timeIntervalSince1970 < 1);
-    
-    NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970;
+
+    NSTimeInterval future = expiryDate.timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
