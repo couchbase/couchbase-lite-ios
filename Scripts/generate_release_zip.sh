@@ -114,13 +114,6 @@ sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p ma
 sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
-# Build tools:
-echo "Build Development Tools ..."
-TOOLS_DIR="$BUILD_DIR/Tools"
-mkdir "$TOOLS_DIR"
-cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
-vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'cblite' -o "$TOOLS_DIR" -v "$VERSION"
-
 # Objective-C
 echo "Make Objective-C framework zip file ..."
 mkdir -p "$OUTPUT_OBJC_DIR"
@@ -130,10 +123,6 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
-cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_DIR"
-pushd "$OUTPUT_OBJC_DIR"
-zip -ry "$OUTPUT_OBJC_ZIP" *
-popd
 
 # Swift
 echo "Make Swift framework zip file ..."
@@ -144,10 +133,6 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
-cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_DIR"
-pushd "$OUTPUT_SWIFT_DIR"
-zip -ry "$OUTPUT_SWIFT_ZIP" *
-popd
 
 # Generate MD5 files:
 echo "Generate MD5 files ..."
