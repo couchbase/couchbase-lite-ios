@@ -123,6 +123,9 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
+pushd "$OUTPUT_OBJC_DIR"
+zip -ry "$OUTPUT_OBJC_ZIP" *
+popd
 
 # Swift
 echo "Make Swift framework zip file ..."
@@ -133,6 +136,9 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
+pushd "$OUTPUT_SWIFT_DIR"
+zip -ry "$OUTPUT_SWIFT_ZIP" *
+popd
 
 # Generate MD5 files:
 echo "Generate MD5 files ..."
