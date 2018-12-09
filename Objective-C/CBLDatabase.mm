@@ -43,6 +43,8 @@ using namespace fleece;
 
 #define kDBExtension @"cblite2"
 
+#define msec 1000.0
+
 // How long to wait after a database opens before expiring docs
 #define kHousekeepingDelayAfterOpening 3.0
 
@@ -537,8 +539,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(documentID);
     
     CBL_LOCK(self) {
-        UInt64 timestamp = date ? (UInt64)date.timeIntervalSince1970 : 0;
-        
+        UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
         C4Error err;
         CBLStringBytes docID(documentID);
         if (c4doc_setExpiration(_c4db, docID, timestamp, &err)) {
@@ -559,7 +560,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (timestamp == 0) {
             return nil;
         }
-        return [NSDate dateWithTimeIntervalSince1970: timestamp];
+        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
     }
 }
 
@@ -1024,7 +1025,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
-        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
+        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: (nextExpiration/msec)];
         NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow, minimumDelay);
         CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
         dispatch_async(dispatch_get_main_queue(), ^{
