@@ -99,6 +99,19 @@ class CBLTestCase: XCTestCase {
     }
     
     
+    func generateDocument(withID id: String?) throws -> MutableDocument {
+        let doc = createDocument(id);
+        doc.setValue(1, forKey: "key")
+        try saveDocument(doc)
+        XCTAssertEqual(doc.sequence, 1)
+        XCTAssertNotNil(doc.id)
+        if id != nil {
+            XCTAssertEqual(doc.id, id)
+        }
+        return doc
+    }
+    
+    
     func saveDocument(_ document: MutableDocument) throws {
         try db.saveDocument(document)
         let savedDoc = db.document(withID: document.id)
