@@ -77,6 +77,47 @@ class DocumentExpirationTest: CBLTestCase {
         db.removeChangeListener(withToken: token);
     }
     
+    func testDocumentNotShownUpInQueryAfterExpiration() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create doc
+        let doc = try generateDocument(withID: nil)
+        
+        // Setup document change notification
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            XCTAssertEqual(doc.id, change.documentID)
+            XCTAssertNil(self.db.document(withID: doc.id))
+            try! self.verifyQueryResultCount(0, includeDeleted: true)
+            promise.fulfill()
+        }
+        
+        // Set expiry
+        let expiryDate = Date().addingTimeInterval(1)
+        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
+        
+        // Wait for result
+        waitForExpectations(timeout: 5.0)
+        
+        // Remove listener
+        db.removeChangeListener(withToken: token);
+    }
+    
+    func verifyQueryResultCount(_ count: Int, includeDeleted: Bool = false) throws {
+        var rs = try QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .execute()
+        XCTAssertEqual(rs.allResults().count, count)
+
+        if includeDeleted {
+            rs = try QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Meta.isDeleted).execute()
+            XCTAssertEqual(rs.allResults().count, count)
+        }
+    }
+    
     func testDocumentNotPurgedBeforeExpiration() throws {
         let promise = expectation(description: "document expiry expectation")
         
