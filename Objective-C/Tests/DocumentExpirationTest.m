@@ -20,6 +20,8 @@
 #import "CBLTestCase.h"
 #import "CBLDocument+Internal.h"
 
+#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
+
 @interface DocumentExpirationTest : CBLTestCase
 
 @end
@@ -92,6 +94,59 @@
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
+}
+
+- (void) testDocumentNotShowUpInQueryAfterExpiration {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // Create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    
+    // Setup document change notification
+    __weak DocumentExpirationTest *weakSelf = self;
+    id token = [self.db addDocumentChangeListenerWithID: doc.id
+                                               listener: ^(CBLDocumentChange *change)
+    {
+        DocumentExpirationTest *strongSelf = weakSelf;
+        AssertEqualObjects(change.documentID, doc.id);
+        AssertNil([strongSelf.db documentWithID: change.documentID]);
+        [strongSelf verifyQueryResultCount: 0 includeDeleted: true];
+        
+        [expectation fulfill];
+    }];
+    
+    // Set expiry
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
+    AssertNil(err);
+    
+    // Wait for result
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    // Remove listener
+    [self.db removeChangeListenerWithToken: token];
+}
+
+- (void) verifyQueryResultCount: (NSUInteger)count includeDeleted: (BOOL)includeDeleted {
+    NSError* error;
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]];
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute: &error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], count);
+    
+    if (includeDeleted) {
+        q = [CBLQueryBuilder select: @[kDOCID]
+                               from: [CBLQueryDataSource database: self.db]
+                              where: [CBLQueryMeta isDeleted]];
+        AssertNotNil(q);
+        rs = [q execute: &error];
+        AssertNil(error);
+        AssertEqual([[rs allObjects] count], count);
+    }
 }
 
 - (void) testDocumentNotPurgedBeforeExpiration {
@@ -410,6 +465,45 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    // Remove listener
+    [self.db removeChangeListenerWithToken: token];
+}
+
+- (void) testPurgeImmediately {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    // Create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    
+    // Setup document change notification
+    __block NSDate* purgeTime;
+    id token = [self.db addDocumentChangeListenerWithID: doc.id
+                                               listener: ^(CBLDocumentChange *change)
+    {
+        AssertEqualObjects(change.documentID, doc.id);
+        AssertNil([self.db documentWithID: change.documentID]);
+        purgeTime = [NSDate date];
+        [expectation fulfill];
+    }];
+    
+    // Set expiry
+    NSDate* begin = [NSDate date];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &err]);
+    AssertNil(err);
+    
+    // Wait for result
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    /*
+     Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
+     Depending on the current milliseconds, we cannot gurantee, this will get purged exactly within
+     a second but in ~1 second.
+     */
+    NSTimeInterval delta = [purgeTime timeIntervalSinceDate: begin];
+    Assert(delta < 2);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
