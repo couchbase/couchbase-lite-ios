@@ -133,6 +133,23 @@
 }
 
 
+- (void) deleteDatabase: (CBLDatabase*)database {
+    NSError* error;
+    NSString* path = database.path;
+    Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
+    Assert([database delete: &error]);
+    AssertNil(error);
+    AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
+}
+
+
+- (void) closeDatabase: (CBLDatabase*)database{ 
+    NSError* error;
+    Assert([database close:&error]);
+    AssertNil(error);
+}
+
+
 - (CBLMutableDocument*) createDocument {
     return [[CBLMutableDocument alloc] init];
 }
@@ -145,6 +162,17 @@
 
 - (CBLMutableDocument*) createDocument:(NSString *)documentID data:(NSDictionary *)data {
     return [[CBLMutableDocument alloc] initWithID: documentID data: data];
+}
+
+
+- (CBLMutableDocument*) generateDocumentWithID: (NSString*)documentID {
+    CBLMutableDocument* doc = [self createDocument: documentID];
+    [doc setValue: @1 forKey:@"key"];
+    [self saveDocument: doc];
+    AssertEqual(doc.sequence, 1u);
+    if (documentID)
+        AssertEqualObjects(doc.id, documentID);
+    return doc;
 }
 
 

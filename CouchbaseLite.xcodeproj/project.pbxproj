@@ -940,6 +940,10 @@
 		9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
 		9386852921B09C5400BB1242 /* DocumentReplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9386852821B09C5400BB1242 /* DocumentReplication.swift */; };
 		9386852A21B09C5400BB1242 /* DocumentReplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9386852821B09C5400BB1242 /* DocumentReplication.swift */; };
+		9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
+		9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
+		9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
+		9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
 		938B36A4200745FF004485D8 /* CBLQueryResultArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 938B3690200745FE004485D8 /* CBLQueryResultArray.h */; };
 		938B36A5200745FF004485D8 /* CBLQueryResultArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 938B3690200745FE004485D8 /* CBLQueryResultArray.h */; };
 		938B36A6200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
@@ -1050,6 +1054,8 @@
 		93C18E821FB638E80029B567 /* CBLDatabaseConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 93C18E7F1FB638E80029B567 /* CBLDatabaseConfiguration.m */; };
 		93C18E831FB638E80029B567 /* CBLDatabaseConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 93C18E7F1FB638E80029B567 /* CBLDatabaseConfiguration.m */; };
 		93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */; };
+		93C50EA021BDFB7C00C7E980 /* DocumentExpirationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */; };
+		93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */; };
 		93CD016E1E94923900AFB3FA /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
 		93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
 		93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
@@ -1739,6 +1745,7 @@
 		9388CB9421BCDF8B005CA66D /* build_framework.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_framework.sh; sourceTree = "<group>"; };
 		9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = strip_frameworks.sh; sourceTree = "<group>"; };
 		9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_release_zip.sh; sourceTree = "<group>"; };
+		9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DocumentExpirationTest.m; sourceTree = "<group>"; };
 		938B3690200745FE004485D8 /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		938B36A3200745FE004485D8 /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
 		938B3701200D7D1D004485D8 /* MigrationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MigrationTest.m; sourceTree = "<group>"; };
@@ -1801,6 +1808,7 @@
 		93C18E7E1FB638E80029B567 /* CBLDatabaseConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseConfiguration.h; sourceTree = "<group>"; };
 		93C18E7F1FB638E80029B567 /* CBLDatabaseConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseConfiguration.m; sourceTree = "<group>"; };
 		93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DictionaryTest.swift; sourceTree = "<group>"; };
+		93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExpirationTest.swift; sourceTree = "<group>"; };
 		93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = "CouchbaseLite-EE.exp"; sourceTree = "<group>"; };
 		93CD02491E9DA0AC00AFB3FA /* CBLC4Document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLC4Document.h; sourceTree = "<group>"; };
 		93CD024A1E9DA0AC00AFB3FA /* CBLC4Document.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLC4Document.mm; sourceTree = "<group>"; };
@@ -2056,6 +2064,7 @@
 				9369A6B6207DEB5F009B5B83 /* DatabaseEncryptionTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
+				93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */,
 				93F74A8A1EC5549C001289F8 /* FragmentTest.swift */,
 				939B79241E679017009A70EF /* Info.plist */,
 				93E8FEBB20A3E4280061347F /* MessageEndpointTest.swift */,
@@ -2721,6 +2730,7 @@
 				9369A6AC207DD0ED009B5B83 /* DatabaseEncryptionTest.m */,
 				9352945E1E51708E005CE4E8 /* DictionaryTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
+				9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */,
 				931C14691EAAF08C0094F9B2 /* FragmentTest.m */,
 				939260B020A0FF0C00E5748C /* MessageEndpointTest.m */,
 				938B3701200D7D1D004485D8 /* MigrationTest.m */,
@@ -4268,6 +4278,7 @@
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
+				93C50EA021BDFB7C00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4581,6 +4592,7 @@
 				939260B120A0FF0C00E5748C /* MessageEndpointTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
+				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
@@ -4613,6 +4625,7 @@
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
+				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
 				9343F177207D633300F19A89 /* DictionaryTest.m in Sources */,
 				9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */,
 				930C7F9520FE4F7500C74A12 /* CBLMockConnection.m in Sources */,
@@ -4641,6 +4654,7 @@
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
+				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4682,6 +4696,7 @@
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
+				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
@@ -4794,6 +4809,7 @@
 			files = (
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
+				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,

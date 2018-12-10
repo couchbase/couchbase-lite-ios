@@ -57,6 +57,12 @@ NS_ASSUME_NONNULL_BEGIN
 /** Delete the database with the given name. */
 - (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error;
 
+/** Delete the database and verify success. */
+- (void) deleteDatabase: (CBLDatabase*)database;
+
+/** Close the database and verify success. */
+- (void) closeDatabase: (CBLDatabase*)database;
+
 /** Create a new document */
 - (CBLMutableDocument*) createDocument;
 
@@ -65,6 +71,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Create a new document with the given document ID and data. */
 - (CBLMutableDocument*) createDocument:(nullable NSString *)documentID data: (NSDictionary*)data;
+
+/** Create a simple document with the given document ID and save */
+- (CBLMutableDocument*) generateDocumentWithID: (nullable NSString*)documentID;
 
 /** Save a document in the database. */
 - (void) saveDocument: (CBLMutableDocument*)document;
