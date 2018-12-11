@@ -322,4 +322,38 @@
 }
 
 
+# pragma mark - Date Time
+
+
++ (CBLQueryExpression*) stringToMillis:(CBLQueryExpression *)expression {
+    CBLAssertNotNil(expression);
+    
+    return [[CBLFunctionExpression alloc] initWithFunction: @"STR_TO_MILLIS()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) stringToUTC:(CBLQueryExpression *)expression {
+    CBLAssertNotNil(expression);
+    
+    return [[CBLFunctionExpression alloc] initWithFunction: @"STR_TO_UTC()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) millisToString:(CBLQueryExpression *)expression {
+    CBLAssertNotNil(expression);
+    
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MILLIS_TO_STR()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) millisToUTC:(CBLQueryExpression *)expression {
+    CBLAssertNotNil(expression);
+    
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MILLIS_TO_UTC()"
+                                                    params: @[expression]];
+}
+
 @end

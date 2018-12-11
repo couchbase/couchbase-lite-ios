@@ -388,4 +388,71 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.upper(expression.toImpl()))
     }
     
+    
+    /// Creates a STR_TO_MILLIS(expr) function that returns the number of milliseconds since
+    /// the unix epoch of the given ISO 8601 date string expression.
+    ///
+    /// - Parameter expression: The validly formatted ISO 8601 date time string expression.
+    /// - Returns: The STR_TO_MILLIS(expr) function.
+    /// - Note: Valid date strings must start with a date in the form YYYY-MM-DD (time only strings
+    /// are not supported).
+    ///
+    /// Times can be of the form HH:MM, HH:MM:SS, or HH:MM:SS.FFF. Leading zero is not
+    /// optional (i.e. 02 is ok, 2 is not). Hours are in 24-hour format. FFF represents
+    /// milliseconds, and *trailing* zeros are optional (i.e. 5 == 500).
+    ///
+    /// Time zones can be in one of three forms:
+    /// (+/-)HH:MM
+    /// (+/-)HHMM
+    /// Z (which represents UTC)
+    ///
+    /// No time zone present will default to the device local time zone.
+    public static func string(toMillis expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.string(toMillis: expression.toImpl()))
+    }
+    
+    
+    /// Creates a STR_TO_UTC(expr) function that returns the ISO 8601 UTC datetime string
+    /// of the given ISO 8601 date string expression.
+    ///
+    /// - Parameter expression: The validly formatted ISO 8601 date time string expression.
+    /// - Returns: The STR_TO_UTC(expr) function.
+    /// - Note: Valid date strings must start with a date in the form YYYY-MM-DD (time only strings
+    /// are not supported).
+    ///
+    /// Times can be of the form HH:MM, HH:MM:SS, or HH:MM:SS.FFF. Leading zero is not
+    /// optional (i.e. 02 is ok, 2 is not). Hours are in 24-hour format. FFF represents
+    /// milliseconds, and *trailing* zeros are optional (i.e. 5 == 500).
+    ///
+    /// Time zones can be in one of three forms:
+    /// (+/-)HH:MM
+    /// (+/-)HHMM
+    /// Z (which represents UTC)
+    ///
+    /// No time zone present will default to the device local time zone.
+    public static func string(toUTC expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.string(toUTC: expression.toImpl()))
+    }
+    
+    
+    /// Creates a MILLIS_TO_STR(expr) function that returns a ISO 8601 date time string in device
+    /// local timezone of the given number of milliseconds since the unix epoch expression.
+    ///
+    /// - Parameter expression: The numeric value representing milliseconds since the unix epoch.
+    /// - Returns: The MILLIS_TO_STR(expr) function.
+    /// - Note: If the input expression is not numeric, then the result will be null.
+    public static func millis(toString expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.millis(toString: expression.toImpl()))
+    }
+    
+    
+    /// Creates a MILLIS_TO_UTC(expr) function that returns the UTC ISO 8601 date time string
+    /// of the given number of milliseconds since the unix epoch expression.
+    ///
+    /// - Parameter expression: The numeric value representing milliseconds since the unix epoch.
+    /// - Returns: The MILLIS_TO_UTC(expr) function.
+    /// - Note: If the input expression is not numeric, then the result will be null.
+    public static func millis(toUTC expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.millis(toUTC: expression.toImpl()))
+    }
 }

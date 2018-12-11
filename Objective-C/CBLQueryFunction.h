@@ -349,6 +349,72 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) upper:(CBLQueryExpression*)expression;
 
+#pragma mark - Date-Time
+
+/**
+ Creates a STR_TO_MILLIS(expr) function that returns the number of milliseconds since the unix epoch
+ of the given ISO 8601 date time string expression.
+ 
+ @param expression The validly formatted ISO 8601 date time string expression.
+ @return The corresponding function that converts the date time string to timestamp.
+ @note Valid date strings must start with a date in the form YYYY-MM-DD (time only strings are
+ not supported).
+ 
+ Times can be of the form HH:MM, HH:MM:SS, or HH:MM:SS.FFF. Leading zero is not
+ optional (i.e. 02 is ok, 2 is not). Hours are in 24-hour format. FFF represents milliseconds,
+ and *trailing* zeros are optional (i.e. 5 == 500).
+ 
+ Time zones can be in one of three forms:
+ (+/-)HH:MM
+ (+/-)HHMM
+ Z (which represents UTC)
+ 
+ No time zone present will default to the device local time zone.
+ */
++ (CBLQueryExpression*) stringToMillis: (CBLQueryExpression*)expression;
+
+/**
+ Creates a STR_TO_UTC(expr) function that returns the ISO 8601 UTC datetime string of the
+ given ISO 8601 date time string expression.
+ 
+ @param expression The validly formatted ISO 8601 date time string expression.
+ @return The corresponding function that converts the string to UTC string.
+ @note Valid date strings must start with a date in the form YYYY-MM-DD (time only strings are
+ not supported).
+ 
+ Times can be of the form HH:MM, HH:MM:SS, or HH:MM:SS.FFF. Leading zero is not
+ optional (i.e. 02 is ok, 2 is not). Hours are in 24-hour format. FFF represents milliseconds,
+ and *trailing* zeros are optional (i.e. 5 == 500).
+ 
+ Time zones can be in one of three forms:
+ (+/-)HH:MM
+ (+/-)HHMM
+ Z (which represents UTC)
+ 
+ No time zone present will default to the device local time zone.
+ */
++ (CBLQueryExpression*) stringToUTC:(CBLQueryExpression *)expression;
+
+/**
+ Creates a MILLIS_TO_STR(expr) function that returns a ISO 8601 date time string in device
+ local timezone of the given number of milliseconds since the unix epoch expression.
+ 
+ @param expression The numeric value representing milliseconds since the unix epoch.
+ @return The corresponding function that converts the timestamp to the ISO 8601 date string.
+ @note If the input expression is not numeric, then the result will be null.
+ */
++ (CBLQueryExpression*) millisToString:(CBLQueryExpression *)expression;
+
+/**
+ Creates a MILLIS_TO_UTC(expr) function that returns the UTC ISO 8601 date time string
+ of the given number of milliseconds since the unix epoch expression.
+ 
+ @param expression The numeric value representing milliseconds since the unix epoch.
+ @return The corresponding function that converts the timestamp into the UTC ISO 8601 string.
+ @note If the input expression is not numeric, then the result will be null.
+ */
++ (CBLQueryExpression*) millisToUTC:(CBLQueryExpression *)expression;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
