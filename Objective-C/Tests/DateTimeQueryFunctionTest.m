@@ -83,6 +83,8 @@
               @"yyyy-MM-dd'T'HH:mmZZZZZ"];
 }
 
+#pragma mark - StringToMillis
+
 - (void) testStringToMillis {
     NSError* error;
     NSDate* now = [NSDate date];
@@ -140,7 +142,7 @@
     for (NSString* abbr in [self timezones]) {
         CBLQueryExpression* expression =
             [CBLQueryFunction stringToMillis: [CBLQueryExpression property: abbr]];
-        [selectQueries addObject: [CBLQuerySelectResult expression: expression  as: abbr]];
+        [selectQueries addObject: [CBLQuerySelectResult expression: expression as: abbr]];
     }
     
     CBLQuery* q = [CBLQueryBuilder select: selectQueries
@@ -180,7 +182,7 @@
         NSString* key = [NSString stringWithFormat: @"%lu", (unsigned long)i];
         CBLQueryExpression* expression =
             [CBLQueryFunction stringToMillis: [CBLQueryExpression property: key]];
-        [selectQueries addObject: [CBLQuerySelectResult expression: expression  as: key]];
+        [selectQueries addObject: [CBLQuerySelectResult expression: expression as: key]];
     }
     
     CBLQuery* q = [CBLQueryBuilder select: selectQueries
@@ -200,5 +202,87 @@
     }
 }
 
+#pragma mark - StringToUTC
+
+- (void) testStringToUTC {
+    NSError* error;
+    NSDate* now = [NSDate date];
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setValue: [self getISO8601DateString: now] forKey: key];
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction stringToUTC: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertNil(error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    NSLog(@"result: %@", [result toDictionary]);
+    
+    NSString* utcString = [self getDateString: now
+                                       format: @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+                                     timezone: [NSTimeZone timeZoneWithName: @"UTC"]];
+    AssertEqualObjects([result stringAtIndex: 0], utcString);
+}
+
+- (void) testWrongDateFormatWithStringToUTC {
+    NSError* error;
+    NSDate* now = [NSDate date];
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setValue: [self getLongStyleDateString: now] forKey: key];
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction stringToUTC: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    AssertNil([result valueAtIndex: 0]);
+}
+
+- (void) testStringToUTCWithDifferentTimeZones {
+    NSDate* now = [NSDate date];
+    NSString* utcString = [self getDateString: now
+                                       format: @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+                                     timezone: [NSTimeZone timeZoneWithName: @"UTC"]];
+    
+    CBLMutableDocument* doc = [self createDocument];
+    for (NSString* abbr in [self timezones]) {
+        NSString* dateString =
+        [self getISO8601DateString: now timezone: [NSTimeZone timeZoneWithAbbreviation:abbr]];
+        [doc setString: dateString forKey: abbr];
+    }
+    [self saveDocument: doc];
+    
+    NSMutableArray* selectQueries = [[NSMutableArray alloc] init];
+    for (NSString* abbr in [self timezones]) {
+        CBLQueryExpression* expression =
+        [CBLQueryFunction stringToUTC: [CBLQueryExpression property: abbr]];
+        [selectQueries addObject: [CBLQuerySelectResult expression: expression as: abbr]];
+    }
+    
+    CBLQuery* q = [CBLQueryBuilder select: selectQueries
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs);
+    AssertNil(error);
+    NSArray* allResults = [rs allObjects];
+    CBLQueryResult* result = [allResults firstObject];
+    AssertNotNil(result);
+    for (NSString* abbr in [self timezones]) {
+        AssertEqualObjects(utcString, [result stringForKey: abbr]);
+    }
+}
 
 @end
