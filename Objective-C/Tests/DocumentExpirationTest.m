@@ -105,15 +105,17 @@
     
     // Setup document change notification
     __weak DocumentExpirationTest *weakSelf = self;
+    __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
+        count += 1;
         DocumentExpirationTest *strongSelf = weakSelf;
         AssertEqualObjects(change.documentID, doc.id);
-        AssertNil([strongSelf.db documentWithID: change.documentID]);
-        [strongSelf verifyQueryResultCount: 0 includeDeleted: true];
-        
-        [expectation fulfill];
+        if ([strongSelf.db documentWithID: change.documentID] == nil) {
+            [strongSelf verifyQueryResultCount: 0 includeDeleted: true];
+            [expectation fulfill];
+        }
     }];
     
     // Set expiry
@@ -124,6 +126,7 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    AssertEqual(count, 1);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
