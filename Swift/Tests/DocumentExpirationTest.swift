@@ -84,11 +84,14 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
+        var count = 0
         let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            try! self.verifyQueryResultCount(0, includeDeleted: true)
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                try! self.verifyQueryResultCount(0, includeDeleted: true)
+                promise.fulfill()
+            }
         }
         
         // Set expiry
@@ -97,6 +100,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
