@@ -204,31 +204,6 @@
 
 #pragma mark - StringToUTC
 
-- (void) testStringToUTC {
-    NSError* error;
-    NSDate* now = [NSDate date];
-    NSString* key = @"dateString";
-    CBLMutableDocument* doc = [self createDocument];
-    [doc setValue: [self getISO8601DateString: now] forKey: key];
-    [self saveDocument: doc];
-    AssertNil(error);
-    
-    CBLQueryExpression* query = [CBLQueryFunction stringToUTC: [CBLQueryExpression property: key]];
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
-                                     from: [CBLQueryDataSource database: self.db]];
-    
-    CBLQueryResultSet* rs = [q execute: &error];
-    AssertNil(error);
-    CBLQueryResult* result = [[rs allObjects] firstObject];
-    AssertNotNil(result);
-    NSLog(@"result: %@", [result toDictionary]);
-    
-    NSString* utcString = [self getDateString: now
-                                       format: @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-                                     timezone: [NSTimeZone timeZoneWithName: @"UTC"]];
-    AssertEqualObjects([result stringAtIndex: 0], utcString);
-}
-
 - (void) testWrongDateFormatWithStringToUTC {
     NSError* error;
     NSDate* now = [NSDate date];
@@ -283,6 +258,138 @@
     for (NSString* abbr in [self timezones]) {
         AssertEqualObjects(utcString, [result stringForKey: abbr]);
     }
+}
+
+- (void) testStringToUTCWithDifferentTimeformat {
+    // 1970-01-01T02:46:40.123000Z in UTC
+    NSDate* date = [NSDate dateWithTimeIntervalSince1970: 10000.123456];
+    CBLMutableDocument* doc = [self createDocument];
+    for (NSUInteger i = 0; i < [self dateFormats].count; i++) {
+        NSString* format = [[self dateFormats] objectAtIndex: i];
+        NSString* dateString = [self getLocalDateString: date format: format];
+        [doc setString: dateString forKey: [NSString stringWithFormat: @"%lu", (unsigned long)i]];
+    }
+    [self saveDocument: doc];
+    
+    NSMutableArray* selectQueries = [[NSMutableArray alloc] init];
+    for (NSUInteger i = 0; i < [self dateFormats].count; i++) {
+        NSString* key = [NSString stringWithFormat: @"%lu", (unsigned long)i];
+        CBLQueryExpression* expression =
+        [CBLQueryFunction stringToUTC: [CBLQueryExpression property: key]];
+        [selectQueries addObject: [CBLQuerySelectResult expression: expression as: key]];
+    }
+    
+    CBLQuery* q = [CBLQueryBuilder select: selectQueries
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs);
+    AssertNil(error);
+    NSArray* allResults = [rs allObjects];
+    CBLQueryResult* result = [allResults firstObject];
+    AssertNotNil(result);
+    NSArray* expectedResults = [[NSArray alloc] initWithObjects:
+                                @"1970-01-01T02:46:40.123Z",
+                                @"1970-01-01T02:46:40.123Z",
+                                @"1970-01-01T02:46:40.100Z",
+                                @"1970-01-01T02:46:40Z",
+                                @"1970-01-01T02:46:00Z", nil];
+    for (NSUInteger i = 0; i < expectedResults.count; i++) {
+        NSString* key = [NSString stringWithFormat: @"%lu", (unsigned long)i];
+        AssertEqualObjects([result stringForKey: key], [expectedResults objectAtIndex: i]);
+    }
+}
+
+#pragma mark - MillisToString
+
+- (void) testWrongDataWithMillisToString {
+    NSError* error;
+    NSDate* now = [NSDate date];
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setValue: [self getISO8601DateString: now] forKey: key];
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction millisToString: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    AssertNil([result valueAtIndex: 0]);
+}
+
+- (void) testMillisToString {
+    NSDate* date = [NSDate dateWithTimeIntervalSince1970: 10000.123456];
+    NSString* dateString = [self getLocalDateString: date format: @"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
+    NSTimeInterval dateInMillis = [date timeIntervalSince1970] * 1000;
+    NSError* error;
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setDouble: dateInMillis forKey: key];
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction millisToString: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    AssertEqualObjects(dateString, [result valueAtIndex: 0]);
+}
+
+- (void) testMillisToStringFromNoSeconds {
+    // zero seconds and no fraction, so format will not include the FFF.
+    NSString* format = @"yyyy-MM-dd'T'HH:mm:ssZ";
+    double seconds = 0;
+    NSDate* date = [NSDate dateWithTimeIntervalSince1970: seconds];
+    NSString* dateString = [self getLocalDateString: date format: format];
+    NSError* error;
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setDouble: seconds forKey: key];
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction millisToString: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    AssertEqualObjects(dateString, [result valueAtIndex: 0]);
+}
+
+- (void) testMillisToStringFromFractionOfSeconds {
+    NSString* format = @"yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    double seconds = 0.123;
+    NSDate* date = [NSDate dateWithTimeIntervalSince1970: seconds];
+    NSString* dateString = [self getLocalDateString: date format: format];
+    NSError* error;
+    NSString* key = @"dateString";
+    CBLMutableDocument* doc = [self createDocument];
+    [doc setDouble: seconds * 1000 forKey: key]; // secs to milliseconds
+    [self saveDocument: doc];
+    AssertNil(error);
+    
+    CBLQueryExpression* query = [CBLQueryFunction millisToString: [CBLQueryExpression property: key]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    CBLQueryResult* result = [[rs allObjects] firstObject];
+    AssertNotNil(result);
+    AssertEqualObjects(dateString, [result valueAtIndex: 0]);
 }
 
 @end
