@@ -1,5 +1,5 @@
 //
-//  CBLPrefix.h
+//  CBLConsoleLogger.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,28 +17,25 @@
 //  limitations under the License.
 //
 
-#ifdef __OBJC__
-
 #import <Foundation/Foundation.h>
+#import "CBLLogger.h"
 
-#import "fleece/Fleece.h"
-#import "CBLLog+Logging.h"
+NS_ASSUME_NONNULL_BEGIN
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/** Console logger for writing log messages to the system console. */
+@interface CBLConsoleLogger : NSObject <CBLLogger>
 
-#ifndef CBL_THREADSAFE
-#define CBL_THREADSAFE 1
-#endif
+/** The minimum log level of the log messages to be logged. The default log level for
+    console logger is warning. */
+@property (nonatomic) CBLLogLevel level;
 
-#import "CBLException.h"
-#import "CBLLock.h"
-#import "CollectionUtils.h"
-#import "Test.h"
+/** The set of log domains of the log messages to be logged. By default, the log
+    messages of all domains will be logged. */
+@property (nonatomic) CBLLogDomain domains;
 
-#ifdef __cplusplus
-}
-#endif
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
-#endif // __OBJC__
+@end
+
+NS_ASSUME_NONNULL_END

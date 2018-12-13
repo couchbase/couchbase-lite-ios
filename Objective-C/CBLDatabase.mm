@@ -31,6 +31,7 @@
 #import "CBLMisc.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
+#import "CBLLog+Internal.h"
 #import "CBLLog+Admin.h"
 #import "CBLVersion.h"
 #import "fleece/Fleece.hh"
@@ -84,7 +85,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 + (void) initialize {
     if (self == [CBLDatabase class]) {
         NSLog(@"%@", [CBLVersion userAgent]);
-        CBLLog_Init();
+        // Initialize logging
+        CBLAssertNotNil(CBLLog.sharedInstance);
+        CBLLogInfo(Database, @"%@", [CBLVersion userAgent]);
     }
 }
 
@@ -295,7 +298,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (_c4db == nullptr)
             return YES;
         
-        CBLLog(Database, @"Closing %@ at path %@", self, self.path);
+        CBLLogInfo(Database, @"Closing %@ at path %@", self, self.path);
     
         if (_activeReplications.count > 0) {
             NSString* err = @"Cannot close the database. "
@@ -420,7 +423,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 + (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
-    CBLLog_SetLevel(domain, level);
+    CBLWarn(Database, @"This method has been deprecated. "
+            "Please use CBLDatabase.log.console instead of -setLogLevel:domain:.");
+}
+
+
++ (CBLLog*) log {
+    return [CBLLog sharedInstance];
 }
 
 
@@ -608,7 +617,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     slice bPath(path.fileSystemRepresentation);
 
     C4DatabaseConfig c4config = c4DatabaseConfig(_config);
-    CBLLog(Database, @"Opening %@ at path %@", self, path);
+    CBLLogInfo(Database, @"Opening %@ at path %@", self, path);
     C4Error err;
     _c4db = c4db_open(bPath, &c4config, &err);
     if (!_c4db)
@@ -941,8 +950,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             return false;
         
         // Resolve conflict:
-        CBLLog(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
-               docID, localDoc.revID, remoteDoc.revID);
+        CBLLogInfo(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
+                   docID, localDoc.revID, remoteDoc.revID);
         
         CBLDocument* resolvedDoc = [self resolveConflictBetweenLocalDoc: localDoc
                                                            andRemoteDoc: remoteDoc];
@@ -1011,8 +1020,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         || !c4doc_save(rawDoc, 0, &c4err)) {
         return convertError(c4err, outError);
     }
-    CBLLog(Sync, @"Conflict resolved as doc '%@' rev %.*s",
-           localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+    CBLLogInfo(Sync, @"Conflict resolved as doc '%@' rev %.*s",
+               localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
     return YES;
 }
 
@@ -1027,14 +1036,14 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     if (nextExpiration > 0) {
         NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: (nextExpiration/msec)];
         NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow, minimumDelay);
-        CBLLog(Database, @"Scheduling next doc expiration in %.3g sec", delay);
+        CBLLogInfo(Database, @"Scheduling next doc expiration in %.3g sec", delay);
         dispatch_async(dispatch_get_main_queue(), ^{
             [self performSelector: @selector(purgeExpiredDocuments)
                        withObject: nil
                        afterDelay: delay];
         });
     } else {
-        CBLLog(Database, @"No pending doc expirations");
+        CBLLogInfo(Database, @"No pending doc expirations");
     }
 }
 
@@ -1045,11 +1054,11 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             if (!_c4db)
                 return;
             
-            CBLLog(Database, @"Purging expired documents...");
+            CBLLogInfo(Database, @"Purging expired documents...");
             C4Error c4err;
             UInt64 nPurged = c4db_purgeExpiredDocs(_c4db, &c4err);
             if (nPurged >= 0)
-                CBLLog(Database, @"Purged %lld expired documents", nPurged);
+                CBLLogInfo(Database, @"Purged %lld expired documents", nPurged);
             else {
                 NSError* error;
                 convertError(c4err, &error);

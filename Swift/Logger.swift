@@ -1,5 +1,5 @@
 //
-//  CBLPrefix.h
+//  Logger.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,28 +17,32 @@
 //  limitations under the License.
 //
 
-#ifdef __OBJC__
+import Foundation
 
-#import <Foundation/Foundation.h>
-
-#import "fleece/Fleece.h"
-#import "CBLLog+Logging.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifndef CBL_THREADSAFE
-#define CBL_THREADSAFE 1
-#endif
-
-#import "CBLException.h"
-#import "CBLLock.h"
-#import "CollectionUtils.h"
-#import "Test.h"
-
-#ifdef __cplusplus
+/// Log domain.
+public enum LogDomain: UInt8 {
+    case all            = 15
+    case database       = 1
+    case query          = 2
+    case replicator     = 4
+    case network        = 8
 }
-#endif
 
-#endif // __OBJC__
+/// Log level.
+public enum LogLevel: UInt8 {
+    case debug = 0
+    case verbose
+    case info
+    case warning
+    case error
+    case none
+}
+
+/// Logger protocol
+public protocol Logger {
+    /// The minimum log level to be logged.
+    var level: LogLevel { get }
+    
+    /// The callback log function.
+    func log(level: LogLevel, domain: LogDomain, message: String)
+}

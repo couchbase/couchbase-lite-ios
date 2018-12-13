@@ -1,5 +1,5 @@
 //
-//  CBLPrefix.h
+//  CBLLog.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,28 +17,30 @@
 //  limitations under the License.
 //
 
-#ifdef __OBJC__
-
 #import <Foundation/Foundation.h>
+@protocol CBLLogger;
+@class CBLConsoleLogger;
+@class CBLFileLogger;
 
-#import "fleece/Fleece.h"
-#import "CBLLog+Logging.h"
+NS_ASSUME_NONNULL_BEGIN
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/**
+ Log allows to configure console and file logger or to set a custom logger.
+ */
+@interface CBLLog : NSObject
 
-#ifndef CBL_THREADSAFE
-#define CBL_THREADSAFE 1
-#endif
+/** Console logger writing log messages to the system console. */
+@property (readonly, nonatomic) CBLConsoleLogger* console;
 
-#import "CBLException.h"
-#import "CBLLock.h"
-#import "CollectionUtils.h"
-#import "Test.h"
+/** File logger writing log messages to files. */
+@property (readonly, nonatomic) CBLFileLogger* file;
 
-#ifdef __cplusplus
-}
-#endif
+/** For setting a custom logger. */
+@property (nonatomic, nullable) id<CBLLogger> custom;
 
-#endif // __OBJC__
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
+@end
+
+NS_ASSUME_NONNULL_END

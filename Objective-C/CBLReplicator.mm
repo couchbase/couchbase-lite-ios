@@ -148,7 +148,7 @@ typedef enum {
             return;
         }
         
-        CBLLog(Sync, @"%@: Starting", self);
+        CBLLogInfo(Sync, @"%@: Starting", self);
         _retryCount = 0;
         _suspended = NO;
         _isSuspending = NO;
@@ -160,11 +160,11 @@ typedef enum {
 - (void) retry {
     CBL_LOCK(self) {
         if (_repl || _rawStatus.level != kC4Offline) {
-            CBLLog(Sync, @"%@: Ignore retrying (status = %d)", self, _rawStatus.level);
+            CBLLogInfo(Sync, @"%@: Ignore retrying (status = %d)", self, _rawStatus.level);
             return;
         }
         
-        CBLLog(Sync, @"%@: Retrying...", self);
+        CBLLogInfo(Sync, @"%@: Retrying...", self);
         [self _start];
     }
 }
@@ -347,7 +347,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
         if (!reachable && !_repl && !_isStopping) {
-            CBLLog(Sync, @"%@: Server may now be reachable; retrying...", self);
+            CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
             _retryCount = 0;
             [self retry];
         }
@@ -487,15 +487,15 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     if (transient || _reachability.reachable) {
         // On transient error, retry periodically, with exponential backoff:
         auto delay = retryDelay(++_retryCount);
-        CBLLog(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
-               self, error.localizedDescription, delay);
+        CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
+                   self, error.localizedDescription, delay);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                        _dispatchQueue, ^{
                            [self retry];
                        });
     } else {
-        CBLLog(Sync, @"%@: Network error (%@); will retry when network changes...",
-               self, error.localizedDescription);
+        CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
+                   self, error.localizedDescription);
     }
     // Also retry when the network changes:
     [self startReachabilityObserver];
@@ -510,9 +510,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     
     _rawStatus = c4Status;
     self.status = [[CBLReplicatorStatus alloc] initWithStatus: c4Status];
-    CBLLog(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
-           self, kC4ReplicatorActivityLevelNames[c4Status.level],
-           c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal, self.status.error);
+    CBLLogInfo(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
+               self, kC4ReplicatorActivityLevelNames[c4Status.level],
+               c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal, self.status.error);
 }
 
 
@@ -550,7 +550,7 @@ static void onDocsEnded(C4Replicator *repl,
         
         if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
             // Conflict pulling a document -- the revision was added but app needs to resolve it:
-            CBLLog(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
+            CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
             NSError* error;
             if ([_config.database resolveConflictInDocument: doc.id error: &error]) {
                 [doc resetError]; // Reset the error as successfully resolving the conflicts
@@ -559,8 +559,8 @@ static void onDocsEnded(C4Replicator *repl,
         }
         
         if (doc.c4Error.code)
-            CBLLog(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
-                   (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
+            CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
+                       (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
     }
     
     id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
@@ -618,14 +618,14 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
 - (void) setSuspended: (BOOL)suspended {
     CBL_LOCK(self) {
         if (_isStopping || _rawStatus.level == kC4Stopped) {
-            CBLLog(Sync, @"%@: Ignore setting suspended = %d (%@)",
-                   self, suspended, (_isStopping ? @"stopping" : @"stoppped"));
+            CBLLogInfo(Sync, @"%@: Ignore setting suspended = %d (%@)",
+                       self, suspended, (_isStopping ? @"stopping" : @"stoppped"));
             return;
         }
         
         if (_suspended != suspended) {
-            CBLLog(Sync, @"%@: Set suspended = %d (suspending = %d)",
-                   self, suspended, _isSuspending);
+            CBLLogInfo(Sync, @"%@: Set suspended = %d (suspending = %d)",
+                       self, suspended, _isSuspending);
             
             _suspended = suspended;
             

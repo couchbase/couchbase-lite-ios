@@ -29,7 +29,7 @@
 
 
 - (void) setupBackgrounding {
-    CBLLog(Sync, @"%@: Starting backgrounding monitor...", self);
+    CBLLogInfo(Sync, @"%@: Starting backgrounding monitor...", self);
     NSFileProtectionType prot = self.fileProtection;
     if ([prot isEqual: NSFileProtectionComplete] ||
         [prot isEqual: NSFileProtectionCompleteUnlessOpen]) {
@@ -59,7 +59,7 @@
 
 
 - (void) endBackgrounding {
-    CBLLog(Sync, @"%@: Ending backgrounding monitor...", self);
+    CBLLogInfo(Sync, @"%@: Ending backgrounding monitor...", self);
     [NSNotificationCenter.defaultCenter removeObserver: self
                                                   name: UIApplicationProtectedDataWillBecomeUnavailable
                                                 object: nil];
@@ -76,7 +76,7 @@
         if ([self.bgMonitor hasBackgroundTask]) {
             _deepBackground = YES;
             [self updateSuspended];
-            CBLLog(Sync, @"%@: ending background task as idle.", self);
+            CBLLogInfo(Sync, @"%@: ending background task as idle.", self);
             [self.bgMonitor endBackgroundTask];  // will probably suspend the process immediately
         }
     });
@@ -88,9 +88,9 @@
 
 - (void) appBackgrounding {
     if (self.active && [self.bgMonitor beginBackgroundTaskNamed: self.description]) {
-        CBLLog(Sync, @"%@: App backgrounding, starting temporary background task", self);
+        CBLLogInfo(Sync, @"%@: App backgrounding, starting temporary background task", self);
     } else {
-        CBLLog(Sync, @"%@: App backgrounding, not active, suspending the replicator", self);
+        CBLLogInfo(Sync, @"%@: App backgrounding, not active, suspending the replicator", self);
         _deepBackground = YES;
         [self updateSuspended];
     }
@@ -100,7 +100,7 @@
 - (void) appForegrounding {
     BOOL ended = [self.bgMonitor endBackgroundTask];
     if (ended)
-        CBLLog(Sync, @"%@: App foregrounding, ending background task.", self);
+        CBLLogInfo(Sync, @"%@: App foregrounding, ending background task.", self);
     if (_deepBackground) {
         _deepBackground = NO;
         [self updateSuspended];
@@ -109,7 +109,7 @@
 
 
 - (void) backgroundTaskExpired {
-    CBLLog(Sync, @"%@: Background task time expired!", self);
+    CBLLogInfo(Sync, @"%@: Background task time expired!", self);
     _deepBackground = YES;
     [self updateSuspended];
 }
@@ -117,7 +117,7 @@
 
 // Called when the app is about to lose access to files:
 - (void) fileAccessChanged: (NSNotification*)n {
-    CBLLog(Sync, @"%@: Device locked, database unavailable.", self);
+    CBLLogInfo(Sync, @"%@: Device locked, database unavailable.", self);
     _filesystemUnavailable = [n.name isEqual: UIApplicationProtectedDataWillBecomeUnavailable];
     [self updateSuspended];
 }

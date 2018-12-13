@@ -23,7 +23,6 @@
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
-#import "CBLLog.h"
 #import "CBLReplicator+Internal.h"
 #import "c4Socket.h"
 #import "MYURLUtils.h"
@@ -280,12 +279,12 @@ static void doDispose(C4Socket* s) {
     [_out open];
 
     if (_connectingToProxy) {
-        CBLLog(WebSocket, @"%@ connecting to HTTP proxy %@:%d...",
-               self, _logic.directHost, _logic.directPort);
+        CBLLogInfo(WebSocket, @"%@ connecting to HTTP proxy %@:%d...",
+                   self, _logic.directHost, _logic.directPort);
         _logic.useProxyCONNECT = YES;
         [self writeData: _logic.HTTPRequestData completionHandler: nil];
     } else {
-        CBLLog(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
+        CBLLogInfo(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
         [self _sendWebSocketRequest];
     }
 
@@ -400,7 +399,7 @@ static void doDispose(C4Socket* s) {
     [self clearHTTPState];
     [self configureTLS];
 
-    CBLLog(WebSocket, @"%@ Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
+    CBLLogInfo(WebSocket, @"%@ Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
     [self _sendWebSocketRequest];
 }
 
@@ -450,7 +449,7 @@ static void doDispose(C4Socket* s) {
 
 // Notifies LiteCore that the WebSocket is connected.
 - (void) connected: (NSDictionary*)responseHeaders {
-    CBLLog(WebSocket, @"CBLWebSocket CONNECTED!");
+    CBLLogInfo(WebSocket, @"CBLWebSocket CONNECTED!");
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_opened(socket);
     }];
@@ -533,7 +532,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // callback from C4Socket
 - (void) closeSocket {
-    CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
+    CBLLogInfo(WebSocket, @"CBLWebSocket closeSocket requested");
     dispatch_async(_queue, ^{
         if (_in || _out) {
             [self closeWithError: nil];
@@ -554,7 +553,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     if (!_in)
         return;
 
-    CBLLog(WebSocket, @"CBLWebSocket CLOSING WITH STATUS %d \"%@\"", (int)code, reason);
+    CBLLogInfo(WebSocket, @"CBLWebSocket CLOSING WITH STATUS %d \"%@\"", (int)code, reason);
     [self disconnect];
     nsstring_slice reasonSlice(reason);
     [self c4SocketClosed: c4error_make(WebSocketDomain, code, reasonSlice)];
@@ -567,10 +566,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
     C4Error c4err;
     if (error) {
-        CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@", error.my_compactDescription);
+        CBLLogInfo(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@", error.my_compactDescription);
         convertError(error, &c4err);
     } else {
-        CBLLog(WebSocket, @"CBLWebSocket CLOSED");
+        CBLLogInfo(WebSocket, @"CBLWebSocket CLOSED");
         c4err = {};
     }
     [self c4SocketClosed: c4err];

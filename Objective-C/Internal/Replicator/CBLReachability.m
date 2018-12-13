@@ -146,10 +146,10 @@ static BOOL sAlwaysAssumeProxy = NO;
     // See whether status is already known:
     SCNetworkReachabilityFlags flag;
     if (SCNetworkReachabilityGetFlags(_ref, &flag)) {
-        CBLLog(Sync, @"%@: flags=%x; starting...", self, flag);
+        CBLLogInfo(Sync, @"%@: flags=%x; starting...", self, flag);
         [self notifyFlagsChanged: flag];
     } else {
-        CBLLog(Sync, @"%@: starting...", self);
+        CBLLogInfo(Sync, @"%@: starting...", self);
     }
     return YES;
 }
@@ -172,7 +172,7 @@ static BOOL sAlwaysAssumeProxy = NO;
 - (void) stop {
     _reachabilityKnown = NO;
     if (_runLoop || _queue)
-        CBLLog(Sync, @"%@: stopped", self);
+        CBLLogInfo(Sync, @"%@: stopped", self);
     
     if (![self removeCallback])
         CBLWarn(Sync, @"%@: cannot remove reachability callback", self);
@@ -253,7 +253,7 @@ static BOOL sAlwaysAssumeProxy = NO;
     if (!_reachabilityKnown || flags != _reachabilityFlags) {
         self.reachabilityFlags = flags;
         self.reachabilityKnown = YES;
-        CBLLog(Sync, @"%@: flags <-- %x", self, flags);
+        CBLLogInfo(Sync, @"%@: flags <-- %x", self, flags);
         __typeof(_onChange) onChange = _onChange;
         if (onChange)
             onChange();

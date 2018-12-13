@@ -19,27 +19,6 @@
 
 import Foundation
 
-/// Log domain. The log domains here are tentative and subject to change.
-public enum LogDomain: UInt8 {
-    case all = 0
-    case database
-    case query
-    case replicator
-    case network
-}
-
-/// Log level. The default log level for all domains is warning.
-/// The log levels here are tentative and subject to change.
-public enum LogLevel: UInt8 {
-    case debug = 0
-    case verbose
-    case info
-    case warning
-    case error
-    case lastWriteWins
-}
-
-
 /// Concurruncy control type used when saving or deleting a document.
 ///
 /// - lastWriteWins: The last write operation will win if there is a conflict.
@@ -378,16 +357,20 @@ public final class Database {
     }
     
     
-    /// Set log level for the given log domain.
+    /// This function is deprecated. Use Database.log.console to set log level and domains instead.
     ///
     /// - Parameters:
     ///   - level: The log level.
     ///   - domain: The log domain.
+    @available(*, deprecated, message: "Use Database.log.console instead.")
     public class func setLogLevel(_ level: LogLevel, domain: LogDomain) {
-        let l = CBLLogLevel.init(rawValue: UInt32(level.rawValue))!
-        let d = CBLLogDomain.init(rawValue: UInt32(domain.rawValue))!
-        return CBLDatabase.setLogLevel(l, domain: d)
+        Log.log(domain: .database, level: .warning, message:
+            "This method has been deprecated. Please use Database.log.console instead of setLogLevel(_, domain:)")
     }
+    
+    
+    /// Log object used for configuring console, file, and custom logger.
+    public static let log = Log()
     
     
     // MARK: Internal

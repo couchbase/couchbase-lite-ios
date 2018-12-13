@@ -1,8 +1,8 @@
 //
-//  CBLLogging+Admin.h
+//  CBLLog+Internal.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,20 +17,30 @@
 //  limitations under the License.
 //
 
-#import "CBLLogger.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#import "CBLLog.h"
+#import "CBLConsoleLogger.h"
+#import "CBLFileLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
-    
-NSString* CBLLog_GetLevelName(CBLLogLevel level);
-    
-NSString* CBLLog_GetDomainName(CBLLogDomain domain);
-    
-NS_ASSUME_NONNULL_END
 
-#ifdef __cplusplus
-}
-#endif
+@interface CBLLog ()
+
++ (instancetype) sharedInstance;
+
+- (void) synchronizeCallbackLogLevel;
+
+@end
+
+@interface CBLConsoleLogger ()
+
+- (instancetype) initWithLogLevel: (CBLLogLevel)level;
+
+@end
+
+@interface CBLFileLogger ()
+
+- (instancetype) initWithDefault;
+
+@end
+
+NS_ASSUME_NONNULL_END

@@ -23,7 +23,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLCoreBridge.h"
-#import "CBLLog.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "c4BlobStore.h"

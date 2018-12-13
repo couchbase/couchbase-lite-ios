@@ -18,7 +18,6 @@
 //
 
 #import "CBLLiveQuery.h"
-#import "CBLLog.h"
 #import "CBLQuery.h"
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
@@ -184,7 +183,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) update {
     CBLQuery* strongQuery = _query;
-    CBLLog(Query, @"%@: Querying...", self);
+    CBLLogInfo(Query, @"%@: Querying...", self);
     NSError *error;
     CBLQueryResultSet* oldRs = _rs;
     CBLQueryResultSet* newRs;
@@ -199,7 +198,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     BOOL changed = YES;
     if (newRs) {
         if (oldRs)
-            CBLLog(Query, @"%@: Changed!", self);
+            CBLLogInfo(Query, @"%@: Changed!", self);
         _rs = newRs;
     } else if (error != nil) {
         CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);

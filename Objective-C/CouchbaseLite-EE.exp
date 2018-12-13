@@ -22,6 +22,7 @@
 .objc_class_name_CBLAuthenticator
 .objc_class_name_CBLBasicAuthenticator
 .objc_class_name_CBLBlob
+.objc_class_name_CBLConsoleLogger
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
@@ -30,11 +31,14 @@
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLDocumentReplication
+.objc_class_name_CBLFileLogger
 .objc_class_name_CBLFullTextIndex
 .objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment
 .objc_class_name_CBLIndex
 .objc_class_name_CBLIndexBuilder
+.objc_class_name_CBLLog
+.objc_class_name_CBLLogger
 .objc_class_name_CBLMutableArray
 .objc_class_name_CBLMutableDictionary
 .objc_class_name_CBLMutableDocument

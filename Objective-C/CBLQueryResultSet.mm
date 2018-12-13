@@ -86,7 +86,7 @@ namespace cbl {
         _c4enum = e;
         _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(query.database, e))->retain();
         _columnNames = columnNames;
-        CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
+        CBLLogInfo(Query, @"Beginning query enumeration (%p)", _c4enum);
     }
     return self;
 }
@@ -110,7 +110,7 @@ namespace cbl {
             CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
         } else {
             _isAllEnumerated = YES;
-            CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
+            CBLLogInfo(Query, @"End of query enumeration (%p)", _c4enum);
         }
         return row;
     }

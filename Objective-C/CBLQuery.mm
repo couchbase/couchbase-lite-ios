@@ -265,7 +265,7 @@ using namespace fleece;
         if (_c4Query)
             return YES;
 
-        CBLLog(Query, @"Query encoded as %.*s", (int)_json.length, (char*)_json.bytes);
+        CBLLogInfo(Query, @"Query encoded as %.*s", (int)_json.length, (char*)_json.bytes);
 
         // Compile JSON query:
         C4Error c4Err;

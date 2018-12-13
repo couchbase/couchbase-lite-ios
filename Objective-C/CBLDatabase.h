@@ -18,39 +18,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLLogger.h"
 @class CBLDatabaseConfiguration;
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
 @class CBLIndex;
+@class CBLLog;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
-
-/**
- Log domain. The log domains here are tentative and subject to change.
- */
-typedef NS_ENUM(uint32_t, CBLLogDomain) {
-    kCBLLogDomainAll,
-    kCBLLogDomainDatabase,
-    kCBLLogDomainQuery,
-    kCBLLogDomainReplicator,
-    kCBLLogDomainNetwork,
-};
-
-
-/**
- Log level. The default log level for all domains is kCBLLogLevelWarning.
- The log levels here are tentative and subject to change.
- */
-typedef NS_ENUM(uint32_t, CBLLogLevel) {
-    kCBLLogLevelDebug,
-    kCBLLogLevelVerbose,
-    kCBLLogLevelInfo,
-    kCBLLogLevelWarning,
-    kCBLLogLevelError,
-    kCBLLogLevelNone
-};
 
 
 /**
@@ -302,12 +279,21 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 #pragma mark - Logging
 
 /**
- Sets log level for the given log domain.
-
+ This function is deprecated. Use CBLDatabase.log.console to set log level and domains instead.
+ 
  @param level The log level.
  @param domain The log domain.
  */
-+ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain;
++ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain
+  __attribute__((deprecated("Use CBLDatabase.log.console instead.")));
+
+
+/**
+ Log object used for configuring console, file, and custom logger.
+
+ @return log object
+ */
++ (CBLLog*) log;
 
 #pragma mark - Change Listener
 

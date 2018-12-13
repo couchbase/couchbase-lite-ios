@@ -288,8 +288,8 @@ static NSDictionary* sOverrideProxySettings;
 
         case 401: {
             NSString* authResponse = getHeader(_responseMsg, @"WWW-Authenticate");
-            CBLLog(WebSocket, @"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
-                self, _authorizationHeader, authResponse);
+            CBLLogInfo(WebSocket, @"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
+                       self, _authorizationHeader, authResponse);
             NSDictionary* challengeInfo = [[self class] parseAuthHeader: authResponse];
             
             NSMutableDictionary* errorInfo = [NSMutableDictionary new];
@@ -309,15 +309,15 @@ static NSDictionary* sOverrideProxySettings;
             if (!_proxyAuthorizationHeader) {
                 if (!_proxyCredential)
                     _proxyCredential = [self credentialForAuthHeader: authResponse];
-                CBLLog(WebSocket, @"%@: Proxy auth challenge; credential = %@", self, _proxyCredential);
+                CBLLogInfo(WebSocket, @"%@: Proxy auth challenge; credential = %@", self, _proxyCredential);
                 if (_proxyCredential) {
                     // Recoverable auth failure -- try again with new _proxyCredential:
                     _shouldRetry = YES;
                     break;
                 }
             }
-            CBLLog(WebSocket, @"%@: HTTP proxy auth failed;  got Proxy-Authenticate: %@",
-                   self, authResponse);
+            CBLLogInfo(WebSocket, @"%@: HTTP proxy auth failed;  got Proxy-Authenticate: %@",
+                       self, authResponse);
             [self setErrorCode: kCFErrorHTTPBadProxyCredentials userInfo: nil];
             break;
         }

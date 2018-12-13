@@ -1,5 +1,5 @@
 //
-//  CBLLog.h
+//  CBLLog+Logging.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -34,18 +34,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define kCBL_LogDomainDefault kC4DefaultLog
 
-// TODO: Sync Lite and LiteCore log domains:
 extern C4LogDomain kCBL_LogDomainDatabase;
 extern C4LogDomain kCBL_LogDomainQuery;
 extern C4LogDomain kCBL_LogDomainSync;
 extern C4LogDomain kCBL_LogDomainWebSocket;
-
+    
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \
         ({if (__builtin_expect(c4log_getLevel(kCBL_LogDomain##DOMAIN) <= LEVEL, false))   \
               cblLog(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
 #define CBLLogVerbose(DOMAIN, FMT, ...) CBLLogToAt(DOMAIN, kC4LogVerbose, FMT, ## __VA_ARGS__)
-#define CBLLog(DOMAIN, FMT, ...)        CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
+#define CBLLogInfo(DOMAIN, FMT, ...)    CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
 #define CBLWarn(DOMAIN, FMT, ...)       CBLLogToAt(DOMAIN, kC4LogWarning, FMT, ## __VA_ARGS__)
 #define CBLWarnError(DOMAIN, FMT, ...)  CBLLogToAt(DOMAIN, kC4LogError,   FMT, ## __VA_ARGS__)
 
@@ -58,7 +57,7 @@ extern C4LogDomain kCBL_LogDomainWebSocket;
     
 void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
     __attribute__((format(__NSString__, 3, 4)));
-
+    
 NS_ASSUME_NONNULL_END
     
 #ifdef __cplusplus
