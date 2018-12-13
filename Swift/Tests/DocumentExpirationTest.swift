@@ -60,10 +60,13 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        var count = 0
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                promise.fulfill()
+            }
         }
         
         // Set expiry
@@ -72,6 +75,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
@@ -89,7 +93,7 @@ class DocumentExpirationTest: CBLTestCase {
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
             if self.db.document(withID: doc.id) == nil {
-                try! self.verifyQueryResultCount(0, includeDeleted: true)
+                try! self.verifyQueryResultCount(0, deletedDocs: 0)
                 promise.fulfill()
             }
         }
@@ -106,20 +110,18 @@ class DocumentExpirationTest: CBLTestCase {
         db.removeChangeListener(withToken: token);
     }
     
-    func verifyQueryResultCount(_ count: Int, includeDeleted: Bool = false) throws {
+    func verifyQueryResultCount(_ count: Int, deletedDocs: Int) throws {
         var rs = try QueryBuilder
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .execute()
         XCTAssertEqual(rs.allResults().count, count)
 
-        if includeDeleted {
-            rs = try QueryBuilder
-                .select(SelectResult.expression(Meta.id))
-                .from(DataSource.database(db))
-                .where(Meta.isDeleted).execute()
-            XCTAssertEqual(rs.allResults().count, count)
-        }
+        rs = try QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(Meta.isDeleted).execute()
+        XCTAssertEqual(rs.allResults().count, deletedDocs)
     }
     
     func testDocumentNotPurgedBeforeExpiration() throws {
@@ -129,12 +131,15 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
+        var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            purgeTime = Date().timeIntervalSince1970
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                purgeTime = Date().timeIntervalSince1970
+                promise.fulfill()
+            }
         }
         
         // Set Expiry
@@ -147,6 +152,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
+        XCTAssertEqual(count, 1)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
@@ -189,16 +195,20 @@ class DocumentExpirationTest: CBLTestCase {
         try self.reopenDB()
         
         // Setup document change notification
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        var count = 0
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                promise.fulfill()
+            }
         }
         
         XCTAssertNotNil(self.db.document(withID: doc.id))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
@@ -214,10 +224,13 @@ class DocumentExpirationTest: CBLTestCase {
         let otherDB = try self.openDB(name: db.name)
         
         // Setup document change notification on otherDB
+        var count = 0
         let token = otherDB.addDocumentChangeListener(withID: doc.id) { (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(otherDB.document(withID: doc.id))
-            promise.fulfill()
+            if otherDB.document(withID: doc.id) == nil {
+                promise.fulfill()
+            }
         }
         
         // Set expiry on db instance
@@ -229,6 +242,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         XCTAssertNil(self.db.document(withID: doc.id))
         XCTAssertNil(otherDB.document(withID: doc.id))
@@ -247,12 +261,15 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
+        var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            purgeTime = Date().timeIntervalSince1970
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                purgeTime = Date().timeIntervalSince1970
+                promise.fulfill()
+            }
         }
         
         // Set Expiry
@@ -265,6 +282,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
@@ -280,12 +298,15 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
+        var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
-            purgeTime = Date().timeIntervalSince1970
-            promise.fulfill()
+            if self.db.document(withID: doc.id) == nil {
+                purgeTime = Date().timeIntervalSince1970
+                promise.fulfill()
+            }
         }
         
         // Set Expiry
@@ -298,6 +319,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 1)
         
         // Validate
         XCTAssert(purgeTime - begin < 3.0)
@@ -337,7 +359,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
             XCTAssertNil(self.db.document(withID: doc.id))
@@ -355,6 +377,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 2)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
@@ -368,7 +391,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
             XCTAssertNil(self.db.document(withID: doc.id))
@@ -386,6 +409,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
+        XCTAssertEqual(count, 2)
         
         // Remove listener
         db.removeChangeListener(withToken: token);
