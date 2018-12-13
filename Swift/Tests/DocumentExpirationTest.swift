@@ -61,10 +61,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 promise.fulfill()
             }
         }
@@ -92,7 +92,7 @@ class DocumentExpirationTest: CBLTestCase {
         let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 try! self.verifyQueryResultCount(0, deletedDocs: 0)
                 promise.fulfill()
             }
@@ -133,10 +133,10 @@ class DocumentExpirationTest: CBLTestCase {
         // Setup document change notification
         var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
                 promise.fulfill()
             }
@@ -196,10 +196,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 promise.fulfill()
             }
         }
@@ -263,10 +263,10 @@ class DocumentExpirationTest: CBLTestCase {
         // Setup document change notification
         var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
                 promise.fulfill()
             }
@@ -300,10 +300,10 @@ class DocumentExpirationTest: CBLTestCase {
         // Setup document change notification
         var count = 0
         var purgeTime: TimeInterval = 0.0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count += 1
             XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
+            if change.database.document(withID: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
                 promise.fulfill()
             }
@@ -359,10 +359,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
+            XCTAssertNil(change.database.document(withID: doc.id))
             if count == 2 {
                 promise.fulfill()
             }
@@ -391,10 +391,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
-            XCTAssertNil(self.db.document(withID: doc.id))
+            XCTAssertNil(change.database.document(withID: doc.id))
             if count == 2 {
                 promise.fulfill()
             }
