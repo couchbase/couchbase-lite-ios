@@ -69,15 +69,38 @@
                    }];
 }
 
+- (void) testPurgeDocumentAfterSettingExpiry {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    NSError* err;
+    CBLMutableDocument* doc = [self generateDocumentWithID: nil];
+    AssertEqual(self.db.count, 1u);
+    
+    NSDate* expiryDateToPurge = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    Assert([self.db setDocumentExpirationWithID: doc.id
+                                     expiration: expiryDateToPurge
+                                          error: &err]);
+    
+    // purge doc
+    Assert([self.db purgeDocument: doc error: &err]);
+    AssertNil(err);
+    
+    // shouldn't crash due to timer fired
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [expectation fulfill];
+                   });
+    
+    // Wait for result, it shouldn't crash due to already purged doc
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+}
+
 - (void) testDocumentPurgedAfterExpiration {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     NSError* err;
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    CBLMutableDocument* docToPurgeBeforeExpire = [self createDocument];
-    [docToPurgeBeforeExpire setValue: @"somevalue" forKey: @"somekey"];
-    [self saveDocument: docToPurgeBeforeExpire];
-    AssertEqual(self.db.count, 2u);
+    AssertEqual(self.db.count, 1u);
     
     // Setup document change notification
     id token = [self.db addDocumentChangeListenerWithID: doc.id
@@ -90,17 +113,9 @@
                 }];
 
     // Set expiry
-    NSDate* expiryDateToPurge = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    Assert([self.db setDocumentExpirationWithID: docToPurgeBeforeExpire.id
-                                     expiration: expiryDateToPurge
-                                          error: &err]);
     AssertNil(err);
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 3.0];
     Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
-    
-    // purge one document
-    Assert([self.db purgeDocument: docToPurgeBeforeExpire error: &err]);
     AssertNil(err);
     
     // Wait for result, it shouldn't crash due to already purged doc

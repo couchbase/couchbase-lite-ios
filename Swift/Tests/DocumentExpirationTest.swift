@@ -53,14 +53,32 @@ class DocumentExpirationTest: CBLTestCase {
         }
     }
     
+    func testDocumentPurgingAfterSettingExpiry() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create doc
+        let doc = try generateDocument(withID: nil)
+        
+        // Set expiry
+        try db.setDocumentExpiration(withID: doc.id,
+                                     expiration: Date().addingTimeInterval(1))
+        
+        try db.purgeDocument(doc)
+        
+        // Validate it is not crashing due to the expiry timer!!
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            promise.fulfill()
+        }
+        
+        // Wait for result
+        waitForExpectations(timeout: 5.0)
+    }
+    
     func testDocumentPurgedAfterExpiration() throws {
         let promise = expectation(description: "document expiry expectation")
         
         // Create doc
         let doc = try generateDocument(withID: nil)
-        let docToPurge = createDocument()
-        docToPurge.setValue("string", forKey: "string")
-        try saveDocument(docToPurge)
         
         // Setup document change notification
         let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
@@ -71,13 +89,8 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Set expiry
-        try db.setDocumentExpiration(withID: docToPurge.id,
-                                     expiration: Date().addingTimeInterval(1))
         try db.setDocumentExpiration(withID: doc.id,
-                                     expiration: Date().addingTimeInterval(3))
-        
-        try db.purgeDocument(docToPurge)
-        
+                                     expiration: Date().addingTimeInterval(1))
         // Wait for result
         waitForExpectations(timeout: 5.0)
         
