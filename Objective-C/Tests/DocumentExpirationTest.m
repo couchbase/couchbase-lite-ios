@@ -98,8 +98,8 @@
 - (void) testDocumentPurgedAfterExpiration {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
-    NSError* err;
     CBLDocument* doc = [self generateDocumentWithID: nil];
+    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     AssertEqual(self.db.count, 1u);
     
     // Setup document change notification
@@ -113,12 +113,12 @@
     }];
 
     // Set expiry
-    AssertNil(err);
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    NSError* err;
     Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
     AssertNil(err);
     
-    // Wait for result, it shouldn't crash due to already purged doc
+    // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
     
     // Remove listener
