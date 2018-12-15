@@ -77,11 +77,9 @@
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
     // Setup document change notification
-    __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             [expectation fulfill];
@@ -97,7 +95,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -112,11 +109,9 @@
     
     // Setup document change notification
     __weak DocumentExpirationTest* weakSelf = self;
-    __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         DocumentExpirationTest* strongSelf = weakSelf;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
@@ -133,7 +128,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -164,12 +158,10 @@
     CBLDocument* doc = [self generateDocumentWithID: nil];
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
-    __block int count = 0;
     __block NSTimeInterval purgeTime;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             purgeTime = [[NSDate date] timeIntervalSince1970];
@@ -189,7 +181,6 @@
     
     // Validate
     Assert(purgeTime - begin >= 2.0);
-    AssertEqual(count, 1);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -239,11 +230,9 @@
     [self reopenDB];
     
     // Setup document change notification
-    __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             [expectation fulfill];
@@ -254,7 +243,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5 handler: nil];
-    AssertEqual(count, 1);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -272,12 +260,10 @@
     Assert(otherDB != self.db);
     
     // Setup document change notification on otherDB
-    __block int count = 0;
     __weak CBLDatabase *weakOtherDB = otherDB;
     id token = [otherDB addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([weakOtherDB documentWithID: change.documentID] == nil) {
             [expectation fulfill];
@@ -294,7 +280,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5 handler: nil];
-    AssertEqual(count, 1);
     
     AssertNil([self.db documentWithID: doc.id]);
     AssertNil([otherDB documentWithID: doc.id]);
@@ -314,12 +299,10 @@
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
     // Setup document change notification
-    __block int count = 0;
     __block NSTimeInterval purgeTime;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             purgeTime = [[NSDate date] timeIntervalSince1970];
@@ -341,7 +324,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
     
     // Validate
     Assert(purgeTime - begin >= 2.0);
@@ -358,10 +340,8 @@
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
     // Setup document change notification
-    __block int count = 0;
     __block NSTimeInterval purgeTime;
     id token = [self.db addDocumentChangeListenerWithID: doc.id listener: ^(CBLDocumentChange *change) {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             [expectation fulfill];
@@ -383,7 +363,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
     
     // Validate
     Assert(purgeTime - begin < 3.0);
@@ -518,12 +497,10 @@
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
     // Setup document change notification
-    __block int count = 0;
     __block NSDate* purgeTime;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
-        count += 1;
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
             purgeTime = [NSDate date];
@@ -539,7 +516,6 @@
     
     // Wait for result
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
     
     /*
      Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
