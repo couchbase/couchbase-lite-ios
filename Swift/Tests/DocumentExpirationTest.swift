@@ -414,4 +414,37 @@ class DocumentExpirationTest: CBLTestCase {
         // Remove listener
         db.removeChangeListener(withToken: token);
     }
+    
+    func testPurgeImmedietly() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create doc
+        let doc = try generateDocument(withID: nil)
+        
+        // Setup document change notification
+        var purgeTime: Date!
+        let begin = Date()
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+            XCTAssertEqual(doc.id, change.documentID)
+            if change.database.document(withID: doc.id) == nil {
+                purgeTime = Date()
+                promise.fulfill()
+            }
+        }
+        
+        try db.setDocumentExpiration(withID: doc.id, expiration: Date())
+        
+        // Wait for result
+        waitForExpectations(timeout: 5.0)
+        
+        
+        /// Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
+        /// Depending on the current milliseconds, we cannot gurantee, this will get purged exactly
+        /// within a second but in ~1 second.
+        let delta = purgeTime.timeIntervalSince(begin)
+        assert(delta < 2);
+        
+        // Remove listener
+        db.removeChangeListener(withToken: token);
+    }
 }
