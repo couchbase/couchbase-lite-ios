@@ -58,6 +58,9 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Create doc
         let doc = try generateDocument(withID: nil)
+        let docToPurge = createDocument()
+        docToPurge.setValue("string", forKey: "string")
+        try saveDocument(docToPurge)
         
         // Setup document change notification
         var count = 0
@@ -70,8 +73,12 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Set expiry
-        let expiryDate = Date().addingTimeInterval(1)
-        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
+        try db.setDocumentExpiration(withID: docToPurge.id,
+                                     expiration: Date().addingTimeInterval(1))
+        try db.setDocumentExpiration(withID: doc.id,
+                                     expiration: Date().addingTimeInterval(3))
+        
+        try db.purgeDocument(docToPurge)
         
         // Wait for result
         waitForExpectations(timeout: 5.0)

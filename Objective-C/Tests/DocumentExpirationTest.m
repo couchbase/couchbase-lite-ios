@@ -72,32 +72,40 @@
 - (void) testDocumentPurgedAfterExpiration {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
-    // Create doc
+    NSError* err;
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    CBLMutableDocument* docToPurgeBeforeExpire = [self createDocument];
+    [docToPurgeBeforeExpire setValue: @"somevalue" forKey: @"somekey"];
+    [self saveDocument: docToPurgeBeforeExpire];
+    AssertEqual(self.db.count, 2u);
     
     // Setup document change notification
-    __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
-    {
-        count += 1;
-        AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
-            [expectation fulfill];
-        }
-        
-    }];
-    
+                {
+                    AssertEqualObjects(change.documentID, doc.id);
+                    if ([change.database documentWithID: change.documentID] == nil) {
+                        [expectation fulfill];
+                    }
+                }];
+
     // Set expiry
-    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    NSError* err;
+    NSDate* expiryDateToPurge = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    Assert([self.db setDocumentExpirationWithID: docToPurgeBeforeExpire.id
+                                     expiration: expiryDateToPurge
+                                          error: &err]);
+    AssertNil(err);
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 3.0];
     Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
     AssertNil(err);
     
-    // Wait for result
+    // purge one document
+    Assert([self.db purgeDocument: docToPurgeBeforeExpire error: &err]);
+    AssertNil(err);
+    
+    // Wait for result, it shouldn't crash due to already purged doc
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    AssertEqual(count, 1);
+    AssertEqual(self.db.count, 0u);
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -552,6 +560,5 @@
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
 }
-
 
 @end
