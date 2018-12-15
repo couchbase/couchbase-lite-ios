@@ -105,16 +105,16 @@
     // Setup document change notification
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
-                {
-                    AssertEqualObjects(change.documentID, doc.id);
-                    if ([change.database documentWithID: change.documentID] == nil) {
-                        [expectation fulfill];
-                    }
-                }];
+    {
+        AssertEqualObjects(change.documentID, doc.id);
+        if ([change.database documentWithID: change.documentID] == nil) {
+            [expectation fulfill];
+        }
+    }];
 
     // Set expiry
     AssertNil(err);
-    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 3.0];
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
     Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
     AssertNil(err);
     

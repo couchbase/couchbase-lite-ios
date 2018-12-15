@@ -1831,7 +1831,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 
 - (void) testPushAndPullExpiredDocument_SG {
-    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     timeout = 200;
     
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
@@ -1847,15 +1846,15 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(self.db.count, 1u);
     
     // Setup document change notification
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
-                {
-                    AssertEqualObjects(change.documentID, doc.id);
-                    if ([change.database documentWithID: change.documentID] == nil) {
-                        [expectation fulfill];
-                    }
-                    
-                }];
+    {
+        AssertEqualObjects(change.documentID, doc.id);
+        if ([change.database documentWithID: change.documentID] == nil) {
+            [expectation fulfill];
+        }
+    }];
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];

@@ -56,10 +56,8 @@ class DocumentExpirationTest: CBLTestCase {
     func testDocumentPurgingAfterSettingExpiry() throws {
         let promise = expectation(description: "document expiry expectation")
         
-        // Create doc
+        // Create & set expiry
         let doc = try generateDocument(withID: nil)
-        
-        // Set expiry
         try db.setDocumentExpiration(withID: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         
@@ -69,8 +67,6 @@ class DocumentExpirationTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             promise.fulfill()
         }
-        
-        // Wait for result
         waitForExpectations(timeout: 5.0)
     }
     
