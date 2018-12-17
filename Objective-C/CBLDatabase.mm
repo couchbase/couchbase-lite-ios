@@ -1041,11 +1041,22 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 - (void) purgeExpiredDocuments {
     dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        CBLLog(Database, @"Purging expired documents...");
-        C4Error err;
-        UInt64 nPurged = c4db_purgeExpiredDocs(_c4db, &err);
-        CBLLog(Database, @"Purged %lld expired documents", nPurged);
-        [self scheduleDocumentExpiration: 1.0];
+        CBL_LOCK(self) {
+            if (!_c4db)
+                return;
+            
+            CBLLog(Database, @"Purging expired documents...");
+            C4Error c4err;
+            UInt64 nPurged = c4db_purgeExpiredDocs(_c4db, &c4err);
+            if (nPurged >= 0)
+                CBLLog(Database, @"Purged %lld expired documents", nPurged);
+            else {
+                NSError* error;
+                convertError(c4err, &error);
+                CBLWarnError(Database, @"Cannot purge expired documents: %@", error);
+            }
+            [self scheduleDocumentExpiration: 1.0];
+        }
     });
 }
 
