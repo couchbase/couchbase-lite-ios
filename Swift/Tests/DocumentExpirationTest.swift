@@ -53,6 +53,23 @@ class DocumentExpirationTest: CBLTestCase {
         }
     }
     
+    func testDocumentPurgingAfterSettingExpiry() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create & set expiry
+        let doc = try generateDocument(withID: nil)
+        try db.setDocumentExpiration(withID: doc.id,
+                                     expiration: Date().addingTimeInterval(1))
+        
+        try db.purgeDocument(doc)
+        
+        // Validate it is not crashing due to the expiry timer!!
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            promise.fulfill()
+        }
+        waitForExpectations(timeout: 5.0)
+    }
+    
     func testDocumentPurgedAfterExpiration() throws {
         let promise = expectation(description: "document expiry expectation")
         
@@ -68,9 +85,8 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Set expiry
-        let expiryDate = Date().addingTimeInterval(1)
-        try db.setDocumentExpiration(withID: doc.id, expiration: expiryDate)
-        
+        try db.setDocumentExpiration(withID: doc.id,
+                                     expiration: Date().addingTimeInterval(1))
         // Wait for result
         waitForExpectations(timeout: 5.0)
         
@@ -389,6 +405,39 @@ class DocumentExpirationTest: CBLTestCase {
         // Wait for result
         waitForExpectations(timeout: 5.0)
         XCTAssertEqual(count, 2)
+        
+        // Remove listener
+        db.removeChangeListener(withToken: token);
+    }
+    
+    func testPurgeImmedietly() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create doc
+        let doc = try generateDocument(withID: nil)
+        
+        // Setup document change notification
+        var purgeTime: Date!
+        let begin = Date()
+        let token = db.addDocumentChangeListener(withID: doc.id) { (change) in
+            XCTAssertEqual(doc.id, change.documentID)
+            if change.database.document(withID: doc.id) == nil {
+                purgeTime = Date()
+                promise.fulfill()
+            }
+        }
+        
+        try db.setDocumentExpiration(withID: doc.id, expiration: Date())
+        
+        // Wait for result
+        waitForExpectations(timeout: 5.0)
+        
+        
+        /// Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
+        /// Depending on the current milliseconds, we cannot gurantee, this will get purged exactly
+        /// within a second but in ~1 second.
+        let delta = purgeTime.timeIntervalSince(begin)
+        assert(delta < 2);
         
         // Remove listener
         db.removeChangeListener(withToken: token);

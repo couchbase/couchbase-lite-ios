@@ -69,12 +69,38 @@
                    }];
 }
 
+- (void) testPurgeDocumentAfterSettingExpiry {
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    
+    NSError* err;
+    CBLMutableDocument* doc = [self generateDocumentWithID: nil];
+    AssertEqual(self.db.count, 1u);
+    
+    NSDate* expiryDateToPurge = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    Assert([self.db setDocumentExpirationWithID: doc.id
+                                     expiration: expiryDateToPurge
+                                          error: &err]);
+    
+    // purge doc
+    Assert([self.db purgeDocument: doc error: &err]);
+    AssertNil(err);
+    
+    // shouldn't crash due to timer fired
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [expectation fulfill];
+                   });
+    
+    // Wait for result, it shouldn't crash due to already purged doc
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+}
+
 - (void) testDocumentPurgedAfterExpiration {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
-    // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertEqual(self.db.count, 1u);
     
     // Setup document change notification
     id token = [self.db addDocumentChangeListenerWithID: doc.id
@@ -84,9 +110,8 @@
         if ([change.database documentWithID: change.documentID] == nil) {
             [expectation fulfill];
         }
-        
     }];
-    
+
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
     NSError* err;
@@ -528,6 +553,5 @@
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
 }
-
 
 @end
