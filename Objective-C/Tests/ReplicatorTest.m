@@ -1829,4 +1829,63 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
+
+- (void) testPushAndPullExpiredDocument_SG {
+    timeout = 200;
+    
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    NSError* error;
+    NSString* propertyKey = @"expiredDocumentKey";
+    NSString* value = @"some random text";
+    CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
+    [doc setString: value forKey: propertyKey];
+    Assert([self.db saveDocument: doc error: &error], @"Save Error: %@", error);
+    AssertEqual(self.db.count, 1u);
+    
+    // Setup document change notification
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    id token = [self.db addDocumentChangeListenerWithID: doc.id
+                                               listener: ^(CBLDocumentChange *change)
+    {
+        AssertEqualObjects(change.documentID, doc.id);
+        if ([change.database documentWithID: change.documentID] == nil) {
+            [expectation fulfill];
+        }
+    }];
+    
+    // Set expiry
+    NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
+    AssertNil(err);
+    
+    // Wait for the document get expired.
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self.db removeChangeListenerWithToken: token];
+    
+    // Erase remote data:
+    [self eraseRemoteEndpoint: target];
+    
+    // PUSH to SG:
+    Log(@"-------- Starting push replication --------");
+    id config = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Clean database:
+    AssertEqual(self.db.count, 0u);
+    
+    // PULL from SG:
+    Log(@"-------- Starting pull replication --------");
+    config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // should not be replicated
+    AssertEqual(self.db.count, 0u);
+    CBLDocument* savedDoc = [self.db documentWithID: doc.id];
+    AssertNil([savedDoc stringForKey: propertyKey]);
+}
+
 @end
