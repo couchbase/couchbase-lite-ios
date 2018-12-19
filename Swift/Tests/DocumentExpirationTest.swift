@@ -442,4 +442,30 @@ class DocumentExpirationTest: CBLTestCase {
         // Remove listener
         db.removeChangeListener(withToken: token);
     }
+    
+    func testWhetherDatabaseEventTrigged() throws {
+        let promise = expectation(description: "document expiry expectation")
+        
+        // Create doc
+        let doc = try generateDocument(withID: nil)
+        
+        // Setup document change notification
+        let token = db.addChangeListener { (change) in
+            XCTAssertEqual(change.documentIDs.count, 1)
+            let docID = change.documentIDs.first
+            XCTAssertNotNil(docID)
+            XCTAssertEqual(doc.id, docID)
+            if change.database.document(withID: doc.id) == nil {
+                promise.fulfill()
+            }
+        }
+        
+        try db.setDocumentExpiration(withID: doc.id, expiration: Date(timeIntervalSinceNow: 1))
+        
+        // Wait for result
+        waitForExpectations(timeout: 5.0)
+        
+        // Remove listener
+        db.removeChangeListener(withToken: token);
+    }
 }

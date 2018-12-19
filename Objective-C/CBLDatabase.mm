@@ -1040,7 +1040,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 
 - (void) purgeExpiredDocuments {
-    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(_dispatchQueue, ^{
         CBL_LOCK(self) {
             if (!_c4db)
                 return;
