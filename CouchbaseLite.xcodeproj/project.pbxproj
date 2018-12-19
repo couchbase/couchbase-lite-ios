@@ -23,6 +23,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		270AB2BC2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
 		270AB2BD2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
@@ -1458,6 +1459,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLChangeNotifier.h; sourceTree = "<group>"; };
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
@@ -2064,6 +2066,7 @@
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				9369A6B6207DEB5F009B5B83 /* DatabaseEncryptionTest.swift */,
+				1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */,
@@ -4279,6 +4282,7 @@
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
+				1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
 				93C50EA021BDFB7C00C7E980 /* DocumentExpirationTest.swift in Sources */,
