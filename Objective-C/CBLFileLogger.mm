@@ -108,7 +108,7 @@
         .base_path = CBLStringBytes(self.directory),
         .max_size_bytes = (int64_t)self.maxSize,
         .max_rotate_count = (int32_t)self.maxRotateCount,
-        .use_plaintext = self.usePlainText
+        .use_plaintext = (bool)self.usePlainText
     };
     
     C4Error c4err;
