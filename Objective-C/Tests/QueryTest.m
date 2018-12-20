@@ -1979,4 +1979,55 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
+
+- (void) testAddRemoveLIveQueryListenerFrequently {
+    [self loadNumbers: 11];
+    
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    __block id token;
+    id block = ^(CBLQueryChange* change) {
+        AssertNotNil(change.query);
+        AssertNil(change.error);
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        NSLog(@"rows: %lu", (unsigned long)rows.count);
+        if (rows.count == 54) {
+            [x fulfill];
+        }
+    };
+    token = [q addChangeListener: block];
+    for(NSUInteger i = 1; i <= 45; i++) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                     (int64_t)(i * 0.4 * NSEC_PER_SEC)),
+                       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),
+                       ^{
+                           [self createDocNumbered: -(i) of: 100];
+                           
+                       });
+    }
+    
+    for(NSUInteger i = 1; i <= 45; i++) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                     (int64_t)(i * 0.4 * NSEC_PER_SEC)),
+                       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),
+                       ^{
+                           if (q != nil && token != nil) {
+                               [q removeChangeListenerWithToken: token];
+                               token = [q addChangeListener: block];
+                           }
+                       });
+    }
+    
+    
+    
+    [self waitForExpectationsWithTimeout: 20.0 handler: ^(NSError *error) { }];
+    
+    [q removeChangeListenerWithToken: token];
+}
+
+
 @end

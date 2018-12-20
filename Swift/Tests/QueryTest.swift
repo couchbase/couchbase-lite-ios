@@ -1480,4 +1480,190 @@ class QueryTest: CBLTestCase {
         
         XCTAssertEqual(rs.allResults().count, 0)
     }
+    
+    func testAddRemoveLiveQueryListeners() throws {
+        let totalCount = 40
+        let updateFrequency = 0.5
+        let listenerAddRemoveFrequency = 0.2
+        var count = 0;
+        let q = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        
+        let x = expectation(description: "changes")
+        
+        let listener: ((QueryChange) -> Void)  = { (change) -> Void in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let allResults =  change.results?.allResults()
+            print(" listener fired # \(allResults?.count ?? 0)")
+            if allResults?.count == (totalCount) {
+                x.fulfill()
+            }
+        }
+        
+        var token = q.addChangeListener(listener)
+        for i in 1...(totalCount) {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * updateFrequency),
+                            execute:
+                    { [unowned self] in
+                        print("Adding Document")
+                        try! self.createDoc(numbered: -(i), of: 100)
+                })
+        }
+        
+        for i in 1...100 {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * listenerAddRemoveFrequency),
+                            execute:
+                    {
+                        print("Adding and Removing Listener")
+                        
+                        q.removeChangeListener(withToken: token)
+                        token = q.addChangeListener(listener)
+                })
+        }
+        
+        waitForExpectations(timeout: 200)
+        
+        q.removeChangeListener(withToken: token)
+        
+    }
+    
+    func testMultipleListeners() throws {
+        let x = expectation(description: "changes")
+        let totalCount = 40
+        let updateFrequency = 0.2
+        let listenerAddRemoveFrequency = 0.1
+        var count = 0;
+        let q1 = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        
+        let q2 = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").greaterThan(Expression.int(10))
+                .and(Expression.property("number1").lessThan(Expression.int(50))))
+            .orderBy(Ordering.property("number1"))
+        
+        let q3 = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").greaterThan(Expression.int(50))
+                .and(Expression.property("number1").lessThan(Expression.int(90))))
+            .orderBy(Ordering.property("number1"))
+        
+        let listener: ((QueryChange) -> Void)  = { (change) -> Void in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let allResults =  change.results?.allResults()
+            print(" listener fired # \(allResults?.count ?? 0)")
+            if allResults?.count == (totalCount) {
+                x.fulfill()
+            }
+        }
+        
+        var token1 = q1.addChangeListener(listener)
+        var token2 = q2.addChangeListener(listener)
+        var token3 = q3.addChangeListener(listener)
+        for i in 1...(totalCount) {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * updateFrequency),
+                            execute:
+                    { [unowned self] in
+                        print("Adding Document")
+                        try! self.createDoc(numbered: -(i), of: 100)
+                        try! self.createDoc(numbered: i + 10, of: 100)
+                        try! self.createDoc(numbered: i + 50, of: 100)
+                })
+        }
+        
+        for i in 1...100 {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * listenerAddRemoveFrequency),
+                            execute:
+                    {
+                        print("Adding and Removing Listener")
+                        
+                        q1.removeChangeListener(withToken: token1)
+                        q2.removeChangeListener(withToken: token2)
+                        q3.removeChangeListener(withToken: token3)
+                        token1 = q1.addChangeListener(listener)
+                        token2 = q2.addChangeListener(listener)
+                        token3 = q3.addChangeListener(listener)
+                })
+        }
+        
+        waitForExpectations(timeout: 20)
+        
+        q1.removeChangeListener(withToken: token1)
+        q2.removeChangeListener(withToken: token2)
+        q3.removeChangeListener(withToken: token3)
+        
+    }
+    
+    func testAddRemoveLiveQuery() throws {
+        let x = expectation(description: "changes")
+        let totalCount = 90
+        let updateFrequency: Double = 0.2
+        let createFrequency: Double = 0.2
+        
+        var q: Query!
+        var token: ListenerToken!
+        for i in 1...(totalCount) {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * updateFrequency),
+                            execute:
+                    { [unowned self] in
+                        if let token = token, let query = q {
+                            query.removeChangeListener(withToken: token)
+                        }
+                        q = QueryBuilder
+                            .select()
+                            .from(DataSource.database(self.db))
+                            .where(Expression.property("number1").lessThan(Expression.int(10)))
+                            .orderBy(Ordering.property("number1"))
+                        
+                        token = q.addChangeListener({ (change) -> Void in
+                            XCTAssertNotNil(change.query)
+                            XCTAssertNil(change.error)
+                            let allResults =  change.results?.allResults()
+                            print(" listener fired # \(allResults?.count ?? 0)")
+                            if allResults?.count == (totalCount) {
+                                x.fulfill()
+                            }
+                        })
+                })
+        }
+        
+        for i in 1...(totalCount) {
+            DispatchQueue
+                .global(qos: .background)
+                .asyncAfter(deadline: .now() + (Double(i) * createFrequency),
+                            execute:
+                    { [unowned self] in
+                        print("Adding Document")
+                        try! self.createDoc(numbered: -(i), of: 100)
+                        
+                        if let token = token, let query = q {
+                            query.removeChangeListener(withToken: token)
+                        }
+                })
+        }
+        waitForExpectations(timeout: 30)
+        q.removeChangeListener(withToken: token)
+    }
 }
