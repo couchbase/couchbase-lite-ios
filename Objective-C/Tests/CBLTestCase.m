@@ -43,8 +43,8 @@
     if (self == [CBLTestCase class]) {
         NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: kLogFileName];
         C4Error error;
-        NSAssert(c4log_writeToBinaryFile(kC4LogVerbose, c4str(path.UTF8String), &error), @"Couldn't initialize logging");
-        NSLog(@"Writing log to %@", path);
+        C4LogFileOptions options = {kC4LogVerbose, c4str(path.UTF8String), 500*1024, 0, false};
+        NSAssert(c4log_writeToBinaryFile(options, &error), @"Couldn't initialize logging");
     }
 }
 

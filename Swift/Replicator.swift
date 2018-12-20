@@ -165,10 +165,11 @@ public final class Replicator {
     @discardableResult public func addDocumentReplicationListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
         let token = _impl.addDocumentReplicationListener(with: queue, listener: { (replication) in
-            listener(DocumentReplication(replicator: self,
-                                         isPush: replication.isPush,
-                                         documentID: replication.documentID,
-                                         error: replication.error))
+            let docs = replication.documents.map {
+                ReplicatedDocument(id: $0.id, isDeleted: $0.isDeleted,
+                                   isAccessRemoved: $0.isAccessRemoved, error: $0.error)
+            }
+            listener(DocumentReplication(replicator: self, isPush: replication.isPush,documents: docs))
         })
         return ListenerToken(token)
     }

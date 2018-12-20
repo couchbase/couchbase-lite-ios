@@ -183,7 +183,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(db.count, 2)
     }
     
-    func testDocumentReplicationListener() throws {
+    func testDocumentReplicationEvent() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
@@ -200,18 +200,28 @@ class ReplicatorTest: CBLTestCase {
         
         var replicator: Replicator!
         var token: ListenerToken!
-        let docIds = NSMutableSet()
+        var docs: [ReplicatedDocument] = []
         self.run(config: config, reset: false, expectedError: nil) { (r) in
             replicator = r
             token = r.addDocumentReplicationListener({ (replication) in
-                docIds.add(replication.documentID)
+                XCTAssert(replication.isPush)
+                for doc in replication.documents {
+                    docs.append(doc)
+                }
             })
         }
         
         // Check if getting two document replication events:
-        XCTAssertEqual(docIds.count, 2)
-        XCTAssert(docIds.contains("doc1"))
-        XCTAssert(docIds.contains("doc2"))
+        XCTAssertEqual(docs.count, 2)
+        XCTAssertEqual(docs[0].id, "doc1")
+        XCTAssertNil(docs[0].error)
+        XCTAssertFalse(docs[0].isDeleted)
+        XCTAssertFalse(docs[0].isAccessRemoved)
+        
+        XCTAssertEqual(docs[1].id, "doc2")
+        XCTAssertNil(docs[1].error)
+        XCTAssertFalse(docs[1].isDeleted)
+        XCTAssertFalse(docs[1].isAccessRemoved)
         
         // Add another doc:
         let doc3 = MutableDocument(id: "doc3")
@@ -223,8 +233,11 @@ class ReplicatorTest: CBLTestCase {
         self.run(withReplicator: replicator, expectedError: nil)
         
         // Check if getting a new document replication event:
-        XCTAssertEqual(docIds.count, 3)
-        XCTAssert(docIds.contains("doc3"))
+        XCTAssertEqual(docs.count, 3)
+        XCTAssertEqual(docs[2].id, "doc3")
+        XCTAssertNil(docs[2].error)
+        XCTAssertFalse(docs[2].isDeleted)
+        XCTAssertFalse(docs[2].isAccessRemoved)
         
         // Add another doc:
         let doc4 = MutableDocument(id: "doc4")
@@ -239,7 +252,125 @@ class ReplicatorTest: CBLTestCase {
         self.run(withReplicator: replicator, expectedError: nil)
         
         // Should not getting a new document replication event:
-        XCTAssertEqual(docIds.count, 3)
+        XCTAssertEqual(docs.count, 3)
+    }
+    
+    func testDocumentReplicationEventWithPushConflict() throws {
+        let doc1a = MutableDocument(id: "doc1")
+        doc1a.setString("Tiger", forKey: "species")
+        doc1a.setString("Star", forKey: "pattern")
+        try db.saveDocument(doc1a)
+        
+        let doc1b = MutableDocument(id: "doc1")
+        doc1b.setString("Tiger", forKey: "species")
+        doc1b.setString("Striped", forKey: "pattern")
+        try otherDB.saveDocument(doc1b)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .push, continuous: false)
+        
+        var replicator: Replicator!
+        var token: ListenerToken!
+        var docs: [ReplicatedDocument] = []
+        self.run(config: config, reset: false, expectedError: nil) { (r) in
+            replicator = r
+            token = r.addDocumentReplicationListener({ (replication) in
+                XCTAssert(replication.isPush)
+                for doc in replication.documents {
+                    docs.append(doc)
+                }
+            })
+        }
+        
+        // Check:
+        XCTAssertEqual(docs.count, 1)
+        XCTAssertEqual(docs[0].id, "doc1")
+        XCTAssertNotNil(docs[0].error)
+        let err = docs[0].error! as NSError
+        XCTAssertEqual(err.domain, CBLErrorDomain)
+        XCTAssertEqual(err.code, CBLErrorHTTPConflict)
+        XCTAssertFalse(docs[0].isDeleted)
+        XCTAssertFalse(docs[0].isAccessRemoved)
+        
+        // Remove document replication listener:
+        replicator.removeChangeListener(withToken: token)
+    }
+    
+    func failing_testDocumentReplicationEventWithPullConflict() throws {
+        let doc1a = MutableDocument(id: "doc1")
+        doc1a.setString("Tiger", forKey: "species")
+        doc1a.setString("Star", forKey: "pattern")
+        try db.saveDocument(doc1a)
+        
+        let doc1b = MutableDocument(id: "doc1")
+        doc1b.setString("Tiger", forKey: "species")
+        doc1b.setString("Striped", forKey: "pattern")
+        try otherDB.saveDocument(doc1b)
+        
+        // Pull:
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .pull, continuous: false)
+        
+        var replicator: Replicator!
+        var token: ListenerToken!
+        var docs: [ReplicatedDocument] = []
+        self.run(config: config, reset: false, expectedError: nil) { (r) in
+            replicator = r
+            token = r.addDocumentReplicationListener({ (replication) in
+                XCTAssertFalse(replication.isPush)
+                for doc in replication.documents {
+                    docs.append(doc)
+                }
+            })
+        }
+        
+        // Check:
+        XCTAssertEqual(docs.count, 1)
+        XCTAssertEqual(docs[0].id, "doc1")
+        XCTAssertNil(docs[0].error)
+        XCTAssertFalse(docs[0].isDeleted)
+        XCTAssertFalse(docs[0].isAccessRemoved)
+        
+        // Remove document replication listener:
+        replicator.removeChangeListener(withToken: token)
+    }
+    
+    func testDocumentReplicationEventWithDeletion() throws {
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Star", forKey: "pattern")
+        try db.saveDocument(doc1)
+        
+        // Delete:
+        try db.deleteDocument(doc1)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .push, continuous: false)
+        
+        var replicator: Replicator!
+        var token: ListenerToken!
+        var docs: [ReplicatedDocument] = []
+        self.run(config: config, reset: false, expectedError: nil) { (r) in
+            replicator = r
+            token = r.addDocumentReplicationListener({ (replication) in
+                XCTAssert(replication.isPush)
+                for doc in replication.documents {
+                    docs.append(doc)
+                }
+            })
+        }
+        
+        // Check:
+        XCTAssertEqual(docs.count, 1)
+        XCTAssertEqual(docs[0].id, "doc1")
+        XCTAssertNil(docs[0].error)
+        XCTAssertTrue(docs[0].isDeleted)
+        XCTAssertFalse(docs[0].isAccessRemoved)
+        
+        // Remove document replication listener:
+        replicator.removeChangeListener(withToken: token)
     }
     
     func testPushFilter() throws {

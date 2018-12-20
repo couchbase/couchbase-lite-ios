@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLReplicator;
+@class CBLReplicatedDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,8 +32,26 @@ NS_ASSUME_NONNULL_BEGIN
 /** The flag indicating that the replication is push or pull. */
 @property (nonatomic, readonly) BOOL isPush;
 
+/** A list of the replicated documents. */
+@property (nonatomic, readonly) NSArray<CBLReplicatedDocument*>* documents;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
+@end
+
+/// CBLReplicatedDocument contains the information of a document that has been replicated.
+@interface CBLReplicatedDocument : NSObject
+
 /** The document ID. */
-@property (nonatomic, readonly) NSString* documentID;
+@property (nonatomic, readonly) NSString* id;
+
+/** The flag indicating that the replicated document has been deleted. */
+@property (nonatomic, readonly) BOOL isDeleted;
+
+/** The flag indicating that the document's access has been removed as a result of
+    removal from all Sync Gateway channels that a user has access to. */
+@property (nonatomic, readonly) BOOL isAccessRemoved;
 
 /** The error if occurred */
 @property (nonatomic, readonly, nullable) NSError* error;

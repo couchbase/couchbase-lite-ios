@@ -1427,7 +1427,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([otherDB documentWithID: @"doc2"]);
 }
 
-- (void) testDocumentReplicationListener {
+- (void) testDocumentReplicationEvent {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
@@ -1443,20 +1443,30 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
 
-    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
+    NSMutableArray<CBLReplicatedDocument*>* docs = [NSMutableArray array];
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         replicator = r;
         token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
-            [docIds addObject: docReplication.documentID];
+            Assert(docReplication.isPush);
+            for (CBLReplicatedDocument* doc in docReplication.documents) {
+                [docs addObject: doc];
+            }
         }];
     }];
     
     // Check if getting two document replication events:
-    AssertEqual(docIds.count, 2u);
-    Assert([docIds containsObject: @"doc1"]);
-    Assert([docIds containsObject: @"doc2"]);
+    AssertEqual(docs.count, 2u);
+    AssertEqualObjects(docs[0].id, @"doc1");
+    AssertNil(docs[0].error);
+    AssertFalse(docs[0].isDeleted);
+    AssertFalse(docs[0].isAccessRemoved);
+    
+    AssertEqualObjects(docs[1].id, @"doc2");
+    AssertNil(docs[1].error);
+    AssertFalse(docs[1].isDeleted);
+    AssertFalse(docs[1].isAccessRemoved);
     
     // Add another doc:
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
@@ -1468,8 +1478,11 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
     
     // Check if getting a new document replication event:
-    AssertEqual(docIds.count, 3u);
-    Assert([docIds containsObject: @"doc3"]);
+    AssertEqual(docs.count, 3u);
+    AssertEqualObjects(docs[2].id, @"doc3");
+    AssertNil(docs[2].error);
+    AssertFalse(docs[2].isDeleted);
+    AssertFalse(docs[2].isAccessRemoved);
     
     // Add another doc:
     CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
@@ -1484,7 +1497,133 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
     
     // Should not getting a new document replication event:
-    AssertEqual(docIds.count, 3u);
+    AssertEqual(docs.count, 3u);
+}
+
+- (void) testDocumentReplicationEventWithPushConflict {
+    NSError* error;
+    CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1a setString: @"Tiger" forKey: @"species"];
+    [doc1a setString: @"Star" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc1a error: &error]);
+    
+    CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1b setString: @"Tiger" forKey: @"species"];
+    [doc1b setString: @"Striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc1b error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    NSMutableArray<CBLReplicatedDocument*>* docs = [NSMutableArray array];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            Assert(docReplication.isPush);
+            for (CBLReplicatedDocument* doc in docReplication.documents) {
+                [docs addObject: doc];
+            }
+        }];
+    }];
+    
+    // Run the replicator:
+    [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
+    
+    // Check:
+    AssertEqual(docs.count, 1u);
+    AssertEqualObjects(docs[0].id, @"doc1");
+    AssertNotNil(docs[0].error);
+    AssertEqualObjects(docs[0].error.domain, CBLErrorDomain);
+    AssertEqual(docs[0].error.code, CBLErrorHTTPConflict);
+    AssertFalse(docs[0].isDeleted);
+    AssertFalse(docs[0].isAccessRemoved);
+    
+    // Remove document replication listener:
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) failing_testDocumentReplicationEventWithPullConflict {
+    NSError* error;
+    CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1a setString: @"Tiger" forKey: @"species"];
+    [doc1a setString: @"Star" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc1a error: &error]);
+    
+    CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1b setString: @"Tiger" forKey: @"species"];
+    [doc1b setString: @"Striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc1b error: &error]);
+    
+    // Pull:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    NSMutableArray<CBLReplicatedDocument*>* docs = [NSMutableArray array];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            AssertFalse(docReplication.isPush);
+            for (CBLReplicatedDocument* doc in docReplication.documents) {
+                [docs addObject: doc];
+            }
+        }];
+    }];
+    
+    // Check:
+    AssertEqual(docs.count, 1u);
+    AssertEqualObjects(docs[0].id, @"doc1");
+    AssertNil(docs[0].error);
+    AssertFalse(docs[0].isDeleted);
+    AssertFalse(docs[0].isAccessRemoved);
+    
+    // Remove document replication listener:
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) testDocumentReplicationEventWithDeletion {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Star" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    // Delete:
+    Assert([self.db deleteDocument: doc1 error: &error]);
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    NSMutableArray<CBLReplicatedDocument*>* docs = [NSMutableArray array];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            Assert(docReplication.isPush);
+            for (CBLReplicatedDocument* doc in docReplication.documents) {
+                [docs addObject: doc];
+            }
+        }];
+    }];
+    
+    // Run the replicator:
+    [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
+    
+    // Check:
+    AssertEqual(docs.count, 1u);
+    AssertEqualObjects(docs[0].id, @"doc1");
+    AssertNil(docs[0].error);
+    Assert(docs[0].isDeleted);
+    AssertFalse(docs[0].isAccessRemoved);
+    
+    // Remove document replication listener:
+    [replicator removeChangeListenerWithToken: token];
 }
 
 - (void) testPushFilter {

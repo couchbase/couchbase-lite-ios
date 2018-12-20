@@ -19,25 +19,60 @@
 
 #import "CBLDocumentReplication.h"
 #import "CBLDocumentReplication+Internal.h"
+#import "CBLCoreBridge.h"
 #import "CBLReplicator.h"
+#import "CBLStatus.h"
 
 @implementation CBLDocumentReplication
 
-@synthesize replicator=_replicator, isPush=_isPush, documentID=_documentID, error=_error;
+@synthesize replicator=_replicator, isPush=_isPush, documents=_documents;
 
 - (instancetype) initWithReplicator: (CBLReplicator*)replicator
                              isPush: (BOOL)isPush
-                         documentID: (NSString*)documentID
-                              error: (nullable NSError*)error
+                          documents: (NSArray<CBLReplicatedDocument*>*)documents
 {
     self = [super init];
     if (self) {
         _replicator = replicator;
         _isPush = isPush;
-        _documentID = documentID;
-        _error = error;
+        _documents = documents;
     }
     return self;
+}
+
+@end
+
+
+@implementation CBLReplicatedDocument
+
+@synthesize id=_id, isDeleted=_isDeleted, isAccessRemoved=_isAccessRemoved;
+@synthesize c4Error=_c4Error, isTransientError=_isTransientError;
+
+- (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded {
+    self = [super init];
+    if (self) {
+        _id = slice2string(docEnded->docID);
+        _isDeleted = (docEnded->flags & kRevDeleted) != 0;
+        _isAccessRemoved = (docEnded->flags & kRevPurged) != 0;
+        _c4Error = docEnded->error;
+        _isTransientError = docEnded->errorIsTransient;
+    }
+    return self;
+}
+
+
+- (void) resetError {
+    _c4Error = {};
+}
+
+
+- (NSError*) error {
+    if (_c4Error.code) {
+        NSError* error;
+        convertError(_c4Error, &error);
+        return error;
+    }
+    return nil;
 }
 
 @end

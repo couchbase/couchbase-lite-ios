@@ -18,6 +18,7 @@
 //
 
 #import "CBLDocumentReplication.h"
+#import "c4Replicator.h"
 @class CBLReplicator;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -26,8 +27,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithReplicator: (CBLReplicator*)replicator
                              isPush: (BOOL)isPush
-                         documentID: (NSString*)documentID
-                              error: (nullable NSError*)error;
+                          documents: (NSArray<CBLReplicatedDocument*>*)documents;
+
+@end
+
+@interface CBLReplicatedDocument ()
+
+- (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded;
+
+@property (nonatomic, readonly) C4Error c4Error;
+
+@property (nonatomic, readonly) BOOL isTransientError;
+
+- (void) resetError;
 
 @end
 
