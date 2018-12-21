@@ -24,6 +24,8 @@ import Foundation
 /// property to true.
 public class FileLogger {
     
+    private static let defaultMaxSize = UInt64(500 * 1024)
+    
     /// The minimum log level of the log messages to be logged. The default log level for
     /// file logger is warning.
     public var level: LogLevel = .info {
@@ -47,7 +49,7 @@ public class FileLogger {
     }
     
     /// The maximum size of a log file before being rotation. The default is 1024 bytes.
-    public var maxSize: UInt64 = 1024 {
+    public var maxSize: UInt64 = defaultMaxSize {
         didSet {
             CBLDatabase.log().file.maxSize = maxSize
         }

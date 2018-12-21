@@ -24,6 +24,8 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 
+#define kCBLFileLoggerDefaultMaxSize 500*1024
+
 @implementation CBLFileLogger
 
 @synthesize level=_level, directory=_directory, usePlainText=_usePlainText;
@@ -35,7 +37,7 @@
         _level = kCBLLogLevelInfo;
         _directory = [self defaultDirectory];
         _usePlainText = YES;
-        _maxSize = 1024;
+        _maxSize = kCBLFileLoggerDefaultMaxSize;
         _maxRotateCount = 1;
         [self apply];
     }
