@@ -297,7 +297,7 @@ class ReplicatorTest: CBLTestCase {
         replicator.removeChangeListener(withToken: token)
     }
     
-    func failing_testDocumentReplicationEventWithPullConflict() throws {
+    func testDocumentReplicationEventWithPullConflict() throws {
         let doc1a = MutableDocument(id: "doc1")
         doc1a.setString("Tiger", forKey: "species")
         doc1a.setString("Star", forKey: "pattern")

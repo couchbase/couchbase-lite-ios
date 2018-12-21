@@ -1546,7 +1546,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) failing_testDocumentReplicationEventWithPullConflict {
+- (void) testDocumentReplicationEventWithPullConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1a setString: @"Tiger" forKey: @"species"];
