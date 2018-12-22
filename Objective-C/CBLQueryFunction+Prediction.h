@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  To create an expression that refers to a property in the prediction result, the -property:
  method of the created CBLQueryPredictionFunction object can be used.
 
- @param model The predictive model name that registered to the CBLDatabase.
+ @param model The predictive model name registered to the CouchbaseLite Database.
  @param input The expression evaluated to a dictionary.
  @return A CBLQueryPredictionFunction object.
  */

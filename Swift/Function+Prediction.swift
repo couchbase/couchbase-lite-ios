@@ -45,8 +45,7 @@ extension Function {
     /// can be used.
     ///
     /// - Parameters:
-    ///   - model: The expression evaluated to a string name referring to a predictive model
-    ///            registered to the CouchbaseLite Database.
+    ///   - model: The predictive model name registered to the CouchbaseLite Database.
     ///   - input: The expression evaluated to a dictionary.
     /// - Returns: A PredictionFunction object.
     public static func prediction(model: String,
