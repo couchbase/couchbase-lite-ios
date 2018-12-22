@@ -1773,6 +1773,91 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 
+- (void) testReplicationEventExpirationWithPush {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc setString: @"Tiger" forKey: @"species"];
+    [doc setString: @"Hobbes" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc error: &error]);
+    
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    id token1 = [self.db addDocumentChangeListenerWithID: doc.id
+                                                listener: ^(CBLDocumentChange *change)
+                 {
+                     AssertEqualObjects(change.documentID, doc.id);
+                     if ([change.database documentWithID: change.documentID] == nil) {
+                         [expectation fulfill];
+                     }
+                 }];
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            NSError* err;
+            Assert([self.db setDocumentExpirationWithID: doc.id
+                                             expiration: [NSDate date]
+                                                  error: &err]);
+        }];
+    }];
+    
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    AssertEqual(self.db.count, 0u);
+    AssertEqual(otherDB.count, 1u);
+    [self.db removeChangeListenerWithToken: token1];
+    [replicator removeChangeListenerWithToken: token];
+}
+
+
+- (void) testReplicationEventExpirationWithPull {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc setString: @"Tiger" forKey: @"species"];
+    [doc setString: @"Hobbes" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc error: &error]);
+    AssertEqual(otherDB.count, 1u);
+    AssertEqual(self.db.count, 0u);
+    
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    id token1 = [otherDB addDocumentChangeListenerWithID: doc.id
+                                                listener:^(CBLDocumentChange * change)
+                 {
+                     if ([change.database documentWithID: change.documentID] == nil) {
+                         [expectation fulfill];
+                     }
+                 }];
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            NSError* err;
+            Assert([otherDB setDocumentExpirationWithID: doc.id
+                                             expiration: [NSDate date]
+                                                  error: &err]);
+        }];
+    }];
+    
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    AssertEqual(self.db.count, 1u);
+    AssertEqual(otherDB.count, 0u);
+    [otherDB removeChangeListenerWithToken: token1];
+    [replicator removeChangeListenerWithToken: token];
+}
+
+
 #endif // COUCHBASE_ENTERPRISE
 
 
