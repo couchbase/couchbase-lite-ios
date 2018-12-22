@@ -512,7 +512,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc3"))
     }
     
-    func testReplicationEventExpirationWithPush() throws {
+    func testPushAndForget() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Tiger", forKey: "species")
         doc.setString("Hobbes", forKey: "pattern")
@@ -548,44 +548,6 @@ class ReplicatorTest: CBLTestCase {
         
         XCTAssertEqual(self.db.count, 0)
         XCTAssertEqual(otherDB.count, 1)
-    }
-    
-    func testReplicationEventExpirationWithPull() throws {
-        let doc = MutableDocument(id: "doc1")
-        doc.setString("Tiger", forKey: "species")
-        doc.setString("Hobbes", forKey: "pattern")
-        try otherDB.saveDocument(doc)
-        
-        let promise = expectation(description: "document expiry expectation")
-        let docChangeToken =
-            otherDB.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
-                XCTAssertEqual(doc.id, change.documentID)
-                if self.otherDB.document(withID: doc.id) == nil {
-                    promise.fulfill()
-                }
-        }
-        XCTAssertEqual(self.db.count, 0)
-        XCTAssertEqual(otherDB.count, 1)
-        
-        // Push:
-        let target = DatabaseEndpoint(database: otherDB)
-        let config = self.config(target: target, type: .pull, continuous: false)
-        var replicator: Replicator!
-        var docReplicationToken: ListenerToken!
-        self.run(config: config, reset: false, expectedError: nil) { [unowned self] (r) in
-            replicator = r
-            docReplicationToken = r.addDocumentReplicationListener({ [unowned self] (replication) in
-                try! self.otherDB.setDocumentExpiration(withID: doc.id, expiration: Date())
-            })
-        }
-        
-        waitForExpectations(timeout: 5.0)
-        
-        replicator.removeChangeListener(withToken: docReplicationToken)
-        otherDB.removeChangeListener(withToken: docChangeToken);
-        
-        XCTAssertEqual(self.db.count, 1)
-        XCTAssertEqual(otherDB.count, 0)
     }
     
     #endif
