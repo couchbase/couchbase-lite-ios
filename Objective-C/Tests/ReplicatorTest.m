@@ -1773,6 +1773,48 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 
+- (void) testPushAndForget {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc setString: @"Tiger" forKey: @"species"];
+    [doc setString: @"Hobbes" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc error: &error]);
+    
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    id docChangeToken = [self.db addDocumentChangeListenerWithID: doc.id
+                                                        listener: ^(CBLDocumentChange *change)
+                         {
+                             AssertEqualObjects(change.documentID, doc.id);
+                             if ([change.database documentWithID: change.documentID] == nil) {
+                                 [expectation fulfill];
+                             }
+                         }];
+    
+    // Push:
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    __block id<CBLListenerToken> docReplToken;
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        docReplToken = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            NSError* err;
+            Assert([self.db setDocumentExpirationWithID: doc.id
+                                             expiration: [NSDate date]
+                                                  error: &err]);
+        }];
+    }];
+    
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    AssertEqual(self.db.count, 0u);
+    AssertEqual(otherDB.count, 1u);
+    [self.db removeChangeListenerWithToken: docChangeToken];
+    [replicator removeChangeListenerWithToken: docReplToken];
+}
+
+
 #endif // COUCHBASE_ENTERPRISE
 
 
