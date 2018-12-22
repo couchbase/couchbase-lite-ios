@@ -46,7 +46,15 @@
 
 
 - (NSString*) defaultDirectory {
-    return [[CBLDatabaseConfiguration defaultDirectory] stringByAppendingPathComponent: @"Logs"];
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString* path = paths[0];
+#if !TARGET_OS_IPHONE
+    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    if (!bundleID)
+        return [NSFileManager.defaultManager currentDirectoryPath]; // last-ditch default for non-apps
+    path = [path stringByAppendingPathComponent: bundleID];
+#endif
+    return [path stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
 }
 
 
