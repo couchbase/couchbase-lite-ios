@@ -519,11 +519,12 @@ class ReplicatorTest: CBLTestCase {
         try db.saveDocument(doc)
         
         let promise = expectation(description: "document expiry expectation")
-        let docChangeToken = db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
-            XCTAssertEqual(doc.id, change.documentID)
-            if self.db.document(withID: doc.id) == nil {
-                promise.fulfill()
-            }
+        let docChangeToken =
+            db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+                XCTAssertEqual(doc.id, change.documentID)
+                if self.db.document(withID: doc.id) == nil {
+                    promise.fulfill()
+                }
         }
         XCTAssertEqual(self.db.count, 1)
         XCTAssertEqual(otherDB.count, 0)
