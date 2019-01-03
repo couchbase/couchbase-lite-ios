@@ -69,23 +69,21 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) start {
-    if (!_dbListenerToken) {
-        CBLDatabase* db = _query.database;
-        Assert(db);
-        
-        CBL_LOCK(db) {
-            [db.liveQueries addObject:self];
+    CBL_LOCK(self) {
+        if (!_dbListenerToken) {
+            CBLDatabase* db = _query.database;
+            Assert(db);
+            CBL_LOCK(db) {
+                [db.liveQueries addObject:self];
+            }
+            
+            __weak typeof(self) wSelf = self;
+            _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
+                [wSelf databaseChanged: change];
+            }];
         }
         
-        __weak typeof(self) wSelf = self;
-
-        _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
-            [wSelf databaseChanged: change];
-        }];
-    }
-    _observing = YES;
-    
-    CBL_LOCK(self) {
+        _observing = YES;
         _rs = nil;
         _willUpdate = NO;
         [self updateAfter:0.0];
@@ -94,19 +92,18 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) stop {
-    if (_dbListenerToken) {
-        CBLQuery* strongQuery = _query; // since we are accessing weak _query multiple times which can become nil
-        CBL_LOCK(strongQuery.database) {
-            [strongQuery.database.liveQueries removeObject:self];
-        }
-        [strongQuery.database removeChangeListenerWithToken: _dbListenerToken];
-        _dbListenerToken = nil;
-    }
-    
-    _observing = NO;
-    _changeNotifier = nil;
-    
     CBL_LOCK(self) {
+        if (_dbListenerToken) {
+            CBLQuery* strongQuery = _query; // since we are accessing weak _query multiple times which can become nil
+            CBL_LOCK(strongQuery.database) {
+                [strongQuery.database.liveQueries removeObject:self];
+            }
+            [strongQuery.database removeChangeListenerWithToken: _dbListenerToken];
+            _dbListenerToken = nil;
+        }
+        
+        _observing = NO;
+        _changeNotifier = nil;
         _willUpdate = NO; // cancels the delayed update started by -databaseChanged
         _rs = nil;
     }
@@ -115,8 +112,10 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) queryParametersChanged {
-    if (_dbListenerToken)
-        [self start];
+    CBL_LOCK(self) {
+        if (_dbListenerToken)
+            [self start];
+    }
 }
 
 
@@ -128,18 +127,22 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
 {
-    if (!_observing)
-        [self start];
-
-    if (!_changeNotifier)
-        _changeNotifier = [CBLChangeNotifier new];
-    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
+    CBL_LOCK(self) {
+        if (!_observing)
+            [self start];
+        
+        if (!_changeNotifier)
+            _changeNotifier = [CBLChangeNotifier new];
+        return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
+    }
 }
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
-        [self stop];
+    CBL_LOCK(self) {
+        if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
+            [self stop];
+    }
 }
 
 
@@ -150,38 +153,43 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBL_LOCK(self) {
         if (_willUpdate)
             return;  // Already a pending update scheduled
+        
+        // Use double the update interval if this is a remote change (coming from a pull replication):
+        NSTimeInterval updateInterval = _updateInterval;
+        if (change.isExternal)
+            updateInterval *= 2;
+        
+        // Schedule an update, respecting the updateInterval:
+        NSTimeInterval updateDelay = (_lastUpdatedAt + updateInterval) - CFAbsoluteTimeGetCurrent();
+        updateDelay = MAX(0, MIN(_updateInterval, updateDelay));
+        [self updateAfter: updateDelay];
     }
-    
-    // Use double the update interval if this is a remote change (coming from a pull replication):
-    NSTimeInterval updateInterval = _updateInterval;
-    if (change.isExternal)
-        updateInterval *= 2;
-
-    // Schedule an update, respecting the updateInterval:
-    NSTimeInterval updateDelay = (_lastUpdatedAt + updateInterval) - CFAbsoluteTimeGetCurrent();
-    updateDelay = MAX(0, MIN(_updateInterval, updateDelay));
-    [self updateAfter: updateDelay];
 }
 
 
 - (void) updateAfter: (NSTimeInterval)updateDelay {
-    CBL_LOCK(self) {
-        if (_willUpdate)
-            return;  // Already a pending update scheduled
-        _willUpdate = YES;
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
-                       _query.database.queryQueue, ^{
-            CBL_LOCK(self) {
-                if (_willUpdate)
-                    [self update];
-            }
-        });
-    }
+    if (_willUpdate)
+        return;  // Already a pending update scheduled
+    _willUpdate = YES;
+    
+    __strong typeof(_query) query = _query;
+    dispatch_queue_t queue = query.database.queryQueue;
+    if (!queue)
+        return;
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
+                   queue, ^{
+                       [self update];
+                   });
 }
 
 
 - (void) update {
+    CBL_LOCK(self) {
+        if (!_willUpdate)
+            return;
+    }
+    
     CBLQuery* strongQuery = _query;
     CBLLogInfo(Query, @"%@: Querying...", self);
     NSError *error;
@@ -192,25 +200,27 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     else
         newRs = [oldRs refresh: &error];
 
-    _willUpdate = false;
-    _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
-    
-    BOOL changed = YES;
-    if (newRs) {
-        if (oldRs)
-            CBLLogInfo(Query, @"%@: Changed!", self);
-        _rs = newRs;
-    } else if (error != nil) {
-        CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
-    } else {
-        changed = NO;
-        CBLLogVerbose(Query, @"%@: ...no change", self);
-    }
-    
-    if (changed) {
-        [_changeNotifier postChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
-                                                                   results: newRs
-                                                                     error: error]];
+    CBL_LOCK(self) {
+        _willUpdate = false;
+        _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
+        
+        BOOL changed = YES;
+        if (newRs) {
+            if (oldRs)
+                CBLLogInfo(Query, @"%@: Changed!", self);
+            _rs = newRs;
+        } else if (error != nil) {
+            CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
+        } else {
+            changed = NO;
+            CBLLogVerbose(Query, @"%@: ...no change", self);
+        }
+        
+        if (changed) {
+            [_changeNotifier postChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
+                                                                       results: newRs
+                                                                         error: error]];
+        }
     }
 }
 

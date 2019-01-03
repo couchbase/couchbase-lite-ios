@@ -198,9 +198,13 @@ using namespace fleece;
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
-    NSData* params = [_parameters encode: outError];
-    if (_parameters && !params)
-        return nil;
+    
+    NSData* params = nil;
+    CBL_LOCK(self) {
+        params = [_parameters encode: outError];
+        if (_parameters && !params)
+            return nil;
+    }
     
     C4Error c4Err;
     C4QueryEnumerator* e;
@@ -251,9 +255,11 @@ using namespace fleece;
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
-    q.parameters = _parameters;
-    return q;
+    CBL_LOCK(self) {
+        CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
+        q.parameters = _parameters;
+        return q;
+    }
 }
 
 
