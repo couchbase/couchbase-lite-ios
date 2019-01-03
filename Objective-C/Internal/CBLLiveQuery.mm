@@ -168,13 +168,20 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBL_LOCK(self) {
         if (_willUpdate)
             return;  // Already a pending update scheduled
+
+        __strong typeof(_query) query = _query;
+        if (query == nil)
+          return; // query dealloced
+
         _willUpdate = YES;
-        
+
+        __weak typeof(self) wSelf = self;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
-                       _query.database.queryQueue, ^{
-            CBL_LOCK(self) {
+                       query.database.queryQueue, ^{
+            __strong typeof(wSelf) sSelf = wSelf;
+            CBL_LOCK(sSelf) {
                 if (_willUpdate)
-                    [self update];
+                    [sSelf update];
             }
         });
     }
