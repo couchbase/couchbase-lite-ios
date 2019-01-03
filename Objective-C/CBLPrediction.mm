@@ -52,7 +52,7 @@ static CBLPrediction* sInstance;
                 id<CBLPredictiveModel>m = (__bridge id<CBLPredictiveModel>)context;
                 NSDictionary* dict = Dict(input).asNSObject();
                 CBLDictionary* i = (id)[[CBLNewDictionary alloc] initWithDictionary: dict];
-                CBLDictionary* o = [m prediction: i];
+                CBLDictionary* o = [m predict: i];
                 if (!o)
                     return C4SliceResult{};
                 
@@ -67,6 +67,12 @@ static CBLPrediction* sInstance;
         // Retain the registered model object:
         if (!_models)
             _models = [NSMutableDictionary dictionary];
+        
+        // If there is a model registered with the same name, unregister the current one first:
+        if ([_models objectForKey: name])
+            [self unregisterModelWithName: name];
+        
+        // Save the model in a dictionary:
         [_models setObject: model forKey: name];
         
         // Register model:

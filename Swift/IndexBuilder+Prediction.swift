@@ -1,5 +1,5 @@
 //
-//  CBLPrediction+Internal.h
+//  IndexBuilder+Prediction.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc. All rights reserved.
@@ -16,14 +16,14 @@
 //  limitations under the License.
 //
 
-#import "CBLPrediction.h"
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface CBLPrediction ()
-
-+ (instancetype) sharedInstance;
-
-@end
-
-NS_ASSUME_NONNULL_END
+extension IndexBuilder {
+    
+    public static func predictiveIndex(model: String,
+                                       input: ExpressionProtocol,
+                                  properties: [String]? = nil) -> PredictiveIndex {
+        return PredictiveIndex.init(model: model, input: input, properties: properties)
+    }
+    
+}

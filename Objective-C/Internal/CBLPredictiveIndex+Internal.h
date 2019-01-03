@@ -1,5 +1,5 @@
 //
-//  CBLPrediction+Internal.h
+//  CBLPredictiveIndex+Internal.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc. All rights reserved.
@@ -16,13 +16,16 @@
 //  limitations under the License.
 //
 
-#import "CBLPrediction.h"
+#import "CBLPredictiveIndex.h"
+@class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLPrediction ()
+@interface CBLPredictiveIndex ()
 
-+ (instancetype) sharedInstance;
+- (instancetype) initWithModel: (NSString*)model
+                         input: (CBLQueryExpression*)input
+                    properties: (nullable NSArray<NSString*>*)properties;
 
 @end
 

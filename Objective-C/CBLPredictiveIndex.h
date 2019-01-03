@@ -1,5 +1,5 @@
 //
-//  CBLPrediction+Internal.h
+//  CBLPredictiveIndex.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc. All rights reserved.
@@ -16,13 +16,15 @@
 //  limitations under the License.
 //
 
-#import "CBLPrediction.h"
+#import <Foundation/Foundation.h>
+#import "CBLIndex.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLPrediction ()
+@interface CBLPredictiveIndex : CBLIndex
 
-+ (instancetype) sharedInstance;
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

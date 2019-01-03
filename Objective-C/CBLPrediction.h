@@ -21,9 +21,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * PredictiveModel protocol that allows to integrate machine learning model into
+ * CBL Query via invoking the Function.prediction() function.
+ */
 @protocol CBLPredictiveModel <NSObject>
-- (nullable CBLDictionary*) prediction: (CBLDictionary*)input;
+
+- (nullable CBLDictionary*) predict: (CBLDictionary*)input;
+
 @end
+
 
 @interface CBLPrediction : NSObject
 

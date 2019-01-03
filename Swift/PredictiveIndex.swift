@@ -1,5 +1,5 @@
 //
-//  CBLPrediction+Internal.h
+//  PredictiveIndex.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc. All rights reserved.
@@ -16,14 +16,21 @@
 //  limitations under the License.
 //
 
-#import "CBLPrediction.h"
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface CBLPrediction ()
-
-+ (instancetype) sharedInstance;
-
-@end
-
-NS_ASSUME_NONNULL_END
+public final class PredictiveIndex: Index, CBLIndexConvertible {
+    
+    // MARK: Internal
+    
+    private let impl: CBLPredictiveIndex
+    
+    init(model: String, input: ExpressionProtocol, properties: [String]?) {
+        self.impl = CBLIndexBuilder.predictiveIndex(withModel: model, input: input.toImpl(),
+                                                   properties: properties)
+    }
+    
+    func toImpl() -> CBLIndex {
+        return self.impl as CBLIndex
+    }
+    
+}

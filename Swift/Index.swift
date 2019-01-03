@@ -20,55 +20,8 @@
 import Foundation
 
 
+/// Index protocol.
 public protocol Index { }
-
-
-/// Index represents an index which could be a value index for regular queries or
-/// full-text index for full-text queries (using the match operator).
-public class IndexBuilder {
-    
-    /// Create a value index with the given index items. The index items are a list of
-    /// the properties or expressions to be indexed.
-    ///
-    /// - Parameter: items The index items.
-    /// - Returns: The ValueIndex.
-    public class func valueIndex(items: ValueIndexItem...) -> ValueIndex {
-        return valueIndex(items: items);
-    }
-    
-    
-    /// Create a value index with the given index items. The index items are a list of
-    /// the properties or expressions to be indexed.
-    ///
-    /// - Parameter items: The index items.
-    /// - Returns:  The ValueIndex.
-    public class func valueIndex(items: [ValueIndexItem]) -> ValueIndex {
-        return ValueIndex(items: items)
-    }
-    
-    
-    /// Create a full-text index with the given index items. Typically
-    /// the index items are the properties that are used to perform the
-    /// match operation against with.
-    ///
-    /// - Parameter: items The index items.
-    /// - Returns:  The FullTextIndex.
-    public class func fullTextIndex(items: FullTextIndexItem...) -> FullTextIndex {
-        return fullTextIndex(items: items)
-    }
-    
-    
-    /// Create a full-text index with the given index items. Typically
-    /// the index items are the properties that are used to perform the
-    /// match operation against with.
-    ///
-    /// - Parameter: items The index items.
-    /// - Returns:  The FullTextIndex.
-    public class func fullTextIndex(items: [FullTextIndexItem]) -> FullTextIndex {
-        return FullTextIndex(items: items)
-    }
-    
-}
 
 
 // MARK: Value Index

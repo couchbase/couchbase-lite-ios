@@ -54,6 +54,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (CBLQueryExpression*) property: (NSString*)keyPath {
+    keyPath = [NSString stringWithFormat: @".%@", keyPath];
     return [self predictionExpressionWithParams:
             @[_model, _input, [CBLQueryExpression string: keyPath]]];
 }
