@@ -166,8 +166,9 @@ public final class Replicator {
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
         let token = _impl.addDocumentReplicationListener(with: queue, listener: { (replication) in
             let docs = replication.documents.map {
-                ReplicatedDocument(id: $0.id, isDeleted: $0.isDeleted,
-                                   isAccessRemoved: $0.isAccessRemoved, error: $0.error)
+                return ReplicatedDocument(id: $0.id,
+                                          flags: DocumentFlags(rawValue: Int($0.flags.rawValue)),
+                                          error: $0.error)
             }
             listener(DocumentReplication(replicator: self, isPush: replication.isPush,documents: docs))
         })

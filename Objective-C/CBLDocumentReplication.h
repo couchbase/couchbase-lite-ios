@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLDocumentFlags.h"
 @class CBLReplicator;
 @class CBLReplicatedDocument;
 
@@ -46,12 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** The document ID. */
 @property (nonatomic, readonly) NSString* id;
 
-/** The flag indicating that the replicated document has been deleted. */
-@property (nonatomic, readonly) BOOL isDeleted;
-
-/** The flag indicating that the document's access has been removed as a result of
-    removal from all Sync Gateway channels that a user has access to. */
-@property (nonatomic, readonly) BOOL isAccessRemoved;
+/** The flags describing the replicated document. */
+@property (nonatomic, readonly) CBLDocumentFlags flags;
 
 /** The error if occurred */
 @property (nonatomic, readonly, nullable) NSError* error;

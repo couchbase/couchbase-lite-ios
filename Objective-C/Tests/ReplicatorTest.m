@@ -1461,13 +1461,13 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(docs.count, 2u);
     AssertEqualObjects(docs[0].id, @"doc1");
     AssertNil(docs[0].error);
-    AssertFalse(docs[0].isDeleted);
-    AssertFalse(docs[0].isAccessRemoved);
+    Assert((docs[0].flags & kCBLDocumentFlagsDeleted) != kCBLDocumentFlagsDeleted);
+    Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     AssertEqualObjects(docs[1].id, @"doc2");
     AssertNil(docs[1].error);
-    AssertFalse(docs[1].isDeleted);
-    AssertFalse(docs[1].isAccessRemoved);
+    Assert((docs[1].flags & kCBLDocumentFlagsDeleted) != kCBLDocumentFlagsDeleted);
+    Assert((docs[1].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Add another doc:
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
@@ -1482,8 +1482,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(docs.count, 3u);
     AssertEqualObjects(docs[2].id, @"doc3");
     AssertNil(docs[2].error);
-    AssertFalse(docs[2].isDeleted);
-    AssertFalse(docs[2].isAccessRemoved);
+    Assert((docs[2].flags & kCBLDocumentFlagsDeleted) != kCBLDocumentFlagsDeleted);
+    Assert((docs[2].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Add another doc:
     CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
@@ -1539,8 +1539,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNotNil(docs[0].error);
     AssertEqualObjects(docs[0].error.domain, CBLErrorDomain);
     AssertEqual(docs[0].error.code, CBLErrorHTTPConflict);
-    AssertFalse(docs[0].isDeleted);
-    AssertFalse(docs[0].isAccessRemoved);
+    Assert((docs[0].flags & kCBLDocumentFlagsDeleted) != kCBLDocumentFlagsDeleted);
+    Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
     [replicator removeChangeListenerWithToken: token];
@@ -1579,8 +1579,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(docs.count, 1u);
     AssertEqualObjects(docs[0].id, @"doc1");
     AssertNil(docs[0].error);
-    AssertFalse(docs[0].isDeleted);
-    AssertFalse(docs[0].isAccessRemoved);
+    Assert((docs[0].flags & kCBLDocumentFlagsDeleted) != kCBLDocumentFlagsDeleted);
+    Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
     [replicator removeChangeListenerWithToken: token];
@@ -1620,8 +1620,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(docs.count, 1u);
     AssertEqualObjects(docs[0].id, @"doc1");
     AssertNil(docs[0].error);
-    Assert(docs[0].isDeleted);
-    AssertFalse(docs[0].isAccessRemoved);
+    Assert((docs[0].flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted);
+    Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
     [replicator removeChangeListenerWithToken: token];
@@ -1658,9 +1658,13 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.pushFilter = ^BOOL(CBLDocument* document, BOOL isDeleted) {
+    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        
+        // isDeleted:
+        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
+        
         // Check deleted flag:
         Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
         if (!isDeleted) {
@@ -1731,9 +1735,13 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePull
                                                      continuous: NO];
-    config.pullFilter = ^BOOL(CBLDocument* document, BOOL isDeleted) {
+    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        
+        // isDeleted:
+        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
+        
         // Check deleted flag:
         Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
         if (!isDeleted) {

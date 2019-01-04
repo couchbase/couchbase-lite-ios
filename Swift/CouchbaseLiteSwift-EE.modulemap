@@ -38,6 +38,7 @@ framework module CouchbaseLiteSwift {
         header "CBLDictionaryFragment.h"
         header "CBLDocument.h"
         header "CBLDocumentChange.h"
+        header "CBLDocumentFlags.h"
         header "CBLDocumentFragment.h"
         header "CBLDocumentReplication.h"
         header "CBLEndpoint.h"

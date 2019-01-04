@@ -45,16 +45,21 @@
 
 @implementation CBLReplicatedDocument
 
-@synthesize id=_id, isDeleted=_isDeleted, isAccessRemoved=_isAccessRemoved;
-@synthesize c4Error=_c4Error, isTransientError=_isTransientError;
+@synthesize id=_id, flags=_flags, c4Error=_c4Error, isTransientError=_isTransientError;
 
 - (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded {
     self = [super init];
     if (self) {
         _id = slice2string(docEnded->docID);
-        _isDeleted = (docEnded->flags & kRevDeleted) != 0;
-        _isAccessRemoved = (docEnded->flags & kRevPurged) != 0;
+        
+        _flags = 0;
+        if ((docEnded->flags & kRevDeleted) == kRevDeleted)
+            _flags |= kCBLDocumentFlagsDeleted;
+        if ((docEnded->flags & kRevPurged) == kRevPurged)
+            _flags |= kCBLDocumentFlagsAccessRemoved;
+        
         _c4Error = docEnded->error;
+        
         _isTransientError = docEnded->errorIsTransient;
     }
     return self;

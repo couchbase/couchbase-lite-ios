@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
+#import "CBLDocumentFlags.h"
 @class CBLAuthenticator;
 @class CBLDatabase;
 @class CBLDocument;
@@ -27,14 +28,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** Replicator type. */
-typedef enum {
-    kCBLReplicatorTypePushAndPull = 0,    ///< Bidirectional; both push and pull
-    kCBLReplicatorTypePush,               ///< Pushing changes to the target
-    kCBLReplicatorTypePull                ///< Pulling changes from the target
-} CBLReplicatorType;
+typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
+    kCBLReplicatorTypePushAndPull = 0,          ///< Bidirectional; both push and pull
+    kCBLReplicatorTypePush,                     ///< Pushing changes to the target
+    kCBLReplicatorTypePull                      ///< Pulling changes from the target
+};
 
 /** Replication Filter */
-typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, BOOL isDeleted);
+typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags flags);
 
 /** Replicator Configuration */
 @interface CBLReplicatorConfiguration: NSObject

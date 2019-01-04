@@ -40,12 +40,8 @@ public struct ReplicatedDocument {
     /// The document ID.
     public let id: String
     
-    /// The flag indicating that the replicated document has been deleted.
-    public let isDeleted: Bool
-    
-    /// The flag indicating that the document's access has been removed as a result of
-    /// removal from all Sync Gateway channels that a user has access to.
-    public let isAccessRemoved: Bool
+    /// The flag describing the replicated document.
+    public let flags: DocumentFlags
     
     /// The error if occurred.
     public let error: Error?

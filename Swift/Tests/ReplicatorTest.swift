@@ -214,13 +214,13 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(docs.count, 2)
         XCTAssertEqual(docs[0].id, "doc1")
         XCTAssertNil(docs[0].error)
-        XCTAssertFalse(docs[0].isDeleted)
-        XCTAssertFalse(docs[0].isAccessRemoved)
+        XCTAssertFalse(docs[0].flags.contains(.deleted))
+        XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         XCTAssertEqual(docs[1].id, "doc2")
         XCTAssertNil(docs[1].error)
-        XCTAssertFalse(docs[1].isDeleted)
-        XCTAssertFalse(docs[1].isAccessRemoved)
+        XCTAssertFalse(docs[1].flags.contains(.deleted))
+        XCTAssertFalse(docs[1].flags.contains(.accessRemoved))
         
         // Add another doc:
         let doc3 = MutableDocument(id: "doc3")
@@ -235,8 +235,8 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(docs.count, 3)
         XCTAssertEqual(docs[2].id, "doc3")
         XCTAssertNil(docs[2].error)
-        XCTAssertFalse(docs[2].isDeleted)
-        XCTAssertFalse(docs[2].isAccessRemoved)
+        XCTAssertFalse(docs[2].flags.contains(.deleted))
+        XCTAssertFalse(docs[2].flags.contains(.accessRemoved))
         
         // Add another doc:
         let doc4 = MutableDocument(id: "doc4")
@@ -289,8 +289,8 @@ class ReplicatorTest: CBLTestCase {
         let err = docs[0].error! as NSError
         XCTAssertEqual(err.domain, CBLErrorDomain)
         XCTAssertEqual(err.code, CBLErrorHTTPConflict)
-        XCTAssertFalse(docs[0].isDeleted)
-        XCTAssertFalse(docs[0].isAccessRemoved)
+        XCTAssertFalse(docs[0].flags.contains(.deleted))
+        XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
         replicator.removeChangeListener(withToken: token)
@@ -328,8 +328,8 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(docs.count, 1)
         XCTAssertEqual(docs[0].id, "doc1")
         XCTAssertNil(docs[0].error)
-        XCTAssertFalse(docs[0].isDeleted)
-        XCTAssertFalse(docs[0].isAccessRemoved)
+        XCTAssertFalse(docs[0].flags.contains(.deleted))
+        XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
         replicator.removeChangeListener(withToken: token)
@@ -365,8 +365,8 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(docs.count, 1)
         XCTAssertEqual(docs[0].id, "doc1")
         XCTAssertNil(docs[0].error)
-        XCTAssertTrue(docs[0].isDeleted)
-        XCTAssertFalse(docs[0].isAccessRemoved)
+        XCTAssertTrue(docs[0].flags.contains(.deleted))
+        XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
         replicator.removeChangeListener(withToken: token)
@@ -400,10 +400,11 @@ class ReplicatorTest: CBLTestCase {
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
         let config = self.config(target: target, type: .push, continuous: false)
-        config.pushFilter = { (doc, del) in
+        config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
-            XCTAssert(doc.id == "doc3" ? del : !del)
-            if !del {
+            let isDeleted = flags.contains(.deleted)
+            XCTAssert(doc.id == "doc3" ? isDeleted : !isDeleted)
+            if !isDeleted {
                 // Check content:
                 XCTAssertNotNil(doc.value(forKey: "pattern"))
                 XCTAssertEqual(doc.string(forKey: "species")!, "Tiger")
@@ -471,10 +472,11 @@ class ReplicatorTest: CBLTestCase {
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
         let config = self.config(target: target, type: .pull, continuous: false)
-        config.pullFilter = { (doc, del) in
+        config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
-            XCTAssert(doc.id == "doc3" ? del : !del)
-            if !del {
+            let isDeleted = flags.contains(.deleted)
+            XCTAssert(doc.id == "doc3" ? isDeleted : !isDeleted)
+            if !isDeleted {
                 // Check content:
                 XCTAssertNotNil(doc.value(forKey: "pattern"))
                 XCTAssertEqual(doc.string(forKey: "species")!, "Tiger")

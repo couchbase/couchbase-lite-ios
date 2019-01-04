@@ -31,8 +31,26 @@ public enum ReplicatorType: UInt8 {
     case pull
 }
 
+/// Document flags describing a replicated document.
+public struct DocumentFlags: OptionSet {
+    /// Raw value.
+    public let rawValue: Int
+    
+    /// Constructor with the raw value.
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+    
+    /// Indicating that the replicated document has been deleted.
+    public static let deleted = DocumentFlags(rawValue: 1 << 0)
+    
+    /// Indicating that the document's access has been removed as a result of
+    /// removal from all Sync Gateway channels that a user has access to.
+    public static let accessRemoved = DocumentFlags(rawValue: 1 << 1)
+}
+
 /// Replication Filter.
-public typealias ReplicationFilter = (Document, Bool) -> Bool
+public typealias ReplicationFilter = (Document, DocumentFlags) -> Bool
 
 /// Replicator configuration.
 public class ReplicatorConfiguration {
@@ -182,7 +200,7 @@ public class ReplicatorConfiguration {
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         let c = CBLReplicatorConfiguration(database: self.database._impl, target: target.toImpl())
-        c.replicatorType = CBLReplicatorType(rawValue: UInt32(self.replicatorType.rawValue))
+        c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
         c.pinnedServerCertificate = self.pinnedServerCertificate
@@ -198,9 +216,12 @@ public class ReplicatorConfiguration {
     }
     
     func filter(push: Bool) -> CBLReplicationFilter? {
-        guard let filter = push ? self.pushFilter : self.pullFilter else {
+        guard let f = push ? self.pushFilter : self.pullFilter else {
             return nil
         }
-        return { (doc, del) in return filter(Document(doc), del) }
+        
+        return { (doc, flags) in
+            return f(Document(doc), DocumentFlags(rawValue: Int(flags.rawValue)))
+        }
     }
 }

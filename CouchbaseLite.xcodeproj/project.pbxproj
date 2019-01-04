@@ -1209,6 +1209,10 @@
 		93EB25CA21CDCF190006FB88 /* CBLPrediction+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EB25C821CDCF190006FB88 /* CBLPrediction+Internal.h */; };
 		93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */; };
 		93EB25CD21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */; };
+		93EB263321DF19D00006FB88 /* CBLDocumentFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93EB263421DF19D00006FB88 /* CBLDocumentFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93EB264421DF1AE20006FB88 /* CBLDocumentFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		93EB264521DF1AE40006FB88 /* CBLDocumentFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		93EC42CD1FB3801E00D54BB4 /* CBLFullTextIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EC42C91FB3801E00D54BB4 /* CBLFullTextIndex.m */; };
 		93EC42CE1FB3801E00D54BB4 /* CBLFullTextIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EC42C91FB3801E00D54BB4 /* CBLFullTextIndex.m */; };
 		93EC42CF1FB3801E00D54BB4 /* CBLFullTextIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EC42CA1FB3801E00D54BB4 /* CBLFullTextIndex.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1962,6 +1966,7 @@
 		93EB25C221CDCEC20006FB88 /* CBLQueryParameters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryParameters.mm; sourceTree = "<group>"; };
 		93EB25C821CDCF190006FB88 /* CBLPrediction+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLPrediction+Internal.h"; sourceTree = "<group>"; };
 		93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredictiveQueryTest.m; sourceTree = "<group>"; };
+		93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDocumentFlags.h; sourceTree = "<group>"; };
 		93EC42C91FB3801E00D54BB4 /* CBLFullTextIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFullTextIndex.m; sourceTree = "<group>"; };
 		93EC42CA1FB3801E00D54BB4 /* CBLFullTextIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFullTextIndex.h; sourceTree = "<group>"; };
 		93EC42CB1FB3801E00D54BB4 /* CBLValueIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLValueIndex.h; sourceTree = "<group>"; };
@@ -2481,6 +2486,7 @@
 				93B41CAF1F04706100A7F114 /* CBLReplicatorChange.m */,
 				93DB7FEA1ED8E1C000C4F845 /* CBLReplicatorConfiguration.h */,
 				93DB7FEB1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m */,
+				93EB263221DF19D00006FB88 /* CBLDocumentFlags.h */,
 				935A58B421AFA34D009A29CB /* CBLDocumentReplication.h */,
 				935A58B521AFA34D009A29CB /* CBLDocumentReplication.mm */,
 			);
@@ -3109,6 +3115,7 @@
 				938B36A5200745FF004485D8 /* CBLQueryResultArray.h in Headers */,
 				935A58CF21AFAD31009A29CB /* CBLDocumentReplication+Internal.h in Headers */,
 				27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */,
+				93EB264521DF1AE40006FB88 /* CBLDocumentFlags.h in Headers */,
 				9383A5961F1EEFCD0083053D /* CBLQueryResult+Internal.h in Headers */,
 				934A27931F30E5CA003946A7 /* CBLBinaryExpression.h in Headers */,
 				27D7219A1F8E97F400AA4458 /* CBLFleece.hh in Headers */,
@@ -3322,6 +3329,7 @@
 				9369A6A6207DC7CB009B5B83 /* CBLDatabase+EncryptionInternal.h in Headers */,
 				9343EFD4207D611600F19A89 /* CBLAggregateExpression.h in Headers */,
 				9343EFD5207D611600F19A89 /* CBLDocument+Internal.h in Headers */,
+				93EB263421DF19D00006FB88 /* CBLDocumentFlags.h in Headers */,
 				939260A220A0CBAC00E5748C /* CBLMessageEndpointListener.h in Headers */,
 				9343EFD6207D611600F19A89 /* CBLQueryLimit.h in Headers */,
 				9343EFD7207D611600F19A89 /* Test.h in Headers */,
@@ -3440,6 +3448,7 @@
 				9343F0DE207D61AB00F19A89 /* CBLListenerToken.h in Headers */,
 				9343F0DF207D61AB00F19A89 /* CBLQueryOrdering.h in Headers */,
 				9343F0E0207D61AB00F19A89 /* CBLBasicAuthenticator.h in Headers */,
+				93EB264421DF1AE20006FB88 /* CBLDocumentFlags.h in Headers */,
 				9369A699207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.h in Headers */,
 				9343F0E1207D61AB00F19A89 /* CBLMutableArray.h in Headers */,
 				9369A69F207DBAA9009B5B83 /* CBLDatabase+Encryption.h in Headers */,
@@ -3657,6 +3666,7 @@
 				938E389D1F3A7A47006806C7 /* CBLCollationExpression.h in Headers */,
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
 				93E18734211122D9001D52B9 /* MYURLUtils.h in Headers */,
+				93EB263321DF19D00006FB88 /* CBLDocumentFlags.h in Headers */,
 				937A69031F0731230058277F /* CBLQueryFunction.h in Headers */,
 				9381961E1EC11A8C0032CC51 /* CBLDictionary+Swift.h in Headers */,
 				937F026F1EFC694900060D64 /* CBLQueryChange+Internal.h in Headers */,

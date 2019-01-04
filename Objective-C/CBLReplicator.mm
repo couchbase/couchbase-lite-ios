@@ -593,8 +593,15 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
     auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
                                           documentID: slice2string(docID)
                                                 body: body];
-    bool isDeleted = (flags & kRevDeleted) != 0;
-    return pushing ? _config.pushFilter(doc, isDeleted) : _config.pullFilter(doc, isDeleted);
+    
+    CBLDocumentFlags docFlags = 0;
+    if ((flags & kRevDeleted) == kRevDeleted)
+        docFlags |= kCBLDocumentFlagsDeleted;
+    
+    if ((flags & kRevPurged) == kRevPurged)
+        docFlags |= kRevPurged;
+    
+    return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 }
 
 
