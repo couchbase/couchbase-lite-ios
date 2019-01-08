@@ -285,7 +285,9 @@ using namespace cbl;
     return [self mutableCopy];
 }
 
+
 #pragma mark - To CBLDictionary
+
 
 - (CBLDictionary*) toCBLDictionary {
     return (id)self;

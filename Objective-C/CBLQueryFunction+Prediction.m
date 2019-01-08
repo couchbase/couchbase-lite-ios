@@ -44,6 +44,7 @@ NS_ASSUME_NONNULL_END
     CBLQueryExpression* _input;
 }
 
+
 - (instancetype) initWithModel: (NSString*)model input: (CBLQueryExpression*)input {
     self = [super initWithNone];
     if (self) {
@@ -53,15 +54,18 @@ NS_ASSUME_NONNULL_END
     return self;
 }
 
+
 - (CBLQueryExpression*) property: (NSString*)keyPath {
     keyPath = [NSString stringWithFormat: @".%@", keyPath];
     return [self predictionExpressionWithParams:
             @[_model, _input, [CBLQueryExpression string: keyPath]]];
 }
 
+
 - (id) asJSON {
     return [[self predictionExpressionWithParams: @[_model, _input]] asJSON];
 }
+
 
 - (CBLFunctionExpression*) predictionExpressionWithParams: (NSArray<CBLQueryExpression*>*)params {
     return [[CBLFunctionExpression alloc] initWithFunction: @"PREDICTION()" params: params];

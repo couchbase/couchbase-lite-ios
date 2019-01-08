@@ -147,7 +147,7 @@
     [CBLDatabase.prediction unregisterModelWithName: model];
 }
 
-- (void) testPredictionInpuOutput {
+- (void) testPredictionInputOutput {
     // Register echo model:
     CBLEchoModel* echoModel = [[CBLEchoModel alloc] init];
     [echoModel registerModel];
@@ -639,6 +639,8 @@
     }];
     AssertEqual(numRows, 1u);
     AssertEqual(aggregateModel.numberOfCalls, 2u); // The value should be cached by the index
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testIndexPredictionValueUsingPredictiveIndex {
@@ -675,6 +677,8 @@
     }];
     AssertEqual(numRows, 1u);
     AssertEqual(aggregateModel.numberOfCalls, 2u);
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testIndexMuliplePredictionValuesUsingPredictiveIndex {
@@ -714,6 +718,8 @@
     }];
     AssertEqual(numRows, 2u);
     AssertEqual(aggregateModel.numberOfCalls, 2u);
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testIndexCompoundPredictionValuesUsingPredictiveIndex {
@@ -748,6 +754,8 @@
     }];
     AssertEqual(numRows, 1u);
     AssertEqual(aggregateModel.numberOfCalls, 2u);
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testDeletePredictiveIndex {
@@ -797,6 +805,8 @@
     }];
     AssertEqual(numRows, 1u);
     AssertEqual(aggregateModel.numberOfCalls, 4u); // Note: verifyQuery executes query twice
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testDeletePredictiveIndexesSharingSameCacheTable {
@@ -912,6 +922,8 @@
     }];
     AssertEqual(numRows, 2u);
     Assert(aggregateModel.numberOfCalls > 0); // Not using cache anymore
+    
+    [aggregateModel unregisterModel];
 }
 
 - (void) testEuclidientDistance {

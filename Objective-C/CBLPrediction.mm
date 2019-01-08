@@ -33,6 +33,7 @@ using namespace fleece;
 
 static CBLPrediction* sInstance;
 
+
 + (instancetype) sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -40,6 +41,7 @@ static CBLPrediction* sInstance;
     });
     return sInstance;
 }
+
 
 - (void) registerModel: (id<CBLPredictiveModel>)model withName: (NSString*)name {
     CBLAssertNotNil(model);
@@ -80,6 +82,7 @@ static CBLPrediction* sInstance;
         c4pred_registerModel(name.UTF8String, predModel);
     }
 }
+
 
 - (void) unregisterModelWithName: (NSString*)name {
     CBLAssertNotNil(name);

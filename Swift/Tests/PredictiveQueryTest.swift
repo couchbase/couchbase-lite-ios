@@ -293,6 +293,8 @@ class PredictiveQueryTest: CBLTestCase {
             XCTAssertEqual(pred.int(forKey: "avg"), numbers.value(forKeyPath: "@avg.self") as! Int)
         }
         XCTAssertEqual(rows, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testQueryPredictionValues() throws {
@@ -583,6 +585,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 1);
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testIndexPredictionValueUsingPredictiveIndex() throws {
@@ -617,6 +621,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 1);
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testIndexMultiplePredictionValuesUsingPredictiveIndex() throws {
@@ -652,6 +658,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 2);
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testIndexCompoundPredictiveValuesUsingPredictiveIndex() throws {
@@ -684,6 +692,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 1);
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testDeletePredictiveIndex() throws {
@@ -734,6 +744,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 1);
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testDeletePredictiveIndexesSharingSameCacheTable() throws {
@@ -849,6 +861,8 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(rows, 2);
         XCTAssert(aggregateModel.numberOfCalls > 0);
+        
+        aggregateModel.unregisterModel()
     }
     
     func testEuclidientDistance() throws {
