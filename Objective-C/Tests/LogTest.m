@@ -170,7 +170,8 @@
     NSArray* files = [self getLogsInDirectory: nil
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
-    NSArray* sorted = [files sortedArrayUsingComparator:^NSComparisonResult(NSURL* url1, NSURL* url2) {
+    NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
+                                                                             NSURL* url2) {
         NSError* err;
         NSDate *date1 = nil;
         [url1 getResourceValue: &date1
@@ -204,7 +205,8 @@
     NSArray* files = [self getLogsInDirectory: nil
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
-    NSArray* sorted = [files sortedArrayUsingComparator:^NSComparisonResult(NSURL* url1, NSURL* url2) {
+    NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
+                                                                             NSURL* url2) {
         NSError* err;
         NSDate *date1 = nil;
         [url1 getResourceValue: &date1
@@ -226,9 +228,8 @@
     NSString* contents = [NSString stringWithContentsOfURL: last
                                                   encoding: NSASCIIStringEncoding
                                                      error: &error];
-    Assert([contents rangeOfString: input].length > 0);
+    Assert([contents rangeOfString: input].location != NSNotFound);
 }
-
 
 @end
 
