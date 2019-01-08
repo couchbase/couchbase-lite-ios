@@ -75,6 +75,21 @@
 }
 
 
+- (NSArray<NSURL*>*) logsInDirectory: (nullable NSString*)directory {
+    if (directory == nil) {
+        directory = CBLDatabase.log.file.directory;
+    }
+    NSError* error;
+    NSDirectoryEnumerationOptions options = NSDirectoryEnumerationSkipsSubdirectoryDescendants | NSDirectoryEnumerationSkipsHiddenFiles;
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtURL: [NSURL URLWithString: directory]
+                                                   includingPropertiesForKeys: @[]
+                                                                      options: options
+                                                                        error: &error];
+    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"pathExtension == 'cbllog'"];
+    return [files filteredArrayUsingPredicate: predicate];
+}
+
+
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     LogTestLogger* customLogger = [[LogTestLogger alloc] init];
@@ -132,6 +147,15 @@
         else if ([file rangeOfString: @"error"].location != NSNotFound)
             AssertEqual(lineCount, 5);
     }
+}
+
+
+- (void) testDefaultLocation {
+    CBLLogInfo(Database, @"TEST INFO");
+    
+    NSArray* files = [self logsInDirectory: nil];
+    
+    Assert(files.count >= 5, "because there should be at least 5 log entries in the folder");
 }
 
 @end
