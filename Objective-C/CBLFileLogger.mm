@@ -36,7 +36,7 @@
     if (self) {
         _level = kCBLLogLevelInfo;
         _directory = [self defaultDirectory];
-        _usePlainText = YES;
+        _usePlainText = FALSE;
         _maxSize = kCBLFileLoggerDefaultMaxSize;
         _maxRotateCount = 1;
         [self apply];
