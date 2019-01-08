@@ -27,6 +27,7 @@
     NSArray<NSString*>* _properties;
 }
 
+
 - (instancetype) initWithModel: (NSString*)model
                          input: (CBLQueryExpression*)input
                     properties: (nullable NSArray<NSString*>*)properties {

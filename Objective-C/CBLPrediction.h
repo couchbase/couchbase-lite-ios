@@ -22,8 +22,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * PredictiveModel protocol that allows to integrate machine learning model into
- * CBL Query via invoking the Function.prediction() function.
+ PredictiveModel protocol that allows to integrate machine learning model into
+ CBL Query via invoking the Function.prediction() function.
  */
 @protocol CBLPredictiveModel <NSObject>
 
@@ -32,10 +32,25 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+/**
+ The prediction model manager for registering and unregistering predictive models.
+ */
 @interface CBLPrediction : NSObject
 
+/**
+ Register a predictive model by the given name.
+
+ @param model The predictive model.
+ @param name The name of the predictive model.
+ */
 - (void) registerModel: (id<CBLPredictiveModel>)model withName: (NSString*)name;
 
+
+/**
+ Unregister the predictive model of the given name.
+
+ @param name The name of the predictive model.
+ */
 - (void) unregisterModelWithName: (NSString*)name;
 
 /** Not available */
