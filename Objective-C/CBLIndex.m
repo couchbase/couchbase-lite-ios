@@ -38,6 +38,7 @@
 
 
 - (id) indexItems {
+    // Implement by subclass
     return nil;
 }
 

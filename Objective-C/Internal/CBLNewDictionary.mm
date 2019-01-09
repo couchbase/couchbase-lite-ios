@@ -286,6 +286,14 @@ using namespace cbl;
 }
 
 
+#pragma mark - To CBLDictionary
+
+
+- (CBLDictionary*) toCBLDictionary {
+    return (id)self;
+}
+
+
 #pragma mark - NSFastEnumeration
 
 

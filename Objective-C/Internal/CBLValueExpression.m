@@ -81,7 +81,8 @@ static id dictionaryAsJSON(NSDictionary* dict) {
 
 
 static id arrayAsJSON(NSArray* array) {
-    NSMutableArray *json = [NSMutableArray arrayWithCapacity: array.count];
+    NSMutableArray *json = [NSMutableArray arrayWithCapacity: array.count + 1];
+    [json addObject: @"[]"]; // Array Operation
     for (id value in array) {
         [json addObject: valueAsJSON(value)];
     }

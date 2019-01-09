@@ -31,7 +31,7 @@ public protocol PredictiveModel {
     ///
     /// - Parameter input: The input dictionary.
     /// - Returns: The output dictionary.
-    func prediction(input: DictionaryObject) -> DictionaryObject?
+    func predict(input: DictionaryObject) -> DictionaryObject?
     
 }
 
@@ -67,9 +67,17 @@ class PredictiveModelBridge: NSObject, CBLPredictiveModel {
         self.model = model
     }
     
-    func prediction(_ input: CBLDictionary) -> CBLDictionary? {
+    func predict(_ input: CBLDictionary) -> CBLDictionary? {
         let inDict = DataConverter.convertGETValue(input) as! DictionaryObject
-        return DataConverter.convertSETValue(model.prediction(input: inDict)) as? CBLDictionary
+        guard let output = DataConverter.convertSETValue(model.predict(input: inDict)) else {
+            return nil
+        }
+        
+        if let dict = output as? CBLNewDictionary {
+            return dict.toCBLDictionary()
+        }
+        
+        return output as? CBLDictionary
     }
     
 }
