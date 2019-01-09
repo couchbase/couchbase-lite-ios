@@ -75,6 +75,27 @@
 }
 
 
+- (NSArray<NSURL*>*) getLogsInDirectory: (nullable NSString*)directory
+                             properties: (nullable NSArray<NSURLResourceKey>*)keys
+                           onlyInfoLogs: (BOOL)onlyInfo {
+    directory = directory ? directory : CBLDatabase.log.file.directory;
+    NSURL* path = [NSURL URLWithString: directory];
+    AssertNotNil(path);
+    
+    NSError* error;
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtURL: path
+                                                   includingPropertiesForKeys: keys ? keys : @[]
+                                                                      options: 0
+                                                                        error: &error];
+    NSString* format = @"pathExtension == 'cbllog'";
+    if (onlyInfo) {
+        format = [NSString stringWithFormat: @"%@ && lastPathComponent BEGINSWITH 'cbl_info_'", format];
+    }
+    NSPredicate* predicate = [NSPredicate predicateWithFormat: format];
+    return [files filteredArrayUsingPredicate: predicate];
+}
+
+
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     LogTestLogger* customLogger = [[LogTestLogger alloc] init];
@@ -132,6 +153,82 @@
         else if ([file rangeOfString: @"error"].location != NSNotFound)
             AssertEqual(lineCount, 5);
     }
+}
+
+
+- (void) testDefaultLocation {
+    CBLLogInfo(Database, @"TEST INFO");
+    
+    NSArray* files = [self getLogsInDirectory: nil properties: nil onlyInfoLogs: NO];
+    Assert(files.count >= 5, "because there should be at least 5 log entries in the folder");
+}
+
+
+- (void) testDefaultLogFormat {
+    CBLLogInfo(Database, @"TEST INFO");
+    
+    NSArray* files = [self getLogsInDirectory: nil
+                                   properties: @[NSFileModificationDate]
+                                 onlyInfoLogs: YES];
+    NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
+                                                                             NSURL* url2) {
+        NSError* err;
+        NSDate *date1 = nil;
+        [url1 getResourceValue: &date1
+                        forKey: NSURLContentModificationDateKey
+                         error: &err];
+        
+        NSDate* date2 = nil;
+        [url2 getResourceValue: &date2
+                        forKey: NSURLContentModificationDateKey
+                         error: &err];
+        return [date1 compare: date2];
+    }];
+    
+    NSURL* last = [sorted lastObject];
+    AssertNotNil(last);
+    
+    NSError* error;
+    NSFileHandle* sourceFileHandle = [NSFileHandle fileHandleForReadingFromURL: last error: &error];
+    NSData* begainData = [sourceFileHandle readDataOfLength: 4];
+    Byte *bytes = (Byte *)[begainData bytes];
+    Assert(bytes[0] == 0xcf && bytes[1] == 0xb2 && bytes[2] == 0xab && bytes[3] == 0x1b,
+           @"because the log should be in binary format");
+}
+
+
+- (void) testPlainText {
+    CBLDatabase.log.file.usePlainText = YES;
+    NSString* input = @"SOME TEST MESSAGE";
+    CBLLogInfo(Database, @"%@", input);
+    
+    NSArray* files = [self getLogsInDirectory: nil
+                                   properties: @[NSFileModificationDate]
+                                 onlyInfoLogs: YES];
+    NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
+                                                                             NSURL* url2) {
+        NSError* err;
+        NSDate *date1 = nil;
+        [url1 getResourceValue: &date1
+                        forKey: NSURLContentModificationDateKey
+                         error: &err];
+        
+        NSDate* date2 = nil;
+        [url2 getResourceValue: &date2
+                        forKey: NSURLContentModificationDateKey
+                         error: &err];
+        return [date1 compare: date2];
+    }];
+    
+    NSURL* last = [sorted lastObject];
+    AssertNotNil(last);
+    
+    
+    NSError* error;
+    NSString* contents = [NSString stringWithContentsOfURL: last
+                                                  encoding: NSASCIIStringEncoding
+                                                     error: &error];
+    Assert([contents rangeOfString: input].location != NSNotFound);
 }
 
 @end
