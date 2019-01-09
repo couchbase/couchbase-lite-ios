@@ -46,6 +46,20 @@ class LogTest: CBLTestCase {
                          maxRotateCount: Database.log.file.maxRotateCount)
     }
     
+    func getLogsInDirectory(_ directory: String = Database.log.file.directory,
+                            properties: [URLResourceKey] = [],
+                            onlyInfoLogs: Bool = false) throws -> [URL] {
+        guard let url = URL(string: directory) else {
+            fatalError("valid directory should be provided")
+        }
+        
+        let files = try FileManager.default.contentsOfDirectory(at: url,
+                                                                includingPropertiesForKeys: properties,
+                                                                options: .skipsSubdirectoryDescendants)
+        return files.filter({ $0.pathExtension == "cbllog" &&
+            (onlyInfoLogs ? $0.lastPathComponent.starts(with: "cbl_info_") : true) })
+    }
+    
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = LogTestLogger()
@@ -106,6 +120,63 @@ class LogTest: CBLTestCase {
         }
     }
     
+    func testDefaultLocation() throws {
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        
+        let files = try getLogsInDirectory()
+        XCTAssert(files.count >= 5, "because there should be at least 5 log entries in the folder")
+    }
+    
+    func testDefaultLogFormat() throws {
+        Database.log.file.usePlainText = false
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        
+        let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
+                                           onlyInfoLogs: true)
+        let sorted = files.sorted { (url1, url2) -> Bool in
+            guard let date1 = try! url1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
+                fatalError("modification date is missing for the URL")
+            }
+            guard let date2 = try! url2.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
+                fatalError("modification date is missing for the URL")
+            }
+            return date1.compare(date2) == .orderedAscending
+        }
+        
+        guard let last = sorted.last else {
+            fatalError("last item shouldn't be empty")
+        }
+        let handle = try FileHandle.init(forReadingFrom: last)
+        let data = handle.readData(ofLength: 4)
+        let bytes = [UInt8](data)
+        XCTAssert(bytes[0] == 0xcf && bytes[1] == 0xb2 && bytes[2] == 0xab && bytes[3] == 0x1b,
+                  "because the log should be in binary format");
+    }
+    
+    func testPlainText() throws {
+        Database.log.file.usePlainText = true
+        let inputString = "SOME TEST INFO"
+        Log.log(domain: .database, level: .info, message: inputString)
+        
+        let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
+                                           onlyInfoLogs: true)
+        let sorted = files.sorted { (url1, url2) -> Bool in
+            guard let date1 = try! url1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
+                fatalError("modification date is missing for the URL")
+            }
+            guard let date2 = try! url2.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
+                fatalError("modification date is missing for the URL")
+            }
+            return date1.compare(date2) == .orderedAscending
+        }
+        
+        guard let last = sorted.last else {
+            fatalError("last item shouldn't be empty")
+        }
+        
+        let contents = try String(contentsOf: last, encoding: .ascii)
+        XCTAssert(contents.contains(contents))
+    }
 }
 
 class LogTestLogger: Logger {
