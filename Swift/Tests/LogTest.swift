@@ -134,11 +134,17 @@ class LogTest: CBLTestCase {
         let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
                                            onlyInfoLogs: true)
         let sorted = files.sorted { (url1, url2) -> Bool in
-            guard let date1 = try! url1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
-                fatalError("modification date is missing for the URL")
+            guard let date1 = try! url1
+                .resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate
+                else {
+                    fatalError("modification date is missing for the URL")
             }
-            guard let date2 = try! url2.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
-                fatalError("modification date is missing for the URL")
+            guard let date2 = try! url2
+                .resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate
+                else {
+                    fatalError("modification date is missing for the URL")
             }
             return date1.compare(date2) == .orderedAscending
         }
@@ -161,11 +167,17 @@ class LogTest: CBLTestCase {
         let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
                                            onlyInfoLogs: true)
         let sorted = files.sorted { (url1, url2) -> Bool in
-            guard let date1 = try! url1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
-                fatalError("modification date is missing for the URL")
+            guard let date1 = try! url1
+                .resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate
+                else {
+                    fatalError("modification date is missing for the URL")
             }
-            guard let date2 = try! url2.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else {
-                fatalError("modification date is missing for the URL")
+            guard let date2 = try! url2
+                .resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate
+                else {
+                    fatalError("modification date is missing for the URL")
             }
             return date1.compare(date2) == .orderedAscending
         }
