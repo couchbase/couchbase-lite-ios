@@ -58,6 +58,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError;
 
+// Initialize the CBLDatabase with a give C4Database object in the shell mode.
+// This is currently used for creating a CBLDictionary as an input of the predict()
+// method of the PredictiveModel.
+- (instancetype) initWithC4Database: (C4Database*)c4db;
+
 @end
 
 /// CBLDatabaseConfiguration:

@@ -29,7 +29,7 @@
 
 using namespace cbl;
 
-@interface CBLNewDictionary() <FLEncodable>
+@interface CBLNewDictionary()
 @end
 
 @implementation CBLNewDictionary
@@ -348,6 +348,7 @@ using namespace cbl;
     return hash;
 }
 
+
 #pragma mark - CBLConversion
 
 
@@ -358,20 +359,6 @@ using namespace cbl;
 
 - (id) cbl_toCBLObject {
     return self;
-}
-
-
-#pragma mark - FLEncodable
-
-
-- (FLSliceResult) encode: (NSError**)outError {
-    FLEncoder enc = FLEncoder_New();
-    [self fl_encodeToFLEncoder: enc];
-    
-    FLError flErr;
-    FLSliceResult body = FLEncoder_Finish(enc, &flErr);
-    if (!body.buf) convertError(flErr, outError);
-    return body;
 }
 
 @end

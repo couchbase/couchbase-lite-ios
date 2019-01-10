@@ -66,6 +66,13 @@ BOOL convertError(const FLError &flErr, NSError** outError) {
 }
 
 
+BOOL convertError(const FLError &flErr, C4Error* outError) {
+    NSCAssert(flErr != 0, @"No C4Error");
+    *outError = c4error_make(FleeceDomain, (int)flErr, c4str(""));
+    return NO;
+}
+
+
 void convertError(NSError* error, C4Error *outError) {
     C4Error c4err = {LiteCoreDomain, kC4ErrorRemoteError};
     NSString* domain = error.domain;

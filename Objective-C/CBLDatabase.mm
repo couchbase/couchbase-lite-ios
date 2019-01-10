@@ -56,6 +56,8 @@ using namespace fleece;
     C4DatabaseObserver* _dbObs;
     CBLChangeNotifier<CBLDatabaseChange*>* _dbChangeNotifier;
     NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
+    
+    BOOL _shellMode;
 }
 
 
@@ -124,14 +126,31 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+/**
+ Initialize the CBLDatabase with a give C4Database object in the shell mode. The life of the
+ C4Database object will be managed by the caller. This is currently used for creating a
+ CBLDictionary as an input of the predict() method of the PredictiveModel.
+ */
+- (instancetype) initWithC4Database: (C4Database*)c4db {
+    self = [super init];
+    if (self) {
+        _shellMode = YES;
+        _c4db = c4db;
+    }
+    return self;
+}
+
+
 - (instancetype) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithName: _name config: _config error: nil];
 }
 
 
 - (void) dealloc {
-    [self freeC4Observer];
-    [self freeC4DB];
+    if (!_shellMode) {
+        [self freeC4Observer];
+        [self freeC4DB];
+    }
 }
 
 

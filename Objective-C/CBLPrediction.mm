@@ -18,12 +18,14 @@
 
 #import "CBLPrediction+Internal.h"
 #import "CBLCoreBridge.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLFleece.hh"
 #import "CBLNewDictionary.h"
 #import "CBLStatus.h"
 #import "c4PredictiveQuery.h"
 #import "fleece/Fleece.hh"
+#import "MRoot.hh"
 
 using namespace fleece;
 
@@ -49,20 +51,14 @@ static CBLPrediction* sInstance;
     
     CBL_LOCK(self) {
         // Setup callback object:
-        auto callback = [](void* context, FLDict input, C4Error *outError) {
+        auto callback = [](void* context, FLDict input, C4Database* c4db, C4Error *outError) {
             @autoreleasepool {
-                id<CBLPredictiveModel>m = (__bridge id<CBLPredictiveModel>)context;
-                NSDictionary* dict = Dict(input).asNSObject();
-                CBLDictionary* i = (id)[[CBLNewDictionary alloc] initWithDictionary: dict];
-                CBLDictionary* o = [m predict: i];
-                if (!o)
-                    return C4SliceResult{};
-                
-                NSError* error;
-                FLSliceResult result = [o encode: &error];
-                if (!result.buf)
-                    convertError(error, outError);
-                return result;
+                id<CBLPredictiveModel> m = (__bridge id<CBLPredictiveModel>)context;
+                CBLDatabase* db = [[CBLDatabase alloc] initWithC4Database: c4db];
+                MRoot<id> root(new cbl::DocContext(db, nullptr), (FLValue)input, false);
+                CBLDictionary* dict = root.asNative();
+                CBLDictionary* output = [m predict: dict];
+                return encodePrediction(output, outError);
             }
         };
         
@@ -91,6 +87,21 @@ static CBLPrediction* sInstance;
         c4pred_unregisterModel(name.UTF8String);
         [_models removeObjectForKey: name];
     }
+}
+
+
+static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outError) {
+    if (!prediction)
+        return C4SliceResult{};
+    
+    FLError err;
+    FLEncoder enc = FLEncoder_New();
+    [prediction fl_encodeToFLEncoder: enc];
+    FLSliceResult result = FLEncoder_Finish(enc, &err);
+    FLEncoder_Free(enc);
+    if (err != 0)
+        convertError(err, outError);
+    return result;
 }
 
 @end

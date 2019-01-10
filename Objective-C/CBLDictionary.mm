@@ -79,8 +79,9 @@ using namespace fleece;
 
 - (void) setupSharedLock {
     id db;
-    if (_dict.context() != MContext::gNullContext)
-        db = ((DocContext*)_dict.context())->database();
+    auto docContext = dynamic_cast<DocContext*>(_dict.context());
+    if (docContext)
+        db = (docContext)->database();
     _sharedLock = db != nil ? db : self;
 }
 
@@ -362,34 +363,5 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         _dict.encodeTo(encoder);
     }
 }
-
-
-#pragma mark - FLEncodable
-
-
-// Encode independently of the document. CBLBlob objects will not be installed
-// in the database and will be encoded with their content directly.
-- (FLSliceResult) encode: (NSError**)outError {
-    CBL_LOCK(_sharedLock) {
-        FLEncoder enc;
-        if (_dict.context() != MContext::gNullContext) {
-            CBLDatabase* db = ((DocContext*)_dict.context())->database();
-            enc = c4db_getSharedFleeceEncoder(db.c4db);
-        } else
-            enc = FLEncoder_New();
-        
-        FLError err;
-        [self fl_encodeToFLEncoder: enc];
-        FLSliceResult body = FLEncoder_Finish(enc, &err);
-        
-        if (_dict.context() != MContext::gNullContext)
-            FLEncoder_Free(enc);
-        
-        if (!body.buf)
-            convertError(err, outError);
-        return body;
-    }
-}
-
 
 @end
