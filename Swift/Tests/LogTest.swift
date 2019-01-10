@@ -46,6 +46,44 @@ class LogTest: CBLTestCase {
                          maxRotateCount: Database.log.file.maxRotateCount)
     }
     
+    func writeOneKiloByteOfLog() {
+        let message = "11223344556677889900"
+        for _ in 0..<23 {
+            Log.log(domain: .database, level: .verbose, message: message)
+            Log.log(domain: .database, level: .info, message: message)
+            Log.log(domain: .database, level: .warning, message: message)
+            Log.log(domain: .database, level: .error, message: message)
+        }
+        Thread.sleep(forTimeInterval: 1.0)
+    }
+    
+    func writeAllLogs(_ message: String) {
+        Log.log(domain: .database, level: .verbose, message: message)
+        Log.log(domain: .database, level: .info, message: message)
+        Log.log(domain: .database, level: .warning, message: message)
+        Log.log(domain: .database, level: .error, message: message)
+    }
+    
+    func isKeywordPresentInAnyLog(_ keyword: String,
+                                  path: String = Database.log.file.directory) throws -> Bool {
+        // TODO: refactor the getLogsFromDirectory!!
+        guard let url = URL(string: path) else {
+            fatalError()
+        }
+        let files = try FileManager.default.contentsOfDirectory(at: url,
+                                                                includingPropertiesForKeys: [],
+                                                                options: .skipsSubdirectoryDescendants)
+        for file in files.filter({ $0.pathExtension == "cbllog" }) {
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            if contents.contains(keyword) {
+                return true
+            }
+        }
+        return false
+    }
+    
+    // MARK: TESTS
+    
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = LogTestLogger()
@@ -106,6 +144,87 @@ class LogTest: CBLTestCase {
         }
     }
     
+    func testMaxSize() throws {
+        backupFileLogger()
+        
+        let path = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+        try? FileManager.default.removeItem(atPath: path)
+        
+        Database.log.file.directory = path
+        Database.log.file.usePlainText = true
+        Database.log.file.maxSize = 1024
+        Database.log.file.level = .verbose
+        
+        writeOneKiloByteOfLog()
+        writeOneKiloByteOfLog()
+        
+        var totalFilesInDirectory = (Database.log.file.maxRotateCount + 1) * 4
+        
+        #if DEBUG
+        totalFilesInDirectory = totalFilesInDirectory + 1
+        #endif
+        
+        // TODO: refactor to get the files from directory
+        guard let url = URL(string: path) else {
+            fatalError()
+        }
+        let files = try FileManager.default.contentsOfDirectory(at: url,
+                                                                includingPropertiesForKeys: [],
+                                                                options: .skipsSubdirectoryDescendants)
+        let totalLogFilesSaved = files.filter({ $0.pathExtension == "cbllog" })
+        XCTAssertEqual(totalLogFilesSaved.count, totalFilesInDirectory)
+    }
+    
+    func testDisableLogging() throws {
+        backupFileLogger()
+        
+        let path = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+        try? FileManager.default.removeItem(atPath: path)
+        
+        Database.log.file.directory = path
+        Database.log.file.usePlainText = true
+        Database.log.file.level = .none
+        
+        let message = UUID().uuidString
+        writeAllLogs(message)
+        
+        XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: path))
+    }
+    
+    func testReEnableLogging() throws {
+        backupFileLogger()
+        
+        let path = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+        try? FileManager.default.removeItem(atPath: path)
+        
+        Database.log.file.directory = path
+        Database.log.file.usePlainText = true
+        Database.log.file.level = .none
+        
+        let message = UUID().uuidString
+        writeAllLogs(message)
+        
+        XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: path))
+        
+        // ENABLE LOGGING
+        Database.log.file.level = .verbose
+        writeAllLogs(message)
+        
+        // TODO: refactor code to get directory!!
+        guard let url = URL(string: path) else {
+            fatalError()
+        }
+        let files = try FileManager.default.contentsOfDirectory(at: url,
+                                                                includingPropertiesForKeys: [],
+                                                                options: .skipsSubdirectoryDescendants)
+        for file in files.filter({ $0.pathExtension == "cbllog" }) {
+            if file.lastPathComponent.starts(with: "cbl_debug_") {
+                continue
+            }
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            XCTAssert(contents.contains(message))
+        }
+    }
 }
 
 class LogTestLogger: Logger {
