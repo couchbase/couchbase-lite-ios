@@ -96,6 +96,47 @@
 }
 
 
+- (void) writeOneKiloByteOfLog {
+    NSString* inputString = @"11223344556677889900"; // 20B + (27B, 24B, 24B, 24B, 29B)  ~44B line
+    for(int i = 0; i < 23; i++) {
+        CBLDebug(Database, @"%@", inputString);
+        CBLLogInfo(Database, @"%@", inputString);
+        CBLLogVerbose(Database, @"%@", inputString);
+        CBLWarn(Database, @"%@", inputString);
+        CBLWarnError(Database, @"%@", inputString);
+    }
+    [NSThread sleepForTimeInterval: 1];
+}
+
+
+- (void) writeAllLogs: (NSString*)string {
+    CBLDebug(Database, @"%@", string);
+    CBLLogInfo(Database, @"%@", string);
+    CBLLogVerbose(Database, @"%@", string);
+    CBLWarn(Database, @"%@", string);
+    CBLWarnError(Database, @"%@", string);
+}
+
+
+- (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (NSString*)path {
+    NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
+    NSError* error;
+    for (NSURL* url in files) {
+        NSString* contents = [NSString stringWithContentsOfURL: url
+                                                      encoding: NSASCIIStringEncoding
+                                                         error: &error];
+        AssertNil(error);
+        if ([contents rangeOfString: keyword].location != NSNotFound) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+
+#pragma mark - TESTS
+
+
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     LogTestLogger* customLogger = [[LogTestLogger alloc] init];
@@ -137,7 +178,7 @@
     for (NSString* file in files) {
         NSString* log = [path stringByAppendingPathComponent: file];
         NSString* content = [NSString stringWithContentsOfFile: log
-                                                      encoding: NSUTF8StringEncoding
+                                                      encoding: NSASCIIStringEncoding
                                                          error: &error];
         __block int lineCount = 0;
         [content enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
@@ -229,6 +270,80 @@
                                                   encoding: NSASCIIStringEncoding
                                                      error: &error];
     Assert([contents rangeOfString: input].location != NSNotFound);
+}
+
+
+- (void) testMaxSize {
+    [self backupFileLogger];
+    
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"];
+    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    
+    CBLDatabase.log.file.directory = path;
+    CBLDatabase.log.file.usePlainText = YES;
+    CBLDatabase.log.file.maxSize = 1024;
+    CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    
+    // 2048 Byte
+    [self writeOneKiloByteOfLog];
+    [self writeOneKiloByteOfLog];
+    
+    NSUInteger totalFilesInDirectory = (CBLDatabase.log.file.maxRotateCount + 1) * 5;
+#if !DEBUG
+    totalFilesInDirectory = totalFilesInDirectory - 1;
+#endif
+    NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
+    AssertEqual(files.count, totalFilesInDirectory);
+}
+
+
+- (void) testDisableLogging {
+    [self backupFileLogger];
+    
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"];
+    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    
+    CBLDatabase.log.file.directory = path;
+    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    CBLDatabase.log.file.usePlainText = YES;
+    
+    NSString* inputString = [[NSUUID UUID] UUIDString];
+    [self writeAllLogs: inputString];
+    
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: path]);
+}
+
+
+- (void) testReEnableLogging {
+    [self backupFileLogger];
+    
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"];
+    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    
+    CBLDatabase.log.file.directory = path;
+    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    CBLDatabase.log.file.usePlainText = YES;
+    
+    NSString* inputString = [[NSUUID UUID] UUIDString];
+    [self writeAllLogs: inputString];
+    
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: path]);
+    
+    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    [self writeAllLogs: inputString];
+    
+    NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
+    NSError* error;
+    for (NSURL* url in files) {
+        if ([url.lastPathComponent hasPrefix: @"cbl_debug_"]) {
+            continue;
+        }
+        NSString* contents = [NSString stringWithContentsOfURL: url
+                                                      encoding: NSASCIIStringEncoding
+                                                         error: &error];
+        AssertNil(error);
+        Assert([contents rangeOfString: inputString].location != NSNotFound);
+    }
 }
 
 @end
