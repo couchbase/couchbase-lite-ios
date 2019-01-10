@@ -23,6 +23,7 @@
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
+#import "CBLVersion.h"
 
 #define kCBLFileLoggerDefaultMaxSize 500*1024
 
@@ -118,7 +119,8 @@
         .base_path = CBLStringBytes(self.directory),
         .max_size_bytes = (int64_t)self.maxSize,
         .max_rotate_count = (int32_t)self.maxRotateCount,
-        .use_plaintext = (bool)self.usePlainText
+        .use_plaintext = (bool)self.usePlainText,
+        .header = CBLStringBytes([CBLVersion userAgent])
     };
     
     C4Error c4err;
