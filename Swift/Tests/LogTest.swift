@@ -193,16 +193,7 @@ class LogTest: CBLTestCase {
     func testLogFilename() throws {
         let regex = "cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog"
         let predicate = NSPredicate(format: "SELF MATCHES %@", regex)
-        
-        // TODO: refactor getting the files from Directory!
-        guard let url = URL(string: Database.log.file.directory) else {
-            fatalError("valid directory should be provided")
-        }
-        
-        let files = try FileManager.default.contentsOfDirectory(at: url,
-                                                                includingPropertiesForKeys: [],
-                                                                options: .skipsSubdirectoryDescendants)
-        for file in files.filter({ $0.pathExtension == "cbllog" }) {
+        for file in try getLogsInDirectory() {
             XCTAssert(predicate.evaluate(with: file.lastPathComponent))
         }
     }
