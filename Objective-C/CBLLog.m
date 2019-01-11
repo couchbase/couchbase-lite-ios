@@ -31,6 +31,12 @@ C4LogDomain kCBL_LogDomainWebSocket;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
 
+// For bridging custom logger between Swift and Objective-C
+// without making CBLLogger protocol public
+@interface CBLCustomLogger : NSObject <CBLLogger>
+- (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger;
+@end
+
 @implementation CBLLog {
     CBLLogLevel _callbackLogLevel;
 }
@@ -238,6 +244,11 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
     cblLog(c4Domain, (C4LogLevel)level, @"%@", message);
 }
 
+
+- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger {
+    self.custom = [[CBLCustomLogger alloc] initWithLevel: level logger: logger];
+}
+
 @end
 
 
@@ -280,3 +291,30 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
             return @"Database";
     }
 }
+
+
+@implementation CBLCustomLogger {
+    CBLLogLevel _level;
+    CBLCustomLoggerBlock _logger;
+}
+
+- (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger {
+    self = [super init];
+    if (self) {
+        _level = level;
+        _logger = logger;
+    }
+    return self;
+}
+
+
+- (CBLLogLevel) level {
+    return _level;
+}
+
+
+- (void) logWithLevel:(CBLLogLevel)level domain:(CBLLogDomain)domain message:(NSString *)message {
+    _logger(level, domain, message);
+}
+
+@end

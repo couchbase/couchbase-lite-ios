@@ -289,6 +289,14 @@ class LogTest: CBLTestCase {
             XCTAssert(contents.contains(message))
         }
     }
+    
+    func testLogFilename() throws {
+        let regex = "cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", regex)
+        for file in try getLogsInDirectory() {
+            XCTAssert(predicate.evaluate(with: file.lastPathComponent))
+        }
+    }
 }
 
 class LogTestLogger: Logger {

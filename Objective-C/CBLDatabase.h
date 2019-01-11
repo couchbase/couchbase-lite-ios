@@ -81,7 +81,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
  */
 - (nullable instancetype) initWithName: (NSString*)name
                                 config: (nullable CBLDatabaseConfiguration*)config
-                                 error: (NSError**)error NS_DESIGNATED_INITIALIZER;
+                                 error: (NSError**)error;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

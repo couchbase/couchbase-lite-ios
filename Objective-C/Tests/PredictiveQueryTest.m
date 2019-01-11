@@ -221,7 +221,7 @@
     [echoModel unregisterModel];
 }
 
-- (void) failing_testPredictionWithBlobPropertyInput {
+- (void) testPredictionWithBlobPropertyInput {
     NSArray* texts = @[
                        @"Knox on fox in socks in box. Socks on Knox and Knox in box.",
                        @"Clocks on fox tick. Clocks on Knox tock. Six sick bricks tick. Six sick chicks tock."

@@ -105,6 +105,7 @@ framework module CouchbaseLiteSwift {
         header "CBLMessageEndpointListener.h"
         header "CBLMessagingError.h"
         header "CBLPrediction.h"
+        header "CBLPrediction+Swift.h"
         header "CBLPredictiveIndex.h"
         header "CBLProtocolType.h"
         header "CBLQueryFunction+Prediction.h"
