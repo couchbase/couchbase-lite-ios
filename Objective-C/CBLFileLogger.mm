@@ -27,7 +27,9 @@
 
 #define kCBLFileLoggerDefaultMaxSize 500*1024
 
-@implementation CBLFileLogger
+@implementation CBLFileLogger {
+    BOOL _isCustomDirectory;
+}
 
 @synthesize level=_level, directory=_directory, usePlainText=_usePlainText;
 @synthesize maxSize=_maxSize, maxRotateCount=_maxRotateCount;
@@ -37,6 +39,7 @@
     if (self) {
         _level = kCBLLogLevelInfo;
         _directory = [self defaultDirectory];
+        _isCustomDirectory = NO;
         _usePlainText = NO;
         _maxSize = kCBLFileLoggerDefaultMaxSize;
         _maxRotateCount = 1;
@@ -57,7 +60,7 @@
         return [[NSFileManager.defaultManager currentDirectoryPath]
                 stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
 #else
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
     return [paths[0] stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
 #endif
 }
@@ -74,6 +77,7 @@
 - (void) setDirectory: (NSString *)directory {
     if (_directory != directory) {
         _directory = directory;
+        _isCustomDirectory = YES;
         [self apply];
     }
 }
@@ -149,6 +153,15 @@
             return NO;
         }
     }
+    
+#if TARGET_OS_IPHONE
+    // Exclude the log directory from backup:
+    if (!_isCustomDirectory) {
+        NSURL* URL= [NSURL fileURLWithPath: directory];
+        return [URL setResourceValue: [NSNumber numberWithBool: YES]
+                              forKey: NSURLIsExcludedFromBackupKey error: outError];
+    }
+#endif
     return YES;
 }
 

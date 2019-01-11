@@ -49,10 +49,7 @@ class LogTest: CBLTestCase {
     func getLogsInDirectory(_ directory: String = Database.log.file.directory,
                             properties: [URLResourceKey] = [],
                             onlyInfoLogs: Bool = false) throws -> [URL] {
-        guard let url = URL(string: directory) else {
-            fatalError("valid directory should be provided")
-        }
-        
+        let url = URL(fileURLWithPath: directory)
         let files = try FileManager.default.contentsOfDirectory(at: url,
                                                                 includingPropertiesForKeys: properties,
                                                                 options: .skipsSubdirectoryDescendants)

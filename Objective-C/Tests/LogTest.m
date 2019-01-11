@@ -79,7 +79,7 @@
                              properties: (nullable NSArray<NSURLResourceKey>*)keys
                            onlyInfoLogs: (BOOL)onlyInfo {
     directory = directory ? directory : CBLDatabase.log.file.directory;
-    NSURL* path = [NSURL URLWithString: directory];
+    NSURL* path = [NSURL fileURLWithPath: directory];
     AssertNotNil(path);
     
     NSError* error;
