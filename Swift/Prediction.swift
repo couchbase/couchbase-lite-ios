@@ -38,14 +38,15 @@ public protocol PredictiveModel {
 /// Predictive model manager class for registering and unregistering predictive models.
 public class Prediction {
     
-    
     /// Register a predictive model by the given name.
     ///
     /// - Parameters:
     ///   - model: The predictive model.
     ///   - name: The name of the predictive model.
     public func registerModel(_ model: PredictiveModel, withName name: String) {
-        CBLDatabase.prediction().register(PredictiveModelBridge(model: model), withName: name)
+        CBLDatabase.prediction().registerModel(withName: name) { (input) -> CBLDictionary? in
+            self.predict(withModel: model, input: input);
+        }
     }
     
     
@@ -56,20 +57,14 @@ public class Prediction {
         CBLDatabase.prediction().unregisterModel(withName: name)
     }
     
-}
-
-/// An internal class that bridges between Swift and Objective-C predictive model.
-class PredictiveModelBridge: NSObject, CBLPredictiveModel {
     
-    let model: PredictiveModel
+    // MARK: Internal
     
-    init(model: PredictiveModel) {
-        self.model = model
-    }
     
-    func predict(_ input: CBLDictionary) -> CBLDictionary? {
-        let inDict = DataConverter.convertGETValue(input) as! DictionaryObject
-        guard let output = DataConverter.convertSETValue(model.predict(input: inDict)) else {
+    func predict(withModel model: PredictiveModel, input: CBLDictionary) -> CBLDictionary? {
+        let inputDict = DataConverter.convertGETValue(input) as! DictionaryObject
+        let outputDict = model.predict(input: inputDict)
+        guard let output = DataConverter.convertSETValue(outputDict) else {
             return nil
         }
         

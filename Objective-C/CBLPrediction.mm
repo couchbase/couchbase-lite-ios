@@ -17,6 +17,7 @@
 //
 
 #import "CBLPrediction+Internal.h"
+#import "CBLPrediction+Swift.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
@@ -28,6 +29,10 @@
 #import "MRoot.hh"
 
 using namespace fleece;
+
+@interface CBLPredictiveModelBridge : NSObject <CBLPredictiveModel>
+- (instancetype) initWithBlock: (CBLPredictiveModelBlock)model;
+@end
 
 @implementation CBLPrediction {
     NSMutableDictionary *_models; // For retaining the registered models
@@ -102,6 +107,35 @@ static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outErr
     if (err != 0)
         convertError(err, outError);
     return result;
+}
+
+
+#pragma mark - Swift
+
+
+- (void) registerModelWithName: (NSString*)name usingBlock: (CBLPredictiveModelBlock)block {
+    CBLPredictiveModelBridge* model = [[CBLPredictiveModelBridge alloc] initWithBlock: block];
+    [self registerModel: model withName: name];
+}
+
+@end
+
+
+@implementation CBLPredictiveModelBridge {
+    CBLPredictiveModelBlock _model;
+}
+
+- (instancetype) initWithBlock: (CBLPredictiveModelBlock)block {
+    self = [super init];
+    if (self) {
+        _model = block;
+    }
+    return self;
+}
+
+
+- (nullable CBLDictionary *)predict:(nonnull CBLDictionary *)input {
+    return _model(input);
 }
 
 @end
