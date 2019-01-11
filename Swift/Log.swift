@@ -31,7 +31,16 @@ public class Log {
     /// For setting a custom logger.
     public var custom: Logger? {
         didSet {
-            CBLDatabase.log().custom = custom != nil ? CustomLoggerBridge(logger: custom!) : nil
+            if let logger = custom {
+                let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
+                CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
+                    let l = LogLevel(rawValue: UInt8(level.rawValue))!
+                    let d = LogDomain(rawValue: UInt8(domain.rawValue))!
+                    logger.log(level: l, domain: d, message: message)
+                }
+            } else {
+                CBLDatabase.log().custom = nil
+            }
         }
     }
     
@@ -45,28 +54,6 @@ public class Log {
         let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
         CBLDatabase.log().log(to: cDomain, level: cLevel, message: message)
-    }
-}
-
-/// Briging between Swift and Objective-C custom logger
-class CustomLoggerBridge: NSObject, CBLLogger {
-    
-    let logger: Logger
-    
-    init(logger: Logger) {
-        self.logger = logger
-    }
-    
-    // MARK: CBLLogger
-    
-    var level: CBLLogLevel {
-        return CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
-    }
-    
-    func log(with level: CBLLogLevel, domain: CBLLogDomain, message: String) {
-        let l = LogLevel(rawValue: UInt8(level.rawValue))!
-        let d = LogDomain(rawValue: UInt8(domain.rawValue))!
-        logger.log(level: l, domain: d, message: message)
     }
     
 }
