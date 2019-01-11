@@ -72,9 +72,10 @@ using namespace fleece;
 
 
 - (void) setupSharedLock {
-    id db = nil;
-    if (_array.context() != MContext::gNullContext)
-        db = ((DocContext*)_array.context())->database();
+    id db;
+    auto docContext = dynamic_cast<DocContext*>(_array.context());
+    if (docContext)
+        db = (docContext)->database();
     _sharedLock = db != nil ? db : self;
 }
 

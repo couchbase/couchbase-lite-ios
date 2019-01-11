@@ -42,22 +42,22 @@ namespace cbl {
     float     asFloat   (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     double    asDouble  (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     
+    // Doc Context
     class DocContext : public fleece::MContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
-
+        
         CBLDatabase* database() const   {return _db;}
         CBLC4Document* __nullable document() const {return _doc;}
         NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
-
+        
         id toObject(fleece::Value);
-
-    private:
+        
+        private:
         CBLDatabase *_db;
         CBLC4Document* __nullable _doc;
         NSMapTable* _fleeceToNSStrings;
     };
-
 }
 
 

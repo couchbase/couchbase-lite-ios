@@ -32,7 +32,6 @@
 }
 @end
 
-
 namespace cbl {
     DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
     :fleece::MContext(fleece::alloc_slice())
@@ -40,19 +39,18 @@ namespace cbl {
     ,_doc(doc)
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
-
-
+    
+    
     id DocContext::toObject(fleece::Value value) {
         return value.asNSObject(_fleeceToNSStrings);
     }
 }
 
-
 namespace fleece {
     using namespace cbl;
 
     // Check whether the dictionary is the old attachment or not:
-    static bool isOldAttachment(Dict properties, DocContext *context) {
+    static bool isOldAttachment(Dict properties) {
         if (properties.get(C4STR("digest")) != nullptr &&
             properties.get(C4STR("revpos")) != nullptr &&
             properties.get(C4STR("stub")) != nullptr &&
@@ -64,7 +62,7 @@ namespace fleece {
     // Instantiate an Objective-C object for a Fleece dictionary with an "@type" key. */
     static id createSpecialObjectOfType(Dict properties, DocContext *context) {
         slice type = properties.get(C4STR(kC4ObjectTypeProperty)).asString();
-        if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties, context)) {
+        if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties)) {
             return [[CBLBlob alloc] initWithDatabase: context->database()
                                           properties: context->toObject(properties)];
         }
@@ -93,6 +91,9 @@ namespace fleece {
                 Class c = parent->mutableChildren() ? [CBLMutableDictionary class]
                                                     : [CBLDictionary class];
                 return [[c alloc] initWithMValue: mv inParent: parent];
+            }
+            case kFLData: {
+                return [value.asNSObject() cbl_toCBLObject];
             }
             default: {
                 return ((DocContext*)parent->context())->toObject(value);

@@ -11,9 +11,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void (^CBLCustomLoggerBlock)(CBLLogLevel, CBLLogDomain, NSString*);
+
 @interface CBLLog ()
 
 - (void) logTo: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
+
+- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger;
 
 @end
 

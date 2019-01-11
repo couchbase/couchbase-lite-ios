@@ -346,6 +346,16 @@
     }
 }
 
+
+- (void) testLogFilename {
+    NSString* regex = @"cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog";
+    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"SELF MATCHES %@", regex];
+    NSArray* files = [self getLogsInDirectory: nil properties: nil onlyInfoLogs: NO];
+    for (NSURL* file in files) {
+        Assert([predicate evaluateWithObject: file.lastPathComponent]);
+    }
+}
+
 @end
 
 
