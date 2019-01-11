@@ -49,21 +49,29 @@ class LogTest: CBLTestCase {
     }
     
     func writeOneKiloByteOfLog() {
-        let message = "11223344556677889900"
-        for _ in 0..<23 {
-            Log.log(domain: .database, level: .verbose, message: message)
-            Log.log(domain: .database, level: .info, message: message)
-            Log.log(domain: .database, level: .warning, message: message)
-            Log.log(domain: .database, level: .error, message: message)
-        }
+        /// add a second delay to skip the filesystem flush
         Thread.sleep(forTimeInterval: 1.0)
+        
+        let message = "11223344556677889900" // 44Byte line
+        for _ in 0..<20 { // 880Bytes
+            Log.log(domain: .database, level: .error, message: "\(message)")
+            Log.log(domain: .database, level: .warning, message: "\(message)")
+            Log.log(domain: .database, level: .info, message: "\(message)")
+            Log.log(domain: .database, level: .verbose, message: "\(message)")
+            Log.log(domain: .database, level: .debug, message: "\(message)")
+        }
+        writeAllLogs("123456789") // 33 Bytes
+        
+        /// header section contains ~111 Bytes
+        /// total of 111 + 880 + 33 = 1024
     }
     
     func writeAllLogs(_ message: String) {
-        Log.log(domain: .database, level: .verbose, message: message)
-        Log.log(domain: .database, level: .info, message: message)
-        Log.log(domain: .database, level: .warning, message: message)
         Log.log(domain: .database, level: .error, message: message)
+        Log.log(domain: .database, level: .warning, message: message)
+        Log.log(domain: .database, level: .info, message: message)
+        Log.log(domain: .database, level: .verbose, message: message)
+        Log.log(domain: .database, level: .debug, message: message)
     }
     
     func isKeywordPresentInAnyLog(_ keyword: String,
@@ -232,15 +240,16 @@ class LogTest: CBLTestCase {
         Database.log.file.directory = path
         Database.log.file.usePlainText = true
         Database.log.file.maxSize = 1024
-        Database.log.file.level = .verbose
+        Database.log.file.level = .debug
         
         writeOneKiloByteOfLog()
-        writeOneKiloByteOfLog()
+        /// after the 1KB of logs, closing of DB will write ~200Bytes.
+        /// which will create an extra file
         
-        var totalFilesInDirectory = (Database.log.file.maxRotateCount + 1) * 4
+        var totalFilesInDirectory = (Database.log.file.maxRotateCount + 1) * 5
         
-        #if DEBUG
-        totalFilesInDirectory = totalFilesInDirectory + 1
+        #if !DEBUG
+        totalFilesInDirectory = totalFilesInDirectory - 1
         #endif
         
         let totalLogFilesSaved = try getLogsInDirectory(path)
