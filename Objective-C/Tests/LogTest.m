@@ -241,6 +241,27 @@
     }
 }
 
+
+- (void) testEnableAndDisableCustomLogging {
+    CBLLogInfo(Database, @"IGNORE");
+    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    customLogger.level = kCBLLogLevelNone;
+    CBLDatabase.log.custom = customLogger;
+    CBLLogVerbose(Database, @"TEST VERBOSE");
+    CBLLogInfo(Database, @"TEST INFO");
+    CBLWarn(Database, @"TEST WARNING");
+    CBLWarnError(Database, @"TEST ERROR");
+    AssertEqual(customLogger.lines.count, 0);
+    
+    customLogger.level = kCBLLogLevelVerbose;
+    CBLDatabase.log.custom = customLogger;
+    CBLLogVerbose(Database, @"TEST VERBOSE");
+    CBLLogInfo(Database, @"TEST INFO");
+    CBLWarn(Database, @"TEST WARNING");
+    CBLWarnError(Database, @"TEST ERROR");
+    AssertEqual(customLogger.lines.count, 4);
+}
+
 @end
 
 
