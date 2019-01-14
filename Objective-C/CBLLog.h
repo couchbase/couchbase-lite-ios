@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** File logger writing log messages to files. */
 @property (readonly, nonatomic) CBLFileLogger* file;
 
-/** For setting a custom logger. */
+/** For setting a custom logger. Set log level for custom instance, before setting this property. */
 @property (nonatomic, nullable) id<CBLLogger> custom;
 
 /** Not available */
