@@ -372,7 +372,15 @@ class ReplicatorTest: CBLTestCase {
         replicator.removeChangeListener(withToken: token)
     }
     
-    func testPushFilter() throws {
+    func testSingleShotPushFilter() throws {
+        try testPushFilter(false)
+    }
+    
+    func testContinuousPushFilter() throws {
+        try testPushFilter(true)
+    }
+    
+    func testPushFilter(_ isContinuous: Bool) throws {
         // Create documents:
         let content = "I'm a tiger.".data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
