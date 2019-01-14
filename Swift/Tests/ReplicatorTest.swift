@@ -407,7 +407,7 @@ class ReplicatorTest: CBLTestCase {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
