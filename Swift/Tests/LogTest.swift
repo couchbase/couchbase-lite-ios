@@ -314,6 +314,22 @@ class LogTest: CBLTestCase {
             XCTAssert(contents.contains(message))
         }
     }
+    
+    func testFileLoggingHeader() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
+        Database.log.file.level = .verbose
+        
+        writeOneKiloByteOfLog()
+        for file in try getLogsInDirectory(config.directory) {
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            let firstLine = contents.split(separator: "\n")
+            XCTAssert(firstLine.contains("CouchbaseLite/"))
+            XCTAssert(firstLine.contains("Build/"))
+            XCTAssert(firstLine.contains("Commit/"))
+        }
+    }
 }
 
 class LogTestLogger: Logger {

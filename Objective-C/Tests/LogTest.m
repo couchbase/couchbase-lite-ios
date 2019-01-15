@@ -367,6 +367,28 @@
     }
 }
 
+
+- (void) testFileLoggingHeader {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    
+    [self writeOneKiloByteOfLog];
+    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSError* error;
+    for (NSURL* url in files) {
+        NSString* contents = [NSString stringWithContentsOfURL: url
+                                                      encoding: NSASCIIStringEncoding
+                                                         error: &error];
+        AssertNil(error);
+        NSString* firstLine = [contents componentsSeparatedByString:@"\n"].firstObject;
+        Assert([firstLine rangeOfString: @"CouchbaseLite/"].location != NSNotFound);
+        Assert([firstLine rangeOfString: @"Build/"].location != NSNotFound);
+        Assert([firstLine rangeOfString: @"Commit/"].location != NSNotFound);
+    }
+}
+
 @end
 
 
