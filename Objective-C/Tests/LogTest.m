@@ -306,11 +306,10 @@
 }
 
 
-- (void) testFileLoggingDefaultMaxSize {
+- (void) testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
     config.maxSize = 1024;
-    config.maxRotateCount = 1;
     CBLDatabase.log.file.config = config;
     CBLDatabase.log.file.level = kCBLLogLevelVerbose;
     

@@ -324,7 +324,9 @@ class LogTest: CBLTestCase {
         writeOneKiloByteOfLog()
         for file in try getLogsInDirectory(config.directory) {
             let contents = try String(contentsOf: file, encoding: .ascii)
-            let firstLine = contents.split(separator: "\n")
+            guard let firstLine = contents.components(separatedBy: "\n").first else {
+                fatalError("log contents should be empty and needs header section")
+            }
             XCTAssert(firstLine.contains("CouchbaseLite/"))
             XCTAssert(firstLine.contains("Build/"))
             XCTAssert(firstLine.contains("Commit/"))
