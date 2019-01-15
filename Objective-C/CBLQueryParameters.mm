@@ -118,12 +118,12 @@ using namespace fleece;
 
 
 - (void) setDictionary: (nullable CBLDictionary*)value forName: (NSString*)name {
-    [self setValue: [value toDictionary] forKey: name];
+    [self setValue: [value toDictionary] forName: name];
 }
 
 
 - (void) setArray: (nullable CBLArray*)value forName: (NSString*)name {
-    [self setValue: [value toArray] forKey: name];
+    [self setValue: [value toArray] forName: name];
 }
 
 
