@@ -78,6 +78,7 @@
 #pragma mark - Internal
 
 
+/** Cheak and raise an exception when trying to modify a property on the readonly configuration object. */
 - (void) checkReadonly {
     if (_readonly) {
         [NSException raise: NSInternalInconsistencyException
