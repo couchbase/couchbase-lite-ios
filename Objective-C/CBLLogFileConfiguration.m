@@ -86,20 +86,4 @@
 }
 
 
-- (NSString*) defaultDirectory {
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    if (bundleID) {
-        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-        return [paths[0] stringByAppendingPathComponent:
-                [NSString stringWithFormat: @"Logs/%@/CouchbaseLite", bundleID]];
-    } else
-        return [[NSFileManager.defaultManager currentDirectoryPath]
-                stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
-#else
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    return [paths[0] stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
-#endif
-}
-
 @end
