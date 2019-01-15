@@ -1006,7 +1006,9 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     r = nil;
 }
 
+
 #endif // TARGET_OS_IPHONE
+
 
 - (void) testResetCheckpoint {
     NSError* error;
@@ -1091,6 +1093,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     NSLog(@"Test Done");
 }
 
+
 - (void)testShortP2P {
     //int testNo = 1;
     for(int i = 0; i < 2; i++) {
@@ -1157,6 +1160,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     }
 }
 
+
 - (void)testContinuousP2P {
     NSError* err = nil;
     BOOL success = [otherDB delete:&err];
@@ -1190,29 +1194,36 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePushAndPull usingUID:@"p2ptest3"];
 }
 
+
 - (void) testP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
 }
+
 
 - (void)testP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
 }
 
+
 - (void)testP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
 }
+
 
 - (void)testP2PPermanentFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:NO];
 }
 
+
 - (void)testP2PPermanentFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:NO];
 }
 
+
 - (void)testP2PPermanentFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:NO];
 }
+
 
 - (void)testP2PPassiveClose {
     CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:kCBLProtocolTypeMessageStream];
@@ -1245,6 +1256,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(listenerErrors.count, 0UL);
     AssertNotNil(replicator.status.error);
 }
+
 
 - (void) testP2PPassiveCloseAll {
     CBLMutableDocument* doc = [CBLMutableDocument documentWithID:@"test"];
@@ -1296,6 +1308,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNotNil(replicator2.status.error);
 }
 
+
 - (void)testP2PChangeListener {
     NSMutableArray* statuses = [NSMutableArray new];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:[[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:kCBLProtocolTypeByteStream]];
@@ -1313,6 +1326,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self waitForExpectations:@[x] timeout:10.0];
     Assert(statuses.count > 0);
 }
+
 
 - (void)testP2PRemoveChangeListener {
     NSMutableArray* statuses = [NSMutableArray new];
@@ -1332,6 +1346,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self waitForExpectations:@[x] timeout:10.0];
     Assert(statuses.count == 0UL);
 }
+
 
 - (void) testP2PPushWithDocIDsFilter {
     NSError* error;
@@ -1361,6 +1376,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([otherDB documentWithID: @"doc2"]);
 }
 
+
 - (void) testP2PPullWithDocIDsFilter {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1388,6 +1404,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNotNil([self.db documentWithID: @"doc3"]);
     AssertNil([self.db documentWithID: @"doc2"]);
 }
+
 
 - (void) testP2PPushAndPullWithDocIDsFilter {
     NSError* error;
@@ -1427,6 +1444,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNotNil([otherDB documentWithID: @"doc4"]);
     AssertNil([otherDB documentWithID: @"doc2"]);
 }
+
 
 - (void) testDocumentReplicationEvent {
     NSError* error;
@@ -1501,6 +1519,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(docs.count, 3u);
 }
 
+
 - (void) testDocumentReplicationEventWithPushConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1546,6 +1565,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [replicator removeChangeListenerWithToken: token];
 }
 
+
 - (void) testDocumentReplicationEventWithPullConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1585,6 +1605,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // Remove document replication listener:
     [replicator removeChangeListenerWithToken: token];
 }
+
 
 - (void) testDocumentReplicationEventWithDeletion {
     NSError* error;
@@ -1627,7 +1648,18 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testPushFilter {
+
+- (void) testSingleShotPushFilter {
+    [self testPushFilter: NO];
+}
+
+
+- (void) testContinuousPushFilter {
+    [self testPushFilter: YES];
+}
+
+
+- (void) testPushFilter: (BOOL)isContinuous {
     // Create documents:
     NSError* error;
     NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
@@ -1657,7 +1689,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePush
-                                                     continuous: NO];
+                                                     continuous: isContinuous];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
@@ -1698,6 +1730,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([otherDB documentWithID: @"doc2"]);
     AssertNil([otherDB documentWithID: @"doc3"]);
 }
+
 
 - (void) testPullFilter {
     // Add a document to db database so that it can pull the deleted docs from:
@@ -1821,7 +1854,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self.db removeChangeListenerWithToken: docChangeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
 }
-
 
 #endif // COUCHBASE_ENTERPRISE
 

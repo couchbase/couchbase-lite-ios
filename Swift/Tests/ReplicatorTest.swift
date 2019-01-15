@@ -372,7 +372,15 @@ class ReplicatorTest: CBLTestCase {
         replicator.removeChangeListener(withToken: token)
     }
     
-    func testPushFilter() throws {
+    func testSingleShotPushFilter() throws {
+        try testPushFilter(false)
+    }
+    
+    func testContinuousPushFilter() throws {
+        try testPushFilter(true)
+    }
+    
+    func testPushFilter(_ isContinuous: Bool) throws {
         // Create documents:
         let content = "I'm a tiger.".data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
@@ -399,7 +407,7 @@ class ReplicatorTest: CBLTestCase {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)

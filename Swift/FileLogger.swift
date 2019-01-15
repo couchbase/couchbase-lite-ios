@@ -2,7 +2,7 @@
 //  FileLogger.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,48 +19,33 @@
 
 import Foundation
 
-/// File logger used for writing log messages to files. The binary file format will
-/// be used by default. To change the file format to plain text, set the usePlainText
-/// property to true.
+/// File logger used for writing log messages to files. To enable the file logger,
+/// setup the log file configuration and specify the log level as desired.
+///
+/// It is important to configure your LogFileConfiguration object appropriately before setting
+/// to a logger. Logger make a copy of the configuration settings you provide and use those settings
+/// to configure the logger. Once configured, the logger object ignores any changes you make to the
+/// LogFileConfiguration object.
 public class FileLogger {
     
-    private static let defaultMaxSize = UInt64(500 * 1024)
+    /// The log file configuration for configuring the log directory, file format, and rotation
+    /// policy. The config property is nil by default. Setting the config property to nil will
+    /// disable the file logging.
+    public var config: LogFileConfiguration? {
+        didSet {
+            CBLDatabase.log().file.config = config?.toImpl()
+        }
+    }
     
     /// The minimum log level of the log messages to be logged. The default log level for
-    /// file logger is warning.
-    public var level: LogLevel = .info {
+    /// file logger is none which means no logging.
+    public var level: LogLevel = .none {
         didSet {
             CBLDatabase.log().file.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
         }
     }
     
-    /// The directory to store the log files.
-    public var directory: String = CBLDatabase.log().file.directory {
-        didSet {
-            CBLDatabase.log().file.directory = directory
-        }
-    }
-    
-    /// To use plain text file format instead of the default binary format.
-    public var usePlainText: Bool = false {
-        didSet {
-            CBLDatabase.log().file.usePlainText = usePlainText
-        }
-    }
-    
-    /// The maximum size of a log file before being rotation. The default is 1024 bytes.
-    public var maxSize: UInt64 = defaultMaxSize {
-        didSet {
-            CBLDatabase.log().file.maxSize = maxSize
-        }
-    }
-    
-    /// The maximum number of rotated log files to keep. The default is 1 which means no rotation.
-    public var maxRotateCount: Int = 1 {
-        didSet(value) {
-            CBLDatabase.log().file.maxRotateCount = value
-        }
-    }
+    // MARK: Internal
     
     init() { }
 }

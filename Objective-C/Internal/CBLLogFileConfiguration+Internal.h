@@ -1,8 +1,8 @@
 //
-//  CBLLog+Swift.h
+//  CBLLogFileConfiguration+Internal.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,18 +17,14 @@
 //  limitations under the License.
 //
 
-#import "CBLLog.h"
-#import "CBLLogger.h"
+#import "CBLLogFileConfiguration.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^CBLCustomLoggerBlock)(CBLLogLevel, CBLLogDomain, NSString*);
+@interface CBLLogFileConfiguration ()
 
-@interface CBLLog ()
-
-- (void) logTo: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
-
-- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger;
+- (instancetype) initWithConfig: (CBLLogFileConfiguration*)config
+                       readonly: (BOOL)readonly;
 
 @end
 
