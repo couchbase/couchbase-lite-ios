@@ -21,6 +21,11 @@ import Foundation
 
 /// File logger used for writing log messages to files. To enable the file logger,
 /// setup the log file configuration and specify the log level as desired.
+///
+/// It is important to configure your LogFileConfiguration object appropriately before setting
+/// to a logger. Logger make a copy of the configuration settings you provide and use those settings
+/// to configure the logger. Once configured, the logger object ignores any changes you make to the
+/// LogFileConfiguration object.
 public class FileLogger {
     
     /// The log file configuration for configuring the log directory, file format, and rotation
