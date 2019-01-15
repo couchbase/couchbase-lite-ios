@@ -559,5 +559,64 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 1)
     }
     
+    func testPushDeletedDocWithFilterSingleShot() throws {
+        try testPushDeletedDocWithFilter(false)
+    }
+    
+    func testPushDeletedDocWithFilterContinuous() throws {
+        try testPushDeletedDocWithFilter(true)
+    }
+    
+    func testPushDeletedDocWithFilter(_ isContinuous: Bool) throws {
+        // Create documents:
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "pass")
+        doc2.setString("pass", forKey: "name")
+        try db.saveDocument(doc2)
+        
+        // Create replicator with push filter:
+        let docIds = NSMutableSet()
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .push, continuous: isContinuous)
+        config.pushFilter = { (doc, flags) in
+            XCTAssertNotNil(doc.id)
+            docIds.add(doc.id)
+            
+            let isDeleted = flags.contains(.deleted)
+            if isDeleted {
+                return doc.id == "pass"
+            }
+            return doc.string(forKey: "name") == "pass"
+        }
+        
+        // Run the replicator:
+        run(config: config, expectedError: nil)
+        
+        // Check documents passed through the filter
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc1"))
+        XCTAssert(docIds.contains("pass"))
+        
+        XCTAssertNotNil(otherDB.document(withID: "doc1"))
+        XCTAssertNotNil(otherDB.document(withID: "pass"))
+        
+        try db.deleteDocument(doc1)
+        try db.deleteDocument(doc2)
+        
+        docIds.removeAllObjects()
+        run(config: config, expectedError: nil)
+        
+        // Check documents passed to the filter:
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc1"))
+        XCTAssert(docIds.contains("pass"))
+        
+        XCTAssertNotNil(otherDB.document(withID: "doc1"))
+        XCTAssertNil(otherDB.document(withID: "pass"))
+    }
+    
     #endif
 }
