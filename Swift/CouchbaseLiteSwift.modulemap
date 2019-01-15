@@ -50,6 +50,7 @@ framework module CouchbaseLiteSwift {
         header "CBLIndexBuilder.h"
         header "CBLListenerToken.h"
         header "CBLLog.h"
+        header "CBLLogFileConfiguration.h"
         header "CBLLogger.h"
         header "CBLQueryChange.h"
         header "CBLMutableArray.h"

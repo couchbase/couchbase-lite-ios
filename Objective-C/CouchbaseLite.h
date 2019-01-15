@@ -51,6 +51,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLListenerToken.h"
 #import "CBLLog.h"
 #import "CBLLogger.h"
+#import "CBLLogFileConfiguration.h"
 #import "CBLQueryChange.h"
 #import "CBLMutableArray.h"
 #import "CBLMutableArrayFragment.h"

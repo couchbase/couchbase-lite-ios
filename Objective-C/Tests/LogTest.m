@@ -2,7 +2,7 @@
 //  LogTest.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
 
+#define logFileDirectory [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"]
+
 @interface LogTestLogger : NSObject <CBLLogger>
 
 @property (nonatomic) CBLLogLevel level;
@@ -32,15 +34,9 @@
 
 @interface FileLoggerBackup: NSObject
 
+@property (nonatomic, nullable) CBLLogFileConfiguration* config;
+
 @property (nonatomic) CBLLogLevel level;
-
-@property (nonatomic) NSString* directory;
-
-@property (nonatomic) BOOL usePlainText;
-
-@property (nonatomic) uint64_t maxSize;
-
-@property (nonatomic) NSInteger maxRotateCount;
 
 @end
 
@@ -52,34 +48,42 @@
     FileLoggerBackup* _backup;
 }
 
+
+- (void) setUp {
+    [super setUp];
+    [self backupFileLogger];
+    [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
+}
+
+
 - (void) tearDown {
     [super tearDown];
+    
     if (_backup) {
         CBLDatabase.log.file.level = _backup.level;
-        CBLDatabase.log.file.directory = _backup.directory;
-        CBLDatabase.log.file.maxSize = _backup.maxSize;
-        CBLDatabase.log.file.maxRotateCount = _backup.maxRotateCount;
-        CBLDatabase.log.file.usePlainText = _backup.usePlainText;
+        CBLDatabase.log.file.config = _backup.config;
         _backup = nil;
     }
+}
+
+
+- (CBLLogFileConfiguration*) logFileConfig {
+    return [[CBLLogFileConfiguration alloc] initWithDirectory: logFileDirectory];
 }
 
 
 - (void) backupFileLogger {
     _backup = [[FileLoggerBackup alloc] init];
     _backup.level = CBLDatabase.log.file.level;
-    _backup.directory = CBLDatabase.log.file.directory;
-    _backup.maxSize = CBLDatabase.log.file.maxSize;
-    _backup.maxRotateCount = CBLDatabase.log.file.maxRotateCount;
-    _backup.usePlainText = CBLDatabase.log.file.usePlainText;
+    _backup.config = CBLDatabase.log.file.config;
 }
 
 
-- (NSArray<NSURL*>*) getLogsInDirectory: (nullable NSString*)directory
+- (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
                              properties: (nullable NSArray<NSURLResourceKey>*)keys
                            onlyInfoLogs: (BOOL)onlyInfo {
-    directory = directory ? directory : CBLDatabase.log.file.directory;
-    NSURL* path = [NSURL URLWithString: directory];
+    AssertNotNil(directory);
+    NSURL* path = [NSURL fileURLWithPath: directory];
     AssertNotNil(path);
     
     NSError* error;
@@ -114,15 +118,10 @@
 }
 
 
-- (void) testPlainTextLoggingLevels {
-    [self backupFileLogger];
-    
-    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"];
-    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
-    
-    CBLDatabase.log.file.directory = path;
-    CBLDatabase.log.file.usePlainText = YES;
-    CBLDatabase.log.file.maxRotateCount = 0;
+- (void) testFileLoggingLevels {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    CBLDatabase.log.file.config = config;
     
     for (NSUInteger i = 5; i >= 1; i--) {
         CBLDatabase.log.file.level = (CBLLogLevel)i;
@@ -133,9 +132,10 @@
     }
     
     NSError* error;
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: path error: &error];
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: config.directory
+                                                                         error: &error];
     for (NSString* file in files) {
-        NSString* log = [path stringByAppendingPathComponent: file];
+        NSString* log = [config.directory stringByAppendingPathComponent: file];
         NSString* content = [NSString stringWithContentsOfFile: log
                                                       encoding: NSUTF8StringEncoding
                                                          error: &error];
@@ -156,18 +156,13 @@
 }
 
 
-- (void) testDefaultLocation {
-    CBLLogInfo(Database, @"TEST INFO");
+- (void) testFileLoggingDefaultBinaryFormat {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelInfo;
     
-    NSArray* files = [self getLogsInDirectory: nil properties: nil onlyInfoLogs: NO];
-    Assert(files.count >= 5, "because there should be at least 5 log entries in the folder");
-}
-
-
-- (void) testDefaultLogFormat {
     CBLLogInfo(Database, @"TEST INFO");
-    
-    NSArray* files = [self getLogsInDirectory: nil
+    NSArray* files = [self getLogsInDirectory: config.directory
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
     NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
@@ -191,18 +186,23 @@
     NSError* error;
     NSFileHandle* sourceFileHandle = [NSFileHandle fileHandleForReadingFromURL: last error: &error];
     NSData* begainData = [sourceFileHandle readDataOfLength: 4];
+    AssertNotNil(begainData);
     Byte *bytes = (Byte *)[begainData bytes];
     Assert(bytes[0] == 0xcf && bytes[1] == 0xb2 && bytes[2] == 0xab && bytes[3] == 0x1b,
            @"because the log should be in binary format");
 }
 
 
-- (void) testPlainText {
-    CBLDatabase.log.file.usePlainText = YES;
+- (void) testFileLoggingUsePlainText {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelInfo;
+    
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
     
-    NSArray* files = [self getLogsInDirectory: nil
+    NSArray* files = [self getLogsInDirectory: config.directory
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
     NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
@@ -232,10 +232,14 @@
 }
 
 
-- (void) testLogFilename {
+- (void) testFileLoggingLogFilename {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    
     NSString* regex = @"cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog";
     NSPredicate* predicate = [NSPredicate predicateWithFormat: @"SELF MATCHES %@", regex];
-    NSArray* files = [self getLogsInDirectory: nil properties: nil onlyInfoLogs: NO];
+    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
     for (NSURL* file in files) {
         Assert([predicate evaluateWithObject: file.lastPathComponent]);
     }
@@ -300,7 +304,6 @@
 
 @implementation FileLoggerBackup
 
-@synthesize level=_level, directory=_directory, usePlainText=_usePlainText;
-@synthesize maxSize=_maxSize, maxRotateCount=_maxRotateCount;
+@synthesize config=_config, level=_level;
 
 @end
