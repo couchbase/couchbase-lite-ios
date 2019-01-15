@@ -100,6 +100,45 @@
 }
 
 
+- (void) writeOneKiloByteOfLog {
+    NSString* inputString = @"11223344556677889900"; // 20B + (27B, 24B, 24B, 24B, 29B)  ~44B line
+    for(int i = 0; i < 23; i++) {
+        CBLDebug(Database, @"%@", inputString);
+        CBLLogInfo(Database, @"%@", inputString);
+        CBLLogVerbose(Database, @"%@", inputString);
+        CBLWarn(Database, @"%@", inputString);
+        CBLWarnError(Database, @"%@", inputString);
+    }
+    [self writeAllLogs: @"-"]; // 25B : total ~1037Bytes
+    [NSThread sleepForTimeInterval: 1.0];
+}
+
+
+- (void) writeAllLogs: (NSString*)string {
+    CBLDebug(Database, @"%@", string);
+    CBLLogInfo(Database, @"%@", string);
+    CBLLogVerbose(Database, @"%@", string);
+    CBLWarn(Database, @"%@", string);
+    CBLWarnError(Database, @"%@", string);
+}
+
+
+- (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (NSString*)path {
+    NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
+    NSError* error;
+    for (NSURL* url in files) {
+        NSString* contents = [NSString stringWithContentsOfURL: url
+                                                      encoding: NSASCIIStringEncoding
+                                                         error: &error];
+        AssertNil(error);
+        if ([contents rangeOfString: keyword].location != NSNotFound) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     LogTestLogger* customLogger = [[LogTestLogger alloc] init];
@@ -264,6 +303,68 @@
     CBLWarn(Database, @"TEST WARNING");
     CBLWarnError(Database, @"TEST ERROR");
     AssertEqual(customLogger.lines.count, 4);
+}
+
+
+- (void) testFileLoggingDefaultMaxSize {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    config.maxSize = 1024;
+    config.maxRotateCount = 1;
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    
+    // this should create two files, as the 1KB + extra ~400-500Bytes.
+    [self writeOneKiloByteOfLog];
+    
+    NSUInteger totalFilesInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
+#if !DEBUG
+    totalFilesInDirectory = totalFilesInDirectory - 1;
+#endif
+    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    AssertEqual(files.count, totalFilesInDirectory);
+}
+
+
+- (void) testFileLoggingDisableLogging {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    
+    NSString* inputString = [[NSUUID UUID] UUIDString];
+    [self writeAllLogs: inputString];
+    
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
+}
+
+
+- (void) testFileLoggingReEnableLogging {
+    CBLLogFileConfiguration* config = [self logFileConfig];
+    config.usePlainText = YES;
+    CBLDatabase.log.file.config = config;
+    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    
+    NSString* inputString = [[NSUUID UUID] UUIDString];
+    [self writeAllLogs: inputString];
+    
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
+    
+    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    [self writeAllLogs: inputString];
+    
+    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSError* error;
+    for (NSURL* url in files) {
+        if ([url.lastPathComponent hasPrefix: @"cbl_debug_"]) {
+            continue;
+        }
+        NSString* contents = [NSString stringWithContentsOfURL: url
+                                                      encoding: NSASCIIStringEncoding
+                                                         error: &error];
+        AssertNil(error);
+        Assert([contents rangeOfString: inputString].location != NSNotFound);
+    }
 }
 
 @end
