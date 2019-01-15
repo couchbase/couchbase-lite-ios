@@ -197,6 +197,28 @@ class LogTest: CBLTestCase {
             XCTAssert(predicate.evaluate(with: file.lastPathComponent))
         }
     }
+    
+    func testEnableAndDisableCustomLogging() throws {
+        Log.log(domain: .database, level: .info, message: "IGNORE")
+        let customLogger = LogTestLogger()
+        Database.log.custom = customLogger
+        
+        customLogger.level = .none
+        Database.log.custom = customLogger
+        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log.log(domain: .database, level: .error, message: "TEST ERROR")
+        XCTAssertEqual(customLogger.lines.count, 0)
+        
+        customLogger.level = .verbose
+        Database.log.custom = customLogger
+        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log.log(domain: .database, level: .error, message: "TEST ERROR")
+        XCTAssertEqual(customLogger.lines.count, 4)
+    }
 }
 
 class LogTestLogger: Logger {
