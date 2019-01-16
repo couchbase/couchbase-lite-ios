@@ -65,6 +65,36 @@ class LogTest: CBLTestCase {
             (onlyInfoLogs ? $0.lastPathComponent.starts(with: "cbl_info_") : true) })
     }
     
+    func writeOneKiloByteOfLog() {
+        let message = "11223344556677889900" // 44Byte line
+        for _ in 0..<23 { // 1012 Bytes
+            Log.log(domain: .database, level: .error, message: "\(message)")
+            Log.log(domain: .database, level: .warning, message: "\(message)")
+            Log.log(domain: .database, level: .info, message: "\(message)")
+            Log.log(domain: .database, level: .verbose, message: "\(message)")
+            Log.log(domain: .database, level: .debug, message: "\(message)")
+        }
+        writeAllLogs("1") // ~25Bytes
+    }
+    
+    func writeAllLogs(_ message: String) {
+        Log.log(domain: .database, level: .error, message: message)
+        Log.log(domain: .database, level: .warning, message: message)
+        Log.log(domain: .database, level: .info, message: message)
+        Log.log(domain: .database, level: .verbose, message: message)
+        Log.log(domain: .database, level: .debug, message: message)
+    }
+    
+    func isKeywordPresentInAnyLog(_ keyword: String, path: String) throws -> Bool {
+        for file in try getLogsInDirectory(path) {
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            if contents.contains(keyword) {
+                return true
+            }
+        }
+        return false
+    }
+    
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = LogTestLogger()
@@ -223,6 +253,84 @@ class LogTest: CBLTestCase {
         Log.log(domain: .database, level: .warning, message: "TEST WARNING")
         Log.log(domain: .database, level: .error, message: "TEST ERROR")
         XCTAssertEqual(customLogger.lines.count, 4)
+    }
+    
+    func _testFileLoggingMaxSize() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        config.maxSize = 1024
+        Database.log.file.config = config
+        Database.log.file.level = .debug
+        
+        // this should create two files, as the 1KB logs + extra ~400Bytes
+        writeOneKiloByteOfLog()
+        
+        guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
+            fatalError("Config should be present!!")
+        }
+        var totalFilesInDirectory = (maxRotateCount + 1) * 5
+        
+        #if !DEBUG
+        totalFilesInDirectory = totalFilesInDirectory - 1
+        #endif
+        
+        let totalLogFilesSaved = try getLogsInDirectory(config.directory)
+        XCTAssertEqual(totalLogFilesSaved.count, totalFilesInDirectory)
+    }
+    
+    func testFileLoggingDisableLogging() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
+        Database.log.file.level = .none
+        
+        let message = UUID().uuidString
+        writeAllLogs(message)
+        
+        XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: config.directory))
+    }
+    
+    func testFileLoggingReEnableLogging() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
+        
+        // DISABLE LOGGING
+        Database.log.file.level = .none
+        let message = UUID().uuidString
+        writeAllLogs(message)
+        
+        XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: config.directory))
+        
+        // ENABLE LOGGING
+        Database.log.file.level = .verbose
+        writeAllLogs(message)
+        
+        for file in try getLogsInDirectory(config.directory) {
+            if file.lastPathComponent.starts(with: "cbl_debug_") {
+                continue
+            }
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            XCTAssert(contents.contains(message))
+        }
+    }
+    
+    func testFileLoggingHeader() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
+        Database.log.file.level = .verbose
+        
+        writeOneKiloByteOfLog()
+        for file in try getLogsInDirectory(config.directory) {
+            let contents = try String(contentsOf: file, encoding: .ascii)
+            guard let firstLine = contents.components(separatedBy: "\n").first else {
+                fatalError("log contents should be empty and needs header section")
+            }
+            XCTAssert(firstLine.contains("CouchbaseLite/"))
+            XCTAssert(firstLine.contains("Build/"))
+            XCTAssert(firstLine.contains("Commit/"))
+        }
     }
 }
 
