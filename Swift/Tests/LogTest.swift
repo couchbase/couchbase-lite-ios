@@ -2,7 +2,7 @@
 //  LogTest.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -23,36 +23,41 @@ import XCTest
 
 class LogTest: CBLTestCase {
     
+    static let logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+    
     var backup: FileLoggerBackup?
+    
+    override func setUp() {
+        super.setUp()
+        
+        backupFileLogger()
+        try? FileManager.default.removeItem(atPath: LogTest.logFileDirectory)
+    }
     
     override func tearDown() {
         super.tearDown()
         
         if let backup = self.backup {
+            Database.log.file.config = backup.config
             Database.log.file.level = backup.level
-            Database.log.file.directory = backup.directory
-            Database.log.file.maxSize = backup.maxSize
-            Database.log.file.maxRotateCount = backup.maxRotateCount
-            Database.log.file.usePlainText = backup.usePlainText
             self.backup = nil
         }
     }
     
-    func backupFileLogger() {
-        backup = FileLoggerBackup(level: Database.log.file.level,
-                              directory: Database.log.file.directory,
-                           usePlainText: Database.log.file.usePlainText,
-                                maxSize: Database.log.file.maxSize,
-                         maxRotateCount: Database.log.file.maxRotateCount)
+    func logFileConfig() -> LogFileConfiguration {
+        return LogFileConfiguration(directory: LogTest.logFileDirectory)
     }
     
-    func getLogsInDirectory(_ directory: String = Database.log.file.directory,
+    func backupFileLogger() {
+        backup = FileLoggerBackup(config: Database.log.file.config,
+                                  level: Database.log.file.level)
+    }
+    
+    func getLogsInDirectory(_ directory: String,
                             properties: [URLResourceKey] = [],
-                            onlyInfoLogs: Bool = false) throws -> [URL] {
-        guard let url = URL(string: directory) else {
-            fatalError("valid directory should be provided")
-        }
-        
+                            onlyInfoLogs: Bool = false) throws -> [URL]
+    {
+        let url = URL(fileURLWithPath: directory)
         let files = try FileManager.default.contentsOfDirectory(at: url,
                                                                 includingPropertiesForKeys: properties,
                                                                 options: .skipsSubdirectoryDescendants)
@@ -79,15 +84,10 @@ class LogTest: CBLTestCase {
         Database.log.custom = nil
     }
     
-    func testPlainTextLoggingLevels() throws {
-        backupFileLogger()
-        
-        let path = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
-        try? FileManager.default.removeItem(atPath: path)
-        
-        Database.log.file.directory = path
-        Database.log.file.usePlainText = true
-        Database.log.file.maxRotateCount = 0
+    func testFileLoggingLevels() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
         
         for i in (1...5).reversed() {
             Database.log.file.level = LogLevel(rawValue: UInt8(i))!
@@ -97,9 +97,9 @@ class LogTest: CBLTestCase {
             Log.log(domain: .database, level: .error, message: "TEST ERROR")
         }
         
-        let files = try FileManager.default.contentsOfDirectory(atPath: path)
+        let files = try FileManager.default.contentsOfDirectory(atPath: config.directory)
         for file in files {
-            let log = (path as NSString).appendingPathComponent(file)
+            let log = (config.directory as NSString).appendingPathComponent(file)
             let content = try NSString(contentsOfFile: log, encoding: String.Encoding.utf8.rawValue)
             
             var lineCount = 0
@@ -120,18 +120,15 @@ class LogTest: CBLTestCase {
         }
     }
     
-    func testDefaultLocation() throws {
-        Log.log(domain: .database, level: .info, message: "TEST INFO")
-        
-        let files = try getLogsInDirectory()
-        XCTAssert(files.count >= 5, "because there should be at least 5 log entries in the folder")
-    }
     
-    func testDefaultLogFormat() throws {
-        Database.log.file.usePlainText = false
+    func testFileLoggingDefaultBinaryFormat() throws {
+        let config = self.logFileConfig()
+        Database.log.file.config = config
+        Database.log.file.level = .info
         Log.log(domain: .database, level: .info, message: "TEST INFO")
         
-        let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
+        let files = try getLogsInDirectory(config.directory,
+                                           properties: [.contentModificationDateKey],
                                            onlyInfoLogs: true)
         let sorted = files.sorted { (url1, url2) -> Bool in
             guard let date1 = try! url1
@@ -159,12 +156,17 @@ class LogTest: CBLTestCase {
                   "because the log should be in binary format");
     }
     
-    func testPlainText() throws {
-        Database.log.file.usePlainText = true
+    func testFileLoggingUsePlainText() throws {
+        let config = self.logFileConfig()
+        config.usePlainText = true
+        Database.log.file.config = config
+        Database.log.file.level = .info
+        
         let inputString = "SOME TEST INFO"
         Log.log(domain: .database, level: .info, message: inputString)
         
-        let files = try getLogsInDirectory(properties: [.contentModificationDateKey],
+        let files = try getLogsInDirectory(config.directory,
+                                           properties: [.contentModificationDateKey],
                                            onlyInfoLogs: true)
         let sorted = files.sorted { (url1, url2) -> Bool in
             guard let date1 = try! url1
@@ -190,10 +192,13 @@ class LogTest: CBLTestCase {
         XCTAssert(contents.contains(contents))
     }
 
-    func testLogFilename() throws {
+    func testFileLoggingLogFilename() throws {
+        let config = self.logFileConfig()
+        Database.log.file.config = config
+        Database.log.file.level = .debug
         let regex = "cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog"
         let predicate = NSPredicate(format: "SELF MATCHES %@", regex)
-        for file in try getLogsInDirectory() {
+        for file in try getLogsInDirectory(config.directory) {
             XCTAssert(predicate.evaluate(with: file.lastPathComponent))
         }
     }
@@ -239,14 +244,8 @@ class LogTestLogger: Logger {
 
 struct FileLoggerBackup {
     
+    var config: LogFileConfiguration?
+    
     var level: LogLevel
-    
-    var directory: String
-    
-    var usePlainText: Bool
-    
-    var maxSize: UInt64
-    
-    var maxRotateCount: Int
     
 }

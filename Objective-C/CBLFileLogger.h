@@ -19,41 +19,33 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLLogger.h"
+@class CBLLogFileConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- File logger used for writing log messages to files. The binary file format will be used by default.
- To change the file format to plain text, set the usePlainText property to true.
+ File logger used for writing log messages to files. To enable the file logger,
+ setup the log file configuration and specifiy the log level as desired.
+ 
+ It is important to configure your CBLLogFileConfiguration object appropriately before setting
+ to a logger. Logger make a copy of the configuration settings you provide and use those settings
+ to configure the logger. Once configured, the logger object ignores any changes you make to the
+ CBLLogFileConfiguration object.
  */
 @interface CBLFileLogger : NSObject <CBLLogger>
 
 /**
+ The log file configuration for configuring the log directory, file format, and rotation policy.
+ The config property is nil by default. Setting the config property to nil will disable the file
+ logging.
+ */
+@property (nonatomic, nullable) CBLLogFileConfiguration* config;
+
+/**
  The minimum log level of the log messages to be logged. The default log level for
- file logger is warning.
+ file logger is kCBLLogLevelNone which means no logging.
  */
 @property (nonatomic) CBLLogLevel level;
-
-/**
- The directory to store the log files.
- */
-@property (nonatomic) NSString* directory;
-
-/**
- To use plain text file format instead of the default binary format.
- */
-@property (nonatomic) BOOL usePlainText;
-
-/**
- The maximum size of a log file before being rotation. The default is 1024 bytes.
- */
-@property (nonatomic) uint64_t maxSize;
-
-
-/**
- The maximum number of rotated log files to keep. The default is 1 which means no rotation.
- */
-@property (nonatomic) NSInteger maxRotateCount;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
