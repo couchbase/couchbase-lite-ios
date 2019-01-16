@@ -559,6 +559,8 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 1)
     }
     
+    // MARK: Removed Doc with Filter
+    
     func _testPushRemovedDocWithFilterSingleShot() throws {
         try testPushRemovedDocWithFilter(false)
     }
@@ -665,6 +667,116 @@ class ReplicatorTest: CBLTestCase {
         let doc2Mutable = otherDB.document(withID: "pass")?.toMutable()
         doc2Mutable?.setData(["_removed": true])
         try otherDB.saveDocument(doc2)
+        
+        run(config: config, expectedError: nil)
+        
+        // Check documents passed to the filter:
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc1"))
+        XCTAssert(docIds.contains("pass"))
+        
+        XCTAssertNotNil(db.document(withID: "doc1"))
+        XCTAssertNil(db.document(withID: "pass"))
+    }
+    
+    // MARK: Deleted Doc with Filter
+    
+    func _testPushDeletedDocWithFilterSingleShot() throws {
+        try testPushDeletedDocWithFilter(false)
+    }
+    
+    func _testPushDeletedDocWithFilterContinuous() throws {
+        try testPushDeletedDocWithFilter(true)
+    }
+    
+    func _testPullDeletedDocWithFilterSingleShot() throws {
+        try testPullDeletedDocWithFilter(false)
+    }
+    
+    func _testPullDeletedDocWithFilterContinuous() throws {
+        try testPullDeletedDocWithFilter(true)
+    }
+    
+    func testPushDeletedDocWithFilter(_ isContinuous: Bool) throws {
+        // Create documents:
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "pass")
+        doc2.setString("pass", forKey: "name")
+        try db.saveDocument(doc2)
+        
+        // Create replicator with push filter:
+        let docIds = NSMutableSet()
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .push, continuous: isContinuous)
+        config.pushFilter = { (doc, flags) in
+            XCTAssertNotNil(doc.id)
+            
+            let isDeleted = flags.contains(.deleted)
+            if isDeleted {
+                docIds.add(doc.id)
+                return doc.id == "pass"
+            }
+            return doc.string(forKey: "name") == "pass"
+        }
+        
+        // Run the replicator:
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(docIds.count, 0)
+        
+        XCTAssertNotNil(otherDB.document(withID: "doc1"))
+        XCTAssertNotNil(otherDB.document(withID: "pass"))
+        
+        try db.deleteDocument(doc1)
+        try db.deleteDocument(doc2)
+        
+        run(config: config, expectedError: nil)
+        
+        // Check documents passed to the filter:
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc1"))
+        XCTAssert(docIds.contains("pass"))
+        
+        XCTAssertNotNil(otherDB.document(withID: "doc1"))
+        XCTAssertNil(otherDB.document(withID: "pass"))
+    }
+    
+    func testPullDeletedDocWithFilter(_ isContinuous: Bool) throws {
+        // Create documents:
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try otherDB.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "pass")
+        doc2.setString("pass", forKey: "name")
+        try otherDB.saveDocument(doc2)
+        
+        // Create replicator with push filter:
+        let docIds = NSMutableSet()
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .pull, continuous: isContinuous)
+        config.pullFilter = { (doc, flags) in
+            XCTAssertNotNil(doc.id)
+            
+            let isDeleted = flags.contains(.deleted)
+            if isDeleted {
+                docIds.add(doc.id)
+                return doc.id == "pass"
+            }
+            return doc.string(forKey: "name") == "pass"
+        }
+        
+        // Run the replicator:
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(docIds.count, 0)
+        
+        XCTAssertNotNil(db.document(withID: "doc1"))
+        XCTAssertNotNil(db.document(withID: "pass"))
+        
+        try otherDB.deleteDocument(doc1)
+        try otherDB.deleteDocument(doc2)
         
         run(config: config, expectedError: nil)
         
