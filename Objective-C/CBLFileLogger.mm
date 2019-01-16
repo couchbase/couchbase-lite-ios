@@ -19,47 +19,23 @@
 
 #import "CBLFileLogger.h"
 #import "CBLLog+Internal.h"
-#import "CBLDatabase+Internal.h"
+#import "CBLLogFileConfiguration+Internal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLVersion.h"
 
-#define kCBLFileLoggerDefaultMaxSize 500*1024
-
 @implementation CBLFileLogger
 
-@synthesize level=_level, directory=_directory, usePlainText=_usePlainText;
-@synthesize maxSize=_maxSize, maxRotateCount=_maxRotateCount;
+@synthesize level=_level, config=_config;
+
 
 - (instancetype) initWithDefault {
     self = [super init];
     if (self) {
-        _level = kCBLLogLevelInfo;
-        _directory = [self defaultDirectory];
-        _usePlainText = NO;
-        _maxSize = kCBLFileLoggerDefaultMaxSize;
-        _maxRotateCount = 1;
-        [self apply];
+        _level = kCBLLogLevelNone;
     }
     return self;
-}
-
-
-- (NSString*) defaultDirectory {
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    if (bundleID) {
-        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-        return [paths[0] stringByAppendingPathComponent:
-                [NSString stringWithFormat: @"Logs/%@/CouchbaseLite", bundleID]];
-    } else
-        return [[NSFileManager.defaultManager currentDirectoryPath]
-                stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
-#else
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    return [paths[0] stringByAppendingPathComponent: @"CouchbaseLite/Logs"];
-#endif
 }
 
 
@@ -71,33 +47,13 @@
 }
 
 
-- (void) setDirectory: (NSString *)directory {
-    if (_directory != directory) {
-        _directory = directory;
-        [self apply];
-    }
-}
-
-
-- (void) setUsePlainText: (BOOL)usePlainText {
-    if (_usePlainText != usePlainText) {
-        _usePlainText = usePlainText;
-        [self apply];
-    }
-}
-
-
-- (void) setMaxSize: (uint64_t)maxSize {
-    if (_maxSize != maxSize) {
-        _maxSize = maxSize;
-        [self apply];
-    }
-}
-
-
-- (void) setMaxRotateCount: (NSInteger)maxRotateCount {
-    if (_maxRotateCount != maxRotateCount) {
-        _maxRotateCount = maxRotateCount;
+- (void) setConfig: (CBLLogFileConfiguration*)config {
+    if (_config != config) {
+        if (config) {
+            // Copy and mark as READONLY
+            config = [[CBLLogFileConfiguration alloc] initWithConfig: config readonly: YES];
+        }
+        _config = config;
         [self apply];
     }
 }
@@ -107,23 +63,29 @@
                domain: (CBLLogDomain)domain
               message: (nonnull NSString*)message
 {
-    // Do nothing
+    // Do nothing: Logging will be done in Lite Core
 }
 
 
 - (void) apply {
     NSError* error;
-    if (![self setupLogDirectory: self.directory error: &error]) {
-        CBLWarnError(Database, @"Cannot setup log directory at %@: %@", self.directory, error);
+    
+    if (!_config) {
+        c4log_setBinaryFileLevel(kC4LogNone);
+        return;
+    }
+    
+    if (![self setupLogDirectory: _config.directory error: &error]) {
+        CBLWarnError(Database, @"Cannot setup log directory at %@: %@", _config.directory, error);
         return;
     }
     
     C4LogFileOptions options = {
         .log_level = (C4LogLevel)self.level,
-        .base_path = CBLStringBytes(self.directory),
-        .max_size_bytes = (int64_t)self.maxSize,
-        .max_rotate_count = (int32_t)self.maxRotateCount,
-        .use_plaintext = (bool)self.usePlainText,
+        .base_path = CBLStringBytes(_config.directory),
+        .max_size_bytes = (int64_t)_config.maxSize,
+        .max_rotate_count = (int32_t)_config.maxRotateCount,
+        .use_plaintext = (bool)_config.usePlainText,
         .header = CBLStringBytes([CBLVersion userAgent])
     };
     
@@ -132,8 +94,6 @@
         convertError(c4err, &error);
         CBLWarnError(Database, @"Cannot enable file logging: %@", error);
     }
-    
-    c4log_setBinaryFileLevel((C4LogLevel)self.level);
 }
 
 
