@@ -559,19 +559,19 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 1)
     }
     
-    func testPushRemovedDocWithFilterSingleShot() throws {
+    func _testPushRemovedDocWithFilterSingleShot() throws {
         try testPushRemovedDocWithFilter(false)
     }
     
-    func testPushRemovedDocWithFilterContinuous() throws {
+    func _testPushRemovedDocWithFilterContinuous() throws {
         try testPushRemovedDocWithFilter(true)
     }
     
-    func testPullRemovedDocWithFilterSingleShot() throws {
+    func _testPullRemovedDocWithFilterSingleShot() throws {
         try testPullRemovedDocWithFilter(false)
     }
     
-    func testPullRemovedDocWithFilterContinuous() throws {
+    func _testPullRemovedDocWithFilterContinuous() throws {
         try testPullRemovedDocWithFilter(true)
     }
     
@@ -591,10 +591,10 @@ class ReplicatorTest: CBLTestCase {
         let config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
-            docIds.add(doc.id)
             
-            let isDeleted = flags.contains(.deleted)
-            if isDeleted {
+            let isAccessRemoved = flags.contains(.accessRemoved)
+            if isAccessRemoved {
+                docIds.add(doc.id)
                 return doc.id == "pass"
             }
             return doc.string(forKey: "name") == "pass"
@@ -602,11 +602,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Run the replicator:
         run(config: config, expectedError: nil)
-        
-        // Check documents passed to the filter:
-        XCTAssertEqual(docIds.count, 2)
-        XCTAssert(docIds.contains("doc1"))
-        XCTAssert(docIds.contains("pass"))
+        XCTAssertEqual(docIds.count, 0)
         
         XCTAssertNotNil(otherDB.document(withID: "doc1"))
         XCTAssertNotNil(otherDB.document(withID: "pass"))
@@ -619,7 +615,6 @@ class ReplicatorTest: CBLTestCase {
         doc2Mutable?.setData(["_removed": true])
         try db.saveDocument(doc2)
         
-        docIds.removeAllObjects()
         run(config: config, expectedError: nil)
         
         // Check documents passed to the filter:
@@ -647,10 +642,10 @@ class ReplicatorTest: CBLTestCase {
         let config = self.config(target: target, type: .pull, continuous: isContinuous)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
-            docIds.add(doc.id)
             
-            let isDeleted = flags.contains(.deleted)
-            if isDeleted {
+            let isAccessRemoved = flags.contains(.accessRemoved)
+            if isAccessRemoved {
+                docIds.add(doc.id)
                 return doc.id == "pass"
             }
             return doc.string(forKey: "name") == "pass"
@@ -658,11 +653,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Run the replicator:
         run(config: config, expectedError: nil)
-        
-        // Check documents passed to the filter:
-        XCTAssertEqual(docIds.count, 2)
-        XCTAssert(docIds.contains("doc1"))
-        XCTAssert(docIds.contains("pass"))
+        XCTAssertEqual(docIds.count, 0)
         
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "pass"))
@@ -675,7 +666,6 @@ class ReplicatorTest: CBLTestCase {
         doc2Mutable?.setData(["_removed": true])
         try otherDB.saveDocument(doc2)
         
-        docIds.removeAllObjects()
         run(config: config, expectedError: nil)
         
         // Check documents passed to the filter:

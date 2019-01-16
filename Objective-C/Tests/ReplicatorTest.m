@@ -1856,22 +1856,22 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 
-- (void) testPullRemovedDocWithFilterSingleShot {
+- (void) _testPullRemovedDocWithFilterSingleShot {
     [self testPullRemovedDocWithFilter: NO];
 }
 
 
-- (void) testPullRemovedDocWithFilterContinuous {
+- (void) _testPullRemovedDocWithFilterContinuous {
     [self testPullRemovedDocWithFilter: YES];
 }
 
 
-- (void) testPushRemovedDocWithFilterSingleShot {
+- (void) _testPushRemovedDocWithFilterSingleShot {
     [self testPushRemovedDocWithFilter: NO];
 }
 
 
-- (void) testPushRemovedDocWithFilterContinuous {
+- (void) _testPushRemovedDocWithFilterContinuous {
     [self testPushRemovedDocWithFilter: NO];
 }
 
@@ -1894,11 +1894,11 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                      continuous: isContinuous];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
-        [docIds addObject: document.id];
-        
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        if (isDeleted) {
-            // if deleted only allow  `docID = pass` is allowed.
+        BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
+        if (isAccessRemoved) {
+            [docIds addObject: document.id];
+            
+            // if access removed only allow  `docID = pass` is allowed.
             return [document.id isEqualToString: @"pass"];
         }
         // allow all docs with `name = pass`
@@ -1906,6 +1906,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     };
     
     [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(docIds.count, 0u);
     
     // Update the `_removed` flag
     doc1 = [[otherDB documentWithID: @"doc1"] toMutable];
@@ -1945,11 +1946,12 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                      continuous: isContinuous];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
-        [docIds addObject: document.id];
         
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        if (isDeleted) {
-            // if deleted only allow  `docID = pass` is allowed.
+        BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
+        if (isAccessRemoved) {
+            [docIds addObject: document.id];
+            
+            // if isAccessRemoved, allow  `docID = pass` is allowed.
             return [document.id isEqualToString: @"pass"];
         }
         // allow all docs with `name = pass`
@@ -1957,6 +1959,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     };
     
     [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(docIds.count, 0u);
     
     AssertNotNil([otherDB documentWithID: @"doc1"]);
     AssertNotNil([otherDB documentWithID: @"pass"]);
