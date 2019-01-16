@@ -28,7 +28,8 @@ public class Log {
     /// File logger writing log messages to files.
     public let file = FileLogger()
     
-    /// For setting a custom logger.
+    /// For setting a custom logger. Changing the log level of the assigned custom logger will
+    /// require the custom logger to be reassigned so that the change can be affected.
     public var custom: Logger? {
         didSet {
             if let logger = custom {
