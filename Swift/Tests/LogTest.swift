@@ -255,7 +255,7 @@ class LogTest: CBLTestCase {
         XCTAssertEqual(customLogger.lines.count, 4)
     }
     
-    func testFileLoggingMaxSize() throws {
+    func _testFileLoggingMaxSize() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
         config.maxSize = 1024

@@ -306,7 +306,7 @@
 }
 
 
-- (void) testFileLoggingMaxSize {
+- (void) _testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
     config.maxSize = 1024;
