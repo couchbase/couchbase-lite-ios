@@ -789,5 +789,139 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "pass"))
     }
     
+    // MARK: stop and restart replication with filter
+    
+    func testStopAndRestartPushReplicationWithFilter() throws {
+        // Create documents:
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        // Create replicator with pull filter:
+        let docIds = NSMutableSet()
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .push, continuous: true)
+        config.pushFilter = { (doc, flags) in
+            XCTAssertNotNil(doc.id)
+            docIds.add(doc.id)
+            return doc.string(forKey: "name") == "pass"
+        }
+        
+        // create a replicator
+        repl = Replicator(config: config)
+        repl.start()
+        waitForReplicatorListenerToStop()
+        
+        XCTAssertEqual(docIds.count, 1)
+        XCTAssertEqual(otherDB.count, 1)
+        XCTAssertEqual(db.count, 1)
+        
+        // stops the replicator
+        repl.stop()
+        waitForReplicatorListenerToStop()
+        
+        // make some more changes
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("pass", forKey: "name")
+        try db.saveDocument(doc2)
+        
+        let doc3 = MutableDocument(id: "doc3")
+        doc3.setString("donotpass", forKey: "name")
+        try db.saveDocument(doc3)
+        
+        // restart the same replicator
+        docIds.removeAllObjects()
+        repl.start()
+        waitForReplicatorListenerToStop()
+        
+        // should use the same replicator filter.
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc3"))
+        XCTAssert(docIds.contains("doc2"))
+        
+        XCTAssertNotNil(otherDB.document(withID: "doc1"))
+        XCTAssertNotNil(otherDB.document(withID: "doc2"))
+        XCTAssertEqual(db.count, 3)
+        XCTAssertEqual(otherDB.count, 2)
+        
+        repl.stop()
+        waitForReplicatorListenerToStop()
+    }
+    
+    func _testStopAndRestartPullReplicationWithFilter() throws {
+        // Create documents:
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try otherDB.saveDocument(doc1)
+        
+        // Create replicator with pull filter:
+        let docIds = NSMutableSet()
+        let target = DatabaseEndpoint(database: otherDB)
+        let config = self.config(target: target, type: .pull, continuous: true)
+        config.pullFilter = { (doc, flags) in
+            XCTAssertNotNil(doc.id)
+            docIds.add(doc.id)
+            return doc.string(forKey: "name") == "pass"
+        }
+        
+        // create a replicator
+        repl = Replicator(config: config)
+        repl.start()
+        waitForReplicatorListenerToStop()
+        
+        XCTAssertEqual(docIds.count, 1)
+        XCTAssertEqual(otherDB.count, 1)
+        XCTAssertEqual(db.count, 1)
+        
+        // stops the replicator
+        repl.stop()
+        waitForReplicatorListenerToStop()
+        
+        // make some more changes
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("pass", forKey: "name")
+        try otherDB.saveDocument(doc2)
+        
+        let doc3 = MutableDocument(id: "doc3")
+        doc3.setString("donotpass", forKey: "name")
+        try otherDB.saveDocument(doc3)
+        
+        // restart the same replicator
+        docIds.removeAllObjects()
+        repl.start()
+        waitForReplicatorListenerToStop()
+        
+        // should use the same replicator filter.
+        XCTAssertEqual(docIds.count, 2)
+        XCTAssert(docIds.contains("doc3"))
+        XCTAssert(docIds.contains("doc2"))
+        
+        XCTAssertNotNil(db.document(withID: "doc1"))
+        XCTAssertNotNil(db.document(withID: "doc2"))
+        XCTAssertEqual(otherDB.count, 3)
+        XCTAssertEqual(db.count, 2)
+        
+        repl.stop()
+        waitForReplicatorListenerToStop()
+    }
+    
+    func waitForReplicatorListenerToStop() {
+        let x = self.expectation(description: "change")
+        let token = repl.addChangeListener { (change) in
+            let status = change.status
+            if status.activity == .idle && status.progress.completed == status.progress.total {
+                x.fulfill()
+            }
+            if status.activity == .stopped {
+                guard status.error == nil else {
+                    fatalError("No Error should occur")
+                }
+                x.fulfill()
+            }
+        }
+        wait(for: [x], timeout: 5.0)
+        repl.removeChangeListener(withToken: token)
+    }
+    
     #endif
 }
