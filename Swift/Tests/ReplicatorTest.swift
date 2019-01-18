@@ -809,16 +809,11 @@ class ReplicatorTest: CBLTestCase {
         
         // create a replicator
         repl = Replicator(config: config)
-        repl.start()
-        waitForReplicatorListenerToStop()
+        run(withReplicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(otherDB.count, 1)
         XCTAssertEqual(db.count, 1)
-        
-        // stops the replicator
-        repl.stop()
-        waitForReplicatorListenerToStop()
         
         // make some more changes
         let doc2 = MutableDocument(id: "doc2")
@@ -831,8 +826,7 @@ class ReplicatorTest: CBLTestCase {
         
         // restart the same replicator
         docIds.removeAllObjects()
-        repl.start()
-        waitForReplicatorListenerToStop()
+        run(withReplicator: repl, expectedError: nil)
         
         // should use the same replicator filter.
         XCTAssertEqual(docIds.count, 2)
@@ -841,14 +835,12 @@ class ReplicatorTest: CBLTestCase {
         
         XCTAssertNotNil(otherDB.document(withID: "doc1"))
         XCTAssertNotNil(otherDB.document(withID: "doc2"))
+        XCTAssertNil(otherDB.document(withID: "doc3"))
         XCTAssertEqual(db.count, 3)
         XCTAssertEqual(otherDB.count, 2)
-        
-        repl.stop()
-        waitForReplicatorListenerToStop()
     }
     
-    func _testStopAndRestartPullReplicationWithFilter() throws {
+    func testStopAndRestartPullReplicationWithFilter() throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
@@ -866,16 +858,11 @@ class ReplicatorTest: CBLTestCase {
         
         // create a replicator
         repl = Replicator(config: config)
-        repl.start()
-        waitForReplicatorListenerToStop()
+        run(withReplicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(otherDB.count, 1)
         XCTAssertEqual(db.count, 1)
-        
-        // stops the replicator
-        repl.stop()
-        waitForReplicatorListenerToStop()
         
         // make some more changes
         let doc2 = MutableDocument(id: "doc2")
@@ -888,8 +875,7 @@ class ReplicatorTest: CBLTestCase {
         
         // restart the same replicator
         docIds.removeAllObjects()
-        repl.start()
-        waitForReplicatorListenerToStop()
+        run(withReplicator: repl, expectedError: nil)
         
         // should use the same replicator filter.
         XCTAssertEqual(docIds.count, 2)
@@ -898,29 +884,9 @@ class ReplicatorTest: CBLTestCase {
         
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "doc2"))
+        XCTAssertNil(db.document(withID: "doc3"))
         XCTAssertEqual(otherDB.count, 3)
         XCTAssertEqual(db.count, 2)
-        
-        repl.stop()
-        waitForReplicatorListenerToStop()
-    }
-    
-    func waitForReplicatorListenerToStop() {
-        let x = self.expectation(description: "change")
-        let token = repl.addChangeListener { (change) in
-            let status = change.status
-            if status.activity == .idle && status.progress.completed == status.progress.total {
-                x.fulfill()
-            }
-            if status.activity == .stopped {
-                guard status.error == nil else {
-                    fatalError("No Error should occur")
-                }
-                x.fulfill()
-            }
-        }
-        wait(for: [x], timeout: 5.0)
-        repl.removeChangeListener(withToken: token)
     }
     
     #endif

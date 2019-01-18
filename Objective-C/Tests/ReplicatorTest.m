@@ -2144,14 +2144,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     };
     
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    [repl start];
-    [self waitForReplicatorListenerToStop];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
     AssertEqual(self.db.count, 1u);
     AssertEqual(otherDB.count, 1u);
-    
-    [repl stop];
-    [self waitForReplicatorListenerToStop];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"pass" forKey: @"name"];
@@ -2162,8 +2158,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     Assert([self.db saveDocument: doc3 error: &error]);
     
     [docIds removeAllObjects];
-    [repl start];
-    [self waitForReplicatorListenerToStop];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     
     // Check documents passed to the filter:
     AssertEqual(docIds.count, 2u);
@@ -2173,15 +2168,13 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // shouldn't delete the one with `docID != pass`
     AssertNotNil([otherDB documentWithID: @"doc1"]);
     AssertNotNil([otherDB documentWithID: @"doc2"]);
+    AssertNil([otherDB documentWithID: @"doc3"]);
     AssertEqual(self.db.count, 3u);
     AssertEqual(otherDB.count, 2u);
-    
-    [repl stop];
-    [self waitForReplicatorListenerToStop];
 }
 
 
-- (void) _testStopAndRestartPullReplicationWithFilter {
+- (void) testStopAndRestartPullReplicationWithFilter {
     // Create documents
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -2202,14 +2195,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     };
     
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    [repl start];
-    [self waitForReplicatorListenerToStop];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
     AssertEqual(self.db.count, 1u);
     AssertEqual(otherDB.count, 1u);
-    
-    [repl stop];
-    [self waitForReplicatorListenerToStop];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"pass" forKey: @"name"];
@@ -2220,8 +2209,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     Assert([otherDB saveDocument: doc3 error: &error]);
     
     [docIds removeAllObjects];
-    [repl start];
-    [self waitForReplicatorListenerToStop];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     
     // Check documents passed to the filter:
     AssertEqual(docIds.count, 2u);
@@ -2231,27 +2219,9 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // shouldn't delete the one with `docID != pass`
     AssertNotNil([self.db documentWithID: @"doc1"]);
     AssertNotNil([self.db documentWithID: @"doc2"]);
+    AssertNil([self.db documentWithID: @"doc3"]);
     AssertEqual(otherDB.count, 3u);
     AssertEqual(self.db.count, 2u);
-    
-    [repl stop];
-    [self waitForReplicatorListenerToStop];
-}
-
-
-- (void) waitForReplicatorListenerToStop {
-    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
-    id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
-        if (change.status.activity == kCBLReplicatorIdle &&
-            change.status.progress.completed == change.status.progress.total) {
-            [x fulfill];
-        }
-        if (change.status.activity == kCBLReplicatorStopped) {
-            [x fulfill];
-        }
-    }];
-    [self waitForExpectations: @[x] timeout: timeout];
-    [repl removeChangeListenerWithToken: token];
 }
 
 #endif // COUCHBASE_ENTERPRISE
