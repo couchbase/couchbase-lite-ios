@@ -110,7 +110,6 @@
         CBLWarnError(Database, @"%@", inputString);
     }
     [self writeAllLogs: @"-"]; // 25B : total ~1037Bytes
-    [NSThread sleepForTimeInterval: 1.0];
 }
 
 
@@ -306,22 +305,22 @@
 }
 
 
-- (void) _testFileLoggingMaxSize {
+- (void) testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
     config.maxSize = 1024;
     CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    CBLDatabase.log.file.level = kCBLLogLevelDebug;
     
     // this should create two files, as the 1KB + extra ~400-500Bytes.
     [self writeOneKiloByteOfLog];
     
-    NSUInteger totalFilesInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
+    NSUInteger totalFilesShouldBeInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
 #if !DEBUG
-    totalFilesInDirectory = totalFilesInDirectory - 1;
+    totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1;
 #endif
     NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
-    AssertEqual(files.count, totalFilesInDirectory);
+    AssertEqual(files.count, totalFilesShouldBeInDirectory);
 }
 
 

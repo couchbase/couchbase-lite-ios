@@ -255,7 +255,7 @@ class LogTest: CBLTestCase {
         XCTAssertEqual(customLogger.lines.count, 4)
     }
     
-    func _testFileLoggingMaxSize() throws {
+    func testFileLoggingMaxSize() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
         config.maxSize = 1024
@@ -268,14 +268,14 @@ class LogTest: CBLTestCase {
         guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
             fatalError("Config should be present!!")
         }
-        var totalFilesInDirectory = (maxRotateCount + 1) * 5
+        var totalFilesShouldBeInDirectory = (maxRotateCount + 1) * 5
         
         #if !DEBUG
-        totalFilesInDirectory = totalFilesInDirectory - 1
+        totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1
         #endif
         
         let totalLogFilesSaved = try getLogsInDirectory(config.directory)
-        XCTAssertEqual(totalLogFilesSaved.count, totalFilesInDirectory)
+        XCTAssertEqual(totalLogFilesSaved.count, totalFilesShouldBeInDirectory)
     }
     
     func testFileLoggingDisableLogging() throws {
