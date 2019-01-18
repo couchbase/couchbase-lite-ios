@@ -20,8 +20,6 @@
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
 
-#define logFileDirectory [NSTemporaryDirectory() stringByAppendingPathComponent: @"LogTestLogs"]
-
 @interface LogTestLogger : NSObject <CBLLogger>
 
 @property (nonatomic) CBLLogLevel level;
@@ -46,19 +44,21 @@
 
 @implementation LogTest {
     FileLoggerBackup* _backup;
+    NSString* logFileDirectory;
 }
 
 
 - (void) setUp {
     [super setUp];
     [self backupFileLogger];
-    [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
+    NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
+    logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
 }
 
 
 - (void) tearDown {
     [super tearDown];
-    
+    [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
     if (_backup) {
         CBLDatabase.log.file.level = _backup.level;
         CBLDatabase.log.file.config = _backup.config;

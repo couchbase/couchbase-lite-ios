@@ -23,20 +23,20 @@ import XCTest
 
 class LogTest: CBLTestCase {
     
-    static let logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+    var logFileDirectory: String!
     
     var backup: FileLoggerBackup?
     
     override func setUp() {
         super.setUp()
-        
+        let folderName = "LogTestLogs_\(Int.random(in: 1...1000))"
+        logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent(folderName)
         backupFileLogger()
-        try? FileManager.default.removeItem(atPath: LogTest.logFileDirectory)
     }
     
     override func tearDown() {
         super.tearDown()
-        
+        try? FileManager.default.removeItem(atPath: logFileDirectory)
         if let backup = self.backup {
             Database.log.file.config = backup.config
             Database.log.file.level = backup.level
@@ -45,7 +45,7 @@ class LogTest: CBLTestCase {
     }
     
     func logFileConfig() -> LogFileConfiguration {
-        return LogFileConfiguration(directory: LogTest.logFileDirectory)
+        return LogFileConfiguration(directory: logFileDirectory)
     }
     
     func backupFileLogger() {
