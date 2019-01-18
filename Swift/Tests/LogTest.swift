@@ -23,20 +23,20 @@ import XCTest
 
 class LogTest: CBLTestCase {
     
-    static let logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent("LogTestLogs")
+    var logFileDirectory: String!
     
     var backup: FileLoggerBackup?
     
     override func setUp() {
         super.setUp()
-        
+        let folderName = "LogTestLogs_\(Int.random(in: 1...1000))"
+        logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent(folderName)
         backupFileLogger()
-        try? FileManager.default.removeItem(atPath: LogTest.logFileDirectory)
     }
     
     override func tearDown() {
         super.tearDown()
-        
+        try? FileManager.default.removeItem(atPath: logFileDirectory)
         if let backup = self.backup {
             Database.log.file.config = backup.config
             Database.log.file.level = backup.level
@@ -45,7 +45,7 @@ class LogTest: CBLTestCase {
     }
     
     func logFileConfig() -> LogFileConfiguration {
-        return LogFileConfiguration(directory: LogTest.logFileDirectory)
+        return LogFileConfiguration(directory: logFileDirectory)
     }
     
     func backupFileLogger() {
@@ -255,7 +255,7 @@ class LogTest: CBLTestCase {
         XCTAssertEqual(customLogger.lines.count, 4)
     }
     
-    func _testFileLoggingMaxSize() throws {
+    func testFileLoggingMaxSize() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
         config.maxSize = 1024
@@ -268,14 +268,14 @@ class LogTest: CBLTestCase {
         guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
             fatalError("Config should be present!!")
         }
-        var totalFilesInDirectory = (maxRotateCount + 1) * 5
+        var totalFilesShouldBeInDirectory = (maxRotateCount + 1) * 5
         
         #if !DEBUG
-        totalFilesInDirectory = totalFilesInDirectory - 1
+        totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1
         #endif
         
         let totalLogFilesSaved = try getLogsInDirectory(config.directory)
-        XCTAssertEqual(totalLogFilesSaved.count, totalFilesInDirectory)
+        XCTAssertEqual(totalLogFilesSaved.count, totalFilesShouldBeInDirectory)
     }
     
     func testFileLoggingDisableLogging() throws {

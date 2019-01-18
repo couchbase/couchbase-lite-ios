@@ -599,7 +599,7 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
         docFlags |= kCBLDocumentFlagsDeleted;
     
     if ((flags & kRevPurged) == kRevPurged)
-        docFlags |= kRevPurged;
+        docFlags |= kCBLDocumentFlagsAccessRemoved;
     
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 }

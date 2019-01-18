@@ -681,19 +681,19 @@ class ReplicatorTest: CBLTestCase {
     
     // MARK: Deleted Doc with Filter
     
-    func _testPushDeletedDocWithFilterSingleShot() throws {
+    func testPushDeletedDocWithFilterSingleShot() throws {
         try testPushDeletedDocWithFilter(false)
     }
     
-    func _testPushDeletedDocWithFilterContinuous() throws {
+    func testPushDeletedDocWithFilterContinuous() throws {
         try testPushDeletedDocWithFilter(true)
     }
     
-    func _testPullDeletedDocWithFilterSingleShot() throws {
+    func testPullDeletedDocWithFilterSingleShot() throws {
         try testPullDeletedDocWithFilter(false)
     }
     
-    func _testPullDeletedDocWithFilterContinuous() throws {
+    func testPullDeletedDocWithFilterContinuous() throws {
         try testPullDeletedDocWithFilter(true)
     }
     
