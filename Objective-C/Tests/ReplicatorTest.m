@@ -1990,22 +1990,22 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 #pragma mark Deleted Doc with Filter
 
 
-- (void) _testPushDeletedDocWithFilterSingleShot {
+- (void) testPushDeletedDocWithFilterSingleShot {
     [self testPushDeletedDocWithFilter: NO];
 }
 
 
-- (void) _testPushDeletedDocWithFilterContinuous {
+- (void) testPushDeletedDocWithFilterContinuous {
     [self testPushDeletedDocWithFilter: YES];
 }
 
 
-- (void) _testPullDeletedDocWithFilterSingleShot {
+- (void) testPullDeletedDocWithFilterSingleShot {
     [self testPullDeletedDocWithFilter: NO];
 }
 
 
-- (void) _testPullDeletedDocWithFilterContinuous {
+- (void) testPullDeletedDocWithFilterContinuous {
     [self testPullDeletedDocWithFilter: YES];
 }
 
