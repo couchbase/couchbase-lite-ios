@@ -1869,16 +1869,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 
-- (void) _testPushRemovedDocWithFilterSingleShot {
-    [self testPushRemovedDocWithFilter: NO];
-}
-
-
-- (void) _testPushRemovedDocWithFilterContinuous {
-    [self testPushRemovedDocWithFilter: NO];
-}
-
-
 - (void) testPullRemovedDocWithFilter: (BOOL)isContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1928,62 +1918,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // shouldn't delete the one with `docID != pass`
     AssertNotNil([self.db documentWithID: @"doc1"]);
     AssertNil([self.db documentWithID: @"pass"]);
-}
-
-
-- (void) testPushRemovedDocWithFilter: (BOOL)isContinuous {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"pass"];
-    [doc2 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc2 error: &error]);
-    
-    // replicator with pull filter
-    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: isContinuous];
-    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        
-        BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
-        if (isAccessRemoved) {
-            [docIds addObject: document.id];
-            
-            // if isAccessRemoved, allow  `docID = pass` is allowed.
-            return [document.id isEqualToString: @"pass"];
-        }
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    AssertEqual(docIds.count, 0u);
-    
-    AssertNotNil([otherDB documentWithID: @"doc1"]);
-    AssertNotNil([otherDB documentWithID: @"pass"]);
-    
-    // Update the `_removed` flag
-    doc1 = [[self.db documentWithID: @"doc1"] toMutable];
-    [doc1 setData: @{@"_removed": @YES}];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    doc2 = [[self.db documentWithID: @"pass"] toMutable];
-    [doc2 setData: @{@"_removed": @YES}];
-    Assert([self.db saveDocument: doc2 error: &error]);
-    
-    // pull replication again...
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(docIds.count, 2u);
-    
-    // shouldn't delete the one with `docID != pass`
-    AssertNotNil([otherDB documentWithID: @"doc1"]);
-    AssertNil([otherDB documentWithID: @"pass"]);
 }
 
 
