@@ -91,11 +91,11 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 
 
 /** 
- Gets an existing CBLMutableDocument object with the given ID. If the document with the given ID
+ Gets an existing document with the given ID. If a document with the given ID
  doesn't exist in the database, the value returned will be nil.
  
  @param id The document ID.
- @return The CBLMutableDocument object.
+ @return The CBLDocument object.
  */
 - (nullable CBLDocument*) documentWithID: (NSString*)id;
 
