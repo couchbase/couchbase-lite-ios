@@ -18,13 +18,15 @@
 
 import Foundation
 
+/// ENTERPRISE EDITION ONLY.
+///
 /// PredictiveModel protocol that allows to integrate machine learning model into
 /// CBL Query via invoking the Function.prediction() function.
 public protocol PredictiveModel {
     
     /// The prediction callback called when invoking the Function.prediction() function
     /// inside a query or an index. The input dictionary object's keys and values will be
-    /// coresponding to the 'input' dictionary parameter of theFunction.prediction() function.
+    /// corresponding to the 'input' dictionary parameter of theFunction.prediction() function.
     ///
     /// If the prediction callback cannot return a result, the prediction callback
     /// should return null value, which will be evaluated as MISSING.
@@ -35,6 +37,8 @@ public protocol PredictiveModel {
     
 }
 
+/// ENTERPRISE EDITION ONLY.
+///
 /// Predictive model manager class for registering and unregistering predictive models.
 public class Prediction {
     

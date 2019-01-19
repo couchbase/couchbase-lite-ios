@@ -25,6 +25,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ IndexBuilder used for building database index objects.
+ */
 @interface CBLIndexBuilder : NSObject
 
 /**

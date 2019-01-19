@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLIndexBuilder (Prediction)
 
 /**
+ ENTERPRISE EDITION ONLY.
+ 
  Create a predictive index with the given predictive model name, input specification to
  the predictive model, and the properties of the prediction result.
  

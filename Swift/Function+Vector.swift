@@ -22,14 +22,16 @@ extension Function {
     
     // MARK: Vector Comparison
     
-    /// Creates a function that returns the euclient distance between the two input vectors.
+    /// ENTERPRISE EDITION ONLY.
+    ///
+    /// Creates a function that returns the euclidean distance between the two input vectors.
     /// The result is a non-negative floating-point number. The expression1 and expression2 must be
     /// arrays of numbers, and must be the same length.
     ///
     /// - Parameters:
     ///   - expression1: The expression evaluated to an arrays of numbers.
     ///   - expression2: The expression evaluated to an arrays of numbers.
-    /// - Returns: The euclient distance between two given input vectors.
+    /// - Returns: The euclidean distance between two given input vectors.
     public static func euclideanDistance(between expression1: ExpressionProtocol,
                                              and expression2: ExpressionProtocol) -> ExpressionProtocol
     {
@@ -37,14 +39,16 @@ extension Function {
         return QueryExpression(expr)
     }
     
-    /// Creates a function that returns the squared euclient distance between the two input vectors.
+    /// ENTERPRISE EDITION ONLY.
+    ///
+    /// Creates a function that returns the squared euclidean distance between the two input vectors.
     /// The result is a non-negative floating-point number. The expression1 and expression2 must be
     /// arrays of numbers, and must be the same length.
     ///
     /// - Parameters:
     ///   - expression1: The expression evaluated to an arrays of numbers.
     ///   - expression2: The expression evaluated to an arrays of numbers.
-    /// - Returns: The squared euclient distance between two given input vectors.
+    /// - Returns: The squared euclidean distance between two given input vectors.
     public static func squaredEuclideanDistance(between expression1: ExpressionProtocol,
                                                     and expression2: ExpressionProtocol) -> ExpressionProtocol
     {
@@ -52,6 +56,8 @@ extension Function {
         return QueryExpression(expr)
     }
     
+    /// ENTERPRISE EDITION ONLY.
+    ///
     /// Creates a function that returns the cosine distance which one minus the cosine similarity
     /// between the two input vectors. The result is a floating-point number ranges from −1.0 to 1.0.
     /// The expression1 and expression2 must be arrays of numbers, and must be the same length.

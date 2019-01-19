@@ -26,7 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryFunction (Vector)
 
 /**
- Creates a function that returns the euclient distance between the two input vectors.
+ ENTERPRISE EDITION ONLY.
+ 
+ Creates a function that returns the euclidean distance between the two input vectors.
  The result is a non-negative floating-point number. The expression1 and expression2 must be
  arrays of numbers, and must be the same length.
 
@@ -38,7 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
                                              and: (CBLQueryExpression*)expression2;
 
 /**
- Creates a function that returns the squared euclient distance between the two input vectors.
+ ENTERPRISE EDITION ONLY.
+ 
+ Creates a function that returns the squared euclidean distance between the two input vectors.
  The result is a non-negative floating-point number. The expression1 and expression2 must be
  arrays of numbers, and must be the same length.
 
@@ -50,6 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
                                                     and: (CBLQueryExpression*)expression2;
 
 /**
+ ENTERPRISE EDITION ONLY.
+ 
  Creates a function that returns the cosine distance which one minus the cosine similarity
  between the two input vectors. The result is a floating-point number ranges from −1.0 to 1.0.
  The expression1 and expression2 must be arrays of numbers, and must be the same length.

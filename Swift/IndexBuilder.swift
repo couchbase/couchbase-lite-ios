@@ -19,8 +19,7 @@
 
 import Foundation
 
-/// Index represents an index which could be a value index for regular queries or
-/// full-text index for full-text queries (using the match operator).
+/// IndexBuilder used for building database index objects.
 public class IndexBuilder {
     
     /// Create a value index with the given index items. The index items are a list of

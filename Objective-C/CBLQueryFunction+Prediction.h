@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryFunction (Prediction)
 
 /**
+ ENTERPRISE EDITION ONLY.
+ 
  Creates prediction function with the given model name and input. When running a query with
  the prediction function, the corresponding predictive model registered to CBLDatabase class
  will be called with the given input to predict the result.
@@ -45,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /**
+ ENTERPRISE EDITION ONLY.
+ 
  CBLQueryPredictionFunction that allows to create an expression that
  refers to one of the properties of the prediction result dictionary.
  */
@@ -55,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
  Creates a property expression that refers to a property of the prediction result dictionary.
 
  @param keyPath The key path to the property.
- @return The property expression refering to a property of the prediction dictionary result.
+ @return The property expression referring to a property of the prediction dictionary result.
  */
 - (CBLQueryExpression*) property: (NSString*)keyPath;
 

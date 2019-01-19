@@ -18,6 +18,8 @@
 
 import Foundation
 
+/// ENTERPRISE EDITION ONLY.
+///
 /// PredictionFunction protocol that allows to create an expression that
 /// refers to one of the properties of the prediction result dictionary.
 public protocol PredictionFunction : ExpressionProtocol {
@@ -26,7 +28,7 @@ public protocol PredictionFunction : ExpressionProtocol {
     /// prediction result dictionary.
     ///
     /// - Parameter keyPath: The key path to the property.
-    /// - Returns: The property expression refering to a property of the prediction dictionary result.
+    /// - Returns: The property expression referring to a property of the prediction dictionary result.
     func property(_ keyPath: String) -> ExpressionProtocol;
     
 }
@@ -35,13 +37,15 @@ extension Function {
     
     // MARK: Prediction
     
+    /// ENTERPRISE EDITION ONLY.
+    ///
     /// Creates prediction function with the given model name and input. When running a query with
     /// the prediction function, the corresponding predictive model registered to CouchbaseLite
     /// Database class will be called with the given input to predict the result.
     ///
     /// The prediction result returned by the predictive model will be in a form dictionary object.
     /// To create an expression that refers to a property in the prediction result,
-    /// the property(_ keypath: String) function of the created PredictionFunction object
+    /// the property(_ keypath: String) method of the created PredictionFunction object
     /// can be used.
     ///
     /// - Parameters:
