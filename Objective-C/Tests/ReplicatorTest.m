@@ -2119,6 +2119,111 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(otherDB.count, 0u);
 }
 
+
+#pragma mark stop and restart the replication with filter
+
+
+- (void) testStopAndRestartPushReplicationWithFilter {
+    // Create documents
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"pass" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        [docIds addObject: document.id];
+        
+        // allow all docs with `name = pass`
+        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+    };
+    
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
+    AssertEqual(docIds.count, 1u);
+    AssertEqual(self.db.count, 1u);
+    AssertEqual(otherDB.count, 1u);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"pass" forKey: @"name"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"donotpass" forKey: @"name"];
+    Assert([self.db saveDocument: doc3 error: &error]);
+    
+    [docIds removeAllObjects];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(docIds.count, 2u);
+    Assert([docIds containsObject: @"doc3"]);
+    Assert([docIds containsObject: @"doc2"]);
+    
+    // shouldn't delete the one with `docID != pass`
+    AssertNotNil([otherDB documentWithID: @"doc1"]);
+    AssertNotNil([otherDB documentWithID: @"doc2"]);
+    AssertNil([otherDB documentWithID: @"doc3"]);
+    AssertEqual(self.db.count, 3u);
+    AssertEqual(otherDB.count, 2u);
+}
+
+
+- (void) testStopAndRestartPullReplicationWithFilter {
+    // Create documents
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"pass" forKey: @"name"];
+    Assert([otherDB saveDocument: doc1 error: &error]);
+    
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: YES];
+    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        [docIds addObject: document.id];
+        
+        // allow all docs with `name = pass`
+        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+    };
+    
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
+    AssertEqual(docIds.count, 1u);
+    AssertEqual(self.db.count, 1u);
+    AssertEqual(otherDB.count, 1u);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"pass" forKey: @"name"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
+    [doc3 setString: @"donotpass" forKey: @"name"];
+    Assert([otherDB saveDocument: doc3 error: &error]);
+    
+    [docIds removeAllObjects];
+    [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(docIds.count, 2u);
+    Assert([docIds containsObject: @"doc3"]);
+    Assert([docIds containsObject: @"doc2"]);
+    
+    // shouldn't delete the one with `docID != pass`
+    AssertNotNil([self.db documentWithID: @"doc1"]);
+    AssertNotNil([self.db documentWithID: @"doc2"]);
+    AssertNil([self.db documentWithID: @"doc3"]);
+    AssertEqual(otherDB.count, 3u);
+    AssertEqual(self.db.count, 2u);
+}
+
 #endif // COUCHBASE_ENTERPRISE
 
 
