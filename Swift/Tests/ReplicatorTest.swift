@@ -801,7 +801,7 @@ class ReplicatorTest: CBLTestCase {
             return doc.string(forKey: "name") == "pass"
         }
         
-        // create a replicator
+        // create a replicator config
         repl = Replicator(config: config)
         run(withReplicator: repl, expectedError: nil)
         
