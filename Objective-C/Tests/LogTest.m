@@ -387,6 +387,36 @@
     }
 }
 
+
+- (void) testNonASCII {
+    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    customLogger.level = kCBLLogLevelVerbose;
+    CBLDatabase.log.custom = customLogger;
+    CBLDatabase.log.console.domains = kCBLLogDomainAll;
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
+    CBLMutableDocument* document = [self createDocument: @"doc1"];
+    [document setString: hebrew forKey: @"hebrew"];
+    NSError* error;
+    [self.db saveDocument: document error: &error];
+    AssertNil(error);
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute:&error];
+    AssertNil(error);
+    AssertEqual([[rs allObjects] count], 1u);
+    NSString* expectedHebrew = [NSString stringWithFormat: @"[{\"hebrew\":\"%@\"}]", hebrew];
+    BOOL found = NO;
+    for (NSString* line in customLogger.lines) {
+        if ([line containsString: expectedHebrew]) {
+            found = YES;
+        }
+    }
+    Assert(found);
+}
+
 @end
 
 
