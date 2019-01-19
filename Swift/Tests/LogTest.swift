@@ -332,6 +332,34 @@ class LogTest: CBLTestCase {
             XCTAssert(firstLine.contains("Commit/"))
         }
     }
+    
+    func testNonASCII() throws {
+        let customLogger = LogTestLogger()
+        customLogger.level = .verbose
+        Database.log.custom = customLogger
+        Database.log.console.domains = [LogDomain.all]
+        Database.log.console.level = .verbose
+        let hebrew = "מזג האוויר נחמד היום" // The weather is nice today.
+        let doc = MutableDocument()
+        doc.setString(hebrew, forKey: "hebrew")
+        try db.saveDocument(doc)
+        
+        let q = QueryBuilder
+            .select(SelectResult.all())
+            .from(DataSource.database(db))
+        
+        let rs = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 1);
+        
+        let expectedHebrew = "[{\"hebrew\":\"\(hebrew)\"}]"
+        var found: Bool = false
+        for line in customLogger.lines {
+            if line.contains(expectedHebrew) {
+                found = true
+            }
+        }
+        XCTAssert(found)
+    }
 }
 
 class LogTestLogger: Logger {
