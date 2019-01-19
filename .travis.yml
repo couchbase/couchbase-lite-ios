@@ -1,0 +1,8 @@
+language: objective-c
+osx_image: xcode10.1
+before_install:
+  - brew update
+  - brew install doxygen
+script: 
+  - xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination "platform=macOS" -quiet
+  - xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination "platform=macOS" -quiet
