@@ -346,11 +346,10 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
             id value = dict[key];
             FLEncoder_WriteNSObject(encoder, value);
         }
+        FLEncoder_EndDict(encoder);
     } else {
         FLEncoder_WriteNSObject(encoder, self.content);
     }
-    FLEncoder_EndDict(encoder);
 }
-
 
 @end

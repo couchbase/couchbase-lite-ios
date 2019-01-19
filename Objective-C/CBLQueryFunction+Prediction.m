@@ -34,6 +34,8 @@ NS_ASSUME_NONNULL_END
 + (CBLQueryPredictionFunction*) predictionUsingModel: (NSString*)model
                                                input: (CBLQueryExpression*)input
 {
+    CBLAssertNotNil(model);
+    CBLAssertNotNil(input);
     return [[CBLQueryPredictionFunction alloc] initWithModel: model input: input];
 }
 
@@ -56,6 +58,8 @@ NS_ASSUME_NONNULL_END
 
 
 - (CBLQueryExpression*) property: (NSString*)keyPath {
+    CBLAssertNotNil(keyPath);
+    
     keyPath = [NSString stringWithFormat: @".%@", keyPath];
     return [self predictionExpressionWithParams:
             @[_model, _input, [CBLQueryExpression string: keyPath]]];

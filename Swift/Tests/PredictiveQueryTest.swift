@@ -865,10 +865,10 @@ class PredictiveQueryTest: CBLTestCase {
         aggregateModel.unregisterModel()
     }
     
-    func testEuclidientDistance() throws {
+    func testEuclideanDistance() throws {
         let tests: [[Any]] = [
             [[10, 10], [13, 14], 5],
-            [[1,2, 3], [1, 2, 3], 0],
+            [[1, 2, 3], [1, 2, 3], 0],
             [[], [], 0],
             [[1, 2], [1, 2, 3], NSNull()],
             [[1, 2], "foo", NSNull()]
@@ -890,15 +890,19 @@ class PredictiveQueryTest: CBLTestCase {
         
         
         let rows = try verifyQuery(q) { (n, r) in
-            XCTAssertEqual(r.int(at: 0), r.int(at: 1))
+            if r.value(at: 1) == nil {
+                XCTAssertNil(r.value(at: 0))
+            } else {
+                XCTAssertEqual(r.int(at: 0), r.int(at: 1))
+            }
         }
         XCTAssertEqual(Int(rows), tests.count);
     }
     
-    func testSquaredEuclidientDistance() throws {
+    func testSquaredEuclideanDistance() throws {
         let tests: [[Any]] = [
             [[10, 10], [13, 14], 25],
-            [[1,2, 3], [1, 2, 3], 0],
+            [[1, 2, 3], [1, 2, 3], 0],
             [[], [], 0],
             [[1, 2], [1, 2, 3], NSNull()],
             [[1, 2], "foo", NSNull()]
@@ -923,7 +927,7 @@ class PredictiveQueryTest: CBLTestCase {
             if r.value(at: 1) == nil {
                 XCTAssertNil(r.value(at: 0))
             } else {
-                XCTAssertEqual(r.double(at: 0), r.double(at: 1))
+                XCTAssertEqual(r.int(at: 0), r.int(at: 1))
             }
         }
         XCTAssertEqual(Int(rows), tests.count);

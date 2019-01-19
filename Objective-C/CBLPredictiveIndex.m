@@ -52,17 +52,17 @@
 
 
 - (id) indexItems {
-    NSMutableArray* item = [NSMutableArray array];
-    [item addObject: @"PREDICTION()"];
-    [item addObject: _model];
-    [item addObject: [_input asJSON]];
+    NSMutableArray* items = [NSMutableArray array];
+    [items addObject: @"PREDICTION()"];
+    [items addObject: _model];
+    [items addObject: [_input asJSON]];
     
     for (NSString* keyPath in _properties) {
-        [item addObject: [NSString stringWithFormat: @".%@", keyPath]];
+        [items addObject: [NSString stringWithFormat: @".%@", keyPath]];
     }
     
     NSMutableArray* json = [NSMutableArray array];
-    [json addObject: item];
+    [json addObject: items];
     return json;
 }
 
