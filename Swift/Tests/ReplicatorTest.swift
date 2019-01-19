@@ -561,71 +561,12 @@ class ReplicatorTest: CBLTestCase {
     
     // MARK: Removed Doc with Filter
     
-    func _testPushRemovedDocWithFilterSingleShot() throws {
-        try testPushRemovedDocWithFilter(false)
-    }
-    
-    func _testPushRemovedDocWithFilterContinuous() throws {
-        try testPushRemovedDocWithFilter(true)
-    }
-    
-    func _testPullRemovedDocWithFilterSingleShot() throws {
+    func testPullRemovedDocWithFilterSingleShot() throws {
         try testPullRemovedDocWithFilter(false)
     }
     
-    func _testPullRemovedDocWithFilterContinuous() throws {
+    func testPullRemovedDocWithFilterContinuous() throws {
         try testPullRemovedDocWithFilter(true)
-    }
-    
-    func testPushRemovedDocWithFilter(_ isContinuous: Bool) throws {
-        // Create documents:
-        let doc1 = MutableDocument(id: "doc1")
-        doc1.setString("pass", forKey: "name")
-        try db.saveDocument(doc1)
-        
-        let doc2 = MutableDocument(id: "pass")
-        doc2.setString("pass", forKey: "name")
-        try db.saveDocument(doc2)
-        
-        // Create replicator with push filter:
-        let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
-        let config = self.config(target: target, type: .push, continuous: isContinuous)
-        config.pushFilter = { (doc, flags) in
-            XCTAssertNotNil(doc.id)
-            
-            let isAccessRemoved = flags.contains(.accessRemoved)
-            if isAccessRemoved {
-                docIds.add(doc.id)
-                return doc.id == "pass"
-            }
-            return doc.string(forKey: "name") == "pass"
-        }
-        
-        // Run the replicator:
-        run(config: config, expectedError: nil)
-        XCTAssertEqual(docIds.count, 0)
-        
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNotNil(otherDB.document(withID: "pass"))
-        
-        let doc1Mutable = db.document(withID: "doc1")?.toMutable()
-        doc1Mutable?.setData(["_removed": true])
-        try db.saveDocument(doc1)
-        
-        let doc2Mutable = db.document(withID: "pass")?.toMutable()
-        doc2Mutable?.setData(["_removed": true])
-        try db.saveDocument(doc2)
-        
-        run(config: config, expectedError: nil)
-        
-        // Check documents passed to the filter:
-        XCTAssertEqual(docIds.count, 2)
-        XCTAssert(docIds.contains("doc1"))
-        XCTAssert(docIds.contains("pass"))
-        
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNil(otherDB.document(withID: "pass"))
     }
     
     func testPullRemovedDocWithFilter(_ isContinuous: Bool) throws {
@@ -660,13 +601,17 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "pass"))
         
-        let doc1Mutable = otherDB.document(withID: "doc1")?.toMutable()
-        doc1Mutable?.setData(["_removed": true])
-        try otherDB.saveDocument(doc1)
+        guard let doc1Mutable = otherDB.document(withID: "doc1")?.toMutable() else {
+            fatalError("Docs must exists")
+        }
+        doc1Mutable.setData(["_removed": true])
+        try otherDB.saveDocument(doc1Mutable)
         
-        let doc2Mutable = otherDB.document(withID: "pass")?.toMutable()
-        doc2Mutable?.setData(["_removed": true])
-        try otherDB.saveDocument(doc2)
+        guard let doc2Mutable = otherDB.document(withID: "pass")?.toMutable() else {
+            fatalError("Docs must exists")
+        }
+        doc2Mutable.setData(["_removed": true])
+        try otherDB.saveDocument(doc2Mutable)
         
         run(config: config, expectedError: nil)
         
