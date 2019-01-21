@@ -113,7 +113,7 @@ using namespace fleece;
 
 
 - (void) setBlob: (nullable CBLBlob*)value forName:(NSString *)name {
-    [self setValue: value.content forName: name];
+    [self setValue: value forName: name];
 }
 
 

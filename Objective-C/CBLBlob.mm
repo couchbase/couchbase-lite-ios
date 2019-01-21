@@ -42,7 +42,9 @@ static const size_t kMaxCachedContentLength = 8*1024;
 static const size_t kReadBufferSize = 8*1024;
 
 static NSString* const kTypeMetaProperty = @kC4ObjectTypeProperty;
+static NSString* const kDataMetaProperty = @kC4BlobDataProperty;
 static NSString* const kBlobType = @kC4ObjectType_Blob;
+
 
 
 @implementation CBLBlob
@@ -129,7 +131,8 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         _length = asNumber(_properties[@"length"]).unsignedLongLongValue;
         _digest = asString(_properties[@"digest"]);
         _contentType = asString(_properties[@"content_type"]);
-        if (!_digest) {
+        _content = asData(_properties[kDataMetaProperty]);
+        if (!_digest && !_content) {
             C4Warn("Blob read from database has missing digest");
             _digest = @"";
         }
@@ -152,7 +155,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
 - (NSDictionary *)jsonRepresentation {
-    Assert(_db, @"Blob hasn't been saved in the database yet");
     NSMutableDictionary *json = [self.properties mutableCopy];
     json[kTypeMetaProperty] = kBlobType;
     return json;
@@ -337,19 +339,24 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
             [document setEncodingError: error];
             return;
         }
-        
-        NSDictionary* dict = self.jsonRepresentation;
-        FLEncoder_BeginDict(encoder, [dict count]);
-        for (NSString *key in dict) {
-            CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
-            id value = dict[key];
-            FLEncoder_WriteNSObject(encoder, value);
-        }
-        FLEncoder_EndDict(encoder);
-    } else {
+    }
+    
+    NSDictionary* dict = self.jsonRepresentation;
+    FLEncoder_BeginDict(encoder, [dict count]);
+    for (NSString *key in dict) {
+        CBLStringBytes bKey(key);
+        FLEncoder_WriteKey(encoder, bKey);
+        id value = dict[key];
+        FLEncoder_WriteNSObject(encoder, value);
+    }
+    
+    if (!document) {
+        CBLStringBytes bKey(kDataMetaProperty);
+        FLEncoder_WriteKey(encoder, bKey);
         FLEncoder_WriteNSObject(encoder, self.content);
     }
+    
+    FLEncoder_EndDict(encoder);
 }
 
 @end

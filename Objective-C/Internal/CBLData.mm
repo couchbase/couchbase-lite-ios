@@ -108,4 +108,5 @@ namespace cbl {
     NSNumber* asNumber  (id object)    {return $castIf(NSNumber, object);}
     NSString* asString  (id object)    {return $castIf(NSString, object);}
     NSDate*   asDate    (id object)    {return [CBLJSON dateWithJSONObject: object];}
+    NSData*   asData    (id object)    {return $castIf(NSData, object);}
 }

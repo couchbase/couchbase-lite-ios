@@ -1044,6 +1044,11 @@ class TextModel: TestPredictiveModel {
             return nil
         }
         
+        guard let contentType = blob.contentType, contentType == "text/plain" else {
+            NSLog("WARN: Invalid blob content type; not text/plain.")
+            return nil
+        }
+        
         let text =  String(bytes: blob.content!, encoding: .utf8)! as NSString
         
         var wc = 0

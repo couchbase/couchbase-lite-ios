@@ -56,6 +56,7 @@ namespace cbl {
     NSNumber* asNumber  (__nullable id);
     NSString* asString  (__nullable id);
     NSDate*   asDate    (__nullable id);
+    NSData*   asData    (__nullable id);
 }
 #endif
 
