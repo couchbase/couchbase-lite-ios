@@ -62,7 +62,7 @@ public class Parameters {
     ///   - name: The parameter name.
     /// - Returns: The self object.
     @discardableResult public func setBlob(_ value: Blob, forName name: String) -> Parameters {
-        return setValue(value.content, forName: name)
+        return setValue(value, forName: name)
     }
     
     /// Set a boolean value to the query parameter referenced by the given name. A query parameter

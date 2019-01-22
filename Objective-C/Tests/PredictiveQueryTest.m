@@ -1090,6 +1090,11 @@
     if (!blob)
         return nil;
     
+    if (![blob.contentType isEqualToString: @"text/plain"]) {
+        NSLog(@"WARN: Invalid blob content type; not text/plain.");
+        return nil;
+    }
+    
     NSString* text = [[NSString alloc] initWithData: blob.content
                                            encoding: NSUTF8StringEncoding];
     
