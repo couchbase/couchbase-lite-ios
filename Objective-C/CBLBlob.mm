@@ -46,7 +46,6 @@ static NSString* const kDataMetaProperty = @kC4BlobDataProperty;
 static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
-
 @implementation CBLBlob
 {
     CBLDatabase *_db;                       // nil if blob is new and unsaved
