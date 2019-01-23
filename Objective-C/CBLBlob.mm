@@ -42,7 +42,11 @@ static const size_t kMaxCachedContentLength = 8*1024;
 static const size_t kReadBufferSize = 8*1024;
 
 static NSString* const kTypeMetaProperty = @kC4ObjectTypeProperty;
+static NSString* const kDigestMetaProperty = @kC4BlobDigestProperty;
 static NSString* const kDataMetaProperty = @kC4BlobDataProperty;
+static NSString* const kLengthMetaProperty = @"length";
+static NSString* const kContentTypeMetaProperty = @"content_type";
+
 static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
@@ -127,14 +131,12 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         tempProps[kTypeMetaProperty] = nil;
         _properties = tempProps;
 
-        _length = asNumber(_properties[@"length"]).unsignedLongLongValue;
-        _digest = asString(_properties[@"digest"]);
-        _contentType = asString(_properties[@"content_type"]);
+        _length = asNumber(_properties[kLengthMetaProperty]).unsignedLongLongValue;
+        _digest = asString(_properties[kDigestMetaProperty]);
+        _contentType = asString(_properties[kContentTypeMetaProperty]);
         _content = asData(_properties[kDataMetaProperty]);
-        if (!_digest && !_content) {
+        if (!_digest && !_content)
             C4Warn("Blob read from database has neither digest nor data.");
-            _digest = @"";
-        }
     }
     return self;
 }
@@ -156,6 +158,10 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 - (NSDictionary *)jsonRepresentation {
     NSMutableDictionary *json = [self.properties mutableCopy];
     json[kTypeMetaProperty] = kBlobType;
+    if (_digest)
+        json[kDigestMetaProperty] = _digest; // Ensure that digest will be there.
+    else
+        json[kDataMetaProperty] = self.content;
     return json;
 }
 
@@ -334,6 +340,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     if (document) {
         CBLDatabase* database = document.database;
         NSError *error;
+        // Note: Installing blob in the database also updates the digest property.
         if (![self installInDatabase: database error: &error]) {
             [document setEncodingError: error];
             return;
@@ -348,13 +355,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         id value = dict[key];
         FLEncoder_WriteNSObject(encoder, value);
     }
-    
-    if (!document) {
-        CBLStringBytes bKey(kDataMetaProperty);
-        FLEncoder_WriteKey(encoder, bKey);
-        FLEncoder_WriteNSObject(encoder, self.content);
-    }
-    
     FLEncoder_EndDict(encoder);
 }
 
