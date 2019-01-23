@@ -1,5 +1,5 @@
 
-# Couchbase Lite 2.0
+# Couchbase Lite 2.0 [![Build Status](https://travis-ci.org/couchbase/couchbase-lite-ios.svg?branch=master)](https://travis-ci.org/couchbase/couchbase-lite-ios)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
