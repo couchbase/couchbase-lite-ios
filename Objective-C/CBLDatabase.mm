@@ -745,7 +745,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 - (void) postDatabaseChanged {
     CBL_LOCK(self) {
-        if (!_dbObs || !_c4db || c4db_isInTransaction(_c4db))
+        if (!_dbObs || !_c4db)
             return;
         
         const uint32_t kMaxChanges = 100u;
