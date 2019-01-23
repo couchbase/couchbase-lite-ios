@@ -132,7 +132,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         _contentType = asString(_properties[@"content_type"]);
         _content = asData(_properties[kDataMetaProperty]);
         if (!_digest && !_content) {
-            C4Warn("Blob read from database has missing digest");
+            C4Warn("Blob read from database has neither digest nor data.");
             _digest = @"";
         }
     }
