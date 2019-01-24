@@ -9,4 +9,5 @@ env:
 before_install:
   - brew update
   - brew install doxygen
-script: xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=macOS" | xcpretty -c
+  - gem install xcpretty-travis-formatter
+script: xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=macOS" | xcpretty -f `xcpretty-travis-formatter`
