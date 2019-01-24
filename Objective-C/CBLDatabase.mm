@@ -107,6 +107,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     self = [super init];
     if (self) {
+        [[self class] checkFileLogging: NO];
+        
         _name = name;
         _config = [[CBLDatabaseConfiguration alloc] initWithConfig: config readonly: YES];
         if (![self open: outError])
@@ -1097,6 +1099,19 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             [NSObject cancelPreviousPerformRequestsWithTarget: strongSelf
                                                      selector: @selector(purgeExpiredDocuments)
                                                        object: nil];
+        }
+    });
+}
+
+
+/** Check and show warning if file logging is not configured. */
++ (void) checkFileLogging: (BOOL)swift {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (!CBLDatabase.log.file.config) {
+            NSString* clazz = swift ? @"Database" : @"CBLDatabase";
+            CBLWarn(Database, @"%@.log.file.config is nil, meaning file logging is disabled. "
+                    "Log files required for product support are not being generated.", clazz);
         }
     });
 }
