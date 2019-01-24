@@ -90,6 +90,7 @@ framework module CouchbaseLiteSwift {
         // Swift Extensions:
         header "CBLArray+Swift.h"
         header "CBLBlob+Swift.h"
+        header "CBLDatabase+Swift.h"
         header "CBLDictionary+Swift.h"
         header "CBLLog+Swift.h"
     }
