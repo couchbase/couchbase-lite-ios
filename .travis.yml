@@ -3,9 +3,10 @@ osx_image: xcode10.1
 branches:
   only:
   - master
+env:
+  - SCHEME="CBL ObjC"
+  - SCHEME="CBL Swift"
 before_install:
   - brew update
   - brew install doxygen
-script: 
-  - xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination "platform=macOS" -quiet
-  - xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination "platform=macOS" -quiet
+script: xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=macOS" | xcpretty -c
