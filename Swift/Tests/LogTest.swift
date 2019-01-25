@@ -337,7 +337,7 @@ class LogTest: CBLTestCase {
         let customLogger = LogTestLogger()
         customLogger.level = .verbose
         Database.log.custom = customLogger
-        Database.log.console.domains = [LogDomain.all]
+        Database.log.console.domains = .all
         Database.log.console.level = .verbose
         let hebrew = "מזג האוויר נחמד היום" // The weather is nice today.
         let doc = MutableDocument()
