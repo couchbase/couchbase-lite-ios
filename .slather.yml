@@ -1,0 +1,8 @@
+# .slather.yml
+
+coverage_service: coveralls
+xcodeproj: CouchbaseLite.xcodeproj
+scheme: "CBL ObjC"
+ignore:
+  - vendor/*
+  - Swift/*
