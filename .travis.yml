@@ -10,6 +10,6 @@ before_install:
   - brew update
   - brew install doxygen
   - gem install slather
-script: xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone XS" -enableCodeCoverage YES | xcpretty -c
+script: set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone XS" -enableCodeCoverage YES | xcpretty -c
 after_success:
   - test "$SCHEME" = "CBL ObjC" && slather
