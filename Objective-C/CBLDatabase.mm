@@ -184,6 +184,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
+    CBLAssertNotNil(documentID);
+    
     return [self documentWithID: documentID error: nil];
 }
 
@@ -192,6 +194,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    CBLAssertNotNil(documentID);
+    
     return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
@@ -498,6 +502,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    CBLAssertNotNil(token);
+    
     CBL_LOCK(self) {
         [self mustBeOpen];
         
