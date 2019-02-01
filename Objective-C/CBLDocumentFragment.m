@@ -45,6 +45,8 @@
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     return _doc ? _doc[key] : nil;
 }
 
