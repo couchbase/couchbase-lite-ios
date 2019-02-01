@@ -159,6 +159,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable id) valueForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, nil);
     }
@@ -166,6 +168,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, [NSString class]);
     }
@@ -173,6 +177,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, [NSNumber class]);
     }
@@ -180,6 +186,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (NSInteger) integerForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asInteger(_get(_dict, key), _dict);
     }
@@ -187,6 +195,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (long long) longLongForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asLongLong(_get(_dict, key), _dict);
     }
@@ -194,6 +204,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (float) floatForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asFloat(_get(_dict, key), _dict);
     }
@@ -201,6 +213,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (double) doubleForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asDouble(_get(_dict, key), _dict);
     }
@@ -208,6 +222,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (BOOL) booleanForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asBool(_get(_dict, key), _dict);
     }
@@ -215,6 +231,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return asDate(_getObject(_dict, key, nil));
     }
@@ -222,6 +240,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, [CBLBlob class]);
     }
@@ -229,6 +249,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, [CBLArray class]);
     }
@@ -236,6 +258,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return _getObject(_dict, key, [CBLDictionary class]);
     }
@@ -246,6 +270,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (BOOL) containsValueForKey: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     CBL_LOCK(_sharedLock) {
         return !_get(_dict, key).isEmpty();
     }
@@ -289,6 +315,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    CBLAssertNotNil(key);
+    
     if (![self containsValueForKey: key])
         return nil;
     return [[CBLFragment alloc] initWithParent: self key: key];
