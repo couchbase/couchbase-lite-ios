@@ -50,7 +50,7 @@ public class Parameters {
     ///   - value: The ArrayObject value.
     ///   - name: The parameter name.
     /// - Returns: The self object.
-    @discardableResult public func setArray(_ value: ArrayObject, forName name: String) -> Parameters {
+    @discardableResult public func setArray(_ value: ArrayObject?, forName name: String) -> Parameters {
         return setValue(value, forName: name)
     }
     
@@ -61,7 +61,7 @@ public class Parameters {
     ///   - value: The Blob value.
     ///   - name: The parameter name.
     /// - Returns: The self object.
-    @discardableResult public func setBlob(_ value: Blob, forName name: String) -> Parameters {
+    @discardableResult public func setBlob(_ value: Blob?, forName name: String) -> Parameters {
         return setValue(value, forName: name)
     }
     
@@ -94,7 +94,7 @@ public class Parameters {
     ///   - value: The DictionaryObject value.
     ///   - name: The parameter name.
     /// - Returns: The self object.
-    @discardableResult public func setDictionary(_ value: DictionaryObject, forName name: String) -> Parameters {
+    @discardableResult public func setDictionary(_ value: DictionaryObject?, forName name: String) -> Parameters {
         return setValue(value, forName: name)
     }
     
