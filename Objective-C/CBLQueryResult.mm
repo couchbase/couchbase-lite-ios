@@ -295,6 +295,8 @@ using namespace fleece;
 
 
 - (NSInteger) indexForColumnName: (NSString*)name {
+    CBLAssertNotNil(name);
+    
     NSNumber* colIndex = [_rs.columnNames objectForKey: name];
     if (!colIndex)
         return -1;
