@@ -79,7 +79,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let doc = createDocument().setString(input, forKey: key)
         try saveDocument(doc)
         
-        let select = SelectResult.expression(Function.string(toMillis: Expression.property(key)))
+        let select = SelectResult.expression(Function.stringToMillis(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
             .from(DataSource.database(db))
@@ -101,7 +101,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let doc = createDocument().setString(input, forKey: key)
         try saveDocument(doc)
         
-        let select = SelectResult.expression(Function.string(toUTC: Expression.property(key)))
+        let select = SelectResult.expression(Function.stringToUTC(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
             .from(DataSource.database(db))
@@ -123,7 +123,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let doc = createDocument().setDouble(input, forKey: key)
         try saveDocument(doc)
         
-        let select = SelectResult.expression(Function.millis(toString: Expression.property(key)))
+        let select = SelectResult.expression(Function.millisToString(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
             .from(DataSource.database(db))
@@ -146,7 +146,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let doc = createDocument().setDouble(input, forKey: key)
         try saveDocument(doc)
         
-        let select = SelectResult.expression(Function.millis(toUTC: Expression.property(key)))
+        let select = SelectResult.expression(Function.millisToUTC(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
             .from(DataSource.database(db))
