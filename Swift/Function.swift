@@ -407,7 +407,7 @@ public final class Function {
     /// Z (which represents UTC)
     ///
     /// No time zone present will default to the device local time zone.
-    public static func string(toMillis expression: ExpressionProtocol) -> ExpressionProtocol {
+    public static func stringToMillis(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.string(toMillis: expression.toImpl()))
     }
     
@@ -430,7 +430,7 @@ public final class Function {
     /// Z (which represents UTC)
     ///
     /// No time zone present will default to the device local time zone.
-    public static func string(toUTC expression: ExpressionProtocol) -> ExpressionProtocol {
+    public static func stringToUTC(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.string(toUTC: expression.toImpl()))
     }
     
@@ -441,7 +441,7 @@ public final class Function {
     /// - Parameter expression: The numeric value representing milliseconds since the unix epoch.
     /// - Returns: The MILLIS_TO_STR(expr) function.
     /// - Note: If the input expression is not numeric, then the result will be null.
-    public static func millis(toString expression: ExpressionProtocol) -> ExpressionProtocol {
+    public static func millisToString(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.millis(toString: expression.toImpl()))
     }
     
@@ -452,7 +452,7 @@ public final class Function {
     /// - Parameter expression: The numeric value representing milliseconds since the unix epoch.
     /// - Returns: The MILLIS_TO_UTC(expr) function.
     /// - Note: If the input expression is not numeric, then the result will be null.
-    public static func millis(toUTC expression: ExpressionProtocol) -> ExpressionProtocol {
+    public static func millisToUTC(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.millis(toUTC: expression.toImpl()))
     }
 }
