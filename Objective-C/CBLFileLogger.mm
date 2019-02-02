@@ -48,6 +48,8 @@
 
 
 - (void) setConfig: (CBLLogFileConfiguration*)config {
+    CBLAssertNotNil(config);
+    
     if (_config != config) {
         if (config) {
             // Copy and mark as READONLY
