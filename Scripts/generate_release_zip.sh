@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest]"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest] [--pretty]"
 }
 
 while [[ $# -gt 0 ]]
@@ -24,6 +24,9 @@ do
       ;;
       --notest)
       NO_TEST=YES
+      ;;
+      --pretty)
+      PRETTY=YES
       ;;
       *)
       usage
@@ -54,6 +57,15 @@ else
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
 fi
 
+if [ -z "$PRETTY" ]
+then
+  XCPRETTY="cat"
+  PRETTY_OPT=""
+else
+  XCPRETTY="xcpretty"
+  PRETTY_OPT="pretty"
+fi
+
 #Clean output directory:
 rm -rf "$OUTPUT_DIR"
 
@@ -66,17 +78,23 @@ then
   echo "Check devices ..."
   instruments -s devices
 
+  # Create test logs folder
+  rm -rf TestLogs && mkdir TestLogs
+
   echo "Run ObjC macOS Test ..."
-# xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx | tee TestLogs/ObjC_MacOS.log | "$XCPRETTY"
 
   echo "Run ObjC iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | tee TestLogs/ObjC_iOS.log | "$XCPRETTY"
 
   echo "Run Swift macOS Test ..."
-#  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx | tee TestLogs/Swift_MacOS.log | "$XCPRETTY"
 
   echo "Run Swift iOS Test ..."
-#  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | tee TestLogs/Swift_iOS.log | "$XCPRETTY"
+  
+  # Zip test logs
+  zip TestLogs.zip TestLogs && rm -rf TestLogs
 
   echo "Generate Test Coverage Reports ..."
   OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
@@ -108,11 +126,10 @@ OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation_$EDITION$VERSION_SU
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
 
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
-
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | "$XCPRETTY"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | "$XCPRETTY"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | "$XCPRETTY"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | "$XCPRETTY"
 
 # Objective-C
 echo "Make Objective-C framework zip file ..."
