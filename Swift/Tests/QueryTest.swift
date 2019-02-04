@@ -671,10 +671,10 @@ class QueryTest: CBLTestCase {
         
         let numRow = try verifyQuery(q, block: { (n, r) in
             XCTAssertEqual(r.count, 5)
-            XCTAssertEqual(r.double(forKey: "AVG()"), r.double(at: 0))
-            XCTAssertEqual(r.int(forKey: "COUNT()"), r.int(at: 1))
+            XCTAssertEqual(r.double(forKey: "$1"), r.double(at: 0))
+            XCTAssertEqual(r.int(forKey: "$2"), r.int(at: 1))
             XCTAssertEqual(r.int(forKey: "min"), r.int(at: 2))
-            XCTAssertEqual(r.int(forKey: "MAX()"), r.int(at: 3))
+            XCTAssertEqual(r.int(forKey: "$3"), r.int(at: 3))
             XCTAssertEqual(r.int(forKey: "sum"), r.int(at: 4))
         })
         XCTAssertEqual(numRow, 1)
