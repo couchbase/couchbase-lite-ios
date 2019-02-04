@@ -876,10 +876,10 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 5u);
-        AssertEqual([r doubleForKey: @"AVG()"], [r doubleAtIndex: 0]);
-        AssertEqual([r integerForKey: @"COUNT()"], [r integerAtIndex: 1]);
+        AssertEqual([r doubleForKey: @"$1"], [r doubleAtIndex: 0]);
+        AssertEqual([r integerForKey: @"$2"], [r integerAtIndex: 1]);
         AssertEqual([r integerForKey: @"min"], [r integerAtIndex: 2]);
-        AssertEqual([r integerForKey: @"MAX()"], [r integerAtIndex: 3]);
+        AssertEqual([r integerForKey: @"$3"], [r integerAtIndex: 3]);
         AssertEqual([r integerForKey: @"sum"], [r integerAtIndex: 4]);
     }];
     AssertEqual(numRows, 1u);
