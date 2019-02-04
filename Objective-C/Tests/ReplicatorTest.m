@@ -119,6 +119,8 @@
 
 
 - (void) setUp {
+    Assert([self deleteDBNamed: @"otherdb" error: nil]);
+    
     [super setUp];
     
     timeout = 5.0;
