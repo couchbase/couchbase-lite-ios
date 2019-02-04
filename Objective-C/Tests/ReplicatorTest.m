@@ -134,7 +134,7 @@
     // Workaround to ensure that replicator's background cleaning task was done:
     // https://github.com/couchbase/couchbase-lite-core/issues/520
     // https://github.com/couchbase/couchbase-lite-core/issues/539
-    [NSThread sleepForTimeInterval: 0.5];
+    // [NSThread sleepForTimeInterval: 0.5];
     
     Assert([otherDB close: nil]);
     otherDB = nil;
@@ -737,7 +737,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 
-- (void) failing_testStopContinuousReplicator {
+- (void) testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
@@ -766,7 +766,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         [r removeChangeListenerWithToken: token];
         
         // Add some delay:
-        [NSThread sleepForTimeInterval: 1.0];
+        // [NSThread sleepForTimeInterval: 1.0];
     }
     r = nil;
 }
@@ -778,7 +778,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         @autoreleasepool {
             Log(@"**** Begin iteration %d ****", i);
             @autoreleasepool {
-                [self failing_testStopContinuousReplicator];
+                [self testStopContinuousReplicator];
             }
             Log(@"**** End iteration %d ****", i);
             fprintf(stderr, "\n\n");
@@ -1089,8 +1089,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // Reset and pull:
     [self run: config reset: YES errorCode: 0 errorDomain: nil];
     AssertEqual(self.db.count, 2u);
-    
-    NSLog(@"Test Done");
 }
 
 
@@ -1142,7 +1140,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         AssertEqual(_db.count, 2UL);
         
         // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-        [NSThread sleepForTimeInterval: 0.5];
+        // [NSThread sleepForTimeInterval: 0.5];
         
         CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
         Assert([savedDoc booleanForKey:@"modified"]);
@@ -1172,7 +1170,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePush usingUID:@"p2ptest1"];
     
     // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-    [NSThread sleepForTimeInterval: 0.5];
+    // [NSThread sleepForTimeInterval: 0.5];
     
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
@@ -1183,7 +1181,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePull usingUID:@"p2ptest2"];
     
     // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-    [NSThread sleepForTimeInterval: 0.5];
+    // [NSThread sleepForTimeInterval: 0.5];
     
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
