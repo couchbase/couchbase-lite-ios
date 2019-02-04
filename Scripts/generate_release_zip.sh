@@ -108,11 +108,11 @@ OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation_$EDITION$VERSION_SU
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
 
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" -quiet
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" -quiet
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" -quiet
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" -quiet
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
 # Objective-C
 echo "Make Objective-C framework zip file ..."
