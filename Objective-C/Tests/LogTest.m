@@ -415,6 +415,8 @@
         }
     }
     Assert(found);
+    
+    CBLDatabase.log.console.level = kCBLLogLevelWarning;
 }
 
 @end
