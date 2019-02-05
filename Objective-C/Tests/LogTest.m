@@ -416,6 +416,7 @@
     }
     Assert(found);
     
+    // Reset back to the default console log level:
     CBLDatabase.log.console.level = kCBLLogLevelWarning;
 }
 

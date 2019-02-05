@@ -359,6 +359,9 @@ class LogTest: CBLTestCase {
             }
         }
         XCTAssert(found)
+        
+        // Reset back to the default console log level:
+        Database.log.console.level = .warning
     }
 }
 
