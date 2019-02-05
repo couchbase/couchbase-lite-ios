@@ -119,6 +119,7 @@
 
 
 - (void) setUp {
+    // Delete otherdb:
     [self deleteDBNamed: @"otherdb" error: nil];
     
     [super setUp];
@@ -126,6 +127,8 @@
     timeout = 5.0;
     _pinServerCert = YES;
     NSError* error;
+    
+    // Create otherdb:
     otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
     AssertNotNil(otherDB);
@@ -133,6 +136,7 @@
 
 
 - (void) tearDown {
+    // TODO: Remove this:
     // Workaround to ensure that replicator's background cleaning task was done:
     // https://github.com/couchbase/couchbase-lite-core/issues/520
     // https://github.com/couchbase/couchbase-lite-core/issues/539
@@ -767,6 +771,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         [self waitForExpectations: @[x] timeout: 10.0];
         [r removeChangeListenerWithToken: token];
         
+        // TODO: Remove this:
         // Add some delay:
         // [NSThread sleepForTimeInterval: 1.0];
     }
@@ -1141,6 +1146,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         [self run:replConfig errorCode:0 errorDomain:nil];
         AssertEqual(_db.count, 2UL);
         
+        // TODO: Remove this:
         // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
         // [NSThread sleepForTimeInterval: 0.5];
         
@@ -1171,6 +1177,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePush usingUID:@"p2ptest1"];
     
+    // TODO: Remove this:
     // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
     // [NSThread sleepForTimeInterval: 0.5];
     
@@ -1182,6 +1189,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePull usingUID:@"p2ptest2"];
     
+    // TODO: Remove this:
     // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
     // [NSThread sleepForTimeInterval: 0.5];
     

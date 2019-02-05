@@ -26,15 +26,19 @@ class ReplicatorTest: CBLTestCase {
     var repl: Replicator!
     
     override func setUp() {
+        // Delete otherdb:
+        try? deleteDB(name: "otherdb")
         super.setUp()
+        // Create otherdb:
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)
     }
     
     override func tearDown() {
+        // TODO: Remove this
         // Workaround to ensure that replicator's background cleaning task was done:
         // https://github.com/couchbase/couchbase-lite-core/issues/520
-        Thread.sleep(forTimeInterval: 0.3);
+        // Thread.sleep(forTimeInterval: 0.3);
         
         try! otherDB.close()
         otherDB = nil
