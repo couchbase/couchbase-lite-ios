@@ -78,24 +78,18 @@ then
   echo "Check devices ..."
   instruments -s devices
 
-  # Create test logs folder
-  rm -rf TestLogs && mkdir TestLogs
-
   echo "Run ObjC macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx | tee TestLogs/ObjC_MacOS.log | "$XCPRETTY"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx | "$XCPRETTY"
 
   echo "Run ObjC iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | tee TestLogs/ObjC_iOS.log | "$XCPRETTY"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | "$XCPRETTY"
 
   echo "Run Swift macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx | tee TestLogs/Swift_MacOS.log | "$XCPRETTY"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx | "$XCPRETTY"
 
   echo "Run Swift iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | tee TestLogs/Swift_iOS.log | "$XCPRETTY"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | "$XCPRETTY"
   
-  # Zip test logs
-  zip TestLogs.zip TestLogs && rm -rf TestLogs
-
   echo "Generate Test Coverage Reports ..."
   OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
   sh Scripts/generate_coverage.sh -o "$OUTPUT_COVERAGE_DIR" $EXTRA_CMD_OPTIONS
