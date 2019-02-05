@@ -40,7 +40,7 @@
 - (void) setUp {
     [super setUp];
     
-    Assert([self deleteDBNamed: kDatabaseName error: nil]);
+    [self deleteDBNamed: kDatabaseName error: nil];
     
     _c4ObjectCount = c4_getObjectCount();
     NSString* dir = self.directory;

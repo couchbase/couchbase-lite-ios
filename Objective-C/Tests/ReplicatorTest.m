@@ -119,7 +119,7 @@
 
 
 - (void) setUp {
-    Assert([self deleteDBNamed: @"otherdb" error: nil]);
+    [self deleteDBNamed: @"otherdb" error: nil];
     
     [super setUp];
     
