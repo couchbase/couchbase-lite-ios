@@ -95,6 +95,7 @@ framework module CouchbaseLiteSwift {
         header "CBLLog+Swift.h"
         
         // Enterprise:
+        header "CBLCoreMLPredictiveModel.h"
         header "CBLDatabaseConfiguration+Encryption.h"
         header "CBLDatabaseEndpoint.h"
         header "CBLDatabase+Encryption.h"

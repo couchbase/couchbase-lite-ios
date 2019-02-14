@@ -184,6 +184,12 @@
 }
 
 
+- (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type {
+    NSString* res = [@"Support" stringByAppendingPathComponent: resourceName];
+    return [[NSBundle bundleForClass: [self class]] URLForResource: res withExtension: type];
+}
+
+
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* res = [@"Support" stringByAppendingPathComponent: resourceName];
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: res
@@ -283,6 +289,17 @@
     @catch (NSException* e) {
         AssertEqualObjects(e.name, name);
     }
+    @finally {
+        --gC4ExpectExceptions;
+    }
+}
+
+- (void) ignoreException: (void (^) (void))block {
+    @try {
+        ++gC4ExpectExceptions;
+        block();
+    }
+    @catch (NSException* e) { }
     @finally {
         --gC4ExpectExceptions;
     }

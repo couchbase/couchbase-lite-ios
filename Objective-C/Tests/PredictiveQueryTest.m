@@ -19,15 +19,6 @@
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
 
-#define PREDICTION_VALUE(MODEL, IN, PROPERTY) \
-    [[CBLQueryFunction predictionUsingModel: (MODEL) input: (IN)] property: PROPERTY]
-
-#define SEL_PREDICTION_VALUE(MODEL, IN, PROPERTY) SEL_EXPR(PREDICTION_VALUE(MODEL, IN, PROPERTY))
-
-#define PREDICTION(MODEL, IN) \
-    [CBLQueryFunction predictionUsingModel: (MODEL) input: (IN)]
-
-#define SEL_PREDICTION(MODEL, IN) SEL_EXPR(PREDICTION(MODEL, IN))
 
 @interface CBLTestPredictiveModel: NSObject <CBLPredictiveModel>
 
