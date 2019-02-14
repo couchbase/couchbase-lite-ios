@@ -42,6 +42,21 @@
 #define kMETA_SEQ               [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
 #define kDATA_SRC_DB            [CBLQueryDataSource database: self.db]
 
+#ifdef COUCHBASE_ENTERPRISE
+
+// Predictive Query:
+#define PREDICTION_VALUE(MODEL, IN, PROPERTY) \
+[[CBLQueryFunction predictionUsingModel: (MODEL) input: (IN)] property: PROPERTY]
+
+#define SEL_PREDICTION_VALUE(MODEL, IN, PROPERTY) SEL_EXPR(PREDICTION_VALUE(MODEL, IN, PROPERTY))
+
+#define PREDICTION(MODEL, IN) \
+[CBLQueryFunction predictionUsingModel: (MODEL) input: (IN)]
+
+#define SEL_PREDICTION(MODEL, IN) SEL_EXPR(PREDICTION(MODEL, IN))
+
+#endif
+
 extern atomic_int gC4ExpectExceptions;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -94,6 +109,9 @@ NS_ASSUME_NONNULL_BEGIN
     object and after save with a new document objct getting from the database. */
 - (void) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
 
+/** URL for a resource. */
+- (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type;
+
 /** Reads a bundle resource file into an NSData. */
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type;
 
@@ -124,6 +142,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) expectException: (NSString*)name in: (void (^) (void))block;
 
 - (void) mayHaveException: (NSString*)name in: (void (^) (void))block;
+
+- (void) ignoreException: (void (^) (void))block;
 
 - (uint64_t) verifyQuery: (CBLQuery*)query
             randomAccess: (BOOL)randomAccess

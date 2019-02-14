@@ -77,6 +77,7 @@ _CBLErrorDomain
 _kCBLAllPropertiesName
 
 # Enterprise Edition:
+.objc_class_name_CBLCoreMLPredictiveModel
 .objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLEncryptionKey
 .objc_class_name_CBLMessage
