@@ -42,7 +42,7 @@ public final class DocumentFragment: DictionaryFragment {
     
     // MARK: Subscript
     
-    
+
     /// Subscript access to a Fragment object by the given key.
     ///
     /// - Parameter key: The key.

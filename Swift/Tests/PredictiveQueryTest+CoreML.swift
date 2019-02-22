@@ -31,7 +31,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         }
         
         var mlmodel: MLModel? = nil
-        ignoreExpcetion {
+        ignoreException {
             let compiledModelURL = try MLModel.compileModel(at: modelURL)
             mlmodel = try MLModel(contentsOf: compiledModelURL)
         }
@@ -66,7 +66,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         }
     }
     
-    func crateDocumentWithImage(at path: String) throws {
+    func createDocumentWithImage(at path: String) throws {
         let res = (path as NSString).deletingPathExtension
         let ext = (path as NSString).pathExtension
         let name = (res as NSString).lastPathComponent
@@ -145,7 +145,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         }
         Database.prediction.registerModel(model, withName: "MobileNet")
         
-        try crateDocumentWithImage(at: "mlmodels/MobileNet/cat.jpg")
+        try createDocumentWithImage(at: "mlmodels/MobileNet/cat.jpg")
         
         let input = Expression.dictionary(["image" : Expression.property("image")])
         let prediction = Function.prediction(model: "MobileNet", input: input)
@@ -174,7 +174,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         
         let faces = ["adams", "lennon-3", "carell", "lennon-2", "lennon-1"]
         for face in faces {
-            try crateDocumentWithImage(at: "mlmodels/OpenFace/\(face).png")
+            try createDocumentWithImage(at: "mlmodels/OpenFace/\(face).png")
         }
         
         // Query the finger print of each face:
@@ -210,7 +210,11 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
             let name = r.string(at: 0)!
             names.append(name)
             XCTAssertNotNil(r.value(at: 1))
-            XCTAssertTrue(r.double(at: 1) >= 0)
+            if name == "lennon-1" {
+                XCTAssertEqual(r.double(at: 1), 0.0)
+            } else {
+                XCTAssertTrue(r.double(at: 1) > 0)
+            }
         }
         XCTAssertEqual(rows, UInt64(faces.count));
         XCTAssertEqual(names, ["lennon-1", "lennon-2", "lennon-3", "carell", "adams"])

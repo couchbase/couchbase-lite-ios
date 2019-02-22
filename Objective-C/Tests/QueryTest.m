@@ -36,31 +36,6 @@
 @implementation QueryTest
 
 
-- (uint64_t) verifyQuery: (CBLQuery*)q
-            randomAccess: (BOOL)randomAccess
-                    test: (void (^)(uint64_t n, CBLQueryResult *result))block {
-    NSError* error;
-    CBLQueryResultSet* rs = [q execute: &error];
-    Assert(rs, @"Query failed: %@", error);
-    uint64_t n = 0;
-    for (CBLQueryResult *r in rs) {
-        block(++n, r);
-    }
-    
-    rs = [q execute: &error];
-    Assert(rs, @"Query failed: %@", error);
-    NSArray* all = rs.allObjects;
-    AssertEqual(all.count, n);
-    if (randomAccess && n > 0) {
-        // Note: the block's 1st parameter is 1-based, while NSArray is 0-based
-        block(n,       all[(NSUInteger)(n-1)]);
-        block(1,       all[0]);
-        block(n/2 + 1, all[(NSUInteger)(n/2)]);
-    }
-    return n;
-}
-
-
 - (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
     NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];

@@ -24,7 +24,9 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 
 @end
 
+
 @implementation PredictiveQueryWithCoreMLTest
+
 
 - (MLModel*) coreMLModel: (NSString*)name mustExist: (BOOL)mustExist {
     NSString* resource = [NSString stringWithFormat: @"mlmodels/%@", name];
@@ -235,7 +237,10 @@ API_AVAILABLE(macos(10.13), ios(11.0))
         AssertNotNil(name);
         [names addObject: name];
         AssertNotNil([r numberAtIndex: 1]);
-        Assert([r doubleAtIndex: 1] >= 0);
+        if ([name isEqualToString: @"lennon-1"])
+            AssertEqual([r doubleAtIndex: 1], 0.0);
+        else
+            Assert([r doubleAtIndex: 1] >= 0);
     }];
     AssertEqual(numRows, faces.count);
     AssertEqualObjects(names, (@[@"lennon-1", @"lennon-2", @"lennon-3", @"carell", @"adams"]));
@@ -357,5 +362,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     AssertNotNil(blob2);
     AssertEqualObjects(blob2.contentType, @"image/png");
 }
+
 
 @end

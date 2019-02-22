@@ -206,13 +206,9 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func ignoreExpcetion(block: @escaping () throws -> Void) {
+    func ignoreException(block: @escaping () throws -> Void) {
         CBLTestHelper.allowException {
-            var error: NSError?
-            do {
-                try block()
-            }
-            catch let e as NSError { }
+            try? block()
         }
     }
     

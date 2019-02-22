@@ -27,7 +27,6 @@
 #import <CoreImage/CoreImage.h>
 #import <Vision/Vision.h>
 
-#define kCBLMayUseVisionModel YES
 #define kCBLMaxVisionPredictedProbabilities 10
 
 @implementation CBLCoreMLPredictiveModel {
@@ -36,7 +35,9 @@
     NSString* _vnFeatureName;
 }
 
+
 - (instancetype) initWithMLModel: (MLModel*)model {
+    CBLAssertNotNil(model);
     self = [super init];
     if (self) {
         _model = model;
@@ -47,9 +48,6 @@
 
 
 - (void) setupVisionModel {
-    if (!kCBLMayUseVisionModel)
-        return;
-        
     MLModelDescription* desc = _model.modelDescription;
     NSDictionary<NSString*, MLFeatureDescription*>* inputSpecs = desc.inputDescriptionsByName;
     NSDictionary<NSString*, MLFeatureDescription*>* outputSpecs = desc.outputDescriptionsByName;
@@ -189,7 +187,7 @@
 
 + (id<MLFeatureProvider>) featuresFromDictionary: (CBLDictionary*)dictionary
                                             spec: (NSDictionary<NSString*, MLFeatureDescription*>*)spec {
-    NSMutableDictionary* dict = [[NSMutableDictionary alloc] initWithCapacity: spec.count];
+    NSMutableDictionary* featureProviderDict = [[NSMutableDictionary alloc] initWithCapacity: spec.count];
     for (NSString* key in spec) {
         MLFeatureDescription* desc = spec[key];
         id value = [dictionary valueForKey: key];
@@ -225,12 +223,12 @@
             CBLWarn(Query, @"Cannot convert the value of %@ key.", key);
             return nil;
         }
-        [dict setObject: featureValue forKey: key];
+        [featureProviderDict setObject: featureValue forKey: key];
     }
     
     NSError* error;
     MLDictionaryFeatureProvider* provider =
-        [[MLDictionaryFeatureProvider alloc] initWithDictionary: dict error: &error];
+        [[MLDictionaryFeatureProvider alloc] initWithDictionary: featureProviderDict error: &error];
     if (!provider) {
         CBLWarn(Query, @"Error when creating a dictionary feature provider: %@", error);
     }
@@ -257,8 +255,9 @@
             if (!dict)
                 return nil;
             NSError* error;
-            MLFeatureValue* dictValue = [MLFeatureValue featureValueWithDictionary:
-                                         [dict toDictionary] error: &error];
+            MLFeatureValue* dictValue =
+                [MLFeatureValue featureValueWithDictionary: [dict toDictionary]
+                                                     error: &error];
             if (!dictValue) {
                 CBLWarn(Query, @"Error when creating a dictionary feature value: %@", error);
             }
@@ -534,5 +533,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     CFRelease(destination);
     return [[CBLBlob alloc] initWithContentType: @"image/png" data: data];
 }
+
 
 @end
