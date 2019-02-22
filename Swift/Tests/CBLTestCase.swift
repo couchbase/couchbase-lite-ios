@@ -129,16 +129,22 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func dataFromResource(name: String, ofType: String) throws -> NSData {
+    func urlForResource(name: String, ofType type: String) -> URL? {
         let res = ("Support" as NSString).appendingPathComponent(name)
-        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: ofType)
-        return try! NSData(contentsOfFile: path!, options: [])
+        return Bundle(for: type(of:self)).url(forResource: res, withExtension: type)
+    }
+    
+    
+    func dataFromResource(name: String, ofType type: String) throws -> Data {
+        let res = ("Support" as NSString).appendingPathComponent(name)
+        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: type)
+        return try! NSData(contentsOfFile: path!, options: []) as Data
     }
 
     
-    func stringFromResource(name: String, ofType: String) throws -> String {
+    func stringFromResource(name: String, ofType type: String) throws -> String {
         let res = ("Support" as NSString).appendingPathComponent(name)
-        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: ofType)
+        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: type)
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
 
@@ -198,6 +204,14 @@ class CBLTestCase: XCTestCase {
             XCTAssertEqual(error?.code, code)
         }
     }
+    
+    
+    func ignoreException(block: @escaping () throws -> Void) {
+        CBLTestHelper.allowException {
+            try? block()
+        }
+    }
+    
     
     func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
