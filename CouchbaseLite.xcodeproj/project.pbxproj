@@ -1074,6 +1074,8 @@
 		939B1B5D2009C04100FAA3CB /* CBLQueryVariableExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 939B1B592009C04100FAA3CB /* CBLQueryVariableExpression.m */; };
 		939B1B5F2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */; };
 		939B1B602009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */; };
+		93A4F2452221058500257423 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93A4F2352221058500257423 /* CoreImage.framework */; };
+		93A4F2462221059500257423 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93A4F2352221058500257423 /* CoreImage.framework */; };
 		93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */; };
 		93AE16CD221D22E600539C05 /* CBLCoreMLPredictiveModel+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93AE16CC221D22E600539C05 /* CBLCoreMLPredictiveModel+Internal.h */; };
@@ -1940,6 +1942,7 @@
 		939B1B592009C04100FAA3CB /* CBLQueryVariableExpression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryVariableExpression.m; sourceTree = "<group>"; };
 		939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQueryVariableExpression+Internal.h"; sourceTree = "<group>"; };
 		939B79241E679017009A70EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		93A4F2352221058500257423 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
 		93AE16CC221D22E600539C05 /* CBLCoreMLPredictiveModel+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCoreMLPredictiveModel+Internal.h"; sourceTree = "<group>"; };
 		93AE16DE221D263F00539C05 /* CoreMLPredictiveModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMLPredictiveModel.swift; sourceTree = "<group>"; };
@@ -2092,6 +2095,7 @@
 			files = (
 				9343EF8E207D611600F19A89 /* libz.tbd in Frameworks */,
 				9343EF8F207D611600F19A89 /* libLiteCore-static.a in Frameworks */,
+				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2101,6 +2105,7 @@
 			files = (
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
 				9343F0B3207D61AB00F19A89 /* libLiteCore-static.a in Frameworks */,
+				93A4F2462221059500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2276,6 +2281,7 @@
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				93A4F2352221058500257423 /* CoreImage.framework */,
 				9399E4B21E932F4700B57600 /* libz.tbd */,
 			);
 			name = Frameworks;
