@@ -310,33 +310,35 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 }
 
 
-- (void) testSequenceDataConversion API_AVAILABLE(macos(10.14), ios(12.0)) {
-    NSArray* types = @[@(MLFeatureTypeInt64), @(MLFeatureTypeString)];
-    NSArray* tests = @[@[@1, @2, @3, @4, @5], @[@"1", @"2", @"3", @"4", @"5"]];
-    
-    for (NSUInteger i = 0; i < types.count; i++) {
-        MLFeatureType type = [types[i] integerValue];
-        NSArray* data = tests[i];
+- (void) testSequenceDataConversion {
+    if (@available(macOS 10.14, iOS 12.0, *)) {
+        NSArray* types = @[@(MLFeatureTypeInt64), @(MLFeatureTypeString)];
+        NSArray* tests = @[@[@1, @2, @3, @4, @5], @[@"1", @"2", @"3", @"4", @"5"]];
         
-        // CBLArray to Sequence:
-        CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithData: data];
-        MLFeatureValue* featureValue =
+        for (NSUInteger i = 0; i < types.count; i++) {
+            MLFeatureType type = [types[i] integerValue];
+            NSArray* data = tests[i];
+            
+            // CBLArray to Sequence:
+            CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithData: data];
+            MLFeatureValue* featureValue =
             [CBLCoreMLPredictiveModel sequenceFeatureValueFromValue: mArray type: type];
-        AssertEqual(featureValue.type, MLFeatureTypeSequence);
-        MLSequence* sequence = featureValue.sequenceValue;
-        AssertNotNil(sequence);
-        NSArray* values = nil;
-        if (type == MLFeatureTypeInt64) {
-            values = [sequence int64Values];
-        } else {
-            values = [sequence stringValues];
+            AssertEqual(featureValue.type, MLFeatureTypeSequence);
+            MLSequence* sequence = featureValue.sequenceValue;
+            AssertNotNil(sequence);
+            NSArray* values = nil;
+            if (type == MLFeatureTypeInt64) {
+                values = [sequence int64Values];
+            } else {
+                values = [sequence stringValues];
+            }
+            AssertEqualObjects(values, data);
+            
+            // Sequence to CBLArray:
+            CBLArray* array = [CBLCoreMLPredictiveModel arrayFromSequence: sequence];
+            AssertNotNil(array);
+            AssertEqualObjects([array toArray], data);
         }
-        AssertEqualObjects(values, data);
-        
-        // Sequence to CBLArray:
-        CBLArray* array = [CBLCoreMLPredictiveModel arrayFromSequence: sequence];
-        AssertNotNil(array);
-        AssertEqualObjects([array toArray], data);
     }
 }
 
