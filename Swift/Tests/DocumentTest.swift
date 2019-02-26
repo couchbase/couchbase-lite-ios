@@ -379,6 +379,8 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setValue(Int.min, forKey: "min_int")
         doc.setValue(Int.max, forKey: "max_int")
+        doc.setValue(Int64.min, forKey: "min_int64")
+        doc.setValue(Int64.max, forKey: "max_int64")
         doc.setValue(Float.leastNormalMagnitude, forKey: "min_float")
         doc.setValue(Float.greatestFiniteMagnitude, forKey: "max_float")
         doc.setValue(Double.leastNormalMagnitude, forKey: "min_double")
@@ -389,6 +391,11 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.int(forKey: "max_int"), Int.max);
             XCTAssertEqual(d.value(forKey: "min_int") as! Int, Int.min);
             XCTAssertEqual(d.value(forKey: "max_int") as! Int, Int.max);
+            
+            XCTAssertEqual(d.int64(forKey: "min_int"), Int64.min);
+            XCTAssertEqual(d.int64(forKey: "max_int"), Int64.max);
+            XCTAssertEqual(d.value(forKey: "min_int") as! Int64, Int64.min);
+            XCTAssertEqual(d.value(forKey: "max_int") as! Int64, Int64.max);
             
             XCTAssertEqual(d.float(forKey: "min_float"), Float.leastNormalMagnitude);
             XCTAssertEqual(d.float(forKey: "max_float"), Float.greatestFiniteMagnitude);

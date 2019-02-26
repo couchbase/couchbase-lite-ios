@@ -157,7 +157,16 @@
         // Literal:
         @"number1": @10,
         @"number2": @10.1,
-        @"boolean": @YES,
+        @"int-min": @NSIntegerMin,
+        @"int-max": @NSIntegerMax,
+        @"int64-min": @INT64_MIN,
+        @"int64-max": @INT64_MAX,
+        @"float-min": @FLT_MIN,
+        @"float-max": @FLT_MAX,
+        @"double-min": @DBL_MIN,
+        @"double-max": @DBL_MAX,
+        @"boolean_true": @YES,
+        @"boolean_false": @NO,
         @"string": @"hello",
         @"date": date,
         @"null": [NSNull null],
@@ -189,7 +198,16 @@
         // Literal:
         AssertEqual([pred integerForKey: @"number1"], 10);
         AssertEqual([pred doubleForKey: @"number2"], 10.1);
-        AssertEqual([pred booleanForKey: @"boolean"], YES);
+        AssertEqual([pred integerForKey: @"int-min"], NSIntegerMin);
+        AssertEqual([pred integerForKey: @"int-max"], NSIntegerMax);
+        AssertEqual([pred longLongForKey: @"int64-min"], INT64_MIN);
+        AssertEqual([pred longLongForKey: @"int64-max"], INT64_MAX);
+        AssertEqual([pred floatForKey: @"float-min"], FLT_MIN);
+        AssertEqual([pred floatForKey: @"float-max"], FLT_MAX);
+        AssertEqual([pred doubleForKey: @"double-min"], DBL_MIN);
+        AssertEqual([pred doubleForKey: @"double-max"], DBL_MAX);
+        AssertEqual([pred booleanForKey: @"boolean_true"], YES);
+        AssertEqual([pred booleanForKey: @"boolean_false"], NO);
         AssertEqualObjects([pred stringForKey: @"string"], @"hello");
         AssertEqualObjects([CBLJSON JSONObjectWithDate: [pred dateForKey: @"date"]], dateStr);
         AssertEqualObjects([pred valueForKey: @"null"], [NSNull null]);

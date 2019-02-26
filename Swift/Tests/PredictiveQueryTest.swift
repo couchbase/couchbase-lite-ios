@@ -120,7 +120,16 @@ class PredictiveQueryTest: CBLTestCase {
             // Literal:
             "number1": 10,
             "number2": 10.1,
-            "boolean": true,
+            "int_min": Int.min,
+            "int_max": Int.max,
+            "int64_min": Int64.min,
+            "int64_max": Int64.max,
+            "float_min": Float.leastNormalMagnitude,
+            "float_max": Float.greatestFiniteMagnitude,
+            "double_min": Double.leastNormalMagnitude,
+            "double_max": Double.greatestFiniteMagnitude,
+            "boolean_true": true,
+            "boolean_false": false,
             "string": "hello",
             "date": date,
             "null": NSNull(),
@@ -152,7 +161,16 @@ class PredictiveQueryTest: CBLTestCase {
             // Literal:
             XCTAssertEqual(pred.int(forKey: "number1"), 10)
             XCTAssertEqual(pred.double(forKey: "number2"), 10.1)
-            XCTAssertEqual(pred.boolean(forKey: "boolean"), true)
+            XCTAssertEqual(pred.int(forKey: "int_min"), Int.min)
+            XCTAssertEqual(pred.int(forKey: "int_max"), Int.max)
+            XCTAssertEqual(pred.int64(forKey: "int64_min"), Int64.min)
+            XCTAssertEqual(pred.int64(forKey: "int64_max"), Int64.max)
+            XCTAssertEqual(pred.float(forKey: "float_min"), Float.leastNormalMagnitude)
+            XCTAssertEqual(pred.float(forKey: "float_max"), Float.greatestFiniteMagnitude)
+            XCTAssertEqual(pred.double(forKey: "double_min"), Double.leastNormalMagnitude)
+            XCTAssertEqual(pred.double(forKey: "double_max"), Double.greatestFiniteMagnitude)
+            XCTAssertEqual(pred.boolean(forKey: "boolean_true"), true)
+            XCTAssertEqual(pred.boolean(forKey: "boolean_false"), false)
             XCTAssertEqual(pred.string(forKey: "string"), "hello")
             XCTAssertEqual(jsonFromDate(pred.date(forKey: "date")!), dateStr)
             XCTAssertEqual(pred.value(forKey: "null") as! NSNull,  NSNull())

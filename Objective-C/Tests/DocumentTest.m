@@ -420,6 +420,8 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @(NSIntegerMin) forKey: @"min_int"];
     [doc setValue: @(NSIntegerMax) forKey: @"max_int"];
+    [doc setValue: @(INT64_MIN) forKey: @"min_int64"];
+    [doc setValue: @(INT64_MAX) forKey: @"max_int64"];
     [doc setValue: @(FLT_MIN) forKey: @"min_float"];
     [doc setValue: @(FLT_MAX) forKey: @"max_float"];
     [doc setValue: @(DBL_MIN) forKey: @"min_double"];
@@ -432,6 +434,13 @@
         AssertEqualObjects([d valueForKey: @"max_int"], @(NSIntegerMax));
         AssertEqual([d integerForKey: @"min_int"], NSIntegerMin);
         AssertEqual([d integerForKey: @"max_int"], NSIntegerMax);
+        
+        AssertEqualObjects([d numberForKey: @"min_int64"], @(INT64_MIN));
+        AssertEqualObjects([d numberForKey: @"max_int64"], @(INT64_MAX));
+        AssertEqualObjects([d valueForKey: @"min_int64"], @(INT64_MIN));
+        AssertEqualObjects([d valueForKey: @"max_int64"], @(INT64_MAX));
+        AssertEqual([d integerForKey: @"min_int64"], INT64_MIN);
+        AssertEqual([d integerForKey: @"max_int64"], INT64_MAX);
         
         AssertEqualObjects([d numberForKey: @"min_float"], @(FLT_MIN));
         AssertEqualObjects([d numberForKey: @"max_float"], @(FLT_MAX));
