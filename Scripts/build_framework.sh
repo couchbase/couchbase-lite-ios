@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform: iOS, tvOS, or macOS> [-c <Configuration Name, default is 'Release'>] -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--verbose]" 
+  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform: iOS, tvOS, or macOS> [-c <Configuration Name, default is 'Release'>] -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--quiet]" 
 }
 
 while [[ $# -gt 0 ]]
@@ -31,8 +31,8 @@ do
       VERSION=${2}
       shift
       ;;
-      --verbose)
-      VERBOSE="Y"
+      --quiet)
+      QUIET="Y"
       ;;
       *)
       usage
@@ -75,13 +75,13 @@ then
   PLATFORM_NAME="macOS"
 fi
 
-if [ -z "$VERBOSE" ]
+if [ -z "$QUIET" ]
 then
-  echo "Verbose: NO"
-  VERBOSE="-quiet"
+  echo "QUIET: NO"
+  QUIET=""
 else
-  echo "Verbose: YES"
-  VERBOSE=""
+  echo "QUIET: YES"
+  QUIET="-quiet"
 fi
 
 OUTPUT_BASE_DIR=${OUTPUT_DIR}/${SCHEME}/${PLATFORM_NAME}
@@ -122,7 +122,7 @@ for SDK in "${SDKS[@]}"
       fi
     fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${ACTION} ${VERBOSE}
+    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${ACTION} ${QUIET}
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`

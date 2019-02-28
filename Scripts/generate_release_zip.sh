@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest]"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest] [--pretty]"
 }
 
 while [[ $# -gt 0 ]]
@@ -24,6 +24,9 @@ do
       ;;
       --notest)
       NO_TEST=YES
+      ;;
+      --pretty)
+      PRETTY=YES
       ;;
       *)
       usage
@@ -54,7 +57,16 @@ else
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
 fi
 
-#Clean output directory:
+if [ -z "$PRETTY" ]
+then
+  XCPRETTY="cat"
+else
+  # Allow non-ascii text in output:
+  export LC_CTYPE=en_US.UTF-8
+  XCPRETTY="xcpretty"
+fi
+
+# Clean output directory:
 rm -rf "$OUTPUT_DIR"
 
 # Check xcodebuild version:
@@ -67,17 +79,17 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx | $XCPRETTY
 
   echo "Run ObjC iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | $XCPRETTY
 
   echo "Run Swift macOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx | $XCPRETTY
 
   echo "Run Swift iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR"
-
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | $XCPRETTY
+  
   echo "Generate Test Coverage Reports ..."
   OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
   sh Scripts/generate_coverage.sh -o "$OUTPUT_COVERAGE_DIR" $EXTRA_CMD_OPTIONS
@@ -108,18 +120,10 @@ OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation_$EDITION$VERSION_SU
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
 
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
-
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION"
-sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION"
-
-# Build tools:
-echo "Build Development Tools ..."
-TOOLS_DIR="$BUILD_DIR/Tools"
-mkdir "$TOOLS_DIR"
-cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
-vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'cblite' -o "$TOOLS_DIR" -v "$VERSION"
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 
 # Objective-C
 echo "Make Objective-C framework zip file ..."
@@ -130,7 +134,6 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
-cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_DIR"
 pushd "$OUTPUT_OBJC_DIR"
 zip -ry "$OUTPUT_OBJC_ZIP" *
 popd
@@ -144,7 +147,6 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
-cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_DIR"
 pushd "$OUTPUT_SWIFT_DIR"
 zip -ry "$OUTPUT_SWIFT_ZIP" *
 popd
