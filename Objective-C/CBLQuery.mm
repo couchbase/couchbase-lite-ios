@@ -120,9 +120,14 @@
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
-    NSData* paramJSON = [_parameters encodeAsJSON: outError];
-    if (_parameters && !paramJSON)
-        return nil;
+    
+    NSData* paramJSON = nil;
+    CBL_LOCK(self) {
+        paramJSON = [_parameters encodeAsJSON: outError];
+        if (_parameters && !paramJSON)
+            return nil;
+    }
+    
     
     C4Error c4Err;
     C4QueryEnumerator* e;
@@ -173,17 +178,19 @@
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    CBLQuery* q =  [[[self class] alloc] initWithSelect: _select
-                                               distinct: _distinct
-                                                   from: _from
-                                                   join: _join
-                                                  where: _where
-                                                groupBy: _groupBy
-                                                 having: _having
-                                                orderBy: _orderings
-                                                  limit: _limit];
-    q.parameters = [_parameters copy];
-    return q;
+    CBL_LOCK(self) {
+        CBLQuery* q =  [[[self class] alloc] initWithSelect: _select
+                                                   distinct: _distinct
+                                                       from: _from
+                                                       join: _join
+                                                      where: _where
+                                                    groupBy: _groupBy
+                                                     having: _having
+                                                    orderBy: _orderings
+                                                      limit: _limit];
+        q.parameters = [_parameters copy];
+        return q;
+    }
 }
 
 
