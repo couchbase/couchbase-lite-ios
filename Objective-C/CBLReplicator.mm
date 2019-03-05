@@ -143,12 +143,12 @@ typedef enum {
 
 - (void) start {
     CBL_LOCK(self) {
+        CBLLogInfo(Sync, @"%@: Starting...", self);
         if (_repl) {
-            CBLWarn(Sync, @"%@ has already started (status = %d)", self,  _rawStatus.level);
+            CBLWarn(Sync, @"%@ has already started (status = %d); ignore starting.",
+                    self,  _rawStatus.level);
             return;
         }
-        
-        CBLLogInfo(Sync, @"%@: Starting", self);
         _retryCount = 0;
         _suspended = NO;
         _isSuspending = NO;
@@ -159,12 +159,11 @@ typedef enum {
 
 - (void) retry {
     CBL_LOCK(self) {
+        CBLLogInfo(Sync, @"%@: Retrying...", self);
         if (_repl || _rawStatus.level != kC4Offline) {
             CBLLogInfo(Sync, @"%@: Ignore retrying (status = %d)", self, _rawStatus.level);
             return;
         }
-        
-        CBLLogInfo(Sync, @"%@: Retrying...", self);
         [self _start];
     }
 }
@@ -293,6 +292,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 - (void) stop {
     CBL_LOCK(self) {
+        CBLLogInfo(Sync, @"%@: Stopping...", self);
         _isStopping = YES;
         _suspended = NO;
         _isSuspending = NO;
@@ -307,8 +307,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         c4repl_stop(_repl);     // this is async; status will change when repl actually stops
     else if (_rawStatus.level == kC4Offline)
         offline = YES;
-    else if (_isStopping)       // no ops, already stopped
+    else if (_isStopping) {     // no ops, already stopped
+        CBLLogInfo(Sync, @"%@: has already stopped; ignore stopping.", self);
         _isStopping = NO;
+    }
     
     if (offline) {
         dispatch_async(_dispatchQueue, ^{
