@@ -222,4 +222,46 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         Database.prediction.unregisterModel(withName: "OpenFace")
     }
     
+    // Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
+    // and put it at Objective-C/Tests/Support/mlmodels/MobileNet
+    func testOutputTransformer() throws {
+        guard let model = try self.model(name: "MobileNet/MobileNet", mustExist: false) else {
+            return
+        }
+        
+        model.outputTransformer = { (output) in
+            guard let o = output else {
+                return nil
+            }
+            
+            let label = o.string(forKey: "classLabel")!
+            let prob = o.dictionary(forKey: "classLabelProbs")?.value(forKey: label)
+            
+            let transformed = MutableDictionaryObject()
+            transformed.setValue(label, forKey: "label")
+            transformed.setValue(prob, forKey: "prob")
+            return transformed
+        }
+        
+        Database.prediction.registerModel(model, withName: "MobileNet")
+        
+        try createDocumentWithImage(at: "mlmodels/MobileNet/cat.jpg")
+        
+        let input = Expression.dictionary(["image" : Expression.property("image")])
+        let prediction = Function.prediction(model: "MobileNet", input: input)
+        let q = QueryBuilder
+            .select(SelectResult.expression(prediction))
+            .from(DataSource.database(db))
+        let rows = try verifyQuery(q) { (n, r) in
+            let pred = r.dictionary(at: 0)!
+            let label = pred.string(forKey: "label")!.lowercased()
+            XCTAssertNotEqual((label as NSString).range(of: "cat").location, NSNotFound)
+            let prob = pred.double(forKey: "prob")
+            XCTAssertTrue(prob > 0.0)
+        }
+        XCTAssertEqual(rows, 1);
+        
+        Database.prediction.unregisterModel(withName: "MobileNet")
+    }
+    
 }

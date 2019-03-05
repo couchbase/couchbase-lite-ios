@@ -36,6 +36,9 @@
 }
 
 
+@synthesize outputTransformer=_outputTransformer;
+
+
 - (instancetype) initWithMLModel: (MLModel*)model {
     CBLAssertNotNil(model);
     self = [super init];
@@ -79,10 +82,16 @@
 
 
 - (nullable CBLDictionary*) predict: (CBLDictionary*)input {
+    CBLDictionary* output;
     if (_vnModel)
-        return [self predictUsingVNModel: input];
+        output = [self predictUsingVNModel: input];
     else
-        return [self predictUsingMLModel: input];
+        output = [self predictUsingMLModel: input];
+    
+    if (self.outputTransformer)
+        output = _outputTransformer(output);
+    
+    return output;
 }
 
 

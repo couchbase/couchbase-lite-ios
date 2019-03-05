@@ -22,6 +22,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Prediction output transformer block type. */
+API_AVAILABLE(macos(10.13), ios(11.0))
+typedef CBLDictionary* __nullable (^CBLCoreMLTransformerBlock) (CBLDictionary* _Nullable);
+
 /**
  CBLCoreMLPredictiveModel is a Core ML based implementation of the CBLPredictiveModel
  protocol. Basically the CBLCoreMLPredictiveModel used a Core ML model to return
@@ -57,6 +61,9 @@ API_AVAILABLE(macos(10.13), ios(11.0))
  @param model The MLModel object.
  */
 - (instancetype) initWithMLModel: (MLModel*)model;
+
+/** Prediction output transformer block. */
+@property (nonatomic, nullable) CBLCoreMLTransformerBlock outputTransformer;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
