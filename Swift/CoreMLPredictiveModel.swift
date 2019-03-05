@@ -44,7 +44,7 @@ import CoreML
 /// is currently supported. However this limitation is applied only when the VNCoreMLModel cannot
 /// be used.
 @available(macOS 10.13, iOS 11.0, *)
-public class CoreMLPredictiveModel : PredictiveModel {
+open class CoreMLPredictiveModel : PredictiveModel {
     
     /// Initializes the CoreMLPredictiveModel with the MLModel object.
     ///
@@ -58,7 +58,7 @@ public class CoreMLPredictiveModel : PredictiveModel {
     
     /// Returns Core ML model prediction result. The method will be called by the query engine
     /// when invoking the Function.prediction() function inside a query or an index.
-    public func predict(input: DictionaryObject) -> DictionaryObject? {
+    open func predict(input: DictionaryObject) -> DictionaryObject? {
         let output = _impl.predict(input._impl as! CBLDictionary)
         return DataConverter.convertGETValue(output) as? DictionaryObject
     }
