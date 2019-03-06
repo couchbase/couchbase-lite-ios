@@ -132,7 +132,7 @@ cp -R "$BUILD_DIR/$SCHEME_PREFIX ObjC"/* "$OUTPUT_OBJC_DIR"
 if [[ -z ${WORKSPACE} ]]; then
     cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 else # official Jenkins build's license
-    cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
+    cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
 pushd "$OUTPUT_OBJC_DIR"
 zip -ry "$OUTPUT_OBJC_ZIP" *
@@ -145,7 +145,7 @@ cp -R "$BUILD_DIR/$SCHEME_PREFIX Swift"/* "$OUTPUT_SWIFT_DIR"
 if [[ -z ${WORKSPACE} ]]; then
     cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 else # official Jenkins build's license
-    cp ${WORKSPACE}/build/license/couchbase-lite/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
+    cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
 pushd "$OUTPUT_SWIFT_DIR"
 zip -ry "$OUTPUT_SWIFT_ZIP" *
