@@ -22,9 +22,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Prediction input transformer block type. */
+API_AVAILABLE(macos(10.13), ios(11.0))
+typedef CBLDictionary* __nonnull (^CBLCoreMLInputTransformerBlock) (CBLDictionary*);
+
 /** Prediction output transformer block type. */
 API_AVAILABLE(macos(10.13), ios(11.0))
-typedef CBLDictionary* __nullable (^CBLCoreMLTransformerBlock) (CBLDictionary* _Nullable);
+typedef CBLDictionary* __nullable (^CBLCoreMLOutputTransformerBlock) (CBLDictionary* _Nullable);
 
 /**
  CBLCoreMLPredictiveModel is a Core ML based implementation of the CBLPredictiveModel
@@ -62,8 +66,11 @@ API_AVAILABLE(macos(10.13), ios(11.0))
  */
 - (instancetype) initWithMLModel: (MLModel*)model;
 
+/** Prediction input transformer block. */
+@property (nonatomic, nullable) CBLCoreMLInputTransformerBlock inputTransformer;
+
 /** Prediction output transformer block. */
-@property (nonatomic, nullable) CBLCoreMLTransformerBlock outputTransformer;
+@property (nonatomic, nullable) CBLCoreMLOutputTransformerBlock outputTransformer;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

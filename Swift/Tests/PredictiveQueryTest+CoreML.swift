@@ -224,9 +224,15 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
     
     // Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
     // and put it at Objective-C/Tests/Support/mlmodels/MobileNet
-    func testOutputTransformer() throws {
+    func testInputOutputTransformer() throws {
         guard let model = try self.model(name: "MobileNet/MobileNet", mustExist: false) else {
             return
+        }
+        
+        model.inputTransformer = { (input) in
+            let transformed = MutableDictionaryObject()
+            transformed.setValue(input.value(forKey: "photo")!, forKey: "image")
+            return transformed
         }
         
         model.outputTransformer = { (output) in
@@ -247,7 +253,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         
         try createDocumentWithImage(at: "mlmodels/MobileNet/cat.jpg")
         
-        let input = Expression.dictionary(["image" : Expression.property("image")])
+        let input = Expression.dictionary(["photo" : Expression.property("image")])
         let prediction = Function.prediction(model: "MobileNet", input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))

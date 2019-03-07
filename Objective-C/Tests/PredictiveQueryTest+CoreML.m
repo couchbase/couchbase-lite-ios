@@ -368,10 +368,16 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 
 // Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
 // and put it at Objective-C/Tests/Support/mlmodels/MobileNet
-- (void) testOutputTransformer {
+- (void) testInputOutputTransformer {
     CBLCoreMLPredictiveModel* model = [self model: @"MobileNet/MobileNet" mustExist: NO];
     if (!model)
         return;
+    
+    model.inputTransformer = ^CBLDictionary*(CBLDictionary *input) {
+        CBLMutableDictionary* transformed = [[CBLMutableDictionary alloc] init];
+        [transformed setValue: [input valueForKey: @"photo"] forKey: @"image"];
+        return transformed;
+    };
     
     model.outputTransformer = ^CBLDictionary*(CBLDictionary *output) {
         if (output) {
@@ -389,7 +395,7 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     
     [self createDocumentWithImageAtPath: @"mlmodels/MobileNet/cat.jpg"];
     
-    NSDictionary* input = @{ @"image": EXPR_PROP(@"image") };
+    NSDictionary* input = @{ @"photo": EXPR_PROP(@"image") };
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR(PREDICTION(@"MobileNet", EXPR_VAL(input)))]
                                      from: kDATA_SRC_DB];
     uint64_t numRows = [self verifyQuery: q randomAccess: NO

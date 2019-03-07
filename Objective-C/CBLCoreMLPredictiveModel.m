@@ -36,7 +36,7 @@
 }
 
 
-@synthesize outputTransformer=_outputTransformer;
+@synthesize inputTransformer=_inputTransformer, outputTransformer=_outputTransformer;
 
 
 - (instancetype) initWithMLModel: (MLModel*)model {
@@ -82,13 +82,21 @@
 
 
 - (nullable CBLDictionary*) predict: (CBLDictionary*)input {
+    if (_inputTransformer) {
+        input = _inputTransformer(input);
+        if (!input) {
+            CBLWarn(Query, @"The prediction input is nil which is not allowed.");
+            return nil;
+        }
+    }
+    
     CBLDictionary* output;
     if (_vnModel)
         output = [self predictUsingVNModel: input];
     else
         output = [self predictUsingMLModel: input];
     
-    if (self.outputTransformer)
+    if (_outputTransformer)
         output = _outputTransformer(output);
     
     return output;

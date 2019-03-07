@@ -54,6 +54,9 @@ open class CoreMLPredictiveModel : PredictiveModel {
         _impl = CBLCoreMLPredictiveModel(mlModel: mlModel)
     }
     
+    /// Prediction input transformer.
+    public var inputTransformer: ((DictionaryObject) -> DictionaryObject)?
+    
     /// Prediction output transformer.
     public var outputTransformer: ((DictionaryObject?) -> DictionaryObject?)?
     
@@ -62,12 +65,17 @@ open class CoreMLPredictiveModel : PredictiveModel {
     /// Makes prediction by using the Core ML model. The method will be called by the query engine
     /// when invoking the Function.prediction() function inside a query or an index.
     open func predict(input: DictionaryObject) -> DictionaryObject? {
-        let prediction = _impl.predict(input._impl as! CBLDictionary)
-        var output = DataConverter.convertGETValue(prediction) as? DictionaryObject
-        if let transformer = self.outputTransformer {
-            output = transformer(output)
+        var predInput = input
+        if let inputTransformer = self.inputTransformer {
+            predInput = inputTransformer(predInput)
         }
-        return output;
+        
+        let output = _impl.predict(predInput._impl as! CBLDictionary)
+        var predOutput = DataConverter.convertGETValue(output) as? DictionaryObject
+        if let outputTransformer = self.outputTransformer {
+            predOutput = outputTransformer(predOutput)
+        }
+        return predOutput;
     }
     
     // MARK: Internal
