@@ -348,7 +348,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
-        if (!reachable && !_repl && !_isStopping) {
+        if (reachable && !_repl && !_isStopping) {
             CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
             _retryCount = 0;
             [self retry];
