@@ -50,6 +50,7 @@ then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
+  COVERAGE_ZIP_FILE="coverage.zip"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 6"
@@ -57,6 +58,7 @@ else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
   CONFIGURATION_TEST="Debug-EE"
+  COVERAGE_ZIP_FILE="coverage-ee.zip"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
@@ -99,7 +101,7 @@ then
   then
     # Objective-C:
     echo "Generate Coverage Report for ObjC ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "${CONFIGURATION_TEST}"  --ignore "vendor/*" --ignore "Swift/*" --output-directory "$OUTPUT_DIR/coverage/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "${CONFIGURATION_TEST}" --ignore "vendor/*" --ignore "Swift/*" --output-directory "$OUTPUT_DIR/coverage/Objective-C" CouchbaseLite.xcodeproj > /dev/null
   fi
 
   echo "Run Swift macOS Test ..."
@@ -117,7 +119,7 @@ then
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
-    zip -ry "coverage.zip" coverage/*
+    zip -ry "$COVERAGE_ZIP_FILE" coverage/*
     popd > /dev/null
     rm -rf "$OUTPUT_DIR/coverage"
   fi
