@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest] [--pretty]"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--EE] [--notest] [--nocov] [--pretty]"
 }
 
 while [[ $# -gt 0 ]]
@@ -24,6 +24,9 @@ do
       ;;
       --notest)
       NO_TEST=YES
+      ;;
+      --nocov)
+      NO_COV=YES
       ;;
       --pretty)
       PRETTY=YES
@@ -46,12 +49,14 @@ if [ -z "$EE" ]
 then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
+  CONFIGURATION_TEST="Debug"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 6"
 else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
+  CONFIGURATION_TEST="Debug-EE"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
@@ -69,6 +74,12 @@ fi
 # Clean output directory:
 rm -rf "$OUTPUT_DIR"
 
+# Clean OBJROOT and SYSROOT Directory:
+OBJROOT_DIR=`xcodebuild -showBuildSettings|grep -w OBJROOT|head -n 1|awk '{ print $3 }'`
+rm -rf "${OBJROOT_DIR}"
+SYMROOT_DIR=`xcodebuild -showBuildSettings|grep -w SYMROOT|head -n 1|awk '{ print $3 }'`
+rm -rf "${SYMROOT_DIR}"
+
 # Check xcodebuild version:
 echo "Check xcodebuild version ..."
 xcodebuild -version
@@ -79,22 +90,37 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk macosx | $XCPRETTY
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "${CONFIGURATION_TEST}" -sdk macosx | $XCPRETTY
 
   echo "Run ObjC iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | $XCPRETTY
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "${CONFIGURATION_TEST}" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
+
+  if [ -z "$NO_COV" ]
+  then
+    # Objective-C:
+    echo "Generate Coverage Report for ObjC ..."
+    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "${CONFIGURATION_TEST}"  --ignore "vendor/*" --ignore "Swift/*" --output-directory "$OUTPUT_DIR/coverage/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+  fi
 
   echo "Run Swift macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk macosx | $XCPRETTY
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "${CONFIGURATION_TEST}" -sdk macosx | $XCPRETTY
 
   echo "Run Swift iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -sdk iphonesimulator -destination "$TEST_SIMULATOR" | $XCPRETTY
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "${CONFIGURATION_TEST}" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
   
-  echo "Generate Test Coverage Reports ..."
-  OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
-  sh Scripts/generate_coverage.sh -o "$OUTPUT_COVERAGE_DIR" $EXTRA_CMD_OPTIONS
-  zip -ry "$OUTPUT_DIR/test_coverage.zip" "$OUTPUT_COVERAGE_DIR"
-  rm -rf "$OUTPUT_COVERAGE_DIR"
+  # Generage Code Coverage Reports:
+  if [ -z "$NO_COV" ]
+  then
+    # Swift:
+    echo "Generate Coverage Report for Swift ..."
+    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "${CONFIGURATION_TEST}"  --ignore "vendor/*" --ignore "Objective-C/*" --output-directory "$OUTPUT_DIR/coverage/Swift" CouchbaseLite.xcodeproj > /dev/null
+    
+    # Zip reports:
+    pushd "$OUTPUT_DIR" > /dev/null
+    zip -ry "coverage.zip" coverage/*
+    popd > /dev/null
+    rm -rf "$OUTPUT_DIR/coverage"
+  fi
 fi
 
 VERSION_SUFFIX=""
@@ -147,29 +173,29 @@ if [[ -z ${WORKSPACE} ]]; then
 else # official Jenkins build's license
     cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
-pushd "$OUTPUT_SWIFT_DIR"
+pushd "$OUTPUT_SWIFT_DIR" > /dev/null
 zip -ry "$OUTPUT_SWIFT_ZIP" *
-popd
+popd > /dev/null
 
 # Generate MD5 files:
 echo "Generate MD5 files ..."
-pushd "$OUTPUT_DIR"
+pushd "$OUTPUT_DIR" > /dev/null
 md5 couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip.md5
 md5 couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip.md5
-popd
+popd > /dev/null
 
 # Generate API docs:
 echo "Generate API docs ..."
 OBJC_UMBRELLA_HEADER=`find $OUTPUT_OBJC_DIR -name "CouchbaseLite.h"`
 sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR" -h "$OBJC_UMBRELLA_HEADER" $EXTRA_CMD_OPTIONS
 # >> Objective-C API
-pushd "$OUTPUT_OBJC_DOCS_DIR"
+pushd "$OUTPUT_OBJC_DOCS_DIR" > /dev/null
 zip -ry "$OUTPUT_OBJC_DOCS_ZIP" *
-popd
+popd > /dev/null
 # >> Swift API docs
-pushd "$OUTPUT_SWIFT_DOCS_DIR"
+pushd "$OUTPUT_SWIFT_DOCS_DIR" > /dev/null
 zip -ry "$OUTPUT_SWIFT_DOCS_ZIP" *
-popd
+popd > /dev/null
 
 # Cleanup
 rm -rf "$BUILD_DIR"
