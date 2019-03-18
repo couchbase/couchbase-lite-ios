@@ -50,7 +50,7 @@ then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
-  COVERAGE_ZIP_FILE="coverage.zip"
+  COVERAGE_NAME="coverage"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 6"
@@ -58,7 +58,7 @@ else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
   CONFIGURATION_TEST="Debug-EE"
-  COVERAGE_ZIP_FILE="coverage-ee.zip"
+  COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
@@ -73,14 +73,14 @@ else
   XCPRETTY="xcpretty"
 fi
 
-# Clean output directory:
-rm -rf "$OUTPUT_DIR"
+# Clean DerivedData
+DERIVED_DATA_DIR=`xcodebuild -showBuildSettings|grep -w OBJROOT|head -n 1|awk '{ print $3 }'|grep -o '.*CouchbaseLite-[^\/]*'`
+echo "Clean DerivedData directory: $DERIVED_DATA_DIR"
+rm -rf "$DERIVED_DATA_DIR"
 
-# Clean OBJROOT and SYSROOT Directory:
-OBJROOT_DIR=`xcodebuild -showBuildSettings|grep -w OBJROOT|head -n 1|awk '{ print $3 }'`
-rm -rf "${OBJROOT_DIR}"
-SYMROOT_DIR=`xcodebuild -showBuildSettings|grep -w SYMROOT|head -n 1|awk '{ print $3 }'`
-rm -rf "${SYMROOT_DIR}"
+# Clean output directory:
+echo "Clean output directory: $OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR"
 
 # Check xcodebuild version:
 echo "Check xcodebuild version ..."
@@ -88,40 +88,42 @@ xcodebuild -version
 
 if [ -z "$NO_TEST" ]
 then
+  echo "Running unit tests ..."
+
   echo "Check devices ..."
   instruments -s devices
 
-  echo "Run ObjC macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "${CONFIGURATION_TEST}" -sdk macosx | $XCPRETTY
+  echo "Run ObjC macOS tests ..."
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx | $XCPRETTY
 
-  echo "Run ObjC iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "${CONFIGURATION_TEST}" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
+  echo "Run ObjC iOS tests ..."
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
 
   if [ -z "$NO_COV" ]
   then
     # Objective-C:
-    echo "Generate Coverage Report for ObjC ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "${CONFIGURATION_TEST}" --ignore "vendor/*" --ignore "Swift/*" --output-directory "$OUTPUT_DIR/coverage/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+    echo "Generate coverage report for ObjC ..."
+    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
   fi
 
-  echo "Run Swift macOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "${CONFIGURATION_TEST}" -sdk macosx | $XCPRETTY
+  echo "Run Swift macOS tests ..."
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx | $XCPRETTY
 
-  echo "Run Swift iOS Test ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "${CONFIGURATION_TEST}" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
+  echo "Run Swift iOS tests ..."
+  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
   then
     # Swift:
-    echo "Generate Coverage Report for Swift ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "${CONFIGURATION_TEST}"  --ignore "vendor/*" --ignore "Objective-C/*" --output-directory "$OUTPUT_DIR/coverage/Swift" CouchbaseLite.xcodeproj > /dev/null
+    echo "Generate coverage report for Swift ..."
+    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
-    zip -ry "$COVERAGE_ZIP_FILE" coverage/*
+    zip -ry $COVERAGE_NAME.zip $COVERAGE_NAME/*
     popd > /dev/null
-    rm -rf "$OUTPUT_DIR/coverage"
+    rm -rf "$OUTPUT_DIR/$COVERAGE_NAME"
   fi
 fi
 
