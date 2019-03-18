@@ -6,3 +6,4 @@ scheme: "CBL ObjC"
 ignore:
   - vendor/*
   - Swift/*
+  - Objective-C/Tests/*
