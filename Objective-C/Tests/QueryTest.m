@@ -405,6 +405,26 @@
         AssertEqual([r integerAtIndex: 0], 20);
     }];
     AssertEqual(numRows, 1u);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @(30) forKey: @"number"];
+    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
+    [doc4 setValue: @(25) forKey: @"number"];
+    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLQueryExpression* whereExp = [[CBLQueryExpression property: @"number"] lessThan: [CBLQueryExpression value: @(30)]];
+    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: whereExp];
+    Assert(q);
+    numRows = [self verifyQuery: q randomAccess: YES
+                           test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual([r count], 1);
+               }];
+    AssertEqual(numRows, 2u);
 }
 
 
@@ -1692,6 +1712,59 @@
                             AssertEqualObjects([doc valueForKey: @"string"], @"string");
                         }];
     AssertEqual(numRows, 1u);
+}
+
+- (void) testSelectFromWhereGroupBy {
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
+    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: STATE]];
+    
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                                  groupBy: @[STATE]];
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 31u);
+}
+
+- (void) testSelectDistinctFromWhereGroupBy {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @(20) forKey: @"number"];
+    [doc1 setValue: @"Tom" forKey: @"name"];
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @(20) forKey: @"number"];
+    [doc2 setValue: @"Bob" forKey: @"name"];
+    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @(30) forKey: @"number"];
+    [doc3 setValue: @"Alice" forKey: @"name"];
+    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
+    [doc4 setValue: @(25) forKey: @"number"];
+    [doc4 setValue: @"Bob" forKey: @"name"];
+    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
+    CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
+    CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
+    CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    
+    CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                             from: [CBLQueryDataSource database: self.db]
+                                            where: nil
+                                          groupBy: @[NAME]];
+    Assert(q);
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 3u);
 }
 
 # pragma mark - META - IsDeleted
