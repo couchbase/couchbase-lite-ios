@@ -25,6 +25,7 @@
 /* Begin PBXBuildFile section */
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
 		270AB2BC2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
 		270AB2BD2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
 		270AB2BE2073EF57009A4596 /* CBLChangeNotifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */; };
@@ -1586,6 +1587,7 @@
 /* Begin PBXFileReference section */
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
+		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
 		270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLChangeNotifier.h; sourceTree = "<group>"; };
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
@@ -2954,6 +2956,7 @@
 			children = (
 				930C7F7C20FE4F7400C74A12 /* Util */,
 				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
+				1ADA05382240218F0068F745 /* AuthenticatorTest.m */,
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
 				9385F3021FC645AE00032037 /* ConcurrentTest.m */,
@@ -5246,6 +5249,7 @@
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
+				1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
 				9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
