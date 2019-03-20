@@ -1717,11 +1717,13 @@
 - (void) testSelectFromWhereGroupBy {
     [self loadJSONResource: @"names_100"];
     
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
     CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
     
     NSArray* results = @[[CBLQuerySelectResult expression: STATE]];
     
+    // selectFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder select: results
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
@@ -1729,6 +1731,26 @@
     NSError* error;
     CBLQueryResultSet* rs = [q execute: &error];
     AssertEqual([rs allResults].count, 31u);
+    
+    // selectFromWhereGroupByHaving
+    q = [CBLQueryBuilder select: results
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                        groupBy: @[STATE]
+                         having: [COUNT greaterThan: [CBLQueryExpression integer: 2]]];
+    
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 5u);
+    
+    // selectFromWhereOrderBy
+    q = [CBLQueryBuilder select: results
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                        orderBy: @[[CBLQuerySortOrder property: @"contact.address.state"]]];
+    rs = [q execute: &error];
+    NSArray* allResults = [rs allResults];
+    AssertEqual(allResults.count, 55u);
+    AssertEqualObjects([allResults.firstObject valueForKey: @"state"], @"AL");
 }
 
 - (void) testSelectDistinctFromWhereGroupBy {
@@ -1753,11 +1775,14 @@
     [doc4 setValue: @"Bob" forKey: @"name"];
     Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
     
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
     CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
     CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
     CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    CBLQuerySelectResult* S_COUNT = [CBLQuerySelectResult expression: COUNT];
     
+    // selectDistinctFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
                                              from: [CBLQueryDataSource database: self.db]
                                             where: nil
@@ -1765,6 +1790,30 @@
     Assert(q);
     CBLQueryResultSet* rs = [q execute: &error];
     AssertEqual([rs allResults].count, 3u);
+    
+    //selectDistinctFromWhereGroupByHaving
+    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
+    Assert(q);
+    rs = [q execute: &error];
+    // only doc with name = Bob will pass.
+    AssertEqual([rs allResults].count, 1u);
+    
+    // selectDistinctFromWhereOrderBy
+    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                orderBy: @[[CBLQuerySortOrder property: @"name"]]];
+    Assert(q);
+    rs = [q execute: &error];
+    NSArray* allResults = [rs allResults];
+    
+    // shuld return all results with distinct name and orderby return with Alice as first element. 
+    AssertEqual(allResults.count, 4u);
+    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Alice");
 }
 
 # pragma mark - META - IsDeleted
