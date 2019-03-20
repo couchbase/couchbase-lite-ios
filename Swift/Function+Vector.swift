@@ -22,7 +22,7 @@ extension Function {
     
     // MARK: Vector Comparison
     
-    /// ENTERPRISE EDITION ONLY.
+    /// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
     ///
     /// Creates a function that returns the euclidean distance between the two input vectors.
     /// The result is a non-negative floating-point number. The expression1 and expression2 must be
@@ -39,7 +39,7 @@ extension Function {
         return QueryExpression(expr)
     }
     
-    /// ENTERPRISE EDITION ONLY.
+    /// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
     ///
     /// Creates a function that returns the squared euclidean distance between the two input vectors.
     /// The result is a non-negative floating-point number. The expression1 and expression2 must be
@@ -56,7 +56,7 @@ extension Function {
         return QueryExpression(expr)
     }
     
-    /// ENTERPRISE EDITION ONLY.
+    /// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
     ///
     /// Creates a function that returns the cosine distance which one minus the cosine similarity
     /// between the two input vectors. The result is a floating-point number ranges from −1.0 to 1.0.

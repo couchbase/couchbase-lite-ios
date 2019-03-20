@@ -22,7 +22,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- ENTERPRISE EDITION ONLY.
+ ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
  
  PredictiveModel protocol that allows to integrate machine learning model into
  CouchbaseLite Query via invoking the Function.prediction() function.

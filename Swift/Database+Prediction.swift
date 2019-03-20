@@ -20,7 +20,7 @@ import Foundation
 
 extension Database {
     
-    /// ENTERPRISE EDITION ONLY.
+    /// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
     ///
     /// The predictive model manager for registering and unregistering predictive models.
     public static let prediction = Prediction()

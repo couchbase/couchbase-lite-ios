@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDatabase (Prediction)
 
 /**
- ENTERPRISE EDITION ONLY.
+ ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
  
  The predictive model manager for registering and unregistering predictive models.
  */

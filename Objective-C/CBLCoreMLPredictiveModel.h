@@ -31,6 +31,8 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 typedef CBLDictionary* __nullable (^CBLCoreMLOutputTransformerBlock) (CBLDictionary* _Nullable);
 
 /**
+ ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
+ 
  CBLCoreMLPredictiveModel is a Core ML based implementation of the CBLPredictiveModel
  protocol. Basically the CBLCoreMLPredictiveModel used a Core ML model to return
  prediction results.

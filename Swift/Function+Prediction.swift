@@ -37,7 +37,7 @@ extension Function {
     
     // MARK: Prediction
     
-    /// ENTERPRISE EDITION ONLY.
+    /// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
     ///
     /// Creates prediction function with the given model name and input. When running a query with
     /// the prediction function, the corresponding predictive model registered to CouchbaseLite
