@@ -18,7 +18,7 @@
 
 import Foundation
 
-/// ENTERPRISE EDITION ONLY.
+/// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
 ///
 /// PredictionFunction protocol that allows to create an expression that
 /// refers to one of the properties of the prediction result dictionary.
