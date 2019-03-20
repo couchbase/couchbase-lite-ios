@@ -352,10 +352,15 @@
         BOOL isAscending = [ascending boolValue];
         
         CBLQueryOrdering* order;
-        if (isAscending)
+        CBLQueryOrdering* orderByState;
+        if (isAscending) {
             order = [[CBLQueryOrdering property: @"name.first"] ascending];
-        else
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] ascending];
+        }
+        else {
             order = [[CBLQueryOrdering property: @"name.first"] descending];
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] descending];
+        }
         
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                          from: [CBLQueryDataSource database: self.db]
@@ -379,6 +384,25 @@
                                                                ascending: isAscending
                                                                 selector: @selector(localizedCompare:)];
         AssertEqualObjects(firstNames, [firstNames sortedArrayUsingDescriptors: @[desc]]);
+        
+        // selectDistinctFromWhereOrderBy
+        CBLQuery* distinctQ = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult property: @"contact.address.state"]]
+                                                         from: [CBLQueryDataSource database: self.db]
+                                                        where: nil
+                                                      orderBy: @[orderByState]];
+        Assert(distinctQ);
+        NSMutableArray* distinctStates = [NSMutableArray array];
+        numRows = [self verifyQuery: distinctQ randomAccess: NO
+                               test: ^(uint64_t n, CBLQueryResult* r)
+                   {
+                       NSString* state = [r valueAtIndex: 0];
+                       if (state)
+                           [distinctStates addObject: state];
+                           
+                   }];
+        AssertEqual(numRows, 42llu);
+        AssertEqual(numRows, distinctStates.count);
+        AssertEqualObjects(distinctStates.firstObject, isAscending ? @"AL" : @"WV");
     }
 }
 
@@ -1741,16 +1765,6 @@
     
     rs = [q execute: &error];
     AssertEqual([rs allResults].count, 5u);
-    
-    // selectFromWhereOrderBy
-    q = [CBLQueryBuilder select: results
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
-                        orderBy: @[[CBLQuerySortOrder property: @"contact.address.state"]]];
-    rs = [q execute: &error];
-    NSArray* allResults = [rs allResults];
-    AssertEqual(allResults.count, 55u);
-    AssertEqualObjects([allResults.firstObject valueForKey: @"state"], @"AL");
 }
 
 - (void) testSelectDistinctFromWhereGroupBy {
@@ -1796,17 +1810,6 @@
     CBLQueryResultSet* rs = [q execute: &error];
     AssertEqual([rs allResults].count, 4u);
     
-    // selectDistinctFromWhereOrderBy
-    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: nil
-                                orderBy: @[[CBLQuerySortOrder property: @"name"]]];
-    Assert(q);
-    rs = [q execute: &error];
-    NSArray* allResults = [rs allResults];
-    AssertEqual(allResults.count, 5u); // should return all results with distinct name
-    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
-    
     //selectDistinctFromWhereGroupByHaving
     q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
                                    from: [CBLQueryDataSource database: self.db]
@@ -1827,7 +1830,7 @@
                                   limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 2]]];
     Assert(q);
     rs = [q execute: &error];
-    allResults = [rs allResults];
+    NSArray* allResults = [rs allResults];
     AssertEqual(allResults.count, 2u);
     AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
 }
