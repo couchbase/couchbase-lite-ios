@@ -18,7 +18,7 @@
 
 import Foundation
 
-/// ENTERPRISE EDITION ONLY.
+/// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
 ///
 /// PredictiveModel protocol that allows to integrate machine learning model into
 /// CBL Query via invoking the Function.prediction() function.
@@ -37,7 +37,7 @@ public protocol PredictiveModel {
     
 }
 
-/// ENTERPRISE EDITION ONLY.
+/// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
 ///
 /// Predictive model manager class for registering and unregistering predictive models.
 public class Prediction {
