@@ -1073,10 +1073,10 @@ class TextModel: TestPredictiveModel {
         var sc = 0
         var curSentLoc = NSNotFound
         text.enumerateLinguisticTags(in: NSRange(location: 0, length: text.length),
-                                 scheme: NSLinguisticTagSchemeTokenType,
+                                 scheme: NSLinguisticTagScheme(rawValue: NSLinguisticTagScheme.tokenType.rawValue),
                                 options: [], orthography: nil)
         { (tag, token, sent, stop) in
-            if tag == NSLinguisticTagWord {
+            if tag!.rawValue == NSLinguisticTag.word.rawValue {
                 wc = wc + 1
             }
             

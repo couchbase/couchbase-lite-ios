@@ -149,7 +149,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         XCTAssertNotNil(digest)
         
         let index = digest!.index(digest!.startIndex, offsetBy: 5)
-        let fileName = digest!.substring(from: index).replacingOccurrences(of: "/", with: "_")
+        let fileName = digest![index...].replacingOccurrences(of: "/", with: "_")
         let path = "\(seekrit!.path!)Attachments/\(fileName).blob"
         let raw = FileHandle(forReadingAtPath: path)!.readDataToEndOfFile()
         if password != nil {

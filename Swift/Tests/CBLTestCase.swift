@@ -131,20 +131,20 @@ class CBLTestCase: XCTestCase {
     
     func urlForResource(name: String, ofType type: String) -> URL? {
         let res = ("Support" as NSString).appendingPathComponent(name)
-        return Bundle(for: type(of:self)).url(forResource: res, withExtension: type)
+        return Bundle(for: Swift.type(of:self)).url(forResource: res, withExtension: type)
     }
     
     
     func dataFromResource(name: String, ofType type: String) throws -> Data {
         let res = ("Support" as NSString).appendingPathComponent(name)
-        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: type)
+        let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: type)
         return try! NSData(contentsOfFile: path!, options: []) as Data
     }
 
     
     func stringFromResource(name: String, ofType type: String) throws -> String {
         let res = ("Support" as NSString).appendingPathComponent(name)
-        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: type)
+        let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: type)
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
 
