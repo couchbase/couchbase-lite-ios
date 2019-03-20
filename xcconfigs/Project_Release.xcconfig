@@ -32,5 +32,6 @@ LD_MAP_FILE_PATH                = $(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME)-Lin
 LLVM_LTO                        = YES                   // Link-time optimization FTW!
 MTL_ENABLE_DEBUG_INFO           = NO                    // ???
 STRIP_INSTALLED_PRODUCT         = YES                   // Strip debug symbols
-SWIFT_OPTIMIZATION_LEVEL        = -Onone                // No Optimization
+SWIFT_COMPILATION_MODE          = wholemodule           // Swift Compilation Mode
+SWIFT_OPTIMIZATION_LEVEL        = -O                    // Optimize for Speed
 VALIDATE_PRODUCT                = YES                   // Perform validation checks on the product
