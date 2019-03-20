@@ -1775,6 +1775,11 @@
     [doc4 setValue: @"Bob" forKey: @"name"];
     Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
     
+    CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
+    [doc5 setValue: @(15) forKey: @"number"];
+    [doc5 setValue: @"Adam" forKey: @"name"];
+    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
+    
     CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
     CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
@@ -1789,18 +1794,7 @@
                                           groupBy: @[NAME]];
     Assert(q);
     CBLQueryResultSet* rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 3u);
-    
-    //selectDistinctFromWhereGroupByHaving
-    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: nil
-                                groupBy: @[NAME]
-                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
-    Assert(q);
-    rs = [q execute: &error];
-    // only doc with name = Bob will pass.
-    AssertEqual([rs allResults].count, 1u);
+    AssertEqual([rs allResults].count, 4u);
     
     // selectDistinctFromWhereOrderBy
     q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
@@ -1810,10 +1804,32 @@
     Assert(q);
     rs = [q execute: &error];
     NSArray* allResults = [rs allResults];
+    AssertEqual(allResults.count, 5u); // should return all results with distinct name
+    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
     
-    // shuld return all results with distinct name and orderby return with Alice as first element. 
-    AssertEqual(allResults.count, 4u);
-    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Alice");
+    //selectDistinctFromWhereGroupByHaving
+    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
+    Assert(q);
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 1u); // only doc with name = Bob will pass.
+    
+    // selectDistinctFromWhereGroupByHavingOrderByLimit
+    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
+                                orderBy: @[[CBLQuerySortOrder property: @"name"]]
+                                  limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 2]]];
+    Assert(q);
+    rs = [q execute: &error];
+    allResults = [rs allResults];
+    AssertEqual(allResults.count, 2u);
+    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
 }
 
 # pragma mark - META - IsDeleted
