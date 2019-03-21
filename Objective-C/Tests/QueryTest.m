@@ -435,6 +435,10 @@
     [joinme setValue: @42 forKey: @"theone"];
     [self saveDocument: joinme];
     
+    CBLMutableDocument* joinmeCopy = [[CBLMutableDocument alloc] initWithID: @"joinmeCopy"];
+    [joinmeCopy setValue: @42 forKey: @"theone"];
+    [self saveDocument: joinmeCopy];
+    
     CBLQuerySelectResult* MAIN_DOC_ID =
         [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
     
@@ -448,10 +452,77 @@
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
-        AssertEqual([doc integerForKey:@"number1"], 42);
-    }];
+                        {
+                            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+                            AssertEqual([doc integerForKey:@"number1"], 42);
+                        }];
+    AssertEqual(numRows, 2u);
+
+    q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult
+                                            expression: [CBLQueryExpression property: @"number1"
+                                                                                from: @"main"]]]
+                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   join: @[join]];
+    Assert(q);
+    numRows = [self verifyQuery: q randomAccess: YES
+                           test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual([r integerForKey: @"number1"], 42);
+               }];
+    AssertEqual(numRows, 1u);
+}
+
+- (void) testSelectFromJoinWhere {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @42 forKey: @"theone"];
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @42 forKey: @"theone"];
+    [self saveDocument: doc2];
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @32 forKey: @"theone"];
+    [self saveDocument: doc3];
+    
+    CBLQuerySelectResult* MAIN_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID]
+                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     join: @[join]
+                                    where: [[CBLQueryExpression property: @"number1"
+                                                                    from: @"main"]
+                                            greaterThan: [CBLQueryExpression value: @(35)]]];
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+                            AssertEqual([doc integerForKey:@"number1"], 42);
+                        }];
+    AssertEqual(numRows, 2u);
+    
+    q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult
+                                            expression: [CBLQueryExpression property: @"number1"
+                                                                                from: @"main"]]]
+                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   join: @[join]
+                                  where: [[CBLQueryExpression property: @"number1"
+                                                                  from: @"main"]
+                                          greaterThan: [CBLQueryExpression value: @(35)]]];
+    Assert(q);
+    numRows = [self verifyQuery: q randomAccess: YES
+                           test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual([r integerForKey: @"number1"], 42);
+               }];
     AssertEqual(numRows, 1u);
 }
 
