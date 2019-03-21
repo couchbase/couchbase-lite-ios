@@ -356,8 +356,7 @@
         if (isAscending) {
             order = [[CBLQueryOrdering property: @"name.first"] ascending];
             orderByState = [[CBLQueryOrdering property: @"contact.address.state"] ascending];
-        }
-        else {
+        } else {
             order = [[CBLQueryOrdering property: @"name.first"] descending];
             orderByState = [[CBLQueryOrdering property: @"contact.address.state"] descending];
         }
