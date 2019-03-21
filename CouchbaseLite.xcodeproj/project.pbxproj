@@ -4098,7 +4098,7 @@
 			attributes = {
 				CLASSPREFIX = CBL;
 				LastSwiftUpdateCheck = 0820;
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					275F92731E4D30A4007FD5A2 = {
@@ -5435,7 +5435,6 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -5484,7 +5483,6 @@
 				PRODUCT_NAME = CouchbaseLiteSwiftTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -5687,7 +5685,6 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 			};
 			name = "Debug-EE";
 		};
@@ -5846,7 +5843,6 @@
 				PRODUCT_NAME = CouchbaseLiteSwiftTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
 			};
 			name = "Release-EE";
 		};
@@ -6152,7 +6148,6 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6208,7 +6203,6 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 			};
 			name = "Debug-EE";
 		};
@@ -6257,7 +6251,6 @@
 				PRODUCT_NAME = CouchbaseLiteSwiftTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6306,7 +6299,6 @@
 				PRODUCT_NAME = CouchbaseLiteSwiftTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
 			};
 			name = "Release-EE";
 		};
