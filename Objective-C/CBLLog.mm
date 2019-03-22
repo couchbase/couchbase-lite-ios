@@ -1,5 +1,5 @@
 //
-//  CBLLog.m
+//  CBLLog.mm
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -22,7 +22,11 @@
 #import "CBLLog+Internal.h"
 #import "CBLLog+Logging.h"
 #import "CBLLog+Swift.h"
+#import "CBLStringBytes.h"
+
+extern "C" {
 #import "ExceptionUtils.h"
+}
 
 C4LogDomain kCBL_LogDomainDatabase;
 C4LogDomain kCBL_LogDomainQuery;
@@ -64,14 +68,12 @@ static C4LogLevel string2level(NSString* value) {
     }
 }
 
-
 static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel level) {
     C4LogDomain domain = c4log_getDomain(domainName, false);
     if (domain)
         c4log_setLevel(domain, level);
     return domain;
 }
-
 
 static NSDictionary* domainDictionary = nil;
 
@@ -90,40 +92,42 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
 }
 
-
 static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, va_list args) {
+    // Message:
+    static char formatBuffer[2048];
+    vsnprintf(formatBuffer, sizeof(formatBuffer), fmt, args);
+    NSString* message = [NSString stringWithUTF8String: fmt];
+    
+    // Send to console and custom logger:
+    sendToCallbackLogger(domain, level, message);
+}
+
+static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message) {
+    // CBLLog:
     CBLLog* log = [CBLLog sharedInstance];
     
     // Level:
-    CBLLogLevel lv = (CBLLogLevel)level;
-    
-    // Validate:
-    BOOL shouldLogToConsole = lv >= log.console.level;
-    BOOL shouldLogToCustom = log.custom && lv >= log.custom.level;
+    CBLLogLevel level = (CBLLogLevel)l;
+    BOOL shouldLogToConsole = level >= log.console.level;
+    BOOL shouldLogToCustom = log.custom && level >= log.custom.level;
     if (!shouldLogToConsole && !shouldLogToCustom)
         return;
     
     // Domain:
-    CBLLogDomain logDomain = toCBLLogDomain(domain);
-    
-    // Message:
-    static char formatBuffer[2048];
-    vsnprintf(formatBuffer, sizeof(formatBuffer), fmt, args);
-    NSString* message = [NSString stringWithUTF8String: formatBuffer];
+    CBLLogDomain domain = toCBLLogDomain(d);
     
     // Console log:
     if (shouldLogToConsole)
-        [log.console logWithLevel: lv domain: logDomain message: message];
+        [log.console logWithLevel: level domain: domain message: message];
     
     // Custom log:
     if (shouldLogToCustom)
-        [log.custom logWithLevel: lv domain: logDomain message: message];
+        [log.custom logWithLevel: level domain: domain message: message];
     
     // Breakpoint if enabled:
-    if (level >= kC4LogWarning && [NSUserDefaults.standardUserDefaults boolForKey: @"CBLBreakOnWarning"])
+    if (level >= kCBLLogLevelWarning && [NSUserDefaults.standardUserDefaults boolForKey: @"CBLBreakOnWarning"])
         MYBreakpoint();     // stops debugger at breakpoint. You can resume normally.
 }
-
 
 // Initialize the CBLLog object and register the logging callback.
 // It also sets up log domain levels based on user defaults named:
@@ -146,7 +150,7 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
             callbackLogLevel = string2level(userLogLevel);
         
         // Enable callback logging:
-        c4log_writeToCallback(callbackLogLevel, &logCallback, false);
+        c4log_writeToCallback(callbackLogLevel, &logCallback, true);
         if (callbackLogLevel != kC4LogWarning)
             NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
         
@@ -184,18 +188,14 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
     return self;
 }
 
-
 #pragma mark - Public
-
 
 - (void) setCustom: (id<CBLLogger>)custom {
     _custom = custom;
     [self synchronizeCallbackLogLevel];
 }
 
-
 #pragma mark - Internal
-
 
 + (instancetype) sharedInstance {
     static CBLLog* sharedInstance = nil;
@@ -205,7 +205,6 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
     });
     return sharedInstance;
 }
-
 
 - (void) synchronizeCallbackLogLevel {
     // Synchronize log level between console and custom:
@@ -219,9 +218,7 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
     }
 }
 
-
 #pragma mark - CBLLog+Swift
-
 
 - (void) logTo: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message {
     C4LogDomain c4Domain;
@@ -244,34 +241,27 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
     cblLog(c4Domain, (C4LogLevel)level, @"%@", message);
 }
 
-
 - (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger {
     self.custom = [[CBLCustomLogger alloc] initWithLevel: level logger: logger];
 }
 
 @end
 
-
 void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
+    // Send preformatted message to litecore no-callback log:
     va_list args;
     va_start(args, msg);
-    NSString *s = [[NSString alloc] initWithFormat: msg arguments: args];
-    const char *cmsg = [s cStringUsingEncoding: NSUTF8StringEncoding];
-    if (cmsg != NULL) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wformat-security"
-        c4log(domain, level, cmsg); // Using cmsg as a non-literal is intended here.
-#pragma clang diagnostic pop
-        va_end(args);
-    } else
-        CBLWarn(Database, @"Couldn't convert cbllog string to C string.");
+    NSString *nsmsg = [[NSString alloc] initWithFormat: msg arguments: args];
+    CBLStringBytes c4msg(nsmsg);
+    c4slog(domain, level, c4msg);
+    
+    // Now log to console and custom logger:
+    sendToCallbackLogger(domain, level, nsmsg);
 }
-
 
 NSString* CBLLog_GetLevelName(CBLLogLevel level) {
     return [NSString stringWithUTF8String: kLevelNames[level]];
 }
-
 
 NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
     switch (domain) {
@@ -292,7 +282,6 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
     }
 }
 
-
 @implementation CBLCustomLogger {
     CBLLogLevel _level;
     CBLCustomLoggerBlock _logger;
@@ -307,11 +296,9 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
     return self;
 }
 
-
 - (CBLLogLevel) level {
     return _level;
 }
-
 
 - (void) logWithLevel:(CBLLogLevel)level domain:(CBLLogDomain)domain message:(NSString *)message {
     _logger(level, domain, message);

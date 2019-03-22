@@ -27,30 +27,50 @@ class LogTest: CBLTestCase {
     
     var backup: FileLoggerBackup?
     
+    var backupConsoleLevel: LogLevel?
+    
+    var backupConsoleDomains: LogDomains?
+    
     override func setUp() {
         super.setUp()
         let folderName = "LogTestLogs_\(Int.random(in: 1...1000))"
         logFileDirectory = (NSTemporaryDirectory() as NSString).appendingPathComponent(folderName)
-        backupFileLogger()
+        backupLoggerConfig()
     }
     
     override func tearDown() {
         super.tearDown()
         try? FileManager.default.removeItem(atPath: logFileDirectory)
-        if let backup = self.backup {
-            Database.log.file.config = backup.config
-            Database.log.file.level = backup.level
-            self.backup = nil
-        }
+        restoreLoggerConfig()
     }
     
     func logFileConfig() -> LogFileConfiguration {
         return LogFileConfiguration(directory: logFileDirectory)
     }
     
-    func backupFileLogger() {
+    func backupLoggerConfig() {
         backup = FileLoggerBackup(config: Database.log.file.config,
                                   level: Database.log.file.level)
+        backupConsoleLevel = Database.log.console.level
+        backupConsoleDomains = Database.log.console.domains
+    }
+    
+    func restoreLoggerConfig() {
+        if let backup = self.backup {
+            Database.log.file.config = backup.config
+            Database.log.file.level = backup.level
+            self.backup = nil
+        }
+        
+        if let consoleLevel = self.backupConsoleLevel {
+            Database.log.console.level = consoleLevel
+        }
+        
+        if let consoleDomains = self.backupConsoleDomains {
+            Database.log.console.domains = consoleDomains
+        }
+        
+        Database.log.custom = nil
     }
     
     func getLogsInDirectory(_ directory: String,
@@ -359,9 +379,22 @@ class LogTest: CBLTestCase {
             }
         }
         XCTAssert(found)
-        
-        // Reset back to the default console log level:
-        Database.log.console.level = .warning
+    }
+    
+    func testPercentEscape() throws {
+        let customLogger = LogTestLogger()
+        customLogger.level = .info
+        Database.log.custom = customLogger
+        Database.log.console.domains = .all
+        Database.log.console.level = .info
+        Log.log(domain: .database, level: .info, message: "Hello %s there")
+        var found: Bool = false
+        for line in customLogger.lines {
+            if line.contains("Hello %s there") {
+                found = true
+            }
+        }
+        XCTAssert(found)
     }
 }
 
