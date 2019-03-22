@@ -44,40 +44,47 @@
 
 @implementation LogTest {
     FileLoggerBackup* _backup;
+    CBLLogLevel _backupConsoleLevel;
+    CBLLogDomain _backupConsoleDomain;
     NSString* logFileDirectory;
 }
 
-
 - (void) setUp {
     [super setUp];
-    [self backupFileLogger];
+    [self backupLoggerConfig];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
 }
 
-
 - (void) tearDown {
     [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
-    if (_backup) {
-        CBLDatabase.log.file.level = _backup.level;
-        CBLDatabase.log.file.config = _backup.config;
-        _backup = nil;
-    }
+    [self restoreLoggerConfig];
 }
-
 
 - (CBLLogFileConfiguration*) logFileConfig {
     return [[CBLLogFileConfiguration alloc] initWithDirectory: logFileDirectory];
 }
 
-
-- (void) backupFileLogger {
+- (void) backupLoggerConfig {
     _backup = [[FileLoggerBackup alloc] init];
     _backup.level = CBLDatabase.log.file.level;
     _backup.config = CBLDatabase.log.file.config;
+    _backupConsoleLevel = CBLDatabase.log.console.level;
+    _backupConsoleDomain = CBLDatabase.log.console.domains;
 }
 
+- (void) restoreLoggerConfig {
+    if (_backup) {
+        CBLDatabase.log.file.level = _backup.level;
+        CBLDatabase.log.file.config = _backup.config;
+        _backup = nil;
+    }
+    CBLDatabase.log.custom = nil;
+    CBLDatabase.log.console.level = _backupConsoleLevel;
+    CBLDatabase.log.console.domains = _backupConsoleDomain;
+    
+}
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
                              properties: (nullable NSArray<NSURLResourceKey>*)keys
@@ -99,7 +106,6 @@
     return [files filteredArrayUsingPredicate: predicate];
 }
 
-
 - (void) writeOneKiloByteOfLog {
     NSString* inputString = @"11223344556677889900"; // 20B + (27B, 24B, 24B, 24B, 29B)  ~44B line
     for(int i = 0; i < 23; i++) {
@@ -112,7 +118,6 @@
     [self writeAllLogs: @"-"]; // 25B : total ~1037Bytes
 }
 
-
 - (void) writeAllLogs: (NSString*)string {
     CBLDebug(Database, @"%@", string);
     CBLLogInfo(Database, @"%@", string);
@@ -120,7 +125,6 @@
     CBLWarn(Database, @"%@", string);
     CBLWarnError(Database, @"%@", string);
 }
-
 
 - (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (NSString*)path {
     NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
@@ -136,7 +140,6 @@
     }
     return NO;
 }
-
 
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
@@ -154,7 +157,6 @@
         AssertEqual(customLogger.lines.count, 5 - i);
     }
 }
-
 
 - (void) testFileLoggingLevels {
     CBLLogFileConfiguration* config = [self logFileConfig];
@@ -193,7 +195,6 @@
     }
 }
 
-
 - (void) testFileLoggingDefaultBinaryFormat {
     CBLLogFileConfiguration* config = [self logFileConfig];
     CBLDatabase.log.file.config = config;
@@ -229,7 +230,6 @@
     Assert(bytes[0] == 0xcf && bytes[1] == 0xb2 && bytes[2] == 0xab && bytes[3] == 0x1b,
            @"because the log should be in binary format");
 }
-
 
 - (void) testFileLoggingUsePlainText {
     CBLLogFileConfiguration* config = [self logFileConfig];
@@ -269,7 +269,6 @@
     Assert([contents rangeOfString: input].location != NSNotFound);
 }
 
-
 - (void) testFileLoggingLogFilename {
     CBLLogFileConfiguration* config = [self logFileConfig];
     CBLDatabase.log.file.config = config;
@@ -282,7 +281,6 @@
         Assert([predicate evaluateWithObject: file.lastPathComponent]);
     }
 }
-
 
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
@@ -304,7 +302,6 @@
     AssertEqual(customLogger.lines.count, 4);
 }
 
-
 - (void) testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
@@ -323,7 +320,6 @@
     AssertEqual(files.count, totalFilesShouldBeInDirectory);
 }
 
-
 - (void) testFileLoggingDisableLogging {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
@@ -335,7 +331,6 @@
     
     AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
 }
-
 
 - (void) testFileLoggingReEnableLogging {
     CBLLogFileConfiguration* config = [self logFileConfig];
@@ -365,7 +360,6 @@
     }
 }
 
-
 - (void) testFileLoggingHeader {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
@@ -386,7 +380,6 @@
         Assert([firstLine rangeOfString: @"Commit/"].location != NSNotFound);
     }
 }
-
 
 - (void) testNonASCII {
     LogTestLogger* customLogger = [[LogTestLogger alloc] init];
@@ -415,9 +408,24 @@
         }
     }
     Assert(found);
+}
+
+- (void) testPercentEscape {
+    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    customLogger.level = kCBLLogLevelInfo;
+    CBLDatabase.log.custom = customLogger;
+    CBLDatabase.log.console.domains = kCBLLogDomainAll;
     
-    // Reset back to the default console log level:
-    CBLDatabase.log.console.level = kCBLLogLevelWarning;
+    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    CBLLogInfo(Database, @"Hello %%s there");
+    
+    BOOL found = NO;
+    for (NSString* line in customLogger.lines) {
+        if ([line containsString:  @"Hello %s there"]) {
+            found = YES;
+        }
+    }
+    Assert(found);
 }
 
 @end
