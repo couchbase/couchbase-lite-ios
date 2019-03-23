@@ -352,10 +352,14 @@
         BOOL isAscending = [ascending boolValue];
         
         CBLQueryOrdering* order;
-        if (isAscending)
+        CBLQueryOrdering* orderByState;
+        if (isAscending) {
             order = [[CBLQueryOrdering property: @"name.first"] ascending];
-        else
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] ascending];
+        } else {
             order = [[CBLQueryOrdering property: @"name.first"] descending];
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] descending];
+        }
         
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                          from: [CBLQueryDataSource database: self.db]
@@ -379,6 +383,25 @@
                                                                ascending: isAscending
                                                                 selector: @selector(localizedCompare:)];
         AssertEqualObjects(firstNames, [firstNames sortedArrayUsingDescriptors: @[desc]]);
+        
+        // selectDistinctFromWhereOrderBy
+        CBLQuery* distinctQ = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult property: @"contact.address.state"]]
+                                                         from: [CBLQueryDataSource database: self.db]
+                                                        where: nil
+                                                      orderBy: @[orderByState]];
+        Assert(distinctQ);
+        NSMutableArray* distinctStates = [NSMutableArray array];
+        numRows = [self verifyQuery: distinctQ randomAccess: NO
+                               test: ^(uint64_t n, CBLQueryResult* r)
+                   {
+                       NSString* state = [r valueAtIndex: 0];
+                       if (state)
+                           [distinctStates addObject: state];
+                           
+                   }];
+        AssertEqual(numRows, 42llu);
+        AssertEqual(numRows, distinctStates.count);
+        AssertEqualObjects(distinctStates.firstObject, isAscending ? @"AL" : @"WV");
     }
 }
 
@@ -1788,11 +1811,13 @@
 - (void) testSelectFromWhereGroupBy {
     [self loadJSONResource: @"names_100"];
     
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
     CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
     
     NSArray* results = @[[CBLQuerySelectResult expression: STATE]];
     
+    // selectFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder select: results
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
@@ -1800,6 +1825,16 @@
     NSError* error;
     CBLQueryResultSet* rs = [q execute: &error];
     AssertEqual([rs allResults].count, 31u);
+    
+    // selectFromWhereGroupByHaving
+    q = [CBLQueryBuilder select: results
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                        groupBy: @[STATE]
+                         having: [COUNT greaterThan: [CBLQueryExpression integer: 2]]];
+    
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 5u);
 }
 
 - (void) testSelectDistinctFromWhereGroupBy {
@@ -1824,18 +1859,50 @@
     [doc4 setValue: @"Bob" forKey: @"name"];
     Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
     
+    CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
+    [doc5 setValue: @(15) forKey: @"number"];
+    [doc5 setValue: @"Adam" forKey: @"name"];
+    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
     CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
     CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
     CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    CBLQuerySelectResult* S_COUNT = [CBLQuerySelectResult expression: COUNT];
     
+    // selectDistinctFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
                                              from: [CBLQueryDataSource database: self.db]
                                             where: nil
                                           groupBy: @[NAME]];
     Assert(q);
     CBLQueryResultSet* rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 3u);
+    AssertEqual([rs allResults].count, 4u);
+    
+    //selectDistinctFromWhereGroupByHaving
+    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
+    Assert(q);
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 1u); // only doc with name = Bob will pass.
+    
+    // selectDistinctFromWhereGroupByHavingOrderByLimit
+    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
+                                orderBy: @[[CBLQuerySortOrder property: @"name"]]
+                                  limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 2]]];
+    Assert(q);
+    rs = [q execute: &error];
+    NSArray* allResults = [rs allResults];
+    AssertEqual(allResults.count, 2u);
+    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
 }
 
 # pragma mark - META - IsDeleted
