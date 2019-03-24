@@ -549,7 +549,6 @@
     AssertEqual(numRows, 1u);
 }
 
-
 - (void) testSelectFromJoinWhereGroupByHaving {
     [self loadNumbers: 100];
     
