@@ -2421,4 +2421,13 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([savedDoc stringForKey: propertyKey]);
 }
 
+- (void) testReplicatorDocumentListener {
+    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    AssertNotNil([repl addDocumentReplicationListener: ^(CBLDocumentReplication * r) { }]);
+    AssertNotNil([repl addDocumentReplicationListenerWithQueue: dispatch_get_main_queue()
+                                                      listener:^(CBLDocumentReplication * r) { }]);
+}
+
 @end
