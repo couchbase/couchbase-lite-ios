@@ -57,7 +57,7 @@ class QueryTest: CBLTestCase {
                 let doc = db.document(withID: r.string(at: 0)!)!
                 let props = doc.toDictionary()
                 let number1 = props["number1"] as! Int
-                if let index = result.index(where: {($0["number1"] as! Int) == number1}) {
+                if let index = result.firstIndex(where: {($0["number1"] as! Int) == number1}) {
                     result.remove(at: index)
                 }
             })
