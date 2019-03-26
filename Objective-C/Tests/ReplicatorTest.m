@@ -2421,13 +2421,34 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([savedDoc stringForKey: propertyKey]);
 }
 
-- (void) testReplicatorDocumentListener {
+#pragma mark - Replicator Config
+
+- (void) testConfigFilters {
     id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    id pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        return (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
+    };
+    id pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        return [[document valueForKey: @"someKey"] isEqualToString: @"pass"];
+    };
+    config.pushFilter = pushFilter;
+    config.pullFilter = pullFilter;
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertNotNil([repl addDocumentReplicationListener: ^(CBLDocumentReplication * r) { }]);
-    AssertNotNil([repl addDocumentReplicationListenerWithQueue: dispatch_get_main_queue()
-                                                      listener:^(CBLDocumentReplication * r) { }]);
+    AssertEqualObjects(repl.config.pushFilter, pushFilter);
+    AssertEqualObjects(repl.config.pullFilter, pullFilter);
+    AssertFalse([repl.config.pushFilter isEqual: pullFilter]);
+    AssertFalse([repl.config.pullFilter isEqual: pushFilter]);
+    
+    // tries to reverse the filter, so that no exception is thrown
+    repl.config.pushFilter = pullFilter;
+    repl.config.pullFilter = pushFilter;
+    AssertEqualObjects(repl.config.pushFilter, pullFilter);
+    AssertEqualObjects(repl.config.pullFilter, pushFilter);
+    Assert([repl.config.pushFilter isEqual: pullFilter]);
+    Assert([repl.config.pullFilter isEqual: pushFilter]);
 }
 
 @end
