@@ -549,6 +549,176 @@
     AssertEqual(numRows, 1u);
 }
 
+- (void) testSelectFromJoinWhereGroupByHaving {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @42 forKey: @"theone"];
+    [doc1 setValue: @"Tom" forKey: @"name"];
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @43 forKey: @"theone"];
+    [doc2 setValue: @"Tom" forKey: @"name"];
+    [self saveDocument: doc2];
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @32 forKey: @"theone"];
+    [doc3 setValue: @"Bob" forKey: @"name"];
+    [self saveDocument: doc3];
+    
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
+    CBLQuerySelectResult* MAIN_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: COUNT as: @"count"]]
+                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     join: @[join]
+                                    where: nil
+                                  groupBy: @[[CBLQueryExpression property: @"theone" from: @"secondary"]]
+                                   having: [COUNT lessThan: [CBLQueryExpression integer: 2]]];
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual([r integerForKey:@"count"], 1);
+                        }];
+    AssertEqual(numRows, 3u);
+    
+    CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name" from: @"secondary"];
+    CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    q = [CBLQueryBuilder selectDistinct: @[S_NAME, [CBLQuerySelectResult expression: COUNT as: @"count"]]
+                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   join: @[join]
+                                  where: nil
+                                groupBy: @[[CBLQueryExpression property: @"theone" from: @"secondary"]]
+                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]];
+    Assert(q);
+    numRows = [self verifyQuery: q randomAccess: YES
+                           test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+                   AssertEqual([r integerForKey:@"count"], 1);
+                   Assert([doc integerForKey:@"number1"] != 42);
+               }];
+    AssertEqual(numRows, 2u);
+}
+
+- (void) testSelectFromJoinWhereOrderBy {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @97 forKey: @"theone"];
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @12 forKey: @"theone"];
+    [self saveDocument: doc2];
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @12 forKey: @"theone"];
+    [self saveDocument: doc3];
+    
+    CBLQueryExpression* numb = [CBLQueryExpression property:@"number1" from:@"main"];
+    CBLQuerySelectResult* MAIN_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: numb]]
+                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     join: @[join]
+                                    where: nil
+                                  orderBy: @[[CBLQueryOrdering expression: numb]]];
+    Assert(q);
+    NSError* error;
+    NSArray* allResults = [q execute: &error].allResults;
+    AssertEqual([allResults.firstObject integerForKey: @"number1"], 12);
+    AssertEqual([allResults.lastObject integerForKey: @"number1"], 97);
+    AssertEqual(allResults.count, 3u);
+    
+    q = [CBLQueryBuilder selectDistinct: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: numb]]
+                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   join: @[join]
+                                  where: nil
+                                orderBy: @[[CBLQueryOrdering expression: numb]]];
+    Assert(q);
+    allResults = [q execute: &error].allResults;
+    AssertEqual([allResults.firstObject integerForKey: @"number1"], 12);
+    AssertEqual([allResults.lastObject integerForKey: @"number1"], 97);
+    AssertEqual(allResults.count, 2u);
+}
+
+- (void) testSelectFromJoinWhereGroupByHavingOrderByLimit {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @42 forKey: @"theone"];
+    [doc1 setValue: @"Tom" forKey: @"name"];
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @43 forKey: @"theone"];
+    [doc2 setValue: @"Tom" forKey: @"name"];
+    [self saveDocument: doc2];
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @32 forKey: @"theone"];
+    [doc3 setValue: @"Bob" forKey: @"name"];
+    [self saveDocument: doc3];
+    
+    CBLQueryExpression* numb = [CBLQueryExpression property:@"number1" from:@"main"];
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
+    CBLQuerySelectResult* MAIN_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    
+    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
+                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID,
+                                             [CBLQuerySelectResult expression: numb],
+                                             [CBLQuerySelectResult expression: COUNT as: @"count"]]
+                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     join: @[join]
+                                    where: nil
+                                  groupBy: @[[CBLQueryExpression property: @"theone"
+                                                                     from: @"secondary"]]
+                                   having: nil
+                                  orderBy: @[[CBLQueryOrdering expression: numb]]
+                                    limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 10]]];
+    Assert(q);
+    NSError* error;
+    NSArray* allResults = [q execute: &error].allResults;
+    AssertEqual([allResults.firstObject integerForKey:@"number1"], 32u);
+    AssertEqual([allResults.lastObject integerForKey:@"number1"], 43u);
+    AssertEqual(allResults.count, 3u);
+    
+    CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name" from: @"secondary"];
+    CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    q = [CBLQueryBuilder selectDistinct: @[S_NAME,
+                                           [CBLQuerySelectResult expression: COUNT as: @"count"]]
+                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   join: @[join]
+                                  where: nil
+                                groupBy: @[[CBLQueryExpression property: @"theone"
+                                                                   from: @"secondary"]]
+                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
+                                orderBy: @[[CBLQueryOrdering expression: NAME]]
+                                  limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 10]]];
+    Assert(q);
+    allResults = [q execute: &error].allResults;
+    AssertEqualObjects([allResults.firstObject valueForKey:@"name"], @"Bob");
+    AssertEqualObjects([allResults.lastObject valueForKey:@"name"], @"Tom");
+    AssertEqual(allResults.count, 2u);
+}
+
 - (void) testLeftJoin {
     [self loadNumbers: 100];
     
