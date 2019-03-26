@@ -79,6 +79,10 @@
     AssertEqual(array.count, 0u);
     AssertEqualObjects([array toArray], @[]);
     
+    CBLMutableArray* array2 = [CBLMutableArray array];
+    AssertEqual(array2.count, 0u);
+    AssertEqualObjects([array2 toArray], @[]);
+    
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: array forKey: @"array"];
     AssertEqual([doc arrayForKey: @"array"], array);
@@ -207,6 +211,40 @@
     }];
 }
 
+- (void) testAddMethodsIndividually {
+    NSArray* data = [self arrayOfAllTypes];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addBoolean: YES];
+    [array addString: data[2]];
+    [array addNumber: data[4]];
+    [array addInteger: 21];
+    [array addLongLong: 12345678];
+    [array addFloat: (float)34.56];
+    [array addDouble: 78.90];
+    
+    NSDate* now = [NSDate date];
+    [array addDate: now];
+    
+    [array addBlob: data[11]];
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setArray: array forKey: @"array"];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        CBLArray* a = [d arrayForKey: @"array"];
+        
+        AssertEqual([a booleanAtIndex: 0], YES);
+        AssertEqualObjects([a stringAtIndex: 1], data[2]);
+        AssertEqualObjects([a numberAtIndex: 2], data[4]);
+        AssertEqual([a integerAtIndex: 3], 21);
+        AssertEqual([a longLongAtIndex: 4], 12345678);
+        AssertEqual([a floatAtIndex: 5], (float)34.56);
+        AssertEqual([a doubleAtIndex: 6], 78.90);
+        Assert([[a dateAtIndex: 7] timeIntervalSinceDate: now] < 1); // less than a second
+        AssertEqualObjects([a blobAtIndex: 8], data[11]);
+    }];
+}
+
 
 - (void) testSetObject {
     // Get test data:
@@ -308,6 +346,45 @@
             [array setValue: @"b" atIndex: [index integerValue]];
         }];
     }
+}
+
+- (void) testSetMethodsIndividually {
+    NSArray* data = [self arrayOfAllTypes];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    for (uint i = 0; i < 9; i++) {
+        [array addValue: [NSNull null]];
+    }
+    
+    uint i = -1;
+    [array setBoolean: YES atIndex: ++i];
+    [array setString: data[2] atIndex: ++i];
+    [array setNumber: data[4] atIndex: ++i];
+    [array setInteger: 21 atIndex: ++i];
+    [array setLongLong: 12345678 atIndex: ++i];
+    [array setFloat: (float)34.56 atIndex: ++i];
+    [array setDouble: 78.90 atIndex: ++i];
+    
+    NSDate* now = [NSDate date];
+    [array setDate: now atIndex: ++i];
+
+    [array setBlob: data[11] atIndex: ++i];
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setArray: array forKey: @"array"];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        CBLArray* a = [d arrayForKey: @"array"];
+        
+        AssertEqual([a booleanAtIndex: 0], YES);
+        AssertEqualObjects([a stringAtIndex: 1], data[2]);
+        AssertEqualObjects([a numberAtIndex: 2], data[4]);
+        AssertEqual([a integerAtIndex: 3], 21);
+        AssertEqual([a longLongAtIndex: 4], 12345678);
+        AssertEqual([a floatAtIndex: 5], (float)34.56);
+        AssertEqual([a doubleAtIndex: 6], 78.90);
+        Assert([[a dateAtIndex: 7] timeIntervalSinceDate: now] < 1); // less than a second
+        AssertEqualObjects([a blobAtIndex: 8], data[11]);
+    }];
 }
 
 
@@ -418,6 +495,45 @@
             [array insertValue: @"b" atIndex: i];
         }];
     }
+}
+
+- (void) testInsertMethodsIndividually {
+    NSArray* data = [self arrayOfAllTypes];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    for (uint i = 0; i < 9; i++) {
+        [array addValue: [NSNull null]];
+    }
+    
+    uint i = -1;
+    [array insertBoolean: YES atIndex: ++i];
+    [array insertString: data[2] atIndex: ++i];
+    [array insertNumber: data[4] atIndex: ++i];
+    [array insertInteger: 21 atIndex: ++i];
+    [array insertLongLong: 12345678 atIndex: ++i];
+    [array insertFloat: (float)34.56 atIndex: ++i];
+    [array insertDouble: 78.90 atIndex: ++i];
+    
+    NSDate* now = [NSDate date];
+    [array insertDate: now atIndex: ++i];
+    
+    [array insertBlob: data[11] atIndex: ++i];
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setArray: array forKey: @"array"];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        CBLArray* a = [d arrayForKey: @"array"];
+        
+        AssertEqual([a booleanAtIndex: 0], YES);
+        AssertEqualObjects([a stringAtIndex: 1], data[2]);
+        AssertEqualObjects([a numberAtIndex: 2], data[4]);
+        AssertEqual([a integerAtIndex: 3], 21);
+        AssertEqual([a longLongAtIndex: 4], 12345678);
+        AssertEqual([a floatAtIndex: 5], (float)34.56);
+        AssertEqual([a doubleAtIndex: 6], 78.90);
+        Assert([[a dateAtIndex: 7] timeIntervalSinceDate: now] < 1); // less than a second
+        AssertEqualObjects([a blobAtIndex: 8], data[11]);
+    }];
 }
 
 
