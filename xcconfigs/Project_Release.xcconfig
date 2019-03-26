@@ -33,5 +33,5 @@ LLVM_LTO                        = YES                   // Link-time optimizatio
 MTL_ENABLE_DEBUG_INFO           = NO                    // ???
 STRIP_INSTALLED_PRODUCT         = YES                   // Strip debug symbols
 SWIFT_COMPILATION_MODE          = wholemodule           // Swift Compilation Mode
-SWIFT_OPTIMIZATION_LEVEL        = -O                    // Optimize for Speed
+SWIFT_OPTIMIZATION_LEVEL        = -Onone                // No optimization
 VALIDATE_PRODUCT                = YES                   // Perform validation checks on the product
