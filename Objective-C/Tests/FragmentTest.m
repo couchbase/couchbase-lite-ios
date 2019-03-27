@@ -63,6 +63,90 @@
     AssertEqualObjects(doc[@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
 }
 
+- (void) testFragmentTypeSetterMethodsWithKey {
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    doc[@"name"].string = @"Jason";
+    doc[@"id"].longLongValue = 123456789;
+    doc[@"age"].number = @(21);
+    doc[@"totalScore"].integerValue = 100;
+    doc[@"earnedScore"].floatValue = 67.89f;
+    doc[@"gpa"].doubleValue = 3.469;
+    doc[@"hasHobby"].booleanValue = YES;
+    NSDate* twoWeeksBack = [NSDate dateWithTimeIntervalSinceNow: 2 * 24 * 60 * 60];
+    doc[@"startDate"].date = twoWeeksBack;
+    
+    NSData* content = [@"I am cool" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    doc[@"about"].blob = blob;
+    
+    CBLMutableArray* phones = [[CBLMutableArray alloc] initWithData: @[@"920-456-7890",
+                                                                       @"920-123-4566"]];
+    doc[@"phone"].array = phones;
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
+                                                                               @"2": @"pending",
+                                                                               @"3": @"pending",
+                                                                               }];
+    doc[@"assignments"].dictionary = dict;
+    
+    AssertEqualObjects(doc[@"name"].string, @"Jason");
+    AssertEqual(doc[@"id"].longLongValue, 123456789);
+    AssertEqualObjects(doc[@"age"].number, @21);
+    AssertEqual(doc[@"totalScore"].integerValue, 100);
+    AssertEqual(doc[@"earnedScore"].floatValue, 67.89f);
+    AssertEqual(doc[@"gpa"].doubleValue, 3.469);
+    AssertEqual(doc[@"hasHobby"].booleanValue, YES);
+    Assert([doc[@"startDate"].date timeIntervalSinceDate: twoWeeksBack] < 1);
+    AssertEqualObjects(doc[@"about"].blob, blob);
+    AssertEqualObjects(doc[@"phone"].array, phones);
+    AssertEqualObjects(doc[@"assignments"].dictionary, dict);
+}
+
+- (void) testFragmentTypeSetterMethodsWithIndex {
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    NSString* key = @"info";
+    NSMutableArray* array = [NSMutableArray array];
+    for (uint i =0; i < 12; i++) {
+        [array addObject: [NSNull null]];
+    }
+    
+    [doc setValue: [[CBLMutableArray alloc] initWithData: array] forKey: key];
+    doc[key][0].string = @"Jason";
+    doc[key][1].longLongValue = 123456789;
+    doc[key][2].number = @(21);
+    doc[key][3].integerValue = 100;
+    doc[key][4].floatValue = 67.89f;
+    doc[key][5].doubleValue = 3.469;
+    doc[key][6].booleanValue = YES;
+    NSDate* twoWeeksBack = [NSDate dateWithTimeIntervalSinceNow: 2 * 24 * 60 * 60];
+    doc[key][7].date = twoWeeksBack;
+
+    NSData* content = [@"I am cool" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    doc[key][8].blob = blob;
+
+    CBLMutableArray* phones = [[CBLMutableArray alloc] initWithData: @[@"920-456-7890",
+                                                                       @"920-123-4566"]];
+    doc[key][9].array = phones;
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
+                                                                               @"2": @"pending",
+                                                                               @"3": @"pending",
+                                                                               }];
+    doc[key][10].dictionary = dict;
+    doc[key][11].value = @"updatedValue";
+    
+    AssertEqualObjects(doc[key][0].string, @"Jason");
+    AssertEqual(doc[key][1].longLongValue, 123456789);
+    AssertEqualObjects(doc[key][2].number, @21);
+    AssertEqual(doc[key][3].integerValue, 100);
+    AssertEqual(doc[key][4].floatValue, 67.89f);
+    AssertEqual(doc[key][5].doubleValue, 3.469);
+    AssertEqual(doc[key][6].booleanValue, YES);
+    Assert([doc[key][7].date timeIntervalSinceDate: twoWeeksBack] < 1);
+    AssertEqualObjects(doc[key][8].blob, blob);
+    AssertEqualObjects(doc[key][9].array, phones);
+    AssertEqualObjects(doc[key][10].dictionary, dict);
+    AssertEqualObjects(doc[key][11].value, @"updatedValue");
+}
 
 - (void) testGetDocFragmentWithID {
     NSDictionary* dict = @{@"address": @{
