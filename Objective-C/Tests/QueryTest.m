@@ -25,6 +25,7 @@
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrdering.h"
+#import "CBLQueryResultArray.h"
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
@@ -2293,6 +2294,35 @@
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], 0u);
+}
+
+#pragma mark - Result Array
+
+- (void) testQueryResultArray {
+    [self loadNumbers: 5];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: nil
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    NSArray* allObjects = rs.allObjects;
+    CBLQueryResultArray* array = [[CBLQueryResultArray alloc] initWithResultSet: rs
+                                                                          count: allObjects.count];
+    AssertEqual(array.count, allObjects.count);
+    Assert(![[array mutableCopy] isEqual: array]);
+    AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 1] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 1] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 2] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 2] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 3] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 3] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
 }
 
 @end
