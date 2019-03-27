@@ -2315,12 +2315,6 @@
     Assert(![[array mutableCopy] isEqual: array]);
     AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
                 [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
-    AssertEqual([[array objectAtIndex: 1] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 1] valueForKey: @"id"]);
-    AssertEqual([[array objectAtIndex: 2] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 2] valueForKey: @"id"]);
-    AssertEqual([[array objectAtIndex: 3] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 3] valueForKey: @"id"]);
     AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
                 [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
 }
