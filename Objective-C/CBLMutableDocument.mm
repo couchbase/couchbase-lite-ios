@@ -99,7 +99,7 @@
 }
 
 
-#pragma mark - CBLMutableDocument
+#pragma mark - CBLMutableDictionary
 
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
