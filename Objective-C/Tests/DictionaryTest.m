@@ -31,6 +31,10 @@
     AssertEqual(address.count, 0u);
     AssertEqualObjects([address toDictionary], @{});
     
+    CBLMutableDictionary* dictionary = [CBLMutableDictionary dictionary];
+    AssertEqual(dictionary.count, 0u);
+    AssertEqualObjects([dictionary toDictionary], @{});
+    
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
@@ -126,6 +130,37 @@
         else
             Assert([d dictionaryForKey: @"level1"] != level1);
         AssertEqualObjects([d toDictionary], dict);
+    }];
+}
+
+
+- (void) testTypeSetters {
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setNumber: @21 forKey: @"number"];
+    [dict setLongLong: 12345678 forKey: @"longlong"];
+    [dict setFloat: (float)12.34 forKey: @"float"];
+    [dict setDouble: 34.56 forKey: @"double"];
+    [dict setBoolean: YES forKey: @"boolean"];
+    
+    NSDate* now = [NSDate date];
+    [dict setDate: now forKey: @"date"];
+    
+    NSData* content = [@"I am Blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [dict setBlob: blob forKey: @"blob"];
+    
+    [doc setDictionary: dict forKey: @"dict"];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        CBLDictionary* dictionary = [d dictionaryForKey: @"dict"];
+        AssertEqualObjects([dictionary numberForKey: @"number"], @21);
+        AssertEqual([dictionary longLongForKey: @"longlong"], 12345678);
+        AssertEqual([dictionary floatForKey: @"float"], (float)12.34);
+        AssertEqual([dictionary doubleForKey: @"double"], 34.56);
+        AssertEqual([dictionary booleanForKey: @"boolean"], YES);
+        Assert([[dictionary dateForKey: @"date"] timeIntervalSinceDate: now] < 1);
+        AssertEqualObjects([dictionary blobForKey: @"blob"], blob);
     }];
 }
 
