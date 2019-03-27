@@ -140,7 +140,7 @@
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     [dict setNumber: @21 forKey: @"number"];
     [dict setLongLong: 12345678 forKey: @"longlong"];
-    [dict setFloat: (float)12.34 forKey: @"float"];
+    [dict setFloat: 12.34f forKey: @"float"];
     [dict setDouble: 34.56 forKey: @"double"];
     [dict setBoolean: YES forKey: @"boolean"];
     
@@ -156,7 +156,7 @@
         CBLDictionary* dictionary = [d dictionaryForKey: @"dict"];
         AssertEqualObjects([dictionary numberForKey: @"number"], @21);
         AssertEqual([dictionary longLongForKey: @"longlong"], 12345678);
-        AssertEqual([dictionary floatForKey: @"float"], (float)12.34);
+        AssertEqual([dictionary floatForKey: @"float"], 12.34f);
         AssertEqual([dictionary doubleForKey: @"double"], 34.56);
         AssertEqual([dictionary booleanForKey: @"boolean"], YES);
         Assert([[dictionary dateForKey: @"date"] timeIntervalSinceDate: now] < 1);

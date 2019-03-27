@@ -71,15 +71,27 @@
     Assert(doc.id.length > 0);
     AssertEqualObjects([doc toDictionary], @{});
     [self saveDocument: doc];
+    
+    CBLMutableDocument* doc1 = [CBLMutableDocument document];
+    AssertNotNil(doc1);
+    Assert(doc1.id.length > 0);
+    AssertEqualObjects([doc1 toDictionary], @{});
+    [self saveDocument: doc1];
 }
 
 
 - (void) testCreateDocWithID {
-    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    AssertNotNil(doc);
-    AssertEqualObjects(doc.id, @"doc1");
-    AssertEqualObjects([doc toDictionary], @{});
-    [self saveDocument: doc];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    AssertNotNil(doc1);
+    AssertEqualObjects(doc1.id, @"doc1");
+    AssertEqualObjects([doc1 toDictionary], @{});
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [CBLMutableDocument documentWithID: @"doc2"];
+    AssertNotNil(doc2);
+    AssertEqualObjects(doc2.id, @"doc2");
+    AssertEqualObjects([doc2 toDictionary], @{});
+    [self saveDocument: doc2];
 }
 
 
@@ -240,27 +252,27 @@
 - (void) testSetString {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @"string1" forKey: @"string1"];
-    [doc setValue: @"string2" forKey: @"string2"];
+    [doc setString: @"string2" forKey: @"string2"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"string1"], @"string1");
-        AssertEqualObjects([d valueForKey: @"string2"], @"string2");
+        AssertEqualObjects([d stringForKey: @"string2"], @"string2");
     }];
     
     // Update:
     [doc setValue: @"string1a" forKey: @"string1"];
-    [doc setValue: @"string2a" forKey: @"string2"];
+    [doc setString: @"string2a" forKey: @"string2"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"string1"], @"string1a");
-        AssertEqualObjects([d valueForKey: @"string2"], @"string2a");
+        AssertEqualObjects([d stringForKey: @"string2"], @"string2a");
     }];
     
     // Get and update:
     doc = [[self.db documentWithID: doc.id] toMutable];
     [doc setValue: @"string1b" forKey: @"string1"];
-    [doc setValue: @"string2b" forKey: @"string2"];
+    [doc setString: @"string2b" forKey: @"string2"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"string1"], @"string1b");
-        AssertEqualObjects([d valueForKey: @"string2"], @"string2b");
+        AssertEqualObjects([d stringForKey: @"string2"], @"string2b");
     }];
 }
 
@@ -289,45 +301,51 @@
 - (void) testSetNumber {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @(1) forKey: @"number1"];
-    [doc setValue: @(0) forKey: @"number2"];
+    [doc setNumber: @(0) forKey: @"number2"];
     [doc setValue: @(-1) forKey: @"number3"];
     [doc setValue: @(1.1) forKey: @"number4"];
     [doc setValue: @(12345678) forKey: @"number5"];
+    [doc setLongLong: 12345678 forKey: @"number6"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"number1"], @(1));
-        AssertEqualObjects([d valueForKey: @"number2"], @(0));
+        AssertEqualObjects([d numberForKey: @"number2"], @(0));
         AssertEqualObjects([d valueForKey: @"number3"], @(-1));
         AssertEqualObjects([d valueForKey: @"number4"], @(1.1));
         AssertEqualObjects([d valueForKey: @"number5"], @(12345678));
+        AssertEqual([d longLongForKey: @"number6"], 12345678);
     }];
     
     // Update:
     [doc setValue: @(0) forKey: @"number1"];
-    [doc setValue: @(1) forKey: @"number2"];
+    [doc setNumber: @(1) forKey: @"number2"];
     [doc setValue: @(1.1) forKey: @"number3"];
     [doc setValue: @(-1) forKey: @"number4"];
     [doc setValue: @(-12345678) forKey: @"number5"];
+    [doc setLongLong: -12345678 forKey: @"number6"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"number1"], @(0));
-        AssertEqualObjects([d valueForKey: @"number2"], @(1));
+        AssertEqualObjects([d numberForKey: @"number2"], @(1));
         AssertEqualObjects([d valueForKey: @"number3"], @(1.1));
         AssertEqualObjects([d valueForKey: @"number4"], @(-1));
         AssertEqualObjects([d valueForKey: @"number5"], @(-12345678));
+        AssertEqual([d longLongForKey: @"number6"], -12345678);
     }];
     
     // Get and update:
     doc = [[self.db documentWithID: doc.id] toMutable];
     [doc setValue: @(1) forKey: @"number1"];
-    [doc setValue: @(0) forKey: @"number2"];
+    [doc setNumber: @(0) forKey: @"number2"];
     [doc setValue: @(2.1) forKey: @"number3"];
     [doc setValue: @(-2) forKey: @"number4"];
     [doc setValue: @(-123456789) forKey: @"number5"];
+    [doc setLongLong: -123456789 forKey: @"number6"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"number1"], @(1));
-        AssertEqualObjects([d valueForKey: @"number2"], @(0));
+        AssertEqualObjects([d numberForKey: @"number2"], @(0));
         AssertEqualObjects([d valueForKey: @"number3"], @(2.1));
         AssertEqualObjects([d valueForKey: @"number4"], @(-2));
         AssertEqualObjects([d valueForKey: @"number5"], @(-123456789));
+        AssertEqual([d longLongForKey: @"number6"], -123456789);
     }];
 }
 
@@ -466,6 +484,7 @@
     [doc setValue: @(1.50) forKey: @"number3"];
     [doc setValue: @(1.51) forKey: @"number4"];
     [doc setValue: @(1.99) forKey: @"number5"];
+    [doc setFloat: 1.23f forKey: @"number6"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"number1"], @(1.00));
@@ -497,6 +516,8 @@
         AssertEqual([d integerForKey: @"number5"], 1);
         AssertEqual([d floatForKey: @"number5"], 1.99f);
         AssertEqual([d doubleForKey: @"number5"], 1.99);
+        
+        AssertEqual([d floatForKey: @"number6"], 1.23f);
     }];
 }
 
@@ -505,32 +526,53 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @(YES) forKey: @"boolean1"];
     [doc setValue: @(NO) forKey: @"boolean2"];
+    [doc setBoolean: YES forKey: @"boolean3"];
+    [doc setBoolean: NO forKey: @"boolean4"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"boolean1"], @(1));
         AssertEqualObjects([d valueForKey: @"boolean2"], @(0));
         AssertEqual([d booleanForKey: @"boolean1"], YES);
         AssertEqual([d booleanForKey: @"boolean2"], NO);
+        
+        AssertEqualObjects([d valueForKey: @"boolean3"], @(1));
+        AssertEqualObjects([d valueForKey: @"boolean4"], @(0));
+        AssertEqual([d booleanForKey: @"boolean3"], YES);
+        AssertEqual([d booleanForKey: @"boolean4"], NO);
     }];
     
     // Update:
     [doc setValue: @(NO) forKey: @"boolean1"];
     [doc setValue: @(YES) forKey: @"boolean2"];
+    [doc setBoolean: NO forKey: @"boolean3"];
+    [doc setBoolean: YES forKey: @"boolean4"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"boolean1"], @(0));
         AssertEqualObjects([d valueForKey: @"boolean2"], @(1));
         AssertEqual([d booleanForKey: @"boolean1"], NO);
         AssertEqual([d booleanForKey: @"boolean2"], YES);
+        
+        AssertEqualObjects([d valueForKey: @"boolean3"], @(0));
+        AssertEqualObjects([d valueForKey: @"boolean4"], @(1));
+        AssertEqual([d booleanForKey: @"boolean3"], NO);
+        AssertEqual([d booleanForKey: @"boolean4"], YES);
     }];
     
     // Get and update:
     doc = [[self.db documentWithID: doc.id] toMutable];
     [doc setValue: @(YES) forKey: @"boolean1"];
     [doc setValue: @(NO) forKey: @"boolean2"];
+    [doc setBoolean: YES forKey: @"boolean3"];
+    [doc setBoolean: NO forKey: @"boolean4"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"boolean1"], @(1));
         AssertEqualObjects([d valueForKey: @"boolean2"], @(0));
         AssertEqual([d booleanForKey: @"boolean1"], YES);
         AssertEqual([d booleanForKey: @"boolean2"], NO);
+        
+        AssertEqualObjects([d valueForKey: @"boolean3"], @(1));
+        AssertEqualObjects([d valueForKey: @"boolean4"], @(0));
+        AssertEqual([d booleanForKey: @"boolean3"], YES);
+        AssertEqual([d booleanForKey: @"boolean4"], NO);
     }];
 }
 
@@ -562,22 +604,32 @@
     NSString* dateStr = [CBLJSON JSONObjectWithDate: date];
     Assert(dateStr.length > 0);
     [doc setValue: date forKey: @"date"];
+    [doc setDate: date forKey: @"date1"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], dateStr);
         AssertEqualObjects([d stringForKey: @"date"], dateStr);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], dateStr);
+        
+        AssertEqualObjects([d valueForKey: @"date1"], dateStr);
+        AssertEqualObjects([d stringForKey: @"date1"], dateStr);
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], dateStr);
     }];
     
     // Update:
     NSDate* nuDate = [NSDate dateWithTimeInterval: 60.0 sinceDate: date];
     NSString* nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
     [doc setValue: nuDate forKey: @"date"];
+    [doc setDate: nuDate forKey: @"date1"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date"], nuDateStr);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], nuDateStr);
+        
+        AssertEqualObjects([d valueForKey: @"date1"], nuDateStr);
+        AssertEqualObjects([d stringForKey: @"date1"], nuDateStr);
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], nuDateStr);
     }];
     
     // Get and update:
@@ -585,11 +637,16 @@
     nuDate = [NSDate dateWithTimeInterval: 120.0 sinceDate: date];
     nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
     [doc setValue: nuDate forKey: @"date"];
+    [doc setDate: nuDate forKey: @"date1"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date"], nuDateStr);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], nuDateStr);
+        
+        AssertEqualObjects([d valueForKey: @"date1"], nuDateStr);
+        AssertEqualObjects([d stringForKey: @"date1"], nuDateStr);
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], nuDateStr);
     }];
 }
 
