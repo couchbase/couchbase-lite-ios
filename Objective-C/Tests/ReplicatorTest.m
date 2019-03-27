@@ -25,6 +25,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLHTTPLogic.h"
 #import "CollectionUtils.h"
+#import "CBLDocumentReplication+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMockConnectionLifecycleLocation.h"
@@ -2449,6 +2450,40 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqualObjects(repl.config.pullFilter, pushFilter);
     Assert([repl.config.pushFilter isEqual: pullFilter]);
     Assert([repl.config.pullFilter isEqual: pushFilter]);
+}
+
+# pragma mark - CBLDocumentReplication
+
+- (void) testCreateDocumentReplicator {
+    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    CBLDocumentReplication* docReplication = [[CBLDocumentReplication alloc] initWithReplicator: repl
+                                                                                         isPush: YES
+                                                                                      documents: @[]];
+    Assert(docReplication.isPush);
+    AssertEqualObjects(docReplication.documents, @[]);
+    AssertEqualObjects(docReplication.replicator, repl);
+}
+
+- (void) testReplicatedDocument {
+    C4DocumentEnded end;
+    end.docID = c4str("docID");
+    end.revID = c4str("revID");
+    end.flags = kRevDeleted;
+    end.error = c4error_make(1, kC4ErrorBusy, c4str("error"));
+    CBLReplicatedDocument* replicatedDoc = [[CBLReplicatedDocument alloc] initWithC4DocumentEnded: &end];
+    AssertEqualObjects(replicatedDoc.id, @"docID");
+    Assert((replicatedDoc.flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted);
+    AssertEqual(replicatedDoc.c4Error.code, kC4ErrorBusy);
+    AssertEqual(replicatedDoc.c4Error.domain, 1);
+    AssertEqual(replicatedDoc.error.code, kC4ErrorBusy);
+    
+    [replicatedDoc resetError];
+    AssertEqual(replicatedDoc.c4Error.code, 0);
+    AssertEqual(replicatedDoc.c4Error.domain, 0);
 }
 
 @end
