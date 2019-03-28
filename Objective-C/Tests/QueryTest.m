@@ -909,8 +909,8 @@
                                   orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
     
     CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setValue: @(2) forName: @"num1"];
-    [params setValue: @(5) forName: @"num2"];
+    [params setInteger: 2 forName: @"num1"];
+    [params setNumber: @(5) forName: @"num2"];
     
     q.parameters = params;
     
@@ -922,6 +922,30 @@
     AssertEqual(numRows, 4u);
 }
 
+- (void) testStringQueryParameter {
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* FIRST_NAME  = [CBLQueryExpression property: @"name.first"];
+    CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"name1"];
+    CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"name2"];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: FIRST_NAME]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[FIRST_NAME equalTo: PARAM_N1] orExpression:
+                                            [FIRST_NAME equalTo: PARAM_N2]]];
+    
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setString: @"Kandra" forName: @"name1"];
+    [params setValue: @"Jeff" forName: @"name2"];
+    
+    q.parameters = params;
+    
+    NSArray* expectedNumbers = @[@"Kandra", @"Jeff"];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r stringAtIndex: 0], expectedNumbers[(NSUInteger)(n-1)]);
+    }];
+    AssertEqual(numRows, 2u);
+}
 
 - (void) testMeta {
     [self loadNumbers: 5];
