@@ -20,6 +20,7 @@
 #import <XCTest/XCTest.h>
 #import "CBLBasicAuthenticator.h"
 #import "CBLTestCase.h"
+#import "CBLAuthenticator+Internal.h"
 
 @interface AuthenticatorTest : CBLTestCase
 
@@ -27,7 +28,7 @@
 
 @implementation AuthenticatorTest
 
-- (void)testBasicAuthenticatorInstance {
+- (void) testBasicAuthenticatorInstance {
     NSString* username = @"someUsername";
     NSString* password = @"somePassword";
     
@@ -37,7 +38,23 @@
     AssertEqualObjects([auth password], password);
 }
 
-- (void)testSessionAuthenticatorWithSessionID {
+- (void) testBasicAuthenticatorAuthenticate {
+    NSString* username = @"someUsername";
+    NSString* password = @"somePassword";
+    
+    CBLBasicAuthenticator* auth = [[CBLBasicAuthenticator alloc] initWithUsername: username
+                                                                         password: password];
+    
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    AssertEqualObjects(options, @{});
+    
+    [auth authenticate: options];
+    AssertEqualObjects(options[@"auth"][@"type"], @"Basic");
+    AssertEqualObjects(options[@"auth"][@"username"], username);
+    AssertEqualObjects(options[@"auth"][@"password"], password);
+}
+
+- (void) testSessionAuthenticatorWithSessionID {
     NSString* sessionID = @"someSessionID";
     
     CBLSessionAuthenticator* auth = [[CBLSessionAuthenticator alloc] initWithSessionID: sessionID];
@@ -45,7 +62,7 @@
     AssertEqualObjects([auth cookieName], @"SyncGatewaySession");
 }
 
-- (void)testSessionAuthenticatorWithSessionIDAndCookie {
+- (void) testSessionAuthenticatorWithSessionIDAndCookie {
     NSString* sessionID = @"someSessionID";
     NSString* cookie = @"someCookie";
     
@@ -55,13 +72,29 @@
     AssertEqualObjects([auth cookieName], cookie);
 }
 
-- (void)testSessionAuthenticatorEmptyCookie {
+- (void) testSessionAuthenticatorEmptyCookie {
     NSString* sessionID = @"someSessionID";
     
     CBLSessionAuthenticator* auth = [[CBLSessionAuthenticator alloc] initWithSessionID: sessionID
                                                                             cookieName: nil];
     AssertEqualObjects([auth sessionID], sessionID);
     AssertEqualObjects([auth cookieName], @"SyncGatewaySession");
+}
+
+- (void) testAuthenticateSession {
+    NSString* sessionID = @"someSessionID";
+    NSString* cookie = @"someCookie";
+    
+    CBLSessionAuthenticator* auth = [[CBLSessionAuthenticator alloc] initWithSessionID: sessionID
+                                                                            cookieName: cookie];
+    
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    AssertNil(options[@"cookies"]);
+    
+    [auth authenticate: options];
+    AssertNotNil(options[@"cookies"]);
+    NSString* cookies = [NSString stringWithFormat: @"%@=%@", cookie, sessionID];
+    AssertEqualObjects(options[@"cookies"], cookies);
 }
 
 @end
