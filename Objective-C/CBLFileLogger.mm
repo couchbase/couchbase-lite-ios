@@ -80,9 +80,11 @@
         return;
     }
     
+    CBLStringBytes directory(_config.directory);
+    
     C4LogFileOptions options = {
         .log_level = (C4LogLevel)self.level,
-        .base_path = CBLStringBytes(_config.directory),
+        .base_path = directory,
         .max_size_bytes = (int64_t)_config.maxSize,
         .max_rotate_count = (int32_t)_config.maxRotateCount,
         .use_plaintext = (bool)_config.usePlainText,
