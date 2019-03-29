@@ -41,9 +41,11 @@
                              v.majorVersion, v.minorVersion, v.patchVersion];
         NSString* system = [NSString stringWithFormat: @"macOS %@", version];
 #endif
-        NSString* platform = @"ObjC";
-        if (strcmp(CBL_PRODUCT_NAME, "CouchbaseLiteSwift") == 0)
+        NSString* platform;
+        if (strcmp(CBL_PRODUCT_NAME, "CouchbaseLiteSwift") == (0))
             platform = @"Swift";
+        else
+            platform = @"ObjC";
         
         NSString* commit = strlen(GitCommit) > (0) ?
         [NSString stringWithFormat: @"Commit/%.8s%s", GitCommit, GitDirty] : @"NA";
