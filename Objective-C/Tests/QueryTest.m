@@ -981,7 +981,7 @@
     [params setDictionary: dict forName: @"assignments"];
     [params setArray: phones  forName: @"phone"];
     
-    q.parameters = params;
+    q.parameters = [[CBLQueryParameters alloc] initWithParameters: params];
     
     NSArray* allObjects = [[q execute: &error] allObjects];
     AssertEqual(allObjects.count, 1u);
