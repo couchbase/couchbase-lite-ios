@@ -20,6 +20,12 @@
 import Foundation
 
 /// Log domain.
+///
+/// all:        All log domains.
+/// database:   Database domain.
+/// query:      Query domain.
+/// replicator: Replicator domain.
+/// network:    Network domain.
 public enum LogDomain: UInt8 {
     case all            = 15
     case database       = 1
@@ -29,6 +35,13 @@ public enum LogDomain: UInt8 {
 }
 
 /// Log level.
+///
+/// - Debug:   Debug log messages. Only present in debug builds of CouchbaseLite.
+/// - verbose: Verbose log messages.
+/// - info:    Informational log messages.
+/// - warning: Warning log messages.
+/// - error:   Error log messages. These indicate immediate errors that need to be addressed.
+/// - none:    Disabling log messages of a given log domain.
 public enum LogLevel: UInt8 {
     case debug = 0
     case verbose
