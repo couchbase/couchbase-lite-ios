@@ -23,23 +23,23 @@ NS_ASSUME_NONNULL_BEGIN
  Log domain.
  */
 typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
-    kCBLLogDomainAll            = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3,
-    kCBLLogDomainDatabase       = 1 << 0,
-    kCBLLogDomainQuery          = 1 << 1,
-    kCBLLogDomainReplicator     = 1 << 2,
-    kCBLLogDomainNetwork        = 1 << 3
+    kCBLLogDomainAll            = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3, ///< All domains
+    kCBLLogDomainDatabase       = 1 << 0, ///< Database domain.
+    kCBLLogDomainQuery          = 1 << 1, ///< Query domain.
+    kCBLLogDomainReplicator     = 1 << 2, ///< Replicator domain.
+    kCBLLogDomainNetwork        = 1 << 3  ///< Network domain.
 };
 
 /**
  Log level.
  */
 typedef NS_ENUM(NSUInteger, CBLLogLevel) {
-    kCBLLogLevelDebug,
-    kCBLLogLevelVerbose,
-    kCBLLogLevelInfo,
-    kCBLLogLevelWarning,
-    kCBLLogLevelError,
-    kCBLLogLevelNone
+    kCBLLogLevelDebug,      ///< Debug log messages. Only present in debug builds of CouchbaseLite.
+    kCBLLogLevelVerbose,    ///< Verbose log messages.
+    kCBLLogLevelInfo,       ///< Informational log messages.
+    kCBLLogLevelWarning,    ///< Warning log messages.
+    kCBLLogLevelError,      ///< Error log messages.
+    kCBLLogLevelNone        ///< Disabling log messages of a given log domain.
 };
 
 /**
