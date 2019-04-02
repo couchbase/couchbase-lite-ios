@@ -60,6 +60,108 @@
     return numbers;
 }
 
+- (void) loadStudents {
+    NSError* error;
+    NSTimeInterval aDayInterval = 24 * 60 * 60;
+    NSDate* twoWeeksBack = [NSDate dateWithTimeIntervalSinceNow: -2 * 7 * aDayInterval];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setString: @"Jason" forKey: @"name"];
+    [doc1 setString: @"santa clara" forKey: @"city"];
+    [doc1 setNumber: @(100) forKey: @"code"];
+    [doc1 setInteger: 2016 forKey: @"year"];
+    [doc1 setLongLong: 123456789 forKey: @"id"];
+    [doc1 setFloat: 67.89f forKey: @"score"];
+    [doc1 setDouble: 3.4 forKey: @"gpa"];
+    [doc1 setBoolean: YES forKey: @"isFullTime"];
+    [doc1 setDate: twoWeeksBack forKey: @"startDate"];
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setString: @"Bob" forKey: @"name"];
+    [doc2 setString: @"santa clara" forKey: @"city"];
+    [doc2 setNumber: @(101) forKey: @"code"];
+    [doc2 setInteger: 2016 forKey: @"year"];
+    [doc2 setLongLong: 123456790 forKey: @"id"];
+    [doc2 setFloat: 60.89f forKey: @"score"];
+    [doc2 setDouble: 3.23 forKey: @"gpa"];
+    [doc2 setBoolean: YES forKey: @"isFullTime"];
+    [doc2 setDate: [twoWeeksBack dateByAddingTimeInterval: aDayInterval] forKey: @"startDate"];
+    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setString: @"Alice" forKey: @"name"];
+    [doc3 setString: @"santa clara" forKey: @"city"];
+    [doc3 setNumber: @(102) forKey: @"code"];
+    [doc3 setInteger: 2017 forKey: @"year"];
+    [doc3 setLongLong: 123456791 forKey: @"id"];
+    [doc3 setFloat: 70.90f forKey: @"score"];
+    [doc3 setDouble: 3.30 forKey: @"gpa"];
+    [doc3 setBoolean: YES forKey: @"isFullTime"];
+    [doc3 setDate: twoWeeksBack forKey: @"startDate"];
+    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
+    [doc4 setString: @"Peter" forKey: @"name"];
+    [doc4 setString: @"santa clara" forKey: @"city"];
+    [doc4 setNumber: @(103) forKey: @"code"];
+    [doc4 setInteger: 2017 forKey: @"year"];
+    [doc4 setLongLong: 123456792 forKey: @"id"];
+    [doc4 setFloat: 59.90f forKey: @"score"];
+    [doc4 setDouble: 4.01 forKey: @"gpa"];
+    [doc4 setBoolean: YES forKey: @"isFullTime"];
+    [doc4 setDate: twoWeeksBack forKey: @"startDate"];
+    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
+    [doc1 setString: @"Sheryl" forKey: @"name"];
+    [doc5 setString: @"santa clara" forKey: @"city"];
+    [doc5 setNumber: @(104) forKey: @"code"];
+    [doc5 setInteger: 2017 forKey: @"year"];
+    [doc5 setLongLong: 123456793 forKey: @"id"];
+    [doc5 setFloat: 65.90f forKey: @"score"];
+    [doc5 setDouble: 3.52 forKey: @"gpa"];
+    [doc5 setBoolean: YES forKey: @"isFullTime"];
+    [doc5 setDate: [twoWeeksBack dateByAddingTimeInterval: 2 * aDayInterval] forKey: @"startDate"];
+    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc6 = [[CBLMutableDocument alloc] init];
+    [doc6 setString: @"Tom" forKey: @"name"];
+    [doc6 setString: @"santa clara" forKey: @"city"];
+    [doc6 setNumber: @(105) forKey: @"code"];
+    [doc6 setInteger: 2017 forKey: @"year"];
+    [doc6 setLongLong: 123456794 forKey: @"id"];
+    [doc6 setFloat: 65.92f forKey: @"score"];
+    [doc6 setDouble: 4.02 forKey: @"gpa"];
+    [doc6 setBoolean: NO forKey: @"isFullTime"];
+    [doc6 setDate: [twoWeeksBack dateByAddingTimeInterval: 2 * aDayInterval] forKey: @"startDate"];
+    Assert([_db saveDocument: doc6 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc7 = [[CBLMutableDocument alloc] init];
+    [doc7 setString: @"Casper" forKey: @"name"];
+    [doc7 setString: @"santa clara" forKey: @"city"];
+    [doc7 setNumber: @(106) forKey: @"code"];
+    [doc7 setInteger: 2017 forKey: @"year"];
+    [doc7 setLongLong: 123456795 forKey: @"id"];
+    [doc7 setFloat: 65.92f forKey: @"score"];
+    [doc7 setDouble: 4.02 forKey: @"gpa"];
+    [doc7 setBoolean: YES forKey: @"isFullTime"];
+    [doc7 setDate: twoWeeksBack forKey: @"startDate"];
+    Assert([_db saveDocument: doc7 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc8 = [[CBLMutableDocument alloc] init];
+    [doc8 setString: @"Casper" forKey: @"name"];
+    [doc8 setString: @"santa clara" forKey: @"city"];
+    [doc8 setNumber: @(106) forKey: @"code"];
+    [doc8 setInteger: 2017 forKey: @"year"];
+    [doc8 setLongLong: 123456796 forKey: @"id"];
+    [doc8 setFloat: 65.92f forKey: @"score"];
+    [doc8 setDouble: 4.02 forKey: @"gpa"];
+    [doc8 setBoolean: YES forKey: @"isFullTime"];
+    [doc8 setDate: [twoWeeksBack dateByAddingTimeInterval: 1 * aDayInterval] forKey: @"startDate"];
+    Assert([_db saveDocument: doc8 error: &error], @"Error when creating a document: %@", error);
+}
+
 
 - (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases {
     for (NSArray* c in cases) {
@@ -896,56 +998,57 @@
     AssertEqual(numRows, 15u);
 }
 
-
-- (void) testParameters {
-    [self loadNumbers: 10];
+- (void) testQueryParameters {
+    [self loadStudents];
     
-    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
-    CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"num1"];
-    CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"num2"];
+    CBLQueryExpression* PARAM_CITY = [CBLQueryExpression parameterNamed: @"city"];
+    CBLQueryExpression* PARAM_CODE = [CBLQueryExpression parameterNamed: @"code"];
+    CBLQueryExpression* PARAM_YEAR = [CBLQueryExpression parameterNamed: @"year"];
+    CBLQueryExpression* PARAM_ID = [CBLQueryExpression parameterNamed: @"id"];
+    CBLQueryExpression* PARAM_SCORE = [CBLQueryExpression parameterNamed: @"score"];
+    CBLQueryExpression* PARAM_GPA = [CBLQueryExpression parameterNamed: @"gpa"];
+    CBLQueryExpression* PARAM_IS_FULLTIME = [CBLQueryExpression parameterNamed: @"isFullTime"];
+    CBLQueryExpression* PARAM_START_DATE = [CBLQueryExpression parameterNamed: @"startDate"];
     
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: NUMBER1]]
+    CBLQueryExpression* qCity = [[CBLQueryExpression property: @"city"] equalTo: PARAM_CITY];
+    CBLQueryExpression* qCode = [[CBLQueryExpression property: @"code"] greaterThan: PARAM_CODE];
+    CBLQueryExpression* qYear = [[CBLQueryExpression property: @"year"] greaterThan: PARAM_YEAR];
+    CBLQueryExpression* qID = [[CBLQueryExpression property: @"id"] greaterThan: PARAM_ID];
+    CBLQueryExpression* qScore = [[CBLQueryExpression property: @"score"] greaterThan: PARAM_SCORE];
+    CBLQueryExpression* qGPA = [[CBLQueryExpression property: @"gpa"]
+                                greaterThanOrEqualTo: PARAM_GPA];
+    CBLQueryExpression* qIsFullTime = [[CBLQueryExpression property: @"isFullTime"]
+                                       equalTo: PARAM_IS_FULLTIME];
+    CBLQueryExpression* qStartDate = [[CBLQueryExpression property: @"startDate"]
+                                      greaterThan: PARAM_START_DATE];
+    CBLQueryExpression* where = [[[[[[[qCity andExpression: qCode]
+                                      andExpression: qYear]
+                                     andExpression: qID] andExpression: qScore]
+                                   andExpression: qGPA]
+                                  andExpression: qIsFullTime]
+                                 andExpression: qStartDate];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
-                                  orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
+                                    where: where];
     
     CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setInteger: 2 forName: @"num1"];
-    [params setNumber: @(5) forName: @"num2"];
+    [params setString: @"santa clara" forName: @"city"];
+    [params setNumber: @(100) forName: @"code"];
+    [params setInteger: 2016  forName: @"year"];
+    [params setLongLong: 123456791 forName: @"id"];
+    [params setFloat: 60.00f forName: @"score"];
+    [params setDouble: 4.0 forName: @"gpa"];
+    [params setBoolean: YES forName: @"isFullTime"];
+    NSDate* twoWeeksBack = [NSDate dateWithTimeIntervalSinceNow: -2 * 7 * 24 * 60 * 60];
+    [params setDate: twoWeeksBack forName: @"startDate"];
     
     q.parameters = params;
     
-    NSArray* expectedNumbers = @[@2, @3, @4, @5];
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
-        NSInteger number = [[r valueAtIndex: 0] integerValue];
-        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
-    }];
-    AssertEqual(numRows, 4u);
-}
-
-- (void) testStringQueryParameter {
-    [self loadJSONResource: @"names_100"];
-    
-    CBLQueryExpression* FIRST_NAME  = [CBLQueryExpression property: @"name.first"];
-    CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"name1"];
-    CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"name2"];
-    
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: FIRST_NAME]]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[FIRST_NAME equalTo: PARAM_N1] orExpression:
-                                            [FIRST_NAME equalTo: PARAM_N2]]];
-    
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setString: @"Kandra" forName: @"name1"];
-    [params setValue: @"Jeff" forName: @"name2"];
-    
-    q.parameters = params;
-    
-    NSArray* expectedNumbers = @[@"Kandra", @"Jeff"];
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
-        AssertEqualObjects([r stringAtIndex: 0], expectedNumbers[(NSUInteger)(n-1)]);
-    }];
-    AssertEqual(numRows, 2u);
+    NSError* error;
+    NSArray* allObjects = [[q execute: &error] allObjects];
+    AssertEqual(allObjects.count, 1u);
+    AssertEqualObjects([[allObjects.firstObject valueForKey: @"testdb"] stringForKey: @"name"],
+                       @"Casper");
 }
 
 - (void) testMeta {
