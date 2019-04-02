@@ -19,7 +19,7 @@
 import Foundation
 import CoreML
 
-/// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
+/// ENTERPRISE EDITION ONLY : UNCOMMITTED
 ///
 /// CoreMLPredictiveModel is a Core ML based implementation of the PredictiveModel
 /// protocol. Basically the CoreMLPredictiveModel used a Core ML model to return

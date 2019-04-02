@@ -18,7 +18,7 @@
 
 import Foundation
 
-/// ENTERPRISE EDITION ONLY : DEVELOPER PREVIEW
+/// ENTERPRISE EDITION ONLY : UNCOMMITTED
 ///
 /// The predictive index used for querying with prediction function. The predictive index
 /// is different from the normal index in that the predictive index will cache the prediction
