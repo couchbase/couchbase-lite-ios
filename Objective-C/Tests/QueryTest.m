@@ -923,12 +923,9 @@
     AssertEqual(numRows, 4u);
 }
 
-- (void) testQueryArrayBlobDictionaryParameters {
-    NSError* error;
-    
+- (void) testQueryArrayDictionaryParameters {
     // DOC 1
-    NSData* content = [@"I am cool." dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    NSError* error;
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
                                                                                @"2": @"pending",
                                                                                @"3": @"pending" }];
@@ -936,48 +933,32 @@
                                                                        @"920-123-4566"]];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setString: @"Jason" forKey: @"name"];
-    [doc1 setBlob: blob forKey: @"about"];
     [doc1 setDictionary: dict forKey: @"assignments"];
     [doc1 setArray: phones forKey: @"phone"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
-    // DOC 2
-    dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
-                                                         @"2": @"submitted",
-                                                         @"3": @"submitted" }];
-    phones = [[CBLMutableArray alloc] initWithData: @[@"920-456-7890",
-                                                      @"920-123-4566"]];
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
-    [doc2 setString: @"Bob" forKey: @"name"];
-    [doc2 setBlob: blob forKey: @"about"];
-    [doc2 setDictionary: dict forKey: @"assignments"];
-    [doc2 setArray: phones forKey: @"phone"];
-    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
-    
     // DOC 3
+    dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
+                                                         @"2": @"pending",
+                                                         @"3": @"submitted" }];
     phones = [[CBLMutableArray alloc] initWithData: @[@"920-123-4567"]];
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setString: @"Alice" forKey: @"name"];
-    [doc3 setBlob: blob forKey: @"about"];
     [doc3 setDictionary: dict forKey: @"assignments"];
     [doc3 setArray: phones forKey: @"phone"];
     Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
     
-    CBLQueryExpression* PARAM_ABOUT = [CBLQueryExpression parameterNamed: @"about"];
     CBLQueryExpression* PARAM_ASSIGNMENTS = [CBLQueryExpression parameterNamed: @"assignments"];
     CBLQueryExpression* PARAM_PHONE = [CBLQueryExpression parameterNamed: @"phone"];
     
-    CBLQueryExpression* qAbout = [[CBLQueryExpression property: @"about"] equalTo: PARAM_ABOUT];
     CBLQueryExpression* qAssignments = [[CBLQueryExpression property: @"assignments"]
                                         equalTo: PARAM_ASSIGNMENTS];
     CBLQueryExpression* qPhone = [[CBLQueryExpression property: @"phone"] equalTo: PARAM_PHONE];
-    CBLQueryExpression* where = [[qAssignments andExpression: qPhone] andExpression: qAbout];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: where];
+                                    where: [qAssignments andExpression: qPhone]];
     
     CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setBlob: blob forName: @"about"];
     [params setDictionary: dict forName: @"assignments"];
     [params setArray: phones  forName: @"phone"];
     
