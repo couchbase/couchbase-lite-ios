@@ -1053,23 +1053,33 @@
     CBLQueryExpression* LNAME = [CBLQueryExpression property: @"name.last"];
     CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
     CBLQueryExpression* CITY = [CBLQueryExpression property: @"contact.address.city"];
+    CBLQueryExpression* EMAIL = [CBLQueryExpression property: @"contact.email"];
+    CBLQueryExpression* ADDRESS = [CBLQueryExpression property: @"contact.address"];
     
     CBLQuerySelectResult* S_FNAME = [CBLQuerySelectResult expression: FNAME as: @"firstname"];
     CBLQuerySelectResult* S_LNAME = [CBLQuerySelectResult expression: LNAME as: @"lastname"];
     CBLQuerySelectResult* S_GENDER = [CBLQuerySelectResult expression: GENDER];
     CBLQuerySelectResult* S_CITY = [CBLQuerySelectResult expression: CITY];
+    CBLQuerySelectResult* S_EMAIL = [CBLQuerySelectResult expression: EMAIL as: @"email"];
+    CBLQuerySelectResult* S_ADDRESS = [CBLQuerySelectResult expression: ADDRESS as: @"address"];
     
-    CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_GENDER, S_CITY]
+    CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_GENDER, S_CITY, S_EMAIL, S_ADDRESS]
                                      from: [CBLQueryDataSource database: self.db]];
     
+    NSSet* keys = [NSSet setWithObjects: @"lastname", @"email",
+                   @"address", @"city", @"firstname", @"gender", nil];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
-        AssertEqual(r.count, 4u);
+        AssertEqual(r.count, 6u);
         AssertEqualObjects([r valueForKey: @"firstname"], [r valueAtIndex: 0]);
+        AssertEqualObjects(r[0].string, r[@"firstname"].string);
         AssertEqualObjects([r valueForKey: @"lastname"], [r valueAtIndex: 1]);
         AssertEqualObjects([r valueForKey: @"gender"], [r valueAtIndex: 2]);
         AssertEqualObjects([r valueForKey: @"city"], [r valueAtIndex: 3]);
+        AssertEqualObjects([r arrayForKey: @"email"], [r arrayAtIndex: 4]);
+        AssertEqualObjects([r dictionaryForKey: @"address"], [r dictionaryAtIndex: 5]);
+        AssertEqualObjects([NSSet setWithArray: [r keys]], keys); // using set will ignore the order
     }];
     AssertEqual((int)numRows, 100);
 }
