@@ -26,6 +26,8 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrdering.h"
 #import "CBLQueryResultArray.h"
+#import "CBLValueExpression.h"
+#import "CBLQueryExpression+Internal.h"
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
@@ -2327,6 +2329,38 @@
                 [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
     AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
                 [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
+}
+
+#pragma mark - Value Expression
+
+- (void) testValueExpressionUnsupportedValueType {
+    NSData* data = [[NSData alloc] init];
+    @try {
+        CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: data];
+        AssertNil(v);
+    } @catch (NSException *exception) {
+        AssertEqualObjects(exception.name, @"NSInternalInconsistencyException");
+    }
+}
+
+- (void) testValueExpression {
+    CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: nil];
+    AssertEqualObjects([v asJSON], [NSNull null]);
+    
+    v = [[CBLValueExpression alloc] initWithValue: [NSDate dateWithTimeIntervalSince1970: 1]];
+    AssertEqualObjects([v asJSON], @"1970-01-01T00:00:01.000Z");
+    
+    v = [[CBLValueExpression alloc] initWithValue: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                    @"value101", @"key101", nil]];
+    AssertEqualObjects([v asJSON], @{@"key101": @"value101"});
+    
+    NSArray* expectedResult= @[ @"[]", @"item1", @"item2" ];
+    v = [[CBLValueExpression alloc] initWithValue: [NSArray arrayWithObjects:
+                                                    @"item1", @"item2", nil]];
+    AssertEqualObjects([v asJSON], expectedResult);
+    
+    v = [[CBLValueExpression alloc] initWithValue: [CBLQueryExpression number: @21]];
+    AssertEqualObjects([v asJSON], @21);
 }
 
 @end
