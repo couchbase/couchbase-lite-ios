@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLMisc.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -37,5 +38,26 @@
     AssertEqualObjects(dateStr2, dateStr1);
 }
 
+- (void) testCBLIsFileExistsError {
+    NSError* error;
+    
+    NSString* res = [@"Support" stringByAppendingPathComponent: @"SelfSigned"];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: res
+                                                                       ofType: @"cer"];
+    BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath: path
+                                             withIntermediateDirectories: YES
+                                                              attributes: nil
+                                                                   error: &error];
+    AssertFalse(success);
+    Assert(CBLIsFileExistsError(error));
+    
+    error = nil;
+    success = [[NSFileManager defaultManager] createDirectoryAtPath: @""
+                                        withIntermediateDirectories: YES
+                                                         attributes: nil
+                                                              error: &error];
+    AssertFalse(success);
+    AssertFalse(CBLIsFileExistsError(error));
+}
 
 @end
