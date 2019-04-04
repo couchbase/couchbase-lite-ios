@@ -61,7 +61,7 @@
     
     if (trust) { CFRelease(trust); }
     NSURLCredential* credential = [trustCheck checkTrust: &error];
-    AssertNotNil(credential);
+    AssertNotNil(credential, @"Credentials is empty, certificate is expired or is invalid.");
 }
 
 @end
