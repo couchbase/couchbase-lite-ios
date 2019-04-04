@@ -19,7 +19,6 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
-#import "CBLTrustCheck.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -36,58 +35,6 @@
     XCTAssertEqualWithAccuracy(date2.timeIntervalSinceReferenceDate,
                                date1.timeIntervalSinceReferenceDate, 0.0001);
     AssertEqualObjects(dateStr2, dateStr1);
-}
-
-- (void) testTrustCheckSelfSignedCertificateBasicPolicy {
-    NSError* error;
-    SecTrustRef trust;
-    
-    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
-    SecCertificateRef certificate = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
-    NSArray* certArray = @[ (__bridge id)certificate ];
-    if (certificate) { CFRelease(certificate); }
-    
-    SecPolicyRef policy = SecPolicyCreateBasicX509();
-    OSStatus status = SecTrustCreateWithCertificates((__bridge CFTypeRef)certArray,
-                                                     policy,
-                                                     &trust);
-    if (policy) { CFRelease(policy); }
-    AssertEqual(status, errSecSuccess);
-    
-    [CBLTrustCheck setAnchorCerts: certArray onlyThese: NO];
-    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust
-                                                                host: @"https://www.couchbase.com/"
-                                                                port: 443];
-    
-    if (trust) { CFRelease(trust); }
-    NSURLCredential* credential = [trustCheck checkTrust: &error];
-    AssertNotNil(credential, @"Credentials is empty, certificate is expired or is invalid.");
-}
-
-- (void) testTrustCheckSelfSignedCertificateWithSSLPolicy {
-    NSError* error;
-    SecTrustRef trust;
-    
-    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
-    SecCertificateRef certificate = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
-    NSArray* certArray = @[ (__bridge id)certificate ];
-    if (certificate) { CFRelease(certificate); }
-    
-    SecPolicyRef policy = SecPolicyCreateSSL(YES, (__bridge CFStringRef)@"https://www.couchbase.com/");
-    OSStatus status = SecTrustCreateWithCertificates((__bridge CFTypeRef)certArray,
-                                                     policy,
-                                                     &trust);
-    if (policy) { CFRelease(policy); }
-    AssertEqual(status, errSecSuccess);
-    
-    [CBLTrustCheck setAnchorCerts: certArray onlyThese: NO];
-    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust
-                                                                host: @"https://www.couchbase.com/"
-                                                                port: 443];
-    
-    if (trust) { CFRelease(trust); }
-    NSURLCredential* credential = [trustCheck checkTrust: &error];
-    AssertNil(credential);
 }
 
 @end
