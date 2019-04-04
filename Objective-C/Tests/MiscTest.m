@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLTrustCheck.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -37,5 +38,30 @@
     AssertEqualObjects(dateStr2, dateStr1);
 }
 
+- (void) testTrustCheckSelfSignedCertificate {
+    NSError* error;
+    SecTrustRef trust;
+    
+    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
+    SecCertificateRef certificate = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    NSArray* certArray = @[ (__bridge id)certificate ];
+    if (certificate) { CFRelease(certificate); }
+    
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
+    OSStatus status = SecTrustCreateWithCertificates((__bridge CFTypeRef)certArray,
+                                                     policy,
+                                                     &trust);
+    if (policy) { CFRelease(policy); }
+    AssertEqual(status, errSecSuccess);
+    
+    [CBLTrustCheck setAnchorCerts: certArray onlyThese: NO];
+    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust
+                                                                host: @"https://www.couchbase.com/"
+                                                                port: 443];
+    
+    if (trust) { CFRelease(trust); }
+    NSURLCredential* credential = [trustCheck checkTrust: &error];
+    AssertNotNil(credential);
+}
 
 @end
