@@ -19,6 +19,9 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLMisc.h"
+#import "CBLBase64.h"
+#import "CBLParseDate.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -37,5 +40,59 @@
     AssertEqualObjects(dateStr2, dateStr1);
 }
 
+- (void) testCBLIsFileExistsError {
+    NSError* error;
+    
+    NSString* res = [@"Support" stringByAppendingPathComponent: @"SelfSigned"];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: res
+                                                                       ofType: @"cer"];
+    BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath: path
+                                             withIntermediateDirectories: YES
+                                                              attributes: nil
+                                                                   error: &error];
+    AssertFalse(success);
+    Assert(CBLIsFileExistsError(error));
+    
+    error = nil;
+    success = [[NSFileManager defaultManager] createDirectoryAtPath: @""
+                                        withIntermediateDirectories: YES
+                                                         attributes: nil
+                                                              error: &error];
+    AssertFalse(success);
+    AssertFalse(CBLIsFileExistsError(error));
+
+}
+
+#pragma mark - Base64
+
+- (void) testBase64EncodeDecodeData {
+    NSString* stringToEncode = @"passingword";
+    NSData* rawData = [stringToEncode dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* encodedString = [CBLBase64 encode: rawData];
+    AssertNotNil(encodedString);
+    
+    NSData* retrievedData = [CBLBase64 decode: encodedString];
+    AssertNotNil(retrievedData);
+    AssertEqualObjects(retrievedData, rawData);
+    AssertEqualObjects(stringToEncode, [[NSString alloc] initWithData: retrievedData
+                                                             encoding: NSUTF8StringEncoding]);
+}
+
+- (void) testBase64EncodeDecodeURLSafe {
+    NSData* retrievedData = [CBLBase64 decodeURLSafe: @"cGFzcyt3b3JkL2NoZWNrP29ubHk"];
+    AssertNotNil(retrievedData);
+    AssertEqualObjects([[NSString alloc] initWithData: retrievedData
+                                             encoding: NSUTF8StringEncoding],
+                       @"pass+word/check?only");
+}
+
+#pragma mark - Parse Date
+
+- (void) testCBLParseISO8601Date {
+    AssertEqual(CBLParseISO8601Date("1970-01-01T00:00:01.000Z"), 1.0);
+    AssertEqual(CBLParseISO8601Date("2018-10-23T11:33:01-0700"), 1540319581);
+    AssertEqual(CBLParseISO8601Date("2020-02-29T23:59:59.000000+0000"), 1583020799);
+    Assert(CBLParseISO8601Date("1970-01-01T00:00:00.123Z") - 0.123 < 0.0001);
+}
 
 @end

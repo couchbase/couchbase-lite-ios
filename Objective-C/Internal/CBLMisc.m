@@ -37,28 +37,6 @@ NSString* CBLCreateUUID() {
     return uuid;
 }
 
-
-char* CBLAppendHex( char *dst, const void* bytes, size_t length) {
-    const uint8_t* chars = bytes;
-    static const char kDigit[16] = "0123456789abcdef";
-    for( size_t i=0; i<length; i++ ) {
-        *(dst++) = kDigit[chars[i] >> 4];
-        *(dst++) = kDigit[chars[i] & 0xF];
-    }
-    *dst = '\0';
-    return dst;
-}
-
-
-NSString* CBLHexFromBytes( const void* bytes, size_t length) {
-    char hex[2*length + 1];
-    CBLAppendHex(hex, bytes, length);
-    return [[NSString alloc] initWithBytes: hex
-                                    length: 2*length
-                                  encoding: NSASCIIStringEncoding];
-}
-
-
 BOOL CBLIsFileExistsError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
