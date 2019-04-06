@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLMisc.h"
 #import "CBLBase64.h"
 #import "CBLParseDate.h"
 
@@ -37,6 +38,29 @@
     XCTAssertEqualWithAccuracy(date2.timeIntervalSinceReferenceDate,
                                date1.timeIntervalSinceReferenceDate, 0.0001);
     AssertEqualObjects(dateStr2, dateStr1);
+}
+
+- (void) testCBLIsFileExistsError {
+    NSError* error;
+    
+    NSString* res = [@"Support" stringByAppendingPathComponent: @"SelfSigned"];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: res
+                                                                       ofType: @"cer"];
+    BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath: path
+                                             withIntermediateDirectories: YES
+                                                              attributes: nil
+                                                                   error: &error];
+    AssertFalse(success);
+    Assert(CBLIsFileExistsError(error));
+    
+    error = nil;
+    success = [[NSFileManager defaultManager] createDirectoryAtPath: @""
+                                        withIntermediateDirectories: YES
+                                                         attributes: nil
+                                                              error: &error];
+    AssertFalse(success);
+    AssertFalse(CBLIsFileExistsError(error));
+
 }
 
 #pragma mark - Base64
