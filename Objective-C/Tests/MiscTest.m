@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLBase64.h"
 #import "CBLParseDate.h"
 
 @interface MiscTest : CBLTestCase
@@ -36,6 +37,29 @@
     XCTAssertEqualWithAccuracy(date2.timeIntervalSinceReferenceDate,
                                date1.timeIntervalSinceReferenceDate, 0.0001);
     AssertEqualObjects(dateStr2, dateStr1);
+}
+
+#pragma mark - Base64
+
+- (void) testBase64EncodeDecodeData {
+    NSString* stringToEncode = @"passingword";
+    NSData* rawData = [stringToEncode dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* encodedString = [CBLBase64 encode: rawData];
+    AssertNotNil(encodedString);
+    
+    NSData* retrievedData = [CBLBase64 decode: encodedString];
+    AssertNotNil(retrievedData);
+    AssertEqualObjects(retrievedData, rawData);
+    AssertEqualObjects(stringToEncode, [[NSString alloc] initWithData: retrievedData
+                                                             encoding: NSUTF8StringEncoding]);
+}
+
+- (void) testBase64EncodeDecodeURLSafe {
+    NSData* retrievedData = [CBLBase64 decodeURLSafe: @"cGFzcyt3b3JkL2NoZWNrP29ubHk"];
+    AssertNotNil(retrievedData);
+    AssertEqualObjects([[NSString alloc] initWithData: retrievedData
+                                             encoding: NSUTF8StringEncoding],
+                       @"pass+word/check?only");
 }
 
 #pragma mark - Parse Date
