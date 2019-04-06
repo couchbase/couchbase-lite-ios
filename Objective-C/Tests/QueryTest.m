@@ -1053,6 +1053,53 @@
                        @"Casper");
 }
 
+- (void) testQueryArrayDictionaryParameters {
+    // DOC 1
+    NSError* error;
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
+                                                                               @"2": @"pending",
+                                                                               @"3": @"pending" }];
+    CBLMutableArray* phones = [[CBLMutableArray alloc] initWithData: @[@"920-456-7890",
+                                                                       @"920-123-4566"]];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setString: @"Jason" forKey: @"name"];
+    [doc1 setDictionary: dict forKey: @"assignments"];
+    [doc1 setArray: phones forKey: @"phone"];
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    
+    // DOC 3
+    dict = [[CBLMutableDictionary alloc] initWithData: @{@"1": @"submitted",
+                                                         @"2": @"pending",
+                                                         @"3": @"submitted" }];
+    phones = [[CBLMutableArray alloc] initWithData: @[@"920-123-4567"]];
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setString: @"Alice" forKey: @"name"];
+    [doc3 setDictionary: dict forKey: @"assignments"];
+    [doc3 setArray: phones forKey: @"phone"];
+    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLQueryExpression* PARAM_ASSIGNMENTS = [CBLQueryExpression parameterNamed: @"assignments"];
+    CBLQueryExpression* PARAM_PHONE = [CBLQueryExpression parameterNamed: @"phone"];
+    
+    CBLQueryExpression* qAssignments = [[CBLQueryExpression property: @"assignments"]
+                                        equalTo: PARAM_ASSIGNMENTS];
+    CBLQueryExpression* qPhone = [[CBLQueryExpression property: @"phone"] equalTo: PARAM_PHONE];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [qAssignments andExpression: qPhone]];
+    
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setDictionary: dict forName: @"assignments"];
+    [params setArray: phones  forName: @"phone"];
+    
+    q.parameters = [[CBLQueryParameters alloc] initWithParameters: params];
+    
+    NSArray* allObjects = [[q execute: &error] allObjects];
+    AssertEqual(allObjects.count, 1u);
+    AssertEqualObjects([[allObjects.firstObject valueForKey: @"testdb"] stringForKey: @"name"],
+                       @"Alice");
+}
+
 - (void) testMeta {
     [self loadNumbers: 5];
     
