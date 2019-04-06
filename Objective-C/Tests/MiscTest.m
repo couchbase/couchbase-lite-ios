@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
 #import "CBLBase64.h"
+#import "CBLParseDate.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -59,6 +60,15 @@
     AssertEqualObjects([[NSString alloc] initWithData: retrievedData
                                              encoding: NSUTF8StringEncoding],
                        @"pass+word/check?only");
+}
+
+#pragma mark - Parse Date
+
+- (void) testCBLParseISO8601Date {
+    AssertEqual(CBLParseISO8601Date("1970-01-01T00:00:01.000Z"), 1.0);
+    AssertEqual(CBLParseISO8601Date("2018-10-23T11:33:01-0700"), 1540319581);
+    AssertEqual(CBLParseISO8601Date("2020-02-29T23:59:59.000000+0000"), 1583020799);
+    Assert(CBLParseISO8601Date("1970-01-01T00:00:00.123Z") - 0.123 < 0.0001);
 }
 
 @end

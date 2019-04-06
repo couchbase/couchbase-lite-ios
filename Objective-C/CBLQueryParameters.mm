@@ -21,6 +21,7 @@
 #import "CBLQuery+Internal.h"
 #import "CBLArray.h"
 #import "CBLBlob.h"
+#import "CBLData.h"
 #import "CBLStatus.h"
 #import "fleece/Fleece.hh"
 
@@ -67,6 +68,8 @@ using namespace fleece;
     
     if (!value)
         value = [NSNull null]; // Only for Apple platform
+    
+    value = [value cbl_toCBLObject];
     
     _data[name] = value;
 }
