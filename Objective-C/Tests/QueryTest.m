@@ -966,7 +966,7 @@
     CBLQuery* q = [CBLQueryBuilder select: @[mainDocID, secondaryDocID, secondaryTheOne]
                                      from: mainDS
                                      join: @[join]];
-    uint64 numRows = [self verifyQuery: q randomAccess: NO test:^(uint64_t n, CBLQueryResult * _Nonnull result) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO test:^(uint64_t n, CBLQueryResult * _Nonnull result) {
         AssertEqual(n, 1u);
         NSString* docID = [result stringForKey: @"mainDocID"];
         CBLDocument* doc = [self.db documentWithID: docID];
