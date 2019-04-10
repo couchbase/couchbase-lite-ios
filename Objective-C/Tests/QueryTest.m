@@ -933,6 +933,52 @@
     AssertEqual(numRows, 100u);
 }
 
+- (void) testJoinByDocID {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"joinme"];
+    [doc1 setInteger: 42 forKey: @"theone"];
+    [doc1 setString: @"doc1" forKey: @"numberID"];
+    [self saveDocument: doc1];
+    
+    // datasources
+    CBLQueryDataSource* mainDS = [CBLQueryDataSource database: self.db as: @"main"];
+    CBLQueryDataSource* secondaryDS = [CBLQueryDataSource database: self.db as: @"secondary"];
+    
+    // create the join statement
+    CBLQueryExpression* mainPropExpr = [CBLQueryMeta idFrom: @"main"];
+    CBLQueryExpression* secondaryExpr = [CBLQueryExpression property: @"numberID"
+                                                                from: @"secondary"];
+    CBLQueryExpression* joinExpr = [mainPropExpr equalTo: secondaryExpr];
+    CBLQueryJoin* join = [CBLQueryJoin innerJoin: secondaryDS on: joinExpr];
+    
+    // select result statement
+    CBLQuerySelectResult* mainDocID = [CBLQuerySelectResult expression: mainPropExpr
+                                                                    as: @"mainDocID"];
+    CBLQuerySelectResult* secondaryDocID = [CBLQuerySelectResult expression: [CBLQueryMeta
+                                                                              idFrom: @"secondary"]
+                                                                         as: @"secondaryDocID"];
+    CBLQuerySelectResult* secondaryTheOne = [CBLQuerySelectResult
+                                             expression: [CBLQueryExpression property: @"theone"
+                                                                                 from:@"secondary"]];
+    
+    // query
+    CBLQuery* q = [CBLQueryBuilder select: @[mainDocID, secondaryDocID, secondaryTheOne]
+                                     from: mainDS
+                                     join: @[join]];
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO test:^(uint64_t n, CBLQueryResult * _Nonnull result) {
+        AssertEqual(n, 1u);
+        NSString* docID = [result stringForKey: @"mainDocID"];
+        CBLDocument* doc = [self.db documentWithID: docID];
+        AssertEqual([doc integerForKey: @"number1"], 1u);
+        AssertEqual([doc integerForKey: @"number2"], 99u);
+        
+        AssertEqualObjects([result stringForKey: @"secondaryDocID"], @"joinme");
+        AssertEqual([result integerForKey: @"theone"], 42u);
+    }];
+    AssertEqual(numRows, 1u);
+}
+
 
 - (void) testGroupBy {
     NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
