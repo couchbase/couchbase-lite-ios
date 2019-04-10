@@ -1189,6 +1189,24 @@
 }
 
 
+- (void) testSelectAllWithDatabaseAlias {
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setString: @"doc1" forKey: @"someKey"];
+    [self saveDocument: doc1];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult allFrom: @"databaseAliasName"]]
+                                     from: [CBLQueryDataSource database: self.db as: @"databaseAliasName"]];
+    Assert(q);
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqualObjects([r dictionaryAtIndex: 0],
+                           [r dictionaryForKey: @"databaseAliasName"]);
+    }];
+    AssertEqual(numRows, 1u);
+}
+
+
 - (void) testGenerateJSONCollation {
     NSArray* collations =
         @[[CBLQueryCollation asciiWithIgnoreCase: NO],
