@@ -1506,8 +1506,8 @@ class QueryTest: CBLTestCase {
         let expiry = Date(timeIntervalSinceNow: 120)
         try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
-            let q = QueryBuilder
-                .select(SelectResult.expression(Meta.id))
+        let q = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .where(Meta.expiration
                 .greaterThan(Expression
