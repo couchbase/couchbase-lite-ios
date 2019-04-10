@@ -423,6 +423,51 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
     }
     
+    func testJoinByDocID() throws {
+        try loadNumbers(100)
+        
+        let doc = MutableDocument(id: "joinme")
+        doc.setInt(42, forKey: "theone")
+        doc.setString("doc1", forKey: "numberID")
+        try db.saveDocument(doc)
+        
+        let mainDS = DataSource.database(db).as("main")
+        let secondaryDS = DataSource.database(db).as("secondary")
+        
+        let mainPropExpr = Meta.id.from("main")
+        let secondaryExpr = Expression.property("numberID").from("secondary")
+        let joinExpr = mainPropExpr.equalTo(secondaryExpr)
+        let join = Join.innerJoin(secondaryDS).on(joinExpr)
+        
+        let mainDocID = SelectResult.expression(mainPropExpr).as("mainDocID")
+        let secondaryDocID = SelectResult.expression(Meta.id.from("secondary")).as("secondaryDocID")
+        let secondaryTheOne = SelectResult.expression(Expression.property("theone").from("secondary"))
+        
+        let q = QueryBuilder
+            .select(mainDocID, secondaryDocID, secondaryTheOne)
+            .from(mainDS)
+            .join(join)
+        let numRows = try verifyQuery(q) { (n, row) in
+            XCTAssertEqual(n, 1)
+            
+            guard
+                let docID = row.string(forKey: "mainDocID"),
+                let doc = db.document(withID: docID)
+                else {
+                    assertionFailure()
+                    return
+            }
+            
+            XCTAssertEqual(doc.int(forKey: "number1"), 1)
+            XCTAssertEqual(doc.int(forKey: "number2"), 99)
+            
+            XCTAssertEqual(row.string(forKey: "secondaryDocID"), "joinme")
+            XCTAssertEqual(row.int(forKey: "theone"), 42)
+        }
+        
+        XCTAssertEqual(numRows, 1)
+    }
+    
     func testGroupBy() throws {
         var expectedStates  = ["AL",    "CA",    "CO",    "FL",    "IA"]
         var expectedCounts  = [1,       6,       1,       1,       3]
@@ -1461,8 +1506,8 @@ class QueryTest: CBLTestCase {
         let expiry = Date(timeIntervalSinceNow: 120)
         try db.setDocumentExpiration(withID: doc.id, expiration: expiry)
         
-        let q = QueryBuilder
-            .select(SelectResult.expression(Meta.id))
+            let q = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .where(Meta.expiration
                 .greaterThan(Expression
