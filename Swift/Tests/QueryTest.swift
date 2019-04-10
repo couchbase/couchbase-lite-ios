@@ -1031,6 +1031,22 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testSelectAllWithDatabaseAlias() throws {
+        let doc = MutableDocument()
+        doc.setString("doc1", forKey: "someKey")
+        try db.saveDocument(doc)
+        
+        let q = QueryBuilder
+            .select(SelectResult.all().from("databaseAliasName"))
+            .from(DataSource.database(db).as("databaseAliasName"))
+        
+        let numRows = try verifyQuery(q) { (n, r) in
+            XCTAssertEqual(r.dictionary(at: 0), r.dictionary(forKey: "databaseAliasName"));
+        }
+        XCTAssertEqual(numRows, 1)
+    }
+    
+    
     func testUnicodeCollationWithLocale() throws {
         let letters = ["B", "A", "Z", "Å"]
         for letter in letters {
