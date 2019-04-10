@@ -113,8 +113,16 @@
 
 - (void) testStringWithJSONObject {
     NSError* error;
-    NSArray* ins = @[@[@"couchbase-mobile"], @{@"couch": @"base", @"lite": @2.5}, @[[NSNull null]], @[]];
-    NSArray* outs = @[@"[\"couchbase-mobile\"]", @"{\"couch\":\"base\",\"lite\":2.5}", @"[null]", @"[]"];
+    NSArray* ins = @[
+                     @[@"couchbase-mobile"],
+                     @{@"couch": @"base", @"lite": @2.5},
+                     @[[NSNull null]],
+                     @[]];
+    NSArray* outs = @[
+                      @"[\"couchbase-mobile\"]",
+                      @"{\"couch\":\"base\",\"lite\":2.5}",
+                      @"[null]",
+                      @"[]"];
     for (NSUInteger i = 0; i < [ins count]; i++) {
         id input = ins[i];
         NSString* string = [CBLJSON stringWithJSONObject: input
@@ -122,7 +130,6 @@
                                                    error: &error];
         AssertEqualObjects(string, outs[i]);
     }
-    
 }
 
 @end
