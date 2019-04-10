@@ -93,9 +93,8 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
 }
 
 static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, va_list args) {
-    // Message:
-    static char formatBuffer[2048];
-    vsnprintf(formatBuffer, sizeof(formatBuffer), fmt, args);
+    // Log message has been preformatted.
+    // c4log_writeToCallback() is called with preformatted=true:
     NSString* message = [NSString stringWithUTF8String: fmt];
     
     // Send to console and custom logger:
