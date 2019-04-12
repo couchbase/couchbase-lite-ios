@@ -567,36 +567,36 @@
     [joinmeCopy setValue: @42 forKey: @"theone"];
     [self saveDocument: joinmeCopy];
     
-    CBLQuerySelectResult* MAIN_DOC_ID =
-        [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    CBLQueryExpression* propNum1 = [CBLQueryExpression property: @"number1" from: @"main"];
+    CBLQueryExpression* propNum2 = [CBLQueryExpression property: @"number2" from: @"main"];
+    CBLQueryExpression* propTheOne = [CBLQueryExpression property: @"theone" from: @"secondary"];
     
-    CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
-                              equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
     CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
-                                         on: on];
-    CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID]
+                                         on: [propNum1 equalTo: propTheOne]];
+    CBLQueryJoin* innerJoin;
+    innerJoin = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                on: [propNum1 equalTo: propTheOne]];
+    
+    // select from join: this should return 2 similar rows with same value.
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: propNum2]]
                                      from: [CBLQueryDataSource database: self.db as: @"main"]
                                      join: @[join]];
     Assert(q);
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES
-                                    test: ^(uint64_t n, CBLQueryResult* r)
-                        {
-                            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
-                            AssertEqual([doc integerForKey:@"number1"], 42);
-                        }];
+    uint64_t numRows = 0;
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqual([r integerForKey: @"number2"], 58, @"because that was the number stored in \
+                    'number2' of the matching doc");
+    }];
     AssertEqual(numRows, 2u);
 
-    q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult
-                                            expression: [CBLQueryExpression property: @"number1"
-                                                                                from: @"main"]]]
+    // select distinct from join: this should return only single row!!
+    q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult expression: propNum1]]
                                    from: [CBLQueryDataSource database: self.db as: @"main"]
-                                   join: @[join]];
+                                   join: @[innerJoin]];
     Assert(q);
-    numRows = [self verifyQuery: q randomAccess: YES
-                           test: ^(uint64_t n, CBLQueryResult* r)
-               {
-                   AssertEqual([r integerForKey: @"number1"], 42);
-               }];
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqual([r integerForKey: @"number1"], 42);
+    }];
     AssertEqual(numRows, 1u);
 }
 
