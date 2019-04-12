@@ -306,10 +306,12 @@
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
     config.maxSize = 1024;
+    config.maxRotateCount = 2;
     CBLDatabase.log.file.config = config;
     CBLDatabase.log.file.level = kCBLLogLevelDebug;
     
-    // this should create two files, as the 1KB + extra ~400-500Bytes.
+    // this should create three files, as the 1KB + 1KB + extra ~400-500Bytes.
+    [self writeOneKiloByteOfLog];
     [self writeOneKiloByteOfLog];
     
     NSUInteger totalFilesShouldBeInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
