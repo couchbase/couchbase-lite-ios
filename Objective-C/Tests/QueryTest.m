@@ -28,6 +28,7 @@
 #import "CBLQueryResultArray.h"
 #import "CBLValueExpression.h"
 #import "CBLQueryExpression+Internal.h"
+#import "CBLUnaryExpression.h"
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
@@ -2600,5 +2601,44 @@
     v = [[CBLValueExpression alloc] initWithValue: [CBLQueryExpression number: @21]];
     AssertEqualObjects([v asJSON], @21);
 }
+
+- (void) testUnaryQueryExpression {
+    NSDate* nw = [NSDate date];
+    CBLMutableDocument* doc1 = [self createDocument];
+    [doc1 setDate: nw forKey: @"now"];
+    [self saveDocument: doc1];
+    
+    CBLMutableDocument* doc2 = [self createDocument];
+    [self saveDocument: doc2];
+    
+    CBLUnaryExpression* notNull;
+    CBLUnaryExpression* notMiss;
+    CBLQueryExpression* propNow = [CBLQueryExpression property: @"now"];
+    notNull = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotNull];
+    notMiss = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotMissing];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [notNull orExpression: notMiss]];
+    uint64_t rows = [self verifyQuery: q randomAccess: YES
+                                 test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                                     NSDate* savedDate = [[result dictionaryAtIndex: 0]
+                                                          dateForKey: @"now"];
+                                     Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                                 }];
+    AssertEqual(rows, 1u);
+    
+    // check same result is produced with notNullOrMissing.
+    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [propNow notNullOrMissing]];
+    rows = [self verifyQuery: q randomAccess: YES
+                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
+                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                        }];
+    AssertEqual(rows, 1u);
+}
+
 
 @end
