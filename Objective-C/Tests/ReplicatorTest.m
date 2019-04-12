@@ -265,6 +265,18 @@
 }
 
 
+- (NSString*) getCertificateID: (SecCertificateRef)cert {
+    CFErrorRef* errRef = NULL;
+    if (@available(macOS 10.13, iOS 11.0, *)) {
+        NSData* data = (NSData*)CFBridgingRelease(SecCertificateCopySerialNumberData(cert, errRef));
+        Assert(errRef == NULL);
+        return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    } else {
+        return (NSString*) CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
+    }
+}
+
+
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
@@ -2450,17 +2462,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqualObjects(repl.config.pullFilter, pushFilter);
     Assert([repl.config.pushFilter isEqual: pullFilter]);
     Assert([repl.config.pullFilter isEqual: pushFilter]);
-}
-
-- (NSString*) getCertificateID: (SecCertificateRef)cert {
-    CFErrorRef* errRef = NULL;
-    if (@available(macOS 10.13, iOS 11.0, *)) {
-        NSData* data = (NSData*)CFBridgingRelease(SecCertificateCopySerialNumberData(cert, errRef));
-        Assert(errRef == NULL);
-        return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-    } else {
-        return (NSString*) CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
-    }
 }
 
 - (void) testReplicationConfigSetterMethods {
