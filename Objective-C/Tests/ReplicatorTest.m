@@ -2452,6 +2452,53 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     Assert([repl.config.pullFilter isEqual: pushFilter]);
 }
 
+- (NSString*) getCertificateID: (SecCertificateRef)cert {
+    CFErrorRef* errRef = NULL;
+    if (@available(macOS 10.13, iOS 11.0, *)) {
+        NSData* data = (NSData*)CFBridgingRelease(SecCertificateCopySerialNumberData(cert, errRef));
+        Assert(errRef == NULL);
+        return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    } else {
+        return (NSString*) CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
+    }
+}
+
+- (void) testReplicationConfigSetterMethods {
+    CBLBasicAuthenticator* basic = [[CBLBasicAuthenticator alloc] initWithUsername: @"abcd"
+                                                                          password: @"efgh"];
+    
+    id target = [[CBLURLEndpoint alloc]
+                 initWithURL: [NSURL URLWithString: @"ws://foo.couchbase.com/db"]];
+    CBLReplicatorConfiguration* temp = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: YES];
+    [temp setContinuous: YES];
+    [temp setAuthenticator: basic];
+    
+    NSArray* channels = [NSArray arrayWithObjects: @"channel1", @"channel2", @"channel3", nil];
+    [temp setChannels: channels];
+    
+    NSArray* docIds = [NSArray arrayWithObjects: @"docID1", @"docID2", nil];
+    [temp setDocumentIDs: docIds];
+    
+    NSDictionary* headers = [NSDictionary dictionaryWithObjectsAndKeys:
+                             @"someObject", @"someKey", nil];
+    [temp setHeaders: headers];
+
+    SecCertificateRef cert = [self secureServerCert];
+    [temp setPinnedServerCertificate: cert];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithConfig: temp];
+    
+    // Make sure all values are set!!
+    AssertEqualObjects(basic, config.authenticator);
+    AssertEqual(YES, config.continuous);
+    AssertEqualObjects([self getCertificateID: cert],
+                       [self getCertificateID: config.pinnedServerCertificate]);
+    AssertEqualObjects(headers, config.headers);
+    AssertEqualObjects(docIds, config.documentIDs);
+    AssertEqualObjects(channels, config.channels);
+}
+
 # pragma mark - CBLDocumentReplication
 
 - (void) testCreateDocumentReplicator {
