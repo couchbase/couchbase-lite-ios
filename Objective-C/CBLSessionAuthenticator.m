@@ -61,17 +61,4 @@
     options[@kC4ReplicatorOptionCookies] = cookieStr;
 }
 
-
-#pragma mark - Private
-
-
-- (nullable NSDate*) convertExpires: (nullable id)expires {
-    if (!expires || [expires isKindOfClass: [NSDate class]])
-        return expires;
-    
-    NSParameterAssert([expires isKindOfClass: [NSString class]]);
-    return [CBLJSON dateWithJSONObject: expires];
-}
-
-
 @end
