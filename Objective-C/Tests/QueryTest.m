@@ -823,7 +823,7 @@
     CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
                                          on: [propNum1 equalTo: propTheOne]];
     CBLQueryJoin* innerJoin;
-    innerJoin = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    innerJoin = [CBLQueryJoin innerJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
                                 on: [propNum1 equalTo: propTheOne]];
     
     // select from join: this should return 2 similar rows with same value.
