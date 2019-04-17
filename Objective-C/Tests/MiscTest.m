@@ -95,4 +95,41 @@
     Assert(CBLParseISO8601Date("1970-01-01T00:00:00.123Z") - 0.123 < 0.0001);
 }
 
+#pragma mark - CBLJSON
+
+- (void) testDataWithJSONObject {
+    NSError* error;
+    NSArray* inputs = @[@"couchbase-mobile", @2021, @[@"abcd"]];
+    for (id input in inputs) {
+        NSData* data = [CBLJSON dataWithJSONObject: input
+                                           options: CBLJSONWritingAllowFragments
+                                             error: &error];
+        
+        AssertEqualObjects(input, [CBLJSON JSONObjectWithData: data
+                                                      options: NSJSONReadingAllowFragments
+                                                        error: &error]);
+    }
+}
+
+- (void) testStringWithJSONObject {
+    NSError* error;
+    NSArray* ins = @[
+                     @[@"couchbase-mobile"],
+                     @{@"couch": @"base", @"lite": @2.5},
+                     @[[NSNull null]],
+                     @[]];
+    NSArray* outs = @[
+                      @"[\"couchbase-mobile\"]",
+                      @"{\"couch\":\"base\",\"lite\":2.5}",
+                      @"[null]",
+                      @"[]"];
+    for (NSUInteger i = 0; i < [ins count]; i++) {
+        id input = ins[i];
+        NSString* string = [CBLJSON stringWithJSONObject: input
+                                                 options: 0
+                                                   error: &error];
+        AssertEqualObjects(string, outs[i]);
+    }
+}
+
 @end

@@ -1080,13 +1080,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             CBLLogInfo(Database, @"Purging expired documents...");
             C4Error c4err;
             UInt64 nPurged = c4db_purgeExpiredDocs(_c4db, &c4err);
-            if (nPurged >= 0)
-                CBLLogInfo(Database, @"Purged %lld expired documents", nPurged);
-            else {
-                NSError* error;
-                convertError(c4err, &error);
-                CBLWarnError(Database, @"Cannot purge expired documents: %@", error);
-            }
+            CBLLogInfo(Database, @"Purged %lld expired documents", nPurged);
             [self scheduleDocumentExpiration: 1.0];
         }
     });
