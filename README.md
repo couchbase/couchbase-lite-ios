@@ -1,16 +1,16 @@
 
-# Couchbase Lite 2.0
+# Couchbase Lite 2.5
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/couchbase/couchbase-lite-ios.svg?branch=master)](https://travis-ci.org/couchbase/couchbase-lite-ios) [![Coverage Status](https://coveralls.io/repos/github/couchbase/couchbase-lite-ios/badge.svg?branch=master)](https://coveralls.io/github/couchbase/couchbase-lite-ios?branch=master)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
-Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
+Couchbase Lite 2.5 has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
 
 ## Requirements
 - iOS 9.0+ | macOS 10.11+
-- Xcode 9.3
+- Xcode 10.0
 
 
 ## Installation
@@ -25,7 +25,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for O
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', '~> 2.0.0'
+  pod 'CouchbaseLite', '~> 2.5.0'
 end
 ```
 
@@ -33,7 +33,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Enterprise', '~> 2.0.0'
+  pod 'CouchbaseLite-Enterprise', '~> 2.5.0'
 end
 ```
 
@@ -43,7 +43,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift', '~> 2.0.0'
+  pod 'CouchbaseLite-Swift', '~> 2.5.0'
 end
 ```
 
@@ -51,7 +51,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.0.0'
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.5.0'
 end
 ```
 
@@ -61,12 +61,12 @@ You can use [Carthage](https://github.com/Carthage/Carthage) to install `Couchba
 
 ##### Community Edition
 ```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json" ~> 2.0.0
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json" ~> 2.5.0
 ```
 
 ##### Enterprise Edition
 ```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json" ~> 2.0.0
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json" ~> 2.5.0
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
@@ -90,12 +90,12 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Documentation
 
-- [Swift](https://developer.couchbase.com/documentation/mobile/2.0/couchbase-lite/swift.html)
-- [Objective-C](https://developer.couchbase.com/documentation/mobile/2.0/couchbase-lite/objc.html)
+- [Swift](https://developer.couchbase.com/documentation/mobile/2.5/couchbase-lite/swift.html)
+- [Objective-C](https://developer.couchbase.com/documentation/mobile/2.5/couchbase-lite/objc.html)
 
 ## Sample Apps
 
-- [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.0) : Objective-C and Swift
+- [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.5) : Objective-C and Swift
 
 
 ## License
