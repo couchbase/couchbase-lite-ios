@@ -822,6 +822,9 @@
     
     CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
                                          on: [propNum1 equalTo: propTheOne]];
+    
+    // there is no particular reason for using inner-join and join. Just for the sake of using
+    // two different statement with same result only.
     CBLQueryJoin* innerJoin;
     innerJoin = [CBLQueryJoin innerJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
                                 on: [propNum1 equalTo: propTheOne]];
