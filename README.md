@@ -10,7 +10,7 @@ Couchbase Lite 2.5 has a completely new set of APIs. The implementation is on to
 
 ## Requirements
 - iOS 9.0+ | macOS 10.11+
-- Xcode 9.3
+- Xcode 10.0
 
 
 ## Installation
