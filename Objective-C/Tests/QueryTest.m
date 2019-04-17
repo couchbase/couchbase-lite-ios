@@ -38,6 +38,7 @@
 
 @implementation QueryTest
 
+#pragma mark - Helper methods
 
 - (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
     NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
@@ -47,7 +48,6 @@
     [self saveDocument: doc];
     return doc;
 }
-
 
 - (NSArray*)loadNumbers:(NSInteger)num {
     NSMutableArray* numbers = [NSMutableArray array];
@@ -164,7 +164,6 @@
     Assert([_db saveDocument: doc8 error: &error], @"Error when creating a document: %@", error);
 }
 
-
 - (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases {
     for (NSArray* c in cases) {
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -186,6 +185,7 @@
     }
 }
 
+#pragma mark - Where
 
 - (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
@@ -210,7 +210,6 @@
     AssertEqual(numRows, 100llu);
 }
 
-
 - (void) testWhereComparison {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
@@ -223,7 +222,6 @@
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
 }
-
 
 - (void) testWhereArithmetic {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
@@ -244,7 +242,6 @@
     [self runTestWithNumbers: numbers cases: cases];
 }
 
-
 - (void) testWhereAndOr {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
@@ -255,7 +252,6 @@
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
 }
-
 
 - (void) testWhereNullOrMissing {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
@@ -305,7 +301,6 @@
     }
 }
 
-
 - (void) testWhereIs {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
@@ -340,7 +335,6 @@
     AssertEqual(numRows, 1u);
 }
 
-
 - (void) testWhereBetween {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
@@ -349,7 +343,6 @@
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
 }
-
 
 - (void) testWhereIn {
     [self loadJSONResource: @"names_100"];
@@ -375,7 +368,6 @@
     AssertEqual((int)numRows, (int)expected.count);
 }
 
-
 - (void) testWhereLike {
     [self loadJSONResource: @"names_100"];
     
@@ -396,7 +388,6 @@
     AssertEqual(numRows, 5u);
     AssertEqual(firstNames.count, 5u);
 }
-
 
 - (void) testWhereRegex {
     [self loadJSONResource: @"names_100"];
@@ -420,7 +411,6 @@
     AssertEqual(firstNames.count, 5u);
 }
 
-
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
@@ -441,75 +431,11 @@
                                     where: where
                                   orderBy: @[order]];
     uint64_t numRows = [self verifyQuery: q  randomAccess: YES
-                                    test:^(uint64_t n, CBLQueryResult* r)
-    {
-        // AssertNotNil([r stringAtIndex:0]);
-        // AssertNotNil([r stringAtIndex:1]);
-    }];
+                                    test:^(uint64_t n, CBLQueryResult* r) { }];
     AssertEqual(numRows, 2u);
 }
 
-
-- (void) testOrderBy {
-    [self loadJSONResource: @"names_100"];
-    
-    for (id ascending in @[@(YES), @(NO)]) {
-        BOOL isAscending = [ascending boolValue];
-        
-        CBLQueryOrdering* order;
-        CBLQueryOrdering* orderByState;
-        if (isAscending) {
-            order = [[CBLQueryOrdering property: @"name.first"] ascending];
-            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] ascending];
-        } else {
-            order = [[CBLQueryOrdering property: @"name.first"] descending];
-            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] descending];
-        }
-        
-        CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
-                                        where: nil
-                                      orderBy: @[order]];
-        Assert(q);
-        
-        NSMutableArray* firstNames = [NSMutableArray array];
-        uint64_t numRows = [self verifyQuery: q randomAccess: NO
-                                        test: ^(uint64_t n, CBLQueryResult* r)
-        {
-            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
-            NSString* firstName = [[doc valueForKey:@"name"] valueForKey: @"first"];
-            if (firstName)
-                [firstNames addObject: firstName];
-        }];
-        AssertEqual(numRows, 100llu);
-        AssertEqual(numRows, firstNames.count);
-        
-        NSSortDescriptor* desc = [NSSortDescriptor sortDescriptorWithKey: nil
-                                                               ascending: isAscending
-                                                                selector: @selector(localizedCompare:)];
-        AssertEqualObjects(firstNames, [firstNames sortedArrayUsingDescriptors: @[desc]]);
-        
-        // selectDistinctFromWhereOrderBy
-        CBLQuery* distinctQ = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult property: @"contact.address.state"]]
-                                                         from: [CBLQueryDataSource database: self.db]
-                                                        where: nil
-                                                      orderBy: @[orderByState]];
-        Assert(distinctQ);
-        NSMutableArray* distinctStates = [NSMutableArray array];
-        numRows = [self verifyQuery: distinctQ randomAccess: NO
-                               test: ^(uint64_t n, CBLQueryResult* r)
-                   {
-                       NSString* state = [r valueAtIndex: 0];
-                       if (state)
-                           [distinctStates addObject: state];
-                           
-                   }];
-        AssertEqual(numRows, 42llu);
-        AssertEqual(numRows, distinctStates.count);
-        AssertEqualObjects(distinctStates.firstObject, isAscending ? @"AL" : @"WV");
-    }
-}
-
+#pragma mark - Select
 
 - (void) testSelectDistinct {
     NSError* error;
@@ -555,6 +481,329 @@
     AssertEqual(numRows, 2u);
 }
 
+- (void) testSelectAll {
+    [self loadNumbers: 100];
+    
+    CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
+    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    CBLQuerySelectResult* S_STAR = [CBLQuerySelectResult all];
+    
+    CBLQueryExpression* TESTDB_NUMBER1 = [CBLQueryExpression property: @"number1" from: @"testdb"];
+    CBLQuerySelectResult* S_TESTDB_NUMBER1 = [CBLQuerySelectResult expression: TESTDB_NUMBER1];
+    CBLQuerySelectResult* S_TESTDB_STAR = [CBLQuerySelectResult allFrom: @"testdb"];
+    
+    // SELECT *
+    CBLQuery* q = [CBLQueryBuilder select: @[S_STAR]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual(r.count, 1u);
+                            CBLMutableDictionary* a1 = [r valueAtIndex: 0];
+                            CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
+                            AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+                            AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+                            AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+                            AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+                        }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT testdb.*
+    q = [CBLQueryBuilder select: @[S_TESTDB_STAR]
+                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual(r.count, 1u);
+                   CBLMutableDictionary* a1 = [r valueAtIndex: 0];
+                   CBLMutableDictionary* a2 = [r valueForKey: @"testdb"];
+                   AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+                   AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+               }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT *, number1
+    q = [CBLQueryBuilder select: @[S_STAR, S_NUMBER1]
+                           from: [CBLQueryDataSource database: self.db]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual(r.count, 2u);
+                   CBLMutableDictionary* a1 = [r valueAtIndex: 0];
+                   CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
+                   AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+                   AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+                   AssertEqual([r integerAtIndex: 1], (NSInteger)n);
+                   AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
+               }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT testdb.*, testdb.number1
+    q = [CBLQueryBuilder select: @[S_TESTDB_STAR, S_TESTDB_NUMBER1]
+                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual(r.count, 2u);
+                   CBLMutableDictionary* a1 = [r valueAtIndex: 0];
+                   CBLMutableDictionary* a2 = [r valueForKey: @"testdb"];
+                   AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+                   AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+                   AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+                   AssertEqual([r integerAtIndex: 1], (NSInteger)n);
+                   AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
+               }];
+    AssertEqual(numRows, 100u);
+}
+
+- (void) testSelectAllWithDatabaseAlias {
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setString: @"doc1" forKey: @"someKey"];
+    [self saveDocument: doc1];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult allFrom: @"databaseAliasName"]]
+                                     from: [CBLQueryDataSource database: self.db as: @"databaseAliasName"]];
+    Assert(q);
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqualObjects([r dictionaryAtIndex: 0],
+                                               [r dictionaryForKey: @"databaseAliasName"]);
+                        }];
+    AssertEqual(numRows, 1u);
+}
+
+#pragma mark - OrderBy/GroupBy
+
+- (void) testOrderBy {
+    [self loadJSONResource: @"names_100"];
+    
+    for (id ascending in @[@(YES), @(NO)]) {
+        BOOL isAscending = [ascending boolValue];
+        
+        CBLQueryOrdering* order;
+        CBLQueryOrdering* orderByState;
+        if (isAscending) {
+            order = [[CBLQueryOrdering property: @"name.first"] ascending];
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] ascending];
+        } else {
+            order = [[CBLQueryOrdering property: @"name.first"] descending];
+            orderByState = [[CBLQueryOrdering property: @"contact.address.state"] descending];
+        }
+        
+        CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                         from: [CBLQueryDataSource database: self.db]
+                                        where: nil
+                                      orderBy: @[order]];
+        Assert(q);
+        
+        NSMutableArray* firstNames = [NSMutableArray array];
+        uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                        test: ^(uint64_t n, CBLQueryResult* r)
+                            {
+                                CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+                                NSString* firstName = [[doc valueForKey:@"name"] valueForKey: @"first"];
+                                if (firstName)
+                                    [firstNames addObject: firstName];
+                            }];
+        AssertEqual(numRows, 100llu);
+        AssertEqual(numRows, firstNames.count);
+        
+        NSSortDescriptor* desc = [NSSortDescriptor sortDescriptorWithKey: nil
+                                                               ascending: isAscending
+                                                                selector: @selector(localizedCompare:)];
+        AssertEqualObjects(firstNames, [firstNames sortedArrayUsingDescriptors: @[desc]]);
+        
+        // selectDistinctFromWhereOrderBy
+        CBLQuery* distinctQ = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult property: @"contact.address.state"]]
+                                                         from: [CBLQueryDataSource database: self.db]
+                                                        where: nil
+                                                      orderBy: @[orderByState]];
+        Assert(distinctQ);
+        NSMutableArray* distinctStates = [NSMutableArray array];
+        numRows = [self verifyQuery: distinctQ randomAccess: NO
+                               test: ^(uint64_t n, CBLQueryResult* r)
+                   {
+                       NSString* state = [r valueAtIndex: 0];
+                       if (state)
+                           [distinctStates addObject: state];
+                       
+                   }];
+        AssertEqual(numRows, 42llu);
+        AssertEqual(numRows, distinctStates.count);
+        AssertEqualObjects(distinctStates.firstObject, isAscending ? @"AL" : @"WV");
+    }
+}
+
+- (void) testGroupBy {
+    NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
+    NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
+    NSArray* expectedMaxZips = @[@"35243", @"94153", @"81223", @"33612", @"50801"];
+    
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
+    CBLQueryExpression* ZIP    = [CBLQueryExpression property: @"contact.address.zip"];
+    CBLQueryExpression* MAXZIP = [CBLQueryFunction max: ZIP];
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: STATE],
+                         [CBLQuerySelectResult expression: COUNT],
+                         [CBLQuerySelectResult expression: MAXZIP]];
+    
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                                  groupBy: @[STATE]
+                                   having: nil
+                                  orderBy: @[[CBLQueryOrdering expression: STATE]]
+                                    limit: nil];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            NSString* state = [r valueAtIndex: 0];
+                            NSInteger count = [[r valueAtIndex: 1] integerValue];
+                            NSString* maxZip = [r valueAtIndex: 2];
+                            // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
+                            if (n-1 < expectedStates.count) {
+                                AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
+                                AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
+                                AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
+                            }
+                        }];
+    AssertEqual(numRows, 31u);
+    
+    // With HAVING:
+    expectedStates  = @[@"CA",    @"IA",     @"IN"];
+    expectedCounts  = @[@6,       @3,        @2];
+    expectedMaxZips = @[@"94153", @"50801",  @"47952"];
+    
+    q = [CBLQueryBuilder select: results
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                        groupBy: @[STATE]
+                         having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]
+                        orderBy: @[[CBLQueryOrdering expression: STATE]]
+                          limit: nil];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        NSString* state = [r valueAtIndex: 0];
+        NSInteger count = [[r valueAtIndex: 1] integerValue];
+        NSString* maxZip = [r valueAtIndex: 2];
+        // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
+        if (n-1 < expectedStates.count) {
+            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
+            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
+            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
+        }
+    }];
+    AssertEqual(numRows, 15u);
+}
+
+- (void) testSelectFromWhereGroupBy {
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
+    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: STATE]];
+    
+    // selectFromWhereGroupBy
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                                  groupBy: @[STATE]];
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 31u);
+    
+    // selectFromWhereGroupByHaving
+    q = [CBLQueryBuilder select: results
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
+                        groupBy: @[STATE]
+                         having: [COUNT greaterThan: [CBLQueryExpression integer: 2]]];
+    
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 5u);
+}
+
+- (void) testSelectDistinctFromWhereGroupBy {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @(20) forKey: @"number"];
+    [doc1 setValue: @"Tom" forKey: @"name"];
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
+    [doc2 setValue: @(20) forKey: @"number"];
+    [doc2 setValue: @"Bob" forKey: @"name"];
+    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
+    [doc3 setValue: @(30) forKey: @"number"];
+    [doc3 setValue: @"Alice" forKey: @"name"];
+    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
+    [doc4 setValue: @(25) forKey: @"number"];
+    [doc4 setValue: @"Bob" forKey: @"name"];
+    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
+    [doc5 setValue: @(15) forKey: @"number"];
+    [doc5 setValue: @"Adam" forKey: @"name"];
+    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
+    
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
+    CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
+    CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
+    CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
+    CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
+    CBLQuerySelectResult* S_COUNT = [CBLQuerySelectResult expression: COUNT];
+    
+    // selectDistinctFromWhereGroupBy
+    CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                             from: [CBLQueryDataSource database: self.db]
+                                            where: nil
+                                          groupBy: @[NAME]];
+    Assert(q);
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 4u);
+    
+    //selectDistinctFromWhereGroupByHaving
+    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
+    Assert(q);
+    rs = [q execute: &error];
+    AssertEqual([rs allResults].count, 1u); // only doc with name = Bob will pass.
+    
+    // selectDistinctFromWhereGroupByHavingOrderByLimit
+    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
+                                   from: [CBLQueryDataSource database: self.db]
+                                  where: nil
+                                groupBy: @[NAME]
+                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
+                                orderBy: @[[CBLQuerySortOrder property: @"name"]]
+                                  limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 2]]];
+    Assert(q);
+    rs = [q execute: &error];
+    NSArray* allResults = [rs allResults];
+    AssertEqual(allResults.count, 2u);
+    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
+}
+
+#pragma mark - JOIN
 
 - (void) testJoin {
     [self loadNumbers: 100];
@@ -862,7 +1111,6 @@
     AssertEqual(numRows, 101u);
 }
 
-
 // https://github.com/couchbase/couchbase-lite-core/issues/497
 - (void) testLeftJoinWithSelectAll {
     [self loadNumbers: 100];
@@ -900,7 +1148,6 @@
     }];
     AssertEqual(numRows, 101u);
 }
-
 
 - (void) testCrossJoin {
     [self loadNumbers: 10];
@@ -979,72 +1226,7 @@
     AssertEqual(numRows, 1u);
 }
 
-
-- (void) testGroupBy {
-    NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
-    NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
-    NSArray* expectedMaxZips = @[@"35243", @"94153", @"81223", @"33612", @"50801"];
-    
-    [self loadJSONResource: @"names_100"];
-    
-    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
-    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
-    CBLQueryExpression* ZIP    = [CBLQueryExpression property: @"contact.address.zip"];
-    CBLQueryExpression* MAXZIP = [CBLQueryFunction max: ZIP];
-    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
-    
-    NSArray* results = @[[CBLQuerySelectResult expression: STATE],
-                         [CBLQuerySelectResult expression: COUNT],
-                         [CBLQuerySelectResult expression: MAXZIP]];
-    
-    CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
-                                  groupBy: @[STATE]
-                                   having: nil
-                                  orderBy: @[[CBLQueryOrdering expression: STATE]]
-                                    limit: nil];
-    
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        NSString* state = [r valueAtIndex: 0];
-        NSInteger count = [[r valueAtIndex: 1] integerValue];
-        NSString* maxZip = [r valueAtIndex: 2];
-        // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
-        if (n-1 < expectedStates.count) {
-            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
-            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
-            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
-        }
-    }];
-    AssertEqual(numRows, 31u);
-    
-    // With HAVING:
-    expectedStates  = @[@"CA",    @"IA",     @"IN"];
-    expectedCounts  = @[@6,       @3,        @2];
-    expectedMaxZips = @[@"94153", @"50801",  @"47952"];
-    
-    q = [CBLQueryBuilder select: results
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
-                        groupBy: @[STATE]
-                         having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]
-                        orderBy: @[[CBLQueryOrdering expression: STATE]]
-                          limit: nil];
-    
-    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
-        NSString* state = [r valueAtIndex: 0];
-        NSInteger count = [[r valueAtIndex: 1] integerValue];
-        NSString* maxZip = [r valueAtIndex: 2];
-        // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
-        if (n-1 < expectedStates.count) {
-            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
-            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
-            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
-        }
-    }];
-    AssertEqual(numRows, 15u);
-}
+#pragma mark - Query Params
 
 - (void) testQueryParameters {
     [self loadStudents];
@@ -1146,46 +1328,7 @@
                        @"Alice");
 }
 
-- (void) testMeta {
-    [self loadNumbers: 5];
-    
-    CBLQueryExpression* DOC_ID  = [CBLQueryMeta id];
-    CBLQueryExpression* DOC_SEQ = [CBLQueryMeta sequence];
-    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
-    
-    CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
-    CBLQuerySelectResult* S_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
-    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
-    
-    CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID, S_DOC_SEQ, S_NUMBER1]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: nil
-                                  orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
-    
-    NSArray* expectedDocIDs  = @[@"doc1", @"doc2", @"doc3", @"doc4", @"doc5"];
-    NSArray* expectedSeqs    = @[@1, @2, @3, @4, @5];
-    NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
-    
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
-        NSString* id1 = [r stringAtIndex: 0];
-        NSString* id2 = [r stringForKey: @"id"];
-        
-        NSInteger sequence1 = [r integerAtIndex: 1];
-        NSInteger sequence2 = [r integerForKey: @"sequence"];
-        
-        NSInteger number = [[r valueAtIndex: 2] integerValue];
-        
-        AssertEqualObjects(id1,  id2);
-        AssertEqualObjects(id1,  expectedDocIDs[(NSUInteger)(n-1)]);
-        
-        AssertEqual(sequence1, sequence2);
-        AssertEqual(sequence1, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
-        
-        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
-    }];
-    AssertEqual(numRows, 5u);
-}
-
+#pragma mark - Limit
 
 - (void) testLimit {
     [self loadNumbers: 10];
@@ -1224,7 +1367,6 @@
     }];
     AssertEqual(numRows, 3u);
 }
-
 
 - (void) testLimitOffset {
     [self loadNumbers: 10];
@@ -1266,7 +1408,6 @@
     }];
     AssertEqual(numRows, 3u);
 }
-
 
 - (void) testQueryResult {
     [self loadNumbers: 100];
@@ -1351,6 +1492,7 @@
     AssertEqual(numRows, 1u);
 }
 
+#pragma mark - Functions
 
 - (void) testAggregateFunctions {
     [self loadNumbers: 100];
@@ -1380,7 +1522,6 @@
                         }];
     AssertEqual(numRows, 1u);
 }
-
 
 - (void) testArrayFunctions {
     CBLMutableDocument* doc = [self createDocument:@"doc1"];
@@ -1415,7 +1556,6 @@
                }];
     AssertEqual(numRows, 1u);
 }
-
 
 - (void) testMathFunctions {
     double num = 0.6;
@@ -1485,7 +1625,6 @@
     }
 }
 
-
 - (void) testStringFunctions {
     NSString* str = @"  See you 18r  ";
     CBLMutableDocument* doc = [self createDocument:@"doc1"];
@@ -1544,7 +1683,6 @@
     AssertEqual(numRows, 1u);
 }
 
-
 - (void) testQuantifiedOperators {
     [self loadJSONResource: @"names_100"];
     
@@ -1595,7 +1733,6 @@
     AssertEqual(numRows, 0u);
 }
 
-
 - (void) testQuantifiedOperatorVariableKeyPath {
     NSArray* data = @[
        @[@{@"city": @"San Francisco"}, @{@"city": @"Palo Alto"}, @{@"city": @"San Jose"}],
@@ -1638,105 +1775,7 @@
     AssertEqual(numRows, expected.count);
 }
 
-
-- (void) testSelectAll {
-    [self loadNumbers: 100];
-    
-    CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
-    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
-    CBLQuerySelectResult* S_STAR = [CBLQuerySelectResult all];
-    
-    CBLQueryExpression* TESTDB_NUMBER1 = [CBLQueryExpression property: @"number1" from: @"testdb"];
-    CBLQuerySelectResult* S_TESTDB_NUMBER1 = [CBLQuerySelectResult expression: TESTDB_NUMBER1];
-    CBLQuerySelectResult* S_TESTDB_STAR = [CBLQuerySelectResult allFrom: @"testdb"];
-    
-    // SELECT *
-    CBLQuery* q = [CBLQueryBuilder select: @[S_STAR]
-                                     from: [CBLQueryDataSource database: self.db]];
-    
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqual(r.count, 1u);
-        CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-        CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
-        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
-    }];
-    AssertEqual(numRows, 100u);
-    
-    // SELECT testdb.*
-    q = [CBLQueryBuilder select: @[S_TESTDB_STAR]
-                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
-    
-    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqual(r.count, 1u);
-        CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-        CBLMutableDictionary* a2 = [r valueForKey: @"testdb"];
-        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
-    }];
-    AssertEqual(numRows, 100u);
-    
-    // SELECT *, number1
-    q = [CBLQueryBuilder select: @[S_STAR, S_NUMBER1]
-                           from: [CBLQueryDataSource database: self.db]];
-    
-    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqual(r.count, 2u);
-        CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-        CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
-        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([r integerAtIndex: 1], (NSInteger)n);
-        AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
-    }];
-    AssertEqual(numRows, 100u);
-    
-    // SELECT testdb.*, testdb.number1
-    q = [CBLQueryBuilder select: @[S_TESTDB_STAR, S_TESTDB_NUMBER1]
-                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
-    
-    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqual(r.count, 2u);
-        CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-        CBLMutableDictionary* a2 = [r valueForKey: @"testdb"];
-        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
-        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
-        AssertEqual([r integerAtIndex: 1], (NSInteger)n);
-        AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
-    }];
-    AssertEqual(numRows, 100u);
-}
-
-
-- (void) testSelectAllWithDatabaseAlias {
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
-    [doc1 setString: @"doc1" forKey: @"someKey"];
-    [self saveDocument: doc1];
-    
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult allFrom: @"databaseAliasName"]]
-                                     from: [CBLQueryDataSource database: self.db as: @"databaseAliasName"]];
-    Assert(q);
-    
-    uint64_t numRows = [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqualObjects([r dictionaryAtIndex: 0],
-                           [r dictionaryForKey: @"databaseAliasName"]);
-    }];
-    AssertEqual(numRows, 1u);
-}
-
+#pragma mark - Collation
 
 - (void) testGenerateJSONCollation {
     NSArray* collations =
@@ -1767,7 +1806,6 @@
         AssertEqualObjects([c asJSON], expected[i++]);
     }
 }
-
 
 - (void) testUnicodeCollationWithLocale {
     NSArray* letters = @[@"B", @"A", @"Z", @"Å"];
@@ -1812,7 +1850,6 @@
     }];
     AssertEqual(numRows, expected.count);
 }
-
 
 - (void) testCompareWithUnicodeCollation {
     id bothSensitive = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: NO ignoreAccents: NO];
@@ -1907,6 +1944,7 @@
     }
 }
 
+#pragma mark - Live Query
 
 - (void) testLiveQuery {
     [self loadNumbers: 100];
@@ -1941,7 +1979,6 @@
     
     [q removeChangeListenerWithToken: token];
 }
-
 
 - (void) testLiveQueryNoUpdate {
     [self loadNumbers: 100];
@@ -2016,7 +2053,6 @@
     sleep(2);
 }
 
-
 - (void) testDeleteDatabaseWithActiveLiveQuery {
     // Add a live query to the DB:
     XCTestExpectation* x = [self expectationWithDescription: @"changes"];
@@ -2044,6 +2080,75 @@
     Assert([self.db delete: &error], @"Cannot delete database: %@", error);
 }
 
+#pragma mark - Results
+
+- (void) testQueryResult {
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* FNAME = [CBLQueryExpression property: @"name.first"];
+    CBLQueryExpression* LNAME = [CBLQueryExpression property: @"name.last"];
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
+    CBLQueryExpression* CITY = [CBLQueryExpression property: @"contact.address.city"];
+    CBLQueryExpression* EMAIL = [CBLQueryExpression property: @"contact.email"];
+    CBLQueryExpression* ADDRESS = [CBLQueryExpression property: @"contact.address"];
+    
+    CBLQuerySelectResult* S_FNAME = [CBLQuerySelectResult expression: FNAME as: @"firstname"];
+    CBLQuerySelectResult* S_LNAME = [CBLQuerySelectResult expression: LNAME as: @"lastname"];
+    CBLQuerySelectResult* S_GENDER = [CBLQuerySelectResult expression: GENDER];
+    CBLQuerySelectResult* S_CITY = [CBLQuerySelectResult expression: CITY];
+    CBLQuerySelectResult* S_EMAIL = [CBLQuerySelectResult expression: EMAIL as: @"email"];
+    CBLQuerySelectResult* S_ADDRESS = [CBLQuerySelectResult expression: ADDRESS as: @"address"];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_GENDER, S_CITY, S_EMAIL, S_ADDRESS]
+                                     from: [CBLQueryDataSource database: self.db]];
+    
+    NSSet* keys = [NSSet setWithObjects: @"lastname", @"email",
+                   @"address", @"city", @"firstname", @"gender", nil];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual(r.count, 6u);
+                            AssertEqualObjects([r valueForKey: @"firstname"], [r valueAtIndex: 0]);
+                            AssertEqualObjects(r[0].string, r[@"firstname"].string);
+                            AssertEqualObjects([r valueForKey: @"lastname"], [r valueAtIndex: 1]);
+                            AssertEqualObjects([r valueForKey: @"gender"], [r valueAtIndex: 2]);
+                            AssertEqualObjects([r valueForKey: @"city"], [r valueAtIndex: 3]);
+                            AssertEqualObjects([r arrayForKey: @"email"], [r arrayAtIndex: 4]);
+                            AssertEqualObjects([r dictionaryForKey: @"address"], [r dictionaryAtIndex: 5]);
+                            AssertEqualObjects([NSSet setWithArray: [r keys]], keys); // using set will ignore the order
+                        }];
+    AssertEqual((int)numRows, 100);
+}
+
+- (void) testQueryProjectingKeys {
+    [self loadNumbers: 100];
+    
+    CBLQueryExpression* AVG = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* CNT = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MIN = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MAX = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* SUM = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: AVG],
+                         [CBLQuerySelectResult expression: CNT],
+                         [CBLQuerySelectResult expression: MIN as: @"min"],
+                         [CBLQuerySelectResult expression: MAX],
+                         [CBLQuerySelectResult expression: SUM as: @"sum"]];
+    
+    CBLQuery* q = [CBLQueryBuilder select: results
+                                     from: [CBLQueryDataSource database: self.db]];
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual(r.count, 5u);
+                            AssertEqual([r doubleForKey: @"$1"], [r doubleAtIndex: 0]);
+                            AssertEqual([r integerForKey: @"$2"], [r integerAtIndex: 1]);
+                            AssertEqual([r integerForKey: @"min"], [r integerAtIndex: 2]);
+                            AssertEqual([r integerForKey: @"$3"], [r integerAtIndex: 3]);
+                            AssertEqual([r integerForKey: @"sum"], [r integerAtIndex: 4]);
+                        }];
+    AssertEqual(numRows, 1u);
+}
 
 - (void) testResultSetEnumeration {
     [self loadNumbers: 5];
@@ -2083,7 +2188,6 @@
     AssertEqual([rs allObjects].count, 0u);
     AssertEqual([rs allResults].count, 0u);
 }
-
 
 - (void) testGetAllResults {
     [self loadNumbers: 5];
@@ -2129,7 +2233,6 @@
     AssertEqual([rs allResults].count, 0u);
 }
 
-
 - (void) testMissingValue {
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
@@ -2162,7 +2265,6 @@
     AssertFalse([r containsValueForKey: @"age"]);
     AssertEqualObjects([r toDictionary], (@{@"name": @"Scott", @"address": [NSNull null]}));
 }
-
 
 - (void) testForumJoin {
     [self loadJSONString:
@@ -2211,7 +2313,6 @@
     AssertEqual(i, 2);
 }
 
-
 - (void) testJSONEncoding {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
@@ -2243,104 +2344,68 @@
     AssertEqual(numRows, 1u);
 }
 
-- (void) testSelectFromWhereGroupBy {
-    [self loadJSONResource: @"names_100"];
-    
-    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
-    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
-    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
-    
-    NSArray* results = @[[CBLQuerySelectResult expression: STATE]];
-    
-    // selectFromWhereGroupBy
-    CBLQuery* q = [CBLQueryBuilder select: results
+- (void) testQueryResultArray {
+    [self loadNumbers: 5];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
-                                  groupBy: @[STATE]];
+                                    where: nil
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     NSError* error;
     CBLQueryResultSet* rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 31u);
+    Assert(rs, @"Query failed: %@", error);
     
-    // selectFromWhereGroupByHaving
-    q = [CBLQueryBuilder select: results
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
-                        groupBy: @[STATE]
-                         having: [COUNT greaterThan: [CBLQueryExpression integer: 2]]];
-    
-    rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 5u);
+    NSArray* allObjects = rs.allObjects;
+    CBLQueryResultArray* array = [[CBLQueryResultArray alloc] initWithResultSet: rs
+                                                                          count: allObjects.count];
+    AssertEqual(array.count, allObjects.count);
+    Assert(![[array mutableCopy] isEqual: array]);
+    AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
 }
 
-- (void) testSelectDistinctFromWhereGroupBy {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
-    [doc1 setValue: @(20) forKey: @"number"];
-    [doc1 setValue: @"Tom" forKey: @"name"];
-    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
-    [doc2 setValue: @(20) forKey: @"number"];
-    [doc2 setValue: @"Bob" forKey: @"name"];
-    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
-    [doc3 setValue: @(30) forKey: @"number"];
-    [doc3 setValue: @"Alice" forKey: @"name"];
-    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
-    
-    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
-    [doc4 setValue: @(25) forKey: @"number"];
-    [doc4 setValue: @"Bob" forKey: @"name"];
-    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
-    
-    CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
-    [doc5 setValue: @(15) forKey: @"number"];
-    [doc5 setValue: @"Adam" forKey: @"name"];
-    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
-    
-    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
-    CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
-    CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name"];
-    CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
-    CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
-    CBLQuerySelectResult* S_COUNT = [CBLQuerySelectResult expression: COUNT];
-    
-    // selectDistinctFromWhereGroupBy
-    CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
-                                             from: [CBLQueryDataSource database: self.db]
-                                            where: nil
-                                          groupBy: @[NAME]];
-    Assert(q);
-    CBLQueryResultSet* rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 4u);
-    
-    //selectDistinctFromWhereGroupByHaving
-    q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: nil
-                                groupBy: @[NAME]
-                                 having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
-    Assert(q);
-    rs = [q execute: &error];
-    AssertEqual([rs allResults].count, 1u); // only doc with name = Bob will pass.
-    
-    // selectDistinctFromWhereGroupByHavingOrderByLimit
-    q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: nil
-                                groupBy: @[NAME]
-                                 having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
-                                orderBy: @[[CBLQuerySortOrder property: @"name"]]
-                                  limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 2]]];
-    Assert(q);
-    rs = [q execute: &error];
-    NSArray* allResults = [rs allResults];
-    AssertEqual(allResults.count, 2u);
-    AssertEqualObjects([allResults.firstObject valueForKey: @"name"], @"Adam");
-}
+# pragma mark - META
 
-# pragma mark - META - IsDeleted
+- (void) testMeta {
+    [self loadNumbers: 5];
+    
+    CBLQueryExpression* DOC_ID  = [CBLQueryMeta id];
+    CBLQueryExpression* DOC_SEQ = [CBLQueryMeta sequence];
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
+    
+    CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    CBLQuerySelectResult* S_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
+    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID, S_DOC_SEQ, S_NUMBER1]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: nil
+                                  orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
+    
+    NSArray* expectedDocIDs  = @[@"doc1", @"doc2", @"doc3", @"doc4", @"doc5"];
+    NSArray* expectedSeqs    = @[@1, @2, @3, @4, @5];
+    NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        NSString* id1 = [r stringAtIndex: 0];
+        NSString* id2 = [r stringForKey: @"id"];
+        
+        NSInteger sequence1 = [r integerAtIndex: 1];
+        NSInteger sequence2 = [r integerForKey: @"sequence"];
+        
+        NSInteger number = [[r valueAtIndex: 2] integerValue];
+        
+        AssertEqualObjects(id1,  id2);
+        AssertEqualObjects(id1,  expectedDocIDs[(NSUInteger)(n-1)]);
+        
+        AssertEqual(sequence1, sequence2);
+        AssertEqual(sequence1, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
+        
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 5u);
+}
 
 - (void) testIsDeletedExpressionEmpty {
     // fetch is-deleted condition should return empty
@@ -2442,7 +2507,6 @@
     AssertNil(error);
     AssertEqual([[rs allObjects] count], documentsCount);
 }
-
 
 #pragma mark - META - expired
 
@@ -2558,29 +2622,6 @@
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], 0u);
-}
-
-#pragma mark - Result Array
-
-- (void) testQueryResultArray {
-    [self loadNumbers: 5];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: nil
-                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
-    NSError* error;
-    CBLQueryResultSet* rs = [q execute: &error];
-    Assert(rs, @"Query failed: %@", error);
-    
-    NSArray* allObjects = rs.allObjects;
-    CBLQueryResultArray* array = [[CBLQueryResultArray alloc] initWithResultSet: rs
-                                                                          count: allObjects.count];
-    AssertEqual(array.count, allObjects.count);
-    Assert(![[array mutableCopy] isEqual: array]);
-    AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
-    AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
 }
 
 #pragma mark - Value Expression
