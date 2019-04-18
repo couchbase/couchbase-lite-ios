@@ -2000,41 +2000,58 @@
 #pragma mark - Results
 
 - (void) testQueryResult {
-    [self loadJSONResource: @"names_100"];
+    [self loadNumbers: 100];
+    [self loadStudents];
     
     CBLQueryExpression* FNAME = [CBLQueryExpression property: @"name.first"];
     CBLQueryExpression* LNAME = [CBLQueryExpression property: @"name.last"];
-    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
-    CBLQueryExpression* CITY = [CBLQueryExpression property: @"contact.address.city"];
     CBLQueryExpression* EMAIL = [CBLQueryExpression property: @"contact.email"];
     CBLQueryExpression* ADDRESS = [CBLQueryExpression property: @"contact.address"];
+    CBLQueryExpression* CODE = [CBLQueryExpression property: @"code"];
+    CBLQueryExpression* YEAR = [CBLQueryExpression property: @"year"];
+    CBLQueryExpression* ID = [CBLQueryExpression property: @"id"];
+    CBLQueryExpression* SCORE = [CBLQueryExpression property: @"score"];
+    CBLQueryExpression* IS_FULLTIME = [CBLQueryExpression property: @"isFullTime"];
+    CBLQueryExpression* START_DATE = [CBLQueryExpression property: @"startDate"];
+    CBLQueryExpression* GPA = [CBLQueryExpression property: @"gpa"];
     
     CBLQuerySelectResult* S_FNAME = [CBLQuerySelectResult expression: FNAME as: @"firstname"];
     CBLQuerySelectResult* S_LNAME = [CBLQuerySelectResult expression: LNAME as: @"lastname"];
-    CBLQuerySelectResult* S_GENDER = [CBLQuerySelectResult expression: GENDER];
-    CBLQuerySelectResult* S_CITY = [CBLQuerySelectResult expression: CITY];
     CBLQuerySelectResult* S_EMAIL = [CBLQuerySelectResult expression: EMAIL as: @"email"];
     CBLQuerySelectResult* S_ADDRESS = [CBLQuerySelectResult expression: ADDRESS as: @"address"];
+    CBLQuerySelectResult* S_CODE = [CBLQuerySelectResult expression: CODE];
+    CBLQuerySelectResult* S_YEAR = [CBLQuerySelectResult expression: YEAR];
+    CBLQuerySelectResult* S_ID = [CBLQuerySelectResult expression: ID];
+    CBLQuerySelectResult* S_SCORE = [CBLQuerySelectResult expression: SCORE];
+    CBLQuerySelectResult* S_IS_FULLTIME = [CBLQuerySelectResult expression: IS_FULLTIME];
+    CBLQuerySelectResult* S_START_DATE = [CBLQuerySelectResult expression: START_DATE];
+    CBLQuerySelectResult* S_GPA = [CBLQuerySelectResult expression: GPA];
     
-    CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_GENDER, S_CITY, S_EMAIL, S_ADDRESS]
+    CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_EMAIL, S_ADDRESS, S_CODE, S_YEAR,
+                                             S_ID, S_SCORE, S_IS_FULLTIME, S_START_DATE, S_GPA]
                                      from: [CBLQueryDataSource database: self.db]];
     
-    NSSet* keys = [NSSet setWithObjects: @"lastname", @"email",
-                   @"address", @"city", @"firstname", @"gender", nil];
+    NSSet* keys = [NSSet setWithObjects: @"lastname", @"email", @"address", @"firstname", @"code",
+                   @"year", @"id", @"score", @"isFullTime", @"startDate", @"gpa", nil];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
                         {
-                            AssertEqual(r.count, 6u);
+                            AssertEqual(r.count, 11u);
                             AssertEqualObjects([r valueForKey: @"firstname"], [r valueAtIndex: 0]);
                             AssertEqualObjects(r[0].string, r[@"firstname"].string);
                             AssertEqualObjects([r valueForKey: @"lastname"], [r valueAtIndex: 1]);
-                            AssertEqualObjects([r valueForKey: @"gender"], [r valueAtIndex: 2]);
-                            AssertEqualObjects([r valueForKey: @"city"], [r valueAtIndex: 3]);
-                            AssertEqualObjects([r arrayForKey: @"email"], [r arrayAtIndex: 4]);
-                            AssertEqualObjects([r dictionaryForKey: @"address"], [r dictionaryAtIndex: 5]);
+                            AssertEqualObjects([r arrayForKey: @"email"], [r arrayAtIndex: 2]);
+                            AssertEqualObjects([r dictionaryForKey: @"address"], [r dictionaryAtIndex: 3]);
+                            AssertEqualObjects([r numberForKey: @"code"], [r numberAtIndex: 4]);
+                            AssertEqual([r integerForKey: @"year"], [r integerAtIndex: 5]);
+                            AssertEqual([r longLongForKey: @"id"], [r longLongAtIndex: 6]);
+                            AssertEqual([r floatForKey: @"score"], [r floatAtIndex: 7]);
+                            AssertEqual([r booleanForKey: @"isFullTime"], [r booleanAtIndex: 8]);
+                            AssertEqualObjects([r dateForKey: @"startDate"], [r dateAtIndex: 9]);
+                            AssertEqual([r doubleForKey: @"gpa"], [r doubleAtIndex: 10]);
                             AssertEqualObjects([NSSet setWithArray: [r keys]], keys); // using set will ignore the order
                         }];
-    AssertEqual((int)numRows, 100);
+    AssertEqual((int)numRows, 108);
 }
 
 - (void) testQueryProjectingKeys {
