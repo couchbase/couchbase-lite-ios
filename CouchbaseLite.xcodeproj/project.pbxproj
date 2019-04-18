@@ -23,6 +23,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
@@ -1586,6 +1587,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
@@ -2973,6 +2975,7 @@
 				939260B020A0FF0C00E5748C /* MessageEndpointTest.m */,
 				938B3701200D7D1D004485D8 /* MigrationTest.m */,
 				93384F8B1EB151C100976B41 /* MiscTest.m */,
+				1A4FE769225ED344009D5F43 /* MiscCppTest.mm */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */,
@@ -5251,6 +5254,7 @@
 				1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
+				1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */,
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
