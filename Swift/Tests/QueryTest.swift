@@ -1048,8 +1048,6 @@ class QueryTest: CBLTestCase {
     
     
     func testSelectAllWithDatabaseAliasWithMultipleSources() throws {
-        Database.log.console.domains = .all
-        Database.log.console.level = .verbose
         try loadNumbers(100)
         
         let doc = createDocument()
