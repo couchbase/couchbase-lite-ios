@@ -1047,6 +1047,32 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testSelectAllWithDatabaseAliasWithMultipleSources() throws {
+        Database.log.console.domains = .all
+        Database.log.console.level = .verbose
+        try loadNumbers(100)
+        
+        let doc = createDocument()
+        doc.setValue(42, forKey: "theOne")
+        try saveDocument(doc)
+        
+        let q = QueryBuilder
+            .selectDistinct([SelectResult.all().from("main"),
+                             SelectResult.all().from("secondary")])
+            .from(DataSource.database(db).as("main"))
+            .join(
+                Join.join(DataSource.database(db).as("secondary"))
+                    .on(Expression.property("number1").from("main")
+                        .equalTo(Expression.property("theOne").from("secondary"))))
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.dictionary(at: 0), r.dictionary(forKey: "main"));
+            XCTAssertEqual(r.dictionary(at: 1), r.dictionary(forKey: "secondary"));
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
     func testUnicodeCollationWithLocale() throws {
         let letters = ["B", "A", "Z", "Å"]
         for letter in letters {
