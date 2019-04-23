@@ -1,11 +1,11 @@
 
-# Couchbase Lite 2.5
+# Couchbase Lite 2.5.0
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/couchbase/couchbase-lite-ios.svg?branch=master)](https://travis-ci.org/couchbase/couchbase-lite-ios) [![Coverage Status](https://coveralls.io/repos/github/couchbase/couchbase-lite-ios/badge.svg?branch=master)](https://coveralls.io/github/couchbase/couchbase-lite-ios?branch=master)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
-Couchbase Lite 2.5 has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
+Couchbase Lite 2.5.0 has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
 
 ## Requirements
@@ -90,8 +90,8 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Documentation
 
-- [Swift](https://developer.couchbase.com/documentation/mobile/2.5/couchbase-lite/swift.html)
-- [Objective-C](https://developer.couchbase.com/documentation/mobile/2.5/couchbase-lite/objc.html)
+- [Swift](https://developer.couchbase.com/documentation/mobile/2.5.0/couchbase-lite/swift.html)
+- [Objective-C](https://developer.couchbase.com/documentation/mobile/2.5.0/couchbase-lite/objc.html)
 
 ## Sample Apps
 
