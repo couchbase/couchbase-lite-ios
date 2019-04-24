@@ -2079,6 +2079,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 
 - (void) testStopAndRestartPushReplicationWithFilter {
+    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+    CBLDatabase.log.console.domains = kCBLLogDomainAll;
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    
     // Create documents
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -2126,6 +2130,9 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([otherDB documentWithID: @"doc3"]);
     AssertEqual(self.db.count, 3u);
     AssertEqual(otherDB.count, 2u);
+    
+    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+    CBLDatabase.log.console.level = kCBLLogLevelNone;
 }
 
 
