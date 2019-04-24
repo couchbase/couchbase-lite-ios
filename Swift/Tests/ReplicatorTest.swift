@@ -32,9 +32,16 @@ class ReplicatorTest: CBLTestCase {
         // Create otherdb:
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)
+        
+        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+        Database.log.console.domains = .all
+        Database.log.console.level = .verbose
     }
     
     override func tearDown() {
+        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+        Database.log.console.level = .warning
+        
         // TODO: Remove this
         // Workaround to ensure that replicator's background cleaning task was done:
         // https://github.com/couchbase/couchbase-lite-core/issues/520
@@ -741,10 +748,6 @@ class ReplicatorTest: CBLTestCase {
     // MARK: stop and restart replication with filter
     
     func testStopAndRestartPushReplicationWithFilter() throws {
-        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-        Database.log.console.domains = .all
-        Database.log.console.level = .verbose
-        
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
@@ -791,9 +794,6 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(otherDB.document(withID: "doc3"))
         XCTAssertEqual(db.count, 3)
         XCTAssertEqual(otherDB.count, 2)
-        
-        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-        Database.log.console.level = .warning
     }
     
     func testStopAndRestartPullReplicationWithFilter() throws {

@@ -133,10 +133,17 @@
     otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
     AssertNotNil(otherDB);
+    
+    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+    CBLDatabase.log.console.domains = kCBLLogDomainAll;
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
 }
 
 
 - (void) tearDown {
+    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
+    CBLDatabase.log.console.level = kCBLLogLevelWarning;
+    
     // TODO: Remove this:
     // Workaround to ensure that replicator's background cleaning task was done:
     // https://github.com/couchbase/couchbase-lite-core/issues/520
@@ -2079,10 +2086,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 
 - (void) testStopAndRestartPushReplicationWithFilter {
-    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
-    
     // Create documents
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -2130,9 +2133,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([otherDB documentWithID: @"doc3"]);
     AssertEqual(self.db.count, 3u);
     AssertEqual(otherDB.count, 2u);
-    
-    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-    CBLDatabase.log.console.level = kCBLLogLevelWarning;
 }
 
 
