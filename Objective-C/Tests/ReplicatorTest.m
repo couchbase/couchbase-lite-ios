@@ -2132,7 +2132,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(otherDB.count, 2u);
     
     // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-    CBLDatabase.log.console.level = kCBLLogLevelNone;
+    CBLDatabase.log.console.level = kCBLLogLevelWarning;
 }
 
 
