@@ -24,6 +24,7 @@
 @class CBLDatabase;
 @class CBLDocument;
 @protocol CBLEndpoint;
+@protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -101,6 +102,12 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  Only documents for which the block returns true are replicated.
  */
 @property (nonatomic, nullable) CBLReplicationFilter pullFilter;
+
+/**
+ The custom conflict resolver object can be set here. If this value is not set, or set to nil,
+ the default conflict resolution will be applied.
+ */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 #if TARGET_OS_IPHONE
 /**

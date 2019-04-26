@@ -25,6 +25,8 @@
 /* Begin PBXBuildFile section */
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1AAB273922737A9A0037A880 /* CBLConflictResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273722737A9A0037A880 /* CBLConflictResolution.h */; };
+		1AAB273A22737A9A0037A880 /* CBLConflictResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273822737A9A0037A880 /* CBLConflictResolution.m */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
@@ -1589,6 +1591,9 @@
 /* Begin PBXFileReference section */
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1AAB2736227373EB0037A880 /* CBLConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
+		1AAB273722737A9A0037A880 /* CBLConflictResolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolution.h; sourceTree = "<group>"; };
+		1AAB273822737A9A0037A880 /* CBLConflictResolution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolution.m; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
@@ -2189,6 +2194,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1AAB27262273739F0037A880 /* ConflictResolution */ = {
+			isa = PBXGroup;
+			children = (
+				1AAB2736227373EB0037A880 /* CBLConflictResolver.h */,
+				1AAB273722737A9A0037A880 /* CBLConflictResolution.h */,
+				1AAB273822737A9A0037A880 /* CBLConflictResolution.m */,
+			);
+			name = ConflictResolution;
+			sourceTree = "<group>";
+		};
 		2753AFF01EC39CA200C12E98 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
@@ -2556,6 +2571,7 @@
 		938195D91EBCD5F70032CC51 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
+				1AAB27262273739F0037A880 /* ConflictResolution */,
 				27D7ECFC1F2A851600828ECF /* Authenticators */,
 				93DBD01B2004BD0A0017CA83 /* Endpoints */,
 				275229C51E776BC100E630FA /* CBLReplicator.h */,
@@ -3799,6 +3815,7 @@
 				934F4CAF1E241FB500F90659 /* CBLLog+Logging.h in Headers */,
 				938195981EB97E7A0032CC51 /* CBLDocumentFragment.h in Headers */,
 				93CD024B1E9DA0AC00AFB3FA /* CBLC4Document.h in Headers */,
+				1AAB273922737A9A0037A880 /* CBLConflictResolution.h in Headers */,
 				93CD02681E9FFEC500AFB3FA /* CBLArray.h in Headers */,
 				934F4CB61E241FB500F90659 /* CBLStringBytes.h in Headers */,
 				27D721BA1F904B2500AA4458 /* CBLNewDictionary.h in Headers */,
@@ -5182,6 +5199,7 @@
 				937A693E1F1065610058277F /* CBLQueryMeta.m in Sources */,
 				276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */,
 				933208151E77415E000D9993 /* CBLQueryExpression.m in Sources */,
+				1AAB273A22737A9A0037A880 /* CBLConflictResolution.m in Sources */,
 				931C14641EAAD3420094F9B2 /* CBLMutableFragment.m in Sources */,
 				93F5D1A71EFAEA2400E2DF53 /* CBLSessionAuthenticator.m in Sources */,
 				934A279B1F30E5FA003946A7 /* CBLCompoundExpression.m in Sources */,

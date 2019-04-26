@@ -39,6 +39,7 @@
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
+@synthesize conflictResolver=_conflictResolver;
 
 #if TARGET_OS_IPHONE
 @synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
