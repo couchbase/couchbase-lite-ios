@@ -989,21 +989,20 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         CBLDocument* resolvedDoc = [conflictResolver resolve: conflict];
         
         if (resolvedDoc == nil) {
-            // TODO: document is deleted!!
-            return YES;
-        } else {
-            NSError* err;
-            BOOL success = [self saveResolvedDocument: resolvedDoc withLocalDoc: localDoc
-                                            remoteDoc: remoteDoc error: &err];
-            
-            if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
-                continue;
-            
-            if (outError)
-                *outError = err;
-            
-            return success;
+            resolvedDoc = localDoc.isDeleted ? localDoc : remoteDoc;
         }
+        
+        NSError* err;
+        BOOL success = [self saveResolvedDocument: resolvedDoc withLocalDoc: localDoc
+                                        remoteDoc: remoteDoc error: &err];
+        
+        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
+            continue;
+        
+        if (outError)
+            *outError = err;
+        
+        return success;
     }
 }
 
