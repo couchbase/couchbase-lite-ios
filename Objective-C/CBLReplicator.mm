@@ -73,6 +73,7 @@ typedef enum {
 @implementation CBLReplicator
 {
     dispatch_queue_t _dispatchQueue;
+    dispatch_queue_t _otherDispatchQueue; // TODO: Naming???
     C4Replicator* _repl;
     NSString* _desc;
     C4ReplicatorStatus _rawStatus;
@@ -95,6 +96,7 @@ typedef enum {
 @synthesize bgMonitor=_bgMonitor;
 @synthesize suspended=_suspended;
 @synthesize dispatchQueue=_dispatchQueue;
+@synthesize otherDispatchQueue=_otherDispatchQueue;
 
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
@@ -108,6 +110,9 @@ typedef enum {
         _progressLevel = kCBLProgressLevelBasic;
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
+        
+        NSString* qName = $sprintf(@"DB-Replicator-Other <%@>", config.database.name);
+        _otherDispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_CONCURRENT);
     }
     return self;
 }
@@ -551,15 +556,18 @@ static void onDocsEnded(C4Replicator *repl,
             continue;
         
         if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
-            // Conflict pulling a document -- the revision was added but app needs to resolve it:
-            CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
-            NSError* error;
-            if ([_config.database resolveConflictInDocument: doc.id
-                                       withConflictResolver: _config.conflictResolver
-                                                      error: &error]) {
-                [doc resetError]; // Reset the error as successfully resolving the conflicts
-            } else
-                CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
+            dispatch_async(_otherDispatchQueue, ^{
+                // Conflict pulling a document -- the revision was added but app needs to resolve it
+                CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
+                NSError* error;
+                if ([_config.database resolveConflictInDocument: doc.id
+                                           withConflictResolver: _config.conflictResolver
+                                                          error: &error]) {
+                    [doc resetError]; // Reset the error as successfully resolving the conflicts
+                } else
+                    CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@",
+                            self, doc.id, error);
+            });
         }
         
         if (doc.c4Error.code)
