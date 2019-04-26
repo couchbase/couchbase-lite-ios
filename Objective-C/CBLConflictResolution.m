@@ -20,6 +20,7 @@
 #import "CBLConflictResolution.h"
 #import "CBLConflictResolver.h"
 #import "CBLDocument+Internal.h"
+#import "CBLConflict.h"
 
 @interface CBLDefaultConflictResolution : NSObject <CBLConflictResolver>
 

@@ -1,5 +1,5 @@
 //
-//  CBLConflictResolver.h
+//  CBLConflict.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,19 +17,23 @@
 //  limitations under the License.
 //
 
-#import "CBLConflict.h"
-@class CBLDocument;
+#import "CBLConflict+Internal.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation CBLConflict
 
-/**
- Conflict Resolver protocol
- */
-@protocol CBLConflictResolver <NSObject>
+@synthesize localDocument=_localDocument, remoteDocument=_remoteDocument;
 
-/** The callback resolve method, if conflict occurs. */
-- (nullable CBLDocument*) resolve: (CBLConflict*)conflict;
+# pragma mark - Internal
+
+- (instancetype) initWithLocalDocument:(CBLDocument *)localDoc
+                        remoteDocument:(CBLDocument *)remoteDoc {
+    NSParameterAssert(localDoc != nil && remoteDoc != nil);
+    self = [super init];
+    if (self) {
+        _localDocument = localDoc;
+        _remoteDocument = remoteDoc;
+    }
+    return self;
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

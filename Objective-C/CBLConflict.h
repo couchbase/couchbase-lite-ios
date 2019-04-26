@@ -1,5 +1,5 @@
 //
-//  CBLConflictResolver.h
+//  CBLConflict.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,18 +17,24 @@
 //  limitations under the License.
 //
 
-#import "CBLConflict.h"
+#import <Foundation/Foundation.h>
 @class CBLDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Conflict Resolver protocol
+ Conflict class
  */
-@protocol CBLConflictResolver <NSObject>
+@interface CBLConflict : NSObject
 
-/** The callback resolve method, if conflict occurs. */
-- (nullable CBLDocument*) resolve: (CBLConflict*)conflict;
+/** The document which is already in the database. */
+@property(nonatomic, readonly, nullable) CBLDocument* localDocument;
+
+/** The document which is merging to the database. */
+@property(nonatomic, readonly, nullable) CBLDocument* remoteDocument;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
