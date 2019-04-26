@@ -989,7 +989,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         CBLDocument* resolvedDoc = [conflictResolver resolve: conflict];
         
         if (resolvedDoc == nil) {
-            resolvedDoc = localDoc.isDeleted ? localDoc : remoteDoc;
+            resolvedDoc = remoteDoc.isDeleted ? remoteDoc : localDoc;
         }
         
         NSError* err;
