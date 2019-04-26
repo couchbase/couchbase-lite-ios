@@ -27,7 +27,6 @@
 
 - (instancetype) initWithLocalDocument:(CBLDocument *)localDoc
                         remoteDocument:(CBLDocument *)remoteDoc {
-    NSParameterAssert(localDoc != nil && remoteDoc != nil);
     self = [super init];
     if (self) {
         _localDocument = localDoc;
