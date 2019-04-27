@@ -233,7 +233,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                     error: &err];
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
-            
             CBLDocument* latestDoc;
             CBL_LOCK(self) {
                 C4Transaction transaction(_c4db);
