@@ -219,6 +219,61 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+- (BOOL) saveDocument: (CBLMutableDocument *)document
+      conflictHandler: (BOOL (^)(CBLMutableDocument *, CBLDocument * nullable))conflictHandler
+                error: (NSError **)error {
+    
+    CBLAssertNotNil(document);
+    CBLAssertNotNil(conflictHandler);
+    
+    while (true) {
+        NSError* err;
+        BOOL success = [self saveDocument: document
+                       concurrencyControl: kCBLConcurrencyControlFailOnConflict
+                                    error: &err];
+        // if it's a conflict, we will use the conflictHandler to resolve.
+        if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
+            
+            CBLDocument* latestDoc;
+            CBL_LOCK(self) {
+                C4Transaction transaction(_c4db);
+                if (!transaction.begin())
+                    return convertError(transaction.error(), error);
+                
+                latestDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                       documentID: document.id
+                                                   includeDeleted: YES
+                                                            error: error];
+                if (!latestDoc)
+                    return NO;
+                
+                if (!transaction.commit())
+                    return convertError(transaction.error(), error);
+            }
+            
+            @try {
+                if (conflictHandler(document, latestDoc)) {
+                    CBLAssertNotNil(document);
+                    continue;
+                }
+            } @catch(NSError* conflictHandlerError) {
+                if (error)
+                    *error = conflictHandlerError;
+            }
+            return NO;
+        } else if (!success) { // any other error, we return false with errorInfo
+            if (error)
+                *error = err;
+            
+            return NO;
+        }
+        
+        // save didn't cause any error
+        return YES;
+    }
+}
+
+
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
     return [self deleteDocument: document
              concurrencyControl: kCBLConcurrencyControlLastWriteWins
