@@ -980,16 +980,39 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         }
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
+        
+        CBLAssertNotNil(localDoc);
+        CBLAssertNotNil(remoteDoc);
+        
+        localDoc = localDoc.isDeleted ? nil : localDoc;
+        remoteDoc = remoteDoc.isDeleted ? nil : remoteDoc;
         CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc
                                                             remoteDocument: remoteDoc];
         
         // Resolve conflict:
-        CBLLogInfo(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
-                   docID, localDoc.revID, remoteDoc.revID);
-        CBLDocument* resolvedDoc = [conflictResolver resolve: conflict];
+        CBLDocument* resolvedDoc;
+        @try {
+            CBLLogInfo(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
+                       docID, localDoc.revID, remoteDoc.revID);
+            
+            resolvedDoc = [conflictResolver resolve: conflict];
+        } @catch (NSException *exception) {
+            CBLWarn(Sync, @"Exception in conflict resolver: %@", exception.description);
+            // TODO: handle error
+            return NO;
+        }
         
-        if (resolvedDoc == nil) {
-            resolvedDoc = remoteDoc.isDeleted ? remoteDoc : localDoc;
+        if (resolvedDoc.id != docID) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"Resolved docID '%@' is not matching with docID '%@'",
+             resolvedDoc.id, docID];
+            return NO;
+        }
+        
+        if (resolvedDoc.database != self) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"Resolved document is from a different database!"];
+            return NO;
         }
         
         NSError* err;
