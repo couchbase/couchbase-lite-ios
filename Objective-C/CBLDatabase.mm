@@ -213,6 +213,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(document);
     
     return [self saveDocument: document
+             withBaseDocument: nil
            concurrencyControl: concurrencyControl
                    asDeletion: NO
                         error: error];
@@ -228,22 +229,24 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     while (true) {
         NSError* err;
+        CBLDocument* oldDoc = nil;
         BOOL success = [self saveDocument: document
+                         withBaseDocument: oldDoc
                        concurrencyControl: kCBLConcurrencyControlFailOnConflict
+                               asDeletion: NO
                                     error: &err];
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
-            CBLDocument* latestDoc;
             CBL_LOCK(self) {
                 C4Transaction transaction(_c4db);
                 if (!transaction.begin())
                     return convertError(transaction.error(), error);
                 
-                latestDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                       documentID: document.id
-                                                   includeDeleted: YES
-                                                            error: error];
-                if (!latestDoc)
+                oldDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                    documentID: document.id
+                                                includeDeleted: YES
+                                                         error: error];
+                if (!oldDoc)
                     return NO;
                 
                 if (!transaction.commit())
@@ -251,7 +254,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             }
             
             @try {
-                if (conflictHandler(document, latestDoc)) {
+                if (conflictHandler(document, oldDoc)) {
                     CBLAssertNotNil(document);
                     continue;
                 }
@@ -287,6 +290,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(document);
     
     return [self saveDocument: document
+             withBaseDocument: nil
            concurrencyControl: concurrencyControl
                    asDeletion: YES
                         error: error];
@@ -889,6 +893,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 
 - (BOOL) saveDocument: (CBLDocument*)document
+     withBaseDocument: (nullable CBLDocument*)baseDoc
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
            asDeletion: (BOOL)deletion
                 error: (NSError**)outError
@@ -909,8 +914,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             if (!transaction.begin())
                 return convertError(transaction.error(), outError);
             
-            if (![self saveDocument: document into: &newDoc
-                   withBaseDocument: nil asDeletion: deletion error: outError])
+            if (![self saveDocument: document into: &newDoc withBaseDocument: baseDoc.c4Doc.rawDoc
+                         asDeletion: deletion error: outError])
                 return NO;
             
             if (!newDoc) {
