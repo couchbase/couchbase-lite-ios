@@ -73,7 +73,7 @@ typedef enum {
 @implementation CBLReplicator
 {
     dispatch_queue_t _dispatchQueue;
-    dispatch_queue_t _concurrentQueue;
+    dispatch_queue_t _conflictResolverQueue;
     C4Replicator* _repl;
     NSString* _desc;
     C4ReplicatorStatus _rawStatus;
@@ -96,7 +96,7 @@ typedef enum {
 @synthesize bgMonitor=_bgMonitor;
 @synthesize suspended=_suspended;
 @synthesize dispatchQueue=_dispatchQueue;
-@synthesize concurrentQueue=_concurrentQueue;
+@synthesize conflictResolverQueue=_conflictResolverQueue;
 
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
@@ -112,7 +112,7 @@ typedef enum {
         _docReplicationNotifier = [CBLChangeNotifier new];
         
         NSString* qName = $sprintf(@"DB-Replicator-Other <%@>", config.database.name);
-        _concurrentQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_CONCURRENT);
+        _conflictResolverQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_CONCURRENT);
     }
     return self;
 }
@@ -556,7 +556,7 @@ static void onDocsEnded(C4Replicator *repl,
             continue;
         
         if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
-            dispatch_async(_concurrentQueue, ^{
+            dispatch_async(_conflictResolverQueue, ^{
                 // Conflict pulling a document -- the revision was added but app needs to resolve it
                 CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
                 NSError* error;
