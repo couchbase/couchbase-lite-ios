@@ -981,9 +981,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
         
-        CBLAssertNotNil(localDoc);
-        CBLAssertNotNil(remoteDoc);
-        
+        Assert(localDoc == nil && remoteDoc == nil, @"Local and remote document shouldn't be empty \
+               at same time, when resolving conflict.");
         localDoc = localDoc.isDeleted ? nil : localDoc;
         remoteDoc = remoteDoc.isDeleted ? nil : remoteDoc;
         CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc
