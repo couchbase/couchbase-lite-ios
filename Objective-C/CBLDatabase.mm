@@ -995,22 +995,22 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                        docID, localDoc.revID, remoteDoc.revID);
             
             resolvedDoc = [conflictResolver resolve: conflict];
-        } @catch (NSException *exception) {
-            CBLWarn(Sync, @"Exception in conflict resolver: %@", exception.description);
-            // TODO: handle error
-            return NO;
-        }
-        
-        if (resolvedDoc.id != docID) {
-            [NSException raise: NSInternalInconsistencyException
-                        format: @"Resolved docID '%@' is not matching with docID '%@'",
-             resolvedDoc.id, docID];
-            return NO;
-        }
-        
-        if (resolvedDoc.database != self) {
-            [NSException raise: NSInternalInconsistencyException
-                        format: @"Resolved document is from a different database!"];
+            
+            if (resolvedDoc.id != docID) {
+                [NSException raise: NSInternalInconsistencyException
+                            format: @"Resolved docID '%@' is not matching with docID '%@'",
+                 resolvedDoc.id, docID];
+            }
+            
+            if (resolvedDoc.database != self) {
+                [NSException raise: NSInternalInconsistencyException
+                            format: @"Resolved document is from a different database!"];
+            }
+        } @catch (NSException *ex) {
+            CBLWarn(Sync, @"Exception in conflict resolver: %@", ex.description);
+            *outError = [NSError errorWithDomain: CBLErrorDomain
+                                            code:CBLErrorConflict
+                                        userInfo: @{NSLocalizedDescriptionKey: ex.description}];
             return NO;
         }
         
