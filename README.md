@@ -95,7 +95,7 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Sample Apps
 
-- [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.0) : Objective-C and Swift
+- [Todo](https://github.com/couchbaselabs/mobile-training-todo) : Objective-C and Swift
 
 
 ## License
