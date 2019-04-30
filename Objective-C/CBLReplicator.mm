@@ -565,9 +565,12 @@ static void onDocsEnded(C4Replicator *repl,
                                                           error: &error]) {
                     [doc resetError]; // Reset the error as successfully resolving the conflicts
                 } else {
-                    // TODO: Handle the errors when the conflict happens, with the pull
                     CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@",
                             self, doc.id, error);
+                    id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
+                                                                                 isPush: pushing
+                                                                              documents: @[doc]];
+                    [_docReplicationNotifier postChange: replication];
                 }
             });
         }
