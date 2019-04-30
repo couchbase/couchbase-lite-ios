@@ -94,10 +94,10 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS tests ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx | $XCPRETTY
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run ObjC iOS tests ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
 
   if [ -z "$NO_COV" ]
   then
@@ -107,10 +107,10 @@ then
   fi
 
   echo "Run Swift macOS tests ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx | $XCPRETTY
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES | $XCPRETTY
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
