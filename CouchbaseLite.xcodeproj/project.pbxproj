@@ -1597,6 +1597,7 @@
 /* Begin PBXFileReference section */
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
 		1AAF6371226A8B060016754C /* QueryTest+Meta.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Meta.m"; sourceTree = "<group>"; };
 		1AAF6382226A8DBF0016754C /* QueryTest+Join.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Join.m"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -2990,6 +2991,7 @@
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */,
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
+				1AA6744E227925D20018CC6D /* QueryTest.h */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
 				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
 				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,

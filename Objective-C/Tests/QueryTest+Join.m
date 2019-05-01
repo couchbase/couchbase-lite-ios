@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "QueryTest.m"
+#import "QueryTest.h"
 
 @interface QueryTestWithJoin : QueryTest
 

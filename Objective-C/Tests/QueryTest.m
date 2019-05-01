@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLTestCase.h"
+#import "QueryTest.h"
 #import "CBLLiveQuery.h"
 #import "CBLQuery+internal.h"
 #import "CBLQuery+JSON.h"
@@ -31,10 +31,6 @@
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
-
-@interface QueryTest : CBLTestCase
-
-@end
 
 @implementation QueryTest
 
