@@ -142,9 +142,6 @@ public final class Database {
             try _impl.save(document._impl as! CBLMutableDocument, conflictHandler: conflictHandler)
             return true
         } catch let err as NSError {
-            if err.code == CBLErrorConflict {
-                return false
-            }
             throw err
         }
     }
