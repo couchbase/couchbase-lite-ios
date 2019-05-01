@@ -19,6 +19,9 @@
 
 #import "CBLTestCase.h"
 
+#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
+#define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
+
 @interface QueryTest : CBLTestCase
 
 - (NSArray*)loadNumbers:(NSInteger)num;

@@ -29,9 +29,6 @@
 #import "CBLValueExpression.h"
 #import "CBLQueryExpression+Internal.h"
 
-#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
-#define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
-
 @implementation QueryTest
 
 #pragma mark - Helper methods
