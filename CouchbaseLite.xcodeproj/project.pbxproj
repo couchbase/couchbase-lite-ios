@@ -25,6 +25,12 @@
 /* Begin PBXBuildFile section */
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
@@ -5020,7 +5026,9 @@
 				933F841D220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
+				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
+				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
@@ -5059,6 +5067,7 @@
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
+				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -5071,6 +5080,7 @@
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
+				1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */,
 				939260B220A0FF1600E5748C /* MessageEndpointTest.m in Sources */,
 				9343F17D207D633300F19A89 /* MiscTest.m in Sources */,
 				930C7F9320FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
@@ -5134,12 +5144,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
+				1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				9388CC3F21C1E2B8005CA66D /* LogTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
+				1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
