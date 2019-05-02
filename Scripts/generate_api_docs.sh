@@ -49,5 +49,5 @@ else
   SCHEME="CBL-EE Swift"
 fi
 
-jazzy --clean --xcodebuild-arguments "-scheme,$SCHEME,-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme Scripts/Support/Docs/README.md --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
-jazzy --clean --objc --umbrella-header ${OBJC_HEADER} --module CouchbaseLite --theme Scripts/Support/Docs/Theme --readme Scripts/Support/Docs/README.md --output ${OUTPUT_DIR}/CouchbaseLite
+jazzy --clean --xcodebuild-arguments "-scheme,$SCHEME,-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
+jazzy --clean --objc --umbrella-header ${OBJC_HEADER} --module CouchbaseLite --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DIR}/CouchbaseLite

@@ -46,6 +46,14 @@
 		1AAB2785227793E40037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAB2786227793E50037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAB2787227793E50037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
+		1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
@@ -1616,6 +1624,9 @@
 		1AAB273B22739EBB0037A880 /* CBLConflict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflict.h; sourceTree = "<group>"; };
 		1AAB273C22739EBB0037A880 /* CBLConflict.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflict.m; sourceTree = "<group>"; };
 		1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLConflict+Internal.h"; sourceTree = "<group>"; };
+		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
+		1AAF6371226A8B060016754C /* QueryTest+Meta.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Meta.m"; sourceTree = "<group>"; };
+		1AAF6382226A8DBF0016754C /* QueryTest+Join.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Join.m"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
@@ -3021,7 +3032,10 @@
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */,
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
+				1AA6744E227925D20018CC6D /* QueryTest.h */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
+				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
+				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
@@ -5074,7 +5088,9 @@
 				933F841D220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
+				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
+				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
@@ -5113,6 +5129,7 @@
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
+				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -5125,6 +5142,7 @@
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
+				1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */,
 				939260B220A0FF1600E5748C /* MessageEndpointTest.m in Sources */,
 				9343F17D207D633300F19A89 /* MiscTest.m in Sources */,
 				930C7F9320FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
@@ -5188,12 +5206,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
+				1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				9388CC3F21C1E2B8005CA66D /* LogTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
+				1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
@@ -5324,6 +5344,8 @@
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
 				9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
+				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
+				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
