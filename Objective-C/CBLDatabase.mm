@@ -983,10 +983,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
         
-        localDoc = localDoc.isDeleted ? nil : localDoc;
-        remoteDoc = remoteDoc.isDeleted ? nil : remoteDoc;
-        CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc
-                                                            remoteDocument: remoteDoc];
+        CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc.isDeleted ? nil : localDoc
+                                                            remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
         
         // Resolve conflict:
         CBLDocument* resolvedDoc;
@@ -1040,15 +1038,13 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             return convertError(t.error(), outError);
         
         if (!resolvedDoc) {
-            if (!localDoc && remoteDoc)
-                resolvedDoc = remoteDoc; // local deleted, keep remote
+            if (localDoc.isDeleted)
+                resolvedDoc = localDoc;
             
-            if (!remoteDoc && localDoc)
-                resolvedDoc = localDoc; // remote deleted, keep local
+            if (remoteDoc.isDeleted)
+                resolvedDoc = remoteDoc;
         }
         
-        Assert(resolvedDoc == nil, @"Resolved doc shouldn't be empty for \
-               the local '%@' and remote '%@'", localDoc.revID, remoteDoc.revID);
         if (resolvedDoc != localDoc)
             resolvedDoc.database = self;
         
@@ -1059,11 +1055,16 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         alloc_slice mergedBody;
         C4RevisionFlags mergedFlags = 0;
         if (resolvedDoc != remoteDoc) {
-            // Unless the remote revision is being used as-is, we need a new revision:
-            mergedBody = [resolvedDoc encode: outError];
-            if (!mergedBody)
-                return false;
-            if (resolvedDoc.isDeleted)
+            BOOL isDeleted = YES;
+            if (resolvedDoc) {
+                // Unless the remote revision is being used as-is, we need a new revision:
+                mergedBody = [resolvedDoc encode: outError];
+                if (!mergedBody)
+                    return false;
+                isDeleted = resolvedDoc.isDeleted;
+            }
+            
+            if (isDeleted)
                 mergedFlags |= kRevDeleted;
         }
         
