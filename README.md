@@ -1,5 +1,5 @@
 
-# Couchbase Lite 2.5.0
+# Couchbase Lite 2.5.1
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/couchbase/couchbase-lite-ios.svg?branch=master)](https://travis-ci.org/couchbase/couchbase-lite-ios) [![Coverage Status](https://coveralls.io/repos/github/couchbase/couchbase-lite-ios/badge.svg?branch=master)](https://coveralls.io/github/couchbase/couchbase-lite-ios?branch=master)
 
@@ -25,7 +25,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for O
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', '~> 2.5.0'
+  pod 'CouchbaseLite', '~> 2.5.1'
 end
 ```
 
@@ -33,7 +33,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Enterprise', '~> 2.5.0'
+  pod 'CouchbaseLite-Enterprise', '~> 2.5.1'
 end
 ```
 
@@ -43,7 +43,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift', '~> 2.5.0'
+  pod 'CouchbaseLite-Swift', '~> 2.5.1'
 end
 ```
 
@@ -51,7 +51,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.5.0'
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.5.1'
 end
 ```
 
