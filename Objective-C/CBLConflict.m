@@ -25,8 +25,10 @@
 
 # pragma mark - Internal
 
-- (instancetype) initWithLocalDocument:(CBLDocument *)localDoc
-                        remoteDocument:(CBLDocument *)remoteDoc {
+- (instancetype) initWithLocalDocument: (CBLDocument *)localDoc
+                        remoteDocument: (CBLDocument *)remoteDoc {
+    Assert(localDoc == nil && remoteDoc == nil, @"Local and remote document shouldn't be empty \
+           at same time, when resolving conflict.");
     self = [super init];
     if (self) {
         _localDocument = localDoc;

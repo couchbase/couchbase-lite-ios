@@ -111,7 +111,7 @@ typedef enum {
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
         
-        NSString* qName = $sprintf(@"DB-Replicator-Other <%@>", config.database.name);
+        NSString* qName = $sprintf(@"Conflict Resolver <%@>", config.database.name);
         _conflictResolverQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_CONCURRENT);
     }
     return self;
@@ -560,6 +560,8 @@ static void onDocsEnded(C4Replicator *repl,
                 // Conflict pulling a document -- the revision was added but app needs to resolve it
                 CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
                 NSError* error;
+                
+                // TODO: Error handling correction will revisit in separate PR
                 if ([_config.database resolveConflictInDocument: doc.id
                                            withConflictResolver: _config.conflictResolver
                                                           error: &error]) {

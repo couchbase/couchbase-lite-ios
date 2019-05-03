@@ -23,14 +23,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Conflict class
+ Conflict class, which includes the conflicted documents. 
  */
 @interface CBLConflict : NSObject
 
-/** The document which is already in the database. */
+/** The document which is already in the database. If null, the document is deleted. */
 @property(nonatomic, readonly, nullable) CBLDocument* localDocument;
 
-/** The document which is merging to the database. */
+/** The document which is merging to the database. If null, the document is deleted.*/
 @property(nonatomic, readonly, nullable) CBLDocument* remoteDocument;
 
 /** Not available */

@@ -958,6 +958,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     while (true) {
         CBLDocument* localDoc;
         CBLDocument* remoteDoc;
+        
+        // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
             C4Transaction t(_c4db);
             if (!t.begin())
@@ -967,13 +969,13 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                               includeDeleted: YES error: outError];
             if (!localDoc)
-                return false;
+                return NO;
             
             // Read the conflicting remote revision:
             remoteDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                                includeDeleted: YES error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision])
-                return false;
+                return NO;
             
             if (!t.commit())
                 return convertError(t.error(), outError);
@@ -981,8 +983,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
         
-        Assert(localDoc == nil && remoteDoc == nil, @"Local and remote document shouldn't be empty \
-               at same time, when resolving conflict.");
         localDoc = localDoc.isDeleted ? nil : localDoc;
         remoteDoc = remoteDoc.isDeleted ? nil : remoteDoc;
         CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc
@@ -991,25 +991,26 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         // Resolve conflict:
         CBLDocument* resolvedDoc;
         @try {
-            CBLLogInfo(Sync, @"Resolving doc '%@' (mine=%@ and theirs=%@)",
+            CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
                        docID, localDoc.revID, remoteDoc.revID);
             
             resolvedDoc = [conflictResolver resolve: conflict];
             
-            if (resolvedDoc.id != docID) {
+            if (resolvedDoc && resolvedDoc.id != docID) {
                 [NSException raise: NSInternalInconsistencyException
                             format: @"Resolved docID '%@' is not matching with docID '%@'",
                  resolvedDoc.id, docID];
             }
             
-            if (resolvedDoc.database != self) {
+            if (resolvedDoc && resolvedDoc.database != self) {
                 [NSException raise: NSInternalInconsistencyException
-                            format: @"Resolved document is from a different database!"];
+                            format: @"Resolved document db '%@' is different from expected db '%@'",
+                 resolvedDoc.database.name, self.name];
             }
         } @catch (NSException *ex) {
             CBLWarn(Sync, @"Exception in conflict resolver: %@", ex.description);
             *outError = [NSError errorWithDomain: CBLErrorDomain
-                                            code:CBLErrorConflict
+                                            code: CBLErrorConflict
                                         userInfo: @{NSLocalizedDescriptionKey: ex.description}];
             return NO;
         }
@@ -1038,6 +1039,16 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         if (!t.begin())
             return convertError(t.error(), outError);
         
+        if (!resolvedDoc) {
+            if (!localDoc && remoteDoc)
+                resolvedDoc = remoteDoc; // local deleted, keep remote
+            
+            if (!remoteDoc && localDoc)
+                resolvedDoc = localDoc; // remote deleted, keep local
+        }
+        
+        Assert(resolvedDoc == nil, @"Resolved doc shouldn't be empty for \
+               the local '%@' and remote '%@'", localDoc.revID, remoteDoc.revID);
         if (resolvedDoc != localDoc)
             resolvedDoc.database = self;
         
