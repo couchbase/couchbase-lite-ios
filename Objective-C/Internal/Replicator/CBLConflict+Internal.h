@@ -21,7 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLConflict (Internal)
+@interface CBLConflict ()
 
 - (instancetype) initWithLocalDocument: (nullable CBLDocument*)localDoc
                         remoteDocument: (nullable CBLDocument*)remoteDoc;
