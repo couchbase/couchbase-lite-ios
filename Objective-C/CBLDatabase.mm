@@ -1062,7 +1062,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                 if (!mergedBody)
                     return false;
                 isDeleted = resolvedDoc.isDeleted;
-            }
+            } else
+                mergedBody = alloc_slice(""_sl);
             
             if (isDeleted)
                 mergedFlags |= kRevDeleted;
