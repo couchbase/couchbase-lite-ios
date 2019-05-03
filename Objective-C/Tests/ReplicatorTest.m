@@ -781,6 +781,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
+    // pass the remote revision
     CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
     Assert(doc2);
     [doc2 setValue: @"striped" forKey: @"pattern"];
@@ -804,7 +805,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     
-    // Most-Active Win:
     NSDictionary* exp = @{@"species": @"Tiger",
                           @"pattern": @"striped",
                           @"color": @"black-yellow",
@@ -822,7 +822,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
-    // Now make different changes in db and otherDB:
+    // Now make different changes in db and otherDB: (make local pass)
     doc1 = [[self.db documentWithID: @"doc"] toMutable];
     [doc1 setValue: @"Hobbes" forKey: @"name"];
     [doc1 setValue: @YES forKey: @"pass"];
@@ -846,7 +846,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     
-    // Most-Active Win:
     NSDictionary* exp = @{@"species": @"Tiger",
                           @"name": @"Hobbes",
                           @"pass": @YES};
@@ -864,7 +863,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
-    // Now make different changes in db and otherDB:
+    // Now make different changes in db and otherDB: (do not pass both, which return nil, deletion)
     doc1 = [[self.db documentWithID: @"doc"] toMutable];
     [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
@@ -883,7 +882,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    // Check that it was resolved:
+    // Check whether the document is deleted, and returns null.
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
@@ -900,6 +899,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
+    // remove local revision and change remote doc.  
     Assert([self.db deleteDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
@@ -915,7 +915,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    // Check that it was resolved:
+    // Check whether the document gets deleted and return null. 
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
@@ -947,7 +947,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    // Check that it was resolved:
+    // Check whether it deletes the document and returns nil. 
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
