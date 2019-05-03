@@ -39,6 +39,7 @@
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
+@synthesize conflictResolver=_conflictResolver;
 
 #if TARGET_OS_IPHONE
 @synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
@@ -112,6 +113,11 @@
     _channels = channels;
 }
 
+- (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
+    [self checkReadonly];
+    _conflictResolver = conflictResolver;
+}
+
 
 #if TARGET_OS_IPHONE
 - (void) setAllowReplicatingInBackground: (BOOL)allowReplicatingInBackground {
@@ -140,6 +146,7 @@
         _channels = config.channels;
         _pushFilter = config.pushFilter;
         _pullFilter = config.pullFilter;
+        _conflictResolver = config.conflictResolver;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif
