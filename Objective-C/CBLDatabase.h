@@ -143,6 +143,21 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
                 error: (NSError**)error;
 
 /**
+ Saves a document to the database. When write operations are executed
+ concurrently, and if conflicts occur, conflict handler will be called. Use the handler to directly
+ edit the document. Returning true, will save the document. Returning false, will cancel
+ the save operation.
+ 
+ @param document The document.
+ @param conflictHandler The conflict handler block which can be used to resolve it.
+ @param error On return, error if any.
+ @return True on success, false on failure.
+*/
+- (BOOL) saveDocument: (CBLMutableDocument*)document
+      conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
+                error: (NSError**)error;
+
+/**
  Deletes a document from the database. When write operations are executed
  concurrently, the last writer will overwrite all other written values.
  Calling this method is the same as calling the -deleteDocument:concurrencyControl:error:
