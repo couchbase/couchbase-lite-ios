@@ -132,16 +132,17 @@ public final class Database {
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
         ) throws -> Bool {
         do {
-            let conflictHandler = { (current: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                if let oldDoc = old {
-                    return conflictHandler(MutableDocument(current), Document(oldDoc))
+            try _impl.save(
+                document._impl as! CBLMutableDocument,
+                conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
+                    return conflictHandler(MutableDocument(cur), old != nil ? Document(old!) : nil)
                 }
-                return conflictHandler(MutableDocument(current), nil)
-            }
-            
-            try _impl.save(document._impl as! CBLMutableDocument, conflictHandler: conflictHandler)
+            )
             return true
         } catch let err as NSError {
+            if err.code == CBLErrorConflict {
+                return false
+            }
             throw err
         }
     }
