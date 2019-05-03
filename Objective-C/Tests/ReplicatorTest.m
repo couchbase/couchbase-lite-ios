@@ -37,6 +37,10 @@
 @interface ReplicatorTest : CBLTestCase
 @end
 
+@interface MyConflictResolver: NSObject<CBLConflictResolver>
+@property(nonatomic, nullable) CBLDocument* winner;
+@end
+
 #ifdef COUCHBASE_ENTERPRISE
 
 @interface MockConnectionFactory : NSObject <CBLMessageEndpointDelegate>
@@ -762,6 +766,192 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
+- (void) testConflictResolverRemoteWin {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Now make different changes in db and otherDB:
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    [doc2 setValue: @YES forKey: @"pass"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target
+                                                               type: kCBLReplicatorTypePull
+                                                         continuous: NO];
+    
+    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 1u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    
+    // Most-Active Win:
+    NSDictionary* exp = @{@"species": @"Tiger",
+                          @"pattern": @"striped",
+                          @"color": @"black-yellow",
+                          @"pass": @YES};
+    AssertEqualObjects(savedDoc.toDictionary, exp);
+}
+
+- (void) testConflictResolverLocalWin {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Now make different changes in db and otherDB:
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    [doc1 setValue: @YES forKey: @"pass"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target
+                                                               type: kCBLReplicatorTypePull
+                                                         continuous: NO];
+    
+    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 1u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    
+    // Most-Active Win:
+    NSDictionary* exp = @{@"species": @"Tiger",
+                          @"name": @"Hobbes",
+                          @"pass": @YES};
+    AssertEqualObjects(savedDoc.toDictionary, exp);
+}
+
+- (void) testConflictResolverDeleteWithNonEmptyDocs {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Now make different changes in db and otherDB:
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target
+                                                               type: kCBLReplicatorTypePull
+                                                         continuous: NO];
+    
+    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 0u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertNil(savedDoc);
+}
+
+- (void) testConflictResolverDeleteLocal {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    Assert([self.db deleteDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target
+                                                               type: kCBLReplicatorTypePull
+                                                         continuous: NO];
+    
+    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 0u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertNil(savedDoc);
+}
+
+- (void) testConflictResolverDeleteRemote {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    Assert([otherDB deleteDocument: [otherDB documentWithID: @"doc"] error: &error]);
+    
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target
+                                                               type: kCBLReplicatorTypePull
+                                                         continuous: NO];
+    
+    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 0u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertNil(savedDoc);
+}
 
 - (void) testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
@@ -2539,6 +2729,29 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     [replicatedDoc resetError];
     AssertEqual(replicatedDoc.c4Error.code, 0);
     AssertEqual(replicatedDoc.c4Error.domain, 0);
+}
+
+@end
+
+@implementation MyConflictResolver
+
+@synthesize winner=_winner;
+
+- (CBLDocument *)resolve:(CBLConflict *)conflict {
+    CBLDocument* local = conflict.localDocument;
+    CBLDocument* remote = conflict.remoteDocument;
+    _winner = nil;
+    
+    if (!local || !remote)
+        return _winner;
+    
+    if ([local booleanForKey: @"pass"])
+        _winner = local;
+    
+    if ([remote booleanForKey: @"pass"])
+        _winner = remote;
+    
+    return _winner;
 }
 
 @end
