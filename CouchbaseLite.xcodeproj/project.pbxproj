@@ -23,8 +23,20 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1A416030227D0AD40061A567 /* Conflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602A227D08580061A567 /* Conflict.swift */; };
+		1A416031227D0AD40061A567 /* ConflictResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602C227D08580061A567 /* ConflictResolution.swift */; };
+		1A416032227D0AD40061A567 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602B227D08580061A567 /* ConflictResolver.swift */; };
+		1A416033227D0AD50061A567 /* Conflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602A227D08580061A567 /* Conflict.swift */; };
+		1A416034227D0AD50061A567 /* ConflictResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602C227D08580061A567 /* ConflictResolution.swift */; };
+		1A416035227D0AD50061A567 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602B227D08580061A567 /* ConflictResolver.swift */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AAB273922737A9A0037A880 /* CBLConflictResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273722737A9A0037A880 /* CBLConflictResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AAB273D22739EBB0037A880 /* CBLConflict.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273B22739EBB0037A880 /* CBLConflict.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AAB273E22739EBB0037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
@@ -46,12 +58,6 @@
 		1AAB2785227793E40037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAB2786227793E50037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAB2787227793E50037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
-		1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
-		1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
-		1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
-		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
-		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
-		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
@@ -1616,15 +1622,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A41602A227D08580061A567 /* Conflict.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conflict.swift; sourceTree = "<group>"; };
+		1A41602B227D08580061A567 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
+		1A41602C227D08580061A567 /* ConflictResolution.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolution.swift; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
 		1AAB2736227373EB0037A880 /* CBLConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		1AAB273722737A9A0037A880 /* CBLConflictResolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolution.h; sourceTree = "<group>"; };
 		1AAB273822737A9A0037A880 /* CBLConflictResolution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolution.m; sourceTree = "<group>"; };
 		1AAB273B22739EBB0037A880 /* CBLConflict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflict.h; sourceTree = "<group>"; };
 		1AAB273C22739EBB0037A880 /* CBLConflict.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflict.m; sourceTree = "<group>"; };
 		1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLConflict+Internal.h"; sourceTree = "<group>"; };
-		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
 		1AAF6371226A8B060016754C /* QueryTest+Meta.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Meta.m"; sourceTree = "<group>"; };
 		1AAF6382226A8DBF0016754C /* QueryTest+Join.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Join.m"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -2227,6 +2236,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1A41601A227D084A0061A567 /* ConflictResolution */ = {
+			isa = PBXGroup;
+			children = (
+				1A41602A227D08580061A567 /* Conflict.swift */,
+				1A41602C227D08580061A567 /* ConflictResolution.swift */,
+				1A41602B227D08580061A567 /* ConflictResolver.swift */,
+			);
+			name = ConflictResolution;
+			sourceTree = "<group>";
+		};
 		1AAB27262273739F0037A880 /* ConflictResolution */ = {
 			isa = PBXGroup;
 			children = (
@@ -2394,6 +2413,7 @@
 		9338BEE21ED5475200634873 /* Replication */ = {
 			isa = PBXGroup;
 			children = (
+				1A41601A227D084A0061A567 /* ConflictResolution */,
 				93CED8D020488C9500E6F0A4 /* Authenticator.swift */,
 				93248DE72005E72A00C15B00 /* Endpoint.swift */,
 				27E35A911E8C4F4300E103F9 /* Replicator.swift */,
@@ -4221,7 +4241,7 @@
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 0830;
+						LastSwiftMigration = 1020;
 						ProvisioningStyle = Automatic;
 					};
 					9398D91A1E03434200464432 = {
@@ -4617,11 +4637,13 @@
 				937F02A21EFC7DC600060D64 /* CBLQueryChange.m in Sources */,
 				93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */,
 				93E18737211122EA001D52B9 /* MYURLUtils.m in Sources */,
+				1A416030227D0AD40061A567 /* Conflict.swift in Sources */,
 				93C18E831FB638E80029B567 /* CBLDatabaseConfiguration.m in Sources */,
 				9381961C1EC113860032CC51 /* CBLFragment.m in Sources */,
 				93EC42E91FB3930E00D54BB4 /* CBLQueryArrayExpression.m in Sources */,
 				93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */,
 				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
+				1A416031227D0AD40061A567 /* ConflictResolution.swift in Sources */,
 				934A27AE1F30E641003946A7 /* CBLParameterExpression.m in Sources */,
 				9380D2681F0D7C04007DD84A /* HavingRouter.swift in Sources */,
 				938196181EC113730032CC51 /* CBLMutableFragment.m in Sources */,
@@ -4643,6 +4665,7 @@
 				27F9619C1ED8D9440060F804 /* CBLReachability.m in Sources */,
 				9384D84E1FC4163100FE89D8 /* FullTextExpression.swift in Sources */,
 				9381962E1EC15F4A0032CC51 /* CBLData.mm in Sources */,
+				1A416032227D0AD40061A567 /* ConflictResolver.swift in Sources */,
 				934A27C21F31073E003946A7 /* ArrayExpressionIn.swift in Sources */,
 				93EB25C421CDCEC20006FB88 /* CBLQueryParameters.mm in Sources */,
 				93765EAD1EC181F3005E4050 /* Fragment.swift in Sources */,
@@ -4993,7 +5016,9 @@
 				9343F06E207D61AB00F19A89 /* CBLQueryCollation.m in Sources */,
 				9343F06F207D61AB00F19A89 /* CBLQueryArrayFunction.m in Sources */,
 				9343F070207D61AB00F19A89 /* CBLQueryOrdering.m in Sources */,
+				1A416034227D0AD50061A567 /* ConflictResolution.swift in Sources */,
 				9343F071207D61AB00F19A89 /* CBLReplicatorConfiguration.m in Sources */,
+				1A416035227D0AD50061A567 /* ConflictResolver.swift in Sources */,
 				9343F072207D61AB00F19A89 /* CBLCoreBridge.mm in Sources */,
 				9343F073207D61AB00F19A89 /* CBLAggregateExpression.m in Sources */,
 				9369A6B3207DDBE7009B5B83 /* Database+Encryption.swift in Sources */,
@@ -5015,6 +5040,7 @@
 				9343F080207D61AB00F19A89 /* Blob.swift in Sources */,
 				9343F081207D61AB00F19A89 /* CBLQueryResultArray.m in Sources */,
 				9343F082207D61AB00F19A89 /* FullTextFunction.swift in Sources */,
+				1A416033227D0AD50061A567 /* Conflict.swift in Sources */,
 				9343F083207D61AB00F19A89 /* LimitRouter.swift in Sources */,
 				9343F084207D61AB00F19A89 /* CBLQuery.mm in Sources */,
 				9343F085207D61AB00F19A89 /* ValueExpression.swift in Sources */,
@@ -5684,7 +5710,9 @@
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
@@ -5850,7 +5878,9 @@
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
 			name = "Release-EE";
@@ -6642,7 +6672,9 @@
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
@@ -6653,7 +6685,9 @@
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
 			name = Release;

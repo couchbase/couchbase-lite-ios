@@ -135,6 +135,16 @@ public class ReplicatorConfiguration {
         }
     }
     
+    /**
+     The custom conflict resolver object can be set here. If this value is not set, or set to nil,
+     the default conflict resolution will be applied.
+     */
+    public var conflictResolver: ConflictResolver? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    
     #if os(iOS)
     /**
      Allows the replicator to continue replicating in the background. The default
@@ -186,6 +196,7 @@ public class ReplicatorConfiguration {
         self.headers = config.headers
         self.channels = config.channels
         self.documentIDs = config.documentIDs
+        self.conflictResolver = config.conflictResolver
     #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground
     #endif
@@ -209,6 +220,7 @@ public class ReplicatorConfiguration {
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
+        c.conflictResolver = self.conflictResolver != nil ? CustomCBLConflictResolver(self.conflictResolver!) : nil
     #if os(iOS)
         c.allowReplicatingInBackground = self.allowReplicatingInBackground
     #endif
@@ -225,3 +237,18 @@ public class ReplicatorConfiguration {
         }
     }
 }
+
+
+/* internal */ fileprivate class CustomCBLConflictResolver: NSObject, CBLConflictResolver {
+    let _resolver: ConflictResolver
+    
+    init(_ resolver: ConflictResolver) {
+        _resolver = resolver
+    }
+    
+    func resolve(_ conflict: CBLConflict) -> CBLDocument? {
+        let doc = _resolver.resolve(conflict: Conflict(impl: conflict))
+        return doc?._impl
+    }
+}
+
