@@ -845,5 +845,180 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(db.count, 2)
     }
     
+    func testConflictHandlerRemoteWin() throws {
+        let doc = MutableDocument(id: "doc")
+        doc.setString("Tiger", forKey: "species")
+        try db.saveDocument(doc)
+        
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // make changes to both documents from db and otherDB
+        let doc1 = db.document(withID: "doc")!.toMutable()
+        doc1.setString("Hobbes", forKey: "name")
+        doc1.setBoolean(true, forKey: "pass")
+        try db.saveDocument(doc1)
+        
+        let doc2 = otherDB.document(withID: "doc")!.toMutable()
+        doc2.setString("striped", forKey: "pattern")
+        try otherDB.saveDocument(doc2)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        let resolver = MyConflictResolver()
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.count, 1)
+        
+        let savedDoc = db.document(withID: "doc")!
+        
+        let exp: [String: Any] = ["species": "Tiger", "name": "Hobbes", "pass": 1]
+        XCTAssertEqual(resolver.winner!, savedDoc)
+        XCTAssertEqual(savedDoc.toDictionary().count, 3)
+        XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
+    }
+    
+    func testConflictHandlerLocalWin() throws {
+        let doc = MutableDocument(id: "doc")
+        doc.setString("Tiger", forKey: "species")
+        try db.saveDocument(doc)
+        
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // make changes to both documents from db and otherDB
+        let doc1 = db.document(withID: "doc")!.toMutable()
+        doc1.setString("Hobbes", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        let doc2 = otherDB.document(withID: "doc")!.toMutable()
+        doc2.setString("striped", forKey: "pattern")
+        doc2.setBoolean(true, forKey: "pass")
+        try otherDB.saveDocument(doc2)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        let resolver = MyConflictResolver()
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.count, 1)
+        
+        let savedDoc = db.document(withID: "doc")!
+        
+        let exp: [String: Any] = ["species": "Tiger", "pattern": "striped", "pass": 1]
+        XCTAssertEqual(resolver.winner!, savedDoc)
+        XCTAssertEqual(savedDoc.toDictionary().count, 3)
+        XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
+    }
+    
+    func testConflictHandlerDelete() throws {
+        let doc = MutableDocument(id: "doc")
+        doc.setString("Tiger", forKey: "species")
+        try db.saveDocument(doc)
+        
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // make changes to both documents from db and otherDB
+        let doc1 = db.document(withID: "doc")!.toMutable()
+        doc1.setString("Hobbes", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        let doc2 = otherDB.document(withID: "doc")!.toMutable()
+        doc2.setString("striped", forKey: "pattern")
+        try otherDB.saveDocument(doc2)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        let resolver = MyConflictResolver()
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(resolver.winner)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: "doc"))
+    }
+    
+    func testConflictHandlerDeleteLocal() throws {
+        let doc = MutableDocument(id: "doc")
+        doc.setString("Tiger", forKey: "species")
+        try db.saveDocument(doc)
+        
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // make changes to both documents from db and otherDB
+        try db.deleteDocument(db.document(withID: "doc")!)
+        
+        let doc2 = otherDB.document(withID: "doc")!.toMutable()
+        doc2.setString("striped", forKey: "pattern")
+        try otherDB.saveDocument(doc2)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        let resolver = MyConflictResolver()
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(resolver.winner)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: "doc"))
+    }
+    
+    func testConflictHandlerDeleteRemote() throws {
+        let doc = MutableDocument(id: "doc")
+        doc.setString("Tiger", forKey: "species")
+        try db.saveDocument(doc)
+        
+        let target = DatabaseEndpoint(database: otherDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // make changes to both documents from db and otherDB
+        let doc1 = db.document(withID: "doc")!.toMutable()
+        doc1.setString("Hobbes", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        try otherDB.deleteDocument(otherDB.document(withID: "doc")!)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        let resolver = MyConflictResolver()
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(resolver.winner)
+        XCTAssertEqual(db.count, 0)
+        XCTAssertNil(db.document(withID: "doc"))
+    }
+    
     #endif
+}
+
+class MyConflictResolver: ConflictResolver {
+    var winner: Document? = nil
+    func resolve(conflict: Conflict) -> Document? {
+        let local = conflict.localDocument
+        let remote = conflict.remoteDocument
+        
+        if local == nil || remote == nil {
+            return winner
+        }
+        
+        if local?.boolean(forKey: "pass") ?? false {
+            winner = local
+        }
+        
+        if remote?.boolean(forKey: "pass") ?? false {
+            winner = remote
+        }
+        
+        return winner
+    }
 }
