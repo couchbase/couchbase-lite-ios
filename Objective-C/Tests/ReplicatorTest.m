@@ -766,6 +766,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
+# pragma mark Conflict Resolver
+
 - (void) testConflictResolverRemoteWin {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
