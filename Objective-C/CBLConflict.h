@@ -27,10 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLConflict : NSObject
 
-/** The document which is already in the database. If null, the document is deleted. */
+/** The document in the local database. If nil, document is deleted. */
 @property(nonatomic, readonly, nullable) CBLDocument* localDocument;
 
-/** The document which is merging to the database. If null, the document is deleted.*/
+/** The document replicated from the remote database. If nil, document is deleted. */
 @property(nonatomic, readonly, nullable) CBLDocument* remoteDocument;
 
 /** Not available */

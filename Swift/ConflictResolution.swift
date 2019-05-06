@@ -1,5 +1,5 @@
 //
-//  CBLConflictResolution.h
+//  ConflictResolution.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,19 +17,30 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-@protocol CBLConflictResolver;
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
+/// Conflict Resolution class
+public class ConflictResolution {
+    
+    /// The default conflict resolver used by the replicator.
+    public static var `default`: ConflictResolver {
+        return DefaultResolver()
+    }
+}
 
-/**
- Conflict Resolution class
- */
-@interface CBLConflictResolution : NSObject
+/* internal */ class DefaultResolver: ConflictResolver {
+    let resolver: CBLConflictResolver
+    
+    init() {
+        resolver = CBLConflictResolution.default()
+    }
+    
+    func resolve(conflict: Conflict) -> Document? {
+        guard let doc = resolver.resolve(conflict.impl) else {
+            return nil
+        }
+        
+        return Document(doc)
+    }
+}
 
-/** The default conflict resolver used by the replicator. */
-+ (id<CBLConflictResolver>) default;
-
-@end
-
-NS_ASSUME_NONNULL_END

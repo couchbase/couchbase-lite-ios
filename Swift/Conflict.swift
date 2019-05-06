@@ -1,5 +1,5 @@
 //
-//  CBLConflictResolution.h
+//  Conflict.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,19 +17,27 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-@protocol CBLConflictResolver;
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
-
-/**
- Conflict Resolution class
- */
-@interface CBLConflictResolution : NSObject
-
-/** The default conflict resolver used by the replicator. */
-+ (id<CBLConflictResolver>) default;
-
-@end
-
-NS_ASSUME_NONNULL_END
+/// Conflict class
+public struct Conflict {
+    
+    /// The document in the local database. If nil, document is deleted.
+    public var localDocument: Document? {
+        guard let doc = impl.localDocument else {
+            return nil
+        }
+        return Document(doc)
+    }
+    
+    /// The document replicated from the remote database. If nil, document is deleted.
+    public var remoteDocument: Document? {
+        guard let doc = impl.remoteDocument else {
+            return nil
+        }
+        return Document(doc)
+    }
+    
+    // MARK: Internal
+    let impl: CBLConflict
+}
