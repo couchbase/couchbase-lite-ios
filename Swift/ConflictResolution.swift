@@ -22,7 +22,7 @@ import Foundation
 /// Conflict Resolution class
 public class ConflictResolution {
     
-    /// The default conflict resolver object.
+    /// The default conflict resolver used by the replicator.
     public static var `default`: ConflictResolver {
         return DefaultResolver()
     }
