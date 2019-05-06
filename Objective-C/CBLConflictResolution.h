@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLConflictResolution : NSObject
 
-/** The default conflict resolver object. */
+/** The default conflict resolver used by the replicator. */
 + (id<CBLConflictResolver>) default;
 
 @end

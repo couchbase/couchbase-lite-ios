@@ -22,7 +22,7 @@ import Foundation
 /// Conflict class
 public struct Conflict {
     
-    /// The document in the local database.
+    /// The document in the local database. If nil, document is deleted.
     public var localDocument: Document? {
         guard let doc = impl.localDocument else {
             return nil
@@ -30,7 +30,7 @@ public struct Conflict {
         return Document(doc)
     }
     
-    /// The document replicated from the remote database
+    /// The document replicated from the remote database. If nil, document is deleted.
     public var remoteDocument: Document? {
         guard let doc = impl.remoteDocument else {
             return nil
