@@ -37,7 +37,7 @@
 @interface ReplicatorTest : CBLTestCase
 @end
 
-@interface MyConflictResolver: NSObject<CBLConflictResolver>
+@interface TestConflictResolver: NSObject<CBLConflictResolver>
 @property(nonatomic, nullable) CBLDocument* winner;
 @end
 
@@ -768,7 +768,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 #pragma mark Conflict Resolver
 
-- (void) testConflictResolverRemoteWin {
+- (void) testConflictResolverRemoteWins {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
@@ -798,7 +798,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -814,7 +814,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
-- (void) testConflictResolverLocalWin {
+- (void) testConflictResolverLocalWins {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
@@ -839,7 +839,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -854,7 +854,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
-- (void) testConflictResolverDeleteWithNonEmptyDocs {
+- (void) testConflictResolverNullDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
@@ -879,7 +879,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -890,7 +890,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil(savedDoc);
 }
 
-- (void) testConflictResolverDeleteLocal {
+- (void) testConflictResolverDeletedLocalWins {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
@@ -912,7 +912,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -923,7 +923,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertNil(savedDoc);
 }
 
-- (void) testConflictResolverDeleteRemote {
+- (void) testConflictResolverDeletedRemoteWins {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
@@ -944,7 +944,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    MyConflictResolver* resolver = [[MyConflictResolver alloc] init];
+    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -2735,7 +2735,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 @end
 
-@implementation MyConflictResolver
+@implementation TestConflictResolver
 
 @synthesize winner=_winner;
 
