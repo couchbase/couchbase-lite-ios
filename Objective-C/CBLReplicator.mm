@@ -550,7 +550,7 @@ static void onDocsEnded(C4Replicator *repl,
 
 
 - (void) onDocsEnded: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
-    NSMutableArray* nonConflictedDocs = [NSMutableArray arrayWithCapacity: docs.count];
+    NSMutableArray* nonConflictedDocs = [NSMutableArray array];
     for (CBLReplicatedDocument* doc in docs) {
         C4Error c4err = doc.c4Error;
         if (!c4err.code) {
