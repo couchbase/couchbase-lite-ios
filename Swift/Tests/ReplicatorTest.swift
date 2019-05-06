@@ -845,7 +845,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(db.count, 2)
     }
     
-    func testConflictHandlerRemoteWin() throws {
+    func testConflictHandlerRemoteWins() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
         try db.saveDocument(doc)
@@ -866,7 +866,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = MyConflictResolver()
+        let resolver = TestConflictResolver()
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -880,7 +880,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
     }
     
-    func testConflictHandlerLocalWin() throws {
+    func testConflictHandlerLocalWins() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
         try db.saveDocument(doc)
@@ -901,7 +901,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = MyConflictResolver()
+        let resolver = TestConflictResolver()
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -915,7 +915,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
     }
     
-    func testConflictHandlerDelete() throws {
+    func testConflictHandlerNullDoc() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
         try db.saveDocument(doc)
@@ -935,7 +935,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = MyConflictResolver()
+        let resolver = TestConflictResolver()
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -944,7 +944,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc"))
     }
     
-    func testConflictHandlerDeleteLocal() throws {
+    func testConflictHandlerDeletedLocalWins() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
         try db.saveDocument(doc)
@@ -962,7 +962,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = MyConflictResolver()
+        let resolver = TestConflictResolver()
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -971,7 +971,7 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc"))
     }
     
-    func testConflictHandlerDeleteRemote() throws {
+    func testConflictHandlerDeletedRemoteWins() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
         try db.saveDocument(doc)
@@ -989,7 +989,7 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = MyConflictResolver()
+        let resolver = TestConflictResolver()
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -1001,7 +1001,7 @@ class ReplicatorTest: CBLTestCase {
     #endif
 }
 
-class MyConflictResolver: ConflictResolver {
+class TestConflictResolver: ConflictResolver {
     var winner: Document? = nil
     func resolve(conflict: Conflict) -> Document? {
         let local = conflict.localDocument
