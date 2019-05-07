@@ -135,7 +135,7 @@ public final class Database {
             try _impl.save(
                 document._impl as! CBLMutableDocument,
                 conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    return conflictHandler(MutableDocument(cur), old != nil ? Document(old!) : nil)
+                    return conflictHandler(document, old != nil ? Document(old!) : nil)
                 }
             )
             return true

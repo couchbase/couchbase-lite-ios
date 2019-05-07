@@ -227,9 +227,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(document);
     CBLAssertNotNil(conflictHandler);
     
+    CBLDocument* oldDoc = nil;
+    NSError* err;
     while (true) {
-        NSError* err;
-        CBLDocument* oldDoc = nil;
         BOOL success = [self saveDocument: document
                          withBaseDocument: oldDoc
                        concurrencyControl: kCBLConcurrencyControlFailOnConflict
