@@ -111,7 +111,7 @@ public final class SelectResult {
 /* Internal */ class QuerySelectResultFrom: QuerySelectResult, SelectResultFrom {
     
     public func from(_ alias: String?) -> SelectResultProtocol {
-        return QuerySelectResult(expression: Expression.all().from(alias), alias: nil)
+        return QuerySelectResult(expression: Expression.all().from(alias), alias: alias)
     }
     
 }

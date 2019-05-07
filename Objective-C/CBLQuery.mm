@@ -40,8 +40,7 @@ using namespace fleece;
     NSDictionary* _columnNames;
     CBLLiveQuery* _liveQuery;
     
-    NSString* _dataSourceName;
-    NSArray<CBLQuerySelectResult*>* _select;
+    CBLQueryDataSource* _from;
 }
 
 @synthesize database=_database;
@@ -83,6 +82,7 @@ using namespace fleece;
             root[@"DISTINCT"] = @(YES);
 
         // JOIN / FROM:
+        _from = from;
         NSMutableArray* fromArray;
         NSDictionary* as = [from asJSON];
         if (as.count > 0) {
@@ -107,11 +107,6 @@ using namespace fleece;
         if (selects.count == 0) // Empty selects means SELECT *
             [selects addObject: [[CBLQuerySelectResult allFrom: as[@"AS"]] asJSON]];
         root[@"WHAT"] = selects;
-        
-        // Workaround for https://github.com/couchbase/couchbase-lite-core/issues/750
-        // Keep _select and _dataSourceName to resolve select * column name:)
-        _select = select;
-        _dataSourceName = from.columnName;
 
         // WHERE:
         if (where)
@@ -300,21 +295,12 @@ using namespace fleece;
         for (unsigned i = 0; i < n; ++i) {
             slice title = c4query_columnTitle(_c4Query, i);
             NSString* titleString = slice2string(title);
-            if ([titleString isEqualToString: @"*"] || [titleString hasPrefix: @"* #"]) {
-                // Workaround for https://github.com/couchbase/couchbase-lite-core/issues/750
-                // Fallback to 2.1.x approach by getting column name from select result.
-                if (_select.count == n)
-                    titleString = _select[i].columnName;
-                if (titleString.length == 0)
-                    titleString = _dataSourceName;
+            if ([titleString hasPrefix: @"*"]) {
+                titleString = _from.columnName;
             }
             cols[titleString] = @(i);
         }
         _columnNames = [cols copy];
-        
-        // No needs anymore:
-        _select = nil;
-        _dataSourceName = nil;
         
         return YES;
     }

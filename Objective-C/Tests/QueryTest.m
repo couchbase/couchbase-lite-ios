@@ -572,6 +572,37 @@
     AssertEqual(numRows, 1u);
 }
 
+- (void) testDatabaseAliasWithMultipleSources {
+    [self loadNumbers: 100];
+    
+    CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
+    [joinme setValue: @42 forKey: @"theone"];
+    [self saveDocument: joinme];
+    
+    CBLMutableDocument* joinmeCopy = [[CBLMutableDocument alloc] initWithID: @"joinmeCopy"];
+    [joinmeCopy setValue: @42 forKey: @"theone"];
+    [self saveDocument: joinmeCopy];
+    
+    CBLQueryExpression* propNum1 = [CBLQueryExpression property: @"number1" from: @"main"];
+    CBLQueryExpression* propTheOne = [CBLQueryExpression property: @"theone" from: @"secondary"];
+    
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+                                         on: [propNum1 equalTo: propTheOne]];
+    
+    CBLQuery* q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult allFrom: @"main"],
+                                                     [CBLQuerySelectResult allFrom: @"secondary"]]
+                                             from: [CBLQueryDataSource database: self.db as: @"main"]
+                                             join: @[join]];
+    Assert(q);
+    uint64_t numRows = 0;
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r dictionaryAtIndex: 0], [r dictionaryForKey: @"main"]);
+        AssertEqualObjects([r dictionaryAtIndex: 1], [r dictionaryForKey: @"secondary"]);
+    }];
+    AssertEqual(numRows, 1u);
+}
+
+
 #pragma mark - OrderBy/GroupBy
 
 - (void) testOrderBy {
