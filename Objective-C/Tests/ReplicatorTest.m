@@ -787,7 +787,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
     Assert(doc2);
     [doc2 setValue: @"striped" forKey: @"pattern"];
-    [doc2 setValue: @YES forKey: @"pass"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     [doc2 setValue: @"black-yellow" forKey: @"color"];
@@ -798,7 +797,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -807,10 +809,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     
-    NSDictionary* exp = @{@"species": @"Tiger",
-                          @"pattern": @"striped",
-                          @"color": @"black-yellow",
-                          @"pass": @YES};
+    NSDictionary* exp = @{@"species": @"Tiger", @"pattern": @"striped", @"color": @"black-yellow"};
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
@@ -827,7 +826,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     // Now make different changes in db and otherDB: (make local pass)
     doc1 = [[self.db documentWithID: @"doc"] toMutable];
     [doc1 setValue: @"Hobbes" forKey: @"name"];
-    [doc1 setValue: @YES forKey: @"pass"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
@@ -839,7 +837,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.localDocument;
+    }];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -848,9 +849,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     AssertEqual(self.db.count, 1u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     
-    NSDictionary* exp = @{@"species": @"Tiger",
-                          @"name": @"Hobbes",
-                          @"pass": @YES};
+    NSDictionary* exp = @{@"species": @"Tiger", @"name": @"Hobbes"};
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
@@ -879,7 +878,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return nil;
+    }];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -912,7 +914,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return nil;
+    }];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -944,7 +949,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                                type: kCBLReplicatorTypePull
                                                          continuous: NO];
     
-    TestConflictResolver* resolver = [[TestConflictResolver alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return nil;
+    }];
     pullConfig.conflictResolver = resolver;
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
@@ -2735,32 +2743,23 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 @end
 
-@implementation TestConflictResolver
+@implementation TestConflictResolver {
+    CBLDocument* (^_resolver)(CBLConflict*);
+}
 
 @synthesize winner=_winner;
 
-/**
- this resolve will
- (i) returns nil, if either local or remote is not present/deleted.
- (ii) returns remote, if remote document contains key `pass` and it's value `true`
- (iii) returns local, if local document contains key `pass` and it's value `true` && no remote
-     with same `pass` key.
- (iv) returns nil, if neither  local nor remote contains the key with `pass` and value `true`.
- */
+// set this resolver, which will be used while resolving the conflict
+- (instancetype) initWithResolver: (CBLDocument* (^)(CBLConflict*))resolver {
+    self = [super init];
+    if (self) {
+        _resolver = resolver;
+    }
+    return self;
+}
+
 - (CBLDocument *) resolve:(CBLConflict *)conflict {
-    CBLDocument* local = conflict.localDocument;
-    CBLDocument* remote = conflict.remoteDocument;
-    _winner = nil;
-    
-    if (!local || !remote)
-        return _winner;
-    
-    if ([local booleanForKey: @"pass"])
-        _winner = local;
-    
-    if ([remote booleanForKey: @"pass"])
-        _winner = remote;
-    
+    _winner = _resolver(conflict);
     return _winner;
 }
 
