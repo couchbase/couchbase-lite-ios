@@ -2739,7 +2739,15 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 @synthesize winner=_winner;
 
-- (CBLDocument *)resolve:(CBLConflict *)conflict {
+/**
+ this resolve will
+ (i) returns nil, if either local or remote is not present/deleted.
+ (ii) returns remote, if remote document contains key `pass` and it's value `true`
+ (iii) returns local, if local document contains key `pass` and it's value `true` && no remote
+     with same `pass` key.
+ (iv) returns nil, if neither  local nor remote contains the key with `pass` and value `true`.
+ */
+- (CBLDocument *) resolve:(CBLConflict *)conflict {
     CBLDocument* local = conflict.localDocument;
     CBLDocument* remote = conflict.remoteDocument;
     _winner = nil;
