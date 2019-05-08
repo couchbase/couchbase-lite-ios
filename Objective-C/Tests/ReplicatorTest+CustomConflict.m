@@ -32,18 +32,9 @@
 
 
 @interface ReplicatorTest_CustomConflict : ReplicatorTest
-
 @end
 
 @implementation ReplicatorTest_CustomConflict
-
-- (void) setUp {
-    [super setUp];
-}
-
-- (void) tearDown {
-    [super tearDown];
-}
 
 #pragma mark - Tests without replication
 
