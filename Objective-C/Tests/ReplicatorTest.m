@@ -119,6 +119,8 @@
     AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
 }
 
+#pragma mark - Endpoint
+
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
     NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
     if (!host) {
@@ -209,6 +211,7 @@
     }
 }
 
+#pragma mark - Certifciate
 
 - (SecCertificateRef) secureServerCert {
     NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
@@ -229,6 +232,7 @@
     }
 }
 
+#pragma mark - Configs
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
@@ -260,6 +264,8 @@
     
     return c;
 }
+
+#pragma mark - Run Replicator
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
@@ -326,6 +332,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     return fulfilled;
 }
 
+#pragma mark - Verify Replicator Change
+
 - (void) verifyChange: (CBLReplicatorChange*)change
             errorCode: (NSInteger)code
           errorDomain: (NSString*)domain
@@ -345,6 +353,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
             AssertNil(s.error);
     }
 }
+
+#pragma mark - Wait
 
 - (XCTestExpectation *) waitForReplicatorIdle:(CBLReplicator*)replicator withProgressAtLeast:(uint64_t)progress {
     XCTestExpectation* x = [self expectationWithDescription:@"Replicator idle"];
@@ -403,6 +413,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     
     return x;
 }
+
+#pragma mark - P2P Helpers
 
 - (CBLReplicatorConfiguration *)createFailureP2PConfigurationWithProtocol: (CBLProtocolType)protocolType
                                                                atLocation: (CBLMockConnectionLifecycleLocation)location
