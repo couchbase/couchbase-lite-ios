@@ -118,6 +118,36 @@ public final class Database {
     }
     
     
+    /// Saves a document to the database. When write operations are executed concurrently,
+    /// and if conflicts occur, conflict handler will be called. Use the handler to directly
+    /// edit the document. Returning true, will save the document. Returning false, will cancel
+    /// the save operation.
+    ///
+    /// - Parameters:
+    ///   - document: The document.
+    ///   - conflictHandler: The conflict handler closure which can be used to resolve it.
+    /// - Returns: True if successful. False on failure
+    /// - Throws: An error on a failure.
+    @discardableResult public func saveDocument(
+        _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
+        ) throws -> Bool {
+        do {
+            try _impl.save(
+                document._impl as! CBLMutableDocument,
+                conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
+                    return conflictHandler(document, old != nil ? Document(old!) : nil)
+                }
+            )
+            return true
+        } catch let err as NSError {
+            if err.code == CBLErrorConflict {
+                return false
+            }
+            throw err
+        }
+    }
+    
+    
     /// Deletes a document from the database. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the deleteDocument(document,

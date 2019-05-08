@@ -550,10 +550,13 @@ static void onDocsEnded(C4Replicator *repl,
 
 
 - (void) onDocsEnded: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
+    NSMutableArray* nonConflictedDocs = [NSMutableArray array];
     for (CBLReplicatedDocument* doc in docs) {
         C4Error c4err = doc.c4Error;
-        if (!c4err.code)
+        if (!c4err.code) {
+            [nonConflictedDocs addObject: doc];
             continue;
+        }
         
         if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
             dispatch_async(_conflictResolverQueue, ^{
@@ -561,7 +564,6 @@ static void onDocsEnded(C4Replicator *repl,
                 CBLLogInfo(Sync, @"%@: pulled conflicting version of '%@'", self, doc.id);
                 NSError* error;
                 
-                // TODO: Error handling correction will revisit in separate PR
                 if ([_config.database resolveConflictInDocument: doc.id
                                            withConflictResolver: _config.conflictResolver
                                                           error: &error]) {
@@ -569,23 +571,36 @@ static void onDocsEnded(C4Replicator *repl,
                 } else {
                     CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@",
                             self, doc.id, error);
-                    id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
-                                                                                 isPush: pushing
-                                                                              documents: @[doc]];
-                    [_docReplicationNotifier postChange: replication];
                 }
+                
+                [self logDocumentErrorOnDocsEnded: doc pushing: pushing];
+                [self notifyReplicationChange: @[doc] pushing: pushing];
             });
+            
+            // handles error separately in separate queue and logs/notifies result from there.
+            continue;
+        } else {
+            [nonConflictedDocs addObject: doc];
         }
         
-        if (doc.c4Error.code)
-            CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
-                       (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
+        [self logDocumentErrorOnDocsEnded: doc pushing: pushing];
     }
     
+    [self notifyReplicationChange: nonConflictedDocs pushing: pushing];
+}
+
+- (void) notifyReplicationChange: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
     id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
                                                                  isPush: pushing
                                                               documents: docs];
     [_docReplicationNotifier postChange: replication];
+}
+
+- (void) logDocumentErrorOnDocsEnded: (CBLReplicatedDocument*)doc pushing: (BOOL)pushing {
+    C4Error c4err = doc.c4Error;
+    if (doc.c4Error.code)
+        CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
+                   (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
 }
 
 
