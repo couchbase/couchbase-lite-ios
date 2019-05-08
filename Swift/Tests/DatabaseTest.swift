@@ -372,6 +372,47 @@ class DatabaseTest: CBLTestCase {
         try cleanDB()
     }
     
+    // MARK: Save Conflict Resolution Handler
+    
+    func testConflictResolution() throws
+    {
+        let doc = createDocument("doc1")
+        doc.setString("Daniel", forKey: "firstName")
+        doc.setString("Tiger", forKey: "lastName")
+        try db.saveDocument(doc)
+        
+        // Get two doc1 document objects (doc1a and doc1b):
+        let doc1a = db.document(withID: doc.id)!.toMutable()
+        let doc1b = db.document(withID: doc.id)!.toMutable()
+        
+        // Modify doc1a:
+        doc1a.setString("Scott", forKey: "firstName")
+        try db.saveDocument(doc1a)
+        doc1a.setString("Scotty", forKey: "nickName")
+        try db.saveDocument(doc1a)
+        XCTAssertTrue(doc1a.toDictionary() == ["firstName": "Scott",
+                                               "lastName": "Tiger",
+                                               "nickName": "Scotty"])
+        XCTAssertEqual(doc1a.sequence, 3)
+        
+        // Modify doc1b:
+        doc1b.setString("Lion", forKey: "middleName")
+        
+        // merge the dictionaries, and keeping the doc1b dictionary values if duplicate comes in.
+        try db.saveDocument(doc1b) { (cur, old) -> Bool in
+            let merged = cur.toDictionary()
+                .merging(old!.toDictionary(), uniquingKeysWith: { (first, _) in first })
+            cur.setData(merged)
+            return true
+        }
+        let savedDoc = db.document(withID: doc1b.id)!
+        XCTAssertTrue(savedDoc.toDictionary() == ["firstName": "Daniel", // kept previous key value
+                                                  "nickName": "Scotty", // merged
+                                                  "lastName": "Tiger",  // NA
+                                                  "middleName": "Lion"]) // conflicting update
+    }
+    
+    
     // MARK: Delete Document
     
     func testDeletePreSaveDoc() throws {
