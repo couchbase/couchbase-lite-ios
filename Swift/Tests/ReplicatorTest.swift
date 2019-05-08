@@ -845,6 +845,8 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertEqual(db.count, 2)
     }
     
+    // MARK: Conflict Resolver
+    
     func testConflictHandlerRemoteWins() throws {
         let doc = MutableDocument(id: "doc")
         doc.setString("Tiger", forKey: "species")
@@ -857,7 +859,6 @@ class ReplicatorTest: CBLTestCase {
         // make changes to both documents from db and otherDB
         let doc1 = db.document(withID: "doc")!.toMutable()
         doc1.setString("Hobbes", forKey: "name")
-        doc1.setBoolean(true, forKey: "pass")
         try db.saveDocument(doc1)
         
         let doc2 = otherDB.document(withID: "doc")!.toMutable()
@@ -866,7 +867,9 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = TestConflictResolver()
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -874,9 +877,9 @@ class ReplicatorTest: CBLTestCase {
         
         let savedDoc = db.document(withID: "doc")!
         
-        let exp: [String: Any] = ["species": "Tiger", "name": "Hobbes", "pass": 1]
+        let exp: [String: Any] = ["species": "Tiger", "pattern": "striped"]
         XCTAssertEqual(resolver.winner!, savedDoc)
-        XCTAssertEqual(savedDoc.toDictionary().count, 3)
+        XCTAssertEqual(savedDoc.toDictionary().count, 2)
         XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
     }
     
@@ -896,12 +899,13 @@ class ReplicatorTest: CBLTestCase {
         
         let doc2 = otherDB.document(withID: "doc")!.toMutable()
         doc2.setString("striped", forKey: "pattern")
-        doc2.setBoolean(true, forKey: "pass")
         try otherDB.saveDocument(doc2)
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = TestConflictResolver()
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.localDocument
+        }
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -909,9 +913,9 @@ class ReplicatorTest: CBLTestCase {
         
         let savedDoc = db.document(withID: "doc")!
         
-        let exp: [String: Any] = ["species": "Tiger", "pattern": "striped", "pass": 1]
+        let exp: [String: Any] = ["species": "Tiger", "name": "Hobbes"]
         XCTAssertEqual(resolver.winner!, savedDoc)
-        XCTAssertEqual(savedDoc.toDictionary().count, 3)
+        XCTAssertEqual(savedDoc.toDictionary().count, 2)
         XCTAssertEqual(savedDoc.toDictionary().keys, exp.keys)
     }
     
@@ -935,7 +939,9 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = TestConflictResolver()
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            return nil
+        }
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -962,7 +968,9 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = TestConflictResolver()
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            return nil
+        }
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -989,7 +997,9 @@ class ReplicatorTest: CBLTestCase {
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
-        let resolver = TestConflictResolver()
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            return nil
+        }
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         
@@ -1003,22 +1013,15 @@ class ReplicatorTest: CBLTestCase {
 
 class TestConflictResolver: ConflictResolver {
     var winner: Document? = nil
+    let _resolver: (Conflict) -> Document?
+    
+    // set this resolver, which will be used while resolving the conflict
+    init(_ resolver: @escaping (Conflict) -> Document?) {
+        _resolver = resolver
+    }
+    
     func resolve(conflict: Conflict) -> Document? {
-        let local = conflict.localDocument
-        let remote = conflict.remoteDocument
-        
-        if local == nil || remote == nil {
-            return winner
-        }
-        
-        if local?.boolean(forKey: "pass") ?? false {
-            winner = local
-        }
-        
-        if remote?.boolean(forKey: "pass") ?? false {
-            winner = remote
-        }
-        
+        winner = _resolver(conflict)
         return winner
     }
 }
