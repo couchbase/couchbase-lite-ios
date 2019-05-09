@@ -39,7 +39,7 @@
 #pragma mark - Tests without replication
 
 - (void) testConflictResolverConfigProperty {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"wss://foo"]];
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePull
                                                      continuous: NO];
