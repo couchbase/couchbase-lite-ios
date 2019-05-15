@@ -139,10 +139,7 @@
     
     // Check that it was resolved:
     AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    
-    NSDictionary* exp = @{@"species": @"Tiger", @"name": @"Hobbes"};
-    AssertEqualObjects(savedDoc.toDictionary, exp);
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
 }
 
 - (void) testConflictResolverNullDoc {
