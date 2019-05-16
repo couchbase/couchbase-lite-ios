@@ -240,7 +240,6 @@
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return [CBLMutableDocument documentWithID: @"wrongDocID"];
     }];
-    
     [self validateDocumentReplicationEventForConflictedDocs: resolver];
     
     // when resolution is successfull.
@@ -248,7 +247,6 @@
         return con.remoteDocument;
     }];
     [self validateDocumentReplicationEventForConflictedDocs: resolver];
-    
 }
 
 - (void) validateDocumentReplicationEventForConflictedDocs: (TestConflictResolver*)resolver {
