@@ -233,6 +233,129 @@
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
+// TODO: disable test since the unresolved conflict side is still under development.
+-  (void) _testConflictResolverWrongDocID {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return [CBLMutableDocument documentWithID: @"wrongDocID"];
+    }];
+    pullConfig.conflictResolver = resolver;
+    
+    // make sure resolver is thrown the exception and skips the resolution.
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            NSError* err = docRepl.documents.firstObject.error;
+            if (err)
+                [errors addObject: err];
+        }];
+    }];
+    AssertEqual(errors.lastObject.code, CBLErrorConflict);
+    AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
+    [replicator removeChangeListenerWithToken: token];
+    
+    // should be solved when the replicator runs next time!!
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
+}
+
+// TODO: disable test since the unresolved conflict side is still under development.
+- (void) _testConflictResolverDifferentDBDoc {
+    CBLDatabase.log.console.domains = kCBLLogDomainAll;
+    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    
+    __weak CBLDatabase* weakOtherDB = otherDB;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return [weakOtherDB documentWithID: con.localDocument.id]; // doc from different DB!!
+    }];
+    pullConfig.conflictResolver = resolver;
+    
+    // make sure resolver is thrown the exception and skips the resolution.
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            NSError* err = docRepl.documents.firstObject.error;
+            if (err)
+                [errors addObject: err];
+        }];
+    }];
+    AssertEqual(errors.lastObject.code, CBLErrorConflict);
+    AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
+    [replicator removeChangeListenerWithToken: token];
+    
+    // should be solved when the replicator runs next time!!
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
+}
+
+// TODO: disable test since the unresolved conflict side is still under development.
+- (void) _testConflictResolverThrowingException {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"this exception is from resolve method!"];
+        return nil;
+    }];
+    pullConfig.conflictResolver = resolver;
+    
+    // make sure resolver is thrown the exception and skips the resolution.
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            NSError* err = docRepl.documents.firstObject.error;
+            if (err)
+                [errors addObject: err];
+        }];
+    }];
+    AssertEqual(errors.lastObject.code, CBLErrorConflict);
+    AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
+    [replicator removeChangeListenerWithToken: token];
+    
+    // should be solved when the replicator runs next time!!
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
+}
+
 #endif
 
 @end
@@ -257,6 +380,11 @@
 - (CBLDocument *) resolve:(CBLConflict *)conflict {
     _winner = _resolver(conflict);
     return _winner;
+}
+
+- (void) dealloc {
+    _winner = nil;
+    _resolver = nil;
 }
 
 @end
