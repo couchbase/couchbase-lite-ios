@@ -234,23 +234,35 @@
 }
 
 - (void) testDocumentReplicationEventForConflictedDocs {
+    TestConflictResolver* resolver;
+    
+    // when resolution throws exception
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return [CBLMutableDocument documentWithID: @"wrongDocID"];
+    }];
+    
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+    
+    // when resolution is successfull.
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+    
+}
+
+- (void) validateDocumentReplicationEventForConflictedDocs: (TestConflictResolver*)resolver {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
-    
-    TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
-    
-    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
-        return con.remoteDocument;
-    }];
-    pullConfig.conflictResolver = resolver;
+    CBLReplicatorConfiguration* config = [self pullConfig];
+    config.conflictResolver = resolver;
     
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
     __block NSMutableArray<NSString*>* docIds = [NSMutableArray array];
-    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
         replicator = r;
         token = [r addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
             for (CBLReplicatedDocument* replDoc in docRepl.documents) {
