@@ -71,6 +71,10 @@
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
+		1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
+		1AF555D522948BDF0077DF6D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
+		1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
 		270AB2BC2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
 		270AB2BD2073EF57009A4596 /* CBLChangeNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */; };
 		270AB2BE2073EF57009A4596 /* CBLChangeNotifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */; };
@@ -1650,6 +1654,7 @@
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
+		1AF555C322946ED90077DF6D /* QueryTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Main.m"; sourceTree = "<group>"; };
 		270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLChangeNotifier.h; sourceTree = "<group>"; };
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
@@ -3065,6 +3070,7 @@
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
 				1AA6744E227925D20018CC6D /* QueryTest.h */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
+				1AF555C322946ED90077DF6D /* QueryTest+Main.m */,
 				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
 				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,
 				1A4160D6228367520061A567 /* ReplicatorTest.h */,
@@ -5133,6 +5139,7 @@
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
+				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				939260B120A0FF0C00E5748C /* MessageEndpointTest.m in Sources */,
@@ -5169,6 +5176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
+				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
@@ -5250,6 +5258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
+				1AF555D522948BDF0077DF6D /* QueryTest+Main.m in Sources */,
 				1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				9388CC3F21C1E2B8005CA66D /* LogTest.m in Sources */,
@@ -5380,6 +5389,7 @@
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
 				1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */,
+				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				1A4160C62283673E0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
