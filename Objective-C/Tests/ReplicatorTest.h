@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
  variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
  Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
  */
-- (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure;
+- (nullable CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure;
 
 - (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint;
 

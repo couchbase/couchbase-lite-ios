@@ -24,8 +24,47 @@
 
 @interface QueryTest : CBLTestCase
 
-- (NSArray*)loadNumbers:(NSInteger)num;
+/**
+ create document
+ 
+ - Parameters:
+    - i: index for the document. This value will be saved in `number1` key.
+    - num: this number is used to create `number2` key-value, where value = num minus i.
+ - returns: document which is created and saved to self.db
+ */
+- (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num;
 
+/**
+ creates `x` number of documents. Document will be saved with `number1` and `number2` keys, with
+ values index of number and total minus index respectively.
+ 
+ This internally uses the `createDocNumbered` function.
+ 
+ For example, if `num` = 100;
+ 
+ ```
+ doc1 = {
+    number1 = 1,
+    number2 = 99
+ },
+ 
+ doc2 = {
+    number1 = 2,
+    number2 = 98
+ }
+ ```
+
+- Parameters:
+  - num: number of documents to be created.
+- returns: list of document(in dictionary)
+*/
+- (NSArray*) loadNumbers: (NSInteger)num;
+
+/**
+ loads all data types through a student document example.
+ */
 - (void) loadStudents;
+
+- (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases;
 
 @end
