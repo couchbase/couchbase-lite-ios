@@ -233,8 +233,7 @@
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
-// TODO: disable test since the unresolved conflict side is still under development.
--  (void) _testConflictResolverWrongDocID {
+-  (void) testConflictResolverWrongDocID {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -273,8 +272,7 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
 }
 
-// TODO: disable test since the unresolved conflict side is still under development.
-- (void) _testConflictResolverDifferentDBDoc {
+- (void) testConflictResolverDifferentDBDoc {
     CBLDatabase.log.console.domains = kCBLLogDomainAll;
     CBLDatabase.log.console.level = kCBLLogLevelInfo;
     NSString* docId = @"doc";
