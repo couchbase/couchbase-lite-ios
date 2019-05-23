@@ -242,8 +242,9 @@
     TestConflictResolver* resolver;
     CBLReplicatorConfiguration* pullConfig = [self pullConfig];
     
+    __block int count = 0;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
-        
+        count++;
         // update the doc will cause a second conflict
         CBLMutableDocument* savedDoc = [[self.db documentWithID: docId] toMutable];
         if (![savedDoc booleanForKey: @"secondUpdate"]) {
@@ -261,6 +262,7 @@
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 1u);
+    AssertEqual(count, 2u); // make sure the resolver method called twice due to second conflict
     NSMutableDictionary* exp = [NSMutableDictionary dictionaryWithDictionary: localData];
     [exp setValue: @"local" forKey: @"edit"];
     [exp setValue: @YES forKey: @"secondUpdate"];
