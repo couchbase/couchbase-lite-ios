@@ -313,8 +313,7 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
 }
 
-// TODO: disable test since the unresolved conflict side is still under development.
-- (void) _testConflictResolverThrowingException {
+- (void) testConflictResolverThrowingException {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};

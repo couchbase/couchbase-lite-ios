@@ -28,10 +28,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLConflict : NSObject
 
 /** The document in the local database. If nil, document is deleted. */
-@property(nonatomic, readonly, nullable) CBLDocument* localDocument;
+@property(nonatomic, readonly, nullable, weak) CBLDocument* localDocument;
 
 /** The document replicated from the remote database. If nil, document is deleted. */
-@property(nonatomic, readonly, nullable) CBLDocument* remoteDocument;
+@property(nonatomic, readonly, nullable, weak) CBLDocument* remoteDocument;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
