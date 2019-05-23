@@ -261,8 +261,10 @@
     pullConfig.conflictResolver = resolver;
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
+    // make sure the resolver method called twice due to second conflict
+    AssertEqual(count, 2u);
+    
     AssertEqual(self.db.count, 1u);
-    AssertEqual(count, 2u); // make sure the resolver method called twice due to second conflict
     NSMutableDictionary* exp = [NSMutableDictionary dictionaryWithDictionary: localData];
     [exp setValue: @"local" forKey: @"edit"];
     [exp setValue: @YES forKey: @"secondUpdate"];
