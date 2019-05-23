@@ -379,9 +379,4 @@
     return _winner;
 }
 
-- (void) dealloc {
-    _winner = nil;
-    _resolver = nil;
-}
-
 @end
