@@ -582,6 +582,57 @@
     [self cleanDB];
 }
 
+- (void) testCancelConflictHandler {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    [self.db saveDocument: doc1b
+          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+              AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+              AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+              return NO;
+          } error: &error];
+    AssertNil(error);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+
+    // Some Updates to Current Mutable Document
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    [self.db saveDocument: doc1b
+          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+              // with some updates to the existing doc also shouldn't cause any issues
+              [cur setString: @"Scott" forKey: @"nickName"];
+              return NO;
+          } error: &error];
+    AssertNil(error);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+}
 
 #pragma mark - Delete Document
 
