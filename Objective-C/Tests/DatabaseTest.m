@@ -582,6 +582,49 @@
     [self cleanDB];
 }
 
+- (void) testConflictHandlerWithDeletedOldDoc {
+    NSString* docID = @"doc1";
+    [self generateDocumentWithID: docID];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    // keeps new doc(non-deleted)
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    NSError* error;
+    [doc1b setString: @"value1" forKey: @"key1"];
+    [self.db saveDocument: doc1b
+          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+              AssertNil(old);
+              AssertNotNil(cur);
+              return YES;
+          } error: &error];
+    AssertNil(error);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
+    
+    // keeps the deleted(old doc)
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    [doc1b setString: @"value2" forKey: @"key2"];
+    BOOL success = [self.db saveDocument: doc1b
+                         conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                             AssertNil(old);
+                             AssertNotNil(cur);
+                             return NO;
+                         } error: &error];
+    AssertFalse(success);
+    AssertNil(error);
+    AssertNil([self.db documentWithID: docID]);
+    Assert([[CBLDocument alloc] initWithDatabase: self.db
+                                      documentID: docID
+                                  includeDeleted: YES
+                                           error: &error].isDeleted);
+}
+
 
 #pragma mark - Delete Document
 
