@@ -582,6 +582,59 @@
     [self cleanDB];
 }
 
+#pragma mark Save Conflict Handler
+
+- (void) testConflictHandler {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    [self.db saveDocument: doc1b
+          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+              AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+              AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+              AssertEqual(cur.generation, 2u);
+              AssertEqual(old.generation, 2u);
+              return YES;
+          } error: &error];
+    AssertNil(error);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 4u);
+    
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    [self.db saveDocument: doc1b
+          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+              AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+              AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+              AssertEqual(cur.generation, 4u);
+              AssertEqual(old.generation, 4u);
+              [cur setString: @"Scott" forKey: @"nickName"];
+              return YES;
+          } error: &error];
+    AssertNil(error);
+    NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
+    AssertEqual([self.db documentWithID: docID].generation, 5u);
+}
+
 
 #pragma mark - Delete Document
 
