@@ -215,21 +215,47 @@
     TestConflictResolver* resolver;
     CBLReplicatorConfiguration* pullConfig = [self pullConfig];
     
+    // EDIT LOCAL DOCUMENT
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         CBLMutableDocument* mDoc = con.localDocument.toMutable;
         [mDoc setString: @"local" forKey: @"edit"];
         return mDoc;
     }];
     pullConfig.conflictResolver = resolver;
-    
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    // Check that it was resolved:
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    
+    CBLDocument* savedDoc = [self.db documentWithID: docId];
     NSMutableDictionary* exp = [NSMutableDictionary dictionaryWithDictionary: localData];
     [exp setValue: @"local" forKey: @"edit"];
+    AssertEqualObjects(savedDoc.toDictionary, exp);
+    
+    // EDIT REMOTE DOCUMENT
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* mDoc = con.remoteDocument.toMutable;
+        [mDoc setString: @"remote" forKey: @"edit"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    savedDoc = [self.db documentWithID: docId];
+    exp = [NSMutableDictionary dictionaryWithDictionary: remoteData];
+    [exp setValue: @"remote" forKey: @"edit"];
+    AssertEqualObjects(savedDoc.toDictionary, exp);
+    
+    // CREATE NEW DOCUMENT
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithID: con.localDocument.id];
+        [mDoc setString: @"new-with-same-ID" forKey: @"docType"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    savedDoc = [self.db documentWithID: docId];
+    exp = [NSMutableDictionary dictionaryWithObject: @"new-with-same-ID" forKey: @"docType"];
     AssertEqualObjects(savedDoc.toDictionary, exp);
 }
 
