@@ -595,12 +595,12 @@
     
     NSError* error;
     [doc1b setString: @"value1" forKey: @"key1"];
-    [self.db saveDocument: doc1b
-          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-              AssertNil(old);
-              AssertNotNil(cur);
-              return YES;
-          } error: &error];
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                     AssertNil(old);
+                     AssertNotNil(cur);
+                     return YES;
+                 } error: &error]);
     AssertNil(error);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
     
@@ -610,13 +610,12 @@
     [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
     
     [doc1b setString: @"value2" forKey: @"key2"];
-    BOOL success = [self.db saveDocument: doc1b
-                         conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-                             AssertNil(old);
-                             AssertNotNil(cur);
-                             return NO;
-                         } error: &error];
-    AssertFalse(success);
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                          AssertNil(old);
+                          AssertNotNil(cur);
+                          return NO;
+                      } error: &error]);
     AssertNil(error);
     AssertNil([self.db documentWithID: docID]);
     Assert([[CBLDocument alloc] initWithDatabase: self.db
