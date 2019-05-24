@@ -37,18 +37,16 @@
 @implementation CBLDefaultConflictResolution
 
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
-    CBLDocument* remote = conflict.remoteDocument;
-    CBLDocument* local = conflict.localDocument;
-    if (remote == nil || local == nil)
+    if (conflict.remoteDocument == nil || conflict.localDocument == nil)
         return nil;
-    else if (local.generation > remote.generation)
-        return local;
-    else if (local.generation < remote.generation)
-        return remote;
-    else if ([local.revID compare: remote.revID] > 0)
-        return local;
+    else if (conflict.localDocument.generation > conflict.remoteDocument.generation)
+        return conflict.localDocument;
+    else if (conflict.localDocument.generation < conflict.remoteDocument.generation)
+        return conflict.remoteDocument;
+    else if ([conflict.localDocument.revID compare: conflict.remoteDocument.revID] > 0)
+        return conflict.localDocument;
     else
-        return remote;
+        return conflict.remoteDocument;
 }
 
 @end
