@@ -21,7 +21,7 @@ import Foundation
 
 
 /// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.
-protocol DictionaryProtocol: DictionaryFragment {
+public protocol DictionaryProtocol: DictionaryFragment {
     var count: Int { get }
     
     var keys: Array<String> { get }
