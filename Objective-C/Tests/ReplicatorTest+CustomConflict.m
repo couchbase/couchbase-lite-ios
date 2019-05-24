@@ -275,6 +275,45 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testConflictResolverCalledTwice {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    
+    __block int count = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        count++;
+        // update the doc will cause a second conflict
+        CBLMutableDocument* savedDoc = [[self.db documentWithID: docId] toMutable];
+        if (![savedDoc booleanForKey: @"secondUpdate"]) {
+            NSError* error;
+            [savedDoc setBoolean: YES forKey: @"secondUpdate"];
+            [self.db saveDocument: savedDoc error: &error];
+            AssertNil(error);
+        }
+        
+        CBLMutableDocument* mDoc = con.localDocument.toMutable;
+        [mDoc setString: @"local" forKey: @"edit"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // make sure the resolver method called twice due to second conflict
+    AssertEqual(count, 2u);
+    
+    AssertEqual(self.db.count, 1u);
+    NSMutableDictionary* exp = [NSMutableDictionary dictionaryWithDictionary: localData];
+    [exp setValue: @"local" forKey: @"edit"];
+    [exp setValue: @YES forKey: @"secondUpdate"];
+    AssertEqualObjects([self.db documentWithID: docId].toDictionary, exp);
+}
+
 #endif
 
 @end
