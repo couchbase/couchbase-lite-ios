@@ -598,12 +598,12 @@
     
     NSError* error;
     [doc1b setString: @"Scott" forKey: @"nickName"];
-    [self.db saveDocument: doc1b
-          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-              AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
-              AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
-              return NO;
-          } error: &error];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                          AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+                          AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                          return NO;
+                      } error: &error]);
     AssertNil(error);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     
@@ -620,12 +620,12 @@
     AssertEqual([self.db documentWithID: docID].generation, 3u);
 
     [doc1b setString: @"Scotty" forKey: @"nickName"];
-    [self.db saveDocument: doc1b
-          conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-              // with some updates to the existing doc also shouldn't cause any issues
-              [cur setString: @"Scott" forKey: @"nickName"];
-              return NO;
-          } error: &error];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                          // with some updates to the existing doc also shouldn't cause any issues
+                          [cur setString: @"Scott" forKey: @"nickName"];
+                          return NO;
+                      } error: &error]);
     AssertNil(error);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     
