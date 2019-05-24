@@ -313,7 +313,7 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
 }
 
-// TODO: enable this and handle known memory leak expectations
+// TODO: enable this and handle expected memory leak in tests. 
 - (void) _testConflictResolverThrowingException {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
