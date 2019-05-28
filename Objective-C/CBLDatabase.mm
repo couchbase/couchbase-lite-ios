@@ -257,7 +257,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             
             @try {
                 if (conflictHandler(document, oldDoc.isDeleted ? nil : oldDoc)) {
-                    CBLAssertNotNil(document);
                     continue;
                 } else {
                     return createError(CBLErrorConflict, error);
