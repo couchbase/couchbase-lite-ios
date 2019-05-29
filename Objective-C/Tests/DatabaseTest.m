@@ -582,8 +582,7 @@
     [self cleanDB];
 }
 
-// TODO: enable when error PR is merged
-- (void) _testConflictHandlerWithDeletedOldDoc {
+- (void) testConflictHandlerWithDeletedOldDoc {
     NSString* docID = @"doc1";
     [self generateDocumentWithID: docID];
     AssertEqual([self.db documentWithID: docID].generation, 1u);
@@ -616,7 +615,6 @@
                           AssertNotNil(cur);
                           return NO;
                       } error: &error]);
-    AssertNotNil(error);
     AssertEqual(error.code, CBLErrorConflict);
     AssertNil([self.db documentWithID: docID]);
     Assert([[CBLDocument alloc] initWithDatabase: self.db
