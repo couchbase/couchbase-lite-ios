@@ -465,11 +465,12 @@
                                                                       error: &error];
             AssertNil(error);
             Assert(successDoc.isDeleted);
-            continue;
-        }
-        
-        if (doc1.generation != doc2.generation)
+        } else {
+            
+            // if generations are different
+            AssertEqual(doc1.generation, [self.db documentWithID: doc1.id].generation);
             Assert(doc1.generation > doc2.generation);
+        }
     }
 }
 
