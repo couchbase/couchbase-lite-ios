@@ -608,7 +608,6 @@
                      AssertEqual(old.generation, 2u);
                      return YES;
                  } error: &error]);
-    AssertNil(error);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
     AssertEqual([self.db documentWithID: docID].generation, 3u);
     
@@ -629,7 +628,6 @@
                      [cur setString: @"Scott" forKey: @"nickName"];
                      return YES;
                  } error: &error]);
-    AssertNil(error);
     NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
     AssertEqual([self.db documentWithID: docID].generation, 5u);
