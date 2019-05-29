@@ -263,7 +263,7 @@
     [self waitForExpectationsWithTimeout: 5 handler: nil];
     
     // make sure, first doc starts resolution but finishes last.
-    // in between another thread starts and finishes second doc.
+    // in between second doc starts and finishes it. 
     AssertEqualObjects(order.firstObject, order.lastObject);
     AssertEqualObjects(order[1], order[2]);
 }
