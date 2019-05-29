@@ -75,26 +75,31 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: docID];
     Assert([self.db saveDocument: doc1 error: &error]);
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
-    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
     // Now make different changes in db and otherDB:
     doc1 = [[self.db documentWithID: docID] toMutable];
-    [doc1 setData: localData];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    if (localData) {
+        [doc1 setData: localData];
+        Assert([self.db saveDocument: doc1 error: &error]);
+    } else {
+        Assert([self.db deleteDocument: doc1 error: &error]);
+    }
     
     // pass the remote revision
     CBLMutableDocument* doc2 = [[otherDB documentWithID: docID] toMutable];
-    Assert(doc2);
-    [doc2 setData: remoteData];
-    Assert([otherDB saveDocument: doc2 error: &error]);
+    if (remoteData) {
+        [doc2 setData: remoteData];
+        Assert([otherDB saveDocument: doc2 error: &error]);
+    } else {
+        Assert([otherDB deleteDocument: doc2 error: &error]);
+    }
 }
 
-- (CBLReplicatorConfiguration*) pullConfig {
+- (CBLReplicatorConfiguration*) config: (CBLReplicatorType)type {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     return [self configWithTarget: target
-                             type: kCBLReplicatorTypePull
+                             type: type
                        continuous: NO];
 }
 
@@ -105,7 +110,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.remoteDocument;
@@ -119,6 +124,12 @@
     CBLDocument* savedDoc = [self.db documentWithID: docId];
     
     AssertEqualObjects(savedDoc.toDictionary, remoteData);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be equal, so that nothing has pushed to remote
+    AssertEqual(sequenceBeforePush, [otherDB documentWithID: docId].sequence);
 }
 
 - (void) testConflictResolverLocalWins {
@@ -128,7 +139,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.localDocument;
@@ -140,6 +151,12 @@
     // Check that it was resolved:
     AssertEqual(self.db.count, 1u);
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // there was changes to push to remote, and sequence increased
+    Assert(sequenceBeforePush < [otherDB documentWithID: docId].sequence);
 }
 
 - (void) testConflictResolverNullDoc {
@@ -149,7 +166,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -170,7 +187,7 @@
     [self makeConflictFor: docId withLocal: nil withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -191,7 +208,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: nil];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -213,7 +230,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     // EDIT LOCAL DOCUMENT
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -266,7 +283,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     __block int count = 0;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -303,7 +320,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return [CBLMutableDocument documentWithID: @"wrongDocID"];
@@ -344,7 +361,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     __weak CBLDatabase* weakOtherDB = otherDB;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -384,7 +401,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         [NSException raise: NSInternalInconsistencyException
