@@ -604,7 +604,7 @@
                           AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
                           return NO;
                       } error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorConflict);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     
     // make sure no update to revision and generation
@@ -626,7 +626,7 @@
                           [cur setString: @"Scott" forKey: @"nickName"];
                           return NO;
                       } error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorConflict);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     
     // make sure no update to revision and generation
