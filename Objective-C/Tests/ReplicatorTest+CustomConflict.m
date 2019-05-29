@@ -245,12 +245,16 @@
     
     NSMutableArray* order = [NSMutableArray array];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
-        [order addObject: con.localDocument.id];
-        if ([con.localDocument.id isEqualToString: order.firstObject]) {
+        @synchronized (order) {
+            [order addObject: con.localDocument.id];
+        }
+        if (order.count == 1) {
             [NSThread sleepForTimeInterval: 0.5];
             [ex fulfill];
         }
-        [order addObject: con.localDocument.id];
+        @synchronized (order) {
+            [order addObject: con.localDocument.id];
+        }
         return con.remoteDocument;
     }];
     pullConfig.conflictResolver = resolver;
