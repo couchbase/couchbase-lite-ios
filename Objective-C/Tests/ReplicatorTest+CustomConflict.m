@@ -262,7 +262,7 @@
 - (void) testDocumentReplicationEventForConflictedDocs {
     TestConflictResolver* resolver;
     
-    // when document with wrong-id is returned, it will throw exception.
+    // when exception thrown during conflict resolution: here wrong doc-id will throw an exception
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return [CBLMutableDocument documentWithID: @"wrongDocID"];
     }];
