@@ -257,8 +257,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             
             @try {
                 if (conflictHandler(document, oldDoc.isDeleted ? nil : oldDoc)) {
-                    CBLAssertNotNil(document);
                     continue;
+                } else {
+                    return createError(CBLErrorConflict, error);
                 }
             } @catch(NSError* conflictHandlerError) {
                 if (error)
@@ -1052,6 +1053,11 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                        docID, localDoc.revID, remoteDoc.revID);
             
             resolvedDoc = [conflictResolver resolve: conflict];
+            
+            if (!resolvedDoc.database) {
+                // when resolved doc is a newly created doc, without a database
+                resolvedDoc.database = localDoc.database;
+            }
             
             if (resolvedDoc && resolvedDoc.id != docID) {
                 [NSException raise: NSInternalInconsistencyException
