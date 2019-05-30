@@ -582,6 +582,26 @@
     [self cleanDB];
 }
 
+- (void) testConflictHandlerWhenDocumentIsPurged {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    NSError* error;
+    [self.db purgeDocumentWithID: docID error: &error];
+    
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                          return YES;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+}
+
 
 #pragma mark - Delete Document
 
