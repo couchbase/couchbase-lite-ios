@@ -261,9 +261,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 } else {
                     return createError(CBLErrorConflict, error);
                 }
-            } @catch(NSError* conflictHandlerError) {
+            } @catch(NSException* ex) {
                 if (error)
-                    *error = conflictHandlerError;
+                    *error = [NSError errorWithDomain: CBLErrorDomain
+                                                 code: CBLErrorConflict
+                                             userInfo: @{NSLocalizedDescriptionKey: ex.description}];
             }
             return NO;
         } else if (!success) { // any other error, we return false with errorInfo
