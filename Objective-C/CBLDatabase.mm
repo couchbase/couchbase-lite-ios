@@ -1021,10 +1021,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
-            C4Transaction t(_c4db);
-            if (!t.begin())
-                return convertError(t.error(), outError);
-            
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                               includeDeleted: YES error: outError];
@@ -1036,9 +1032,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                                                includeDeleted: YES error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision])
                 return NO;
-            
-            if (!t.commit())
-                return convertError(t.error(), outError);
         }
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
