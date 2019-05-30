@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLDocument+Internal.h"
 
 @interface TestConflictResolver: NSObject<CBLConflictResolver>
 
@@ -177,8 +178,14 @@
     
     // Check whether the document is deleted, and returns null.
     AssertEqual(self.db.count, 0u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    AssertNil(savedDoc);
+    NSError* error;
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedLocalWins {
@@ -200,6 +207,15 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
+    
+    NSError* error;
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedRemoteWins {
@@ -221,6 +237,17 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
+    
+    NSError* error;
+    UInt64 sequenceBeforePush = [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    AssertEqual(sequenceBeforePush, [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverMergeDoc {
@@ -274,6 +301,13 @@
     savedDoc = [self.db documentWithID: docId];
     exp = [NSMutableDictionary dictionaryWithObject: @"new-with-same-ID" forKey: @"docType"];
     AssertEqualObjects(savedDoc.toDictionary, exp);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // sequence before should be less than current; push sends some updated merged doc.
+    Assert(sequenceBeforePush < [otherDB documentWithID: docId].sequence);
+    
 }
 
 - (void) testConflictResolverCalledTwice {
