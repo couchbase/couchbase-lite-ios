@@ -652,12 +652,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         C4Error c4err;
         UInt64 timestamp = c4doc_getExpiration(_c4db, docID, &c4err);
         if (timestamp == 0) {
-            if (c4err.code == 0)
-                return nil;
-            
-            [NSException raise: NSGenericException
-                        format: @"Exception while getting the document(%@) expiration. %d/%d",
-             documentID, c4err.domain, c4err.code];
+            if (c4err.code != 0) {
+                [NSException raise: NSGenericException
+                            format: @"Exception while getting the document(%@) expiration. %d/%d",
+                 documentID, c4err.domain, c4err.code];
+            }
+            return nil;
         }
         return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
     }
