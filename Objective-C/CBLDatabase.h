@@ -411,8 +411,7 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
                                error: (NSError**)error;
 
 /**
- Returns the expiration time of a document, if exists, else nil. An NSGenericException exception
- will be raised, if any error happened.
+ Returns the expiration time of a document, if exists, else nil.
  
  @param documentID The ID of the document to set the expiration date for
  @return the expiration time of a document, if one has been set, else nil.
