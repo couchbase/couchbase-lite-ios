@@ -1128,7 +1128,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                     return false;
                 isDeleted = resolvedDoc.isDeleted;
             } else
-                mergedBody = alloc_slice(""_sl);
+                mergedBody = [self emptyFLSliceResult];
             
             if (isDeleted)
                 mergedFlags |= kRevDeleted;
@@ -1151,6 +1151,15 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         return t.commit() || convertError(t.error(), outError);
     }
+}
+
+- (FLSliceResult) emptyFLSliceResult {
+    FLEncoder enc = c4db_getSharedFleeceEncoder(_c4db);
+    FLEncoder_BeginDict(enc, 0);
+    FLEncoder_EndDict(enc);
+    auto result = FLEncoder_Finish(enc, nullptr);
+    FLEncoder_Reset(enc);
+    return result;
 }
 
 
