@@ -1162,7 +1162,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     return result;
 }
 
-
 # pragma mark DOCUMENT EXPIRATION
 
 
