@@ -1002,6 +1002,20 @@ class ReplicatorTest: CBLTestCase {
     }
     
     #endif
+    
+    func testConflictResolverConfigProperty() {
+        let target = URLEndpoint(url: URL(string: "wss://foo")!)
+        let pullConfig = config(target: target, type: .pull, continuous: false)
+        
+        let conflictResolver = TestConflictResolver { (con) -> Document? in
+            return con.remoteDocument
+        }
+        pullConfig.conflictResolver = conflictResolver
+        repl = Replicator(config: pullConfig)
+        
+        XCTAssertNotNil(pullConfig.conflictResolver)
+        XCTAssertNotNil(repl.config.conflictResolver)
+    }
 }
 
 class TestConflictResolver: ConflictResolver {
