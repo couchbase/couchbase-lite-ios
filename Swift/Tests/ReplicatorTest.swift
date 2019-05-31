@@ -1061,6 +1061,18 @@ class ReplicatorTest: CBLTestCase {
         expectedDocDict = remoteData
         expectedDocDict["edit"] = "remote"
         XCTAssert(expectedDocDict == db.document(withID: docID)!.toDictionary())
+        
+        // CREATE NEW DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = MutableDocument(id: conflict.localDocument!.id)
+            doc.setString("new-with-same-ID", forKey: "docType")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssert(["docType": "new-with-same-ID"] == db.document(withID: docID)!.toDictionary())
     }
     
     #endif
