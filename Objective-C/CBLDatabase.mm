@@ -249,7 +249,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                                 includeDeleted: YES
                                                          error: error];
                 if (!oldDoc)
-                    return createError(CBLErrorConflict, error);
+                    return createError(CBLErrorNotFound, error);
                 
                 if (!transaction.commit())
                     return convertError(transaction.error(), error);

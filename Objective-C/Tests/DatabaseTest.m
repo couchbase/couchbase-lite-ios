@@ -599,7 +599,7 @@
                       conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
                           return YES;
                       } error: &error]);
-    AssertEqual(error.code, CBLErrorConflict);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 
