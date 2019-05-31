@@ -1001,6 +1001,67 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc"))
     }
     
+    /// TODO: REMOVE THIS BEFORE MERGE
+    func getConfig(_ type: ReplicatorType) -> ReplicatorConfiguration {
+        let target = DatabaseEndpoint(database: otherDB)
+        return config(target: target, type: type, continuous: false)
+    }
+    
+    /// TODO: REMOVE THIS BEFORE MERGE
+    func makeConflict(forID docID: String,
+                      withLocal localData: [String: String],
+                      withRemote remoteData: [String: String]) throws {
+        // create doc
+        let doc = createDocument(docID)
+        try saveDocument(doc)
+        
+        // sync the doc in both DBs.
+        let config = getConfig(.push)
+        run(config: config, expectedError: nil)
+        
+        // Now make different changes in db and otherDBs
+        let doc1a = db.document(withID: docID)!.toMutable()
+        doc1a.setData(localData)
+        try saveDocument(doc1a)
+        
+        let doc1b = otherDB.document(withID: docID)!.toMutable()
+        doc1b.setData(remoteData)
+        try otherDB.saveDocument(doc1b)
+    }
+    
+    func testConflictResolverCalledTwice() throws {
+        let docID = "doc"
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        let config = getConfig(.pull)
+        
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        var count = 0;
+        let resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
+            count += 1
+            
+            // update the doc will cause a second conflict
+            let savedDoc = self.db.document(withID: docID)!.toMutable()
+            if !savedDoc["secondUpdate"].exists {
+                savedDoc.setBoolean(true, forKey: "secondUpdate")
+                try! self.db.saveDocument(savedDoc)
+            }
+            
+            let mDoc = conflict.localDocument!.toMutable()
+            mDoc.setString("local", forKey: "edit")
+            return mDoc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(count, 2)
+        XCTAssertEqual(self.db.count, 1)
+        var expectedDocDict: [String: Any] = localData
+        expectedDocDict["edit"] = "local"
+        expectedDocDict["secondUpdate"] = true
+        XCTAssert(self.db.document(withID: docID)!.toDictionary() == expectedDocDict)
+    }
+    
     #endif
 }
 
