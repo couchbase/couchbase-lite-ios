@@ -1001,6 +1001,68 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc"))
     }
     
+    func getConfig(_ type: ReplicatorType) -> ReplicatorConfiguration {
+        let target = DatabaseEndpoint(database: otherDB)
+        return config(target: target, type: type, continuous: false)
+    }
+    
+    func makeConflict(forID docID: String,
+                      withLocal localData: [String: String],
+                      withRemote remoteData: [String: String]) throws {
+        // create doc
+        let doc = createDocument(docID)
+        try saveDocument(doc)
+        
+        // sync the doc in both DBs.
+        let config = getConfig(.push)
+        run(config: config, expectedError: nil)
+        
+        // Now make different changes in db and otherDBs
+        let doc1a = db.document(withID: docID)!.toMutable()
+        doc1a.setData(localData)
+        try saveDocument(doc1a)
+        
+        let doc1b = otherDB.document(withID: docID)!.toMutable()
+        doc1b.setData(remoteData)
+        try otherDB.saveDocument(doc1b)
+    }
+    
+    func testConflictResolverMergeDoc() throws {
+        let docID = "doc"
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        var resolver: TestConflictResolver!
+        let config = getConfig(.pull)
+        
+        // EDIT LOCAL DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = conflict.localDocument?.toMutable()
+            doc?.setString("local", forKey: "edit")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        var expectedDocDict = localData
+        expectedDocDict["edit"] = "local"
+        XCTAssert(expectedDocDict == db.document(withID: docID)!.toDictionary())
+        
+        // EDIT REMOTE DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = conflict.remoteDocument?.toMutable()
+            doc?.setString("remote", forKey: "edit")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        expectedDocDict = remoteData
+        expectedDocDict["edit"] = "remote"
+        XCTAssert(expectedDocDict == db.document(withID: docID)!.toDictionary())
+    }
+    
     #endif
 }
 
