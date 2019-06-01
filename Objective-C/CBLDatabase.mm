@@ -240,19 +240,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
             CBL_LOCK(self) {
-                C4Transaction transaction(_c4db);
-                if (!transaction.begin())
-                    return convertError(transaction.error(), error);
-                
                 oldDoc = [[CBLDocument alloc] initWithDatabase: self
                                                     documentID: document.id
                                                 includeDeleted: YES
                                                          error: error];
                 if (!oldDoc)
                     return NO;
-                
-                if (!transaction.commit())
-                    return convertError(transaction.error(), error);
             }
             
             @try {
