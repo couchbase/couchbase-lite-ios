@@ -57,7 +57,7 @@ protocol ArrayFragment {
 
 
 /// DictionaryFragment protocol provides subscript access to Fragment objects by key.
-protocol DictionaryFragment {
+public protocol DictionaryFragment {
     subscript(key: String) -> Fragment { get }
 }
 

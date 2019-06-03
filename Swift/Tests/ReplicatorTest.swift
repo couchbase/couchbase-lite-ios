@@ -32,16 +32,9 @@ class ReplicatorTest: CBLTestCase {
         // Create otherdb:
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)
-        
-        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-        Database.log.console.domains = .all
-        Database.log.console.level = .verbose
     }
     
     override func tearDown() {
-        // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-        Database.log.console.level = .warning
-        
         // TODO: Remove this
         // Workaround to ensure that replicator's background cleaning task was done:
         // https://github.com/couchbase/couchbase-lite-core/issues/520
