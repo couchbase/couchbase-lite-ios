@@ -240,19 +240,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
             CBL_LOCK(self) {
-                C4Transaction transaction(_c4db);
-                if (!transaction.begin())
-                    return convertError(transaction.error(), error);
-                
                 oldDoc = [[CBLDocument alloc] initWithDatabase: self
                                                     documentID: document.id
                                                 includeDeleted: YES
                                                          error: error];
                 if (!oldDoc)
                     return createError(CBLErrorNotFound, error);
-                
-                if (!transaction.commit())
-                    return convertError(transaction.error(), error);
             }
             
             @try {
@@ -1021,10 +1014,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
-            C4Transaction t(_c4db);
-            if (!t.begin())
-                return convertError(t.error(), outError);
-            
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                               includeDeleted: YES error: outError];
@@ -1036,9 +1025,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                                                includeDeleted: YES error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision])
                 return NO;
-            
-            if (!t.commit())
-                return convertError(t.error(), outError);
         }
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
