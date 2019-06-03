@@ -649,7 +649,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     CBL_LOCK(self) {
         CBLStringBytes docID(documentID);
-        UInt64 timestamp = c4doc_getExpiration(_c4db, docID);
+        UInt64 timestamp = c4doc_getExpiration(_c4db, docID, nullptr);
         if (timestamp == 0) {
             return nil;
         }
