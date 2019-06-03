@@ -582,6 +582,27 @@
     [self cleanDB];
 }
 
+- (void) testSavePurgedDoc {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"name"];
+    NSError* error;
+    Assert([self.db saveDocument: doc error: &error], @"Error: %@", error);
+    
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    Assert([self.db purgeDocumentWithID: docID error: &error], @"Error: %@", error);
+    
+    // try saving the purged doc instance: Should return NotFound!!
+    [doc1b setString: @"Peter" forKey: @"firstName"];
+    AssertFalse([self.db saveDocument: doc1b error: &error]);
+    AssertEqual(error.code, CBLErrorNotFound);
+    AssertEqual(error.domain, CBLErrorDomain);
+    
+    // try saving the doc with same name, which should be saved without any issue.
+    CBLMutableDocument* doc1c = [[CBLMutableDocument alloc] initWithID: docID];
+    Assert([self.db saveDocument: doc1c error: &error], @"Error: %@", error);
+}
 
 #pragma mark - Delete Document
 
