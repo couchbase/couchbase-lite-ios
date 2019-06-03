@@ -249,7 +249,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                                 includeDeleted: YES
                                                          error: error];
                 if (!oldDoc)
-                    return NO;
+                    return createError(CBLErrorNotFound, error);
                 
                 if (!transaction.commit())
                     return convertError(transaction.error(), error);
@@ -651,7 +651,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     CBL_LOCK(self) {
         CBLStringBytes docID(documentID);
-        UInt64 timestamp = c4doc_getExpiration(_c4db, docID);
+        UInt64 timestamp = c4doc_getExpiration(_c4db, docID, nullptr);
         if (timestamp == 0) {
             return nil;
         }
@@ -1130,7 +1130,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                     return false;
                 isDeleted = resolvedDoc.isDeleted;
             } else
-                mergedBody = alloc_slice(""_sl);
+                mergedBody = [self emptyFLSliceResult];
             
             if (isDeleted)
                 mergedFlags |= kRevDeleted;
@@ -1155,6 +1155,14 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
+- (FLSliceResult) emptyFLSliceResult {
+    FLEncoder enc = c4db_getSharedFleeceEncoder(_c4db);
+    FLEncoder_BeginDict(enc, 0);
+    FLEncoder_EndDict(enc);
+    auto result = FLEncoder_Finish(enc, nullptr);
+    FLEncoder_Reset(enc);
+    return result;
+}
 
 # pragma mark DOCUMENT EXPIRATION
 
