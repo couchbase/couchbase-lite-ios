@@ -193,7 +193,11 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBLQuery* strongQuery = _query;
     CBLLogInfo(Query, @"%@: Querying...", self);
     NSError *error;
-    CBLQueryResultSet* oldRs = _rs;
+    CBLQueryResultSet* oldRs;
+    CBL_LOCK(_rs) {
+        oldRs = _rs;
+    }
+    
     CBLQueryResultSet* newRs;
     if (oldRs == nil)
         newRs = (CBLQueryResultSet*) [strongQuery execute: &error];
