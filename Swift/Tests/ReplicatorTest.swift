@@ -100,7 +100,6 @@ class ReplicatorTest: CBLTestCase {
     }
 }
 
-
 class ReplicatorTest_Main: ReplicatorTest {
 
     #if COUCHBASE_ENTERPRISE
