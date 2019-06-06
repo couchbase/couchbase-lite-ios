@@ -519,7 +519,7 @@
     [self makeConflictFor: @"doc2" withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     NSMutableArray* order = [NSMutableArray array];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -528,10 +528,11 @@
         }
         if (order.count == 1) {
             [NSThread sleepForTimeInterval: 0.5];
-            [ex fulfill];
         }
-        @synchronized (order) {
-            [order addObject: con.localDocument.id];
+        [order addObject: con.localDocument.id];
+        
+        if (order.count == 4) {
+            [ex fulfill];
         }
         return con.remoteDocument;
     }];
