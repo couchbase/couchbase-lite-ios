@@ -602,7 +602,7 @@
     [doc1b setString: @"Scott" forKey: @"nickName"];
     Assert([self.db saveDocument: doc1b
                  conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
-                     AssertEqualObjects(doc1b, document);
+                     Assert(doc1b == document);
                      AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
                      AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
                      AssertEqual(document.generation, 2u);
@@ -622,7 +622,7 @@
     [doc1b setString: @"Scotty" forKey: @"nickName"];
     Assert([self.db saveDocument: doc1b
                  conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
-                     AssertEqualObjects(doc1b, document);
+                     Assert(doc1b == document);
                      AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
                      AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
                      AssertEqual(document.generation, 4u);
