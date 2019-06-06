@@ -331,7 +331,7 @@
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
-    CBLReplicatorConfiguration* config = [self pullConfig];
+    CBLReplicatorConfiguration* config = [self config: kCBLReplicatorTypePull];
     config.conflictResolver = resolver;
     
     __block id<CBLListenerToken> token;
