@@ -633,7 +633,58 @@
     NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
     AssertEqual([self.db documentWithID: docID].generation, 5u);
+}
+
+- (void) testCancelConflictHandler {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
     
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                          AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    // Some Updates to Current Mutable Document
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          // with some updates to the existing doc also shouldn't cause any issues
+                          [document setString: @"Scott" forKey: @"nickName"];
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
 }
 
 - (void) testConflictHandlerWhenDocumentIsPurged {
