@@ -438,7 +438,7 @@
     docID = @"doc2";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
-    [conflictedDocs addObject: @[[self.db documentWithID: docID] ?: [NSNull null],
+    [conflictedDocs addObject: @[[NSNull null],
                                  [otherDB documentWithID: docID]]];
     
     // delete remote
@@ -446,7 +446,7 @@
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [otherDB deleteDocument: [otherDB documentWithID: docID] error: &error];
     [conflictedDocs addObject: @[[self.db documentWithID: docID],
-                                 [otherDB documentWithID: docID] ?: [NSNull null]]];
+                                 [NSNull null]]];
     
     
     CBLReplicatorConfiguration* pullConfig = [self pullConfig];
