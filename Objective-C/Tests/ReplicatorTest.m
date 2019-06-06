@@ -86,17 +86,10 @@
     otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
     AssertNotNil(otherDB);
-    
-    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
 }
 
 
 - (void) tearDown {
-    // TODO: #2420 for debugging https://github.com/couchbase/couchbase-lite-ios/issues/2420
-    CBLDatabase.log.console.level = kCBLLogLevelWarning;
-    
     // TODO: Remove this:
     // Workaround to ensure that replicator's background cleaning task was done:
     // https://github.com/couchbase/couchbase-lite-core/issues/520
