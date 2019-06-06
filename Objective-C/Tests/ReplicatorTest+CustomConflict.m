@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLDocument+Internal.h"
 
 @interface TestConflictResolver: NSObject<CBLConflictResolver>
 
@@ -75,26 +76,31 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: docID];
     Assert([self.db saveDocument: doc1 error: &error]);
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
-    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
     // Now make different changes in db and otherDB:
     doc1 = [[self.db documentWithID: docID] toMutable];
-    [doc1 setData: localData];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    if (localData) {
+        [doc1 setData: localData];
+        Assert([self.db saveDocument: doc1 error: &error]);
+    } else {
+        Assert([self.db deleteDocument: doc1 error: &error]);
+    }
     
     // pass the remote revision
     CBLMutableDocument* doc2 = [[otherDB documentWithID: docID] toMutable];
-    Assert(doc2);
-    [doc2 setData: remoteData];
-    Assert([otherDB saveDocument: doc2 error: &error]);
+    if (remoteData) {
+        [doc2 setData: remoteData];
+        Assert([otherDB saveDocument: doc2 error: &error]);
+    } else {
+        Assert([otherDB deleteDocument: doc2 error: &error]);
+    }
 }
 
-- (CBLReplicatorConfiguration*) pullConfig {
+- (CBLReplicatorConfiguration*) config: (CBLReplicatorType)type {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     return [self configWithTarget: target
-                             type: kCBLReplicatorTypePull
+                             type: type
                        continuous: NO];
 }
 
@@ -105,7 +111,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.remoteDocument;
@@ -119,6 +125,12 @@
     CBLDocument* savedDoc = [self.db documentWithID: docId];
     
     AssertEqualObjects(savedDoc.toDictionary, remoteData);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be equal, so that nothing has pushed to remote
+    AssertEqual(sequenceBeforePush, [otherDB documentWithID: docId].sequence);
 }
 
 - (void) testConflictResolverLocalWins {
@@ -128,7 +140,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.localDocument;
@@ -140,6 +152,12 @@
     // Check that it was resolved:
     AssertEqual(self.db.count, 1u);
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // there was changes to push to remote, and sequence increased
+    Assert(sequenceBeforePush < [otherDB documentWithID: docId].sequence);
 }
 
 - (void) testConflictResolverNullDoc {
@@ -149,7 +167,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -160,8 +178,14 @@
     
     // Check whether the document is deleted, and returns null.
     AssertEqual(self.db.count, 0u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    AssertNil(savedDoc);
+    NSError* error;
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedLocalWins {
@@ -170,7 +194,7 @@
     [self makeConflictFor: docId withLocal: nil withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -183,6 +207,15 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
+    
+    NSError* error;
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedRemoteWins {
@@ -191,7 +224,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: nil];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return nil;
@@ -204,6 +237,17 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
     AssertNil(savedDoc);
+    
+    NSError* error;
+    UInt64 sequenceBeforePush = [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // should be greater, so that it pushed new revision to remote
+    AssertEqual(sequenceBeforePush, [[CBLDocument alloc] initWithDatabase: otherDB
+                                                           documentID: docId
+                                                       includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverMergeDoc {
@@ -213,7 +257,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     // EDIT LOCAL DOCUMENT
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -257,6 +301,55 @@
     savedDoc = [self.db documentWithID: docId];
     exp = [NSMutableDictionary dictionaryWithObject: @"new-with-same-ID" forKey: @"docType"];
     AssertEqualObjects(savedDoc.toDictionary, exp);
+    
+    UInt64 sequenceBeforePush = [otherDB documentWithID: docId].sequence;
+    [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
+    
+    // sequence before should be less than current; push sends some updated merged doc.
+    Assert(sequenceBeforePush < [otherDB documentWithID: docId].sequence);
+    
+}
+
+- (void) testDocumentReplicationEventForConflictedDocs {
+    TestConflictResolver* resolver;
+    
+    // when resolution is skipped: here wrong doc-id throws an exception & skips it
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return [CBLMutableDocument documentWithID: @"wrongDocID"];
+    }];
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+    
+    // when resolution is successfull.
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+}
+
+- (void) validateDocumentReplicationEventForConflictedDocs: (TestConflictResolver*)resolver {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    CBLReplicatorConfiguration* config = [self config: kCBLReplicatorTypePull];
+    config.conflictResolver = resolver;
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSString*>* docIds = [NSMutableArray array];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
+            for (CBLReplicatedDocument* replDoc in docRepl.documents) {
+                [docIds addObject: replDoc.id];
+            }
+        }];
+    }];
+    
+    // make sure only single listener event is fired when conflict occured.
+    AssertEqual(docIds.count, 1u);
+    AssertEqualObjects(docIds.firstObject, docId);
+    [replicator removeChangeListenerWithToken: token];
 }
 
 - (void) testConflictResolverCalledTwice {
@@ -266,7 +359,7 @@
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     __block int count = 0;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -303,7 +396,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return [CBLMutableDocument documentWithID: @"wrongDocID"];
@@ -344,7 +437,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     __weak CBLDatabase* weakOtherDB = otherDB;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -384,7 +477,7 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     TestConflictResolver* resolver;
-    CBLReplicatorConfiguration* pullConfig = [self pullConfig];
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
     
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         [NSException raise: NSInternalInconsistencyException
@@ -416,6 +509,94 @@
     pullConfig.conflictResolver = resolver;
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
+}
+
+- (void) testNonBlockingConflictResolver {
+    XCTestExpectation* ex = [self expectationWithDescription: @"testNonBlockingConflictResolver"];
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: @"doc1" withLocal: localData withRemote: remoteData];
+    [self makeConflictFor: @"doc2" withLocal: localData withRemote: remoteData];
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    NSMutableArray* order = [NSMutableArray array];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        @synchronized (order) {
+            [order addObject: con.localDocument.id];
+        }
+        if (order.count == 1) {
+            [NSThread sleepForTimeInterval: 0.5];
+        }
+        [order addObject: con.localDocument.id];
+        
+        if (order.count == 4) {
+            [ex fulfill];
+        }
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+
+    [self waitForExpectationsWithTimeout: 5 handler: nil];
+    
+    // make sure, first doc starts resolution but finishes last.
+    // in between second doc starts and finishes it. 
+    AssertEqualObjects(order.firstObject, order.lastObject);
+    AssertEqualObjects(order[1], order[2]);
+}
+
+- (void) testConflictResolutionDefault {
+    NSError* error;
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    NSMutableArray* conflictedDocs = [NSMutableArray array];
+    
+    // higher generation-id
+    NSString* docID = @"doc1";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
+    [doc setValue: @"value3" forKey: @"key3"];
+    [self saveDocument: doc];
+    [conflictedDocs addObject: @[[self.db documentWithID: docID],
+                                 [otherDB documentWithID: docID]]];
+    
+    // delete local
+    docID = @"doc2";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
+    [conflictedDocs addObject: @[[NSNull null], [otherDB documentWithID: docID]]];
+    
+    // delete remote
+    docID = @"doc4";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    [otherDB deleteDocument: [otherDB documentWithID: docID] error: &error];
+    [conflictedDocs addObject: @[[self.db documentWithID: docID], [NSNull null]]];
+    
+    
+    CBLReplicatorConfiguration* pullConfig = [self config:kCBLReplicatorTypePull];
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    for (NSArray* docs in conflictedDocs) {
+        CBLDocument* doc1 = docs[0];
+        CBLDocument* doc2 = docs[1];
+        
+        // if any deleted, success revision should be deleted.
+        if ([doc1 isEqual: [NSNull null]] || [doc2 isEqual: [NSNull null]]) {
+            docID = [doc1 isKindOfClass: [NSNull class]] ? doc2.id : doc1.id;
+            CBLDocument* successDoc = [[CBLDocument alloc] initWithDatabase: self.db
+                                                                 documentID: docID
+                                                             includeDeleted: YES
+                                                                      error: &error];
+            AssertNil(error);
+            Assert(successDoc.isDeleted);
+        } else {
+            // if generations are different
+            AssertEqual(doc1.generation, [self.db documentWithID: doc1.id].generation);
+            Assert(doc1.generation > doc2.generation);
+        }
+    }
 }
 
 #endif
