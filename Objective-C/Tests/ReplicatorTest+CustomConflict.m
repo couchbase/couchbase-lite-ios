@@ -547,6 +547,58 @@
     AssertEqualObjects(order[1], order[2]);
 }
 
+- (void) testConflictResolutionDefault {
+    NSError* error;
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    NSMutableArray* conflictedDocs = [NSMutableArray array];
+    
+    // higher generation-id
+    NSString* docID = @"doc1";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
+    [doc setValue: @"value3" forKey: @"key3"];
+    [self saveDocument: doc];
+    [conflictedDocs addObject: @[[self.db documentWithID: docID],
+                                 [otherDB documentWithID: docID]]];
+    
+    // delete local
+    docID = @"doc2";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
+    [conflictedDocs addObject: @[[NSNull null], [otherDB documentWithID: docID]]];
+    
+    // delete remote
+    docID = @"doc4";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    [otherDB deleteDocument: [otherDB documentWithID: docID] error: &error];
+    [conflictedDocs addObject: @[[self.db documentWithID: docID], [NSNull null]]];
+    
+    
+    CBLReplicatorConfiguration* pullConfig = [self config:kCBLReplicatorTypePull];
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    for (NSArray* docs in conflictedDocs) {
+        CBLDocument* doc1 = docs[0];
+        CBLDocument* doc2 = docs[1];
+        
+        // if any deleted, success revision should be deleted.
+        if ([doc1 isEqual: [NSNull null]] || [doc2 isEqual: [NSNull null]]) {
+            docID = [doc1 isKindOfClass: [NSNull class]] ? doc2.id : doc1.id;
+            CBLDocument* successDoc = [[CBLDocument alloc] initWithDatabase: self.db
+                                                                 documentID: docID
+                                                             includeDeleted: YES
+                                                                      error: &error];
+            AssertNil(error);
+            Assert(successDoc.isDeleted);
+        } else {
+            // if generations are different
+            AssertEqual(doc1.generation, [self.db documentWithID: doc1.id].generation);
+            Assert(doc1.generation > doc2.generation);
+        }
+    }
+}
+
 #endif
 
 @end
