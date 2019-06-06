@@ -240,19 +240,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
             CBL_LOCK(self) {
-                C4Transaction transaction(_c4db);
-                if (!transaction.begin())
-                    return convertError(transaction.error(), error);
-                
                 oldDoc = [[CBLDocument alloc] initWithDatabase: self
                                                     documentID: document.id
                                                 includeDeleted: YES
                                                          error: error];
                 if (!oldDoc)
-                    return NO;
-                
-                if (!transaction.commit())
-                    return convertError(transaction.error(), error);
+                    return createError(CBLErrorNotFound, error);
             }
             
             @try {
@@ -261,9 +254,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                 } else {
                     return createError(CBLErrorConflict, error);
                 }
-            } @catch(NSError* conflictHandlerError) {
+            } @catch(NSException* ex) {
                 if (error)
-                    *error = conflictHandlerError;
+                    *error = [NSError errorWithDomain: CBLErrorDomain
+                                                 code: CBLErrorConflict
+                                             userInfo: @{NSLocalizedDescriptionKey: ex.description}];
             }
             return NO;
         } else if (!success) { // any other error, we return false with errorInfo
@@ -649,7 +644,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     CBL_LOCK(self) {
         CBLStringBytes docID(documentID);
-        UInt64 timestamp = c4doc_getExpiration(_c4db, docID);
+        UInt64 timestamp = c4doc_getExpiration(_c4db, docID, nullptr);
         if (timestamp == 0) {
             return nil;
         }
@@ -1021,10 +1016,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
-            C4Transaction t(_c4db);
-            if (!t.begin())
-                return convertError(t.error(), outError);
-            
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                               includeDeleted: YES error: outError];
@@ -1036,9 +1027,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                                                includeDeleted: YES error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision])
                 return NO;
-            
-            if (!t.commit())
-                return convertError(t.error(), outError);
         }
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
@@ -1054,18 +1042,13 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             
             resolvedDoc = [conflictResolver resolve: conflict];
             
-            if (!resolvedDoc.database) {
-                // when resolved doc is a newly created doc, without a database
-                resolvedDoc.database = localDoc.database;
-            }
-            
             if (resolvedDoc && resolvedDoc.id != docID) {
                 [NSException raise: NSInternalInconsistencyException
                             format: @"Resolved docID '%@' is not matching with docID '%@'",
                  resolvedDoc.id, docID];
             }
             
-            if (resolvedDoc && resolvedDoc.database != self) {
+            if (resolvedDoc && resolvedDoc.database && resolvedDoc.database != self) {
                 [NSException raise: NSInternalInconsistencyException
                             format: @"Resolved document db '%@' is different from expected db '%@'",
                  resolvedDoc.database.name, self.name];
@@ -1128,7 +1111,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                     return false;
                 isDeleted = resolvedDoc.isDeleted;
             } else
-                mergedBody = alloc_slice(""_sl);
+                mergedBody = [self emptyFLSliceResult];
             
             if (isDeleted)
                 mergedFlags |= kRevDeleted;
@@ -1153,6 +1136,14 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
+- (FLSliceResult) emptyFLSliceResult {
+    FLEncoder enc = c4db_getSharedFleeceEncoder(_c4db);
+    FLEncoder_BeginDict(enc, 0);
+    FLEncoder_EndDict(enc);
+    auto result = FLEncoder_Finish(enc, nullptr);
+    FLEncoder_Reset(enc);
+    return result;
+}
 
 # pragma mark DOCUMENT EXPIRATION
 
