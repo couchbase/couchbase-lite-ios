@@ -652,9 +652,9 @@
     NSError* error;
     [doc1b setString: @"Scott" forKey: @"nickName"];
     AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * savingDoc, CBLDocument * dbDoc) {
-                          AssertEqualObjects(doc1b.toDictionary, savingDoc.toDictionary);
-                          AssertEqualObjects(doc1a.toDictionary, dbDoc.toDictionary);
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                          AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
                           return NO;
                       } error: &error]);
     AssertEqual(error.code, CBLErrorConflict);
@@ -674,9 +674,9 @@
     
     [doc1b setString: @"Scotty" forKey: @"nickName"];
     AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * savingDoc, CBLDocument * dbDoc) {
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
                           // with some updates to the existing doc also shouldn't cause any issues
-                          [savingDoc setString: @"Scott" forKey: @"nickName"];
+                          [document setString: @"Scott" forKey: @"nickName"];
                           return NO;
                       } error: &error]);
     AssertEqual(error.code, CBLErrorConflict);
