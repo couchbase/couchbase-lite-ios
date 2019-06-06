@@ -1042,18 +1042,13 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             
             resolvedDoc = [conflictResolver resolve: conflict];
             
-            if (!resolvedDoc.database) {
-                // when resolved doc is a newly created doc, without a database
-                resolvedDoc.database = localDoc.database;
-            }
-            
             if (resolvedDoc && resolvedDoc.id != docID) {
                 [NSException raise: NSInternalInconsistencyException
                             format: @"Resolved docID '%@' is not matching with docID '%@'",
                  resolvedDoc.id, docID];
             }
             
-            if (resolvedDoc && resolvedDoc.database != self) {
+            if (resolvedDoc && resolvedDoc.database && resolvedDoc.database != self) {
                 [NSException raise: NSInternalInconsistencyException
                             format: @"Resolved document db '%@' is different from expected db '%@'",
                  resolvedDoc.database.name, self.name];
