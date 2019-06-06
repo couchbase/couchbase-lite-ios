@@ -601,10 +601,11 @@
     NSError* error;
     [doc1b setString: @"Scott" forKey: @"nickName"];
     Assert([self.db saveDocument: doc1b
-                 conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-                     AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     AssertEqualObjects(doc1b, document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
                      AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
-                     AssertEqual(cur.generation, 2u);
+                     AssertEqual(document.generation, 2u);
                      AssertEqual(old.generation, 2u);
                      return YES;
                  } error: &error]);
@@ -620,12 +621,13 @@
     
     [doc1b setString: @"Scotty" forKey: @"nickName"];
     Assert([self.db saveDocument: doc1b
-                 conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
-                     AssertEqualObjects(doc1b.toDictionary, cur.toDictionary);
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     AssertEqualObjects(doc1b, document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
                      AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
-                     AssertEqual(cur.generation, 4u);
+                     AssertEqual(document.generation, 4u);
                      AssertEqual(old.generation, 4u);
-                     [cur setString: @"Scott" forKey: @"nickName"];
+                     [document setString: @"Scott" forKey: @"nickName"];
                      return YES;
                  } error: &error]);
     NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
@@ -648,7 +650,7 @@
     
     [doc1b setString: @"Scott" forKey: @"nickName"];
     AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
                           return YES;
                       } error: &error]);
     AssertEqual(error.code, CBLErrorNotFound);
@@ -673,7 +675,7 @@
     NSError* error;
     [doc1b setString: @"Scott" forKey: @"nickName"];
     BOOL success = [self.db saveDocument: doc1b
-                         conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                         conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
                              [NSException raise: NSInternalInconsistencyException
                                          format: @"exception inside the conflict handler"];
                              return YES;
