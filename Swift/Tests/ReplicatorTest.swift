@@ -100,7 +100,6 @@ class ReplicatorTest: CBLTestCase {
     }
 }
 
-
 class ReplicatorTest_Main: ReplicatorTest {
 
     #if COUCHBASE_ENTERPRISE
@@ -840,5 +839,6 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(otherDB.count, 3)
         XCTAssertEqual(db.count, 2)
     }
+    
     #endif
 }
