@@ -735,7 +735,6 @@
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     AssertEqual([self.db documentWithID: docID].generation, 2u);
     AssertEqual(error.code, CBLErrorConflict);
->>>>>>> 81009e8c2cd700c3fa7c2a9b4d7f46f232ef801a
 }
 
 #pragma mark - Delete Document
