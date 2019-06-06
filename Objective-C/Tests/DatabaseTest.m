@@ -700,9 +700,9 @@
     NSError* error = nil;
     [doc1b setString: @"value1" forKey: @"key1"];
     Assert([self.db saveDocument: doc1b
-                 conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
                      AssertNil(old);
-                     AssertNotNil(cur);
+                     AssertNotNil(document);
                      return YES;
                  } error: &error]);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
@@ -714,9 +714,9 @@
     
     [doc1b setString: @"value2" forKey: @"key2"];
     AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * cur, CBLDocument * old) {
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
                           AssertNil(old);
-                          AssertNotNil(cur);
+                          AssertNotNil(document);
                           return NO;
                       } error: &error]);
     AssertEqual(error.code, CBLErrorConflict);
