@@ -310,6 +310,48 @@
     
 }
 
+- (void) testDocumentReplicationEventForConflictedDocs {
+    TestConflictResolver* resolver;
+    
+    // when resolution is skipped: here wrong doc-id throws an exception & skips it
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return [CBLMutableDocument documentWithID: @"wrongDocID"];
+    }];
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+    
+    // when resolution is successfull.
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    [self validateDocumentReplicationEventForConflictedDocs: resolver];
+}
+
+- (void) validateDocumentReplicationEventForConflictedDocs: (TestConflictResolver*)resolver {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    CBLReplicatorConfiguration* config = [self pullConfig];
+    config.conflictResolver = resolver;
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSString*>* docIds = [NSMutableArray array];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
+            for (CBLReplicatedDocument* replDoc in docRepl.documents) {
+                [docIds addObject: replDoc.id];
+            }
+        }];
+    }];
+    
+    // make sure only single listener event is fired when conflict occured.
+    AssertEqual(docIds.count, 1u);
+    AssertEqualObjects(docIds.firstObject, docId);
+    [replicator removeChangeListenerWithToken: token];
+}
+
 - (void) testConflictResolverCalledTwice {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
