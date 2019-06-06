@@ -244,6 +244,54 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(self.db.document(withID: docID)!.toDictionary() == expectedDocDict)
     }
     
+    func testConflictResolverMergeDoc() throws {
+        let docID = "doc"
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        var resolver: TestConflictResolver!
+        let config = getConfig(.pull)
+        
+        // EDIT LOCAL DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = conflict.localDocument?.toMutable()
+            doc?.setString("local", forKey: "edit")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        var expectedDocDict = localData
+        expectedDocDict["edit"] = "local"
+        XCTAssert(expectedDocDict == db.document(withID: docID)!.toDictionary())
+        
+        // EDIT REMOTE DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = conflict.remoteDocument?.toMutable()
+            doc?.setString("remote", forKey: "edit")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        expectedDocDict = remoteData
+        expectedDocDict["edit"] = "remote"
+        XCTAssert(expectedDocDict == db.document(withID: docID)!.toDictionary())
+        
+        // CREATE NEW DOCUMENT
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
+            let doc = MutableDocument(id: conflict.localDocument!.id)
+            doc.setString("new-with-same-ID", forKey: "docType")
+            return doc
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssert(["docType": "new-with-same-ID"] == db.document(withID: docID)!.toDictionary())
+    }
+    
     #endif
 }
 
