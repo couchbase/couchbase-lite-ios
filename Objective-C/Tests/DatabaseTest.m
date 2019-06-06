@@ -686,6 +686,47 @@
     AssertEqual(error.code, CBLErrorConflict);
 }
 
+- (void) testConflictHandlerWithDeletedOldDoc {
+    NSString* docID = @"doc1";
+    [self generateDocumentWithID: docID];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    // keeps new doc(non-deleted)
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    NSError* error = nil;
+    [doc1b setString: @"value1" forKey: @"key1"];
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     AssertNil(old);
+                     AssertNotNil(document);
+                     return YES;
+                 } error: &error]);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
+    
+    // keeps the deleted(old doc)
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    [doc1b setString: @"value2" forKey: @"key2"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          AssertNil(old);
+                          AssertNotNil(document);
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertNil([self.db documentWithID: docID]);
+    Assert([[CBLDocument alloc] initWithDatabase: self.db
+                                      documentID: docID
+                                  includeDeleted: YES
+                                           error: &error].isDeleted);
+}
+
 - (void) testConflictHandlerCalledTwice {
     NSString* docID = @"doc1";
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
