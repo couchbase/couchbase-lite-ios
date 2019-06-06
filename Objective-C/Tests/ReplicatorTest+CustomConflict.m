@@ -307,7 +307,6 @@
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
     
-    
     TestConflictResolver* resolver;
     CBLReplicatorConfiguration* pullConfig = [self pullConfig];
     
