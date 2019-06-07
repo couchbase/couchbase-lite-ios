@@ -341,6 +341,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                 }
             })
         })
+        
+        // make sure only single listener event is fired when conflict occured.
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(docIds.first!, docID)
         replicator.removeChangeListener(withToken: token)
