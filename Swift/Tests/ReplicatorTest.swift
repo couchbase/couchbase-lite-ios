@@ -839,5 +839,6 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(otherDB.count, 3)
         XCTAssertEqual(db.count, 2)
     }
+    
     #endif
 }
