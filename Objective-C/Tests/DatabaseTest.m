@@ -604,6 +604,254 @@
     Assert([self.db saveDocument: doc1c error: &error], @"Error: %@", error);
 }
 
+#pragma mark Save Conflict Handler
+
+- (void) testConflictHandler {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     Assert(doc1b == document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                     AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                     AssertEqual(document.generation, 2u);
+                     AssertEqual(old.generation, 2u);
+                     return YES;
+                 } error: &error]);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 4u);
+    
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     Assert(doc1b == document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                     AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                     AssertEqual(document.generation, 4u);
+                     AssertEqual(old.generation, 4u);
+                     [document setString: @"Scott" forKey: @"nickName"];
+                     return YES;
+                 } error: &error]);
+    NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
+    AssertEqual([self.db documentWithID: docID].generation, 5u);
+}
+
+- (void) testCancelConflictHandler {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                          AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    // Some Updates to Current Mutable Document
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          // with some updates to the existing doc also shouldn't cause any issues
+                          [document setString: @"Scott" forKey: @"nickName"];
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    
+    // make sure no update to revision and generation
+    AssertEqual([self.db documentWithID: docID].generation, 3u);
+    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+}
+
+- (void) testConflictHandlerWhenDocumentIsPurged {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    NSError* error;
+    [self.db purgeDocumentWithID: docID error: &error];
+    
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          return YES;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorNotFound);
+}
+
+// since objc is not exception safe, this exception throw result in memory issue
+// TODO: handle the expected memory issue in tests. s
+- (void) _testConflictHandlerThrowingException {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    BOOL success = [self.db saveDocument: doc1b
+                         conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                             [NSException raise: NSInternalInconsistencyException
+                                         format: @"exception inside the conflict handler"];
+                             return YES;
+                         } error: &error];
+    AssertFalse(success);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    AssertEqual(error.code, CBLErrorConflict);
+}
+
+- (void) testConflictHandlerWithDeletedOldDoc {
+    NSString* docID = @"doc1";
+    [self generateDocumentWithID: docID];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    // keeps new doc(non-deleted)
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    NSError* error = nil;
+    [doc1b setString: @"value1" forKey: @"key1"];
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     AssertNil(old);
+                     AssertNotNil(document);
+                     return YES;
+                 } error: &error]);
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
+    
+    // keeps the deleted(old doc)
+    doc1a = [[self.db documentWithID: docID] toMutable];
+    doc1b = [[self.db documentWithID: docID] toMutable];
+    [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    
+    [doc1b setString: @"value2" forKey: @"key2"];
+    AssertFalse([self.db saveDocument: doc1b
+                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                          AssertNil(old);
+                          AssertNotNil(document);
+                          return NO;
+                      } error: &error]);
+    AssertEqual(error.code, CBLErrorConflict);
+    AssertNil([self.db documentWithID: docID]);
+    Assert([[CBLDocument alloc] initWithDatabase: self.db
+                                      documentID: docID
+                                  includeDeleted: YES
+                                           error: &error].isDeleted);
+}
+
+- (void) testConflictHandlerCalledTwice {
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([self.db documentWithID: docID].generation, 1u);
+    
+    CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
+    
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [self saveDocument: doc1a];
+    AssertEqual([self.db documentWithID: docID].generation, 2u);
+    
+    NSError* error;
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    __block int count = 0;
+    Assert([self.db saveDocument: doc1b
+                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     Assert(document == doc1b);
+                     count++;
+                     CBLMutableDocument* doc1c = [[self.db documentWithID: docID] toMutable];
+                     if (![doc1c booleanForKey: @"secondUpdate"]) {
+                         AssertEqual(old.generation, 2u);
+                         AssertEqual(document.generation, 2u);
+                         [doc1c setBoolean: YES forKey: @"secondUpdate"];
+                         [self saveDocument: doc1c];
+                         AssertEqual([self.db documentWithID: docID].generation, 3u);
+                     }
+                     
+                     // Going to merge the two document contents
+                     NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithDictionary: old.toDictionary];
+                     for (NSString* key in document.toDictionary.allKeys) {
+                         [dict setValue: [document valueForKey: key] forKey: key];
+                     }
+                     [document setData: dict];
+                     [document setValue: @"local" forKey: @"edit"];
+                     return YES;
+                 } error: &error]);
+    
+    // make sure the save handler method called twice due to second conflict
+    AssertEqual(count, 2u);
+    AssertEqual(self.db.count, 1u);
+    
+    NSDictionary* expected = @{@"nickName": @"Scott",
+                               @"firstName": @"Tiger",
+                               @"secondUpdate": @YES,
+                               @"edit": @"local"};
+    AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
+    AssertEqual([self.db documentWithID: docID].generation, 4u);
+}
+
 #pragma mark - Delete Document
 
 
