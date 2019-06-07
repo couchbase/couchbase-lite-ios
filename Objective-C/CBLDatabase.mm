@@ -1031,8 +1031,9 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
         
-        CBLConflict* conflict = [[CBLConflict alloc] initWithLocalDocument: localDoc.isDeleted ? nil : localDoc
-                                                            remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
+        CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
+                                                  localDocument: localDoc.isDeleted ? nil : localDoc
+                                                 remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
         
         // Resolve conflict:
         CBLDocument* resolvedDoc;
@@ -1043,9 +1044,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             resolvedDoc = [conflictResolver resolve: conflict];
             
             if (resolvedDoc && resolvedDoc.id != docID) {
-                [NSException raise: NSInternalInconsistencyException
-                            format: @"Resolved docID '%@' is not matching with docID '%@'",
-                 resolvedDoc.id, docID];
+                CBLWarn(Sync, @"Resolved docID '%@' is not matching with docID '%@'",
+                        resolvedDoc.id, docID);
             }
             
             if (resolvedDoc && resolvedDoc.database && resolvedDoc.database != self) {

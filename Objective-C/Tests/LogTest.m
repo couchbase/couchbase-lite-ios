@@ -19,16 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
-
-@interface LogTestLogger : NSObject <CBLLogger>
-
-@property (nonatomic) CBLLogLevel level;
-
-@property (nonatomic, readonly) NSArray* lines;
-
-- (void) reset;
-
-@end
+#import "CustomLogger.h"
 
 @interface FileLoggerBackup: NSObject
 
@@ -143,7 +134,7 @@
 
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
-    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     CBLDatabase.log.custom = customLogger;
     
     for (NSUInteger i = 5; i >= 1; i--) {
@@ -284,7 +275,7 @@
 
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
-    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelNone;
     CBLDatabase.log.custom = customLogger;
     CBLLogVerbose(Database, @"TEST VERBOSE");
@@ -384,7 +375,7 @@
 }
 
 - (void) testNonASCII {
-    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelVerbose;
     CBLDatabase.log.custom = customLogger;
     CBLDatabase.log.console.domains = kCBLLogDomainAll;
@@ -413,7 +404,7 @@
 }
 
 - (void) testPercentEscape {
-    LogTestLogger* customLogger = [[LogTestLogger alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelInfo;
     CBLDatabase.log.custom = customLogger;
     CBLDatabase.log.console.domains = kCBLLogDomainAll;
@@ -428,39 +419,6 @@
         }
     }
     Assert(found);
-}
-
-@end
-
-
-@implementation LogTestLogger {
-    NSMutableArray* _lines;
-}
-
-@synthesize level=_level;
-
-- (instancetype) init {
-    self = [super init];
-    if (self) {
-        _level = kCBLLogLevelNone;
-        _lines = [NSMutableArray new];
-    }
-    return self;
-}
-
-
-- (NSArray*) lines {
-    return _lines;
-}
-
-
-- (void) reset {
-    [_lines removeAllObjects];
-}
-
-
-- (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    [_lines addObject: message];
 }
 
 @end

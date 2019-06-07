@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLConflict : NSObject
 
+/** The conflict resolved document id. */
+@property(nonatomic, readonly) NSString* documentID;
+
 /** The document in the local database. If nil, document is deleted. */
 @property(nonatomic, readonly, nullable) CBLDocument* localDocument;
 
