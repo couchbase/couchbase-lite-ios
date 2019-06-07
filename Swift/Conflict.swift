@@ -22,6 +22,11 @@ import Foundation
 /// Conflict class
 public struct Conflict {
     
+    /// The conflict resolved document id.
+    public var documentID: String {
+        return impl.documentID
+    }
+    
     /// The document in the local database. If nil, document is deleted.
     public var localDocument: Document? {
         guard let doc = impl.localDocument else {
