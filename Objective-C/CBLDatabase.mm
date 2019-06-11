@@ -1019,14 +1019,19 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                               includeDeleted: YES error: outError];
-            if (!localDoc)
+            if (!localDoc) {
+                CBLWarn(Sync, @"Unable to find the document %@ during conflict resolution,\
+                        skipping...", docID);
                 return NO;
+            }
             
             // Read the conflicting remote revision:
             remoteDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                                includeDeleted: YES error: outError];
-            if (!remoteDoc || ![remoteDoc selectConflictingRevision])
+            if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
+                CBLWarn(Sync, @"Unable to select conflicting revision for %@, skipping...", docID);
                 return NO;
+            }
         }
         
         conflictResolver = conflictResolver ?: [CBLConflictResolution default];
@@ -1044,7 +1049,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
             resolvedDoc = [conflictResolver resolve: conflict];
             
             if (resolvedDoc && resolvedDoc.id != docID) {
-                CBLWarn(Sync, @"Resolved docID '%@' is not matching with docID '%@'",
+                CBLWarn(Sync, @"The document ID of the resolved document '%@' is not matching "
+                        "with the document ID of the conflicting document '%@'.",
                         resolvedDoc.id, docID);
             }
             

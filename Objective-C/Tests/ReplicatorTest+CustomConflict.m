@@ -437,7 +437,8 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, exp);
 
     // validate the warning message!
-    NSString* warning = [NSString stringWithFormat: @"Resolved docID '%@' is not matching with docID '%@'",
+    NSString* warning = [NSString stringWithFormat: @"The document ID of the resolved document '%@'"
+                         " is not matching with the document ID of the conflicting document '%@'.",
                          wrongDocID, docId];
     AssertEqualObjects(custom.lines.lastObject, warning);
     
