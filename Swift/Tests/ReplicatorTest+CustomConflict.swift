@@ -355,8 +355,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
     }
     
-
-    func testConflictResolverWrongDocID() throws {
+    
+    func _testConflictResolverWrongDocID() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
