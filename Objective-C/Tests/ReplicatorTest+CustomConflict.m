@@ -528,7 +528,7 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
 }
 
-- (void) testNonBlockingConflictResolver {
+- (void) _testNonBlockingConflictResolver {
     XCTestExpectation* ex = [self expectationWithDescription: @"testNonBlockingConflictResolver"];
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -562,6 +562,34 @@
     // in between second doc starts and finishes it. 
     AssertEqualObjects(order.firstObject, order.lastObject);
     AssertEqualObjects(order[1], order[2]);
+}
+
+- (void) testNonBlockingDatabaseOperationConflictResolver {
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: @"doc1" withLocal: localData withRemote: remoteData];
+
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+
+    __block int count = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        count++;
+        NSString* doc2ID = @"doc2";
+        NSDictionary* data = @{@"timestamp": [NSString stringWithFormat: @"%@", [NSDate date]]};
+        CBLMutableDocument* mDoc2 = [self createDocument: doc2ID data: data];
+        [self saveDocument: mDoc2];
+        
+        CBLDocument* doc2 = [self.db documentWithID: doc2ID];
+        AssertNotNil(doc2);
+        AssertEqualObjects([doc2 toDictionary], data);
+        
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(count, 1u);
 }
 
 - (void) testConflictResolutionDefault {
