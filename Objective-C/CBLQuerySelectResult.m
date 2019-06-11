@@ -58,7 +58,7 @@
 
 + (instancetype) allFrom: (nullable NSString*)alias {
     CBLQueryExpression* expr = [CBLQueryExpression allFrom: alias];
-    return [[self alloc] initWithExpression: expr as: alias];
+    return [[self alloc] initWithExpression: expr as: nil];
 }
 
 
