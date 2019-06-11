@@ -1,5 +1,5 @@
 //
-//  CBLConflict+Internal.h
+//  CustomLogger.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,16 +17,36 @@
 //  limitations under the License.
 //
 
-#import "CBLConflict.h"
+#import "CustomLogger.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation CustomLogger {
+    NSMutableArray* _lines;
+}
 
-@interface CBLConflict ()
+@synthesize level=_level;
 
-- (instancetype) initWithID: (NSString*)documentID
-              localDocument: (CBLDocument *)localDoc
-             remoteDocument: (CBLDocument *)remoteDoc;
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _level = kCBLLogLevelNone;
+        _lines = [NSMutableArray new];
+    }
+    return self;
+}
+
+
+- (NSArray*) lines {
+    return _lines;
+}
+
+
+- (void) reset {
+    [_lines removeAllObjects];
+}
+
+
+- (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
+    [_lines addObject: message];
+}
 
 @end
-
-NS_ASSUME_NONNULL_END
