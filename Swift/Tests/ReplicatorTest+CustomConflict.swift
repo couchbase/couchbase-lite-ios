@@ -305,6 +305,57 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(["docType": "new-with-same-ID"] == db.document(withID: docID)!.toDictionary())
     }
     
+    func testDocumentReplicationEventForConflictedDocs() throws {
+        var resolver: TestConflictResolver!
+        
+        // when resolution is skipped: here doc from otherDB throws an exception & skips it
+        resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
+            return self.otherDB.document(withID: "doc")
+        }
+        try validateDocumentReplicationEventForConflictedDocs(resolver)
+        
+        // when resolution is successfull but wrong docID
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return MutableDocument()
+        }
+        try validateDocumentReplicationEventForConflictedDocs(resolver)
+        
+        // when resolution is successfull.
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
+        try validateDocumentReplicationEventForConflictedDocs(resolver)
+    }
+    
+    func validateDocumentReplicationEventForConflictedDocs(_ resolver: TestConflictResolver) throws {
+        let docID = "doc"
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        let config = getConfig(.pull)
+        
+        config.conflictResolver = resolver
+        
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        
+        var token: ListenerToken!
+        var replicator: Replicator!
+        var docIds = [String]()
+        run(config: config, reset: false, expectedError: nil, onReplicatorReady: { (r) in
+            replicator = r
+            token = r.addDocumentReplicationListener({ (docRepl) in
+                for doc in docRepl.documents {
+                    docIds.append(doc.id)
+                }
+            })
+        })
+        
+        // make sure only single listener event is fired when conflict occured.
+        XCTAssertEqual(docIds.count, 1)
+        XCTAssertEqual(docIds.first!, docID)
+        replicator.removeChangeListener(withToken: token)
+    }
+    
+    
     // TODO: enable as a separate PR
     func _testConflictResolverWrongDocID() throws {
         let docID = "doc"
