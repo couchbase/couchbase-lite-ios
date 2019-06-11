@@ -357,7 +357,13 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     
     
     func testConflictResolverWrongDocID() throws {
+        // use this to verify the logs generated during the conflict resolution.
+        let customLogger = CustomLogger()
+        customLogger.level = .warning
+        Database.log.custom = customLogger
+        
         let docID = "doc"
+        let wrongDocID = "wrong-doc-id"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
         let config = getConfig(.pull)
@@ -365,7 +371,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         resolver = TestConflictResolver() { (conflict) -> Document? in
-            let mDoc = MutableDocument(id: "wrong-doc-id")
+            let mDoc = MutableDocument(id: wrongDocID)
             mDoc.setString("update", forKey: "edit")
             return mDoc
         }
@@ -385,13 +391,17 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                 XCTAssertNil(docRepl.documents.first?.error)
             }
         })
+        replicator.removeChangeListener(withToken: token)
         
         // validate wrong doc-id is resolved successfully
         XCTAssertEqual(db.count, 1)
         XCTAssert(docIds.contains(docID))
         XCTAssert(db.document(withID: docID)!.toDictionary() == ["edit": "update"])
         
-        replicator.removeChangeListener(withToken: token)
+        // validate the warning log
+        XCTAssertEqual(customLogger.lines.last,
+                       "The document ID of the resolved document '\(wrongDocID)' is not matching " +
+            "with the document ID of the conflicting document '\(docID)'.")
     }
     
     func testConflictResolverDifferentDBDoc() throws {
