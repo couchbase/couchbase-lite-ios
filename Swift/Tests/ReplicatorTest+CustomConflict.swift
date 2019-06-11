@@ -43,8 +43,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     func makeConflict(forID docID: String,
-                      withLocal localData: [String: String],
-                      withRemote remoteData: [String: String]) throws {
+                      withLocal localData: [String: Any],
+                      withRemote remoteData: [String: Any]) throws {
         // create doc
         let doc = createDocument(docID)
         try saveDocument(doc)
@@ -464,6 +464,69 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         config.conflictResolver = resolver
         run(config: config, expectedError: nil)
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
+    }
+    
+    func testConflictResolverReturningBlob() throws {
+        let docID = "doc"
+        let content = "I am a blob".data(using: .utf8)!
+        var blob = Blob(contentType: "text/plain", data: content)
+        var localData: [String: Any] = ["key1": "value1", "blob": blob]
+        var remoteData: [String: Any] = ["key2": "value2"]
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        
+        // RESOLVE WITH REMOTE and BLOB data in LOCAL
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(db.document(withID: docID)?.blob(forKey: "blob"))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
+        
+        // RESOLVE WITH LOCAL with BLOB data
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1", "blob": blob]
+        remoteData = ["key2": "value2"]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.localDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.document(withID: docID)?.blob(forKey: "blob"), blob)
+        XCTAssertEqual(db.document(withID: docID)?.string(forKey: "key1"), "value1")
+        
+        // RESOLVE WITH LOCAL and BLOB data in REMOTE
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1"]
+        remoteData = ["key2": "value2", "blob": blob]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.localDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(db.document(withID: docID)?.blob(forKey: "blob"))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == localData)
+        
+        // RESOLVE WITH REMOTE with BLOB data
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1"]
+        remoteData = ["key2": "value2", "blob": blob]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.document(withID: docID)?.blob(forKey: "blob"), blob)
+        XCTAssertEqual(db.document(withID: docID)?.string(forKey: "key2"), "value2")
     }
     
     #endif
