@@ -356,6 +356,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     
+    // TODO: enable as a separate PR
     func _testConflictResolverWrongDocID() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
