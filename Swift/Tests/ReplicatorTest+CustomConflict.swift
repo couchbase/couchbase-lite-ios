@@ -356,8 +356,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     
-    // TODO: enable as a separate PR
-    func _testConflictResolverWrongDocID() throws {
+    func testConflictResolverWrongDocID() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
@@ -366,31 +365,33 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         resolver = TestConflictResolver() { (conflict) -> Document? in
-            return MutableDocument(id: "wrong-doc-id")
+            let mDoc = MutableDocument(id: "wrong-doc-id")
+            mDoc.setString("update", forKey: "edit")
+            return mDoc
         }
         config.conflictResolver = resolver
         var token: ListenerToken!
         var replicator: Replicator!
-        var error: NSError?
+        var docIds = Set<String>()
         run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
             replicator = repl
             token = repl.addDocumentReplicationListener()  { (docRepl) in
-                if let err = docRepl.documents.first?.error as NSError? {
-                    error = err
-                    XCTAssertEqual(err.code, CBLErrorConflict)
-                    XCTAssertEqual(err.domain, CBLErrorDomain)
+                if docRepl.documents.count != 0 {
+                    XCTAssertEqual(docRepl.documents.count, 1)
+                    docIds.insert(docRepl.documents.first!.id)
                 }
+                
+                // shouldn't report an error from replicator
+                XCTAssertNil(docRepl.documents.first?.error)
             }
         })
         
-        XCTAssertNotNil(error)
+        // validate wrong doc-id is resolved successfully
+        XCTAssertEqual(db.count, 1)
+        XCTAssert(docIds.contains(docID))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == ["edit": "update"])
+        
         replicator.removeChangeListener(withToken: token)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
-            return conflict.remoteDocument
-        }
-        config.conflictResolver = resolver
-        run(config: config, expectedError: nil)
-        XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
     func testConflictResolverDifferentDBDoc() throws {
