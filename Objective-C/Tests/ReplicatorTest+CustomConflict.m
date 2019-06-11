@@ -511,7 +511,7 @@
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, remoteData);
 }
 
-- (void) testNonBlockingConflictResolver {
+- (void) _testNonBlockingConflictResolver {
     XCTestExpectation* ex = [self expectationWithDescription: @"testNonBlockingConflictResolver"];
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -545,6 +545,34 @@
     // in between second doc starts and finishes it. 
     AssertEqualObjects(order.firstObject, order.lastObject);
     AssertEqualObjects(order[1], order[2]);
+}
+
+- (void) testNonBlockingDatabaseOperationConflictResolver {
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: @"doc1" withLocal: localData withRemote: remoteData];
+
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+
+    __block int count = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        count++;
+        NSString* doc2ID = @"doc2";
+        NSDictionary* data = @{@"timestamp": [NSString stringWithFormat: @"%@", [NSDate date]]};
+        CBLMutableDocument* mDoc2 = [self createDocument: doc2ID data: data];
+        [self saveDocument: mDoc2];
+        
+        CBLDocument* doc2 = [self.db documentWithID: doc2ID];
+        AssertNotNil(doc2);
+        AssertEqualObjects([doc2 toDictionary], data);
+        
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(count, 1u);
 }
 
 - (void) testConflictResolutionDefault {
@@ -597,6 +625,84 @@
             Assert(doc1.generation > doc2.generation);
         }
     }
+}
+
+- (void) testConflictResolverReturningBlob {
+    NSString* docID = @"doc";
+    NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    NSDictionary* localData = @{@"key1": @"value1", @"blob": blob};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    
+    // RESOLVE WITH REMOTE and BLOB data in LOCAL
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertNil([[self.db documentWithID: docID] blobForKey: @"blob"]);
+    AssertEqualObjects([[self.db documentWithID: docID] toDictionary], remoteData);
+    
+    // RESOLVE WITH LOCAL with BLOB data
+    localData = @{@"key1": @"value1", @"blob": blob};
+    remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.localDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqualObjects([[self.db documentWithID: docID] blobForKey: @"blob"], blob);
+    AssertEqualObjects([[self.db documentWithID: docID] toDictionary], localData);
+    
+    // RESOLVE WITH LOCAL and BLOB data in REMOTE
+    blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    localData = @{@"key1": @"value1"};
+    remoteData = @{@"key2": @"value2", @"blob": blob};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.localDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertNil([[self.db documentWithID: docID] blobForKey: @"blob"]);
+    AssertEqualObjects([[self.db documentWithID: docID] toDictionary], localData);
+    
+    // RESOLVE WITH REMOTE with BLOB data
+    blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    localData = @{@"key1": @"value1"};
+    remoteData = @{@"key2": @"value2", @"blob": blob};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqualObjects([[self.db documentWithID: docID] blobForKey: @"blob"], blob);
+    AssertEqualObjects([[self.db documentWithID: docID] toDictionary], remoteData);
+    
+    // RESOLVED WITH A NEWLY CREATED DOC WITH BLOB
+    blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    localData = @{@"key1": @"value1"};
+    remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* resolvedDoc = [CBLMutableDocument documentWithID: con.localDocument.id];
+        [resolvedDoc setBlob: blob forKey: @"blob"];
+        return resolvedDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqualObjects([[self.db documentWithID: docID] blobForKey: @"blob"], blob);
+    AssertEqual([[[self.db documentWithID: docID] toDictionary] allKeys].count, 1u);
 }
 
 #endif
