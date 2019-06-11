@@ -22,7 +22,7 @@ import Foundation
 /// Conflict class
 public struct Conflict {
     
-    /// The conflict resolved document id.
+    ///The document id of the conflicting document.
     public var documentID: String {
         return impl.documentID
     }
