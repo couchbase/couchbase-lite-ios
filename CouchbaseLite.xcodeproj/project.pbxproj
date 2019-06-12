@@ -3024,11 +3024,11 @@
 				938195D91EBCD5F70032CC51 /* Replicator */,
 				9388CBE521BF717C005CA66D /* Log */,
 				934F4C931E241FB500F90659 /* Internal */,
+				93BFCD931E0380A300E52F8A /* Tests */,
 				9398D9FD1E03531A00464432 /* CouchbaseLite.h */,
 				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
 				93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
-				93BFCD931E0380A300E52F8A /* Tests */,
 			);
 			path = "Objective-C";
 			sourceTree = "<group>";
