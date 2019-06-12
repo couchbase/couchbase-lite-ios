@@ -72,6 +72,7 @@
 
 
 - (void) resetError {
+    _c4Error = {};
     _error = nil;
 }
 
