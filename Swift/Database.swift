@@ -127,7 +127,7 @@ public final class Database {
     ///   - document: The document.
     ///   - conflictHandler: The conflict handler closure which can be used to resolve it.
     /// - Returns: True if successful. False on failure
-    /// - Throws: An error on a failure.
+    /// - Throws: An error, if an exception happens.
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
         ) throws -> Bool {
