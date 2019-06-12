@@ -412,6 +412,44 @@ class DatabaseTest: CBLTestCase {
                                                   "middleName": "Lion"]) // conflicting update
     }
     
+    func testConflictHandlerCalledTwice() throws {
+        let doc = createDocument("doc1")
+        try db.saveDocument(doc)
+        
+        let doc1a = db.document(withID: doc.id)!.toMutable()
+        let doc1b = db.document(withID: doc.id)!.toMutable()
+        doc1a.setString("Scott", forKey: "firstName")
+        try db.saveDocument(doc1a)
+        
+        doc1b.setString("Lion", forKey: "middleName")
+        var count = 0
+        try db.saveDocument(doc1b) { (doc, old) -> Bool in
+            count += 1
+            let doc1c = self.db.document(withID: doc.id)!.toMutable()
+            if !doc1c.boolean(forKey: "secondUpdate") {
+                doc1c.setBoolean(true, forKey: "secondUpdate")
+                try! self.db.saveDocument(doc1c)
+            }
+            
+            // merge contents
+            var dict = old!.toDictionary()
+            for (key, value) in doc.toDictionary() {
+                dict[key] = value
+            }
+            doc.setData(dict)
+            doc.setString("local", forKey: "edit")
+            return true
+        }
+        
+        XCTAssertEqual(count, 2) // make sure the save handler called twice
+        XCTAssertEqual(db.count, 1)
+        let dict: [String: Any] = ["middleName": "Lion", // old doc contents - merged
+                                   "firstName": "Scott", // savedDoc contents
+                                   "secondUpdate": true, // second update did.
+                                   "edit": "local"] // new prop added during resolve.
+        XCTAssert(db.document(withID: doc1b.id)!.toDictionary() == dict)
+    }
+    
     
     // MARK: Delete Document
     
