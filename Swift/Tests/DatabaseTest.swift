@@ -412,6 +412,28 @@ class DatabaseTest: CBLTestCase {
                                                   "middleName": "Lion"]) // conflicting update
     }
     
+    func testConflictHandlerWhenDocumentIsPurged() throws {
+        let doc = createDocument("doc1")
+        doc.setString("Daniel", forKey: "firstName")
+        doc.setString("Tiger", forKey: "lastName")
+        try db.saveDocument(doc)
+        
+        // Purge one instance
+        let doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.purgeDocument(db.document(withID: doc.id)!)
+        
+        doc1a.setString("Scotty", forKey: "nickName")
+        do {
+            try db.saveDocument(doc1a) { (doc, old) -> Bool in
+                return true
+            }
+            XCTFail("Shouldn't reach here, it should throw an exception when saving")
+        } catch {
+            XCTAssertNotNil(error)
+            XCTAssertEqual((error as NSError?)?.code, CBLErrorNotFound)
+        }
+    }
+    
     
     // MARK: Delete Document
     
