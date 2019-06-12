@@ -466,6 +466,34 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
+    func testNonBlockingDatabaseOperationConflictResolver() throws {
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
+        
+        var count = 0;
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            count += 1
+            
+            let timestamp = "\(Date())"
+            let mDoc = self.createDocument("doc2", data: ["timestamp": timestamp])
+            XCTAssertNotNil(mDoc)
+            XCTAssert(try! self.db.saveDocument(mDoc, concurrencyControl: .failOnConflict))
+            
+            let doc2 = self.db.document(withID: "doc2")
+            XCTAssertNotNil(doc2)
+            XCTAssertEqual(doc2?.string(forKey: "timestamp"), timestamp)
+            
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(count, 1) // make sure, it entered the conflict resolver
+    }
+    
     #endif
 }
 
