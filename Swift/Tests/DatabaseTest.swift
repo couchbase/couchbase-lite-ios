@@ -412,6 +412,37 @@ class DatabaseTest: CBLTestCase {
                                                   "middleName": "Lion"]) // conflicting update
     }
     
+    func testConflictHandlerWithDeletedOldDoc() throws {
+        let doc = createDocument("doc1")
+        try db.saveDocument(doc)
+    
+        // KEEPS NEW DOC(non-deleted)
+        var doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.deleteDocument(db.document(withID: doc.id)!, concurrencyControl: .failOnConflict)
+        
+        doc1a.setString("Lion", forKey: "middleName")
+        try db.saveDocument(doc1a) { (doc, old) -> Bool in
+            XCTAssertNil(old)
+            XCTAssertNotNil(doc)
+            XCTAssert(doc == doc1a)
+            return true
+        }
+        XCTAssert(db.document(withID: doc.id) == doc1a)
+        
+        // KEEPS THE DELETED(old doc)
+        doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.deleteDocument(db.document(withID: doc.id)!, concurrencyControl: .failOnConflict)
+        
+        doc1a.setString("Lion", forKey: "nickName")
+        try db.saveDocument(doc1a) { (doc, old) -> Bool in
+            XCTAssertNil(old)
+            XCTAssertNotNil(doc)
+            XCTAssert(doc == doc1a)
+            return false
+        }
+        XCTAssertNil(db.document(withID: doc.id))
+    }
+    
     
     // MARK: Delete Document
     
