@@ -466,6 +466,57 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
+    func testConflictResolutionDefault() throws {
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        
+        // higher generation-id
+        var docID = "doc1"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        var doc = db.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try saveDocument(doc)
+        
+        // delete local
+        docID = "doc2"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        try db.deleteDocument(db.document(withID: docID)!)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try otherDB.saveDocument(doc)
+        
+        // delete remote
+        docID = "doc3"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        doc = db.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try db.saveDocument(doc)
+        try otherDB.deleteDocument(otherDB.document(withID: docID)!)
+        
+        // delete local but higher remote generation
+        docID = "doc4"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        try db.deleteDocument(db.document(withID: docID)!)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try otherDB.saveDocument(doc)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value4", forKey: "key4")
+        try otherDB.saveDocument(doc)
+        
+        run(config: getConfig(.pull), expectedError: nil)
+        
+        // validate saved doc includes the key3, which is the highest generation.
+        XCTAssertEqual(db.document(withID: "doc1")?.string(forKey: "key3"), "value3")
+        
+        // validates the deleted doc is choosen for its counterpart doc which saved
+        XCTAssertNil(db.document(withID: "doc2"))
+        XCTAssertNil(db.document(withID: "doc3"))
+        
+        // validates the deleted doc is choosen without considering the genaration.
+        XCTAssertNil(db.document(withID: "doc4"))
+    }
+    
     #endif
 }
 
