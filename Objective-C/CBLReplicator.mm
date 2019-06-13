@@ -341,8 +341,17 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) stopped {
     CBL_LOCK(self) {
         Assert(_rawStatus.level == kC4Stopped);
+        // Update states:
         _state = kCBLStateStopped;
         _deferStoppedNotification = NO;
+        
+        // Prevent self to get released when removing from the active replications:
+        CBLReplicator* repl = self;
+        CBL_LOCK(_config.database) {
+            [_config.database.activeReplications removeObject: repl];
+        }
+        
+        // Post status update:
         [self updateStatusAndPost: YES];
     }
 }
@@ -455,15 +464,6 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else if (c4Status.level > kC4Connecting) {
             _retryCount = 0;
             [self stopReachabilityObserver];
-        }
-        
-        // Prevent self to get released when removing from the active replications:
-        CBLReplicator* repl = self;
-        if (c4Status.level == kC4Stopped) {
-            CBL_LOCK(_config.database) {
-                // Remove from the active replications before posting change:
-                [_config.database.activeReplications removeObject: repl];
-            }
         }
         
         // Record raw status:
