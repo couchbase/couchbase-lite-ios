@@ -118,7 +118,7 @@ typedef enum {
         _docReplicationNotifier = [CBLChangeNotifier new];
         _status = [[CBLReplicatorStatus alloc] initWithStatus: {kC4Stopped, {}, {}}];
         
-        NSString* qName = $sprintf(@"Replicator <%@>", [self description]);
+        NSString* qName = self.description;
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         NSString* cqName = $sprintf(@"%@ : Conflicts", qName);
@@ -140,19 +140,20 @@ typedef enum {
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%s%s%s %@]",
-            self.class,
-            (isPull(_config.replicatorType) ? "<" : ""),
-            (_config.continuous ? "*" : "-"),
-            (isPush(_config.replicatorType)  ? ">" : ""),
-            _config.target];
+    if (!_desc)
+        _desc = [NSString stringWithFormat: @"%@[%s%s%s %@]",
+                 self.class,
+                 (isPull(_config.replicatorType) ? "<" : ""),
+                 (_config.continuous ? "*" : "-"),
+                 (isPush(_config.replicatorType)  ? ">" : ""),
+                 _config.target];
+    return _desc;
 }
 
 
 - (void) clearRepl {
     c4repl_free(_repl);
     _repl = nullptr;
-    _desc = nil;
 }
 
 
@@ -187,8 +188,6 @@ typedef enum {
 
 
 - (void) _start {
-    _desc = self.description;   // cache description; it may be called a lot when logging
-    
     // Target:
     id<CBLEndpoint> endpoint = _config.target;
     C4Address addr = {};
