@@ -502,7 +502,6 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: doc.id))
     }
     
-    
     // MARK: Delete Document
     
     func testDeletePreSaveDoc() throws {
