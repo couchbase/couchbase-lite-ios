@@ -45,7 +45,7 @@
 
 @implementation CBLReplicatedDocument
 
-@synthesize id=_id, flags=_flags, c4Error=_c4Error, isTransientError=_isTransientError;
+@synthesize id=_id, flags=_flags, c4Error=_c4Error, isTransientError=_isTransientError, error=_error;
 
 - (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded {
     self = [super init];
@@ -59,6 +59,11 @@
             _flags |= kCBLDocumentFlagsAccessRemoved;
         
         _c4Error = docEnded->error;
+        if (_c4Error.code) {
+            NSError* error;
+            convertError(_c4Error, &error);
+            _error = error;
+        }
         
         _isTransientError = docEnded->errorIsTransient;
     }
@@ -68,16 +73,12 @@
 
 - (void) resetError {
     _c4Error = {};
+    _error = nil;
 }
 
 
-- (NSError*) error {
-    if (_c4Error.code) {
-        NSError* error;
-        convertError(_c4Error, &error);
-        return error;
-    }
-    return nil;
+- (void) updateError: (NSError*)error {
+    _error = error;
 }
 
 @end

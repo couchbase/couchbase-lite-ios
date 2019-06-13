@@ -2011,6 +2011,7 @@
     [replicatedDoc resetError];
     AssertEqual(replicatedDoc.c4Error.code, 0);
     AssertEqual(replicatedDoc.c4Error.domain, 0);
+    AssertNil(replicatedDoc.error);
 }
 
 @end
