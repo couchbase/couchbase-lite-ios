@@ -51,6 +51,8 @@
 		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AA91DC622B0356000BF0BDE /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
+		1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
 		1AAB273922737A9A0037A880 /* CBLConflictResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273722737A9A0037A880 /* CBLConflictResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AAB273D22739EBB0037A880 /* CBLConflict.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273B22739EBB0037A880 /* CBLConflict.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AAB273E22739EBB0037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
@@ -1652,6 +1654,7 @@
 		1AA3D77122AB06E10098E16B /* CustomLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomLogger.h; sourceTree = "<group>"; };
 		1AA3D77222AB06E10098E16B /* CustomLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomLogger.m; sourceTree = "<group>"; };
 		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
+		1AA91DC522B0356000BF0BDE /* CustomLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogger.swift; sourceTree = "<group>"; };
 		1AAB2736227373EB0037A880 /* CBLConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		1AAB273722737A9A0037A880 /* CBLConflictResolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolution.h; sourceTree = "<group>"; };
 		1AAB273822737A9A0037A880 /* CBLConflictResolution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolution.m; sourceTree = "<group>"; };
@@ -2360,6 +2363,7 @@
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
+				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				939B79241E679017009A70EF /* Info.plist */,
 			);
 			path = Tests;
@@ -4801,6 +4805,7 @@
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
 				93C50EA021BDFB7C00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
+				1AA91DC622B0356000BF0BDE /* CustomLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5230,6 +5235,7 @@
 				9343F191207D636300F19A89 /* NotificationTest.swift in Sources */,
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
 				9343F193207D636300F19A89 /* CBLTestHelper.m in Sources */,
+				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				1AA3D6C222A1A41F0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
