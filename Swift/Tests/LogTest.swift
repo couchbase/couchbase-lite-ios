@@ -117,7 +117,7 @@ class LogTest: CBLTestCase {
     
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
-        let customLogger = LogTestLogger()
+        let customLogger = CustomLogger()
         Database.log.custom = customLogger
         
         for i in (1...5).reversed() {
@@ -255,7 +255,7 @@ class LogTest: CBLTestCase {
     
     func testEnableAndDisableCustomLogging() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
-        let customLogger = LogTestLogger()
+        let customLogger = CustomLogger()
         Database.log.custom = customLogger
         
         customLogger.level = .none
@@ -354,7 +354,7 @@ class LogTest: CBLTestCase {
     }
     
     func testNonASCII() throws {
-        let customLogger = LogTestLogger()
+        let customLogger = CustomLogger()
         customLogger.level = .verbose
         Database.log.custom = customLogger
         Database.log.console.domains = .all
@@ -382,7 +382,7 @@ class LogTest: CBLTestCase {
     }
     
     func testPercentEscape() throws {
-        let customLogger = LogTestLogger()
+        let customLogger = CustomLogger()
         customLogger.level = .info
         Database.log.custom = customLogger
         Database.log.console.domains = .all
@@ -396,22 +396,6 @@ class LogTest: CBLTestCase {
         }
         XCTAssert(found)
     }
-}
-
-class LogTestLogger: Logger {
-    
-    var lines: [String] = []
-    
-    var level: LogLevel = .none
-    
-    func reset() {
-        lines.removeAll()
-    }
-    
-    func log(level: LogLevel, domain: LogDomain, message: String) {
-        lines.append(message)
-    }
-    
 }
 
 struct FileLoggerBackup {
