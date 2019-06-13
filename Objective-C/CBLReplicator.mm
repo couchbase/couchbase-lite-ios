@@ -352,7 +352,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         }
         
         // Post status update:
-        [self updateStatusAndPost: YES];
+        [self updateAndPostStatus];
     }
 }
 
@@ -491,7 +491,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             } else
                 [self stopped];
         } else
-            [self updateStatusAndPost: YES];
+            [self updateAndPostStatus];
         
         if (shouldUnsuspend)
             [self retry: YES];
@@ -539,7 +539,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 }
 
 
-- (void) updateStatusAndPost: (BOOL)post {
+- (void) updateAndPostStatus {
     NSError *error = nil;
     if (_rawStatus.error.code)
         convertError(_rawStatus.error, &error);
@@ -550,8 +550,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                self, kC4ReplicatorActivityLevelNames[_rawStatus.level],
                _rawStatus.progress.unitsCompleted, _rawStatus.progress.unitsTotal, self.status.error);
     
-    if (post)
-        [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
+    [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
                                                                               status: self.status]];
 }
 
