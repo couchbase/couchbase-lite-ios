@@ -374,8 +374,7 @@ class DatabaseTest: CBLTestCase {
     
     // MARK: Save Conflict Resolution Handler
     
-    func testConflictResolution() throws
-    {
+    func testConflictResolution() throws {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
@@ -399,10 +398,10 @@ class DatabaseTest: CBLTestCase {
         doc1b.setString("Lion", forKey: "middleName")
         
         // merge the dictionaries, and keeping the doc1b dictionary values if duplicate comes in.
-        try db.saveDocument(doc1b) { (cur, old) -> Bool in
-            let merged = cur.toDictionary()
+        try db.saveDocument(doc1b) { (doc, old) -> Bool in
+            let merged = doc.toDictionary()
                 .merging(old!.toDictionary(), uniquingKeysWith: { (first, _) in first })
-            cur.setData(merged)
+            doc.setData(merged)
             return true
         }
         let savedDoc = db.document(withID: doc1b.id)!
@@ -410,6 +409,97 @@ class DatabaseTest: CBLTestCase {
                                                   "nickName": "Scotty", // merged
                                                   "lastName": "Tiger",  // NA
                                                   "middleName": "Lion"]) // conflicting update
+    }
+    
+    func testCancelConflictHandler() throws {
+        let doc = createDocument("doc1")
+        doc.setString("Daniel", forKey: "firstName")
+        doc.setString("Tiger", forKey: "lastName")
+        try db.saveDocument(doc)
+        
+        // create conflict and return false
+        var doc1a = db.document(withID: doc.id)!.toMutable()
+        var doc1b = db.document(withID: doc.id)!.toMutable()
+        doc1a.setString("Scott", forKey: "firstName")
+        try db.saveDocument(doc1a)
+        doc1b.setString("Lion", forKey: "middleName")
+        XCTAssertFalse(try db.saveDocument(doc1b) { (doc, old) -> Bool in
+            XCTAssert(doc1b == doc)
+            XCTAssertEqual(doc1a, old)
+            return false
+            })
+        
+        // check it is same as old doc, and didn't updated the doc
+        XCTAssertEqual(db.document(withID: doc1b.id)!, doc1a)
+        
+        // Updates to Current Mutable Document, should not save contents.
+        // create conflict, update the mutable doc, and return false
+        doc1a = db.document(withID: doc.id)!.toMutable()
+        doc1b = db.document(withID: doc.id)!.toMutable()
+        doc1a.setString("Sccotty", forKey: "nickname")
+        try db.saveDocument(doc1a)
+        doc1b.setString("Scotty", forKey: "nickname")
+        XCTAssertFalse(try db.saveDocument(doc1b) { (doc, old) -> Bool in
+            XCTAssert(doc1b == doc)
+            XCTAssertEqual(doc1a, old)
+            doc.setString("Scott", forKey: "nickname")
+            return false
+            })
+        // check whether it is same old doc, and no update happened.
+        XCTAssertEqual(db.document(withID: doc1b.id)!, doc1a)
+    }
+    
+    func testConflictHandlerWhenDocumentIsPurged() throws {
+        let doc = createDocument("doc1")
+        doc.setString("Daniel", forKey: "firstName")
+        doc.setString("Tiger", forKey: "lastName")
+        try db.saveDocument(doc)
+        
+        // Purge one instance
+        let doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.purgeDocument(db.document(withID: doc.id)!)
+        
+        doc1a.setString("Scotty", forKey: "nickName")
+        do {
+            try db.saveDocument(doc1a) { (doc, old) -> Bool in
+                return true
+            }
+            XCTFail("Shouldn't reach here, it should throw an exception when saving")
+        } catch {
+            XCTAssertNotNil(error)
+            XCTAssertEqual((error as NSError?)?.code, CBLErrorNotFound)
+        }
+    }
+    
+    func testConflictHandlerWithDeletedOldDoc() throws {
+        let doc = createDocument("doc1")
+        try db.saveDocument(doc)
+        
+        // KEEPS NEW DOC(non-deleted)
+        var doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.deleteDocument(db.document(withID: doc.id)!, concurrencyControl: .failOnConflict)
+        
+        doc1a.setString("Lion", forKey: "middleName")
+        try db.saveDocument(doc1a) { (doc, old) -> Bool in
+            XCTAssertNil(old)
+            XCTAssertNotNil(doc)
+            XCTAssert(doc == doc1a)
+            return true
+        }
+        XCTAssert(db.document(withID: doc.id) == doc1a)
+        
+        // KEEPS THE DELETED(old doc)
+        doc1a = db.document(withID: doc.id)!.toMutable()
+        try db.deleteDocument(db.document(withID: doc.id)!, concurrencyControl: .failOnConflict)
+        
+        doc1a.setString("Lion", forKey: "nickName")
+        try db.saveDocument(doc1a) { (doc, old) -> Bool in
+            XCTAssertNil(old)
+            XCTAssertNotNil(doc)
+            XCTAssert(doc == doc1a)
+            return false
+        }
+        XCTAssertNil(db.document(withID: doc.id))
     }
     
     func testConflictHandlerCalledTwice() throws {
@@ -444,12 +534,11 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(count, 2) // make sure the save handler called twice
         XCTAssertEqual(db.count, 1)
         let dict: [String: Any] = ["middleName": "Lion", // old doc contents - merged
-                                   "firstName": "Scott", // savedDoc contents
-                                   "secondUpdate": true, // second update did.
-                                   "edit": "local"] // new prop added during resolve.
+            "firstName": "Scott", // savedDoc contents
+            "secondUpdate": true, // second update did.
+            "edit": "local"] // new prop added during resolve.
         XCTAssert(db.document(withID: doc1b.id)!.toDictionary() == dict)
     }
-    
     
     // MARK: Delete Document
     
