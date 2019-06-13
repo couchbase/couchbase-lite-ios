@@ -1111,8 +1111,17 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         if (resolvedDoc != remoteDoc) {
             BOOL isDeleted = YES;
             if (resolvedDoc) {
-                // Unless the remote revision is being used as-is, we need a new revision:
-                mergedBody = [resolvedDoc encode: outError];
+                @try {
+                    // Unless the remote revision is being used as-is, we need a new revision:
+                    mergedBody = [resolvedDoc encode: outError];
+                } @catch (NSException *ex) {
+                    CBLWarn(Sync, @"Exception while encoding the doc '%@' body: %@",
+                            resolvedDoc.id, ex.description);
+                    *outError = [NSError errorWithDomain: CBLErrorDomain
+                                                    code: CBLErrorUnexpectedError
+                                                userInfo: @{NSLocalizedDescriptionKey: ex.description}];
+                    return false;
+                }
                 if (!mergedBody)
                     return false;
                 isDeleted = resolvedDoc.isDeleted;
