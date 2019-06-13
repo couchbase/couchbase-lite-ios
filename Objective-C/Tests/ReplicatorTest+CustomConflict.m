@@ -578,11 +578,22 @@
     [conflictedDocs addObject: @[[NSNull null], [otherDB documentWithID: docID]]];
     
     // delete remote
-    docID = @"doc4";
+    docID = @"doc3";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [otherDB deleteDocument: [otherDB documentWithID: docID] error: &error];
     [conflictedDocs addObject: @[[self.db documentWithID: docID], [NSNull null]]];
     
+    // delete local but higher remote generation.
+    docID = @"doc4";
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
+    doc = [[otherDB documentWithID: docID] toMutable];
+    [doc setValue: @"value3" forKey: @"key3"];
+    [otherDB saveDocument: doc error: &error];
+    doc = [[otherDB documentWithID: docID] toMutable];
+    [doc setValue: @"value4" forKey: @"key4"];
+    [otherDB saveDocument: doc error: &error];
+    [conflictedDocs addObject: @[[NSNull null], [otherDB documentWithID: docID]]];
     
     CBLReplicatorConfiguration* pullConfig = [self config:kCBLReplicatorTypePull];
     [self run: pullConfig errorCode: 0 errorDomain: nil];

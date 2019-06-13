@@ -566,6 +566,7 @@ static void onDocsEnded(C4Replicator *repl,
             } else {
                 CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@",
                         self, doc.id, error);
+                [doc updateError: error];
             }
         }
         

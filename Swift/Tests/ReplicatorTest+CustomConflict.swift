@@ -43,8 +43,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     func makeConflict(forID docID: String,
-                      withLocal localData: [String: String],
-                      withRemote remoteData: [String: String]) throws {
+                      withLocal localData: [String: Any],
+                      withRemote remoteData: [String: Any]) throws {
         // create doc
         let doc = createDocument(docID)
         try saveDocument(doc)
@@ -356,9 +356,14 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     
-    // TODO: enable as a separate PR
-    func _testConflictResolverWrongDocID() throws {
+    func testConflictResolverWrongDocID() throws {
+        // use this to verify the logs generated during the conflict resolution.
+        let customLogger = CustomLogger()
+        customLogger.level = .warning
+        Database.log.custom = customLogger
+        
         let docID = "doc"
+        let wrongDocID = "wrong-doc-id"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
         let config = getConfig(.pull)
@@ -366,31 +371,37 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         resolver = TestConflictResolver() { (conflict) -> Document? in
-            return MutableDocument(id: "wrong-doc-id")
+            let mDoc = MutableDocument(id: wrongDocID)
+            mDoc.setString("update", forKey: "edit")
+            return mDoc
         }
         config.conflictResolver = resolver
         var token: ListenerToken!
         var replicator: Replicator!
-        var error: NSError?
+        var docIds = Set<String>()
         run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
             replicator = repl
             token = repl.addDocumentReplicationListener()  { (docRepl) in
-                if let err = docRepl.documents.first?.error as NSError? {
-                    error = err
-                    XCTAssertEqual(err.code, CBLErrorConflict)
-                    XCTAssertEqual(err.domain, CBLErrorDomain)
+                if docRepl.documents.count != 0 {
+                    XCTAssertEqual(docRepl.documents.count, 1)
+                    docIds.insert(docRepl.documents.first!.id)
                 }
+                
+                // shouldn't report an error from replicator
+                XCTAssertNil(docRepl.documents.first?.error)
             }
         })
-        
-        XCTAssertNotNil(error)
         replicator.removeChangeListener(withToken: token)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
-            return conflict.remoteDocument
-        }
-        config.conflictResolver = resolver
-        run(config: config, expectedError: nil)
-        XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
+        
+        // validate wrong doc-id is resolved successfully
+        XCTAssertEqual(db.count, 1)
+        XCTAssert(docIds.contains(docID))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == ["edit": "update"])
+        
+        // validate the warning log
+        XCTAssertEqual(customLogger.lines.last,
+                       "The document ID of the resolved document '\(wrongDocID)' is not matching " +
+            "with the document ID of the conflicting document '\(docID)'.")
     }
     
     func testConflictResolverDifferentDBDoc() throws {
@@ -466,6 +477,168 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
+    func testConflictResolutionDefault() throws {
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        
+        // higher generation-id
+        var docID = "doc1"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        var doc = db.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try saveDocument(doc)
+        
+        // delete local
+        docID = "doc2"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        try db.deleteDocument(db.document(withID: docID)!)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try otherDB.saveDocument(doc)
+        
+        // delete remote
+        docID = "doc3"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        doc = db.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try db.saveDocument(doc)
+        try otherDB.deleteDocument(otherDB.document(withID: docID)!)
+        
+        // delete local but higher remote generation
+        docID = "doc4"
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        try db.deleteDocument(db.document(withID: docID)!)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value3", forKey: "key3")
+        try otherDB.saveDocument(doc)
+        doc = otherDB.document(withID: docID)!.toMutable()
+        doc.setString("value4", forKey: "key4")
+        try otherDB.saveDocument(doc)
+        
+        run(config: getConfig(.pull), expectedError: nil)
+        
+        // validate saved doc includes the key3, which is the highest generation.
+        XCTAssertEqual(db.document(withID: "doc1")?.string(forKey: "key3"), "value3")
+        
+        // validates the deleted doc is choosen for its counterpart doc which saved
+        XCTAssertNil(db.document(withID: "doc2"))
+        XCTAssertNil(db.document(withID: "doc3"))
+        
+        // validates the deleted doc is choosen without considering the genaration.
+        XCTAssertNil(db.document(withID: "doc4"))
+    }
+    
+    func testConflictResolverReturningBlob() throws {
+        let docID = "doc"
+        let content = "I am a blob".data(using: .utf8)!
+        var blob = Blob(contentType: "text/plain", data: content)
+        var localData: [String: Any] = ["key1": "value1", "blob": blob]
+        var remoteData: [String: Any] = ["key2": "value2"]
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        
+        // RESOLVE WITH REMOTE and BLOB data in LOCAL
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(db.document(withID: docID)?.blob(forKey: "blob"))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
+        
+        // RESOLVE WITH LOCAL with BLOB data
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1", "blob": blob]
+        remoteData = ["key2": "value2"]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.localDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.document(withID: docID)?.blob(forKey: "blob"), blob)
+        XCTAssertEqual(db.document(withID: docID)?.string(forKey: "key1"), "value1")
+        
+        // RESOLVE WITH LOCAL and BLOB data in REMOTE
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1"]
+        remoteData = ["key2": "value2", "blob": blob]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.localDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(db.document(withID: docID)?.blob(forKey: "blob"))
+        XCTAssert(db.document(withID: docID)!.toDictionary() == localData)
+        
+        // RESOLVE WITH REMOTE with BLOB data
+        blob = Blob(contentType: "text/plain", data: content)
+        localData = ["key1": "value1"]
+        remoteData = ["key2": "value2", "blob": blob]
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.document(withID: docID)?.blob(forKey: "blob"), blob)
+        XCTAssertEqual(db.document(withID: docID)?.string(forKey: "key2"), "value2")
+    }
+    
+    func testConflictResolverReturningBlobFromDifferentDB() throws {
+        let docID = "doc"
+        let content = "I am a blob".data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        let localData: [String: Any] = ["key1": "value1"]
+        let remoteData: [String: Any] = ["key2": "value2", "blob": blob]
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        
+        // using remote document blob is okay to use!
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            let mDoc = conflict.localDocument?.toMutable()
+            mDoc?.setBlob(conflict.remoteDocument?.blob(forKey: "blob"), forKey: "blob")
+            return mDoc
+        }
+        config.conflictResolver = resolver
+        var token: ListenerToken!
+        var replicator: Replicator!
+        run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+            replicator = repl
+            token = repl.addDocumentReplicationListener({ (docRepl) in
+                XCTAssertNil(docRepl.documents.first?.error)
+            })
+        })
+        replicator.removeChangeListener(withToken: token)
+        
+        // using blob from remote document of user's- which is a different database
+        let otherDBDoc = otherDB.document(withID: docID)!
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            let mDoc = conflict.localDocument?.toMutable()
+            mDoc?.setBlob(otherDBDoc.blob(forKey: "blob"), forKey: "blob")
+            return mDoc
+        }
+        config.conflictResolver = resolver
+        run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+            replicator = repl
+            token = repl.addDocumentReplicationListener({ (docRepl) in
+                if let err = docRepl.documents.first?.error as NSError? {
+                    XCTAssertEqual(err.code, CBLErrorUnexpectedError)
+                }
+            })
+        })
+        
+        replicator.removeChangeListener(withToken: token)
+    }
+    
     func testNonBlockingDatabaseOperationConflictResolver() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
@@ -485,7 +658,6 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             let doc2 = self.db.document(withID: "doc2")
             XCTAssertNotNil(doc2)
             XCTAssertEqual(doc2?.string(forKey: "timestamp"), timestamp)
-            
             return conflict.remoteDocument
         }
         config.conflictResolver = resolver
