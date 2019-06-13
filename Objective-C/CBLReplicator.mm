@@ -66,14 +66,15 @@ typedef enum {
     kCBLProgressLevelDocument
 } CBLReplicatorProgressLevel;
 
-// State controlling how the replicator starts, stops, and suspends:
+// For controlling async start, stop, and suspend:
 typedef enum {
     kCBLStateStopped = 0,
     kCBLStateStopping,
     kCBLStateSuspended,
     kCBLStateSuspending,
     kCBLStateUnsuspending,
-    kCBLStateRunning = 5
+    kCBLStateStarted,
+    kCBLStateStarting
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
@@ -259,6 +260,8 @@ typedef enum {
         .socketFactory = &socketFactory,
     };
     
+    _state = kCBLStateStarting;
+    
     C4Error err;
     CBL_LOCK(_config.database) {
         _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
@@ -278,9 +281,6 @@ typedef enum {
     } else {
         status = {kC4Stopped, {}, err};
     }
-    
-    if (status.level != kC4Stopped)
-        _state = kCBLStateRunning;
     
     // Post an initial notification:
     statusChanged(_repl, status, (__bridge void*)self);
@@ -383,7 +383,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
-        if (reachable && _state == kCBLStateRunning && _rawStatus.level == kC4Offline) {
+        if (reachable && _state == kCBLStateStarted && _rawStatus.level == kC4Offline) {
             CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
             [self retry: YES];
         }
@@ -455,6 +455,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Should be called from the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
+        // Convert stopped to offline if suspending or having a transient or network error:
         if (c4Status.level == kC4Stopped && _state > kCBLStateStopping) {
             if ([self isSuspendInProgress] || [self handleError: c4Status.error]) {
                 // Change c4Status to offline, so my state will reflect that, and proceed:
@@ -465,17 +466,21 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self stopReachabilityObserver];
         }
         
+        // Change from starting to started state:
+        if (_state == kCBLStateStarting && c4Status.level != kC4Stopped)
+            _state = kCBLStateStarted;
+        
         // Record raw status:
         _rawStatus = c4Status;
         
         // Offline:
-        BOOL shouldUnsuspend = NO;
+        BOOL unsuspend = NO;
         if (c4Status.level == kC4Offline) {
             [self clearRepl];
             if (_state == kCBLStateSuspending)
                 _state = kCBLStateSuspended;
             else if (_state == kCBLStateUnsuspending)
-                shouldUnsuspend = YES; // Unsuspending comes before stopped status
+                unsuspend = YES; // Unsuspending comes before stopped status
         }
         
         // Stopped:
@@ -492,7 +497,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else
             [self updateAndPostStatus];
         
-        if (shouldUnsuspend)
+        if (unsuspend)
             [self retry: YES];
         
     #if TARGET_OS_IPHONE
