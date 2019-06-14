@@ -95,7 +95,9 @@ class ReplicatorTest: CBLTestCase {
         replicator.start()
         wait(for: [x], timeout: 5.0)
         
-        replicator.stop()
+        if replicator.status.activity != .stopped {
+            replicator.stop()
+        }
         replicator.removeChangeListener(withToken: token)
     }
 }

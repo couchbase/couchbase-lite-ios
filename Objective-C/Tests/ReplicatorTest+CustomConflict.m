@@ -59,11 +59,9 @@
     AssertEqualObjects(repl.config.conflictResolver, resolver);
     
     // check whether comflict resolver can be edited after setting to replicator
-    @try {
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
         repl.config.conflictResolver = nil;
-    } @catch (NSException *exception) {
-        AssertEqualObjects(exception.name, @"NSInternalInconsistencyException");
-    }
+    }];
 }
 
 #pragma mark - Tests with replication
@@ -466,13 +464,16 @@
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
     __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
-    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
-        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
-            NSError* err = docRepl.documents.firstObject.error;
-            if (err)
-                [errors addObject: err];
+    [self ignoreException: ^{
+        [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+            token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+                NSError* err = docRepl.documents.firstObject.error;
+                if (err)
+                    [errors addObject: err];
+            }];
         }];
     }];
+    
     AssertEqual(errors.lastObject.code, CBLErrorConflict);
     AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);

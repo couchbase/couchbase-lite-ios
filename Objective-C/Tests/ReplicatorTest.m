@@ -319,7 +319,8 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         [self waitForExpectations: @[x] timeout: timeout];
     }
     @finally {
-        [replicator stop];
+        if (replicator.status.activity != kCBLReplicatorStopped)
+            [replicator stop];
         [replicator removeChangeListenerWithToken: token];
     }
     return fulfilled;
