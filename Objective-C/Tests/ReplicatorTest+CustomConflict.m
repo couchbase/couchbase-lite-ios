@@ -243,10 +243,10 @@
                                                        includeDeleted: YES error: &error].sequence;
     [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
-    // should be greater, so that it pushed new revision to remote
+    // The deleted doc shouldn't be pushed to the remote DB:
     AssertEqual(sequenceBeforePush, [[CBLDocument alloc] initWithDatabase: otherDB
-                                                           documentID: docId
-                                                       includeDeleted: YES error: &error].sequence);
+                                                               documentID: docId
+                                                           includeDeleted: YES error: &error].sequence);
 }
 
 - (void) testConflictResolverMergeDoc {
