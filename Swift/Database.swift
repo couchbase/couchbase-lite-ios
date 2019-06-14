@@ -118,15 +118,18 @@ public final class Database {
     }
     
     
-    /// Saves a document to the database. When write operations are executed concurrently,
-    /// and if conflicts occur, conflict handler will be called. Use the handler to directly
-    /// edit the document. Returning true, will save the document. Returning false, will cancel
-    /// the save operation.
-    ///
+    /// Saves a document to the database. When write operations are executed concurrently and if
+    /// conflicts occur, the conflict handler will be called. Use the conflict handler to directly
+    /// edit the document to resolve the conflict. When the conflict handler returns 'true', the
+    /// save method will save the edited document as the resolved document. If the conflict handler
+    /// returns 'false', the save operation will be canceled with 'false' value returned as
+    /// the conflict wasn't resolved.
+    /// 
     /// - Parameters:
     ///   - document: The document.
     ///   - conflictHandler: The conflict handler closure which can be used to resolve it.
-    /// - Returns: True if successful. False on failure
+    /// - Returns: True if successful. False if there is a conflict, but the conflict wasn't
+    ///             resolved as the conflict handler returns 'false' value.
     /// - Throws: An error on a failure.
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool

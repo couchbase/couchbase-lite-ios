@@ -255,6 +255,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                     return createError(CBLErrorConflict, error);
                 }
             } @catch(NSException* ex) {
+                CBLWarn(Database, @"Exception while resolving through save handler. Exception: %@",
+                        ex.description);
                 if (error)
                     *error = [NSError errorWithDomain: CBLErrorDomain
                                                  code: CBLErrorConflict

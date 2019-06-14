@@ -540,6 +540,27 @@ class DatabaseTest: CBLTestCase {
         XCTAssert(db.document(withID: doc1b.id)!.toDictionary() == dict)
     }
     
+    func testConflictHandlerThrowingException() throws {
+        let doc = createDocument("doc1")
+        doc.setString("Daniel", forKey: "firstName")
+        doc.setString("Tiger", forKey: "lastName")
+        try db.saveDocument(doc)
+        
+        let doc1a = db.document(withID: doc.id)!.toMutable()
+        let doc1b = db.document(withID: doc.id)!.toMutable()
+        doc1a.setString("Scott", forKey: "firstName")
+        try db.saveDocument(doc1a)
+        
+        // conflicting save
+        doc1b.setString("Lion", forKey: "middleName")
+        XCTAssertFalse(try db.saveDocument(doc1b) { (cur, old) -> Bool in
+            NSException(name: .internalInconsistencyException,
+                        reason: "some exception happened inside save handler",
+                        userInfo: nil).raise()
+            return true
+            })
+    }
+    
     // MARK: Delete Document
     
     func testDeletePreSaveDoc() throws {
