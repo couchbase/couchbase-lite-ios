@@ -52,9 +52,10 @@ typedef NS_ENUM(uint32_t, CBLCustomWebSocketCloseCode) {
 }
 
 @property (readonly, atomic) BOOL active;
-@property (atomic) BOOL suspended;
 @property (nonatomic) MYBackgroundMonitor* bgMonitor;
 @property (readonly, atomic) dispatch_queue_t dispatchQueue;
+
+- (void) setSuspended: (BOOL)suspended;
 
 @end
 
