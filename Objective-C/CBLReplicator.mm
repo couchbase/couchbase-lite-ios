@@ -178,7 +178,7 @@ typedef enum {
         CBLLogInfo(Sync, @"%@: Retrying...", self);
         if (reset)
             _retryCount = 0;
-        if (_repl) {
+        if (_repl || _state <= kCBLStateStopping) {
             CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
                        self, _state, _rawStatus.level);
             return;
@@ -490,6 +490,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self endBackgrounding];
         #endif
             if (_conflictCount > 0) {
+                CBLLogInfo(Sync, @"%@: Stopped but waiting for conflict resolution (pending = %d) "
+                                  "to finish before notifying.", self, _conflictCount);
                 _deferStoppedNotification = YES;
                 _state = kCBLStateStopping; // Will be stopped after all conflicts are resolved
             } else
@@ -531,7 +533,11 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                    self, error.localizedDescription, delay);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                        _dispatchQueue, ^{
-                           [self retry: NO];
+                           CBL_LOCK(self) {
+                               // Retry if not in stop or suspending state:
+                               if (_state == kCBLStateStarted)
+                                   [self retry: NO];
+                           }
                        });
     } else {
         CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
@@ -555,7 +561,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                _rawStatus.progress.unitsCompleted, _rawStatus.progress.unitsTotal, self.status.error);
     
     [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
-                                                                              status: self.status]];
+                                                                          status: self.status]];
 }
 
 
@@ -623,8 +629,10 @@ static void onDocsEnded(C4Replicator *repl,
                                withConflictResolver: _config.conflictResolver
                                               error: &error])
         [doc resetError];
-    else
+    else {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
+        [doc updateError: error];
+    }
     [self logErrorOnDocument: doc pushing: NO];
     [self postDocumentReplications: @[doc] pushing: NO];
 }
