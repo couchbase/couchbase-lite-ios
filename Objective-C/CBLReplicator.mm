@@ -88,18 +88,18 @@ typedef enum {
     dispatch_queue_t _conflictQueue;
     C4Replicator* _repl;
     NSString* _desc;
-    C4ReplicatorStatus _rawStatus;
     CBLReplicatorState _state;
-    BOOL _deferStoppedNotification;
+    C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
-    unsigned _conflictCount;
     BOOL _allowReachability;
     CBLReachability* _reachability;
     CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
     CBLChangeNotifier<CBLDocumentReplication*>* _docReplicationNotifier;
-    BOOL _resetCheckpoint;
-    BOOL _cancelSuspending;
+    BOOL _resetCheckpoint;          // Reset the replicator checkpoint
+    BOOL _cancelSuspending;         // Cancel the current suspending request
+    unsigned _conflictCount;        // Current number of conflict resolving tasks
+    BOOL _deferStoppedNotification; // Defer the stopped until finishing all conflict resolving tasks
 }
 
 @synthesize config=_config;
