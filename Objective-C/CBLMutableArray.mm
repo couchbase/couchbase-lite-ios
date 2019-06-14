@@ -24,22 +24,17 @@
 #import "CBLJSON.h"
 #import "CBLFleece.hh"
 
-
 @implementation CBLMutableArray
 
-
 #pragma mark - Initializers
-
 
 + (instancetype) array {
     return [[self alloc] init];
 }
 
-
 - (instancetype) init {
     return [super initEmpty];
 }
-
 
 - (instancetype) initWithData: (nullable NSArray*)data {
     self = [self init];
@@ -49,23 +44,19 @@
     return self;
 }
 
-
-- (id) copyWithZone:(NSZone *)zone {
+- (id) copyWithZone: (NSZone*)zone {
     CBL_LOCK(self.sharedLock) {
         return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: false];
     }
 }
 
-
 #pragma mark - Type Setters
-
 
 [[noreturn]] static void throwRangeException(NSUInteger index) {
     [NSException raise: NSRangeException format: @"CBLMutableArray index %lu is out of range",
         (unsigned long)index];
     abort();
 }
-
 
 - (void) setValue: (id)value atIndex: (NSUInteger)index {
     CBL_LOCK(self.sharedLock) {
@@ -82,64 +73,51 @@
     }
 }
 
-
 - (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
-
 
 - (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
 
-
 - (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index {
     [self setValue: @(value) atIndex: index];
 }
-
 
 - (void) setLongLong: (long long)value atIndex: (NSUInteger)index {
     [self setValue: @(value) atIndex: index];
 }
 
-
 - (void) setFloat: (float)value atIndex: (NSUInteger)index {
     [self setValue: @(value) atIndex: index];
 }
-
 
 - (void) setDouble: (double)value atIndex: (NSUInteger)index {
     [self setValue: @(value) atIndex: index];
 }
 
-
 - (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
     [self setValue: @(value) atIndex: index];
 }
-
 
 - (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
 
-
 - (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
-
 
 - (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
 
-
 - (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self setValue: value atIndex: index];
 }
 
-
 #pragma mark - Type Appenders
-
 
 - (void) addValue: (id)value  {
     CBL_LOCK(self.sharedLock) {
@@ -149,64 +127,51 @@
     }
 }
 
-
 - (void) addString: (nullable NSString*)value {
     [self addValue: value];
 }
-
 
 - (void) addNumber: (nullable NSNumber*)value {
     [self addValue: value];
 }
 
-
 - (void) addInteger: (NSInteger)value {
     [self addValue: @(value)];
 }
-
 
 - (void) addLongLong: (long long)value {
     [self addValue: @(value)];
 }
 
-
 - (void) addFloat: (float)value {
     [self addValue: @(value)];
 }
-
 
 - (void) addDouble: (double)value {
     [self addValue: @(value)];
 }
 
-
 - (void) addBoolean: (BOOL)value {
     [self addValue: @(value)];
 }
-
 
 - (void) addDate: (nullable NSDate*)value {
     [self addValue: value];
 }
 
-
 - (void) addBlob: (nullable CBLBlob*)value {
     [self addValue: value];
 }
-
 
 - (void) addArray: (nullable CBLArray*)value {
     [self addValue: value];
 }
 
-
 - (void) addDictionary: (nullable CBLDictionary*)value {
     [self addValue: value];
 }
 
-
 #pragma mark - Type Inserters
-
 
 - (void) insertValue: (id)value atIndex: (NSUInteger)index {
     CBL_LOCK(self.sharedLock) {
@@ -217,66 +182,53 @@
     }
 }
 
-
 - (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
-
 
 - (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
 
-
 - (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index {
     [self insertValue: @(value) atIndex: index];
 }
-
 
 - (void) insertLongLong: (long long)value atIndex: (NSUInteger)index {
     [self insertValue: @(value) atIndex: index];
 }
 
-
 - (void) insertFloat: (float)value atIndex: (NSUInteger)index {
     [self insertValue: @(value) atIndex: index];
 }
-
 
 - (void) insertDouble: (double)value atIndex: (NSUInteger)index {
     [self insertValue: @(value) atIndex: index];
 }
 
-
 - (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
     [self insertValue: @(value) atIndex: index];
 }
-
 
 - (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
 
-
 - (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
-
 
 - (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
 
-
 - (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self insertValue: value atIndex: index];
 }
 
-
 #pragma mark - Set Content with an Array
 
-
-- (void) setData:(nullable NSArray *)data {
+- (void) setData: (nullable NSArray*)data {
     CBL_LOCK(self.sharedLock) {
         _array.clear();
         for (id obj in data)
@@ -284,20 +236,16 @@
     }
 }
 
-
 #pragma mark - Remove value
 
-
-- (void) removeValueAtIndex:(NSUInteger)index {
+- (void) removeValueAtIndex: (NSUInteger)index {
     CBL_LOCK(self.sharedLock) {
         if (!_array.remove(index))
             throwRangeException(index);
     }
 }
 
-
 #pragma mark - Subscript
-
 
 - (CBLMutableFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     if (index >= _array.count())
@@ -305,14 +253,11 @@
     return [[CBLMutableFragment alloc] initWithParent: self index: index];
 }
 
-
 #pragma mark - CBLConversion
-
 
 - (id) cbl_toCBLObject {
     // Overrides CBLArray
     return self;
 }
-
 
 @end

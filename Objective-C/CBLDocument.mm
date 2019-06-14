@@ -29,15 +29,12 @@
 
 using namespace fleece;
 
-
 @implementation CBLDocument
 {
     std::unique_ptr<MRoot<id>> _root;
 }
 
-
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
-
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -53,7 +50,6 @@ using namespace fleece;
     return self;
 }
 
-
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                              body: (nullable FLDict)body {
@@ -67,7 +63,6 @@ using namespace fleece;
     }
     return self;
 }
-
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -95,14 +90,11 @@ using namespace fleece;
     return self;
 }
 
-
 #pragma mark - Public
-
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@]", self.class, self.id];
 }
-
 
 - (uint64_t) sequence {
     CBL_LOCK(self) {
@@ -110,19 +102,15 @@ using namespace fleece;
     }
 }
 
-
-- (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
+- (CBLMutableDocument*) mutableCopyWithZone: (NSZone*)zone {
     return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: nil];
 }
-
 
 - (CBLMutableDocument*) toMutable {
     return [self mutableCopy];
 }
 
-
 #pragma mark - Internal
-
 
 - (C4Database*) c4db {
     C4Database* db = _database.c4db;
@@ -130,17 +118,14 @@ using namespace fleece;
     return db;
 }
 
-
 - (bool) isMutable {
     // CBLMutableDocument overrides this
     return false;
 }
 
-
 - (BOOL) isEmpty {
     return _dict.count == 0;
 }
-
 
 - (void) updateDictionary {
     if (_fleeceData) {
@@ -156,13 +141,11 @@ using namespace fleece;
     }
 }
 
-
 - (CBLC4Document*) c4Doc {
     CBL_LOCK(self) {
         return _c4Doc;
     }
 }
-
 
 - (void) setC4Doc: (CBLC4Document*)c4doc {
     CBL_LOCK(self) {
@@ -178,13 +161,11 @@ using namespace fleece;
     }
 }
 
-
 - (void) replaceC4Doc: (CBLC4Document*)c4doc {
     CBL_LOCK(self) {
         _c4Doc = c4doc;
     }
 }
-
 
 - (FLSliceResult) encode: (NSError**)outError {
     // CBLMutableDocument overrides this
@@ -192,9 +173,7 @@ using namespace fleece;
     return FLSliceResult(body ? alloc_slice(body) : alloc_slice(size_t(0)));
 }
 
-
 #pragma mark - For Replication's conflict resolution
-
 
 - (BOOL) selectConflictingRevision {
     CBL_LOCK(self) {
@@ -210,7 +189,6 @@ using namespace fleece;
     }
 }
 
-
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2
 {
@@ -224,13 +202,11 @@ using namespace fleece;
     }
 }
 
-
 - (NSString*) revID {
     CBL_LOCK(self) {
         return _c4Doc != nil ?  slice2string(_c4Doc.revID) : nil;
     }
 }
-
 
 - (NSUInteger) generation {
     // CBLMutableDocument overrides this
@@ -239,111 +215,90 @@ using namespace fleece;
     }
 }
 
-
 - (BOOL) isDeleted {
     CBL_LOCK(self) {
         return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
     }
 }
 
-
 #pragma mark - CBLDictionary
-
 
 - (NSUInteger) count {
     return _dict.count;
 }
 
-
 - (NSArray*) keys {
     return _dict.keys;
 }
-
 
 - (nullable id) valueForKey: (nonnull NSString*)key {
     return [_dict valueForKey: key];
 }
 
-
 - (nullable NSString*) stringForKey: (nonnull NSString*)key {
     return [_dict stringForKey: key];
 }
-
 
 - (nullable NSNumber*) numberForKey: (nonnull NSString*)key {
     return [_dict numberForKey: key];
 }
 
-
 - (NSInteger) integerForKey:(nonnull NSString*)key {
     return [_dict integerForKey: key];
 }
-
 
 - (long long) longLongForKey: (nonnull NSString*)key {
     return [_dict longLongForKey: key];
 }
 
-
 - (float) floatForKey: (nonnull NSString*)key {
     return [_dict floatForKey: key];
 }
-
 
 - (double) doubleForKey: (nonnull NSString*)key {
     return [_dict doubleForKey: key];
 }
 
-
 - (BOOL) booleanForKey: (nonnull NSString*)key {
     return [_dict booleanForKey: key];
 }
-
 
 - (nullable NSDate*) dateForKey: (nonnull NSString*)key {
     return [_dict dateForKey: key];
 }
 
-
 - (nullable CBLBlob*) blobForKey: (nonnull NSString*)key {
     return [_dict blobForKey: key];
 }
-
 
 - (nullable CBLArray*) arrayForKey: (nonnull NSString*)key {
     return [_dict arrayForKey: key];
 }
 
-
 - (nullable CBLDictionary*) dictionaryForKey:(nonnull NSString*)key {
     return [_dict dictionaryForKey: key];
 }
-
 
 - (BOOL) containsValueForKey: (nonnull NSString *)key {
     return [_dict booleanForKey: key];
 }
 
-
 - (CBLFragment *) objectForKeyedSubscript: (NSString *)key {
     return [_dict objectForKeyedSubscript: key];
 }
 
-- (NSUInteger) countByEnumeratingWithState: (nonnull NSFastEnumerationState *)state
-                                   objects: (id  _Nullable __unsafe_unretained * _Nonnull)buffer
+- (NSUInteger) countByEnumeratingWithState: (nonnull NSFastEnumerationState*)state
+                                   objects: (id  _Nullable __unsafe_unretained* _Nonnull)buffer
                                      count: (NSUInteger)len
 {
     return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
-
-- (NSDictionary<NSString *,id> *)toDictionary {
+- (NSDictionary<NSString *,id>*) toDictionary {
     return [_dict toDictionary];
 }
 
-
 #pragma mark - Equality
-
 
 - (BOOL) isEqual: (id)object {
     if (self == object)
@@ -368,7 +323,6 @@ using namespace fleece;
     
     return [_dict isEqual: other->_dict];
 }
-
 
 - (NSUInteger) hash {
     return [self.database.name hash] ^  [self.id hash] ^ [_dict hash];

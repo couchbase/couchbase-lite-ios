@@ -37,7 +37,7 @@ NSString* CBLCreateUUID() {
     return uuid;
 }
 
-BOOL CBLIsFileExistsError( NSError* error ) {
+BOOL CBLIsFileExistsError(NSError* error) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     return ($equal(domain, NSPOSIXErrorDomain) && code == EEXIST)

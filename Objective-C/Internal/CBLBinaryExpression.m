@@ -21,16 +21,15 @@
 #import "CBLAggregateExpression.h"
 #import "CBLQueryExpression+Internal.h"
 
-
 @implementation CBLBinaryExpression {
     CBLQueryExpression* _lhs;
     CBLQueryExpression* _rhs;
     CBLBinaryExpType _type;
 }
 
-- (instancetype) initWithLeftExpression:(CBLQueryExpression*)lhs
-                        rightExpression:(CBLQueryExpression*)rhs
-                                   type:(CBLBinaryExpType)type {
+- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
+                        rightExpression: (CBLQueryExpression*)rhs
+                                   type: (CBLBinaryExpType)type {
     self = [super initWithNone];
     if (self) {
         _lhs = lhs;

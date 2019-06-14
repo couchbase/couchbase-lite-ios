@@ -28,9 +28,7 @@
 
 @implementation DateTimeQueryFunctionTest
 
-
 #pragma mark - Tests
-
 
 - (void) testStringToMillis {
     [self validateStringToMillis: @""
@@ -59,7 +57,6 @@
                           result: [NSNumber numberWithDouble: 1583020799000]];
 }
 
-
 - (void) testStringToUTC {
     [self validateStringToUTC: nil result: nil];
     [self validateStringToUTC: @"x" result: nil];
@@ -83,7 +80,6 @@
                        result: @"1970-01-01T00:00:00Z"];
 }
 
-
 - (void) testMillisToString {
     int mSec = 1000;
     double seconds = 0.0;
@@ -103,7 +99,6 @@
                           result: [NSDate dateWithTimeIntervalSince1970: seconds]];
 }
 
-
 - (void) testMillisToUTC {
     [self validateMillisToUTC: [NSNumber numberWithDouble: 0]
                        result: @"1970-01-01T00:00:00Z"];
@@ -118,9 +113,7 @@
                        result: @"2018-10-23T18:33:01.999Z"];
 }
 
-
 #pragma mark - Helper Methods
-
 
 - (void) validateStringToMillis: (NSString*)input result: (nullable NSNumber*)millis {
     NSError* error;
@@ -146,7 +139,6 @@
     AssertNil(error);
 }
 
-
 - (void) validateStringToUTC: (nullable NSString*)input result: (nullable NSString*)date {
     NSError* error;
     NSString* key = @"dateString";
@@ -170,7 +162,6 @@
     Assert([self.db purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
-
 
 - (void) validateMillisToString: (NSNumber*)input result: (NSDate*)date {
     NSError* error;
@@ -196,7 +187,6 @@
     AssertNil(error);
 }
 
-
 - (void) validateMillisToUTC: (NSNumber*)input result: (NSString*)utcString {
     NSError* error;
     NSString* key = @"dateString";
@@ -220,6 +210,5 @@
     Assert([self.db purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
-
 
 @end

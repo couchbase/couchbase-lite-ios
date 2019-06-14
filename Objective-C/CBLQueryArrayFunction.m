@@ -22,7 +22,6 @@
 
 @implementation CBLQueryArrayFunction
 
-
 + (CBLQueryExpression*) contains: (id)expression value: (CBLQueryExpression*)value {
     CBLAssertNotNil(expression);
     CBLAssertNotNil(value);
@@ -31,13 +30,11 @@
                                                     params: @[expression, value]];
 }
 
-
 + (CBLQueryExpression*) length: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
     return [[CBLFunctionExpression alloc] initWithFunction: @"ARRAY_LENGTH()"
                                                     params: @[expression]];
 }
-
 
 @end

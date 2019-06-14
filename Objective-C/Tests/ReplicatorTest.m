@@ -31,7 +31,6 @@
 #endif
 }
 
-
 + (void) initialize {
     if (self == [ReplicatorTest class]) {
         // You can set environment variables to force use of a proxy:
@@ -71,7 +70,6 @@
     }
 }
 
-
 - (void) setUp {
     // Delete otherdb:
     [self deleteDBNamed: @"otherdb" error: nil];
@@ -87,7 +85,6 @@
     AssertNil(error);
     AssertNotNil(otherDB);
 }
-
 
 - (void) tearDown {
     // TODO: Remove this:
@@ -137,13 +134,11 @@
     return [[CBLURLEndpoint alloc] initWithURL: url];
 }
 
-
 - (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
     Assert([endpoint.url.path isEqualToString: @"/scratch"], @"Only scratch db should be erased");
     [self sendRequestToEndpoint: endpoint method: @"POST" path: @"_flush" body: nil];
     Log(@"Erased remote database %@", endpoint.url);
 }
-
 
 - (id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
                       method: (NSString*)method
@@ -213,7 +208,6 @@
     return (SecCertificateRef)CFAutorelease(cert);
 }
 
-
 - (NSString*) getCertificateID: (SecCertificateRef)cert {
     CFErrorRef* errRef = NULL;
     if (@available(macOS 10.13, iOS 11.0, *)) {
@@ -236,7 +230,6 @@
                        continuous: continuous
                     authenticator: nil];
 }
-
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type

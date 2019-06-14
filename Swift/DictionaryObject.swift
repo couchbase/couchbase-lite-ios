@@ -22,6 +22,7 @@ import Foundation
 
 /// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.
 public protocol DictionaryProtocol: DictionaryFragment {
+    
     var count: Int { get }
     
     var keys: Array<String> { get }
@@ -53,6 +54,7 @@ public protocol DictionaryProtocol: DictionaryFragment {
     func contains(key: String) -> Bool
     
     func toDictionary() -> Dictionary<String, Any>
+    
 }
 
 
@@ -64,12 +66,10 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return Int(_impl.count)
     }
     
-    
     /// An array containing all keys, or an empty array if the dictionary has no entries.
     public var keys: Array<String> {
         return _impl.keys
     }
-    
     
     /// Gets a property's value. The value types are Blob, ArrayObject,
     /// DictionaryObject, Number, or String based on the underlying data type; or nil
@@ -81,7 +81,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return DataConverter.convertGETValue(_impl.value(forKey: key))
     }
     
-    
     ///  Gets a property's value as a string.
     ///  Returns nil if the property doesn't exist, or its value is not a string.
     ///
@@ -91,7 +90,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.string(forKey: key)
     }
     
-    
     ///  Gets a property's value as a Number.
     ///  Returns nil if the property doesn't exist, or its value is not a number.
     ///
@@ -100,7 +98,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     public func number(forKey key: String) -> NSNumber? {
         return _impl.number(forKey: key)
     }
-    
     
     /// Gets a property's value as an int value.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
@@ -112,7 +109,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.integer(forKey: key)
     }
     
-    
     /// Gets a property's value as an int64 value.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
     /// Returns 0 if the property doesn't exist or does not have a numeric value.
@@ -122,7 +118,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     public func int64(forKey key: String) -> Int64 {
         return _impl.longLong(forKey: key)
     }
-    
     
     /// Gets a property's value as a float value.
     /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
@@ -134,7 +129,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.float(forKey: key)
     }
     
-    
     /// Gets a property's value as a double value.
     /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
     /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
@@ -145,7 +139,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.double(forKey: key)
     }
     
-    
     /// Gets a property's value as a boolean value.
     /// Returns true if the value exists, and is either `true` or a nonzero number.
     ///
@@ -154,7 +147,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     public func boolean(forKey key: String) -> Bool {
         return _impl.boolean(forKey: key)
     }
-    
     
     /// Gets a property's value as a Date value.
     /// JSON does not directly support dates, so the actual property value must be a string, which is
@@ -169,7 +161,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.date(forKey: key)
     }
     
-    
     /// Get a property's value as a Blob object.
     /// Returns nil if the property doesn't exist, or its value is not a blob.
     ///
@@ -179,7 +170,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return value(forKey: key) as? Blob
     }
     
-    
     /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
     ///
@@ -188,7 +178,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     public func array(forKey key: String) -> ArrayObject? {
         return value(forKey: key) as? ArrayObject
     }
-    
     
     /// Get a property's value as a DictionaryObject, which is a mapping object of
     /// a dictionary value.
@@ -200,7 +189,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return value(forKey: key) as? DictionaryObject
     }
     
-    
     /// Tests whether a property exists or not.
     /// This can be less expensive than -objectForKey:, because it does not have to allocate an
     /// NSObject for the property value.
@@ -211,9 +199,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.containsValue(forKey: key)
     }
     
-    
     // MARK: Data
-    
     
     /// Gets content of the current object as a Dictionary. The value types of
     /// the values contained in the returned Dictionary object are Array, Blob,
@@ -236,9 +222,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return dict
     }
     
-    
     // MARK: Edit
-    
     
     /// Returns a mutable copy of the dictionary object.
     ///
@@ -254,9 +238,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         }
     }
     
-    
     // MARK: Sequence
-    
     
     /// Gets  an iterator over the keys of the dictionary entries
     ///
@@ -265,9 +247,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.keys.makeIterator();
     }
     
-    
     // MARK: Subscript
-    
     
     /// Subscript access to a Fragment object by key.
     ///
@@ -276,15 +256,12 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return Fragment(_impl[key])
     }
     
-    
     // MARK: Equality
-    
     
     /// Equal to operator for comparing two Dictionary objects.
     public static func == (dict1: DictionaryObject, dict2: DictionaryObject) -> Bool {
         return (dict1._impl as! NSObject) == (dict2._impl as! NSObject)
     }
-    
     
     // MARK: Hashable
     
@@ -292,9 +269,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         return _impl.hash;
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLDictionaryProtocol) {
         _impl = impl
@@ -309,7 +284,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         }
     }
     
-    
     deinit {
         switch _impl {
         case let dict as CBLDictionary:
@@ -320,7 +294,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
             fatalError("Invalid dictionary!!!")
         }
     }
-    
     
     let _impl: CBLDictionaryProtocol
     

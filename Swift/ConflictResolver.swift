@@ -24,4 +24,5 @@ public protocol ConflictResolver {
     
     /// The callback resolve method, if conflict occurs.
     func resolve(conflict: Conflict) -> Document?
+    
 }

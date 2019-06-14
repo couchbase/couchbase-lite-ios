@@ -423,7 +423,6 @@
 
 @end
 
-
 @implementation FileLoggerBackup
 
 @synthesize config=_config, level=_level;

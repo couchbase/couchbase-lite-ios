@@ -22,9 +22,7 @@
 
 @implementation CBLJSON
 
-
 static NSTimeInterval k1970ToReferenceDate;
-
 
 + (void) initialize {
     if (self == [CBLJSON class]) {
@@ -77,13 +75,11 @@ static NSDateFormatter* getISO8601Formatter() {
     return sFormatter;
 }
 
-
 + (NSString*) JSONObjectWithDate: (NSDate*)date {
     return [self JSONObjectWithDate:date timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 }
 
-
-+ (NSString*) JSONObjectWithDate: (NSDate*)date timeZone:(NSTimeZone *)tz {
++ (NSString*) JSONObjectWithDate: (NSDate*)date timeZone: (NSTimeZone*)tz {
     if (!date)
         return nil;
     @synchronized(self) {
@@ -92,7 +88,6 @@ static NSDateFormatter* getISO8601Formatter() {
         return [formatter stringFromDate: date];
     }
 }
-
 
 + (CFAbsoluteTime) absoluteTimeWithJSONObject: (id)jsonObject {
     NSString* string = [jsonObject isKindOfClass: NSString.class] ? jsonObject : nil;
@@ -104,11 +99,9 @@ static NSDateFormatter* getISO8601Formatter() {
     return time / 1000.0 + k1970ToReferenceDate;
 }
 
-
 + (NSDate*) dateWithJSONObject: (id)jsonObject {
     NSTimeInterval t = [self absoluteTimeWithJSONObject: jsonObject];
     return isnan(t) ? nil : [NSDate dateWithTimeIntervalSinceReferenceDate: t];
 }
-
 
 @end

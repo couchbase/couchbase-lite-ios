@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// ReplicatorChange contains the replicator status information.
 public struct ReplicatorChange {
     
@@ -28,4 +27,5 @@ public struct ReplicatorChange {
     
     /// The replicator status.
     public let status: Replicator.Status
+    
 }

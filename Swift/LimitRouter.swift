@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// LimitRouter for creating and chaning a query LIMIT clause to constraint
 /// the number of results returned by a query.
 protocol LimitRouter {

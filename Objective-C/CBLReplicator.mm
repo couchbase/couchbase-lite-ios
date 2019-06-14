@@ -46,7 +46,6 @@
 using namespace std;
 using namespace fleece;
 
-
 // Maximum number of retries before a one-shot replication gives up
 static constexpr unsigned kMaxOneShotRetryCount = 2;
 
@@ -81,7 +80,6 @@ typedef enum {
 @property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
 
-
 @implementation CBLReplicator
 {
     dispatch_queue_t _dispatchQueue;
@@ -107,7 +105,6 @@ typedef enum {
 @synthesize bgMonitor=_bgMonitor;
 @synthesize dispatchQueue=_dispatchQueue;
 
-
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
     CBLAssertNotNil(config);
     
@@ -129,17 +126,14 @@ typedef enum {
     return self;
 }
 
-
 - (CBLReplicatorConfiguration*) config {
     return _config;
 }
-
 
 - (void) dealloc {
     c4repl_free(_repl);
     [_reachability stop];
 }
-
 
 - (NSString*) description {
     if (!_desc)
@@ -152,12 +146,10 @@ typedef enum {
     return _desc;
 }
 
-
 - (void) clearRepl {
     c4repl_free(_repl);
     _repl = nullptr;
 }
-
 
 - (void) start {
     CBL_LOCK(self) {
@@ -173,7 +165,6 @@ typedef enum {
     }
 }
 
-
 - (void) retry: (BOOL)reset {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Retrying...", self);
@@ -187,7 +178,6 @@ typedef enum {
         [self _start];
     }
 }
-
 
 - (void) _start {
     // Target:
@@ -288,27 +278,22 @@ typedef enum {
     statusChanged(_repl, status, (__bridge void*)self);
 }
 
-
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
     C4ReplicatorMode const kModes[4] = {kC4Disabled, kC4Disabled, kC4OneShot, kC4Continuous};
     return kModes[2*!!active + !!continuous];
 }
 
-
 static BOOL isPush(CBLReplicatorType type) {
     return type == kCBLReplicatorTypePushAndPull || type == kCBLReplicatorTypePush;
 }
-
 
 static BOOL isPull(CBLReplicatorType type) {
     return type == kCBLReplicatorTypePushAndPull || type == kCBLReplicatorTypePull;
 }
 
-
 static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool isPush) {
     return filter != nil ? (isPush ? &pushFilter : &pullFilter) : NULL;
 }
-
 
 - (void) stop {
     CBL_LOCK(self) {
@@ -324,7 +309,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-
 - (void) _stop {
     if (_repl) {
         // Stop the replicator:
@@ -337,7 +321,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         });
     }
 }
-
 
 - (void) stopped {
     CBL_LOCK(self) {
@@ -356,7 +339,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         [self updateAndPostStatus];
     }
 }
-
 
 - (void) startReachabilityObserver {
     if (!_allowReachability || _reachability)
@@ -381,7 +363,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     _reachability = nil;
 }
 
-
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
@@ -391,7 +372,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         }
     }
 }
-
 
 - (void) resetCheckpoint {
     CBL_LOCK(self) {
@@ -404,11 +384,9 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLReplicatorChange*))listener {
     return [self addChangeListenerWithQueue: nil listener: listener];
 }
-
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
@@ -416,11 +394,9 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
 }
 
-
 - (id<CBLListenerToken>) addDocumentReplicationListener: (void (^)(CBLDocumentReplication*))listener {
     return [self addDocumentReplicationListenerWithQueue: nil listener: listener];
 }
-
 
 - (id<CBLListenerToken>) addDocumentReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
                                                         listener: (void (^)(CBLDocumentReplication*))listener
@@ -431,7 +407,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     [_changeNotifier removeChangeListenerWithToken: token];
     
@@ -441,9 +416,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-
 #pragma mark - STATUS CHANGES:
-
 
 static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
@@ -452,7 +425,6 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [replicator c4StatusChanged: status];
     });
 }
-
 
 // Should be called from the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
@@ -513,7 +485,6 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     }
 }
 
-
 - (bool) handleError: (C4Error)c4err {
     // If this is a transient error, or if I'm continuous and the error might go away with a change
     // in network (i.e. network down, hostname unknown), then go offline and retry later.
@@ -551,9 +522,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     return true;
 }
 
-
 - (void) updateAndPostStatus {
-    NSError *error = nil;
+    NSError* error = nil;
     if (_rawStatus.error.code)
         convertError(_rawStatus.error, &error);
     
@@ -567,15 +537,13 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                                                                           status: self.status]];
 }
 
-
 #pragma mark - DOCUMENT-LEVEL ERRORS:
 
-
-static void onDocsEnded(C4Replicator *repl,
+static void onDocsEnded(C4Replicator* repl,
                         bool pushing,
                         size_t nDocs,
                         const C4DocumentEnded* docEnds[],
-                        void *context)
+                        void* context)
 {
     auto replicator = (__bridge CBLReplicator*)context;
     
@@ -593,7 +561,6 @@ static void onDocsEnded(C4Replicator *repl,
     });
 }
 
-
 - (void) onDocsEnded: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
     NSMutableArray* posts = [NSMutableArray array];
     for (CBLReplicatedDocument *doc in docs) {
@@ -609,7 +576,6 @@ static void onDocsEnded(C4Replicator *repl,
         [self postDocumentReplications: posts pushing: pushing];
 }
 
-
 - (void) resolveConflict: (CBLReplicatedDocument*)doc {
     _conflictCount++;
     dispatch_async(_conflictQueue, ^{
@@ -623,7 +589,6 @@ static void onDocsEnded(C4Replicator *repl,
         }
     });
 }
-
 
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
@@ -640,14 +605,12 @@ static void onDocsEnded(C4Replicator *repl,
     [self postDocumentReplications: @[doc] pushing: NO];
 }
 
-
 - (void) postDocumentReplications: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
     id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
                                                                  isPush: pushing
                                                               documents: docs];
     [_docReplicationNotifier postChange: replication];
 }
-
 
 - (void) logErrorOnDocument: (CBLReplicatedDocument*)doc pushing: (BOOL)pushing {
     C4Error c4err = doc.c4Error;
@@ -658,18 +621,15 @@ static void onDocsEnded(C4Replicator *repl,
 
 #pragma mark - Push/Pull Filter
 
-
 static bool pushFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
     return [replicator filterDocument: docID flags: flags body: flbody pushing: true];
 }
 
-
 static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
     return [replicator filterDocument: docID flags: flags body: flbody pushing: false];
 }
-
 
 - (bool) filterDocument: (C4String)docID
                   flags: (C4RevisionFlags)flags
@@ -690,16 +650,13 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 }
 
-
 #pragma mark - BACKGROUNDING SUPPORT
-
 
 - (BOOL) active {
     CBL_LOCK(self) {
         return (_rawStatus.level == kC4Connecting || _rawStatus.level == kC4Busy);
     }
 }
-
 
 - (void) setSuspended: (BOOL)suspended {
     CBL_LOCK(self) {
@@ -727,12 +684,9 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
     }
 }
 
-
 @end
 
-
 #pragma mark - CBLReplicatorStatus
-
 
 @implementation CBLReplicatorStatus
 

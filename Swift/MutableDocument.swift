@@ -19,12 +19,10 @@
 
 import Foundation
 
-
 /// A mutable version of the Document.
 public final class MutableDocument : Document, MutableDictionaryProtocol {
     
     // MARK: Initializers
-    
     
     /// Initializes a new MutableDocument object with a new random UUID.
     /// The created document will be saved into a database when you call
@@ -33,7 +31,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         self.init(CBLMutableDocument())
     }
 
-    
     /// Initializes a new MutableDocument object with the given ID.
     /// If a nil ID value is given, the document will be created with a new
     /// random UUID. The created document will be saved into a database when
@@ -43,7 +40,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     public convenience init(id: String?) {
         self.init(CBLMutableDocument(id: id))
     }
-    
     
     /// Initializes a new MutableDocument object with a new random UUID and
     /// the data. Allowed data value types are Array, ArrayObject, Blob, Date,
@@ -57,7 +53,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         self.init(CBLMutableDocument())
         setData(data)
     }
-    
     
     /// Initializes a new MutableDocument object with a given ID and the data.
     /// If a nil ID value is given, the document will be created with a new
@@ -85,9 +80,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return self;
     }
     
-    
     // MARK: Type Setters
-    
     
     /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
     /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
@@ -103,7 +96,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return self
     }
     
-    
     /// Set a String value for the given key.
     ///
     /// - Parameters:
@@ -113,7 +105,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
         return setValue(value, forKey:  key)
     }
-    
     
     /// Set a Number value for the given key.
     ///
@@ -125,7 +116,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
     /// Set an int value for the given key.
     ///
     /// - Parameters:
@@ -135,7 +125,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set an int64 value for the given key.
     ///
@@ -147,7 +136,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a double value for the given key.
     ///
     /// - Parameters:
@@ -158,7 +146,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a float value for the given key.
     ///
     /// - Parameters:
@@ -168,7 +155,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     @discardableResult public func setFloat(_ value: Float, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
 
     /// Set a boolean value for the given key.
     ///
@@ -180,7 +166,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -190,7 +175,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set a Date object for the given key. A nil value will be converted to an NSNull.
     ///
@@ -202,7 +186,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
     /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -212,7 +195,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
     ///
@@ -224,7 +206,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
 
-    
     // MARK: Data
     
     /// Set data for the document. Allowed value types are Array, ArrayObject,
@@ -238,9 +219,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return self
     }
     
-    
     // MARK: Removing Entries
-    
     
     /// Removes a given key and its value.
     ///
@@ -251,9 +230,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return self
     }
     
-    
     // MARK: Getting DictionaryObject and ArrayObject
-    
     
     /// Get a property's value as an MutableArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
@@ -264,7 +241,6 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return value(forKey: key) as? MutableArrayObject
     }
     
-    
     /// Get a property's value as a MutableDictionaryObject, which is a mapping object of a dictionary
     /// value. Returns nil if the property doesn't exists, or its value is not a dictionary.
     ///
@@ -274,9 +250,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return value(forKey: key) as? MutableDictionaryObject
     }
     
-    
     // MARK: Subscript
-    
     
     /// Subscripting access to a MutableFragment object that represents the value of the dictionary by key.
     ///
@@ -285,17 +259,13 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return MutableFragment(docImpl[key])
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLMutableDocument) {
         super.init(impl)
     }
     
-    
     // MARK: Private
-    
     
     private var docImpl: CBLMutableDocument {
         return _impl as! CBLMutableDocument

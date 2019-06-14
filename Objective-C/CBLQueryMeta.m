@@ -35,11 +35,9 @@
 
 @implementation CBLQueryMeta
 
-
 + (CBLQueryExpression*) id {
     return [self idFrom: nil];
 }
-
 
 + (CBLQueryExpression*) idFrom: (nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIDKeyPath
@@ -47,41 +45,34 @@
                                                      from: alias];
 }
 
-
 + (CBLQueryExpression*) sequence {
     return [self sequenceFrom: nil];
 }
 
-
-+ (CBLQueryExpression*) sequenceFrom:(nullable NSString *)alias {
++ (CBLQueryExpression*) sequenceFrom: (nullable NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
                                                columnName: kCBLQueryMetaSequenceColumnName
                                                      from: alias];
 }
 
-
 + (CBLQueryExpression*) isDeleted {
     return [self isDeletedFrom: nil];
 }
 
-
-+ (CBLQueryExpression*) isDeletedFrom: (nullable NSString *)alias {
++ (CBLQueryExpression*) isDeletedFrom: (nullable NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
                                                columnName: kCBLQueryMetaIsDeletedColumnName
                                                      from: alias];
 }
 
-
 + (CBLQueryExpression*) expiration {
     return [self expirationFrom: nil];
 }
 
-
-+ (CBLQueryExpression*) expirationFrom: (NSString *)alias {
++ (CBLQueryExpression*) expirationFrom: (NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaExpiredKeyPath
                                                columnName: kCBLQueryMetaExpiredColumnName
                                                      from: alias];
 }
-
 
 @end

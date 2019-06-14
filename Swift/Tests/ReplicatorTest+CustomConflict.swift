@@ -21,6 +21,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest_CustomConflict: ReplicatorTest {
+    
     func testConflictResolverConfigProperty() {
         let target = URLEndpoint(url: URL(string: "wss://foo")!)
         let pullConfig = config(target: target, type: .pull, continuous: false)
@@ -714,10 +715,12 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     }
     
     #endif
+    
 }
 
 
 class TestConflictResolver: ConflictResolver {
+    
     var winner: Document? = nil
     let _resolver: (Conflict) -> Document?
     
@@ -730,4 +733,5 @@ class TestConflictResolver: ConflictResolver {
         winner = _resolver(conflict)
         return winner
     }
+    
 }

@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// FromRouter for creating and chaning a query FROM clause.
 protocol FromRouter {
     

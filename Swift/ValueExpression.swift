@@ -21,6 +21,7 @@ import Foundation
 
 /// Value Expression.
 /* internal */ class ValueExpression: QueryExpression {
+    
     init(value: Any?) {
         super.init(CBLQueryExpression.value(ValueExpression.convertValue(value)))
     }
@@ -53,4 +54,5 @@ import Foundation
         }
         return result
     }
+    
 }

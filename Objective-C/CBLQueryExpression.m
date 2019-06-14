@@ -31,16 +31,13 @@
 
 @implementation CBLQueryExpression
 
-
 #pragma mark - Property:
-
 
 + (CBLQueryExpression*) property: (NSString*)property {
     return [self property: property from: nil];
 }
 
-
-+ (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString *)alias {
++ (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)alias {
     CBLAssertNotNil(property);
     
     return [[CBLPropertyExpression alloc] initWithKeyPath: property
@@ -48,69 +45,55 @@
                                                      from: alias];
 }
 
-
 + (CBLQueryExpression*) all {
     return [self allFrom: nil];
 }
-
 
 + (CBLQueryExpression*) allFrom: (nullable NSString*)alias {
     return [CBLPropertyExpression allFrom: alias];
 }
 
-
 #pragma mark - Values:
-
 
 + (CBLQueryExpression*) value: (nullable id)value {
     return [[CBLValueExpression alloc] initWithValue: value];
 }
 
-
 + (CBLQueryExpression*) string: (nullable NSString*)value {
     return [self value: value];
 }
-
 
 + (CBLQueryExpression*) number: (nullable NSNumber*)value {
     return [self value: value];
 }
 
-
 + (CBLQueryExpression*) integer: (NSInteger)value {
     return [self value: @(value)];
 }
-
 
 + (CBLQueryExpression*) longLong: (long long)value {
     return [self value: @(value)];
 }
 
-
 + (CBLQueryExpression*) float: (float)value {
     return [self value: @(value)];
 }
-
 
 + (CBLQueryExpression*) double: (double)value {
     return [self value: @(value)];
 }
 
-
 + (CBLQueryExpression*) boolean: (BOOL)value {
     return [self value: @(value)];
 }
-
 
 + (CBLQueryExpression*) date: (nullable NSDate*)value {
     return [self value: value];
 }
 
-
 + (CBLQueryExpression*) dictionary: (nullable NSDictionary<NSString*,id>*)value {
     return [self value: value];
 }
-
 
 + (CBLQueryExpression*) array: (nullable NSArray*)value {
     return [self value: value];
@@ -118,16 +101,13 @@
 
 #pragma mark - Parameter:
 
-
 + (CBLQueryExpression*) parameterNamed: (NSString*)name {
     CBLAssertNotNil(name);
     
     return [[CBLParameterExpression alloc] initWithName: name];
 }
 
-
 #pragma mark - Unary operators:
-
 
 + (CBLQueryExpression*) negated: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -136,16 +116,13 @@
                                                          type: CBLNotCompundExpType];
 }
 
-
 + (CBLQueryExpression*) not: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
     return [self negated: expression];
 }
 
-
 #pragma mark - Arithmetic Operators:
-
 
 - (CBLQueryExpression*) multiply: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -155,7 +132,6 @@
                                                           type: CBLMultiplyBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) divide: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -163,7 +139,6 @@
                                                rightExpression: expression
                                                           type: CBLDivideBinaryExpType];
 }
-
 
 - (CBLQueryExpression*) modulo: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -173,7 +148,6 @@
                                                           type: CBLModulusBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) add: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -182,16 +156,13 @@
                                                           type: CBLAddBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) subtract: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLSubtractBinaryExpType];
 }
 
-
 #pragma mark - Comparison operators:
-
 
 - (CBLQueryExpression*) lessThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -201,7 +172,6 @@
                                                           type: CBLLessThanBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) lessThanOrEqualTo: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -209,7 +179,6 @@
                                                rightExpression: expression
                                                           type: CBLLessThanOrEqualToBinaryExpType];
 }
-
 
 - (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -219,7 +188,6 @@
                                                           type: CBLGreaterThanBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) greaterThanOrEqualTo: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -227,7 +195,6 @@
                                                rightExpression: expression
                                                           type: CBLGreaterThanOrEqualToBinaryExpType];
 }
-
 
 - (CBLQueryExpression*) equalTo: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -237,7 +204,6 @@
                                                           type: CBLEqualToBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) notEqualTo: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -246,9 +212,7 @@
                                                           type: CBLNotEqualToBinaryExpType];
 }
 
-
 #pragma mark - Like operators:
-
 
 - (CBLQueryExpression*) like: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -258,9 +222,7 @@
                                                           type: CBLLikeBinaryExpType];
 }
 
-
 #pragma mark - Regex like operators:
-
 
 - (CBLQueryExpression*) regex: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -270,9 +232,7 @@
                                                           type: CBLRegexLikeBinaryExpType];
 }
 
-
 #pragma mark - IS operations:
-
 
 - (CBLQueryExpression*) is: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -282,7 +242,6 @@
                                                           type: CBLIsBinaryExpType];
 }
 
-
 - (CBLQueryExpression*) isNot: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -291,23 +250,18 @@
                                                           type: CBLIsNotBinaryExpType];
 }
 
-
 #pragma mark - Null or Missing check operators:
-
 
 - (CBLQueryExpression*) isNullOrMissing {
     return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] orExpression:
             [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeMissing]];
 }
 
-
 - (CBLQueryExpression*) notNullOrMissing {
     return [[self class] negated: [self isNullOrMissing]];
 }
 
-
 #pragma mark - Bitwise operators:
-
 
 - (CBLQueryExpression*) andExpression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
@@ -316,7 +270,6 @@
                                                          type: CBLAndCompundExpType];
 }
 
-
 - (CBLQueryExpression*) orExpression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
@@ -324,9 +277,7 @@
                                                          type: CBLOrCompundExpType];
 }
 
-
 #pragma mark - Aggregate operations:
-
 
 - (CBLQueryExpression*) between: (CBLQueryExpression*)expression1 and: (CBLQueryExpression*)expression2 {
     CBLAssertNotNil(expression1);
@@ -339,9 +290,7 @@
                                                           type: CBLBetweenBinaryExpType];
 }
 
-
 #pragma mark - Collection operations:
-
 
 - (CBLQueryExpression*) in: (NSArray<CBLQueryExpression*>*)expressions {
     CBLAssertNotNil(expressions);
@@ -353,9 +302,7 @@
                                                           type: CBLInBinaryExpType];
 }
 
-
 #pragma mark - Collation:
-
 
 - (CBLQueryExpression*) collate: (CBLQueryCollation*)collation {
     CBLAssertNotNil(collation);
@@ -363,25 +310,20 @@
     return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
 }
 
-
 #pragma mark - Internal 
-
 
 - (instancetype) initWithNone {
     return [super init];
 }
-
 
 - (NSString*) description {
     NSString* desc = [CBLJSON stringWithJSONObject: [self asJSON] options: 0 error: nil];
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
-
 - (id) asJSON {
     // Subclass needs to implement this method:
     return [NSNull null];
 }
-
 
 @end

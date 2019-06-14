@@ -22,11 +22,15 @@ import MultipeerConnectivity
 import CouchbaseLiteSwift
 
 protocol MultipeerConnectionDelegate: class {
+    
     func connectionDidOpen(_ connection: MessageEndpointConnection)
+    
     func connectionDidClose(_ connection: MessageEndpointConnection)
+    
 }
 
 class MultipeerConnection: MessageEndpointConnection {
+    
     let session: MCSession
     
     let peerID: MCPeerID
@@ -66,11 +70,13 @@ class MultipeerConnection: MessageEndpointConnection {
             completion(false, MessagingError(error: error, isRecoverable: false))
         }
     }
+    
 }
 
 class MessageEndpointTest: CBLTestCase, MCNearbyServiceBrowserDelegate,
 MCNearbyServiceAdvertiserDelegate, MCSessionDelegate, MessageEndpointDelegate,
 MultipeerConnectionDelegate {
+    
     var otherDB: Database!
     
     var clientPeer: MCPeerID?
@@ -399,4 +405,5 @@ MultipeerConnectionDelegate {
         let savedDoc2 = self.db.document(withID: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
+    
 }

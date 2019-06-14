@@ -23,21 +23,17 @@
 
 @implementation CBLQueryDataSource
 
-
 @synthesize source=_source, alias=_alias;
 
-
-- (instancetype) initWithDataSource:(id)source as:(nullable NSString*)alias {
+- (instancetype) initWithDataSource: (id)source as: (nullable NSString*)alias {
     _source = source;
     _alias = alias;
     return [super init];
 }
 
-
 - (id) asJSON {
     return _alias ?  @{@"AS": _alias} : @{ };
 }
-
 
 - (nullable NSString*) columnName {
     if (_alias)
@@ -50,19 +46,16 @@
     return nil;
 }
 
-
 + (instancetype) database: (CBLDatabase*)database {
     CBLAssertNotNil(database);
     
     return [CBLQueryDataSource database: database as: nil];
 }
 
-
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
     CBLAssertNotNil(database);
     
     return [[CBLQueryDataSource alloc] initWithDataSource: database as: alias];
 }
-
 
 @end

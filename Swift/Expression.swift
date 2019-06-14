@@ -195,7 +195,6 @@ public protocol ExpressionProtocol {
     
 }
 
-
 /// Query expression factory.
 public final class Expression {
     
@@ -591,14 +590,17 @@ public final class Expression {
     static func toImpl(expressions: [ExpressionProtocol]) -> [CBLQueryExpression] {
         return expressions.map() { $0.toImpl() }
     }
+    
 }
 
 extension ExpressionProtocol {
+    
     func toImpl() -> CBLQueryExpression {
         if let o = self as? QueryExpression {
             return o.toImpl()
         }
         fatalError("Unsupported expression")
     }
+    
 }
 

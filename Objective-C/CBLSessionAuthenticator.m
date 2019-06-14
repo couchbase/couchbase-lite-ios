@@ -27,11 +27,9 @@
 
 @synthesize sessionID=_sessionID, cookieName=_cookieName;
 
-
 - (instancetype) initWithSessionID: (NSString*)sessionID {
     return [self initWithSessionID: sessionID cookieName: nil];
 }
-
 
 - (instancetype) initWithSessionID: (NSString*)sessionID
                         cookieName: (nullable NSString*)cookieName
@@ -45,7 +43,6 @@
     }
     return self;
 }
-
 
 - (void) authenticate: (NSMutableDictionary*)options {
     NSString* current = options[@kC4ReplicatorOptionCookies];

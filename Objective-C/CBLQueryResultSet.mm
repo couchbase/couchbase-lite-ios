@@ -32,7 +32,6 @@
 
 using namespace fleece;
 
-
 namespace cbl {
     // This class is responsible for holding the Fleece data in memory, while objects are using it.
     // The data happens to belong to the C4QueryEnumerator.
@@ -54,11 +53,9 @@ namespace cbl {
     };
 }
 
-
 @interface CBLQueryResultSet()
 @property (atomic) BOOL isAllEnumerated;
 @end
-
 
 @implementation CBLQueryResultSet {
     CBLQuery* _query;
@@ -70,7 +67,6 @@ namespace cbl {
 
 @synthesize c4Query=_c4Query, columnNames=_columnNames;
 @synthesize isAllEnumerated=_isAllEnumerated;
-
 
 - (instancetype) initWithQuery: (CBLQuery*)query
                        c4Query: (C4Query*)c4Query
@@ -91,12 +87,10 @@ namespace cbl {
     return self;
 }
 
-
 - (void) dealloc {
     if (_context)
         _context->release();
 }
-
 
 - (id) nextObject {
     CBL_LOCK(self.database) {
@@ -116,7 +110,6 @@ namespace cbl {
     }
 }
 
-
 - (NSArray<CBLQueryResult*>*) allResults {
     NSMutableArray* results = [NSMutableArray array];
     CBLQueryResult* r;
@@ -127,15 +120,11 @@ namespace cbl {
     // return [self allObjects];
 }
 
-
 #pragma mark - Internal
-
 
 - (CBLDatabase*) database {
     return _query.database;
 }
-
-
 
 - (id) currentObject {
     return [[CBLQueryResult alloc] initWithResultSet: self
@@ -158,7 +147,6 @@ namespace cbl {
     }
 }
 
-
 // TODO: Should we make this public? How else can the app find the error?
 - (NSError*) error {
     if (_error.code == 0)
@@ -167,7 +155,6 @@ namespace cbl {
     convertError(_error, &error);
     return error;
 }
-
 
 - (CBLQueryResultSet*) refresh: (NSError**)outError {
     if (outError)
@@ -190,6 +177,5 @@ namespace cbl {
                                          enumerator: newEnum
                                         columnNames: _columnNames];
 }
-
 
 @end

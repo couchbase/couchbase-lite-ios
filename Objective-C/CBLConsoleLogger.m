@@ -34,14 +34,12 @@
     return self;
 }
 
-
 - (void) setLevel: (CBLLogLevel)level {
     _level = level;
     [[CBLLog sharedInstance] synchronizeCallbackLogLevel];
 }
 
-
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString *)message {
+- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
     if (self.level > level || (self.domains & domain) == 0)
         return;
     

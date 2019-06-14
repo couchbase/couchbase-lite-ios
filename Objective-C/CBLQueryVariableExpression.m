@@ -33,7 +33,6 @@
     return self;
 }
 
-
 - (id) asJSON {
     return @[[NSString stringWithFormat:@"?%@", _name]];
 }

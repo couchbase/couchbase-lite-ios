@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// Couchbase Lite document. The Document is immutable.
 public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     
@@ -27,7 +26,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public var id: String {
         return _impl.id
     }
-    
     
     /// Sequence number of the document in the database.
     /// This indicates how recently the document has been changed: every time any document is updated,
@@ -38,9 +36,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.sequence
     }
     
-    
     // MARK: Edit
-    
     
     /// Returns a mutable copy of the document.
     ///
@@ -48,22 +44,18 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func toMutable() -> MutableDocument {
         return MutableDocument(_impl.toMutable())
     }
-    
 
     // MARK: DictionaryProtocol
 
-    
     /// The number of properties in the document.
     public var count: Int {
         return Int(_impl.count)
     }
 
-
     /// An array containing all keys, or an empty array if the document has no properties.
     public var keys: Array<String> {
         return _impl.keys
     }
-    
     
     /// Gets a property's value. The value types are Blob, ArrayObject,
     /// DictionaryObject, Number, or String based on the underlying data type; or nil
@@ -75,7 +67,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return DataConverter.convertGETValue(_impl.value(forKey: key))
     }
 
-    
     ///  Gets a property's value as a string.
     ///  Returns nil if the property doesn't exist, or its value is not a string.
     ///
@@ -85,7 +76,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.string(forKey: key)
     }
     
-    
     /// Get a property's value as an NSNumber object.
     ///
     /// - Parameter key: The key.
@@ -93,7 +83,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func number(forKey key: String) -> NSNumber? {
         return _impl.number(forKey: key)
     }
-    
     
     /// Gets a property's value as an int value.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
@@ -105,7 +94,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.integer(forKey: key)
     }
     
-    
     /// Gets a property's value as an int64 value.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
     /// Returns 0 if the property doesn't exist or does not have a numeric value.
@@ -115,7 +103,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func int64(forKey key: String) -> Int64 {
         return _impl.longLong(forKey: key)
     }
-    
     
     /// Gets a property's value as a float value.
     /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
@@ -127,7 +114,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.float(forKey: key)
     }
     
-    
     /// Gets a property's value as a double value.
     /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
     /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
@@ -137,7 +123,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func double(forKey key: String) -> Double {
         return _impl.double(forKey: key)
     }
-    
     
     // TODO: Review the behavior of getting boolean value
     /// Gets a property's value as a boolean value.
@@ -149,7 +134,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.boolean(forKey: key)
     }
     
-    
     /// Get a property's value as a Blob object.
     /// Returns nil if the property doesn't exist, or its value is not a blob.
     ///
@@ -158,7 +142,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func blob(forKey key: String) -> Blob? {
         return value(forKey: key) as? Blob
     }
-    
     
     /// Gets a property's value as a Date value.
     /// JSON does not directly support dates, so the actual property value must be a string, which is
@@ -173,7 +156,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.date(forKey: key)
     }
     
-
     /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
     ///
@@ -182,7 +164,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func array(forKey key: String) -> ArrayObject? {
         return value(forKey: key) as? ArrayObject
     }
-
 
     /// Get a property's value as a DictionaryObject, which is a mapping object of
     /// a dictionary value.
@@ -194,7 +175,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return value(forKey: key) as? DictionaryObject
     }
 
-
     /// Tests whether a property exists or not.
     /// This can be less expensive than value(forKey:), because it does not have to allocate an
     /// object for the property value.
@@ -204,11 +184,9 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     public func contains(key: String) -> Bool {
         return _impl.containsValue(forKey: key)
     }
-
     
     // MARK: Data
     
-
     /// Gets content of the current object as a Dictionary. The value types of
     /// the values contained in the returned Dictionary object are Array, Blob,
     /// Dictionary, Number types, NSNull, and String.
@@ -230,9 +208,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return dict
     }
 
-
     // MARK: Sequence
-
 
     /// Gets  an iterator over the keys of the document's properties
     ///
@@ -241,9 +217,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.keys.makeIterator();
     }
 
-
     // MARK: Subscript
-
 
     /// Subscript access to a Fragment object by key.
     ///
@@ -252,15 +226,12 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return Fragment(_impl[key])
     }
     
-    
     // MARK: Equality
-    
     
     /// Equal to operator for comparing two Document objects.
     public static func == (doc1: Document, doc2: Document) -> Bool {
         return doc1._impl == doc2._impl
     }
-    
     
     // MARK: Hashable
     
@@ -268,17 +239,13 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.hash;
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLDocument) {
         _impl = impl
     }
     
-    
     // MARK: Private
-    
     
     let _impl: CBLDocument
     

@@ -19,12 +19,10 @@
 
 import Foundation
 
-
 /// Function factory.
 public final class Function {
     
     // MARK: Aggregation
-    
     
     /// Create an AVG(expr) function expression that returns the average of all the number values
     /// in the group of the values expressed by the given expression.
@@ -35,7 +33,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.avg(expression.toImpl()))
     }
     
-    
     /// Create a COUNT(expr) function expression that returns the count of all values
     /// in the group of the values expressed by the given expression.
     ///
@@ -44,7 +41,6 @@ public final class Function {
     public static func count(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.count(expression.toImpl()))
     }
-    
     
     /// Create a MIN(expr) function expression that returns the minimum value
     /// in the group of the values expressed by the given expression.
@@ -55,7 +51,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.min(expression.toImpl()))
     }
     
-    
     /// Create a MAX(expr) function expression that returns the maximum value
     /// in the group of the values expressed by the given expression.
     ///
@@ -64,7 +59,6 @@ public final class Function {
     public static func max(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.max(expression.toImpl()))
     }
-    
     
     /// Create a SUM(expr) function expression that return the sum of all number values
     /// in the group of the values expressed by the given expression.
@@ -75,9 +69,7 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.sum(expression.toImpl()))
     }
     
-    
     // MARK: Mathematics
-    
     
     /// Creates an ABS(expr) function that returns the absolute value of the given numeric
     /// expression.
@@ -88,7 +80,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.abs(expression.toImpl()))
     }
     
-    
     /// Creates an ACOS(expr) function that returns the inverse cosine of the given numeric
     /// expression.
     ///
@@ -97,7 +88,6 @@ public final class Function {
     public static func acos(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.acos(expression.toImpl()))
     }
-    
     
     /// Creates an ASIN(expr) function that returns the inverse sin of the given numeric
     /// expression.
@@ -108,7 +98,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.asin(expression.toImpl()))
     }
     
-    
     /// Creates an ATAN(expr) function that returns the inverse tangent of the numeric
     /// expression.
     ///
@@ -117,7 +106,6 @@ public final class Function {
     public static func atan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.atan(expression.toImpl()))
     }
-    
     
     /// Creates an ATAN2(X, Y) function that returns the arctangent of y/x.
     ///
@@ -129,7 +117,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.atan2(x.toImpl(), y: y.toImpl()))
     }
     
-    
     /// Creates a CEIL(expr) function that returns the ceiling value of the given numeric
     /// expression
     ///
@@ -138,7 +125,6 @@ public final class Function {
     public static func ceil(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.ceil(expression.toImpl()))
     }
-    
 
     /// Creates a COS(expr) function that returns the cosine of the given numeric expression.
     ///
@@ -147,7 +133,6 @@ public final class Function {
     public static func cos(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.cos(expression.toImpl()))
     }
-    
     
     /// Creates a DEGREES(expr) function that returns the degrees value of the given radiants
     /// value expression.
@@ -158,14 +143,12 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.degrees(expression.toImpl()))
     }
 
-    
     /// Creates a E() function that return the value of the mathemetical constant 'e'.
     ///
     /// - Returns: The E() constant function.
     public static func e() -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.e())
     }
-    
     
     /// Creates a EXP(expr) function that returns the value of 'e' power by the given numeric
     /// expression.
@@ -176,7 +159,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.exp(expression.toImpl()))
     }
     
-    
     /// Creates a FLOOR(expr) function that returns the floor value of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
@@ -184,7 +166,6 @@ public final class Function {
     public static func floor(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.floor(expression.toImpl()))
     }
-    
     
     /// Creates a LN(expr) function that returns the natural log of the given numeric expression.
     ///
@@ -194,7 +175,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.ln(expression.toImpl()))
     }
     
-    
     /// Creates a LOG(expr) function that returns the base 10 log of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
@@ -202,7 +182,6 @@ public final class Function {
     public static func log(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.log(expression.toImpl()))
     }
-
     
     /// Creates a PI() function that returns the mathemetical constant Pi.
     ///
@@ -210,7 +189,6 @@ public final class Function {
     public static func pi() -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.pi())
     }
-
     
     /// Creates a POWER(base, exponent) function that returns the value of the given base
     /// expression power the given exponent expression.
@@ -223,7 +201,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.power(base.toImpl(), exponent: exponent.toImpl()))
     }
     
-    
     /// Creates a RADIANS(expr) function that returns the radians value of the given degrees
     /// value expression.
     ///
@@ -232,7 +209,6 @@ public final class Function {
     public static func radians(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.radians(expression.toImpl()))
     }
-    
     
     /// Creates a ROUND(expr) function that returns the rounded value of the given numeric
     /// expression.
@@ -243,7 +219,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.round(expression.toImpl()))
     }
 
-    
     /// Creates a ROUND(expr, digits) function that returns the rounded value to the given
     /// number of digits of the given numeric expression.
     ///
@@ -255,7 +230,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.round(expression.toImpl(), digits: digits.toImpl()))
     }
     
-    
     /// Creates a SIGN(expr) function that returns the sign (1: positive, -1: negative, 0: zero)
     /// of the given numeric expression.
     ///
@@ -265,7 +239,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.sign(expression.toImpl()))
     }
     
-    
     /// Creates a SIN(expr) function that returns the sin of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
@@ -273,7 +246,6 @@ public final class Function {
     public static func sin(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.sin(expression.toImpl()))
     }
-    
     
     /// Creates a SQRT(expr) function that returns the square root of the given numeric expression.
     ///
@@ -283,7 +255,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.sqrt(expression.toImpl()))
     }
 
-    
     /// Creates a TAN(expr) function that returns the tangent of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
@@ -291,7 +262,6 @@ public final class Function {
     public static func tan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.tan(expression.toImpl()))
     }
-    
     
     /// Creates a TRUNC(expr) function that truncates all of the digits after the decimal place
     /// of the given numeric expression.
@@ -301,7 +271,6 @@ public final class Function {
     public static func trunc(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.trunc(expression.toImpl()))
     }
-    
     
     /// Creates a TRUNC(expr, digits) function that truncates the number of the digits after
     /// the decimal place of the given numeric expression.
@@ -314,9 +283,7 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.trunc(expression.toImpl(), digits: digits.toImpl()))
     }
     
-    
     // Mark: String
-    
     
     /// Creates a CONTAINS(expr, substr) function that evaluates whether the given string
     /// expression conatins the given substring expression or not.
@@ -329,7 +296,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.contains(expression.toImpl(), substring: substring.toImpl()))
     }
     
-    
     /// Creates a LENGTH(expr) function that returns the length of the given string expression.
     ///
     /// - Parameter expression: The string expression.
@@ -337,7 +303,6 @@ public final class Function {
     public static func length(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.length(expression.toImpl()))
     }
-    
     
     /// Creates a LOWER(expr) function that returns the lowercase string of the given string
     /// expression.
@@ -348,7 +313,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.lower(expression.toImpl()))
     }
     
-    
     /// Creates a LTRIM(expr) function that removes the whitespace from the beginning of the
     /// given string expression.
     ///
@@ -357,7 +321,6 @@ public final class Function {
     public static func ltrim(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.ltrim(expression.toImpl()))
     }
-    
     
     /// Creates a RTRIM(expr) function that removes the whitespace from the end of the
     /// given string expression.
@@ -368,7 +331,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.rtrim(expression.toImpl()))
     }
     
-    
     /// Creates a TRIM(expr) function that removes the whitespace from the beginning and '
     /// the end of the given string expression.
     ///
@@ -378,7 +340,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.trim(expression.toImpl()))
     }
     
-    
     /// Creates a UPPER(expr) function that returns the uppercase string of the given string
     /// expression.
     ///
@@ -387,7 +348,6 @@ public final class Function {
     public static func upper(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.upper(expression.toImpl()))
     }
-    
     
     /// Creates a STR_TO_MILLIS(expr) function that returns the number of milliseconds since
     /// the unix epoch of the given ISO 8601 date string expression.
@@ -411,7 +371,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.string(toMillis: expression.toImpl()))
     }
     
-    
     /// Creates a STR_TO_UTC(expr) function that returns the ISO 8601 UTC datetime string
     /// of the given ISO 8601 date string expression.
     ///
@@ -434,7 +393,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.string(toUTC: expression.toImpl()))
     }
     
-    
     /// Creates a MILLIS_TO_STR(expr) function that returns a ISO 8601 date time string in device
     /// local timezone of the given number of milliseconds since the unix epoch expression.
     ///
@@ -445,7 +403,6 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.millis(toString: expression.toImpl()))
     }
     
-    
     /// Creates a MILLIS_TO_UTC(expr) function that returns the UTC ISO 8601 date time string
     /// of the given number of milliseconds since the unix epoch expression.
     ///
@@ -455,4 +412,5 @@ public final class Function {
     public static func millisToUTC(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.millis(toUTC: expression.toImpl()))
     }
+    
 }

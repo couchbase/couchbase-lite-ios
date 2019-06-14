@@ -31,13 +31,11 @@
     return [[self class] expression: [CBLQueryExpression property: name]];
 }
 
-
 + (CBLQuerySortOrder *) expression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
     return [[CBLQuerySortOrder alloc] initWithExpression: expression];
 }
-
 
 #pragma mark - Internal
 
@@ -49,11 +47,9 @@
     return self;
 }
 
-
 - (id) asJSON {
     return [self.expression asJSON];
 }
-
 
 @end
 
@@ -61,7 +57,6 @@
 @implementation CBLQuerySortOrder
 
 @synthesize isAscending=_isAscending;
-
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression {
     self = [super initWithExpression: expression];
@@ -71,23 +66,19 @@
     return self;
 }
 
-
 - (CBLQueryOrdering*) ascending {
     _isAscending = YES;
     return self;
 }
-
 
 - (CBLQueryOrdering*) descending {
     _isAscending = NO;
     return self;
 }
 
-
 - (id) asJSON {
     id json = _isAscending ? [super asJSON] : @[@"DESC", [super asJSON]];
     return json;
 }
-
 
 @end

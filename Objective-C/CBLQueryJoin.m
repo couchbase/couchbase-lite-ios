@@ -32,7 +32,6 @@
     CBLQueryExpression* _on;
 }
 
-
 + (instancetype) join: (CBLQueryDataSource*)dataSource
                    on: (nullable CBLQueryExpression*)expression
 {
@@ -40,7 +39,6 @@
     
     return [[self alloc] initWithType: kCBLInnerJoin dataSource: dataSource on: expression];
 }
-
 
 + (instancetype) leftJoin: (CBLQueryDataSource*)dataSource
                        on: (nullable CBLQueryExpression*)expression
@@ -50,7 +48,6 @@
     return [[self alloc] initWithType: kCBLLeftOuterJoin dataSource: dataSource on: expression];
 }
 
-
 + (instancetype) leftOuterJoin: (CBLQueryDataSource*)dataSource
                             on: (nullable CBLQueryExpression*)expression
 {
@@ -58,7 +55,6 @@
     
     return [[self alloc] initWithType: kCBLLeftOuterJoin dataSource: dataSource on: expression];
 }
-
 
 + (instancetype) innerJoin: (CBLQueryDataSource*)dataSource
                         on: (nullable CBLQueryExpression*)expression
@@ -68,16 +64,13 @@
     return [[self alloc] initWithType: kCBLInnerJoin dataSource: dataSource on: expression];
 }
 
-
 + (instancetype) crossJoin: (CBLQueryDataSource*)dataSource {
     CBLAssertNotNil(dataSource);
     
     return [[self alloc] initWithType: kCBLCrossJoin dataSource: dataSource on: nil];
 }
 
-
 #pragma mark - Internal
-
 
 - (instancetype) initWithType: (NSString*)type
                    dataSource: (CBLQueryDataSource*)dataSource
@@ -92,7 +85,6 @@
     return self;
 }
 
-
 - (id) asJSON {
     NSMutableDictionary* json = [NSMutableDictionary new];
     json[@"JOIN"] = _type;
@@ -100,6 +92,5 @@
     [json addEntriesFromDictionary: [_dataSource asJSON]];
     return json;
 }
-
 
 @end

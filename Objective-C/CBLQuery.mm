@@ -32,7 +32,6 @@
 
 using namespace fleece;
 
-
 @implementation CBLQuery
 {
     NSData* _json;
@@ -47,7 +46,6 @@ using namespace fleece;
 @synthesize JSONRepresentation=_json;
 @synthesize parameters=_parameters;
 
-
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                JSONRepresentation: (NSData*)json
 {
@@ -60,7 +58,6 @@ using namespace fleece;
     }
     return self;
 }
-
 
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
                        distinct: (BOOL)distinct
@@ -149,7 +146,6 @@ using namespace fleece;
     return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
 }
 
-
 - (void) dealloc {
     [_liveQuery stop];
     
@@ -158,15 +154,12 @@ using namespace fleece;
     }
 }
 
-
 - (NSString*) description {
     NSString* desc = [[NSString alloc] initWithData: _json encoding: NSUTF8StringEncoding];
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
-
 #pragma mark - Parameters
-
 
 - (CBLQueryParameters*) parameters {
     CBL_LOCK(self) {
@@ -174,8 +167,7 @@ using namespace fleece;
     }
 }
 
-
-- (void) setParameters: (CBLQueryParameters *)parameters {
+- (void) setParameters: (CBLQueryParameters*)parameters {
     CBL_LOCK(self) {
         if (parameters)
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
@@ -185,7 +177,6 @@ using namespace fleece;
     }
 }
 
-
 - (NSString*) explain: (NSError**)outError {
     if (![self check: outError])
         return nil;
@@ -194,7 +185,6 @@ using namespace fleece;
         return sliceResult2string(c4query_explain(_c4Query));
     }
 }
-
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
     if (![self check: outError])
@@ -226,11 +216,9 @@ using namespace fleece;
                                         columnNames: _columnNames];
 }
 
-
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLQueryChange*))listener {
     return [self addChangeListenerWithQueue: nil listener: listener];
 }
-
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
@@ -244,7 +232,6 @@ using namespace fleece;
     }
 }
 
-
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBLAssertNotNil(token);
     
@@ -253,11 +240,9 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Internal
 
-
-- (instancetype) copyWithZone:(NSZone *)zone {
+- (instancetype) copyWithZone: (NSZone*)zone {
     CBL_LOCK(self) {
         CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
         q.parameters = _parameters;
@@ -265,9 +250,7 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Private
-
 
 - (BOOL) check: (NSError**)outError {
     CBL_LOCK(self) {
@@ -305,6 +288,5 @@ using namespace fleece;
         return YES;
     }
 }
-
 
 @end

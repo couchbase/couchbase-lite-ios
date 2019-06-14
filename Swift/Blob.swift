@@ -36,7 +36,6 @@ public final class Blob: Equatable, Hashable {
         self.init(CBLBlob(contentType: contentType, data: data))
     }
     
-    
     /// Initializes a Blob with the given stream of data.
     ///
     /// - Parameters:
@@ -45,7 +44,6 @@ public final class Blob: Equatable, Hashable {
     public convenience init(contentType: String, contentStream: InputStream) {
         self.init(CBLBlob(contentType: contentType, contentStream: contentStream))
     }
-    
     
     /// Initializes a Blob with the contents of a file.
     ///
@@ -63,53 +61,44 @@ public final class Blob: Equatable, Hashable {
         return _impl.content
     }
     
-    
     /// A stream of the content of a Blob.
     /// The caller is responsible for opening the stream, and closing it when finished.
     public var contentStream: InputStream? {
         return _impl.contentStream
     }
     
-    
     /// The type of content this Blob represents; by convention this is a MIME type.
     public var contentType: String? {
         return _impl.contentType
     }
-    
     
     /// The binary length of this Blob.
     public var length: UInt64 {
         return _impl.length
     }
     
-    
     /// The cryptographic digest of this Blob's contents, which uniquely identifies it.
     public var digest: String? {
         return _impl.digest
     }
-    
     
     /// The metadata associated with this Blob
     public var properties: [String: Any] {
         return _impl.properties
     }
     
-    
     // MARK: Equality
-    
     
     /// Equal to operator for comparing two Blob objects.
     public static func == (blob1: Blob, blob2: Blob) -> Bool {
         return blob1._impl == blob2._impl
     }
     
-    
     // MARK: Hashable
     
     public var hashValue: Int {
         return _impl.hash;
     }
-    
     
     // MARK: Internal
     

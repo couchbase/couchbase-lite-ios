@@ -49,7 +49,6 @@ protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
     
     @discardableResult func setDictionary(_ value: DictionaryObject?, at index: Int) -> Self
     
-    
     // MARK: Type Appenders
     
     @discardableResult func addValue(_ value: Any?) -> Self
@@ -122,12 +121,10 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     
     // MARK: Initializers
     
-    
     /// Initialize a new empty MutableArrayObject.
     public init() {
         super.init(CBLMutableArray())
     }
-    
     
     /// Initialize a new MutableArrayObject object with the data. Allowed
     /// value types are Array, ArrayObject, Blob, Date, Dictionary,
@@ -140,9 +137,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         setData(data)
     }
     
-    
     // MARK: Type Setters
-    
     
     /// Sets a value at the given index. A nil value will be converted to an NSNull.
     ///
@@ -155,7 +150,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return self
     }
     
-    
     /// Sets a String object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -165,7 +159,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func setString(_ value: String?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
-    
     
     /// Sets a Number value at the given index.
     ///
@@ -177,7 +170,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index);
     }
     
-    
     /// Sets an int value at the given index.
     ///
     /// - Parameters:
@@ -187,7 +179,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func setInt(_ value: Int, at index: Int) -> Self {
         return setValue(value, at: index)
     }
-    
     
     /// Sets an int64 value at the given index.
     ///
@@ -199,7 +190,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index)
     }
     
-    
     /// Sets a float value at the given index.
     ///
     /// - Parameters:
@@ -209,7 +199,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func setFloat(_ value: Float, at index: Int) -> Self {
         return setValue(value, at: index)
     }
-    
     
     /// Sets a double value at the given index.
     ///
@@ -221,7 +210,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index)
     }
     
-    
     /// Sets a boolean value at the given index.
     ///
     /// - Parameters:
@@ -231,7 +219,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func setBoolean(_ value: Bool, at index: Int) -> Self {
         return setValue(value, at: index)
     }
-    
     
     /// Sets a Date object at the given index. A nil value will be converted to an NSNull.
     ///
@@ -243,7 +230,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index)
     }
     
-    
     /// Sets a Blob object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -253,7 +239,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func setBlob(_ value: Blob?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
-    
     
     /// Sets an ArrayObject object at the given index. A nil value will be converted to an NSNull.
     ///
@@ -265,7 +250,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index)
     }
     
-    
     /// Sets a DictionaryObject object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -276,9 +260,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return setValue(value, at: index)
     }
     
-    
     // MARK: Type Appenders
-    
     
     /// Adds a value to the end of the array. A nil value will be converted to an NSNull.
     ///
@@ -289,7 +271,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return self
     }
     
-    
     /// Adds a String object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The String object.
@@ -297,7 +278,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func addString(_ value: String?) -> Self {
         return addValue(value)
     }
-    
     
     /// Adds a Number value to the end of the array.
     ///
@@ -307,7 +287,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     /// Adds an int value to the end of the array.
     ///
     /// - Parameter value: The int value.
@@ -315,7 +294,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func addInt(_ value: Int) -> Self {
         return addValue(value)
     }
-    
     
     /// Adds an int64 value to the end of the array.
     ///
@@ -325,7 +303,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     /// Adds a float value to the end of the array.
     ///
     /// - Parameter value: The double value.
@@ -333,7 +310,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func addFloat(_ value: Float) -> Self {
         return addValue(value)
     }
-    
     
     /// Adds a double value to the end of the array.
     ///
@@ -343,7 +319,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     /// Adds a boolean value to the end of the array.
     ///
     /// - Parameter value: The boolean value.
@@ -352,7 +327,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     /// Adds a Date object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The Date object.
@@ -360,7 +334,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func addDate(_ value: Date?) -> Self {
         return addValue(value)
     }
-
     
     /// Adds a Blob object to the end of the array. A nil value will be converted to an NSNull.
     ///
@@ -378,7 +351,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     /// Adds a Dictionary object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The Dictionary object.
@@ -387,9 +359,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return addValue(value)
     }
     
-    
     // MARK: Type Inserters
-    
     
     /// Inserts a value at the given index. A nil value will be converted to an NSNull.
     ///
@@ -402,7 +372,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return self
     }
     
-    
     /// Inserts a String object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -412,7 +381,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func insertString(_ value: String?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
-    
     
     /// Inserts a Number value at the given index. A nil value will be converted to an NSNull.
     ///
@@ -424,7 +392,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     /// Inserts an int value at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -434,7 +401,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func insertInt(_ value: Int, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
-    
     
     /// Inserts an int64 value at the given index. A nil value will be converted to an NSNull.
     ///
@@ -446,7 +412,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     /// Inserts a float value at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -456,7 +421,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func insertFloat(_ value: Float, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
-    
     
     /// Inserts a double value at the given index. A nil value will be converted to an NSNull.
     ///
@@ -468,7 +432,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     /// Inserts a boolean value at the given index.
     ///
     /// - Parameters:
@@ -478,7 +441,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func insertBoolean(_ value: Bool, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
-    
     
     /// Inserts a Date object at the given index. A nil value will be converted to an NSNull.
     ///
@@ -490,7 +452,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     /// Inserts a Blob object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -500,7 +461,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     @discardableResult public func insertBlob(_ value: Blob?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
-    
     
     /// Inserts an ArrayObject at the given index. A nil value will be converted to an NSNull.
     ///
@@ -512,7 +472,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     /// Inserts a Dictionary object at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -523,9 +482,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return insertValue(value, at: index)
     }
     
-    
     // MARK: Removing Value
-    
     
     /// Removes the object at the given index.
     ///
@@ -536,9 +493,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return self
     }
     
-    
     // MARK: Data
-    
 
     /// Set data for the array. Allowed value types are Array, ArrayObject,
     /// Blob, Date, Dictionary, DictionaryObject, NSNull, Number types, and String.
@@ -551,9 +506,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return self
     }
     
-    
     // MARK: Getting ArrayObject and DictionaryObject
-    
     
     /// Gets an MutableArrayObject at the given index. Returns nil if the value is not an array.
     ///
@@ -563,7 +516,6 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return value(at: index) as? MutableArrayObject
     }
     
-    
     /// Gets a MutableDictionaryObject at the given index. Returns nil if the value is not a dictionary.
     ///
     /// - Parameter index: The index. This value must not exceed the bounds of the array.
@@ -572,9 +524,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return value(at: index) as? MutableDictionaryObject
     }
     
-    
     // MARK: ArrayFragment
-    
     
     /// Subscripting access to a MutableFragment object that represents the value at the given index.
     ///
@@ -585,17 +535,13 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return MutableFragment(arrayImpl[UInt(index)])
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLMutableArray) {
         super.init(impl)
     }
     
-    
     // MARK: Private
-    
     
     private var arrayImpl: CBLMutableArray {
         return _impl as! CBLMutableArray

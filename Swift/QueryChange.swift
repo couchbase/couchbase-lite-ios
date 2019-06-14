@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// QueryChange contains the information about the query result changes reported
 /// by a query object.
 public struct QueryChange {

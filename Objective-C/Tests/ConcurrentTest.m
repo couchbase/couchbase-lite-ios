@@ -28,7 +28,6 @@
 
 @implementation ConcurrentTest
 
-
 - (void) setProperties: (id <CBLMutableDictionary>)dictionary
                 custom: (nullable NSDictionary*)custom
 {
@@ -58,13 +57,11 @@
     }
 }
 
-
 - (CBLMutableDocument*) createDoc {
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     [self setProperties: doc custom: nil];
     return doc;
 }
-
 
 - (NSArray*) createAndSaveDocs: (NSUInteger)nDocs  error: (NSError**)error {
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: nDocs];
@@ -77,7 +74,6 @@
     return docs;
 }
 
-
 - (BOOL) updateDoc: (CBLMutableDocument*)doc
             custom: (nullable NSDictionary*)custom
              error: (NSError**)error
@@ -85,7 +81,6 @@
     [self setProperties: doc custom: custom];
     return [self.db saveDocument: doc error: error];
 }
-
 
 - (BOOL) updateDocIDs: (NSArray*)docIds
                rounds: (NSUInteger)rounds
@@ -101,7 +96,6 @@
     return YES;
 }
 
-
 - (void) verifyWhere: (nullable CBLQueryExpression*)expr
                 test: (void (^)(uint64_t n, CBLQueryResult *row))block {
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
@@ -115,7 +109,6 @@
         block(++n, row);
     }
 }
-
 
 - (void) concurrentRuns: (NSUInteger)nRuns
           waitUntilDone: (BOOL)wait
@@ -141,9 +134,7 @@
     }
 }
 
-
 #pragma mark - Database
-
 
 - (void) testConcurrentCreateDocs {
     const NSUInteger kNDocs = 100;
@@ -157,7 +148,6 @@
     
     AssertEqual(self.db.count, kNDocs * kNConcurrents);
 }
-
 
 - (void) testConcurrentReadDocs {
     const NSUInteger kNDocs = 100;
@@ -182,7 +172,6 @@
     }];
 }
 
-
 // https://github.com/couchbase/couchbase-lite-ios/issues/1967
 - (void) testConcurrentReadForUpdatesDocs {
     const NSUInteger kNDocs = 100;
@@ -203,7 +192,6 @@
         }
     }];
 }
-
 
 // https://github.com/couchbase/couchbase-lite-ios/issues/1967
 - (void) testConcurrentUpdateSeperateDocInstances {
@@ -237,7 +225,6 @@
     AssertEqual(count, kNDocs);
 }
 
-
 - (void) testConcurrentDeleteDocs {
     const NSUInteger kNDocs = 5;
     const NSUInteger kNConcurrents = 5;
@@ -252,7 +239,6 @@
     
     AssertEqual(self.db.count, 0u);
 }
-
 
 - (void) testConcurrentInBatch {
     const NSUInteger kNDocs = 100;
@@ -269,7 +255,6 @@
     
     AssertEqual(self.db.count, kNDocs * kNConcurrents);
 }
-
 
 - (void) testConcurrentPurgeDocs {
     const NSUInteger kNDocs = 100;
@@ -288,7 +273,6 @@
     }];
     AssertEqual(self.db.count, 0u);
 }
-
 
 - (void) testConcurrentCompact {
     const NSUInteger kNDocs = 100;

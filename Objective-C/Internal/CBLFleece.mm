@@ -25,7 +25,6 @@
 #import "MDictIterator.hh"
 #import "c4Document+Fleece.h"
 
-
 @implementation NSObject (CBLFleece)
 - (fleece::MCollection<id>*) fl_collection {
     return nullptr;
@@ -122,7 +121,6 @@ namespace fleece {
     }
 }
 
-
 namespace cbl {
     using namespace fleece;
 
@@ -139,14 +137,12 @@ namespace cbl {
             return ![newValue isEqual: oldValue.asNative(&container)];
     }
 
-
     bool asBool(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
             return val.value().asBool();
         else
             return asBool(val.asNative(&container));
     }
-
 
     NSInteger asInteger(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
@@ -155,14 +151,12 @@ namespace cbl {
             return asInteger(val.asNative(&container));
     }
 
-
     long long asLongLong(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
             return val.value().asInt();
         else
             return asLongLong(val.asNative(&container));
     }
-
 
     float asFloat(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
@@ -171,12 +165,10 @@ namespace cbl {
             return asFloat(val.asNative(&container));
     }
 
-
     double asDouble(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
             return val.value().asDouble();
         else
             return asDouble(val.asNative(&container));
     }
-
 }

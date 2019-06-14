@@ -62,7 +62,6 @@ using namespace fleece;
     BOOL _shellMode;
 }
 
-
 @synthesize name=_name;
 @synthesize dispatchQueue=_dispatchQueue;
 @synthesize queryQueue=_queryQueue;
@@ -70,13 +69,11 @@ using namespace fleece;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 @synthesize liveQueries= _liveQueries;
 
-
 static const C4DatabaseConfig kDBConfig = {
     .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_SharedKeys),
     .storageEngine = kC4SQLiteStorageEngine,
     .versioning = kC4RevisionTrees,
 };
-
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
@@ -84,7 +81,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [db postDatabaseChanged];
     });
 }
-
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
@@ -95,12 +91,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
     return [self initWithName: name config: nil error: outError];
 }
-
 
 - (instancetype) initWithName: (NSString*)name
                        config: (nullable CBLDatabaseConfiguration*)config
@@ -129,7 +123,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return self;
 }
 
-
 /**
  Initialize the CBLDatabase with a give C4Database object in the shell mode. The life of the
  C4Database object will be managed by the caller. This is currently used for creating a
@@ -144,11 +137,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return self;
 }
 
-
 - (instancetype) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithName: _name config: _config error: nil];
 }
-
 
 - (void) dealloc {
     if (!_shellMode) {
@@ -157,11 +148,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
 }
-
 
 - (NSString*) path {
     CBL_LOCK(self) {
@@ -169,44 +158,35 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (uint64_t) count {
     CBL_LOCK(self) {
         return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
     }
 }
 
-
 - (CBLDatabaseConfiguration*) config {
     return _config;
 }
 
-
 #pragma mark - GET EXISTING DOCUMENT
-
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
     return [self documentWithID: documentID error: nil];
 }
 
-
 #pragma mark - SUBSCRIPTION
-
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
     return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
-
 #pragma mark - SAVE
 
-
-- (BOOL) saveDocument: (CBLMutableDocument *)document error:(NSError **)error {
+- (BOOL) saveDocument: (CBLMutableDocument*)document error:(NSError**)error {
     return [self saveDocument: document
            concurrencyControl: kCBLConcurrencyControlLastWriteWins
                         error: error];
 }
-
 
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
@@ -221,11 +201,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                         error: error];
 }
 
-
-- (BOOL) saveDocument: (CBLMutableDocument *)document
-      conflictHandler: (BOOL (^)(CBLMutableDocument *, CBLDocument * nullable))conflictHandler
-                error: (NSError **)error {
-    
+- (BOOL) saveDocument: (CBLMutableDocument*)document
+      conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
+                error: (NSError**)error
+{
     CBLAssertNotNil(document);
     CBLAssertNotNil(conflictHandler);
     
@@ -275,13 +254,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
     return [self deleteDocument: document
              concurrencyControl: kCBLConcurrencyControlLastWriteWins
                           error: error];
 }
-
 
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
@@ -295,7 +272,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                    asDeletion: YES
                         error: error];
 }
-
 
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
     CBLAssertNotNil(document);
@@ -316,7 +292,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return NO;
     }
 }
-
 
 - (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);
@@ -340,9 +315,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 #pragma mark - BATCH OPERATION
-
 
 - (BOOL) inBatch: (NSError**)outError usingBlock: (void (NS_NOESCAPE ^)())block {
     CBLAssertNotNil(block);
@@ -368,9 +341,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return YES;
 }
 
-
 #pragma mark - DATABASE MAINTENANCE
-
 
 - (BOOL) close: (NSError**)outError {
     CBL_LOCK(self) {
@@ -404,7 +375,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (BOOL) delete: (NSError**)outError {
     CBL_LOCK(self) {
         [self mustBeOpen];
@@ -434,7 +404,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (BOOL) compact: (NSError**)outError {
     CBL_LOCK(self) {
         [self mustBeOpen];
@@ -445,7 +414,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return YES;
     }
 }
-
 
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
@@ -459,7 +427,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return c4db_deleteAtPath(bPath, &err) || err.code==0 || convertError(err, outError);
 }
 
-
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory
 {
@@ -468,7 +435,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     return [[NSFileManager defaultManager] fileExistsAtPath: path];
 }
-
 
 + (BOOL) copyFromPath: (NSString*)path
            toDatabase: (NSString*)name
@@ -497,28 +463,22 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return YES;
 }
 
-
 #pragma mark - Logging
-
 
 + (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
     CBLWarn(Database, @"This method has been deprecated. "
             "Please use CBLDatabase.log.console instead of -setLogLevel:domain:.");
 }
 
-
 + (CBLLog*) log {
     return [CBLLog sharedInstance];
 }
 
-
 #pragma mark - DOCUMENT CHANGES
-
 
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener {
     return [self addChangeListenerWithQueue: nil listener: listener];
 }
-
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLDatabaseChange*))listener
@@ -532,13 +492,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
                                                 listener: (void (^)(CBLDocumentChange*))listener
 {
     return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
 }
-
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
                                                    queue: (nullable dispatch_queue_t)queue
@@ -554,7 +512,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBLAssertNotNil(token);
     
@@ -568,9 +525,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 #pragma mark - Index:
-
 
 - (NSArray<NSString*>*) indexes {
     CBL_LOCK(self) {
@@ -580,7 +535,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return FLValue_GetNSObject(doc.root(), nullptr);
     }
 }
-
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)outError {
     CBLAssertNotNil(index);
@@ -605,8 +559,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
-- (BOOL) deleteIndexForName:(NSString *)name error:(NSError **)outError {
+- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
     CBLAssertNotNil(name);
     
     CBL_LOCK(self) {
@@ -618,9 +571,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 #pragma mark - DOCUMENT EXPIRATION
-
 
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
@@ -640,7 +591,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
     CBLAssertNotNil(documentID);
     
@@ -654,9 +604,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 #pragma mark - INTERNAL
-
 
 - (void) mustBeOpen {
     if (_c4db == nullptr) {
@@ -664,7 +612,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                     format: @"Attempt to perform an operation on a closed database."];
     }
 }
-
 
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
     CBL_LOCK(self) {
@@ -679,9 +626,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-
 #pragma mark - PRIVATE
-
 
 - (BOOL) open: (NSError**)outError {
     if (_c4db)
@@ -711,20 +656,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return YES;
 }
 
-
 static NSString* defaultDirectory() {
     return [CBLDatabaseConfiguration defaultDirectory];
 }
 
-
-static NSString* databasePath(NSString* name, NSString* dir) {
+static NSString* databasePath(NSString *name, NSString *dir) {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
             stringByAppendingPathExtension: kDBExtension];
     return [dir stringByAppendingPathComponent: name];
 }
 
-
-static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
+static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
 {
     NSError* error;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
@@ -739,8 +681,7 @@ static BOOL setupDatabaseDirectory(NSString* dir, NSError** outError)
     return YES;
 }
 
-
-static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
+static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
     C4DatabaseConfig c4config = kDBConfig;
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
@@ -749,11 +690,9 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     return c4config;
 }
 
-
 - (BOOL) mustBeOpen: (NSError**)outError {
     return _c4db != nullptr || convertError({LiteCoreDomain, kC4ErrorNotOpen}, outError);
 }
-
 
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID
                                    error: (NSError**)outError
@@ -766,7 +705,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
                                                error: outError];
     }
 }
-
 
 // Must be called inside a lock
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
@@ -781,7 +719,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     return YES;
 }
 
-
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
@@ -793,7 +730,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener];
 }
 
-
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBL_LOCK(self) {
         if ([_dbChangeNotifier removeChangeListenerWithToken: token] == 0) {
@@ -803,7 +739,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         }
     }
 }
-
 
 - (void) postDatabaseChanged {
     CBL_LOCK(self) {
@@ -839,7 +774,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
-
 - (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue
@@ -860,7 +794,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     return token;
 }
 
-
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
     CBL_LOCK(self) {
         NSString* documentID = token.key;
@@ -872,7 +805,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
-
 - (void) freeC4Observer {
     c4dbobs_free(_dbObs);
     _dbObs = nullptr;
@@ -882,15 +814,12 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     _docChangeNotifiers = nil;
 }
 
-
 - (void) freeC4DB {
     c4db_free(_c4db);
     _c4db = nil;
 }
 
-
 #pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING
-
 
 - (BOOL) saveDocument: (CBLDocument*)document
      withBaseDocument: (nullable CBLDocument*)baseDoc
@@ -964,13 +893,12 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
-
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
 - (BOOL) saveDocument: (CBLDocument*)document
-                 into: (C4Document **)outDoc
+                 into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
            asDeletion: (BOOL)deletion
-                error: (NSError **)outError
+                error: (NSError**)outError
 {
     C4RevisionFlags revFlags = 0;
     if (deletion)
@@ -1004,7 +932,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
     return YES;
 }
-
 
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 
@@ -1164,7 +1091,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
 
 # pragma mark DOCUMENT EXPIRATION
 
-
 - (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
     [self cancelPreviousPerformRequestsForPurgingExpiredDocuments];
     
@@ -1183,7 +1109,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     }
 }
 
-
 - (void) purgeExpiredDocuments {
     dispatch_async(_dispatchQueue, ^{
         CBL_LOCK(self) {
@@ -1199,7 +1124,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     });
 }
 
-
 - (void) cancelPreviousPerformRequestsForPurgingExpiredDocuments {
     __weak CBLDatabase *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -1211,7 +1135,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
         }
     });
 }
-
 
 /** Check and show warning if file logging is not configured. */
 + (void) checkFileLogging: (BOOL)swift {

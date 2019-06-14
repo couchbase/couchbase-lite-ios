@@ -28,14 +28,12 @@
 #define kDatabaseDirName @"CouchbaseLite"
 #endif
 
-
 @implementation CBLTestCase
 {
     int _c4ObjectCount;
 }
 
 @synthesize db=_db;
-
 
 - (void) setUp {
     [super setUp];
@@ -51,7 +49,6 @@
     }
     [self openDB];
 }
-
 
 - (void) tearDown {
     if (_db) {
@@ -79,18 +76,15 @@
     [super tearDown];
 }
 
-
 - (NSString*) directory {
     return [NSTemporaryDirectory() stringByAppendingPathComponent: kDatabaseDirName];
 }
-
 
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     config.directory = self.directory;
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }
-
 
 - (void) openDB {
     Assert(!_db);
@@ -100,7 +94,6 @@
     AssertNotNil(_db);
 }
 
-
 - (void) reopenDB {
     NSError *error;
     Assert([_db close: &error], @"Close error: %@", error);
@@ -108,18 +101,15 @@
     [self openDB];
 }
 
-
 - (void) cleanDB {
     NSError *error;
     Assert([_db delete: &error], @"Delete error: %@", error);
     [self reopenDB];
 }
 
-
 - (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error {
     return [CBLDatabase deleteDatabase: name inDirectory:self.directory error: error];
 }
-
 
 - (void) deleteDatabase: (CBLDatabase*)database {
     NSError* error;
@@ -130,28 +120,23 @@
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
 
-
 - (void) closeDatabase: (CBLDatabase*)database{ 
     NSError* error;
     Assert([database close:&error]);
     AssertNil(error);
 }
 
-
 - (CBLMutableDocument*) createDocument {
     return [[CBLMutableDocument alloc] init];
 }
-
 
 - (CBLMutableDocument*) createDocument: (NSString*)documentID {
     return [[CBLMutableDocument alloc] initWithID: documentID];
 }
 
-
 - (CBLMutableDocument*) createDocument:(NSString *)documentID data:(NSDictionary *)data {
     return [[CBLMutableDocument alloc] initWithID: documentID data: data];
 }
-
 
 - (CBLMutableDocument*) generateDocumentWithID: (NSString*)documentID {
     CBLMutableDocument* doc = [self createDocument: documentID];
@@ -163,7 +148,6 @@
     return doc;
 }
 
-
 - (void) saveDocument: (CBLMutableDocument*)document {
     NSError* error;
     Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
@@ -174,7 +158,6 @@
     AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
 }
 
-
 - (void) saveDocument: (CBLMutableDocument*)document eval: (void(^)(CBLDocument*))block {
     NSError* error;
     block(document);
@@ -183,12 +166,10 @@
     block([_db documentWithID: document.id]);
 }
 
-
 - (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* res = [@"Support" stringByAppendingPathComponent: resourceName];
     return [[NSBundle bundleForClass: [self class]] URLForResource: res withExtension: type];
 }
-
 
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* res = [@"Support" stringByAppendingPathComponent: resourceName];
@@ -202,7 +183,6 @@
     return contents;
 }
 
-
 - (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSData* contents = [self dataFromResource: resourceName ofType: type];
     NSString* str = [[NSString alloc] initWithData: contents
@@ -210,7 +190,6 @@
     Assert(str);
     return str;
 }
-
 
 - (NSString*) randomStringWithLength: (NSUInteger)length {
     static NSString *chars = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789";
@@ -221,7 +200,6 @@
     }
     return s;
 }
-
 
 - (void) loadJSONResource: (NSString*)resourceName {
     @autoreleasepool {
@@ -251,12 +229,10 @@
     }
 }
 
-
 - (CBLBlob*) blobForString: (NSString*)string {
     return [[CBLBlob alloc] initWithContentType: @"text/plain"
                                            data: [string dataUsingEncoding: NSUTF8StringEncoding]];
 }
-
 
 // helper method to check error
 - (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block {
@@ -273,7 +249,6 @@
                   domain, (long)code, error);
     }
 }
-
 
 - (void) expectException: (NSString*)name in: (void (^) (void))block {
     ++gC4ExpectExceptions;
@@ -328,6 +303,5 @@
     }
     return n;
 }
-
 
 @end

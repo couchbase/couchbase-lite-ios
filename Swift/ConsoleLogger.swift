@@ -23,6 +23,7 @@ import Foundation
 
 /// Log domain options that can be enabled in the console logger.
 public struct LogDomains: OptionSet {
+    
     /// Raw value.
     public let rawValue: Int
     
@@ -45,6 +46,7 @@ public struct LogDomains: OptionSet {
     
     /// Network domain.
     public static let network = LogDomains(rawValue: Int(LogDomain.network.rawValue))
+    
 }
 
 public class ConsoleLogger {
@@ -68,4 +70,5 @@ public class ConsoleLogger {
     // MARK: Internal
     
     init() { }
+    
 }

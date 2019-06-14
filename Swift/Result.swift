@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// Result represents a single row in the query result. The projecting result value can be
 /// accessed either by using a zero based index or by a key corresponding to the
 /// SelectResult objects given when constructing the Query object.
@@ -36,12 +35,10 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     
     // MARK: ReadOnlyArrayProtocol
     
-    
     /// A number of the projecting values in the result.
     public var count: Int {
         return Int(impl.count)
     }
-    
     
     /// The projecting result value at the given index.
     ///
@@ -50,7 +47,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func value(at index: Int) -> Any? {
         return DataConverter.convertGETValue(impl.value(at: UInt(index)))
     }
-    
     
     /// The projecting result value at the given index as a String value.
     /// Returns nil if the value is not a string.
@@ -61,7 +57,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.string(at: UInt(index))
     }
     
-    
     /// The projecting result value at the given index as a Number value.
     /// Returns nil if the value is not a number.
     ///
@@ -70,7 +65,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func number(at index: Int) -> NSNumber? {
         return impl.number(at: UInt(index))
     }
-    
     
     /// The projecting result value at the given index as an Int value.
     /// Returns 0 if the value is not a numeric value.
@@ -81,7 +75,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.integer(at: UInt(index))
     }
     
-    
     /// The projecting result value at the given index as an Int64 value.
     /// Returns 0 if the value is not a numeric value.
     ///
@@ -90,7 +83,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func int64(at index: Int) -> Int64 {
         return impl.longLong(at: UInt(index))
     }
-    
     
     /// The projecting result value at the given index as a Double value.
     /// Returns 0.0 if the value is not a numeric value.
@@ -110,7 +102,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.float(at: UInt(index))
     }
     
-    
     /// The projecting result value at the given index as a Boolean value.
     /// Returns true if the value is not null, and is either `true` or a nonzero number.
     ///
@@ -119,7 +110,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func boolean(at index: Int) -> Bool {
         return impl.boolean(at: UInt(index))
     }
-    
     
     /// The projecting result value at the given index as a Blob value.
     /// Returns nil if the value is not a blob.
@@ -130,7 +120,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return value(at: index) as? Blob
     }
     
-    
     /// The projecting result value at the given index as a Date value.
     /// Returns nil if the value is not a string and is not parseable as a date.
     ///
@@ -139,7 +128,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func date(at index: Int) -> Date? {
         return impl.date(at: UInt(index))
     }
-    
     
     /// The projecting result value at the given index as a readonly ArrayObject value.
     /// Returns nil if the value is not an array.
@@ -150,7 +138,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return value(at: index) as? ArrayObject
     }
     
-    
     /// The projecting result value at the given index as a readonly DictionaryObject value.
     /// Returns nil if the value is not a dictionary.
     ///
@@ -159,7 +146,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func dictionary(at index: Int) -> DictionaryObject? {
         return value(at: index) as? DictionaryObject
     }
-    
     
     /// Gets all values as an Array. The value types of the values contained
     /// in the returned Array object are Array, Blob, Dictionary, Number types,
@@ -172,7 +158,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     
     // MARK: ReadOnlyArrayFragment
     
-    
     /// Subscript access to a ReadOnlyFragment object of the projecting result
     /// value at the given index.
     ///
@@ -181,15 +166,12 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return Fragment(impl[UInt(index)])
     }
     
-    
     // MARK: ReadOnlyDictionaryProtocol
-    
     
     /// All projecting keys.
     public var keys: Array<String> {
         return impl.keys
     }
-    
     
     /// The projecting result value for the given key.
     /// Returns nil if the key doesn't exist.
@@ -200,7 +182,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return DataConverter.convertGETValue(impl.value(forKey: key))
     }
     
-    
     /// The projecting result value for the given key as a String value.
     /// Returns nil if the key doesn't exist, or the value is not a string.
     ///
@@ -209,7 +190,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func string(forKey key: String) -> String? {
         return impl.string(forKey: key)
     }
-    
     
     /// The projecting result value for the given key as a Number value.
     /// Returns nil if the key doesn't exist, or the value is not a number.
@@ -220,7 +200,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.number(forKey: key)
     }
     
-    
     /// The projecting result value for the given key as an Int value.
     /// Returns 0 if the key doesn't exist, or the value is not a numeric value.
     ///
@@ -229,7 +208,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func int(forKey key: String) -> Int {
         return impl.integer(forKey: key)
     }
-    
     
     /// The projecting result value for the given key as an Int64 value.
     /// Returns 0 if the key doesn't exist, or the value is not a numeric value.
@@ -240,7 +218,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.longLong(forKey: key)
     }
     
-    
     /// The projecting result value for the given key as a Float value.
     /// Returns 0.0 if the key doesn't exist, or the value is not a numeric value.
     ///
@@ -250,7 +227,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.float(forKey: key)
     }
     
-    
     /// The projecting result value for the given key as a Double value.
     /// Returns 0.0 if the key doesn't exist, or the value is not a numeric value.
     ///
@@ -259,7 +235,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func double(forKey key: String) -> Double {
         return impl.double(forKey: key)
     }
-    
     
     /// The projecting result value for the given key as a Boolean value.
     /// Returns true if the key doesn't exist, or
@@ -271,7 +246,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.boolean(forKey: key)
     }
     
-    
     /// The projecting result value for the given key as a Blob value.
     /// Returns nil if the key doesn't exist, or the value is not a blob.
     ///
@@ -280,7 +254,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func blob(forKey key: String) -> Blob? {
         return value(forKey: key) as? Blob
     }
-    
     
     /// The projecting result value for the given key as a Date value.
     /// Returns nil if the key doesn't exist, or
@@ -292,7 +265,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.date(forKey: key)
     }
     
-    
     /// The projecting result value for the given key as a readonly ArrayObject value.
     /// Returns nil if the key doesn't exist, or the value is not an array.
     ///
@@ -301,7 +273,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func array(forKey key: String) -> ArrayObject? {
         return value(forKey: key) as? ArrayObject
     }
-    
     
     /// The projecting result value for the given key as a readonly DictionaryObject value.
     /// Returns nil if the key doesn't exist, or the value is not a dictionary.
@@ -312,7 +283,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return value(forKey: key) as? DictionaryObject
     }
     
-    
     /// Tests whether a projecting result key exists or not.
     ///
     /// - Parameter key: The select result key.
@@ -320,7 +290,6 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     public func contains(key: String) -> Bool {
         return impl.containsValue(forKey: key)
     }
-    
     
     /// Gets all values as a Dictionary. The value types of the values contained
     /// in the returned Dictionary object are Array, Blob, Dictionary,
@@ -331,9 +300,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.toDictionary()
     }
     
-    
     // MARK: Sequence
-    
     
     /// Gets  an iterator over the prjecting result keys.
     ///
@@ -342,9 +309,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.keys.makeIterator();
     }
     
-    
     // MARK: DictionaryFragment
-    
     
     /// Subscript access to a ReadOnlyFragment object of the projecting result
     /// value for the given key.
@@ -361,4 +326,5 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     init(impl: CBLQueryResult) {
         self.impl = impl
     }
+    
 }

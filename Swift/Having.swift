@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// Having represents a HAVING clause of the query statement used for filtering the aggregated 
 /// values from the the GROUP BY clause.
 public final class Having: Query, OrderByRouter, LimitRouter {
@@ -32,7 +31,6 @@ public final class Having: Query, OrderByRouter, LimitRouter {
         return orderBy(orderings)
     }
     
-    
     /// Creates and chains an OrderBy object for specifying the orderings of the query result.
     ///
     /// - Parameter orderings: The Ordering objects.
@@ -41,7 +39,6 @@ public final class Having: Query, OrderByRouter, LimitRouter {
         return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
-    
     /// Creates and chains a Limit object to limit the number query results.
     ///
     /// - Parameter limit: The limit expression.
@@ -49,7 +46,6 @@ public final class Having: Query, OrderByRouter, LimitRouter {
     public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
-    
     
     ///  Creates and chains a Limit object to skip the returned results for the given offset
     ///  position and to limit the number of results to not more than the given limit value.
@@ -62,9 +58,7 @@ public final class Having: Query, OrderByRouter, LimitRouter {
         return Limit(query: self, limit: limit, offset: offset)
     }
     
-    
     // MARK: Internal
-    
     
     init(query: Query, impl: CBLQueryExpression) {
         super.init()

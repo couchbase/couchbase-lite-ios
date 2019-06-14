@@ -20,7 +20,6 @@
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabase+Internal.h"
 
-
 @implementation CBLDatabaseConfiguration {
     BOOL _readonly;
 }
@@ -35,11 +34,9 @@
     return [self initWithConfig: nil readonly: NO];
 }
 
-
 - (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config {
     return [self initWithConfig: config readonly: NO];
 }
-
 
 - (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
                        readonly: (BOOL)readonly
@@ -59,8 +56,7 @@
     return self;
 }
 
-
-- (void) setDirectory: (NSString *)directory {
+- (void) setDirectory: (NSString*)directory {
     CBLAssertNotNil(directory);
     
     [self checkReadonly];
@@ -68,9 +64,7 @@
     _directory = directory;
 }
 
-
 #pragma mark - Internal
-
 
 - (void) checkReadonly {
     if (_readonly) {
@@ -78,7 +72,6 @@
                     format: @"This configuration object is readonly."];
     }
 }
-
 
 + (NSString*) defaultDirectory {
     NSSearchPathDirectory dirID = NSApplicationSupportDirectory;

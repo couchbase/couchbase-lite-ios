@@ -24,9 +24,7 @@
 #import "CBLReplicator+Internal.h"
 #import "MYBackgroundMonitor.h"
 
-
 @implementation CBLReplicator (Backgrounding)
-
 
 - (void) setupBackgrounding {
     CBLLogInfo(Sync, @"%@: Starting backgrounding monitor...", self);
@@ -51,12 +49,10 @@
     [self.bgMonitor start];
 }
 
-
 - (NSFileProtectionType) fileProtection {
     NSDictionary* attrs = [NSFileManager.defaultManager attributesOfItemAtPath: self.config.database.path error: NULL];
     return attrs[NSFileProtectionKey] ?: NSFileProtectionNone;
 }
-
 
 - (void) endBackgrounding {
     CBLLogInfo(Sync, @"%@: Ending backgrounding monitor...", self);
@@ -68,7 +64,6 @@
                                                 object: nil];
     [self.bgMonitor stop];
 }
-
 
 // Called when the replicator goes idle
 - (void) endCurrentBackgroundTask {
@@ -82,9 +77,7 @@
     });
 }
 
-
 ////// All the methods below are called on the MAIN THREAD ////////
-
 
 - (void) appBackgrounding {
     if (self.active && [self.bgMonitor beginBackgroundTaskNamed: self.description]) {
@@ -96,7 +89,6 @@
     }
 }
 
-
 - (void) appForegrounding {
     BOOL ended = [self.bgMonitor endBackgroundTask];
     if (ended)
@@ -107,13 +99,11 @@
     }
 }
 
-
 - (void) backgroundTaskExpired {
     CBLLogInfo(Sync, @"%@: Background task time expired!", self);
     _deepBackground = YES;
     [self updateSuspended];
 }
-
 
 // Called when the app is about to lose access to files:
 - (void) fileAccessChanged: (NSNotification*)n {
@@ -122,12 +112,10 @@
     [self updateSuspended];
 }
 
-
 - (void) updateSuspended {
     BOOL suspended = (_filesystemUnavailable || _deepBackground);
     self.suspended = suspended;
 }
-
 
 @end
 

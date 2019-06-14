@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// An OrderBy represents an ORDER BY clause of the query statement.
 public final class OrderBy: Query, LimitRouter {
     
@@ -30,7 +29,6 @@ public final class OrderBy: Query, LimitRouter {
     public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
-    
     
     ///  Creates and chains a Limit object to skip the returned results for the given offset
     ///  position and to limit the number of results to not more than the given limit value.

@@ -34,7 +34,6 @@ extern "C" {
 #import "MYErrorUtils.h"
 }
 
-
 // Max size of data that will be cached in memory with the CBLBlob
 static const size_t kMaxCachedContentLength = 8*1024;
 
@@ -46,15 +45,13 @@ static NSString* const kDigestMetaProperty = @kC4BlobDigestProperty;
 static NSString* const kDataMetaProperty = @kC4BlobDataProperty;
 static NSString* const kLengthMetaProperty = @"length";
 static NSString* const kContentTypeMetaProperty = @"content_type";
-
 static NSString* const kBlobType = @kC4ObjectType_Blob;
-
 
 @implementation CBLBlob
 {
-    CBLDatabase *_db;                       // nil if blob is new and unsaved
-    NSData *_content;                       // If new from data, or already loaded from db
-    NSInputStream *_initialContentStream;   // If new from stream.
+    CBLDatabase* _db;                       // nil if blob is new and unsaved
+    NSData* _content;                       // If new from data, or already loaded from db
+    NSInputStream* _initialContentStream;   // If new from stream.
     NSDictionary* _properties;              // Only in blob read from database
 
     // A newly created unsaved blob will have either _content or _initialContentStream.
@@ -64,7 +61,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 @synthesize contentType=_contentType, length=_length, digest=_digest;
 @synthesize swiftObject=_swiftObject;
-
 
 - (instancetype) initWithContentType: (NSString*)contentType
                                 data: (NSData*)data
@@ -82,7 +78,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return self;
 }
 
-
 - (instancetype) initWithContentType: (NSString*)contentType
                        contentStream: (NSInputStream*)stream
 {
@@ -97,7 +92,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     
     return self;
 }
-
 
 - (instancetype) initWithContentType: (NSString*)contentType
                              fileURL: (NSURL*)url
@@ -116,7 +110,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return [self initWithContentType: contentType
                        contentStream: stream];
 }
-
 
 // Initializer for an existing blob being read from a document
 - (instancetype) initWithDatabase: (CBLDatabase*)db
@@ -141,8 +134,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return self;
 }
 
-
-- (NSDictionary *)properties {
+- (NSDictionary*) properties {
     if (_properties) {
         // Blob read from database;
         return _properties;
@@ -154,9 +146,8 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     }
 }
 
-
-- (NSDictionary *)jsonRepresentation {
-    NSMutableDictionary *json = [self.properties mutableCopy];
+- (NSDictionary*) jsonRepresentation {
+    NSMutableDictionary* json = [self.properties mutableCopy];
     json[kTypeMetaProperty] = kBlobType;
     if (_digest)
         json[kDigestMetaProperty] = _digest; // Ensure that digest will be there.
@@ -165,20 +156,18 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return json;
 }
 
-
 - (BOOL) getBlobStore: (C4BlobStore**)outBlobStore andKey: (C4BlobKey*)outBlobKey {
     *outBlobStore = [_db getBlobStore: nullptr];
     return *outBlobStore && _digest && c4blob_keyFromString(CBLStringBytes(_digest), outBlobKey);
 }
 
-
-- (NSData *)content {
+- (NSData*) content {
     if(_content != nil) {
         // Data is in memory:
         return _content;
     } else if (_db) {
         // Read blob from the BlobStore:
-        C4BlobStore *blobStore;
+        C4BlobStore* blobStore;
         C4BlobKey key;
         if (![self getBlobStore: &blobStore andKey: &key])
             return nil;
@@ -212,10 +201,9 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     }
 }
 
-
-- (NSInputStream *)contentStream {
+- (NSInputStream*) contentStream {
     if (_db) {
-        C4BlobStore *blobStore;
+        C4BlobStore* blobStore;
         C4BlobKey key;
         if (![self getBlobStore: &blobStore andKey: &key])
             return nil;
@@ -226,9 +214,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     }
 }
 
-
 #pragma mark - Equality
-
 
 - (BOOL) isEqual: (id)object {
     if (self == object)
@@ -244,25 +230,21 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return NO;
 }
 
-
 - (NSUInteger) hash {
     return self.content.hash;
 }
 
-
 #pragma mark - Description
-
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@; %llu KB]",
             self.class, _contentType, (_length + 512)/1024];
 }
 
-
 #pragma mark - Internal
 
 
-- (BOOL) installInDatabase: (CBLDatabase *)db error:(NSError **)outError {
+- (BOOL) installInDatabase: (CBLDatabase*)db error:(NSError**)outError {
     Assert(db);
     if (_db) {
         if (_db != db) {
@@ -323,14 +305,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return YES;
 }
 
-
 #pragma mark FLEECE ENCODABLE
-
 
 - (id) cbl_toCBLObject {
     return self;
 }
-
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
     // Note: If CBLDictionary can be encoded independently of CBLDocument,

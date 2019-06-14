@@ -19,14 +19,15 @@
 
 import Foundation
 
-
 /// Replication target endpoint.
 public protocol Endpoint {
     // Opaque
 }
 
 /* internal */ protocol IEndpoint: Endpoint {
+    
     func toImpl() -> CBLEndpoint;
+    
 }
 
 /// URL based replication target endpoint.

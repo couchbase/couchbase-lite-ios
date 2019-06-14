@@ -28,7 +28,6 @@
     return [[CBLValueIndex alloc] initWithItems: items];
 }
 
-
 + (CBLFullTextIndex*) fullTextIndexWithItems: (NSArray<CBLFullTextIndexItem*>*)items {
     CBLAssertNotNil(items);
     

@@ -34,16 +34,13 @@
     return self;
 }
 
-
 - (NSArray*) lines {
     return _lines;
 }
 
-
 - (void) reset {
     [_lines removeAllObjects];
 }
-
 
 - (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
     [_lines addObject: message];

@@ -36,11 +36,9 @@
     return self;
 }
 
-
 - (C4IndexType) indexType {
     return kC4FullTextIndex;
 }
-
 
 - (C4IndexOptions) indexOptions {
     C4IndexOptions c4options = { };
@@ -49,7 +47,6 @@
     c4options.ignoreDiacritics = _ignoreAccents;
     return c4options;
 }
-
 
 - (id) indexItems {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _items.count];
@@ -60,7 +57,6 @@
 }
 
 @end
-
 
 @implementation CBLFullTextIndexItem
 

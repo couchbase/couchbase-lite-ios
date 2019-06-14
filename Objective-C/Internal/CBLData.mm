@@ -27,7 +27,6 @@
 
 NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
-
 @implementation NSObject (CBLConversions)
 
 - (id) cbl_toPlainObject {
@@ -45,7 +44,6 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 }
 
 @end
-
 
 @implementation NSArray (CBLConversions)
 - (id) cbl_toCBLObject {
@@ -88,7 +86,6 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
     return self;
 }
 @end
-
 
 namespace cbl {
     bool asBool (id object) {

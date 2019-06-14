@@ -46,7 +46,6 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
     return self;
 }
 
-
 - (NSString*) description {
     return [NSString stringWithFormat: @"URL[%@]", _url];
 }

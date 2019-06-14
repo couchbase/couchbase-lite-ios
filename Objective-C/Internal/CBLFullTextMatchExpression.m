@@ -35,7 +35,6 @@
     return self;
 }
 
-
 - (id) asJSON {
     return @[@"MATCH", _indexName, _query];
 }

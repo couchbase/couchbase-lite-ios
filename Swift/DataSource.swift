@@ -27,11 +27,13 @@ public protocol DataSourceProtocol {
 
 /// A query data source with the aliasing function.
 public protocol DataSourceAs: DataSourceProtocol {
+    
     /// Create an alias data source.
     ///
     /// - Parameter alias: The alias name.
     /// - Returns: The DataSource object.
     func `as`(_ alias: String) -> DataSourceProtocol
+    
 }
 
 /// A query data source factory.
@@ -46,6 +48,7 @@ public final class DataSource {
         return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl),
                                 database: database)
     }
+    
 }
 
 /* internal */ class DatabaseSource: DataSourceProtocol {

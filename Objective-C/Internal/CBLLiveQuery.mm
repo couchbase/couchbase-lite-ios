@@ -24,7 +24,6 @@
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLChangeNotifier.h"
 
-
 // Default value of CBLLiveQuery.updateInterval
 static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
@@ -41,7 +40,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBLChangeNotifier<CBLQueryChange*>* _changeNotifier;
 }
 
-
 - (instancetype) initWithQuery: (CBLQuery*)query {
     self = [super init];
     if (self) {
@@ -52,21 +50,17 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     return self;
 }
 
-
 - (void) dealloc {
     [self stop];
 }
-
 
 - (NSString*) description {
     return [NSString stringWithFormat:@"%@[%@]", self.class, [_query description]];
 }
 
-
 - (CBLQueryParameters*) parameters {
     return _query.parameters;
 }
-
 
 - (void) start {
     CBL_LOCK(self) {
@@ -90,7 +84,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
 - (void) stop {
     CBL_LOCK(self) {
         if (_dbListenerToken) {
@@ -109,8 +102,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
-
 - (void) queryParametersChanged {
     CBL_LOCK(self) {
         if (_dbListenerToken)
@@ -118,11 +109,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
 - (nullable NSString*) explain: (NSError**)error {
     return [_query explain: error];
 }
-
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
@@ -137,7 +126,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBL_LOCK(self) {
         if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
@@ -145,9 +133,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
 #pragma mark Private
-
 
 - (void) databaseChanged: (CBLDatabaseChange*)change {
     CBL_LOCK(self) {
@@ -166,7 +152,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
 }
 
-
 - (void) updateAfter: (NSTimeInterval)updateDelay {
     if (_willUpdate)
         return;  // Already a pending update scheduled
@@ -182,7 +167,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
                        [self update];
                    });
 }
-
 
 - (void) update {
     CBL_LOCK(self) {
@@ -223,6 +207,5 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         }
     }
 }
-
 
 @end

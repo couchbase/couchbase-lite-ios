@@ -25,7 +25,6 @@
     CBLQueryExpression* _operand;
 }
 
-
 - (instancetype) initWithExpression: (CBLQueryExpression*)operand
                                type: (CBLUnaryExpType)type
 {
@@ -36,7 +35,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     id operand = [_operand asJSON];

@@ -21,9 +21,7 @@
 #import "MYErrorUtils.h"
 #import "MYURLUtils.h"
 
-
 #define kMaxRedirects 10
-
 
 @implementation CBLHTTPLogic
 {
@@ -37,14 +35,11 @@
     NSUInteger _redirectCount;
 }
 
-
 @synthesize handleRedirects=_handleRedirects, shouldContinue=_shouldContinue;
 @synthesize shouldRetry=_shouldRetry, credential=_credential, httpStatus=_httpStatus, error=_error;
 @synthesize proxySettings=_proxySettings, proxyType=_proxyType, useProxyCONNECT=_useProxyCONNECT;
 
-
 static NSDictionary* sOverrideProxySettings;
-
 
 - (instancetype) initWithURLRequest:(NSURLRequest *)urlRequest {
     NSParameterAssert(urlRequest);
@@ -57,16 +52,13 @@ static NSDictionary* sOverrideProxySettings;
     return self;
 }
 
-
 - (void) dealloc {
     if (_responseMsg) CFRelease(_responseMsg);
 }
 
-
 - (NSURL*) URL {
     return (NSURL*)_urlRequest.URL;
 }
-
 
 - (NSString*) directHost {
     if (_proxyType == kCBLNoProxy)
@@ -74,7 +66,6 @@ static NSDictionary* sOverrideProxySettings;
     else
         return _proxySettings[(id)kCFProxyHostNameKey];
 }
-
 
 - (UInt16) directPort {
     if (_proxyType == kCBLNoProxy)
@@ -88,11 +79,9 @@ static NSDictionary* sOverrideProxySettings;
         return 80;
 }
 
-
 - (UInt16) port {
     return self.URL.my_effectivePort;
 }
-
 
 - (BOOL) useTLS {
     switch (_proxyType) {
@@ -106,7 +95,6 @@ static NSDictionary* sOverrideProxySettings;
             return NO;
     }
 }
-
 
 + (NSString*) userAgent {
     NSProcessInfo* process = [NSProcessInfo processInfo];
@@ -130,9 +118,7 @@ static NSDictionary* sOverrideProxySettings;
     _error = [NSError errorWithDomain: NSURLErrorDomain code: code userInfo: info];
 }
 
-
 #pragma mark - REQUEST:
-
 
 - (void) setValue: (NSString*)value forHTTPHeaderField:(NSString*)header {
     [_urlRequest setValue: value forHTTPHeaderField: header];
@@ -145,7 +131,6 @@ static NSDictionary* sOverrideProxySettings;
 - (void) setObject: (NSString*)value forKeyedSubscript: (NSString*)key {
     [_urlRequest setValue: value forHTTPHeaderField: key];
 }
-
 
 - (CFHTTPMessageRef) newHTTPRequest {
     NSURL* url = self.URL;
@@ -230,7 +215,6 @@ static NSDictionary* sOverrideProxySettings;
     return httpMsg;
 }
 
-
 - (NSData*) HTTPRequestData {
     CFHTTPMessageRef rq = [self newHTTPRequest];
     NSData* data = CFBridgingRelease(CFHTTPMessageCopySerializedMessage(rq));
@@ -253,9 +237,7 @@ static NSDictionary* sOverrideProxySettings;
     return data;
 }
 
-
 #pragma mark - RESPONSE HANDLING:
-
 
 - (void) receivedResponse: (CFHTTPMessageRef)response {
     NSParameterAssert(response);
@@ -329,7 +311,6 @@ static NSDictionary* sOverrideProxySettings;
     }
 }
 
-
 - (NSString*) httpStatusMessage {
     NSString* line = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(_responseMsg));
     NSRegularExpression* re = [NSRegularExpression
@@ -342,7 +323,6 @@ static NSDictionary* sOverrideProxySettings;
     else
         return line;
 }
-
 
 - (BOOL) redirect {
     NSString* location = getHeader(_responseMsg, @"Location");
@@ -363,15 +343,12 @@ static NSDictionary* sOverrideProxySettings;
     return YES;
 }
 
-
 static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     return CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(message,
                                                                (__bridge CFStringRef)header));
 }
 
-
 #pragma mark - AUTHENTICATION:
-
 
 - (NSURLCredential*) credentialForAuthHeader: (NSString*)authHeader {
     // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
@@ -401,7 +378,6 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     return cred;
 }
 
-
 + (NSDictionary*) parseAuthHeader: (NSString*)authHeader {
     if (!authHeader)
         return nil;
@@ -424,7 +400,6 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     challenge[@"WWW-Authenticate"] = authHeader;
     return challenge;
 }
-
 
 - (bool) addAuthentication: (NSURLCredential*)credential
                  toRequest: (CFHTTPMessageRef)httpMsg
@@ -453,7 +428,6 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     return true;
 }
 
-
 // Adapted from MYURLUtils.m
 - (NSURLProtectionSpace*) protectionSpaceWithRealm: (NSString*)realm
                                  authenticationMethod: (NSString*)authenticationMethod
@@ -466,7 +440,6 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
                                                 realm: realm
                                  authenticationMethod: authenticationMethod];
 }
-
 
 // Adapted from MYURLUtils.m
 - (NSURLCredential*) credentialForRealm: (NSString*)realm
@@ -490,19 +463,15 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
         return [storage defaultCredentialForProtectionSpace: space];
 }
 
-
 #pragma mark - PROXY SUPPORT:
-
 
 + (void) setOverrideProxySettings: (NSDictionary*)proxySettings {
     sOverrideProxySettings = [proxySettings copy];
 }
 
-
 - (void) lookupProxySettings {
     self.proxySettings = sOverrideProxySettings ?: _urlRequest.URL.my_proxySettings;
 }
-
 
 - (void) setProxySettings: (NSDictionary*)settings {
     _error = nil;       // Might get set if PAC resolution fails
@@ -524,7 +493,6 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     _proxySettings = [settings copy];
 }
 
-
 - (BOOL) setProxyURL: (NSURL*)proxyURL {
     NSString* host = proxyURL.host;
     if ([proxyURL.scheme.lowercaseString hasPrefix: @"http"] && host) {
@@ -539,16 +507,13 @@ static NSString* getHeader(CFHTTPMessageRef message, NSString* header) {
     }
 }
 
-
 #define kPrivatePACRunloopMode CFSTR("CBLPACResolution")
-
 
 static void pacCallback(void *client, CFArrayRef proxyList, CFErrorRef error) {
     CFTypeRef* resultPtr = client;
     *resultPtr = proxyList ? CFRetain(proxyList) : CFRetain(error);
     CFRunLoopStop(CFRunLoopGetCurrent());
 }
-
 
 - (NSDictionary*) resolveProxyAutoConfig: (NSDictionary*)settings isURL: (BOOL)isURL {
     CFArrayRef proxies = NULL;

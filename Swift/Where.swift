@@ -30,7 +30,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
         return orderBy(orderings)
     }
     
-    
     /// Create and chain an ORDER BY component for specifying the orderings of the query result.
     ///
     /// - Parameter orderings: The ordering objects.
@@ -38,7 +37,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     public func orderBy(_ orderings: [OrderingProtocol]) -> OrderBy {
         return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
-    
     
     /// Create and chain a GROUP BY component to group the query result.
     ///
@@ -48,7 +46,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
         return groupBy(expressions)
     }
     
-    
     /// Create and chain a GROUP BY component to group the query result.
     ///
     /// - Parameter expressions: The expression objects.
@@ -57,7 +54,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
         return GroupBy(query: self, impl: QueryExpression.toImpl(expressions: expressions))
     }
     
-    
     /// Create and chain a LIMIT component to limit the number query results.
     ///
     /// - Parameter limit: The limit Expression object or liternal value.
@@ -65,7 +61,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
-    
     
     /// Create and chain a LIMIT component to skip the returned results for the given offset
     /// position and to limit the number of results to not more than the given limit value.
@@ -77,7 +72,6 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     public func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit {
         return Limit(query: self, limit: limit, offset: offset)
     }
-    
     
     /// An internal constructor.
     init(query: Query, impl: CBLQueryExpression) {

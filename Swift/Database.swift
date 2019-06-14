@@ -28,7 +28,6 @@ public enum ConcurrencyControl: UInt8 {
     case failOnConflict
 }
 
-
 /// A Couchbase Lite database.
 public final class Database {
     
@@ -45,24 +44,19 @@ public final class Database {
         _impl = try CBLDatabase(name: name, config: _config.toImpl())
     }
     
-    
     /// The database's name.
     public var name: String { return _impl.name }
-    
     
     /// The database's path. If the database is closed or deleted, nil value will be returned.
     public var path: String? { return _impl.path }
     
-    
     /// The total numbers of documents in the database.
     public var count: UInt64 { return _impl.count }
-    
     
     /// The database configuration.
     public var config: DatabaseConfiguration {
         return _config
     }
-    
     
     /// Gets a Document object with the given ID.
     public func document(withID id: String) -> Document? {
@@ -72,12 +66,10 @@ public final class Database {
         return nil;
     }
     
-    
     /// Gets document fragment object by the given document ID.
     public subscript(key: String) -> DocumentFragment {
         return DocumentFragment(_impl[key])
     }
-    
     
     /// Saves a document to the database. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
@@ -89,7 +81,6 @@ public final class Database {
     public func saveDocument(_ document: MutableDocument) throws {
         try _impl.save(document._impl as! CBLMutableDocument)
     }
-    
     
     /// Saves a document to the database. When used with lastWriteWins concurrency
     /// control, the last write operation will win if there is a conflict. When used
@@ -116,7 +107,6 @@ public final class Database {
             throw err
         }
     }
-    
     
     /// Saves a document to the database. When write operations are executed concurrently and if
     /// conflicts occur, the conflict handler will be called. Use the conflict handler to directly
@@ -150,7 +140,6 @@ public final class Database {
         }
     }
     
-    
     /// Deletes a document from the database. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the deleteDocument(document,
@@ -161,7 +150,6 @@ public final class Database {
     public func deleteDocument(_ document: Document) throws {
         try _impl.delete(document._impl)
     }
-    
     
     /// Deletes a document from the database. When used with lastWriteWins concurrency
     /// control, the last write operation will win if there is a conflict.
@@ -189,7 +177,6 @@ public final class Database {
         }
     }
     
-    
     /// Purges the given document from the database.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
@@ -200,7 +187,6 @@ public final class Database {
         try _impl.purgeDocument(document._impl)
     }
     
-    
     /// Purges the document for the given documentID from the database.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
@@ -210,7 +196,6 @@ public final class Database {
     public func purgeDocument(withID documentID: String) throws {
         try _impl.purgeDocument(withID: documentID)
     }
-    
     
     /// Runs a group of database operations in a batch. Use this when performing bulk write 
     /// operations like multiple inserts/updates; it saves the overhead of multiple database 
@@ -232,7 +217,6 @@ public final class Database {
         }
     }
     
-    
     /// Sets an expiration date on a document.
     /// After this time the document will be purged from the database.
     ///
@@ -244,7 +228,6 @@ public final class Database {
         try _impl.setDocumentExpirationWithID(documentID, expiration: expiration)
     }
     
-    
     /// Returns the expiration time of a document, if exists, else nil.
     ///
     /// - Parameter documentID: The ID of the document to set the expiration date for.
@@ -252,7 +235,6 @@ public final class Database {
     public func getDocumentExpiration(withID documentID: String) -> Date? {
         return _impl.getDocumentExpiration(withID: documentID)
     }
-    
     
     /// Adds a database change listener. Changes will be posted on the main queue.
     ///
@@ -263,7 +245,6 @@ public final class Database {
     {
         return self.addChangeListener(withQueue: nil, listener: listener)
     }
-    
     
     /// Adds a database change listener with the dispatch queue on which changes
     /// will be posted. If the dispatch queue is not specified, the changes will be
@@ -282,7 +263,6 @@ public final class Database {
         return ListenerToken(token)
     }
     
-    
     /// Adds a document change listener block for the given document ID.
     ///
     /// - Parameters:
@@ -294,8 +274,6 @@ public final class Database {
     {
         return self.addDocumentChangeListener(withID: id, queue: nil, listener: listener)
     }
-    
-    
     
     /// Adds a document change listener for the document with the given ID and the
     /// dispatch queue on which changes will be posted. If the dispatch queue
@@ -316,14 +294,12 @@ public final class Database {
         return ListenerToken(token)
     }
     
-    
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
         _impl.removeChangeListener(with: token._impl)
     }
-    
     
     /// Closes a database.
     ///
@@ -333,7 +309,6 @@ public final class Database {
         stopActiveQueries()
     }
     
-    
     /// Deletes a database.
     ///
     /// - Throws: An error on a failure.
@@ -342,7 +317,6 @@ public final class Database {
         stopActiveQueries()
     }
     
-    
     /// Compacts the database file by deleting unused attachment files and
     /// vacuuming the SQLite database.
     ///
@@ -350,7 +324,6 @@ public final class Database {
     public func compact() throws {
         try _impl.compact()
     }
-    
 
     /// Deletes a database of the given name in the given directory.
     ///
@@ -362,7 +335,6 @@ public final class Database {
         try CBLDatabase.delete(name, inDirectory: directory)
     }
     
-    
     /// Checks whether a database of the given name exists in the given directory or not.
     ///
     /// - Parameters:
@@ -372,7 +344,6 @@ public final class Database {
     public static func exists(withName name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
-    
     
     /// Copies a canned databaes from the given path to a new database with the given name and
     /// the configuration. The new database will be created at the directory specified in the
@@ -390,7 +361,6 @@ public final class Database {
         try CBLDatabase.copy(fromPath: path, toDatabase: name, withConfig: config?.toImpl())
     }
     
-    
     /// This function is deprecated. Use Database.log.console to set log level and domains instead.
     ///
     /// - Parameters:
@@ -402,13 +372,10 @@ public final class Database {
             "This method has been deprecated. Please use Database.log.console instead of setLogLevel(_, domain:)")
     }
     
-    
     /// Log object used for configuring console, file, and custom logger.
     public static let log = Log()
     
-    
     // MARK: Internal
-    
     
     func addReplicator(_ replicator: Replicator) {
         _lock.lock()
@@ -416,13 +383,11 @@ public final class Database {
         _lock.unlock()
     }
     
-    
     func removeReplicator(_ replicator: Replicator) {
         _lock.lock()
         _activeReplicators.remove(replicator)
         _lock.unlock()
     }
-    
     
     func addQuery(_ query: Query) {
         _lock.lock()
@@ -430,13 +395,11 @@ public final class Database {
         _lock.unlock()
     }
     
-    
     func removeQuery(_ query: Query) {
         _lock.lock()
         _activeQueries.remove(query)
         _lock.unlock()
     }
-    
     
     private func stopActiveQueries() {
         _lock.lock()
@@ -455,4 +418,5 @@ public final class Database {
     private let _activeQueries = NSMutableSet()
 
     let _impl: CBLDatabase
+    
 }

@@ -31,7 +31,6 @@ public class IndexBuilder {
         return valueIndex(items: items);
     }
     
-    
     /// Create a value index with the given index items. The index items are a list of
     /// the properties or expressions to be indexed.
     ///
@@ -40,7 +39,6 @@ public class IndexBuilder {
     public static func valueIndex(items: [ValueIndexItem]) -> ValueIndex {
         return ValueIndex(items: items)
     }
-    
     
     /// Create a full-text index with the given index items. Typically
     /// the index items are the properties that are used to perform the
@@ -51,7 +49,6 @@ public class IndexBuilder {
     public static func fullTextIndex(items: FullTextIndexItem...) -> FullTextIndex {
         return fullTextIndex(items: items)
     }
-    
     
     /// Create a full-text index with the given index items. Typically
     /// the index items are the properties that are used to perform the

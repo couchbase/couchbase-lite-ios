@@ -47,12 +47,10 @@ class CBLTestCase: XCTestCase {
         try! openDB()
     }
     
-    
     override func tearDown() {
         try! db.close()
         super.tearDown()
     }
-    
     
     func openDB(name: String) throws -> Database {
         let config = DatabaseConfiguration()
@@ -60,11 +58,9 @@ class CBLTestCase: XCTestCase {
         return try Database(name: name, config: config)
     }
     
-    
     func openDB() throws {
         db = try openDB(name: databaseName)
     }
-
     
     func reopenDB() throws {
         try db.close()
@@ -72,32 +68,26 @@ class CBLTestCase: XCTestCase {
         try openDB()
     }
     
-    
     func cleanDB() throws {
         try db.delete()
         try reopenDB()
     }
     
-    
     func deleteDB(name: String) throws {
         try Database.delete(withName: name, inDirectory: self.directory)
     }
-    
     
     func createDocument() -> MutableDocument {
         return MutableDocument()
     }
     
-    
     func createDocument(_ id: String?) -> MutableDocument {
         return MutableDocument(id: id)
     }
     
-    
     func createDocument(_ id: String?, data: [String:Any]) -> MutableDocument {
         return MutableDocument(id: id, data: data)
     }
-    
     
     func generateDocument(withID id: String?) throws -> MutableDocument {
         let doc = createDocument(id);
@@ -111,14 +101,12 @@ class CBLTestCase: XCTestCase {
         return doc
     }
     
-    
     func saveDocument(_ document: MutableDocument) throws {
         try db.saveDocument(document)
         let savedDoc = db.document(withID: document.id)
         XCTAssertNotNil(savedDoc)
         XCTAssertEqual(savedDoc!.id, document.id)
     }
-    
     
     func saveDocument(_ document: MutableDocument, eval: (Document) -> Void) throws {
         eval(document)
@@ -128,12 +116,10 @@ class CBLTestCase: XCTestCase {
         eval(savedDoc)
     }
     
-    
     func urlForResource(name: String, ofType type: String) -> URL? {
         let res = ("Support" as NSString).appendingPathComponent(name)
         return Bundle(for: Swift.type(of:self)).url(forResource: res, withExtension: type)
     }
-    
     
     func dataFromResource(name: String, ofType type: String) throws -> Data {
         let res = ("Support" as NSString).appendingPathComponent(name)
@@ -141,13 +127,11 @@ class CBLTestCase: XCTestCase {
         return try! NSData(contentsOfFile: path!, options: []) as Data
     }
 
-    
     func stringFromResource(name: String, ofType type: String) throws -> String {
         let res = ("Support" as NSString).appendingPathComponent(name)
         let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: type)
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
-
     
     func loadJSONResource(name: String) throws {
         try autoreleasepool {
@@ -166,14 +150,12 @@ class CBLTestCase: XCTestCase {
         }
     }
     
-    
     func jsonFromDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
         formatter.timeZone = NSTimeZone(abbreviation: "UTC")! as TimeZone
         return formatter.string(from: date).appending("Z")
     }
-    
     
     func dateFromJson(_ date: String) -> Date {
         let formatter = DateFormatter()
@@ -182,12 +164,10 @@ class CBLTestCase: XCTestCase {
         return formatter.date(from: date)!
     }
     
-    
     func blobForString(_ string: String) -> Blob {
         let data = string.data(using: .utf8)!
         return Blob(contentType: "text/plain", data: data)
     }
-    
     
     func expectError(domain: String, code: Int, block: @escaping () throws -> Void) {
         CBLTestHelper.allowException {
@@ -205,13 +185,11 @@ class CBLTestCase: XCTestCase {
         }
     }
     
-    
     func ignoreException(block: @escaping () throws -> Void) {
         CBLTestHelper.allowException {
             try? block()
         }
     }
-    
     
     func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
@@ -221,6 +199,7 @@ class CBLTestCase: XCTestCase {
         }
         return n
     }
+    
 }
 
 /** Comparing JSON Dictionary */

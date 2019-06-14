@@ -24,7 +24,6 @@
     NSString* _name;
 }
 
-
 - (instancetype)initWithName: (id)name {
     self = [super initWithNone];
     if (self) {
@@ -33,10 +32,8 @@
     return self;
 }
 
-
 - (id) asJSON {
     return @[[NSString stringWithFormat: @"$%@", _name]];
 }
-
 
 @end

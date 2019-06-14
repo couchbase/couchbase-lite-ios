@@ -21,6 +21,7 @@ import Foundation
 
 /// Array expression.
 public final class ArrayExpression {
+    
     /// Creates a variable expression that represents an item in the array
     /// expression (ANY/ANY AND EVERY/EVERY <variable> IN <expr> SATISFIES <expr>).
     ///
@@ -29,7 +30,6 @@ public final class ArrayExpression {
     public static func variable(_ name: String) -> VariableExpressionProtocol {
         return VariableExpression(name: name)
     }
-    
     
     /// Creates an ANY Quantified operator (ANY <variable name> IN <expr> SATISFIES <expr>)
     /// with the given variable name. The method returns an IN clause object that is used for
@@ -69,4 +69,5 @@ public final class ArrayExpression {
     public static func anyAndEvery(_ variable: VariableExpressionProtocol) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .anyAndEvery, variable: variable)
     }
+    
 }

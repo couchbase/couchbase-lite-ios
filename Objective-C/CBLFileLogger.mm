@@ -29,7 +29,6 @@
 
 @synthesize level=_level, config=_config;
 
-
 - (instancetype) initWithDefault {
     self = [super init];
     if (self) {
@@ -38,14 +37,12 @@
     return self;
 }
 
-
 - (void) setLevel: (CBLLogLevel)level {
     if (_level != level) {
         _level = level;
         c4log_setBinaryFileLevel((C4LogLevel)level);
     }
 }
-
 
 - (void) setConfig: (CBLLogFileConfiguration*)config {
     if (_config != config) {
@@ -58,14 +55,12 @@
     }
 }
 
-
 - (void) logWithLevel: (CBLLogLevel)level
                domain: (CBLLogDomain)domain
               message: (nonnull NSString*)message
 {
     // Do nothing: Logging will be done in Lite Core
 }
-
 
 - (void) apply {
     NSError* error;
@@ -97,7 +92,6 @@
         CBLWarnError(Database, @"Cannot enable file logging: %@", error);
     }
 }
-
 
 - (BOOL) setupLogDirectory: (NSString*)directory error: (NSError**)outError {
     NSError* error;

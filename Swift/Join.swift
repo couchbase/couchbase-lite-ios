@@ -47,7 +47,6 @@ public class Join {
         return JoinOn(datasource: datasource, type: .inner)
     }
     
-    
     /// Create a LEFT JOIN (same as LEFT OUTER JOIN) component with the given data source.
     /// Use the returned On component to specify join conditions.
     ///
@@ -56,7 +55,6 @@ public class Join {
     public static func leftJoin(_ datasource: DataSourceProtocol) -> JoinOnProtocol {
         return JoinOn(datasource: datasource, type: .leftOuter)
     }
-    
     
     /// Create a LEFT OUTER JOIN component with the given data source.
     /// Use the returned On component to specify join conditions.
@@ -67,7 +65,6 @@ public class Join {
         return JoinOn(datasource: datasource, type: .leftOuter)
     }
     
-    
     /// Create an INNER JOIN component with the given data source.
     /// Use the returned On component to specify join conditions.
     ///
@@ -77,7 +74,6 @@ public class Join {
         return JoinOn(datasource: datasource, type: .inner)
     }
     
-    
     /// Create an CROSS JOIN component with the given data source.
     /// Use the returned On component to specify join conditions.
     ///
@@ -86,6 +82,7 @@ public class Join {
     public static func crossJoin(_ datasource: DataSourceProtocol) -> JoinProtocol {
         return QueryJoin(impl: CBLQueryJoin.cross(datasource.toImpl()))
     }
+    
 }
 
 /* internal */ enum JoinType {
@@ -152,10 +149,12 @@ public class Join {
 }
 
 extension JoinProtocol {
+    
     func toImpl() -> CBLQueryJoin {
         if let o = self as? QueryJoin {
             return o.toImpl()
         }
         fatalError("Unsupported join.")
     }
+    
 }

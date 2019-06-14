@@ -26,7 +26,6 @@
 
 @implementation NotificationTest
 
-
 - (void) testDatabaseChange {
     XCTestExpectation* x = [self expectationWithDescription:@"change"];
     id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
@@ -50,7 +49,6 @@
     // Remove listener:
     [self.db removeChangeListenerWithToken: token];
 }
-
 
 - (void) testDocumentChange {
     // Create doc1 and doc2
@@ -98,7 +96,6 @@
     [_db removeChangeListenerWithToken:listener3];
 }
 
-
 - (void) testAddSameChangeListeners {
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
@@ -133,7 +130,6 @@
     [_db removeChangeListenerWithToken:listener2];
     [_db removeChangeListenerWithToken:listener3];
 }
-
 
 - (void) testRemoveDocumentChangeListener {
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
@@ -173,6 +169,5 @@
     // Remove again:
     [_db removeChangeListenerWithToken:listener1];
 }
-
 
 @end

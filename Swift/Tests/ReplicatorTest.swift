@@ -21,6 +21,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
+    
     var otherDB: Database!
     var repl: Replicator!
     
@@ -843,4 +844,5 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     #endif
+    
 }

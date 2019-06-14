@@ -41,20 +41,21 @@ public final class Replicator {
         case busy
     }
     
-    
     /// Progress of a replicator. If `total` is zero, the progress is indeterminate; otherwise,
     /// dividing the two will produce a fraction that can be used to draw a progress bar.
     public struct Progress {
+        
         /// The total number of changes to be processed.
         public let completed: UInt64
         
         /// The total number of changes to be processed.
         public let total: UInt64
+        
     }
-    
     
     /// Combined activity level and progress of a replicator.
     public struct Status {
+        
         /// The current activity level.
         public let activity: ActivityLevel
         
@@ -69,6 +70,7 @@ public final class Replicator {
             progress = Progress(completed: status.progress.completed, total: status.progress.total)
             error = status.error
         }
+        
     }
     
     /// Initializes a replicator with the given configuration.
@@ -79,18 +81,15 @@ public final class Replicator {
         _impl = CBLReplicator(config: config.toImpl());
     }
     
-    
     /// The replicator's configuration.
     public var config: ReplicatorConfiguration {
         return _config
     }
     
-    
     /// The replicator's current status: its activity level and progress. Observable.
     public var status: Status {
         return Status(withStatus: _impl.status)
     }
-    
     
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress throuh the replicator change notification.
@@ -99,7 +98,6 @@ public final class Replicator {
         _impl.start()
     }
     
-    
     /// Stops a running replicator. This method returns immediately; when the replicator actually
     /// stops, the replicator will change its status's activity level to `.stopped`
     /// and the replicator change notification will be notified accordingly.
@@ -107,14 +105,12 @@ public final class Replicator {
         _impl.stop()
     }
     
-    
     /// Resets the local checkpoint of the replicator, meaning that it will read all
     /// changes since the beginning of time from the remote database. This can only be
     /// called when the replicator is in a stopped state.
     public func resetCheckpoint() {
         _impl.resetCheckpoint()
     }
-    
     
     /// Adds a replicator change listener. Changes will be posted on the main queue.
     ///
@@ -124,7 +120,6 @@ public final class Replicator {
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
         return self.addChangeListener(withQueue: nil, listener);
     }
-    
     
     /// Adds a replicator change listener with the dispatch queue on which changes
     /// will be posted. If the dispatch queue is not specified, the changes will be
@@ -142,7 +137,6 @@ public final class Replicator {
         return ListenerToken(token)
     }
     
-    
     /// Adds a document replication event listener. The document replication events will be posted
     /// on the main queue.
     ///
@@ -152,7 +146,6 @@ public final class Replicator {
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
         return self.addDocumentReplicationListener(withQueue: nil, listener);
     }
-    
     
     /// Adds a document replication event listener with the dispatch queue on which events
     /// will be posted. If the dispatch queue is not specified, the document replication
@@ -175,7 +168,6 @@ public final class Replicator {
         return ListenerToken(token)
     }
     
-    
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
@@ -183,9 +175,7 @@ public final class Replicator {
         _impl.removeChangeListener(with: token._impl)
     }
     
-    
     // MARK: Internal
-    
     
     func registerActiveReplicator() {
         _lock.lock()
@@ -200,7 +190,6 @@ public final class Replicator {
         _lock.unlock()
     }
     
-    
     func unregisterActiveReplicator() {
         _lock.lock()
         if let token = _listenerToken {
@@ -211,7 +200,6 @@ public final class Replicator {
         _lock.unlock()
     }
     
-    
     private let _impl: CBLReplicator
     
     private let _config: ReplicatorConfiguration
@@ -219,4 +207,5 @@ public final class Replicator {
     private var _listenerToken: CBLListenerToken?
     
     private let _lock = NSLock()
+    
 }

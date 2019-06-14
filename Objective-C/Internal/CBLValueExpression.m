@@ -26,7 +26,6 @@
     id _value;
 }
 
-
 - (instancetype) initWithValue: (nullable id)value {
     self = [super initWithNone];
     if (self) {
@@ -35,7 +34,6 @@
     }
     return self;
 }
-
 
 - (void) validate: (nullable id)value {
     if (!value ||
@@ -53,7 +51,6 @@
                 format: @"Unsupported value type: %@", value];
 }
 
-
 static id valueAsJSON(id value) {
     if (!value)
         return [NSNull null];
@@ -69,7 +66,6 @@ static id valueAsJSON(id value) {
         return value;
 }
 
-
 static id dictionaryAsJSON(NSDictionary* dict) {
     NSMutableDictionary *json =
         [NSMutableDictionary dictionaryWithCapacity: dict.count];
@@ -78,7 +74,6 @@ static id dictionaryAsJSON(NSDictionary* dict) {
     }
     return json;
 }
-
 
 static id arrayAsJSON(NSArray* array) {
     NSMutableArray *json = [NSMutableArray arrayWithCapacity: array.count + 1];
@@ -89,10 +84,8 @@ static id arrayAsJSON(NSArray* array) {
     return json;
 }
 
-
 - (id) asJSON {
     return valueAsJSON(_value);
 }
-
 
 @end

@@ -25,7 +25,6 @@
 
 @implementation DictionaryTest
 
-
 - (void) testCreateDictionary {
     CBLMutableDictionary* address = [[CBLMutableDictionary alloc] init];
     AssertEqual(address.count, 0u);
@@ -43,7 +42,6 @@
         AssertEqualObjects([[d dictionaryForKey: @"address"] toDictionary], @{});
     }];
 }
-
 
 - (void) testCreateDictionaryWithNSDictionary {
     NSDictionary* dict = @{@"street": @"1 Main street",
@@ -63,7 +61,6 @@
         AssertEqualObjects([[d dictionaryForKey: @"address"] toDictionary], dict);
     }];
 }
-
 
 - (void) testGetValueFromNewEmptyDictionary {
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
@@ -100,7 +97,6 @@
     }];
 }
 
-
 - (void) testSetNestedDictionaries {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
@@ -133,7 +129,6 @@
     }];
 }
 
-
 - (void) testTypeSetters {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
@@ -163,7 +158,6 @@
         AssertEqualObjects([dictionary blobForKey: @"blob"], blob);
     }];
 }
-
 
 - (void) testDictionaryArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
@@ -199,7 +193,6 @@
     }];
 }
 
-
 - (void) testReplaceDictionary {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableDictionary *profile1 = [[CBLMutableDictionary alloc] init];
@@ -232,7 +225,6 @@
     }];
 }
 
-
 - (void) testReplaceDictionaryDifferentType {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableDictionary *profile1 = [[CBLMutableDictionary alloc] init];
@@ -257,7 +249,6 @@
         AssertEqualObjects([d valueForKey: @"profile"], @"Daniel Tiger");
     }];
 }
-
 
 - (void) testRemoveDictionary {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
@@ -286,7 +277,6 @@
         AssertFalse([d containsValueForKey: @"profile"]);
     }];
 }
-
 
 - (void) testEnumeratingKeys {
     CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
@@ -335,7 +325,6 @@
     }];
 }
 
-
 - (void) testToMutable {
     CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
     [mDict1 setValue: @"Scott" forKey: @"name"];
@@ -359,6 +348,5 @@
     [mDict3 setValue: @"Thomas" forKey: @"name"];
     AssertEqualObjects([mDict3 valueForKey: @"name"], @"Thomas");
 }
-
 
 @end

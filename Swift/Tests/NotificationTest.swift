@@ -20,8 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class NotificationTest: CBLTestCase {
+    
     func testDatabaseChange() throws {
         let x = self.expectation(description: "change")
         
@@ -41,7 +41,6 @@ class NotificationTest: CBLTestCase {
         
         db.removeChangeListener(withToken: token)
     }
-    
     
     func testDocumentChange() throws {
         let doc1 = createDocument("doc1")
@@ -90,7 +89,6 @@ class NotificationTest: CBLTestCase {
         db.removeChangeListener(withToken: listener3)
     }
     
-    
     func testAddSameChangeListeners() throws {
         let doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
@@ -121,7 +119,6 @@ class NotificationTest: CBLTestCase {
         db.removeChangeListener(withToken: listener2)
         db.removeChangeListener(withToken: listener3)
     }
-    
     
     func testRemoveDocumentChangeListener() throws {
         let doc1 = createDocument("doc1")
@@ -157,4 +154,5 @@ class NotificationTest: CBLTestCase {
         // Remove again:
         db.removeChangeListener(withToken: token)
     }
+    
 }

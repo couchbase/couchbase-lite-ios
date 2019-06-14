@@ -29,14 +29,11 @@
 using namespace cbl;
 using namespace fleece;
 
-
 @implementation CBLArray {
     __weak NSObject* _sharedLock;
 }
 
-
 @synthesize swiftObject=_swiftObject;
-
 
 - (instancetype) initEmpty {
     self = [super init];
@@ -45,7 +42,6 @@ using namespace fleece;
     }
     return self;
 }
-
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
                        inParent: (fleece::MCollection<id>*)parent
@@ -58,7 +54,6 @@ using namespace fleece;
     return self;
 }
 
-
 - (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray
                             isMutable: (bool)isMutable
 {
@@ -70,7 +65,6 @@ using namespace fleece;
     return self;
 }
 
-
 - (void) setupSharedLock {
     id db;
     auto docContext = dynamic_cast<DocContext*>(_array.context());
@@ -79,18 +73,15 @@ using namespace fleece;
     _sharedLock = db != nil ? db : self;
 }
 
-
-- (id) copyWithZone:(NSZone *)zone {
+- (id) copyWithZone: (NSZone*)zone {
     return self;
 }
 
-
-- (CBLMutableArray*) mutableCopyWithZone:(NSZone *)zone {
+- (CBLMutableArray*) mutableCopyWithZone: (NSZone*)zone {
     CBL_LOCK(_sharedLock) {
         return [[CBLMutableArray alloc] initWithCopyOfMArray: _array isMutable: true];
     }
 }
-
 
 // Called under the database's lock:
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
@@ -98,11 +89,9 @@ using namespace fleece;
     _array.encodeTo(encoder);
 }
 
-
 - (MCollection<id>*) fl_collection {
     return &_array;
 }
-
 
 [[noreturn]] static void throwRangeException(NSUInteger index) {
     [NSException raise: NSRangeException format: @"CBLMutableArray index %lu is out of range",
@@ -110,9 +99,7 @@ using namespace fleece;
     abort();
 }
 
-
 #pragma mark - GETTER
-
 
 static const MValue<id>& _get(MArray<id> &array, NSUInteger index) {
     auto &val = array.get(index);
@@ -120,7 +107,6 @@ static const MValue<id>& _get(MArray<id> &array, NSUInteger index) {
         throwRangeException(index);
     return val;
 }
-
 
 static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
@@ -130,13 +116,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return obj;
 }
 
-
 - (nullable id) valueAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return _getObject(_array, index);
     }
 }
-
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -144,13 +128,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return _getObject(_array, index, [NSNumber class]);
     }
 }
-
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -158,13 +140,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (long long) longLongAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return asLongLong(_get(_array, index), _array);
     }
 }
-
 
 - (float) floatAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -172,13 +152,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (double) doubleAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return asDouble(_get(_array, index), _array);
     }
 }
-
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -186,13 +164,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return asDate(_getObject(_array, index));
     }
 }
-
 
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -200,13 +176,11 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
         return _getObject(_array, index, [CBLArray class]);
     }
 }
-
 
 - (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -214,16 +188,13 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 - (NSUInteger) count {
     CBL_LOCK(_sharedLock) {
         return _array.count();
     }
 }
 
-
 #pragma mark - Data
-
 
 - (NSArray*) toArray {
     CBL_LOCK(_sharedLock) {
@@ -235,29 +206,23 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     }
 }
 
-
 #pragma mark - Mutable
-
 
 - (CBLMutableArray*) toMutable {
     return [self mutableCopy];
 }
 
-
 - (id) cbl_toPlainObject {
     return [self toArray];
 }
-
 
 - (id) cbl_toCBLObject {
     return [self mutableCopy];
 }
 
-
 #pragma mark - NSFastEnumeration
 
-
-- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState*)state
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
@@ -280,9 +245,7 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return i;
 }
 
-
 #pragma mark - Subscript
-
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     CBL_LOCK(_sharedLock) {
@@ -292,9 +255,7 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
-
 #pragma mark - Equality
-
 
 - (BOOL) isEqual: (id)object {
     if (self == object)
@@ -318,7 +279,6 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return YES;
 }
 
-
 - (NSUInteger) hash {
     NSUInteger hash = 0;
     for (NSUInteger i = 0; i < self.count; i++) {
@@ -328,13 +288,10 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return hash;
 }
 
-
 #pragma mark - Lock
-
 
 - (NSObject*) sharedLock {
     return _sharedLock;
 }
-
 
 @end

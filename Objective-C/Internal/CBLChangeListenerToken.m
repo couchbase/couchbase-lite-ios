@@ -19,7 +19,6 @@
 
 #import "CBLChangeListenerToken.h"
 
-
 @implementation CBLChangeListenerToken
 {
     void (^_listener)(id);
@@ -27,7 +26,6 @@
 }
 
 @synthesize key=_key;
-
 
 - (instancetype) initWithListener: (void (^)(id))listener
                             queue: (nullable dispatch_queue_t)queue
@@ -40,13 +38,11 @@
     return self;
 }
 
-
 - (void) postChange: (id)change {
     void (^listener)(id) = _listener;
     dispatch_async(_queue, ^{
         listener(change);
     });
 }
-
 
 @end

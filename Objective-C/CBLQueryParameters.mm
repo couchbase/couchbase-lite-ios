@@ -40,11 +40,9 @@ using namespace fleece;
     return [self initWithParameters: nil readonly: NO];
 }
 
-
 - (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters {
    return [self initWithParameters: parameters readonly: NO];
 }
-
 
 - (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
                            readonly: (BOOL)readonly {
@@ -56,7 +54,6 @@ using namespace fleece;
     }
     return self;
 }
-
 
 - (void) setValue: (id)value forName: (NSString*)name {
     CBLAssertNotNil(name);
@@ -74,76 +71,61 @@ using namespace fleece;
     _data[name] = value;
 }
 
-
 - (void) setString: (nullable NSString*)value forName: (NSString*)name {
     [self setValue: value forName: name];
 }
-
 
 - (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name {
     [self setValue: value forName: name];
 }
 
-
 - (void) setInteger: (NSInteger)value forName: (NSString*)name {
     [self setValue: @(value) forName: name];
 }
-
 
 - (void) setLongLong: (long long)value forName: (NSString*)name {
     [self setValue: @(value) forName: name];
 }
 
-
 - (void) setFloat: (float)value forName: (NSString*)name {
     [self setValue: @(value) forName: name];
 }
-
 
 - (void) setDouble: (double)value forName: (NSString*)name {
     [self setValue: @(value) forName: name];
 }
 
-
 - (void) setBoolean: (BOOL)value forName: (NSString*)name {
     [self setValue: @(value) forName: name];
 }
-
 
 - (void) setDate: (nullable NSDate*)value forName: (NSString*)name {
     [self setValue: value forName: name];
 }
 
-
-- (void) setBlob: (nullable CBLBlob*)value forName:(NSString *)name {
+- (void) setBlob: (nullable CBLBlob*)value forName: (NSString*)name {
     [self setValue: value forName: name];
 }
-
 
 - (void) setDictionary: (nullable CBLDictionary*)value forName: (NSString*)name {
     [self setValue: [value toDictionary] forName: name];
 }
 
-
 - (void) setArray: (nullable CBLArray*)value forName: (NSString*)name {
     [self setValue: [value toArray] forName: name];
 }
 
-
-- (nullable id) valueForName: (NSString *)name {
+- (nullable id) valueForName: (NSString*)name {
     CBLAssertNotNil(name);
     
     return [_data objectForKey: name];
 }
 
-
 #pragma mark - Internal
-
 
 - (NSDictionary*) data {
     return _data;
 }
-
 
 - (void) checkReadonly {
     if (_readonly) {
@@ -151,7 +133,6 @@ using namespace fleece;
                     format: @"This parameters object is readonly."];
     }
 }
-
 
 - (nullable NSData*) encode: (NSError**)outError {
     Encoder enc;

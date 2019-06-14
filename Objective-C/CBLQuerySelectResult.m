@@ -30,7 +30,6 @@
     return [self property: property as: nil];
 }
 
-
 + (instancetype) property: (NSString*)property as: (nullable NSString*)alias {
     CBLAssertNotNil(property);
     
@@ -38,11 +37,9 @@
                                          as: alias];
 }
 
-
 + (instancetype) expression: (CBLQueryExpression*)expression {
     return [self expression: expression as: nil];
 }
-
 
 + (instancetype) expression: (CBLQueryExpression*)expression as: (nullable NSString*)alias {
     CBLAssertNotNil(expression);
@@ -50,20 +47,16 @@
     return [[self alloc] initWithExpression: expression as: alias];
 }
 
-
 + (instancetype) all {
     return [self allFrom: nil];
 }
-
 
 + (instancetype) allFrom: (nullable NSString*)alias {
     CBLQueryExpression* expr = [CBLQueryExpression allFrom: alias];
     return [[self alloc] initWithExpression: expr as: nil];
 }
 
-
 #pragma mark - Internal
-
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression
                                  as: (nullable NSString*)alias
@@ -76,7 +69,6 @@
     return self;
 }
 
-
 - (nullable NSString*) columnName {
     if (_alias)
         return _alias;
@@ -88,13 +80,11 @@
     return nil;
 }
 
-
 - (id) asJSON {
     id json = [_expression asJSON];
     if (_alias)
         json = @[@"AS", json, _alias];
     return json;
 }
-
 
 @end

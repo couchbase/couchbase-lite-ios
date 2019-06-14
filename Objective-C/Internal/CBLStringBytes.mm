@@ -21,7 +21,6 @@
 
 using namespace fleece;
 
-
 CBLStringBytes::CBLStringBytes(__unsafe_unretained NSString* str) {
     *this = str;
 }
@@ -61,4 +60,3 @@ void CBLStringBytes::operator= (__unsafe_unretained NSString* str) {
     _storage = data;
     bytes = slice(data);
 }
-

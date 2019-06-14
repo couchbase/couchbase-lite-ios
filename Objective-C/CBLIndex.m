@@ -30,12 +30,10 @@
     return kC4ValueIndex;
 }
 
-
 - (C4IndexOptions) indexOptions {
     // Implement by subclass
     return (C4IndexOptions){ };
 }
-
 
 - (id) indexItems {
     // Implement by subclass

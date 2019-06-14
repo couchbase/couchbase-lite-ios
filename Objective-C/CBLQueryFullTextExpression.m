@@ -30,7 +30,6 @@
     NSString* _name;
 }
 
-
 - /* internal */ (instancetype) initWithIndexName: (NSString*)name {
     self = [super init];
     if (self) {
@@ -39,13 +38,11 @@
     return self;
 }
 
-
 + (CBLQueryFullTextExpression*) indexWithName: (NSString*)name {
     CBLAssertNotNil(name);
     
     return [[self alloc] initWithIndexName: name];
 }
-
 
 - (CBLQueryExpression*) match: (NSString*)query {
     CBLAssertNotNil(query);

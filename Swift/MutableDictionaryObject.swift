@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// MutableDictionaryProtocol defines a set of methods for getting and setting
 /// dictionary data.
 protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragment {
@@ -66,18 +65,15 @@ protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragmen
     
 }
 
-
 /// MutableDictionaryObject provides access to dictionary data.
 public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtocol {
     
     // MARK: Initializers
     
-    
     /// Initialize a new empty MutableDictionaryObject object.
     public init() {
         super.init(CBLMutableDictionary())
     }
-    
     
     /// Initialzes a new MutableDictionaryObject object with the data. Allowed
     /// value types are Array, ArrayObject, Blob, Date, Dictionary,
@@ -90,9 +86,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         setData(data)
     }
     
-    
     // MARK: Type Setters
-    
     
     /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
     /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
@@ -108,7 +102,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return self
     }
     
-    
     /// Set a String value for the given key.
     ///
     /// - Parameters:
@@ -119,7 +112,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey:  key)
     }
 
-    
     /// Set a Number value for the given key.
     ///
     /// - Parameters:
@@ -129,7 +121,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     @discardableResult public func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key);
     }
-    
     
     /// Set an int value for the given key.
     ///
@@ -141,7 +132,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
     
-    
     /// Set an int64 value for the given key.
     ///
     /// - Parameters:
@@ -151,7 +141,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set a double value for the given key.
     ///
@@ -163,7 +152,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a float value for the given key.
     ///
     /// - Parameters:
@@ -174,7 +162,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
 
-    
     /// Set a boolean value for the given key.
     ///
     /// - Parameters:
@@ -184,7 +171,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set a Date object for the given key. A nil value will be converted to an NSNull.
     ///
@@ -196,7 +182,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -206,7 +191,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
-    
     
     /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
     ///
@@ -218,7 +202,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
     
-    
     /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
@@ -229,7 +212,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return setValue(value, forKey: key)
     }
 
-    
     // MARK: Data
     
     /// Set data for the dictionary. Allowed value types are Array, ArrayObject,
@@ -243,9 +225,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return self
     }
     
-    
     // MARK: Removing Entries
-    
     
     /// Removes a given key and its value from the dictionary.
     ///
@@ -256,9 +236,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return self
     }
     
-    
     // MARK: Getting DictionaryObject and ArrayObject
-    
     
     /// Get a property's value as an MutableArrayObject, which is a mapping
     /// object of an array value. Returns nil if the property doesn't exists,
@@ -270,7 +248,6 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return self.value(forKey: key) as? MutableArrayObject
     }
     
-    
     /// Get a property's value as a MutableDictionaryObject, which is a mapping
     /// object of a dictionary value. Returns nil if the property doesn't exists,
     /// or its value is not a dictionary.
@@ -281,9 +258,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return value(forKey: key) as? MutableDictionaryObject
     }
     
-    
     // MARK: Subscript
-    
     
     /// Subscripting access to a MutableFragment object that represents the
     /// value of the dictionary by key.
@@ -294,17 +269,13 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
         return MutableFragment(dictImpl[key])
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLMutableDictionary) {
         super.init(impl)
     }
     
-    
     // MARK: Private
-    
     
     private var dictImpl: CBLMutableDictionary {
         return _impl as! CBLMutableDictionary

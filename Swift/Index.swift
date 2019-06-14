@@ -19,13 +19,10 @@
 
 import Foundation
 
-
 /// Index protocol.
 public protocol Index { }
 
-
 // MARK: Value Index
-
 
 /// A value index for regular queries.
 public final class ValueIndex: Index, CBLIndexConvertible {
@@ -72,9 +69,7 @@ public final class ValueIndexItem {
     
 }
 
-
 // MARK: FTS Index
-
 
 /// A full-text search index for full-text search query with the match operator.
 public final class FullTextIndex: Index, CBLIndexConvertible {
@@ -115,7 +110,6 @@ public final class FullTextIndex: Index, CBLIndexConvertible {
     
 }
 
-
 /// Full-text search index item.
 public class FullTextIndexItem {
     
@@ -135,19 +129,22 @@ public class FullTextIndexItem {
     init(impl: CBLFullTextIndexItem) {
         self.impl = impl
     }
+    
 }
-
 
 protocol CBLIndexConvertible {
+    
     func toImpl() -> CBLIndex
+    
 }
 
-
 extension Index {
+    
     func toImpl() -> CBLIndex {
         if let index = self as? CBLIndexConvertible {
             return index.toImpl()
         }
         fatalError("Unsupported index.")
     }
+    
 }

@@ -32,7 +32,6 @@
 
 @end
 
-
 @interface ReplicatorTest_CustomConflict : ReplicatorTest
 @end
 

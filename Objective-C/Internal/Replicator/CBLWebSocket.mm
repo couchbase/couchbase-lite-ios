@@ -47,7 +47,6 @@ static constexpr size_t kReadBufferSize = 32 * 1024;
 // Beyond this point, I will stop reading from the socket, sending backpressure to the peer.
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
 
-
 struct PendingWrite {
     PendingWrite(NSData *d, void (^h)())
     :data(d)
@@ -59,10 +58,8 @@ struct PendingWrite {
     void (^completionHandler)();
 };
 
-
 @interface CBLWebSocket () <NSStreamDelegate>
 @end
-
 
 @implementation CBLWebSocket
 {
@@ -172,7 +169,6 @@ static void doDispose(C4Socket* s) {
     return self;
 }
 
-
 - (void) dealloc {
     CBLLogVerbose(WebSocket, @"DEALLOC %@", self);
     Assert(!_in);
@@ -180,7 +176,6 @@ static void doDispose(C4Socket* s) {
     if (_httpResponse)
         CFRelease(_httpResponse);
 }
-
 
 - (void) dispose {
     CBLLogVerbose(WebSocket, @"C4Socket of %@ is being disposed", self);
@@ -192,14 +187,12 @@ static void doDispose(C4Socket* s) {
     _keepMeAlive = nil;
 }
 
-
 - (void) clearHTTPState {
     _gotResponseHeaders = _checkSSLCert = false;
     if (_httpResponse)
         CFRelease(_httpResponse);
     _httpResponse = CFHTTPMessageCreateEmpty(NULL, false);
 }
-
 
 - (void) setupAuth {
     Dict auth = _options[kC4ReplicatorOptionAuthentication].asDict();
@@ -226,16 +219,13 @@ static void doDispose(C4Socket* s) {
     CBLWarn(Sync, @"Unknown auth type or missing parameters for auth");
 }
 
-
 - (void) callC4Socket: (void (^)(C4Socket*))callback {
     auto socket = _c4socket.load();
     if (socket)
         callback(socket);
 }
 
-
 #pragma mark - HANDSHAKE:
-
 
 - (void) start {
     dispatch_async(_queue, ^{
@@ -247,7 +237,6 @@ static void doDispose(C4Socket* s) {
         [self _connect];
     });
 }
-
 
 // Opens the TCP connection.
 // This may be called more than once if the initial HTTP response is a redirect or requires auth.
@@ -285,7 +274,6 @@ static void doDispose(C4Socket* s) {
     }
 }
 
-
 - (void) configureSOCKS {
     if (_logic.proxyType == kCBLSOCKSProxy) {
         CFReadStreamSetProperty((__bridge CFReadStreamRef)_in,
@@ -293,7 +281,6 @@ static void doDispose(C4Socket* s) {
                                 (__bridge CFDictionaryRef)_logic.proxySettings);
     }
 }
-
 
 // Sets the TLS/SSL settings of the streams, if necessary.
 // This gets called again after connecting to a proxy, to configure the TLS settings for the
@@ -316,7 +303,6 @@ static void doDispose(C4Socket* s) {
         _checkSSLCert = true;
     }
 }
-
 
 // Sends the initial WebSocket HTTP handshake request.
 - (void) _sendWebSocketRequest {
@@ -344,7 +330,6 @@ static void doDispose(C4Socket* s) {
 
     [self writeData: _logic.HTTPRequestData completionHandler: nil];
 }
-
 
 // Parses the HTTP response.
 - (void) receivedHTTPResponseBytes: (const void*)bytes length: (size_t)length {
@@ -374,7 +359,6 @@ static void doDispose(C4Socket* s) {
     }
 }
 
-
 // Handles a proxy HTTP response, triggering the WebSocket handshake if the tunnel is open.
 - (void) receivedProxyHTTPResponse: (CFHTTPMessageRef)httpResponse {
     NSInteger httpStatus = _logic.httpStatus;
@@ -395,7 +379,6 @@ static void doDispose(C4Socket* s) {
     CBLLogInfo(WebSocket, @"%@ Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
     [self _sendWebSocketRequest];
 }
-
 
 // Handles the WebSocket handshake HTTP response.
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
@@ -439,7 +422,6 @@ static void doDispose(C4Socket* s) {
     }
 }
 
-
 // Notifies LiteCore that the WebSocket is connected.
 - (void) connected: (NSDictionary*)responseHeaders {
     CBLLogInfo(WebSocket, @"CBLWebSocket CONNECTED!");
@@ -447,7 +429,6 @@ static void doDispose(C4Socket* s) {
         c4socket_opened(socket);
     }];
 }
-
 
 // Tests whether a header value matches the expected string.
 static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expected, BOOL caseSens) {
@@ -457,7 +438,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     else
         return value && [value caseInsensitiveCompare: expected] == 0;
 }
-
 
 // Returns the correct Accept: response header value for a given nonce.
 + (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key {
@@ -471,16 +451,13 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     return [data base64EncodedStringWithOptions: 0];
 }
 
-
 #pragma mark - READ / WRITE:
-
 
 // Returns true if there is too much unhandled WebSocket data in memory
 // and we should stop reading from the socket.
 - (bool) readThrottled {
     return _receivedBytesPending >= kMaxReceivedBytesPending;
 }
-
 
 // callback from C4Socket
 - (void) writeAndFree: (C4SliceResult) allocatedData {
@@ -500,7 +477,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     });
 }
 
-
 // Called when WebSocket data is received (NOT necessarily an entire message.)
 - (void) receivedBytes: (const void*)bytes length: (size_t)length {
     self->_receivedBytesPending += length;
@@ -510,7 +486,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         c4socket_received(socket, {bytes, length});
     }];
 }
-
 
 // callback from C4Socket
 - (void) completedReceive: (size_t)byteCount {
@@ -522,7 +497,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     });
 }
 
-
 // callback from C4Socket
 - (void) closeSocket {
     CBLLogInfo(WebSocket, @"CBLWebSocket closeSocket requested");
@@ -533,9 +507,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     });
 }
 
-
 #pragma mark - CLOSING / ERROR HANDLING:
-
 
 // Closes the connection and passes a WebSocket/HTTP status code to LiteCore.
 - (void) closeWithCode: (C4WebSocketCloseCode)code reason: (NSString*)reason {
@@ -552,7 +524,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     [self c4SocketClosed: c4error_make(WebSocketDomain, code, reasonSlice)];
 }
 
-
 // Closes the connection and passes the NSError (if any) to LiteCore.
 - (void) closeWithError: (NSError*)error {
     [self disconnect];
@@ -568,16 +539,13 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     [self c4SocketClosed: c4err];
 }
 
-
 - (void) c4SocketClosed: (C4Error)c4err {
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_closed(socket, c4err);
     }];
 }
 
-
 #pragma mark - NSSTREAM SUPPORT:
-
 
 - (BOOL) checkSSLCert {
     SecTrustRef sslTrust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_in,
@@ -607,14 +575,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     return true;
 }
 
-
 // Asynchronously sends data over the socket, and calls the completion handler block afterwards.
 - (void) writeData: (NSData*)data completionHandler: (void (^)())completionHandler {
     _pendingWrites.emplace_back(data, completionHandler);
     if (_hasSpace)
         [self doWrite];
 }
-
 
 - (void) doWrite {
     while (!_pendingWrites.empty()) {
@@ -637,7 +603,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     }
 }
 
-
 - (void) doRead {
     CBLLogVerbose(WebSocket, @"DoRead...");
     Assert(_hasBytes);
@@ -657,7 +622,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             [self receivedBytes: _readBuffer length: nBytes];
     }
 }
-
 
 - (void)stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     switch (eventCode) {
@@ -694,7 +658,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     }
 }
 
-
 - (void) disconnect {
     CBLLogVerbose(WebSocket, @"%@: Disconnect", self);
     _in.delegate = _out.delegate = nil;
@@ -703,6 +666,5 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     _in = nil;
     _out = nil;
 }
-
 
 @end

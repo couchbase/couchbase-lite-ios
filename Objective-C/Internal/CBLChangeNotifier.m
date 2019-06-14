@@ -20,15 +20,13 @@
 #import "CBLChangeNotifier.h"
 #import "CBLChangeListenerToken.h"
 
-
 @implementation CBLChangeNotifier
 {
     NSMutableSet<CBLChangeListenerToken*>* _listenerTokens;
 }
 
-
 - (CBLChangeListenerToken*) addChangeListenerWithQueue: (dispatch_queue_t)queue
-                                           listener: (void (^)(id))listener
+                                              listener: (void (^)(id))listener
 {
     CBLAssertNotNil(listener);
 
@@ -42,7 +40,6 @@
     }
 }
 
-
 - (NSUInteger) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBLAssertNotNil(token);
 
@@ -52,7 +49,6 @@
     }
 }
 
-
 - (void) postChange: (id)change {
     CBLAssertNotNil(change);
 
@@ -60,6 +56,5 @@
         [_listenerTokens makeObjectsPerformSelector: @selector(postChange:) withObject: change];
     }
 }
-
 
 @end
