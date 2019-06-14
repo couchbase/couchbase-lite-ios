@@ -698,6 +698,60 @@
     AssertEqual([[[self.db documentWithID: docID] toDictionary] allKeys].count, 1u);
 }
 
+- (void)testConflictResolverReturningBlobFromDifferentDB {
+    NSString* docID = @"doc";
+    NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2", @"blob": blob};
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    // using remote document blob is okay to use!
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* mDoc = con.localDocument.toMutable;
+        [mDoc setBlob: [con.remoteDocument blobForKey: @"blob"] forKey: @"blob"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            AssertEqual(docRepl.documents.count, 1u);
+            AssertNil(docRepl.documents.firstObject.error);
+        }];
+    }];
+    [replicator removeChangeListenerWithToken: token];
+    
+    // using blob from remote document of user's- which is a different database
+    CBLDocument* otherDBDoc = [otherDB documentWithID: docID];
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* mDoc = con.localDocument.toMutable;
+        [mDoc setBlob: [otherDBDoc blobForKey: @"blob"] forKey: @"blob"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    __block NSError* error = nil;
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            AssertEqual(docRepl.documents.count, 1u);
+            if (docRepl.documents.firstObject.error) {
+                error = docRepl.documents.firstObject.error;
+            }
+        }];
+    }];
+    AssertNotNil(error);
+    AssertEqual(error.code, CBLErrorUnexpectedError);
+    AssertEqualObjects(error.userInfo[NSLocalizedDescriptionKey], @"A document contains a blob that"
+                       " was saved to a different database; the save operation cannot complete");
+    [replicator removeChangeListenerWithToken: token];
+}
+
 #endif
 
 @end
