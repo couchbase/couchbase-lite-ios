@@ -312,7 +312,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
             return self.otherDB.document(withID: "doc")
         }
-        try validateDocumentReplicationEventForConflictedDocs(resolver)
+        ignoreException {
+            try self.validateDocumentReplicationEventForConflictedDocs(resolver)
+        }
         
         // when resolution is successfull but wrong docID
         resolver = TestConflictResolver() { (conflict) -> Document? in
@@ -419,16 +421,20 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         var token: ListenerToken!
         var replicator: Replicator!
         var error: NSError?
-        run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
-            replicator = repl
-            token = repl.addDocumentReplicationListener({ (docRepl) in
-                if let err = docRepl.documents.first?.error as NSError? {
-                    error = err
-                    XCTAssertEqual(err.code, CBLErrorConflict)
-                    XCTAssertEqual(err.domain, CBLErrorDomain)
-                }
+        
+        ignoreException {
+            self.run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+                replicator = repl
+                token = repl.addDocumentReplicationListener({ (docRepl) in
+                    if let err = docRepl.documents.first?.error as NSError? {
+                        error = err
+                        XCTAssertEqual(err.code, CBLErrorConflict)
+                        XCTAssertEqual(err.domain, CBLErrorDomain)
+                    }
+                })
             })
-        })
+        }
+        
         XCTAssertNotNil(error)
         replicator.removeChangeListener(withToken: token)
         resolver = TestConflictResolver() { (conflict) -> Document? in
@@ -457,16 +463,20 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         var token: ListenerToken!
         var replicator: Replicator!
         var error: NSError?
-        run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
-            replicator = repl
-            token = repl.addDocumentReplicationListener({ (docRepl) in
-                if let err = docRepl.documents.first?.error as NSError? {
-                    error = err
-                    XCTAssertEqual(err.code, CBLErrorConflict)
-                    XCTAssertEqual(err.domain, CBLErrorDomain)
-                }
+        
+        ignoreException {
+            self.run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+                replicator = repl
+                token = repl.addDocumentReplicationListener({ (docRepl) in
+                    if let err = docRepl.documents.first?.error as NSError? {
+                        error = err
+                        XCTAssertEqual(err.code, CBLErrorConflict)
+                        XCTAssertEqual(err.domain, CBLErrorDomain)
+                    }
+                })
             })
-        })
+        }
+        
         XCTAssertNotNil(error)
         replicator.removeChangeListener(withToken: token)
         resolver = TestConflictResolver() { (conflict) -> Document? in
@@ -627,14 +637,16 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return mDoc
         }
         config.conflictResolver = resolver
-        run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
-            replicator = repl
-            token = repl.addDocumentReplicationListener({ (docRepl) in
-                if let err = docRepl.documents.first?.error as NSError? {
-                    XCTAssertEqual(err.code, CBLErrorUnexpectedError)
-                }
+        ignoreException {
+            self.run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+                replicator = repl
+                token = repl.addDocumentReplicationListener({ (docRepl) in
+                    if let err = docRepl.documents.first?.error as NSError? {
+                        XCTAssertEqual(err.code, CBLErrorUnexpectedError)
+                    }
+                })
             })
-        })
+        }
         
         replicator.removeChangeListener(withToken: token)
     }
