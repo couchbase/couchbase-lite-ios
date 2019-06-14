@@ -683,6 +683,41 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(count, 1) // make sure, it entered the conflict resolver
     }
     
+    func testNonBlockingConflictResolver() throws {
+        let expectation = XCTestExpectation(description: "testNonBlockingConflictResolver")
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
+        try makeConflict(forID: "doc2", withLocal: localData, withRemote: remoteData)
+        
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        var order = [String]()
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            order.append(conflict.documentID)
+            
+            if order.count == 1 {
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+            
+            order.append(conflict.documentID)
+            if order.count == 4 {
+                expectation.fulfill()
+            }
+            
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        run(config: config, expectedError: nil)
+        
+        wait(for: [expectation], timeout: 5.0)
+        
+        // make sure, first doc starts resolution but finishes last.
+        // in between second doc starts and finishes it.
+        XCTAssertEqual(order.first, order.last)
+        XCTAssertEqual(order[1], order[2])
+    }
+    
     #endif
 }
 

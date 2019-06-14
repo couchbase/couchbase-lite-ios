@@ -72,7 +72,6 @@ typedef enum {
     kCBLStateStopping,          ///< The replicator was asked to stop but in progress.
     kCBLStateSuspended,         ///< The replicator was suspended; replicator's status is offline.
     kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
-    kCBLStateSuspendingCancel,  ///< The replicator was asked to suspend but got canceled.
     kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
     kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
     kCBLStateStarting           ///< The replicator was asked to start but in progress.
@@ -89,17 +88,18 @@ typedef enum {
     dispatch_queue_t _conflictQueue;
     C4Replicator* _repl;
     NSString* _desc;
-    C4ReplicatorStatus _rawStatus;
     CBLReplicatorState _state;
-    BOOL _deferStoppedNotification;
+    C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
-    unsigned _conflictCount;
     BOOL _allowReachability;
     CBLReachability* _reachability;
     CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
     CBLChangeNotifier<CBLDocumentReplication*>* _docReplicationNotifier;
-    BOOL _resetCheckpoint;
+    BOOL _resetCheckpoint;          // Reset the replicator checkpoint
+    BOOL _cancelSuspending;         // Cancel the current suspending request
+    unsigned _conflictCount;        // Current number of conflict resolving tasks
+    BOOL _deferStoppedNotification; // Defer the stopped until finishing all conflict resolving tasks
 }
 
 @synthesize config=_config;
@@ -262,6 +262,7 @@ typedef enum {
     };
     
     _state = kCBLStateStarting;
+    _cancelSuspending = NO;
     
     C4Error err;
     CBL_LOCK(_config.database) {
@@ -458,7 +459,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     CBL_LOCK(self) {
         // Convert stopped to offline if suspending or having a transient/network error:
         if (c4Status.level == kC4Stopped && _state > kCBLStateStopping) {
-            if ([self isSuspendInProgress] || [self handleError: c4Status.error])
+            if (_state == kCBLStateSuspending || [self handleError: c4Status.error])
                 c4Status.level = kC4Offline;
         }
         
@@ -475,13 +476,12 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         }
         
         // Offline / suspending:
-        BOOL shouldUnsuspend = NO;
+        BOOL resume = NO;
         if (c4Status.level == kC4Offline) {
             [self clearRepl];
-            if ([self isSuspendInProgress]) {
-                if (_state == kCBLStateSuspendingCancel)
-                    shouldUnsuspend = YES;
+            if (_state == kCBLStateSuspending) {
                 _state = kCBLStateSuspended;
+                resume = _cancelSuspending;
             } else
                 _state = kCBLStateOffline;
         }
@@ -502,7 +502,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else
             [self updateAndPostStatus];
         
-        if (shouldUnsuspend)
+        if (resume)
             [self retry: YES];
         
     #if TARGET_OS_IPHONE
@@ -713,8 +713,8 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
         if (changed) {
             CBLLogInfo(Sync, @"%@: Set suspended = %d (state = %d, status = %d)",
                        self, suspended, _state, _rawStatus.level);
-            if ([self isSuspendInProgress]) {
-                _state = suspended ? kCBLStateSuspending : kCBLStateSuspendingCancel;
+            if (_state == kCBLStateSuspending) {
+                _cancelSuspending = !suspended;
                 return;
             }
             
@@ -725,11 +725,6 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
                 [self retry: YES];
         }
     }
-}
-
-
-- (BOOL) isSuspendInProgress {
-    return _state == kCBLStateSuspending || _state == kCBLStateSuspendingCancel;
 }
 
 
