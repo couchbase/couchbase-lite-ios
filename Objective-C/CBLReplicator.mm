@@ -68,13 +68,14 @@ typedef enum {
 
 // For controlling async start, stop, and suspend:
 typedef enum {
-    kCBLStateStopped = 0,
-    kCBLStateStopping,
-    kCBLStateSuspended,
-    kCBLStateSuspending,
-    kCBLStateUnsuspending,
-    kCBLStateStarted,
-    kCBLStateStarting
+    kCBLStateStopped = 0,       ///< The replicator was stopped.
+    kCBLStateStopping,          ///< The replicator was asked to stop but in progress.
+    kCBLStateSuspended,         ///< The replicator was suspended; replicator's status is offline.
+    kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
+    kCBLStateSuspendingCancel,  ///< The replicator was asked to suspend but got canceled.
+    kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
+    kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
+    kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
@@ -383,7 +384,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         bool reachable = _reachability.reachable;
-        if (reachable && _state == kCBLStateStarted && _rawStatus.level == kC4Offline) {
+        if (reachable && _state == kCBLStateOffline) {
             CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
             [self retry: YES];
         }
@@ -455,32 +456,34 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Should be called from the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        // Convert stopped to offline if suspending or having a transient or network error:
+        // Convert stopped to offline if suspending or having a transient/network error:
         if (c4Status.level == kC4Stopped && _state > kCBLStateStopping) {
-            if ([self isSuspendInProgress] || [self handleError: c4Status.error]) {
-                // Change c4Status to offline, so my state will reflect that, and proceed:
+            if ([self isSuspendInProgress] || [self handleError: c4Status.error])
                 c4Status.level = kC4Offline;
-            }
-        } else if (c4Status.level > kC4Connecting) {
-            _retryCount = 0;
-            [self stopReachabilityObserver];
         }
-        
-        // Change from starting to started state:
-        if (_state == kCBLStateStarting && c4Status.level != kC4Stopped)
-            _state = kCBLStateStarted;
         
         // Record raw status:
         _rawStatus = c4Status;
         
-        // Offline:
-        BOOL unsuspend = NO;
+        // Running; idle or busy:
+        if (c4Status.level > kC4Connecting) {
+            if (_state == kCBLStateStarting) {
+                _state = kCBLStateRunning;
+            }
+            _retryCount = 0;
+            [self stopReachabilityObserver];
+        }
+        
+        // Offline / suspending:
+        BOOL shouldUnsuspend = NO;
         if (c4Status.level == kC4Offline) {
             [self clearRepl];
-            if (_state == kCBLStateSuspending)
+            if ([self isSuspendInProgress]) {
+                if (_state == kCBLStateSuspendingCancel)
+                    shouldUnsuspend = YES;
                 _state = kCBLStateSuspended;
-            else if (_state == kCBLStateUnsuspending)
-                unsuspend = YES; // Unsuspending comes before stopped status
+            } else
+                _state = kCBLStateOffline;
         }
         
         // Stopped:
@@ -499,7 +502,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else
             [self updateAndPostStatus];
         
-        if (unsuspend)
+        if (shouldUnsuspend)
             [self retry: YES];
         
     #if TARGET_OS_IPHONE
@@ -534,8 +537,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                        _dispatchQueue, ^{
                            CBL_LOCK(self) {
-                               // Retry if not in stop or suspending state:
-                               if (_state == kCBLStateStarted)
+                               // Retry if still in offline state:
+                               if (_state == kCBLStateOffline)
                                    [self retry: NO];
                            }
                        });
@@ -711,7 +714,7 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
             CBLLogInfo(Sync, @"%@: Set suspended = %d (state = %d, status = %d)",
                        self, suspended, _state, _rawStatus.level);
             if ([self isSuspendInProgress]) {
-                _state = suspended ? kCBLStateSuspending : kCBLStateUnsuspending;
+                _state = suspended ? kCBLStateSuspending : kCBLStateSuspendingCancel;
                 return;
             }
             
@@ -726,7 +729,7 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
 
 
 - (BOOL) isSuspendInProgress {
-    return _state == kCBLStateSuspending || _state == kCBLStateUnsuspending;
+    return _state == kCBLStateSuspending || _state == kCBLStateSuspendingCancel;
 }
 
 
