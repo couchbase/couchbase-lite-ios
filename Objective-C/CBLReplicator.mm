@@ -68,14 +68,14 @@ typedef enum {
 
 // For controlling async start, stop, and suspend:
 typedef enum {
-    kCBLStateStopped = 0,
-    kCBLStateStopping,
-    kCBLStateSuspended,
-    kCBLStateSuspending,
-    kCBLStateSuspendingCancel,
-    kCBLStateOffline,
-    kCBLStateRunning,
-    kCBLStateStarting
+    kCBLStateStopped = 0,       ///< The replicator was stopped.
+    kCBLStateStopping,          ///< The replicator was asked to stop but in progress.
+    kCBLStateSuspended,         ///< The replicator was suspended; replicator's status is offline.
+    kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
+    kCBLStateSuspendingCancel,  ///< The replicator was asked to suspend but got canceled.
+    kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
+    kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
+    kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
