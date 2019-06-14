@@ -698,6 +698,42 @@
     AssertEqual([[[self.db documentWithID: docID] toDictionary] allKeys].count, 1u);
 }
 
+- (void) testNonBlockingConflictResolver {
+    XCTestExpectation* ex = [self expectationWithDescription: @"testNonBlockingConflictResolver"];
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: @"doc1" withLocal: localData withRemote: remoteData];
+    [self makeConflictFor: @"doc2" withLocal: localData withRemote: remoteData];
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    NSMutableArray* order = [NSMutableArray array];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        @synchronized (order) {
+            [order addObject: con.localDocument.id];
+        }
+        if (order.count == 1) {
+            [NSThread sleepForTimeInterval: 0.5];
+        }
+        [order addObject: con.localDocument.id];
+        
+        if (order.count == 4) {
+            [ex fulfill];
+        }
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    [self waitForExpectations: @[ex] timeout: 5.0];
+    
+    // make sure, first doc starts resolution but finishes last.
+    // in between second doc starts and finishes it.
+    AssertEqualObjects(order.firstObject, order.lastObject);
+    AssertEqualObjects(order[1], order[2]);
+}
+
 #endif
 
 @end
