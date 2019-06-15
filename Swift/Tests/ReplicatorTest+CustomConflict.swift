@@ -638,16 +638,21 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return mDoc
         }
         config.conflictResolver = resolver
+        var error: NSError? = nil
         ignoreException {
             self.run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
                 replicator = repl
                 token = repl.addDocumentReplicationListener({ (docRepl) in
                     if let err = docRepl.documents.first?.error as NSError? {
-                        XCTAssertEqual(err.code, CBLErrorUnexpectedError)
+                        error = err
                     }
                 })
             })
         }
+        XCTAssertNotNil(error)
+        XCTAssertEqual(error?.code, CBLErrorUnexpectedError)
+        XCTAssert((error?.userInfo[NSLocalizedDescriptionKey] as! String) == "A document contains" +
+            " a blob that was saved to a different database; the save operation cannot complete")
         
         replicator.removeChangeListener(withToken: token)
     }
