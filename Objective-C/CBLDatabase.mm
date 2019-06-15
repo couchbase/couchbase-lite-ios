@@ -958,7 +958,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             remoteDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
                                                includeDeleted: YES error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
-                CBLWarn(Sync, @"Unable to select conflicting revision for %@, skipping...", docID);
+                CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may \
+                        have been resolved...", docID);
                 return NO;
             }
         }
