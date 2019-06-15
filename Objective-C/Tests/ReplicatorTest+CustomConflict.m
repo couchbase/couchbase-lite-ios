@@ -742,6 +742,7 @@
     CBLDatabase.log.custom = custom;
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
+    XCTestExpectation* expFirstDocResolve = [self expectationWithDescription:@"wait for first conflict to resolve"];
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
@@ -753,7 +754,7 @@
         int c = ccrCount;
         if (ccrCount++ == 0) {
             [expCCR fulfill];
-            [NSThread sleepForTimeInterval: 2.0];
+            [self waitForExpectations: @[expFirstDocResolve] timeout: 5.0];
         }
         return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
     }];
@@ -772,6 +773,9 @@
     __block int noOfNotificationReceived = 0;
     id docReplToken = [replicator addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
         noOfNotificationReceived++;
+        if (noOfNotificationReceived == 1) {
+            [expFirstDocResolve fulfill];
+        }
         AssertEqualObjects(docRepl.documents.firstObject.id, docID);
     }];
     
