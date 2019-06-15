@@ -880,6 +880,7 @@
     
     AssertEqual(errors.count, 1u);
     AssertEqual(errors.firstObject.code, CBLErrorNotFound);
+    [replicator removeChangeListenerWithToken: token];
 }
 
 #endif
