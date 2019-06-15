@@ -24,14 +24,11 @@
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLJSON.h"
 
-
 @interface PredicateQueryTest : CBLTestCase
 
 @end
 
-
 @implementation PredicateQueryTest
-
 
 - (CBLDocument*) docForRow: (CBLQueryRow*)row {
     NSString* docID = [row stringAtIndex: 0];
@@ -40,7 +37,6 @@
     AssertEqual(doc.sequence, sequence);
     return doc;
 }
-
 
 - (uint64_t) verifyQuery: (CBLPredicateQuery*)q test: (void (^)(uint64_t n, CBLQueryRow *row))block {
     NSError* error;
@@ -53,7 +49,6 @@
     }
     return n;
 }
-
 
 - (void) testPredicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
@@ -104,7 +99,6 @@
     }
 }
 
-
 - (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
     NSError *error;
@@ -118,7 +112,6 @@
     }];
     AssertEqual(numRows, 100llu);
 }
-
 
 - (void) testOffsetAndLimit {
     [self loadJSONResource: @"names_100"];
@@ -142,7 +135,6 @@
                                   @"doc-026",
                                   @"doc-027"]));
 }
-
 
 - (void) testSortDescriptors {
     // Strings:
@@ -186,7 +178,6 @@
     AssertEqualObjects(actual, [CBLPredicateQuery json5ToJSON: json5]);
 }
 
-
 - (void) testPropertyQuery               {[self propertyQueryWithReopen: NO];}
 - (void) testPropertyQueryAfterReopen    {[self propertyQueryWithReopen: YES];}
 
@@ -225,7 +216,6 @@
     Assert([self.db deleteIndexForName: @"name.first" error: &error]);
 }
 
-
 - (void) testProjection {
     NSArray* expectedZips = @[@"55587", @"56307", @"56308"];
     NSArray* expectedEmails = @[ @[@"monte.mihlfeld@nosql-matters.org"],
@@ -245,7 +235,6 @@
     }];
     AssertEqual((int)numRows, 3);
 }
-
 
 - (void) testFTS {
     [self loadJSONResource: @"sentences"];
@@ -269,7 +258,6 @@
     AssertEqual((int)numRows, 2);
 }
 
-
 - (void) testAggregate {
     [self loadJSONResource: @"names_100"];
     CBLPredicateQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
@@ -287,7 +275,6 @@
     }];
     AssertEqual((int)numRows, 1);
 }
-
 
 - (void) testGroupBy {
     NSArray* expectedStates = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
@@ -320,7 +307,6 @@
     AssertEqual((int)numRows, 31);
 }
 
-
 - (void) failingTest10_Like {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1667
     [self loadJSONResource: @"names_100"];
@@ -335,7 +321,6 @@
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
-
 
 - (void) failingTest11_Regexp {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1668
@@ -352,7 +337,6 @@
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
-
 
 - (void) failingTest12_SelectDistinct {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
@@ -373,7 +357,6 @@
     }];
     AssertEqual(numRows, 1u);
 }
-
 
 - (void) failingTest13_Null {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
@@ -411,7 +394,6 @@
         AssertEqual((int)numRows, (int)expectedDocs.count);
     }
 }
-
 
 - (void) testWhereIn {
     [self loadJSONResource: @"names_100"];

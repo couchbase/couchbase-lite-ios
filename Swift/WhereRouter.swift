@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// WhereRouter for creating and chaning a query WHERE clause.
 protocol WhereRouter {
     

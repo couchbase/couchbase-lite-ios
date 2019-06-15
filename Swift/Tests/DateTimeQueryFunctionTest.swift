@@ -21,6 +21,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class DateTimeQueryFunctionTest: CBLTestCase {
+    
     func testStringToMillis() throws {
         try validateStringToMillis("", millis: 0.0)
         try validateStringToMillis("2018-12-32T01:01:01Z", millis: 0.0)
@@ -163,4 +164,5 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         
         try db.purgeDocument(doc)
     }
+    
 }

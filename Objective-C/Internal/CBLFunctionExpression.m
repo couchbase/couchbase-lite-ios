@@ -24,7 +24,6 @@
     NSArray<CBLQueryExpression*>* _params;
 }
 
-
 - (instancetype) initWithFunction: (NSString*)function
                            params: (nullable NSArray<CBLQueryExpression*>*)params {
     self = [super initWithNone];
@@ -34,7 +33,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _params.count + 1];

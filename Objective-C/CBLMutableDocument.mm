@@ -28,12 +28,10 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
-
 @implementation CBLMutableDocument
 {
     NSError* _encodingError;
 }
-
 
 #pragma mark - Initializer
 
@@ -41,23 +39,19 @@
     return [[self alloc] initWithID: nil];
 }
 
-
 + (instancetype) documentWithID: (nullable NSString*)documentID {
     return [[self alloc] initWithID: documentID];
 }
 
-
 - (instancetype) init {
     return [self initWithID: nil];
 }
-
 
 - (instancetype) initWithID: (nullable NSString*)documentID {
     return [self initWithDatabase: nil
                        documentID: (documentID ?: CBLCreateUUID())
                             c4Doc: nil];
 }
-
 
 - (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
     self = [self initWithID: nil];
@@ -66,7 +60,6 @@
     }
     return self;
 }
-
 
 - (instancetype) initWithID: (nullable NSString*)documentID
                  data: (nullable NSDictionary<NSString*,id>*)data
@@ -77,7 +70,6 @@
     }
     return self;
 }
-
 
 /* internal */ - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                                   dict: (nullable CBLDictionary*)dict
@@ -93,93 +85,74 @@
 
 #pragma mark - Edit
 
-
 - (CBLMutableDocument*) mutableCopyWithZone: (NSZone *)zone {
     return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: _dict];
 }
 
-
 #pragma mark - CBLMutableDictionary
-
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setValue: value forKey: key];
 }
 
-
-- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
+- (void) setString: (nullable NSString*)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setString: value forKey: key];
 }
 
-
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setNumber: value forKey: key];
 }
 
-
-- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
+- (void) setInteger: (NSInteger)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setInteger: value forKey: key];
 }
 
-
-- (void) setLongLong: (long long)value forKey: (NSString *)key {
+- (void) setLongLong: (long long)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setLongLong: value forKey: key];
 }
 
-
-- (void) setFloat: (float)value forKey: (NSString *)key {
+- (void) setFloat: (float)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setFloat: value forKey: key];
 }
 
-
-- (void) setDouble: (double)value forKey: (NSString *)key {
+- (void) setDouble: (double)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setDouble: value forKey: key];
 }
 
-
-- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
+- (void) setBoolean: (BOOL)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setBoolean: value forKey: key];
 }
 
-
-- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
+- (void) setDate: (nullable NSDate *)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setDate: value forKey: key];
 }
 
-
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setBlob: value forKey: key];
 }
 
-
-- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
+- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setArray: value forKey: key];
 }
 
-
-- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
+- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setDictionary: value forKey: key];
 }
 
-
-- (void) removeValueForKey: (NSString *)key {
+- (void) removeValueForKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) removeValueForKey: key];
 }
 
-
-- (void) setData: (nullable NSDictionary<NSString *,id> *)data {
+- (void) setData: (nullable NSDictionary<NSString *,id>*)data {
     [((CBLMutableDictionary*)_dict) setData: data];
 }
 
-
 #pragma mark - Internal
-
 
 - (bool) isMutable {
     // CBLMutableDocument overrides this
     return true;
 }
-
 
 // TODO: This value is incorrect after the document is saved as self.changed
 // doesn't get reset. However this is currently being used during replication's
@@ -188,18 +161,14 @@
     return super.generation + !!self.changed;
 }
 
-
 #pragma mark - Private
-
 
 // TODO: Need to be reset after the document is saved.
 - (BOOL) changed {
     return ((CBLMutableDictionary*)_dict).changed;
 }
 
-
 #pragma mark - Fleece Encodable
-
 
 - (C4SliceResult) encode: (NSError**)outError {
     _encodingError = nil;
@@ -220,12 +189,10 @@
     return body;
 }
 
-
 // Objects being encoded can call this
 - (void) setEncodingError: (NSError*)error {
     if (!_encodingError)
         _encodingError = error;
 }
-
 
 @end

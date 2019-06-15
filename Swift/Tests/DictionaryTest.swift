@@ -21,7 +21,6 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class DictionaryTest: CBLTestCase {
     
     func testCreateDictionary() throws {
@@ -37,7 +36,6 @@ class DictionaryTest: CBLTestCase {
             XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == [:] as [String: Any])
         }
     }
-    
     
     func testCreateDictionaryWithSwiftDictionary() throws {
         let dict: [String: Any] = ["street": "1 Main street",
@@ -58,7 +56,6 @@ class DictionaryTest: CBLTestCase {
         })
     }
     
-    
     func testGetValueFromNewEmptyDictionary() throws {
         let doc = createDocument("doc1")
         doc.setValue(MutableDictionaryObject(), forKey: "dict")
@@ -77,7 +74,6 @@ class DictionaryTest: CBLTestCase {
             XCTAssertNil(dict.array(forKey: "key"))
         })
     }
-    
     
     func testSetNestedDictionaries() throws {
         let doc = createDocument("doc1")
@@ -105,7 +101,6 @@ class DictionaryTest: CBLTestCase {
         })
     }
     
-    
     func testRemoveDictionary() throws {
         let doc = createDocument("doc1")
         let profile1 = MutableDictionaryObject()
@@ -129,7 +124,6 @@ class DictionaryTest: CBLTestCase {
             XCTAssertFalse(d.contains("profile"))
         })
     }
-    
     
     func testEnumeratingKeys() throws {
         let dict = MutableDictionaryObject()
@@ -177,7 +171,6 @@ class DictionaryTest: CBLTestCase {
             XCTAssertEqual(count, content.count)
         }
     }
-    
     
     func testToMutable() throws {
         let mDict1 = MutableDictionaryObject()

@@ -48,4 +48,5 @@ public class FileLogger {
     // MARK: Internal
     
     init() { }
+    
 }

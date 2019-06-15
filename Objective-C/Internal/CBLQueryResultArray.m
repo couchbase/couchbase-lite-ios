@@ -35,21 +35,17 @@
     return self;
 }
 
-
 - (NSUInteger) count {
     return _count;
 }
-
 
 - (id) objectAtIndex: (NSUInteger)index {
     return [_rs objectAtIndex: index];
 }
 
-
 - (id) copyWithZone:(NSZone *)zone {
     return self;
 }
-
 
 - (NSMutableArray*) mutableCopy {
     NSMutableArray* m = [[NSMutableArray alloc] initWithCapacity: _count];
@@ -58,11 +54,9 @@
     return m;
 }
 
-
 // This is what the %@ substitution calls.
-- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
+- (NSString*) descriptionWithLocale:(id)locale indent: (NSUInteger)level {
     return [NSString stringWithFormat: @"%@[%lu rows]", [self class], (unsigned long)_count];
 }
-
 
 @end

@@ -33,16 +33,13 @@
     return self;
 }
 
-
 - (BOOL) exists {
     return _doc != nil;
 }
 
-
 - (CBLDocument*) document {
     return _doc;
 }
-
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     CBLAssertNotNil(key);

@@ -25,7 +25,6 @@
     NSString* _identityID;
 }
 
-
 - (instancetype) initWithIdentityID: (NSString*)identityID {
     CBLAssertNotNil(identityID);
     
@@ -40,7 +39,6 @@
     return self;
 }
 
-
 - (SecIdentityRef) identity {
     SecIdentityRef identity = MYFindIdentity(_identityID);
     if (identity)
@@ -48,13 +46,11 @@
     return identity;
 }
 
-
-- (void) authenticate: (NSMutableDictionary *)options {
+- (void) authenticate: (NSMutableDictionary*)options {
     NSMutableDictionary *auth = [NSMutableDictionary new];
     auth[@kC4ReplicatorAuthType] = @kC4AuthTypeClientCert;
     auth[@kC4ReplicatorAuthClientCert] = _identityID;
     options[@kC4ReplicatorOptionAuthentication] = auth;
 }
-
 
 @end

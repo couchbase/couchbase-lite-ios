@@ -20,7 +20,6 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class DatabaseTest: CBLTestCase {
 
     func verifyDocument(withID id: String, data: Dictionary<String, Any>) {

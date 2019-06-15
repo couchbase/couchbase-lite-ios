@@ -34,16 +34,13 @@
     return self;
 }
 
-
 - (C4IndexType) indexType {
     return kC4ValueIndex;
 }
 
-
 - (C4IndexOptions) indexOptions {
     return (C4IndexOptions){ };
 }
-
 
 - (id) indexItems {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _items.count];
@@ -52,7 +49,6 @@
     }
     return json;
 }
-
 
 @end
 
@@ -68,14 +64,12 @@
     return self;
 }
 
-
 + (CBLValueIndexItem*) property: (NSString*)property{
     CBLAssertNotNil(property);
     
     return [[CBLValueIndexItem alloc] initWithExpression:
             [CBLQueryExpression property: property]];
 }
-
 
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);

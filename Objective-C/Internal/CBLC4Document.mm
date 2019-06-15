@@ -23,11 +23,9 @@
     C4Document* _rawDoc;
 }
 
-
 + (instancetype) document: (C4Document*)rawDoc {
     return [[self alloc] initWithRawDoc: rawDoc];
 }
-
 
 - (instancetype) initWithRawDoc: (C4Document*)rawDoc {
     self = [super init];
@@ -37,35 +35,28 @@
     return self;
 }
 
-
 - (C4Document*) rawDoc {
     return _rawDoc;
 }
-
 
 - (C4DocumentFlags) flags {
     return _rawDoc->selectedRev.flags;
 }
 
-
 - (C4SequenceNumber) sequence {
     return _rawDoc->selectedRev.sequence;
 }
-
 
 - (C4String) revID {
     return _rawDoc->selectedRev.revID;
 }
 
-
 - (C4Slice) body {
     return _rawDoc->selectedRev.body;
 }
 
-
 - (void) dealloc {
     c4doc_free(_rawDoc);
 }
-
 
 @end

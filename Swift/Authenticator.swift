@@ -27,7 +27,9 @@ public protocol Authenticator {
 }
 
 /* internal */ protocol IAuthenticator: Authenticator {
+    
     func toImpl() -> CBLAuthenticator;
+    
 }
 
 /// The BasicAuthenticator class is an authenticator that will authenticate using HTTP Basic
@@ -38,10 +40,8 @@ public struct BasicAuthenticator: IAuthenticator {
     /// The username.
     public let username: String
     
-    
     /// The password.
     public let password: String
-    
     
     /// Initializes with the username and password.
     ///
@@ -53,9 +53,7 @@ public struct BasicAuthenticator: IAuthenticator {
         self.password = password
     }
     
-    
     // MARK: Internal
-    
     
     func toImpl() -> CBLAuthenticator {
         return CBLBasicAuthenticator(username: username, password: password)
@@ -70,11 +68,9 @@ public struct SessionAuthenticator: IAuthenticator {
     /// Session ID of the session created by a Sync Gateway.
     public let sessionID: String
     
-    
     /// Session cookie name that the session ID value will be set to when communicating
     /// the Sync Gateaway.
     public let cookieName: String
-    
     
     /// Initializes with the Sync Gateway session ID and uses the default cookie name.
     ///
@@ -82,7 +78,6 @@ public struct SessionAuthenticator: IAuthenticator {
     public init(sessionID: String) {
         self.init(sessionID: sessionID, cookieName: nil)
     }
-    
     
     /// Initializes with the session ID and the cookie name. If the given cookieName
     /// is nil, the default cookie name will be used.
@@ -95,9 +90,7 @@ public struct SessionAuthenticator: IAuthenticator {
         self.cookieName = cookieName != nil ? cookieName! : defaultCookieName
     }
     
-    
     // MARK: Internal
-    
     
     let defaultCookieName = "SyncGatewaySession"
     

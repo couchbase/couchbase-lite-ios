@@ -24,7 +24,6 @@
 
 #pragma mark - SELECT > FROM
 
-
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
 {
@@ -39,7 +38,6 @@
                                     orderBy: nil
                                       limit: nil];
 }
-
 
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
@@ -56,9 +54,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > WHERE
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -76,7 +72,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                        where: (nullable CBLQueryExpression*)where
@@ -93,9 +88,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > WHERE > GROUP BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -114,7 +107,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                        where: (nullable CBLQueryExpression*)where
@@ -132,9 +124,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -154,7 +144,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                        where: (nullable CBLQueryExpression*)where
@@ -173,9 +162,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > WHERE > ORDER BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -194,7 +181,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                        where: (nullable CBLQueryExpression*)where
@@ -212,9 +198,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING > ORDER BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -257,9 +241,7 @@
                                       limit: limit];
 }
 
-
 #pragma mark - SELECT > FROM > JOIN
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -277,7 +259,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -294,9 +275,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > JOIN > WHERE
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -315,7 +294,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -333,9 +311,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -355,7 +331,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -374,9 +349,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY > HAVING
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -397,7 +370,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -417,9 +389,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark - SELECT > FROM > JOIN > WHERE > ORDER BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -439,7 +409,6 @@
                                       limit: nil];
 }
 
-
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
                         join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -458,9 +427,7 @@
                                       limit: nil];
 }
 
-
 #pragma mark -  SELECT > FROM > JOIN > WHERE > GROUP BY> HAVING > ORDER BY
-
 
 + (CBLQuery*) select: (NSArray<CBLQuerySelectResult*>*)select
                 from: (CBLQueryDataSource*)from
@@ -482,7 +449,6 @@
                                     orderBy: orderings
                                       limit: limit];
 }
-
 
 + (CBLQuery*) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                         from: (CBLQueryDataSource*)from
@@ -506,4 +472,3 @@
 }
 
 @end
-

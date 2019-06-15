@@ -22,11 +22,11 @@
 
 @implementation CBLNoErrorLogic
 
-- (BOOL)shouldCloseAtLocation:(CBLMockConnectionLifecycleLocation)location {
+- (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location {
     return NO;
 }
 
-- (CBLMessagingError*)createError {
+- (CBLMessagingError*) createError {
     return nil;
 }
 
@@ -40,16 +40,26 @@
     NSInteger _total;
 }
 
-- (instancetype)initAtLocation:(CBLMockConnectionLifecycleLocation)location withRecoveryCount:(NSInteger)recoveryCount {
+- (instancetype)initAtLocation: (CBLMockConnectionLifecycleLocation)location
+             withRecoveryCount: (NSInteger)recoveryCount
+{
     self = [super init];
     if(self) {
         if(recoveryCount <= 0) {
             _total = INT32_MAX;
-            _error = [[CBLMessagingError alloc] initWithError:[NSError errorWithDomain:NSPOSIXErrorDomain code:EACCES userInfo:@{@"message":@"Test Permanent Exception"}] isRecoverable:NO];
+            _error = [[CBLMessagingError alloc] initWithError:
+                      [NSError errorWithDomain: NSPOSIXErrorDomain
+                                          code: EACCES
+                                      userInfo: @{@"message":@"Test Permanent Exception"}]
+                                                isRecoverable: NO];
             
         } else {
             _total = recoveryCount;
-            _error = [[CBLMessagingError alloc] initWithError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ECONNRESET userInfo:@{@"message":@"Test Recoverable Exception"}] isRecoverable:YES];
+            _error = [[CBLMessagingError alloc] initWithError:
+                      [NSError errorWithDomain: NSPOSIXErrorDomain
+                                          code: ECONNRESET
+                                      userInfo: @{@"message":@"Test Recoverable Exception"}]
+                                                isRecoverable: YES];
         }
         
         _location = location;
@@ -58,11 +68,11 @@
     return self;
 }
 
-- (BOOL)shouldCloseAtLocation:(CBLMockConnectionLifecycleLocation)location {
+- (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location {
     return _current < _total && location == _location;
 }
 
-- (CBLMessagingError*)createError {
+- (CBLMessagingError*) createError {
     _current++;
     return _error;
 }
@@ -72,12 +82,16 @@
 @implementation CBLReconnectErrorLogic
 @synthesize isErrorActive;
 
-- (BOOL)shouldCloseAtLocation:(CBLMockConnectionLifecycleLocation)location {
+- (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location {
     return isErrorActive;
 }
 
-- (CBLMessagingError*)createError {
-    return [[CBLMessagingError alloc] initWithError:[NSError errorWithDomain:CBLErrorDomain code:-1 userInfo:@{@"message":@"Server is no longer listening"}] isRecoverable:false];
+- (CBLMessagingError*) createError {
+    return [[CBLMessagingError alloc] initWithError:
+            [NSError errorWithDomain: CBLErrorDomain
+                                code: -1
+                            userInfo: @{@"message":@"Server is no longer listening"}]
+                                      isRecoverable: false];
 }
 
 @end

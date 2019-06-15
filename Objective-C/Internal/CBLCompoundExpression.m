@@ -25,7 +25,6 @@
     CBLCompoundExpType _type;
 }
 
-
 - (instancetype) initWithExpressions: (NSArray<CBLQueryExpression*>*)expressions
                                 type: (CBLCompoundExpType)type
 {
@@ -36,7 +35,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
@@ -61,6 +59,5 @@
     
     return json;
 }
-
 
 @end

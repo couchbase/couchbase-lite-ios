@@ -21,7 +21,6 @@
 
 @implementation CBLQueryFunction (Vector)
 
-
 + (CBLQueryExpression*) euclideanDistanceBetween: (CBLQueryExpression*)expression1
                                              and: (CBLQueryExpression*)expression2
 {
@@ -31,7 +30,6 @@
     return [[CBLFunctionExpression alloc] initWithFunction: @"EUCLIDEAN_DISTANCE()"
                                                     params: @[expression1, expression2]];
 }
-
 
 + (CBLQueryExpression*) squaredEuclideanDistanceBetween: (CBLQueryExpression*)expression1
                                                     and: (CBLQueryExpression*)expression2
@@ -43,7 +41,6 @@
                                                     params: @[expression1, expression2,
                                                               [CBLQueryExpression integer: 2]]];
 }
-
 
 + (CBLQueryExpression*) cosineDistanceBetween: (CBLQueryExpression*)expression1
                                           and: (CBLQueryExpression*)expression2

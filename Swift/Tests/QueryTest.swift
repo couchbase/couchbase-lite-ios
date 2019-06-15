@@ -22,6 +22,7 @@ import XCTest
 @testable import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
+    
     let kDOCID = SelectResult.expression(Meta.id)
     
     let kSEQUENCE = SelectResult.expression(Meta.sequence)
@@ -66,7 +67,6 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    
     func testNoWhereQuery() throws {
         try loadJSONResource(name: "names_100")
         
@@ -82,7 +82,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 100);
     }
     
-    
     func testWhereComparison() throws {
         let n1 = Expression.property("number1")
         let cases = [
@@ -96,7 +95,6 @@ class QueryTest: CBLTestCase {
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
     }
-    
     
     func testWhereArithmetic() throws {
         let n1 = Expression.property("number1")
@@ -117,7 +115,6 @@ class QueryTest: CBLTestCase {
         try runTestWithNumbers(numbers, cases: cases)
     }
     
-    
     func testWhereAndOr() throws {
         let n1 = Expression.property("number1")
         let n2 = Expression.property("number2")
@@ -128,7 +125,6 @@ class QueryTest: CBLTestCase {
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
     }
-    
     
     func testWhereNullOrMissing() throws {
         let doc1 = createDocument("doc1")
@@ -172,7 +168,6 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    
     func testWhereIs() throws {
         let doc1 = MutableDocument()
         doc1.setValue("string", forKey: "string")
@@ -197,7 +192,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 1);
     }
     
-    
     func testWhereBetween() throws {
         let n1 = Expression.property("number1")
         let cases = [
@@ -206,7 +200,6 @@ class QueryTest: CBLTestCase {
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
     }
-    
     
     func testWhereLike() throws {
         try loadJSONResource(name: "names_100")
@@ -230,7 +223,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
-    
     func testWhereIn() throws {
         try loadJSONResource(name: "names_100")
         let expected = ["Marcy", "Margaretta", "Margrett", "Marlen", "Maryjo"]
@@ -245,7 +237,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(Int(numRows), expected.count);
     }
-    
     
     func testWhereRegex() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
@@ -270,7 +261,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
-    
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
@@ -291,7 +281,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 2)
     }
 
-    
     func testOrderBy() throws {
         try loadJSONResource(name: "names_100")
         
@@ -320,7 +309,6 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    
     func testSelectDistinct() throws {
         let doc1 = MutableDocument()
         doc1.setValue(20, forKey: "number")
@@ -338,7 +326,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
     }
-    
     
     func testJoin() throws {
         try loadNumbers(100)
@@ -533,7 +520,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 15)
     }
     
-    
     func testParameters() throws {
         try loadNumbers(10)
         
@@ -558,7 +544,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 4)
     }
-    
     
     func testMeta() throws {
         try loadNumbers(5)
@@ -600,7 +585,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 5)
     }
     
-    
     func testLimit() throws {
         try loadNumbers(10)
         
@@ -634,7 +618,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 3)
     }
-    
     
     func testLimitOffset() throws {
         try loadNumbers(10)
@@ -672,7 +655,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 3)
     }
     
-    
     func testQueryResult() throws {
         try loadJSONResource(name: "names_100")
         
@@ -700,7 +682,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
     }
     
-    
     func testQueryProjectingKeys() throws {
         try loadNumbers(100)
         
@@ -725,7 +706,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 1)
     }
     
-    
     func testAggregateFunctions() throws {
         try loadNumbers(100)
         
@@ -748,7 +728,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
     }
-    
     
     func testArrayFunctions() throws {
         let doc = MutableDocument(id: "doc1")
@@ -904,7 +883,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 1)
     }
     
-    
     func testQuantifiedOperators() throws {
         try loadJSONResource(name: "names_100")
         
@@ -948,7 +926,6 @@ class QueryTest: CBLTestCase {
         numRow = try verifyQuery(q, block: { (n, r) in })
         XCTAssertEqual(numRow, 0)
     }
-    
     
     func testSelectAll() throws {
         try loadNumbers(100)
@@ -1030,7 +1007,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 100)
     }
     
-    
     func testSelectAllWithDatabaseAliasWithMultipleSources() throws {
         try loadNumbers(100)
         
@@ -1053,7 +1029,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
     }
-    
     
     func testUnicodeCollationWithLocale() throws {
         let letters = ["B", "A", "Z", "Å"]
@@ -1092,7 +1067,6 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, UInt64(expected.count))
     }
-    
     
     func testCompareWithUnicodeCollation() throws {
         let bothSensitive = Collation.unicode()
@@ -1182,7 +1156,6 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;
@@ -1215,7 +1188,6 @@ class QueryTest: CBLTestCase {
         
         q.removeChangeListener(withToken: token)
     }
-    
     
     func testLiveQueryNoUpdate() throws {
         try loadNumbers(100)
@@ -1254,7 +1226,6 @@ class QueryTest: CBLTestCase {
         q.removeChangeListener(withToken: token)
     }
     
-    
     func testResultSetEnumeration() throws {
         try loadNumbers(5)
         let q = QueryBuilder
@@ -1284,7 +1255,6 @@ class QueryTest: CBLTestCase {
         XCTAssertNil(rs.next())
         XCTAssert(rs.allResults().isEmpty)
     }
-    
     
     func testGetAllResults() throws {
         try loadNumbers(5)
@@ -1319,7 +1289,6 @@ class QueryTest: CBLTestCase {
         XCTAssertNil(rs.next())
         XCTAssert(rs.allResults().isEmpty)
     }
-    
     
     func testMissingValue() throws {
         let doc1 = createDocument("doc1")
@@ -1377,7 +1346,6 @@ class QueryTest: CBLTestCase {
         }
         XCTAssertEqual(numRows, 1);
     }
-    
     
     // MARK: META - isDeleted
     
@@ -1460,7 +1428,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(selectDeletedOnlyResultSet.allResults().count, documentsCount)
     }
     
-    
     // MARK: META - expired
     
     func testMetaExpirationWithNoDocumentWithExpiration() throws {
@@ -1540,4 +1507,5 @@ class QueryTest: CBLTestCase {
         
         XCTAssertEqual(rs.allResults().count, 0)
     }
+    
 }

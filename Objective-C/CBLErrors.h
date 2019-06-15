@@ -23,7 +23,6 @@
 /** NSError domain for Couchbase Lite errors. */
 extern NSErrorDomain const CBLErrorDomain;
 
-
 NS_ERROR_ENUM(CBLErrorDomain) {
     CBLErrorAssertionFailed = 1,    // Internal assertion failure
     CBLErrorUnimplemented,          // Oops, an unimplemented API call

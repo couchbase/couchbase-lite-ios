@@ -27,21 +27,25 @@ public protocol SelectResultProtocol {
 /// SelectResult with the aliasing function. The alias name can be used as
 /// the key for accessing the result value from the query Result object.
 public protocol SelectResultAs: SelectResultProtocol {
+    
     /// Specifies the alias name to the SelectResult object.
     ///
     /// - Parameter alias: The alias name.
     /// - Returns: The SelectResult object with the alias name specified.
     func `as`(_ alias: String?) -> SelectResultProtocol
+    
 }
 
 /// SelectResult with the from function that you can specify the data source
 /// alias name.
 public protocol SelectResultFrom: SelectResultProtocol {
+    
     /// Species the data source alias name to the SelectResult object.
     ///
     /// - Parameter alias: The data source alias name.
     /// - Returns: The SelectResult object with the data source alias name specified.
     func from(_ alias: String?) -> SelectResultProtocol
+    
 }
 
 /// SelectResult factory.
@@ -78,6 +82,7 @@ public final class SelectResult {
 }
 
 /* internal */ class QuerySelectResult: SelectResultProtocol {
+    
     let expression: ExpressionProtocol
     
     let alias: String?
@@ -98,6 +103,7 @@ public final class SelectResult {
         }
         return impls;
     }
+    
 }
 
 /* Internal */ class QuerySelectResultAs: QuerySelectResult, SelectResultAs {

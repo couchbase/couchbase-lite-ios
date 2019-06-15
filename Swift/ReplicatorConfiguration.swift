@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 ///  Replicator type.
 ///
 /// - pushAndPull: Bidirectional; both push and pull
@@ -33,6 +32,7 @@ public enum ReplicatorType: UInt8 {
 
 /// Document flags describing a replicated document.
 public struct DocumentFlags: OptionSet {
+    
     /// Raw value.
     public let rawValue: Int
     
@@ -47,6 +47,7 @@ public struct DocumentFlags: OptionSet {
     /// Indicating that the document's access has been removed as a result of
     /// removal from all Sync Gateway channels that a user has access to.
     public static let accessRemoved = DocumentFlags(rawValue: 1 << 1)
+    
 }
 
 /// Replication Filter.
@@ -236,10 +237,12 @@ public class ReplicatorConfiguration {
             return f(Document(doc), DocumentFlags(rawValue: Int(flags.rawValue)))
         }
     }
+    
 }
 
 
 /* internal */ fileprivate class BridgingConflictResolver: NSObject, CBLConflictResolver {
+    
     let _resolver: ConflictResolver
     
     init(_ resolver: ConflictResolver) {
@@ -250,5 +253,6 @@ public class ReplicatorConfiguration {
         let doc = _resolver.resolve(conflict: Conflict(impl: conflict))
         return doc?._impl
     }
+    
 }
 

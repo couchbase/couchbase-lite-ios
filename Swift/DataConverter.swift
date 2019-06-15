@@ -19,8 +19,8 @@
 
 import Foundation
 
-
 /* internal */ class DataConverter {
+    
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
         case let impl as CBLMutableDictionary:
@@ -56,8 +56,8 @@ import Foundation
         default:
             return value
         }
+        
     }
-    
     
     static func convertSETValue(_ value: Any?) -> Any? {
         switch value {
@@ -76,7 +76,6 @@ import Foundation
         }
     }
     
-    
     static func convertSETDictionary(_ dictionary: [String: Any]?) -> [String: Any]? {
         guard let dict = dictionary else {
             return nil
@@ -89,7 +88,6 @@ import Foundation
         return result
     }
     
-    
     static func convertSETArray(_ array: [Any]?) -> [Any]? {
         guard let a = array else {
             return nil
@@ -101,5 +99,5 @@ import Foundation
         }
         return result
     }
+    
 }
-

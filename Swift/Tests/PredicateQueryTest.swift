@@ -20,8 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class PredicateQueryTest: CBLTestCase {
+    
     func testAllDocs() throws {
         try loadJSONResource(name: "names_100")
         var n: UInt64 = 0;
@@ -99,4 +99,5 @@ class PredicateQueryTest: CBLTestCase {
         }
         return n
     }
+    
 }

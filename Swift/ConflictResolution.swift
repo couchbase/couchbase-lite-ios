@@ -26,9 +26,11 @@ public class ConflictResolution {
     public static var `default`: ConflictResolver {
         return DefaultResolver()
     }
+    
 }
 
 /* internal */ class DefaultResolver: ConflictResolver {
+    
     let resolver: CBLConflictResolver
     
     init() {
@@ -42,5 +44,6 @@ public class ConflictResolution {
         
         return Document(doc)
     }
+    
 }
 

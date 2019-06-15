@@ -35,7 +35,6 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
-
 - (void) testPushDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -56,7 +55,6 @@
     AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
 }
 
-
 - (void) testPushDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -76,7 +74,6 @@
     CBLDocument* savedDoc1 = [otherDB documentWithID: @"doc1"];
     AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
 }
-
 
 - (void) testPullDoc {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
@@ -99,7 +96,6 @@
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
 
-
 - (void) testPullDocContinuous {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
@@ -120,7 +116,6 @@
     CBLDocument* savedDoc2 = [self.db documentWithID: @"doc2"];
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
-
 
 - (void) testPullConflict {
     // Create a document and push it to otherDB:
@@ -169,7 +164,6 @@
     AssertEqualObjects(otherSavedDoc.toDictionary, expectedResult);
 }
 
-
 - (void) testPullConflictNoBaseRevision {
     // Create the conflicting docs separately in each database. They have the same base revID
     // because the contents are identical, but because the db never pushed revision 1, it doesn't
@@ -200,7 +194,6 @@
                                                  @"pattern": @"striped",
                                                  @"color": @"black-yellow"}));
 }
-
 
 - (void) testPullConflictDeleteWins {
     // Create a document and push it to otherDB:
@@ -270,7 +263,6 @@
     r = nil;
 }
 
-
 // Runs -testStopContinuousReplicator over and over again indefinitely. (Disabled, obviously)
 - (void) _testStopContinuousReplicatorForever {
     for (int i = 0; true; i++) {
@@ -287,7 +279,6 @@
         }
     }
 }
-
 
 - (void) testCloseDatabaseWithActiveReplicator {
     // Add a replicator to the DB:
@@ -320,7 +311,6 @@
     r = nil;
     AssertEqual(self.db.activeReplications.count, (unsigned long)0);
 }
-
 
 - (void) testDeleteDatabaseWithActiveReplicator {
     // add a replicator to the DB
@@ -359,7 +349,6 @@
     Assert([self.db delete:&error], @"Cannot delete database: %@", error);
 }
 
-
 - (void) testPushBlob {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -379,7 +368,6 @@
     CBLDocument* savedDoc1 = [otherDB documentWithID: @"doc1"];
     AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
 }
-
 
 - (void) testPullBlob {
     NSError* error;
@@ -401,9 +389,7 @@
     AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
 }
 
-
 #if TARGET_OS_IPHONE
-
 
 - (void) testSwitchBackgroundForeground {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
@@ -457,7 +443,6 @@
     r = nil;
 }
 
-
 - (void) testBackgroundingWhenStopping {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
@@ -505,9 +490,7 @@
     r = nil;
 }
 
-
 #endif // TARGET_OS_IPHONE
-
 
 - (void) testResetCheckpoint {
     NSError* error;
@@ -549,7 +532,6 @@
     AssertEqual(self.db.count, 2u);
 }
 
-
 - (void) testResetCheckpointContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -589,7 +571,6 @@
     [self run: config reset: YES errorCode: 0 errorDomain: nil];
     AssertEqual(self.db.count, 2u);
 }
-
 
 - (void)testShortP2P {
     //int testNo = 1;
@@ -658,7 +639,6 @@
     }
 }
 
-
 - (void)testContinuousP2P {
     NSError* err = nil;
     BOOL success = [otherDB delete:&err];
@@ -694,36 +674,29 @@
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePushAndPull usingUID:@"p2ptest3"];
 }
 
-
 - (void) testP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
 }
-
 
 - (void)testP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
 }
 
-
 - (void)testP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
 }
-
 
 - (void)testP2PPermanentFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:NO];
 }
 
-
 - (void)testP2PPermanentFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:NO];
 }
 
-
 - (void)testP2PPermanentFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:NO];
 }
-
 
 - (void)testP2PPassiveClose {
     CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:kCBLProtocolTypeMessageStream];
@@ -756,7 +729,6 @@
     AssertEqual(listenerErrors.count, 0UL);
     AssertNotNil(replicator.status.error);
 }
-
 
 - (void) testP2PPassiveCloseAll {
     CBLMutableDocument* doc = [CBLMutableDocument documentWithID:@"test"];
@@ -808,7 +780,6 @@
     AssertNotNil(replicator2.status.error);
 }
 
-
 - (void)testP2PChangeListener {
     NSMutableArray* statuses = [NSMutableArray new];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:[[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:kCBLProtocolTypeByteStream]];
@@ -826,7 +797,6 @@
     [self waitForExpectations:@[x] timeout:10.0];
     Assert(statuses.count > 0);
 }
-
 
 - (void)testP2PRemoveChangeListener {
     NSMutableArray* statuses = [NSMutableArray new];
@@ -846,7 +816,6 @@
     [self waitForExpectations:@[x] timeout:10.0];
     Assert(statuses.count == 0UL);
 }
-
 
 - (void) testP2PPushWithDocIDsFilter {
     NSError* error;
@@ -876,7 +845,6 @@
     AssertNil([otherDB documentWithID: @"doc2"]);
 }
 
-
 - (void) testP2PPullWithDocIDsFilter {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -904,7 +872,6 @@
     AssertNotNil([self.db documentWithID: @"doc3"]);
     AssertNil([self.db documentWithID: @"doc2"]);
 }
-
 
 - (void) testP2PPushAndPullWithDocIDsFilter {
     NSError* error;
@@ -944,7 +911,6 @@
     AssertNotNil([otherDB documentWithID: @"doc4"]);
     AssertNil([otherDB documentWithID: @"doc2"]);
 }
-
 
 - (void) testDocumentReplicationEvent {
     NSError* error;
@@ -1019,7 +985,6 @@
     AssertEqual(docs.count, 3u);
 }
 
-
 - (void) testDocumentReplicationEventWithPushConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1065,7 +1030,6 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-
 - (void) testDocumentReplicationEventWithPullConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1105,7 +1069,6 @@
     // Remove document replication listener:
     [replicator removeChangeListenerWithToken: token];
 }
-
 
 - (void) testDocumentReplicationEventWithDeletion {
     NSError* error;
@@ -1148,16 +1111,13 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-
 - (void) testSingleShotPushFilter {
     [self testPushFilter: NO];
 }
 
-
 - (void) testContinuousPushFilter {
     [self testPushFilter: YES];
 }
-
 
 - (void) testPushFilter: (BOOL)isContinuous {
     // Create documents:
@@ -1230,7 +1190,6 @@
     AssertNil([otherDB documentWithID: @"doc2"]);
     AssertNil([otherDB documentWithID: @"doc3"]);
 }
-
 
 - (void) testPullFilter {
     // Add a document to db database so that it can pull the deleted docs from:
@@ -1313,7 +1272,6 @@
     AssertNil([self.db documentWithID: @"doc3"]);
 }
 
-
 - (void) testPushAndForget {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
@@ -1355,19 +1313,15 @@
     [replicator removeChangeListenerWithToken: docReplToken];
 }
 
-
 #pragma mark Removed Doc with Filter
-
 
 - (void) testPullRemovedDocWithFilterSingleShot {
     [self testPullRemovedDocWithFilter: NO];
 }
 
-
 - (void) testPullRemovedDocWithFilterContinuous {
     [self testPullRemovedDocWithFilter: YES];
 }
-
 
 - (void) testPullRemovedDocWithFilter: (BOOL)isContinuous {
     NSError* error;
@@ -1420,29 +1374,23 @@
     AssertNil([self.db documentWithID: @"pass"]);
 }
 
-
 #pragma mark Deleted Doc with Filter
-
 
 - (void) testPushDeletedDocWithFilterSingleShot {
     [self testPushDeletedDocWithFilter: NO];
 }
 
-
 - (void) testPushDeletedDocWithFilterContinuous {
     [self testPushDeletedDocWithFilter: YES];
 }
-
 
 - (void) testPullDeletedDocWithFilterSingleShot {
     [self testPullDeletedDocWithFilter: NO];
 }
 
-
 - (void) testPullDeletedDocWithFilterContinuous {
     [self testPullDeletedDocWithFilter: YES];
 }
-
 
 - (void) testPushDeletedDocWithFilter: (BOOL)isContinuous {
     // Create documents:
@@ -1495,7 +1443,6 @@
     AssertNotNil([otherDB documentWithID: @"doc1"]);
     AssertNil([otherDB documentWithID: @"pass"]);
 }
-
 
 - (void) testPullDeletedDocWithFilter: (BOOL)isContinuous {
     // Create documents:
@@ -1553,9 +1500,7 @@
     AssertEqual(otherDB.count, 0u);
 }
 
-
 #pragma mark stop and restart the replication with filter
-
 
 - (void) testStopAndRestartPushReplicationWithFilter {
     // Create documents
@@ -1606,7 +1551,6 @@
     AssertEqual(self.db.count, 3u);
     AssertEqual(otherDB.count, 2u);
 }
-
 
 - (void) testStopAndRestartPullReplicationWithFilter {
     // Create documents
@@ -1660,9 +1604,7 @@
 
 #endif // COUCHBASE_ENTERPRISE
 
-
 #pragma mark - Sync Gateway Tests
-
 
 - (void) testAuthenticationFailure_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
@@ -1672,7 +1614,6 @@
     [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
 }
 
-
 - (void) testAuthenticatedPull_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     if (!target)
@@ -1681,7 +1622,6 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO authenticator: auth];
     [self run: config errorCode: 0 errorDomain: nil];
 }
-
 
 - (void) testPushBlob_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
@@ -1703,7 +1643,6 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
-
 - (void) dontTestMissingHost_SG {
     // Note: The replication doesn't fail with an error; because the unknown-host error is
     // considered transient, the replicator just stays offline and waits for a network change.
@@ -1717,7 +1656,6 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
-
 - (void) testSelfSignedSSLFailure_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
@@ -1727,7 +1665,6 @@
     [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
 }
 
-
 - (void) testSelfSignedSSLPinned_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
@@ -1735,7 +1672,6 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
-
 
 - (void) dontTestContinuousPushNeverending_SG {
     // NOTE: This test never stops even after the replication goes idle.
@@ -1750,7 +1686,6 @@
     XCTestExpectation* x = [self expectationWithDescription: @"When pigs fly"];
     [self waitForExpectations: @[x] timeout: 1e9];
 }
-
 
 - (void) testStopReplicatorAfterOffline_SG {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
@@ -1775,7 +1710,6 @@
     [repl removeChangeListenerWithToken: token];
     r = nil;
 }
-
 
 - (void) testPullConflictDeleteWins_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
@@ -1819,7 +1753,6 @@
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
-
 - (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
     
@@ -1853,7 +1786,6 @@
     config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
-
 
 - (void) testPushAndPullExpiredDocument_SG {
     timeout = 200;

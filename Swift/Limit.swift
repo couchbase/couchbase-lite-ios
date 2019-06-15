@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// A Limit component represents the LIMIT clause of the query statement.
 public final class Limit: Query  {
     

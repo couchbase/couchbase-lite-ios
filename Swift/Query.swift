@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// A database query.
 /// A Query instance can be constructed by calling one of the select class methods.
 public class Query {
@@ -42,7 +41,6 @@ public class Query {
             applyParameters()
         }
     }
-    
 
     /// Executes the query. The returning an enumerator that returns result rows one at a time.
     /// You can run the query any number of times, and you can even have multiple enumerators active 
@@ -57,7 +55,6 @@ public class Query {
         applyParameters()
         return try ResultSet(impl: queryImpl!.execute())
     }
-    
     
     /// Returns a string describing the implementation of the compiled query.
     /// This is intended to be read by a developer for purposes of optimizing the query, especially
@@ -77,7 +74,6 @@ public class Query {
         return try queryImpl!.explain()
     }
     
-    
     /// Adds a query change listener. Changes will be posted on the main queue.
     ///
     /// - Parameter listener: The listener to post changes.
@@ -86,7 +82,6 @@ public class Query {
         _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
         return self.addChangeListener(withQueue: nil, listener)
     }
-    
     
     /// Adds a query change listener with the dispatch queue on which changes
     /// will be posted. If the dispatch queue is not specified, the changes will be
@@ -124,7 +119,6 @@ public class Query {
         tokens.add(listenerToken)
         return listenerToken
     }
-    
     
     /// Removes a change listener wih the given listener token.
     ///
@@ -266,7 +260,6 @@ public final class QueryBuilder {
         return select(results)
     }
     
-    
     /// Create a SELECT statement instance that you can use further
     /// (e.g. calling the from() function) to construct the complete query statement.
     ///
@@ -276,7 +269,6 @@ public final class QueryBuilder {
         return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
     }
     
-    
     /// Create a SELECT DISTINCT statement instance that you can use further
     /// (e.g. calling the from() function) to construct the complete query statement.
     ///
@@ -285,7 +277,6 @@ public final class QueryBuilder {
     public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
         return selectDistinct(results)
     }
-    
     
     /// Create a SELECT DISTINCT statement instance that you can use further
     /// (e.g. calling the from() function) to construct the complete query statement.

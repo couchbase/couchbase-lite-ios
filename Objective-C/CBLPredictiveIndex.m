@@ -27,7 +27,6 @@
     NSArray<NSString*>* _properties;
 }
 
-
 - (instancetype) initWithModel: (NSString*)model
                          input: (CBLQueryExpression*)input
                     properties: (nullable NSArray<NSString*>*)properties {
@@ -40,16 +39,13 @@
     return self;
 }
 
-
 - (C4IndexType) indexType {
     return kC4PredictiveIndex;
 }
 
-
 - (C4IndexOptions) indexOptions {
     return (C4IndexOptions){ };
 }
-
 
 - (id) indexItems {
     NSMutableArray* items = [NSMutableArray array];

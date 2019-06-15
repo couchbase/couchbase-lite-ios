@@ -45,4 +45,5 @@ public struct Conflict {
     
     // MARK: Internal
     let impl: CBLConflict
+    
 }

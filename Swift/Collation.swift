@@ -71,14 +71,12 @@ public final class Collation {
             return CBLQueryCollation.ascii(withIgnoreCase: ignoreCase)
         }
     }
-
     
     /// [Unicode Collation](http://userguide.icu-project.org/collation) that will compare two strings
     /// by using Unicode collation algorithm. If the locale is not specified, the collation is
     /// Unicode-aware but not localized; for example, accented Roman letters sort right after
     /// the base letter (This is implemented by using the "en_US" locale).
     public final class Unicode: CollationProtocol {
-        
         
         /// Specifies whether the collation is case-insenstive or not. Case-insensitive
         /// collation will treat ASCII uppercase and lowercase letters as equivalent.
@@ -90,7 +88,6 @@ public final class Collation {
             return self
         }
         
-        
         /// Specifies whether the collation ignore the accents or diacritics when
         /// comparing the strings or not.
         ///
@@ -100,7 +97,6 @@ public final class Collation {
             self.ignoreAccents = ignoreAccents
             return self
         }
-        
         
         /// Specifies the locale to allow the collation to compare strings appropriately base on
         /// the locale.
@@ -119,9 +115,7 @@ public final class Collation {
             return self
         }
         
-        
         // MARK: Internal
-        
         
         var ignoreCase = false
         
@@ -134,6 +128,7 @@ public final class Collation {
                                              ignoreCase: ignoreCase,
                                              ignoreAccents: ignoreAccents)
         }
+        
     }
     
 }

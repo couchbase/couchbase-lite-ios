@@ -20,8 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class ArrayTest: CBLTestCase {
+    
     func testEnumeratingArray() throws {
         let array = MutableArrayObject()
         for i in 0...19 {
@@ -83,5 +83,6 @@ class ArrayTest: CBLTestCase {
         mArray3.addValue("Thomas")
         XCTAssert(mArray3.toArray() == (["Scott", "Daniel", "Thomas"]))
     }
+    
 }
 

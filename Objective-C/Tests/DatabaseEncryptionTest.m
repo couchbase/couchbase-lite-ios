@@ -28,7 +28,6 @@
     CBLDatabase* _seekrit;
 }
 
-
 - (void) tearDown {
     [_seekrit close: nil];
     [super tearDown];
@@ -41,7 +40,6 @@
     config.directory = self.directory;
     return [[CBLDatabase alloc] initWithName: @"seekrit" config: config error: error];
 }
-
 
 - (void) testUnEncryptedDatabase {
     NSError* error;
@@ -65,7 +63,6 @@
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     AssertEqual(_seekrit.count, 1u);
 }
-
 
 - (void) testEncryptedDatabase {
     // Create encrypted database:
@@ -92,7 +89,6 @@
     _seekrit = [self openSeekritWithPassword: @"letmein" error: &error];
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
 }
-
 
 - (void) testDeleteEncryptedDatabase {
     // Create encrypted database:
@@ -123,7 +119,6 @@
     }];
 }
 
-
 - (void) testCompactEncryptedDatabase {
     // Create encrypted database:
     NSError* error;
@@ -151,11 +146,9 @@
     AssertEqual(_seekrit.count, 1u);
 }
 
-
 - (void) testEncryptedBlobs {
     [self _testEncryptedBlobsWithPassword: @"letmein"];
 }
-
 
 - (void) _testEncryptedBlobsWithPassword: (nullable NSString*)password {
     // Create database with the password:
@@ -192,7 +185,6 @@
     AssertEqualObjects(content, @"This is a blob!");
 }
 
-
 - (void) testMultipleDatabases {
     // Create encryped database:
     NSError* error;
@@ -208,11 +200,9 @@
     Assert([_seekrit changeEncryptionKey:newKey error: &error], @"Cannot rekey: %@", error);
 }
 
-
 - (void) testAddKey     { [self rekeyUsingOldPassword: nil newPassword: @"letmein"]; }
 - (void) testReKey      { [self rekeyUsingOldPassword: @"letmein" newPassword: @"letmeout"]; }
 - (void) testRemoveKey  { [self rekeyUsingOldPassword: @"letmein" newPassword: nil]; }
-
 
 - (void) rekeyUsingOldPassword: (nullable NSString*)oldPass newPassword: (nullable NSString*)newPass {
     // First run the encryped blobs test to populate the database:
@@ -263,6 +253,5 @@
         AssertEqual([r integerAtIndex: 0], i++);
     }
 }
-
 
 @end

@@ -21,6 +21,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class DocumentExpirationTest: CBLTestCase {
+    
     func testGetExpirationPreSave() {
         let doc = createDocument(nil)
         XCTAssertEqual(db.count, 0)
@@ -468,4 +469,5 @@ class DocumentExpirationTest: CBLTestCase {
         // Remove listener
         db.removeChangeListener(withToken: token);
     }
+    
 }

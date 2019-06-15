@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// ResultSet is a result returned from a query.
 public final class ResultSet : Sequence, IteratorProtocol {
     

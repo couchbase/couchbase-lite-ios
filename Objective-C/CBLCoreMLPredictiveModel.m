@@ -35,9 +35,7 @@
     NSString* _vnFeatureName;
 }
 
-
 @synthesize inputTransformer=_inputTransformer, outputTransformer=_outputTransformer;
-
 
 - (instancetype) initWithMLModel: (MLModel*)model {
     CBLAssertNotNil(model);
@@ -48,7 +46,6 @@
     }
     return self;
 }
-
 
 - (void) setupVisionModel {
     MLModelDescription* desc = _model.modelDescription;
@@ -77,9 +74,7 @@
     }
 }
 
-
 #pragma mark - CBLPredictiveModel
-
 
 - (nullable CBLDictionary*) predict: (CBLDictionary*)input {
     if (_inputTransformer) {
@@ -102,7 +97,6 @@
     return output;
 }
 
-
 - (nullable CBLDictionary*) predictUsingMLModel: (CBLDictionary*)input {
     id spec = _model.modelDescription.inputDescriptionsByName;
     id<MLFeatureProvider> features = [self.class featuresFromDictionary: input spec: spec];
@@ -116,7 +110,6 @@
     
     return [self.class dictionaryFromFeatures: output];
 }
-
 
 - (nullable CBLDictionary*) predictUsingVNModel: (CBLDictionary*)input {
     assert(_vnModel != nil && _vnFeatureName != nil);
@@ -140,7 +133,6 @@
     
     return [self predictionResultFromObservations: request.results];
 }
-
 
 - (CBLDictionary*) predictionResultFromObservations: (NSArray*)observations {
     if (observations.count == 0)
@@ -198,12 +190,11 @@
     }
 }
 
-
 #pragma mark - CBLDictionary to Features Conversion
 
-
 + (id<MLFeatureProvider>) featuresFromDictionary: (CBLDictionary*)dictionary
-                                            spec: (NSDictionary<NSString*, MLFeatureDescription*>*)spec {
+                                            spec: (NSDictionary<NSString*, MLFeatureDescription*>*)spec
+{
     NSMutableDictionary* featureProviderDict = [[NSMutableDictionary alloc] initWithCapacity: spec.count];
     for (NSString* key in spec) {
         MLFeatureDescription* desc = spec[key];
@@ -252,7 +243,6 @@
     return provider;
 }
 
-
 + (MLFeatureValue*) featureValueFromValue: (id)value type: (MLFeatureType)type {
     switch (type) {
         case MLFeatureTypeInt64: {
@@ -294,7 +284,6 @@
     }
 }
 
-
 + (MLFeatureValue*) sequenceFeatureValueFromValue: (id)value type: (MLFeatureType)type
 API_AVAILABLE(macos(10.14), ios(12.0))
 {
@@ -315,7 +304,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     }
 }
 
-
 + (MLFeatureValue*) multiArrayFeatureValueFromValue: (id)value
                                               shape: (NSArray<NSNumber*>*)shape
                                                type: (MLMultiArrayDataType)type
@@ -330,7 +318,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     id mArray = [self.class multiArrayFromArray: array shape: shape type: type];
     return mArray != nil ? [MLFeatureValue featureValueWithMultiArray: mArray] : nil;
 }
-
 
 + (MLMultiArray*) multiArrayFromArray: (CBLArray*)array
                                 shape: (NSArray<NSNumber*>*)shape
@@ -352,7 +339,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
                                              atKeys: keys];
     return success ? multiArray : nil;
 }
-
 
 + (BOOL) setValueToMultiArray: (MLMultiArray*)multiArray
                     fromArray: (CBLArray*)array
@@ -389,7 +375,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     return YES;
 }
 
-
 + (CVPixelBufferRef) pixelBufferFromBlob: (CBLBlob*)blob {
     if (!([blob.contentType isEqualToString: @"image/jpeg"] ||
           [blob.contentType isEqualToString: @"image/png"])) {
@@ -422,9 +407,7 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     return pixelBuffer;
 }
 
-
 #pragma mark - Features to CBLDictionary Conversion
-
 
 + (CBLDictionary*) dictionaryFromFeatures: (id<MLFeatureProvider>)features {
     CBLMutableDictionary* output = [[CBLMutableDictionary alloc] init];
@@ -436,7 +419,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     }
     return output;
 }
-
 
 + (id) valueFromFeatureValue: (MLFeatureValue*)featureValue {
     if (featureValue) {
@@ -465,7 +447,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     return nil;
 }
 
-
 + (CBLArray*) arrayFromSequence: (MLSequence*)sequence API_AVAILABLE(macos(10.14), ios(12.0)) {
     if (!sequence)
         return nil;
@@ -480,13 +461,11 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     }
 }
 
-
 + (CBLArray*) arrayFromMultiArray: (MLMultiArray*)multiArray {
     if (multiArray.shape.count == 0)
         return nil;
     return [self.class arrayFromMultiArray: multiArray dimension: 0 data: multiArray.dataPointer];
 }
-
 
 + (CBLArray*) arrayFromMultiArray: (MLMultiArray*)array
                         dimension: (NSUInteger)dimension
@@ -537,7 +516,6 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     return outArray;
 }
 
-
 + (CBLBlob*) blobFromPixelBuffer: (CVPixelBufferRef)pixel {
     CIImage* image = [CIImage imageWithCVImageBuffer: pixel];
     CGImageRef cgImage = [[CIContext context] createCGImage: image fromRect: image.extent];
@@ -550,6 +528,5 @@ API_AVAILABLE(macos(10.14), ios(12.0))
     CFRelease(destination);
     return [[CBLBlob alloc] initWithContentType: @"image/png" data: data];
 }
-
 
 @end

@@ -28,7 +28,6 @@
     CBLQueryExpression* _satisfies;
 }
 
-
 - (instancetype) initWithType: (CBLQuantifiedType)type
                      variable: (CBLQueryVariableExpression*)variable
                            in: (CBLQueryExpression*)inExpression
@@ -43,7 +42,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: 4];

@@ -17,7 +17,6 @@
 //  limitations under the License.
 //
 
-
 #import "CBLLogFileConfiguration+Internal.h"
 
 #define kCBLLogFileConfigurationDefaultMaxSize 500*1024
@@ -28,7 +27,6 @@
 
 @synthesize directory=_directory, usePlainText=_usePlainText;
 @synthesize maxSize=_maxSize, maxRotateCount=_maxRotateCount;
-
 
 - (instancetype) initWithDirectory: (NSString*)directory {
     self = [super init];
@@ -41,7 +39,6 @@
     }
     return self;
 }
-
 
 - (instancetype) initWithConfig: (CBLLogFileConfiguration*)config
                        readonly: (BOOL)readonly {
@@ -56,27 +53,22 @@
     return self;
 }
 
-
 - (void) setUsePlainText: (BOOL)usePlainText {
     [self checkReadonly];
     _usePlainText = usePlainText;
 }
-
 
 - (void) setMaxSize: (uint64_t)maxSize {
     [self checkReadonly];
     _maxSize = maxSize;
 }
 
-
 - (void) setMaxRotateCount: (NSInteger)maxRotateCount {
     [self checkReadonly];
     _maxRotateCount = maxRotateCount;
 }
 
-
 #pragma mark - Internal
-
 
 /** Cheak and raise an exception when trying to modify a property on the readonly configuration object. */
 - (void) checkReadonly {
@@ -85,6 +77,5 @@
                     format: @"This configuration object is readonly."];
     }
 }
-
 
 @end

@@ -20,7 +20,6 @@
 #import "CBLTrustCheck.h"
 #import "MYErrorUtils.h"
 
-
 @implementation CBLTrustCheck
 {
     SecTrustRef _trust;
@@ -30,10 +29,8 @@
 
 @synthesize pinnedCertData=_pinnedCertData;
 
-
 static NSArray* sAnchorCerts;
 static BOOL sOnlyTrustAnchorCerts;
-
 
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     @synchronized(self) {
@@ -41,7 +38,6 @@ static BOOL sOnlyTrustAnchorCerts;
         sOnlyTrustAnchorCerts = onlyThese;
     }
 }
-
 
 - (instancetype) initWithTrust: (SecTrustRef)trust host: (NSString*)host port: (uint16_t)port {
     NSParameterAssert(trust);
@@ -55,7 +51,6 @@ static BOOL sOnlyTrustAnchorCerts;
     return self;
 }
 
-
 - (instancetype) initWithChallenge: (NSURLAuthenticationChallenge*)challenge {
     NSURLProtectionSpace* space = challenge.protectionSpace;
     return [self initWithTrust: space.serverTrust
@@ -63,17 +58,13 @@ static BOOL sOnlyTrustAnchorCerts;
                           port: (uint16_t)space.port];
 }
 
-
 - (void) dealloc {
     CFRelease(_trust);
 }
 
-
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@:%d]", self.class, _host, _port];
 }
-
-
 
 // Checks whether the reported problems with a SecTrust are OK for us
 - (BOOL) shouldAcceptProblems: (NSError**)outError {
@@ -114,7 +105,6 @@ static BOOL sOnlyTrustAnchorCerts;
     return YES;
 }
 
-
 // Updates a SecTrust's result to kSecTrustResultProceed
 - (BOOL) forceTrusted {
     CFDataRef exception = SecTrustCopyExceptions(_trust);
@@ -126,7 +116,6 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustEvaluate(_trust, &result);
     return YES;
 }
-
 
 - (NSURLCredential*) checkTrust: (NSError**)outError {
     // Register any global anchor certificates:
@@ -176,6 +165,5 @@ static BOOL sOnlyTrustAnchorCerts;
         return nil;
     }
 }
-
 
 @end

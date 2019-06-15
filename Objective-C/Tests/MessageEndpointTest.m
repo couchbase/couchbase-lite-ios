@@ -49,7 +49,6 @@
 
 @synthesize session=_session, peerID=_peerID, delegate=_delegate;
 
-
 - (instancetype) initWithSession: (MCSession*)session
                           peerID: (MCPeerID*)peerID
                         delegate: (id<MultipeerConnectionDelegate>)delegate
@@ -63,14 +62,11 @@
     return self;
 }
 
-
 - (void) receiveData: (NSData*)data {
     [_replConnection receive: [CBLMessage fromData: data]];
 }
 
-
 #pragma mark - CBLMessageEndpointConnection
-
 
 - (void)open: (nonnull id<CBLReplicatorConnection>)connection
   completion:(nonnull void (^)(BOOL, CBLMessagingError * _Nullable))completion {
@@ -79,15 +75,13 @@
     completion(YES, nil);
 }
 
-
-- (void)close: (nullable NSError *)error completion: (nonnull void (^)(void))completion {
+- (void)close: (nullable NSError*)error completion: (nonnull void (^)(void))completion {
     [_session disconnect];
     [_delegate connectionDidClose: self];
     completion();
 }
 
-
-- (void)send:(nonnull CBLMessage *)message
+- (void)send:(nonnull CBLMessage*)message
   completion:(nonnull void (^)(BOOL, CBLMessagingError * _Nullable))completion {
     NSError* error;
     BOOL success = [_session sendData: [message toData]
@@ -98,9 +92,7 @@
     completion(success, error ? [[CBLMessagingError alloc] initWithError: error isRecoverable: NO] : nil);
 }
 
-
 @end
-
 
 @interface MessageEndpointTest : CBLTestCase
 <MCNearbyServiceBrowserDelegate, MCNearbyServiceAdvertiserDelegate,
@@ -110,17 +102,17 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 @implementation MessageEndpointTest {
     CBLDatabase* _otherDB;
     
-    MCPeerID *_clientPeer;
-    MCPeerID *_serverPeer;
+    MCPeerID* _clientPeer;
+    MCPeerID* _serverPeer;
     
-    MCSession *_clientSession;
-    MCSession *_serverSession;
+    MCSession* _clientSession;
+    MCSession* _serverSession;
     
-    MCNearbyServiceBrowser *_browser;
-    MCNearbyServiceAdvertiser *_advertiser;
+    MCNearbyServiceBrowser* _browser;
+    MCNearbyServiceAdvertiser* _advertiser;
     
-    MultipeerConnection *_clientConnection;
-    MultipeerConnection *_serverConnection;
+    MultipeerConnection* _clientConnection;
+    MultipeerConnection* _serverConnection;
     
     CBLReplicator* _replicator;
     CBLMessageEndpointListener* _listener;
@@ -128,7 +120,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     XCTestExpectation* _clientConnected;
     XCTestExpectation* _serverConnected;
 }
-
 
 - (void)setUp {
     [super setUp];
@@ -138,7 +129,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     AssertNil(error);
     AssertNotNil(_otherDB);
 }
-
 
 - (void)tearDown {
     [_listener closeAll];
@@ -157,7 +147,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _otherDB = nil;
     [super tearDown];
 }
-
 
 - (void) startDiscovery {
     _serverConnected = [self expectationWithDescription: @"Server Connected"];
@@ -187,7 +176,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     
     [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
 }
-
 
 - (void) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
@@ -241,7 +229,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     [_listener removeChangeListenerWithToken: token1];
 }
 
-
 - (void) verifyChange: (CBLReplicatorChange*)change
             errorCode: (NSInteger)code
           errorDomain: (NSString*)domain
@@ -262,7 +249,6 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     }
 }
 
-
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
@@ -275,23 +261,18 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     return c;
 }
 
-
 #pragma mark - MCNearbyServiceBrowserDelegate
 
-
-- (void)browser:(nonnull MCNearbyServiceBrowser *)browser
-      foundPeer:(nonnull MCPeerID *)peerID
-withDiscoveryInfo: (nullable NSDictionary<NSString *,NSString *> *)info {
+- (void)browser:(nonnull MCNearbyServiceBrowser*)browser
+      foundPeer:(nonnull MCPeerID*)peerID
+withDiscoveryInfo: (nullable NSDictionary<NSString*,NSString*>*)info {
     [_browser invitePeer: peerID toSession: _clientSession withContext: nil timeout: 0.0];
 }
 
-
-- (void)browser:(nonnull MCNearbyServiceBrowser *)browser
-       lostPeer:(nonnull MCPeerID *)peerID { }
-
+- (void)browser:(nonnull MCNearbyServiceBrowser*)browser
+       lostPeer:(nonnull MCPeerID*)peerID { }
 
 #pragma mark - MCNearbyServiceAdvertiserDelegate
-
 
 - (void) advertiser: (nonnull MCNearbyServiceAdvertiser*)advertiser
 didReceiveInvitationFromPeer: (nonnull MCPeerID*)peerID
@@ -300,9 +281,7 @@ didReceiveInvitationFromPeer: (nonnull MCPeerID*)peerID
     invitationHandler(YES, _serverSession);
 }
 
-
 #pragma mark - MCSessionDelegate
-
 
 - (void) session: (nonnull MCSession*)session
             peer: (nonnull MCPeerID*)peerID
@@ -320,7 +299,6 @@ didReceiveInvitationFromPeer: (nonnull MCPeerID*)peerID
     }
 }
 
-
 - (void) session:(nonnull MCSession*)session
   didReceiveData: (nonnull NSData*)data
         fromPeer: (nonnull MCPeerID*)peerID {
@@ -331,12 +309,11 @@ didReceiveInvitationFromPeer: (nonnull MCPeerID*)peerID
         [_clientConnection receiveData: data];
 }
 
-
 - (void) session: (nonnull MCSession*)session
 didFinishReceivingResourceWithName: (nonnull NSString*)resourceName
-        fromPeer:(nonnull MCPeerID *)peerID
-           atURL:(nullable NSURL*)localURL
-       withError:(nullable NSError*)error { /* Not supported */ }
+        fromPeer: (nonnull MCPeerID*)peerID
+           atURL: (nullable NSURL*)localURL
+       withError: (nullable NSError*)error { /* Not supported */ }
 
 - (void) session: (nonnull MCSession*)session
 didReceiveStream: (nonnull NSInputStream*)stream
@@ -348,9 +325,7 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
         fromPeer: (nonnull MCPeerID*)peerID
     withProgress: (nonnull NSProgress*)progress { /* Not supported */ }
 
-
 #pragma mark - MultipeerConnectionDelegate
-
 
 - (void) connectionDidOpen: (id<CBLMessageEndpointConnection>)connection {
     MultipeerConnection* conn = (MultipeerConnection*)connection;
@@ -360,7 +335,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
         _clientConnection = connection;
 }
 
-
 - (void) connectionDidClose: (id<CBLMessageEndpointConnection>)connection {
     MultipeerConnection* conn = (MultipeerConnection*)connection;
     if (conn.session == _serverSession)
@@ -369,9 +343,7 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
         _clientConnection = nil;
 }
 
-
 #pragma mark - CBLMessageEndpointDelegate
-
 
 - (nonnull id<CBLMessageEndpointConnection>)createConnectionForEndpoint: (CBLMessageEndpoint*)endpoint {
     return [[MultipeerConnection alloc] initWithSession: _clientSession
@@ -379,9 +351,7 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                                delegate: self];
 }
 
-
 #pragma mark - Tests
-
 
 - (void) testPushDoc {
     NSError* error;
@@ -405,7 +375,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Tiger");
 }
 
-
 - (void) testPullDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -427,7 +396,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     CBLDocument* savedDoc = [_db documentWithID: @"doc2"];
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Cat");
 }
-
 
 - (void) testPushPullDoc {
     NSError* error;
@@ -455,7 +423,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
 
-
 - (void) testPushDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -478,7 +445,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Tiger");
 }
 
-
 - (void) testPullDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -500,7 +466,6 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     CBLDocument* savedDoc = [_db documentWithID: @"doc2"];
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Cat");
 }
-
 
 - (void) testPushPullDocContinuous {
     NSError* error;

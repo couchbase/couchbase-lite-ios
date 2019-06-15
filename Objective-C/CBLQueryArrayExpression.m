@@ -23,13 +23,11 @@
 
 @implementation CBLQueryArrayExpression
 
-
 + (CBLQueryVariableExpression*) variableWithName: (NSString*)name {
     CBLAssertNotNil(name);
     
     return [[CBLQueryVariableExpression alloc] initWithName: name];
 }
-
 
 + (CBLQueryExpression*) any: (CBLQueryVariableExpression*)variable
                          in: (CBLQueryExpression*)inExpression
@@ -45,7 +43,6 @@
                                                satisfies: satisfies];
 }
 
-
 + (CBLQueryExpression*) anyAndEvery: (CBLQueryVariableExpression*)variable
                                  in: (CBLQueryExpression*)inExpression
                           satisfies: (CBLQueryExpression*)satisfies
@@ -60,7 +57,6 @@
                                                satisfies: satisfies];
 }
 
-
 + (CBLQueryExpression*) every: (CBLQueryVariableExpression*)variable
                            in: (CBLQueryExpression*)inExpression
                     satisfies: (CBLQueryExpression*)satisfies
@@ -74,6 +70,5 @@
                                                       in: inExpression
                                                satisfies: satisfies];
 }
-
 
 @end

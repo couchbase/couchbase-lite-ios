@@ -26,10 +26,8 @@ NSErrorDomain const CBLErrorDomain          = @"CouchbaseLite";
 static NSErrorDomain const SQLiteErrorDomain    = @"CouchbaseLite.SQLite";
 static NSErrorDomain const FleeceErrorDomain    = @"CouchbaseLite.Fleece";
 
-
 static bool cfNetworkToC4Error(int cfNetworkErrorCode, C4Error *outError);
 static bool osStatusToC4Error(OSStatus, C4Error *outError);
-
 
 BOOL convertError(const C4Error &c4err, NSError** outError) {
     NSCAssert(c4err.code != 0 && c4err.domain != 0, @"No C4Error");
@@ -57,7 +55,6 @@ BOOL convertError(const C4Error &c4err, NSError** outError) {
     return NO;
 }
 
-
 BOOL convertError(const FLError &flErr, NSError** outError) {
     NSCAssert(flErr != 0, @"No C4Error");
     if (outError)
@@ -65,13 +62,11 @@ BOOL convertError(const FLError &flErr, NSError** outError) {
     return NO;
 }
 
-
 BOOL convertError(const FLError &flErr, C4Error* outError) {
     NSCAssert(flErr != 0, @"No C4Error");
     *outError = c4error_make(FleeceDomain, (int)flErr, c4str(""));
     return NO;
 }
-
 
 void convertError(NSError* error, C4Error *outError) {
     C4Error c4err = {LiteCoreDomain, kC4ErrorRemoteError};
@@ -101,11 +96,9 @@ void convertError(NSError* error, C4Error *outError) {
     *outError = c4error_make(c4err.domain, c4err.code, c4str(message));
 }
 
-
 BOOL createError(int status,  NSError** outError) {
     return createError(status, nil, outError);
 }
-
 
 BOOL createError(int status,  NSString* desc, NSError** outError) {
     if (outError) {
@@ -121,9 +114,7 @@ BOOL createError(int status,  NSString* desc, NSError** outError) {
     return NO;
 }
 
-
 struct ErrorMapping {int code; C4Error c4err;};
-
 
 static bool mapToC4Error(int code, const ErrorMapping map[], C4Error *outError) {
     for (int i = 0; map[i].code; ++i) {
@@ -134,7 +125,6 @@ static bool mapToC4Error(int code, const ErrorMapping map[], C4Error *outError) 
     }
     return false;
 }
-
 
 static bool cfNetworkToC4Error(int code, C4Error *outError) {
     // Maps CFNetworkErrors <-> C4Errors ... see <CFNetwork/CFNetworkErrors.h>
@@ -164,7 +154,6 @@ static bool cfNetworkToC4Error(int code, C4Error *outError) {
     };
     return mapToC4Error(code, kCFNetworkErrorMap, outError);
 }
-
 
 static bool osStatusToC4Error(OSStatus code, C4Error *outError) {
     // Maps OSStatusErrorDomain errors <-> C4Errors ... see <Security/SecureTransport.h>

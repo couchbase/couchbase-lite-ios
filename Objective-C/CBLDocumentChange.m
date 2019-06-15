@@ -25,7 +25,7 @@
 @synthesize database=_database, documentID=_documentID;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString *)documentID
+                       documentID: (NSString*)documentID
 {
     self = [super init];
     if (self) {

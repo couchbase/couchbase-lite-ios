@@ -53,9 +53,11 @@ public enum LogLevel: UInt8 {
 
 /// Logger protocol
 public protocol Logger {
+    
     /// The minimum log level to be logged.
     var level: LogLevel { get }
     
     /// The callback log function.
     func log(level: LogLevel, domain: LogDomain, message: String)
+    
 }

@@ -19,7 +19,6 @@
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
 
-
 @interface CBLTestPredictiveModel: NSObject <CBLPredictiveModel>
 
 @property (nonatomic, readonly) NSInteger numberOfCalls;

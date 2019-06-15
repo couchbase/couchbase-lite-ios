@@ -24,9 +24,7 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 
 @end
 
-
 @implementation PredictiveQueryWithCoreMLTest
-
 
 - (MLModel*) coreMLModel: (NSString*)name mustExist: (BOOL)mustExist {
     NSString* resource = [NSString stringWithFormat: @"mlmodels/%@", name];
@@ -50,12 +48,10 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     return mlmodel;
 }
 
-
 - (CBLCoreMLPredictiveModel*) model: (NSString*)name mustExist: (BOOL)mustExist {
     MLModel* mlmodel = [self coreMLModel: name mustExist: mustExist];
     return mlmodel ? [[CBLCoreMLPredictiveModel alloc] initWithMLModel: mlmodel] : nil;
 }
-
 
 - (void) createMarsHabitatPricerModelDocuments: (NSArray*)documents {
     for (NSArray* values in documents) {
@@ -68,7 +64,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     }
 }
 
-
 - (void) createDocumentWithImageAtPath: (NSString*)path {
     NSString* res = [path stringByDeletingPathExtension];
     NSString* ext = [path pathExtension];
@@ -80,7 +75,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     [doc setString: name forKey: @"name"];
     [self saveDocument: doc];
 }
-
 
 - (void) testMarsHabitatPricerModel {
     CBLCoreMLPredictiveModel* model = [self model: @"Mars/MarsHabitatPricer" mustExist: YES];
@@ -113,7 +107,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     
     [CBLDatabase.prediction unregisterModelWithName: @"MarsHabitatPricer"];
 }
-
 
 - (void) testInvalidInput {
     CBLCoreMLPredictiveModel* model = [self model: @"Mars/MarsHabitatPricer" mustExist: YES];
@@ -151,7 +144,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     [CBLDatabase.prediction unregisterModelWithName: @"MarsHabitatPricer"];
 }
 
-
 // Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
 // and put it at Objective-C/Tests/Support/mlmodels/MobileNet
 - (void) testMobileNetModel {
@@ -179,7 +171,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     
     [CBLDatabase.prediction unregisterModelWithName: @"MobileNet"];
 }
-
 
 // Note: Download OpenFace.mlmodel from https://github.com/iwantooxxoox/Keras-OpenFace
 // and put it at Objective-C/Tests/Support/mlmodels/OpenFace
@@ -248,7 +239,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     [CBLDatabase.prediction unregisterModelWithName: @"OpenFace"];
 }
 
-
 - (void) testBasicDataConversion {
     NSDictionary* dictData = @{@"name": @"Daniel", @"number": @(1)};
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: dictData];
@@ -279,7 +269,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     }
 }
 
-
 - (void) testMultiArrayDataConversion {
     NSArray* types = @[@(MLMultiArrayDataTypeDouble),
                        @(MLMultiArrayDataTypeFloat32),
@@ -308,7 +297,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
         AssertEqualObjects(arrayData, [array toArray]);
     }
 }
-
 
 - (void) testSequenceDataConversion {
     if (@available(macOS 10.14, iOS 12.0, *)) {
@@ -342,7 +330,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     }
 }
 
-
 - (void) testPixelBufferDataConversion {
     NSData* data = [self dataFromResource: @"mlmodels/MobileNet/cat" ofType: @"jpg"];
     CIImage* image = [[CIImage alloc] initWithData: data];
@@ -364,7 +351,6 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     AssertNotNil(blob2);
     AssertEqualObjects(blob2.contentType, @"image/png");
 }
-
 
 // Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
 // and put it at Objective-C/Tests/Support/mlmodels/MobileNet
@@ -410,6 +396,5 @@ API_AVAILABLE(macos(10.13), ios(11.0))
     
     [CBLDatabase.prediction unregisterModelWithName: @"MobileNet"];
 }
-
 
 @end

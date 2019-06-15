@@ -60,31 +60,26 @@
     return self;
 }
 
-
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config {
     CBLAssertNotNil(config);
     
     return [self initWithConfig: config readonly: NO];
 }
 
-
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
     [self checkReadonly];
     _replicatorType = replicatorType;
 }
-
 
 - (void) setContinuous: (BOOL)continuous {
     [self checkReadonly];
     _continuous = continuous;
 }
 
-
-- (void) setAuthenticator: (CBLAuthenticator *)authenticator {
+- (void) setAuthenticator: (CBLAuthenticator*)authenticator {
     [self checkReadonly];
     _authenticator = authenticator;
 }
-
 
 - (void) setPinnedServerCertificate: (SecCertificateRef)pinnedServerCertificate {
     [self checkReadonly];
@@ -95,20 +90,17 @@
     }
 }
 
-
-- (void) setHeaders: (NSDictionary<NSString *,NSString *> *)headers {
+- (void) setHeaders: (NSDictionary<NSString *,NSString *>*)headers {
     [self checkReadonly];
     _headers = headers;
 }
 
-
-- (void) setDocumentIDs: (NSArray<NSString *> *)documentIDs {
+- (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
     _documentIDs = documentIDs;
 }
 
-
-- (void) setChannels: (NSArray<NSString *> *)channels {
+- (void) setChannels: (NSArray<NSString *>*)channels {
     [self checkReadonly];
     _channels = channels;
 }
@@ -118,7 +110,6 @@
     _conflictResolver = conflictResolver;
 }
 
-
 #if TARGET_OS_IPHONE
 - (void) setAllowReplicatingInBackground: (BOOL)allowReplicatingInBackground {
     [self checkReadonly];
@@ -127,7 +118,6 @@
 #endif
 
 #pragma mark - Internal
-
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
                        readonly: (BOOL)readonly {
@@ -156,14 +146,12 @@
     return self;
 }
 
-
 - (void) checkReadonly {
     if (_readonly) {
         [NSException raise: NSInternalInconsistencyException
                     format: @"This configuration object is readonly."];
     }
 }
-
 
 - (NSDictionary*) effectiveOptions {
     NSMutableDictionary* options = [NSMutableDictionary dictionary];
@@ -203,10 +191,8 @@
     return options;
 }
 
-
 - (void) dealloc {
     cfrelease(_pinnedServerCertificate);
 }
-
 
 @end

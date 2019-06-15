@@ -27,14 +27,12 @@
     BOOL _ignoreAccents;
 }
 
-
 + (CBLQueryCollation*) asciiWithIgnoreCase: (BOOL)ignoreCase {
     return [[CBLQueryCollation alloc] initWithUnicode: NO
                                                locale: nil
                                            ignoreCase: ignoreCase
                                         ignoreAccents: NO];
 }
-
 
 + (CBLQueryCollation*) unicodeWithLocale: (nullable NSString*)locale
                               ignoreCase: (BOOL)ignoreCase
@@ -46,9 +44,7 @@
                                         ignoreAccents: ignoreAccents];
 }
 
-
 #pragma mark - Internal
-
 
 - (instancetype) initWithUnicode: (BOOL)unicode
                           locale: (nullable NSString*)locale
@@ -68,7 +64,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     return @{ @"UNICODE": @(_unicode),

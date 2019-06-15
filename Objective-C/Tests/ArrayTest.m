@@ -29,7 +29,6 @@
 
 @implementation ArrayTest
 
-
 - (NSArray*) arrayOfAllTypes {
     NSMutableArray* array = [NSMutableArray array];
     [array addObject: @(YES)];
@@ -60,7 +59,6 @@
     return array;
 }
 
-
 - (void) populateData: (CBLMutableArray*)array {
     NSArray* data = [self arrayOfAllTypes];
     for (id o in data) {
@@ -68,11 +66,9 @@
     }
 }
 
-
 - (NSString*) blobContent: (CBLBlob*)blob {
     return [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];
 }
-
 
 - (void) testCreate {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -92,7 +88,6 @@
     }];
 }
 
-
 - (void) testCreateWithNativeArray {
     NSArray* data = @[@"1", @"2", @"3"];
     CBLMutableArray* array = [[CBLMutableArray alloc] initWithData: data];
@@ -107,7 +102,6 @@
         AssertEqualObjects([[d arrayForKey: @"array"] toArray], data);
     }];
 }
-
 
 - (void) testSetNativeArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -130,7 +124,6 @@
     AssertEqual(array.count, data.count);
     AssertEqualObjects([array toArray], data);
 }
-
 
 - (void) testAddObjects {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -166,7 +159,6 @@
         AssertEqualObjects([self blobContent: blob], kArrayTestBlob);
     }];
 }
-
 
 - (void) testAddObjectsToExistingArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -245,7 +237,6 @@
     }];
 }
 
-
 - (void) testSetObject {
     // Get test data:
     NSArray* data = [self arrayOfAllTypes];
@@ -288,7 +279,6 @@
         AssertEqualObjects([self blobContent: blob], kArrayTestBlob);
     }];
 }
-
 
 - (void) testSetObjectToExistingArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -335,7 +325,6 @@
         AssertEqualObjects([self blobContent: blob], kArrayTestBlob);
     }];
 }
-
 
 - (void) testSetObjectOutOfBound {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -387,7 +376,6 @@
     }];
 }
 
-
 - (void) testInsertObject {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     
@@ -421,7 +409,6 @@
     AssertEqualObjects([array valueAtIndex: 3], @"a");
     AssertEqualObjects([array valueAtIndex: 4], @"f");
 }
-
 
 - (void) testInsertObjectToExistingArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
@@ -484,7 +471,6 @@
     }];
 }
 
-
 - (void) testInsertObjectOutOfBound {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @"a"];
@@ -536,7 +522,6 @@
     }];
 }
 
-
 - (void) testRemove {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -554,7 +539,6 @@
         AssertEqualObjects([a toArray], (@[]));
     }];
 }
-
 
 - (void) testRemoveExistingArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -578,7 +562,6 @@
     }];
 }
 
-
 - (void) testRemoveOutOfBound {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @"a"];
@@ -589,7 +572,6 @@
         }];
     }
 }
-
 
 - (void) testCount {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -603,7 +585,6 @@
         AssertEqual(a.count, 12u);
     }];
 }
-
 
 - (void) testGetString {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -630,7 +611,6 @@
     }];
 }
 
-
 - (void) testGetNumber {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -655,7 +635,6 @@
         AssertNil([a numberAtIndex: 11]);
     }];
 }
-
 
 - (void) testGetInteger {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -682,7 +661,6 @@
     }];
 }
 
-
 - (void) testGetFloat {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -708,7 +686,6 @@
     }];
 }
 
-
 - (void) testGetDouble {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -733,7 +710,6 @@
         AssertEqual([a doubleAtIndex: 11], 0.0);
     }];
 }
-
 
 - (void) testSetGetMinMaxNumbers {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -771,7 +747,6 @@
         AssertEqual([a doubleAtIndex: 5], DBL_MAX);
     }];
 }
-
 
 - (void) testSetGetFloatNumbers {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -818,7 +793,6 @@
     }];
 }
 
-
 - (void) testGetBoolean {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -843,7 +817,6 @@
         AssertEqual([a booleanAtIndex: 11], YES);
     }];
 }
-
 
 - (void) testGetDate {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -870,7 +843,6 @@
     }];
 }
 
-
 - (void) testGetDictionary {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -896,7 +868,6 @@
     }];
 }
 
-
 - (void) testGetArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [self populateData: array];
@@ -921,7 +892,6 @@
         AssertNil([a arrayAtIndex: 11]);
     }];
 }
-
 
 - (void) testSetNestedArray {
     CBLMutableArray* array1 = [[CBLMutableArray alloc] init];
@@ -950,7 +920,6 @@
         AssertEqualObjects([a3 valueAtIndex: 2], @"c");
     }];
 }
-
 
 - (void) testReplaceArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
@@ -989,7 +958,6 @@
     }];
 }
 
-
 - (void) testReplaceArrayDifferentType {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableArray* array1 = [[CBLMutableArray alloc] init];
@@ -1014,7 +982,6 @@
         AssertEqualObjects([d valueForKey: @"array"], @"Daniel Tiger");
     }];
 }
-
 
 - (void) testEnumeratingArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -1057,7 +1024,6 @@
     }];
 }
 
-
 - (void) testToMutable {
     CBLMutableArray* mArray1 = [[CBLMutableArray alloc] init];
     [mArray1 addValue: @"Scott"];
@@ -1081,6 +1047,5 @@
     [mArray3 addValue: @"Thomas"];
     AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel", @"Thomas"]));
 }
-
 
 @end

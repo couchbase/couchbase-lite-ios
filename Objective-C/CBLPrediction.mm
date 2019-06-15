@@ -40,7 +40,6 @@ using namespace fleece;
 
 static CBLPrediction* sInstance;
 
-
 + (instancetype) sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -48,7 +47,6 @@ static CBLPrediction* sInstance;
     });
     return sInstance;
 }
-
 
 - (void) registerModel: (id<CBLPredictiveModel>)model withName: (NSString*)name {
     CBLAssertNotNil(model);
@@ -84,7 +82,6 @@ static CBLPrediction* sInstance;
     }
 }
 
-
 - (void) unregisterModelWithName: (NSString*)name {
     CBLAssertNotNil(name);
     
@@ -93,7 +90,6 @@ static CBLPrediction* sInstance;
         [_models removeObjectForKey: name];
     }
 }
-
 
 static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outError) {
     if (!prediction)
@@ -109,9 +105,7 @@ static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outErr
     return result;
 }
 
-
 #pragma mark - Swift
-
 
 - (void) registerModelWithName: (NSString*)name usingBlock: (CBLPredictiveModelBlock)block {
     CBLPredictiveModelBridge* model = [[CBLPredictiveModelBridge alloc] initWithBlock: block];
@@ -119,7 +113,6 @@ static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outErr
 }
 
 @end
-
 
 @implementation CBLPredictiveModelBridge {
     CBLPredictiveModelBlock _model;
@@ -133,8 +126,7 @@ static C4SliceResult encodePrediction(CBLDictionary* prediction, C4Error* outErr
     return self;
 }
 
-
-- (nullable CBLDictionary *)predict:(nonnull CBLDictionary *)input {
+- (nullable CBLDictionary*) predict: (nonnull CBLDictionary*)input {
     return _model(input);
 }
 

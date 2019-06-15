@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// Array function factory.
 public final class ArrayFunction {
     
@@ -33,7 +32,6 @@ public final class ArrayFunction {
     public static func contains(_ expression: ExpressionProtocol, value: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryArrayFunction.contains(expression.toImpl(), value: value.toImpl()))
     }
-    
     
     /// Creates an ARRAY_LENGTH(expr) function that returns the length of the given array
     /// expression.

@@ -19,10 +19,10 @@
 
 import Foundation
 
-
 /// MutableFragmentProtocol provides read and write access to the data value
 /// wrapped by a fragment object.
 protocol MutableFragmentProtocol: FragmentProtocol {
+    
     var value: Any? { get set }
     
     var string: String? { get set }
@@ -46,8 +46,8 @@ protocol MutableFragmentProtocol: FragmentProtocol {
     var array: MutableArrayObject? { get set }
     
     var dictionary: MutableDictionaryObject? { get set }
+    
 }
-
 
 /// MutableArrayFragment protocol provides subscript access to Fragment objects
 /// by index.
@@ -55,13 +55,11 @@ protocol MutableArrayFragment {
     subscript(index: Int) -> MutableFragment { get }
 }
 
-
 /// MutableDictionaryFragment protocol provides subscript access to
 /// CBLMutableFragment objects by key.
 protocol MutableDictionaryFragment {
     subscript(key: String) -> MutableFragment { get }
 }
-
 
 /// MutableFragment provides read and write access to data value. MutableFragment also provides
 /// subscript access by either key or index to the nested values which are wrapped by
@@ -78,7 +76,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Gets the value as string or sets the string value to the fragment object.
     public override var string: String? {
         get {
@@ -88,7 +85,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             fragmentImpl.string = newValue
         }
     }
-    
     
     /// Gets the value as number or sets the number value to the fragment object.
     public override var number: NSNumber? {
@@ -100,7 +96,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Gets the value as integer or sets the integer value to the fragment object.
     public override var int: Int {
         get {
@@ -110,7 +105,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             fragmentImpl.integerValue = newValue
         }
     }
-    
     
     /// Gets the value as integer or sets the integer value to the fragment object.
     public override var int64: Int64 {
@@ -122,7 +116,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Gets the value as float or sets the float value to the fragment object.
     public override var float: Float {
         get {
@@ -132,7 +125,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             fragmentImpl.floatValue = newValue
         }
     }
-    
     
     /// Gets the value as double or sets the double value to the fragment object.
     public override var double: Double {
@@ -144,7 +136,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Gets the value as boolean or sets the boolean value to the fragment object.
     public override var boolean: Bool {
         get {
@@ -154,7 +145,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             fragmentImpl.booleanValue = newValue
         }
     }
-    
     
     /// Gets the value as blob or sets the blob value to the fragment object.
     public override var date: Date? {
@@ -166,7 +156,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Gets the value as blob or sets the blob value to the fragment object.
     public override var blob: Blob? {
         get {
@@ -176,7 +165,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
             fragmentImpl.blob = (DataConverter.convertSETValue(newValue) as? CBLBlob)
         }
     }
-    
     
     /// Get the value as an MutableArrayObject object, a mapping object of an array value.
     /// Returns nil if the value is nil, or the value is not an array.
@@ -189,7 +177,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     /// Get a property's value as a MutableDictionaryObject object, a mapping object of
     /// a dictionary value. Returns nil if the value is nil, or the value is not a dictionary.
     public override var dictionary: MutableDictionaryObject? {
@@ -201,9 +188,7 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         }
     }
     
-    
     // MARK: Subscripts
-    
     
     /// Subscript access to a MutableFragment object by index.
     ///
@@ -212,7 +197,6 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         return MutableFragment(fragmentImpl[UInt(index)])
     }
     
-    
     /// Subscript access to a MutableFragment object by key.
     ///
     /// - Parameter key: The key.
@@ -220,22 +204,17 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
         return MutableFragment(fragmentImpl[key])
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLMutableFragment?) {
         super.init(impl ?? MutableFragment.kNonexistent)
     }
     
-    
     // MARK: Private
-    
     
     private var fragmentImpl: CBLMutableFragment {
         return _impl as! CBLMutableFragment
     }
-
 
     static let kNonexistent = CBLMutableFragment()
 

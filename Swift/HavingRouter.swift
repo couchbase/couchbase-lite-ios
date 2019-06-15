@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// HavingRouter for creating and chaning a query HAVING clause.
 protocol HavingRouter {
     

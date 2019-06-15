@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// A Select component represents the returning properties in each query result row.
 public final class Select: Query, FromRouter {
     

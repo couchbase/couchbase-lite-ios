@@ -29,22 +29,17 @@
 
 using namespace fleece;
 
-
 @implementation CBLMutableDictionary
 
-
 #pragma mark - Initializers
-
 
 + (instancetype) dictionary {
     return [[self alloc] init];
 }
 
-
 - (instancetype) init {
     return [super initEmpty];
 }
-
 
 - (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
     self = [self init];
@@ -54,13 +49,11 @@ using namespace fleece;
     return self;
 }
 
-
-- (id) copyWithZone:(NSZone *)zone {
+- (id) copyWithZone: (NSZone*)zone {
     CBL_LOCK(self.sharedLock) {
         return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: false];
     }
 }
-
 
 - (BOOL) changed {
     CBL_LOCK(self.sharedLock) {
@@ -68,9 +61,7 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Type Setters
-
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -88,65 +79,52 @@ using namespace fleece;
     }
 }
 
-
-- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
+- (void) setString: (nullable NSString *)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
+- (void) setInteger: (NSInteger)value forKey: (NSString*)key {
     [self setValue: @(value) forKey: key];
 }
 
-
-- (void) setLongLong: (long long)value forKey: (NSString *)key {
+- (void) setLongLong: (long long)value forKey: (NSString*)key {
     [self setValue: @(value) forKey: key];
 }
 
-
-- (void) setFloat: (float)value forKey: (NSString *)key {
+- (void) setFloat: (float)value forKey: (NSString*)key {
     [self setValue: @(value) forKey: key];
 }
 
-
-- (void) setDouble: (double)value forKey: (NSString *)key {
+- (void) setDouble: (double)value forKey: (NSString*)key {
     [self setValue: @(value) forKey: key];
 }
 
-
-- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
+- (void) setBoolean: (BOOL)value forKey: (NSString*)key {
     [self setValue: @(value) forKey: key];
 }
 
-
-- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
+- (void) setDate: (nullable NSDate*)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
+- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
+- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key {
     [self setValue: value forKey: key];
 }
 
-
-- (void) removeValueForKey: (NSString *)key {
+- (void) removeValueForKey: (NSString*)key {
     CBLAssertNotNil(key);
-    
     CBL_LOCK(self.sharedLock) {
         CBLStringBytes keySlice(key);
         _dict.remove(keySlice);
@@ -154,12 +132,10 @@ using namespace fleece;
     }
 }
 
-
 - (void) setData: (nullable NSDictionary<NSString*,id>*)data {
     CBL_LOCK(self.sharedLock) {
         _dict.clear();
-        
-        [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+        [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL* stop) {
             CBLStringBytes keySlice(key);
             _dict.set(keySlice, [value cbl_toCBLObject]);
         }];
@@ -167,23 +143,18 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Subscript
-
 
 - (CBLMutableFragment*) objectForKeyedSubscript: (NSString*)key {
     CBLAssertNotNil(key);
     return [[CBLMutableFragment alloc] initWithParent: self key: key];
 }
 
-
 #pragma mark - CBLConversion
-
 
 - (id) cbl_toCBLObject {
     // Overrides CBLDictionary
     return self;
 }
-
 
 @end

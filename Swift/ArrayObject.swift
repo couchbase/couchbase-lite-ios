@@ -22,6 +22,7 @@ import Foundation
 
 /// ArrayProtocol defines a set of methods for readonly accessing array data.
 protocol ArrayProtocol: ArrayFragment {
+    
     var count: Int { get }
     
     func value(at index: Int) -> Any?
@@ -49,6 +50,7 @@ protocol ArrayProtocol: ArrayFragment {
     func dictionary(at index: Int) -> DictionaryObject?
     
     func toArray() -> Array<Any>
+    
 }
 
 
@@ -78,7 +80,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return _impl.string(at: UInt(index))
     }
     
-    
     /// Gets value at the given index as a Number value.
     ///
     /// - Parameter index: The index.
@@ -86,7 +87,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     public func number(at index: Int) -> NSNumber? {
         return _impl.number(at: UInt(index))
     }
-    
     
     /// Gets value at the given index as an int value.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
@@ -108,7 +108,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return _impl.longLong(at: UInt(index))
     }
     
-    
     /// Gets the value at the given index as a float value.
     /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
     //// Returns 0.0 if the value doesn't exist or does not have a numeric value.
@@ -118,7 +117,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     public func float(at index: Int) -> Float {
         return _impl.float(at: UInt(index))
     }
-    
     
     /// Gets the value at the given index as a double value.
     /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
@@ -130,7 +128,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return _impl.double(at: UInt(index))
     }
     
-    
     /// Gets the value at the given index as a boolean value.
     /// Returns true if the value exists, and is either `true` or a nonzero number.
     ///
@@ -139,7 +136,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     public func boolean(at index: Int) -> Bool {
         return _impl.boolean(at: UInt(index))
     }
-    
     
     /// Gets value at the given index as an Date.
     /// JSON does not directly support dates, so the actual property value must be a string, which
@@ -154,7 +150,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return _impl.date(at: UInt(index))
     }
     
-    
     /// Get the Blob value at the given index.
     /// Returns nil if the value doesn't exist, or its value is not a blob.
     ///
@@ -163,7 +158,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     public func blob(at index: Int) -> Blob? {
         return value(at: index) as? Blob
     }
-    
     
     /// Gets the value at the given index as a ArrayObject value, which is a mapping object
     /// of an array value.
@@ -175,7 +169,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return value(at: index) as? ArrayObject
     }
     
-    
     /// Get the value at the given index as a DictionaryObject value, which is a
     /// mapping object of a dictionary value.
     /// Returns nil if the value doesn't exists, or its value is not a dictionary.
@@ -186,7 +179,6 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return value(at: index) as? DictionaryObject
     }
 
-    
     /// Gets content of the current object as an Array. The value types of the values
     /// contained in the returned Array object are Array, Blob, Dictionary,
     /// Number types, NSNull, and String.
@@ -207,9 +199,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return array
     }
     
-    
     // MARK: Edit
-    
     
     /// Returns a mutable copy of the array object.
     ///
@@ -218,9 +208,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return MutableArrayObject(_impl.toMutable())
     }
     
-    
     // MARK: Sequence
-    
     
     /// Gets an iterator over items in the array.
     ///
@@ -238,9 +226,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         }
     }
     
-    
     // MARK: Subscript
-    
     
     /// Subscript access to a Fragment object by index
     ///
@@ -249,15 +235,12 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return Fragment(_impl[UInt(index)])
     }
     
-    
     // MARK: Equality
-    
     
     /// Equal to operator for comparing two Array objects.
     public static func == (array1: ArrayObject, array2: ArrayObject) -> Bool {
         return array1._impl == array2._impl
     }
-    
     
     // MARK: Hashable
     
@@ -265,20 +248,16 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         return _impl.hash;
     }
     
-    
     // MARK: Internal
-    
     
     init(_ impl: CBLArray) {
         _impl = impl
         _impl.swiftObject = self
     }
     
-    
     deinit {
         _impl.swiftObject = nil
     }
-    
     
     let _impl: CBLArray
     

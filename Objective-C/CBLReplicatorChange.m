@@ -25,8 +25,8 @@
 
 @synthesize replicator=_replicator, status=_status;
 
-- (instancetype) initWithReplicator:(CBLReplicator *)replicator
-                             status:(CBLReplicatorStatus *)status
+- (instancetype) initWithReplicator: (CBLReplicator*)replicator
+                             status: (CBLReplicatorStatus*)status
 {
     self = [super init];
     if (self) {

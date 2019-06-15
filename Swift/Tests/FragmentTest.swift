@@ -20,8 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class FragmentTest: CBLTestCase {
+    
     func testBasicGetFragmentValues() throws {
         let dict: [String: Any] = ["name": "Jason",
                                    "address": [
@@ -43,7 +43,6 @@ class FragmentTest: CBLTestCase {
         XCTAssertNil(doc["dummy"]["dummy"][0]["dummy"].value)
     }
     
-    
     func testBasicSetFragmentValues() throws {
         let doc = createDocument("doc1")
         doc["name"].value = "Jason"
@@ -57,7 +56,6 @@ class FragmentTest: CBLTestCase {
         XCTAssertEqual(doc["address"]["street"].string!, "1 Main Street")
         XCTAssertEqual(doc["address"]["phones"]["mobile"].string!, "650-123-4567")
     }
-    
     
     func testGetDocFragmentWithID() throws {
         let dict: [String: Any] = ["address": [
@@ -75,7 +73,6 @@ class FragmentTest: CBLTestCase {
         XCTAssertEqual(doc["address"]["state"].string!, "CA")
     }
     
-    
     func testGetDocFragmentWithNonExistingID() throws {
         let doc = db["doc1"]
         XCTAssertNotNil(doc)
@@ -84,7 +81,6 @@ class FragmentTest: CBLTestCase {
         XCTAssertNil(doc["address"]["city"].string)
         XCTAssertNil(doc["address"]["state"].string)
     }
-    
     
     func testGetFragmentFromDictionaryValue() throws {
         let dict: [String: Any] = ["address": [
@@ -111,7 +107,6 @@ class FragmentTest: CBLTestCase {
         }
     }
     
-    
     func testGetFragmentFromArrayValue() throws {
         let dict: [String: Any] = ["references": [["name": "Scott"], ["name": "Sam"]]]
         let doc = createDocument("doc1", data: dict)
@@ -133,7 +128,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testGetFragmentFromInteger() throws {
         let doc = createDocument("doc1")
         doc.setValue(10, forKey: "integer")
@@ -152,7 +146,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.dictionary)
         })
     }
-    
     
     func testGetFragmentFromFloat() throws {
         let doc = createDocument("doc1")
@@ -173,7 +166,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testGetFragmentFromDouble() throws {
         let doc = createDocument("doc1")
         doc.setValue(Double(99.99), forKey: "double")
@@ -193,7 +185,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testGetFragmentFromBoolean() throws {
         let doc = createDocument("doc1")
         doc.setValue(true, forKey: "boolean")
@@ -212,7 +203,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.dictionary)
         })
     }
-    
     
     func testGetFragmentFromDate() throws {
         let date = Date()
@@ -235,7 +225,6 @@ class FragmentTest: CBLTestCase {
         })
     }
 
-    
     func testGetFragmentFromString() throws {
         let doc = createDocument("doc1")
         doc.setValue("hello world", forKey: "string")
@@ -254,7 +243,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.dictionary)
         })
     }
-    
     
     func testGetNestedDictionaryFragment() throws {
         let dict: [String: Any] = ["address": [
@@ -281,7 +269,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testGetNestedNonExistingDictionaryFragment() throws {
         let dict: [String: Any] = ["address": [
                                     "street": "1 Main street",
@@ -304,7 +291,6 @@ class FragmentTest: CBLTestCase {
         })
     }
 
-    
     func testGetNestedArrayFragments() throws {
         let dict: [String: Any] = ["nested-array": [[1, 2, 3], [4, 5, 6]]]
         let doc = createDocument("doc1", data: dict)
@@ -326,7 +312,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testGetNestedNonExistingArrayFragments() throws {
         let dict: [String: Any] = ["nested-array": [[1, 2, 3], [4, 5, 6]]]
         let doc = createDocument("doc1", data: dict)
@@ -346,7 +331,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.dictionary)
         })
     }
-    
     
     func testDictionaryFragmentSet() throws {
         let date = Date()
@@ -368,7 +352,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testDictionaryFragmentsetData() throws {
         let data: [String: Any] = ["name": "Jason",
                                    "address": [
@@ -385,7 +368,6 @@ class FragmentTest: CBLTestCase {
         })
     }
  
-    
     func testDictionaryFragmentSetArray() throws {
         let doc = createDocument("doc1")
         let array = MutableArrayObject(data: [0, 1, 2])
@@ -400,7 +382,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertEqual(d["array"][3].int, 0)
         })
     }
-    
     
     func testDictionaryFragmentSetSwiftDict() throws {
         let data: [String: Any] = ["name": "Jason",
@@ -417,7 +398,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testDictionaryFragmentSetSwiftArray() throws {
         let doc = createDocument("doc1")
         doc["dict"].value = [:]
@@ -433,7 +413,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testNonDictionaryFragmentsetValue() throws {
         let doc = createDocument("doc1")
         doc.setValue("value1", forKey: "string1")
@@ -446,7 +425,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertEqual(mDoc["string2"].value as! String, "value2")
         })
     }
-    
     
     func testArrayFragmentsetData() throws {
         let data: [String: Any] = ["name": "Jason",
@@ -472,7 +450,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testArrayFragmentSetSwiftDictionary() throws {
         let data: [String: Any] = ["name": "Jason",
                                    "address": [
@@ -495,7 +472,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testArrayFragmentSetArrayObject() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
@@ -512,7 +488,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testArrayFragmentSetArray() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
@@ -524,7 +499,6 @@ class FragmentTest: CBLTestCase {
             XCTAssertEqual(d["array"][0][2].boolean, true)
         })
     }
-    
     
     func testNonExistingArrayFragmentsetValue() throws {
         let doc = createDocument("doc1")
@@ -540,7 +514,6 @@ class FragmentTest: CBLTestCase {
         })
     }
     
-    
     func testOutOfRangeArrayFragmentsetValue() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
@@ -552,4 +525,5 @@ class FragmentTest: CBLTestCase {
             XCTAssertFalse(d["array"][0][3].exists)
         })
     }
+    
 }

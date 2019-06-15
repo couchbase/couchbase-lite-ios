@@ -22,13 +22,10 @@
 // Based on public-domain source code by cyrus.najmabadi@gmail.com 
 // taken from http://www.cocoadev.com/index.pl?BaseSixtyFour
 
-
 @implementation CBLBase64
-
 
 static const uint8_t kEncodingTable[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static int8_t kDecodingTable[256];
-
 
 + (void) initialize {
     if (self == [CBLBase64 class]) {
@@ -41,7 +38,6 @@ static int8_t kDecodingTable[256];
         kDecodingTable['='] = 63;
     }
 }
-
 
 + (NSString*) encode: (const void*)input length: (size_t)length {
     if (input == NULL)
@@ -70,18 +66,15 @@ static int8_t kDecodingTable[256];
                                   encoding:NSASCIIStringEncoding];
 }
 
-
 + (NSString*) encode: (NSData*)rawBytes {
     return [self encode: rawBytes.bytes length: rawBytes.length];
 }
-
 
 + (NSData*) decode: (const char*)string length: (size_t)inputLength {
     if (inputLength % 4 != 0)
         return nil;
     return [self decodeURLSafe: string length: inputLength];
 }
-
 
 + (NSData*) decodeURLSafe: (const char*)string length: (size_t)inputLength {
     if (string == NULL)
@@ -118,17 +111,14 @@ static int8_t kDecodingTable[256];
     return data;
 }
 
-
 + (NSData*) decode:(NSString*) string {
     NSData* ascii = [string dataUsingEncoding: NSASCIIStringEncoding];
     return [self decode: ascii.bytes length: ascii.length];
 }
 
-
 + (NSData*) decodeURLSafe: (NSString*)string {
     NSData* ascii = [string dataUsingEncoding: NSASCIIStringEncoding];
     return [self decodeURLSafe: ascii.bytes length: ascii.length];
 }
-
 
 @end

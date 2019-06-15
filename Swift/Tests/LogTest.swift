@@ -20,7 +20,6 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
-
 class LogTest: CBLTestCase {
     
     var logFileDirectory: String!
@@ -169,7 +168,6 @@ class LogTest: CBLTestCase {
             }
         }
     }
-    
     
     func testFileLoggingDefaultBinaryFormat() throws {
         let config = self.logFileConfig()
@@ -396,6 +394,7 @@ class LogTest: CBLTestCase {
         }
         XCTAssert(found)
     }
+    
 }
 
 struct FileLoggerBackup {

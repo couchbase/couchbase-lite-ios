@@ -19,7 +19,6 @@
 
 import Foundation
 
-
 /// The In class represents the IN clause object in a quantified operator (ANY/ANY AND EVERY/EVERY
 /// <variable name> IN <expr> SATISFIES <expr>). The IN clause is used for specifying an array
 /// object or an expression evaluated as an array object, each item of which will be evaluated

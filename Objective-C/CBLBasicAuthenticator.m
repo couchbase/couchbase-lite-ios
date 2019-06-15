@@ -24,7 +24,6 @@
 
 @synthesize username=_username, password=_password;
 
-
 - (instancetype) initWithUsername: (NSString*)username password: (NSString*)password {
     CBLAssertNotNil(username);
     CBLAssertNotNil(password);
@@ -36,7 +35,6 @@
     }
     return self;
 }
-
 
 - (void) authenticate: (NSMutableDictionary *)options {
     NSMutableDictionary *auth = [NSMutableDictionary new];

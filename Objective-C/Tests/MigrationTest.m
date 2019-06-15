@@ -25,7 +25,6 @@
 
 @implementation MigrationTest
 
-
 - (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
     NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
@@ -34,7 +33,6 @@
     Assert(path, @"FATAL: Missing file '%@' in bundle directory '%@'", fileName, directory);
     return path;
 }
-
 
 - (void)testMigration {
     NSFileManager *manager = [NSFileManager defaultManager];
@@ -67,6 +65,5 @@
     
     Assert([database delete: &error], @"Couldn't delete database");
 }
-
 
 @end

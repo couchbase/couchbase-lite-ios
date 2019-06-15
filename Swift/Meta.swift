@@ -21,11 +21,13 @@ import Foundation
 
 /// Meta expression.
 public protocol MetaExpressionProtocol: ExpressionProtocol {
+    
     /// Specifies an alias name of the data source to query the data from. */
     ///
     /// - Parameter alias: The data source alias name.
     /// - Returns: The Meta expression with the given alias name specified.
     func from(_ alias: String) -> ExpressionProtocol
+    
 }
 
 /// Meta is a factory class for creating the meta expressions that refer to
@@ -37,7 +39,6 @@ public final class Meta {
         return MetaExpression(type: .id)
     }
     
-    
     /// A metadata expression refering to the sequence number of the document.
     /// The sequence number indicates how recently the document has been changed. If one document's
     /// `sequence` is greater than another's, that means it was changed more recently.
@@ -45,17 +46,16 @@ public final class Meta {
         return MetaExpression(type: .sequence)
     }
     
-    
     /// A metadata expression referring to the deleted boolean flag of the document.
     public static var isDeleted: MetaExpressionProtocol {
         return MetaExpression(type: .isDeleted)
     }
     
-    
     /// A metadata expression refering to the expiration timestamp of the document.
     public static var expiration: MetaExpressionProtocol {
         return MetaExpression(type: .expiration)
     }
+    
 }
 
 /* internal */ enum MetaType {

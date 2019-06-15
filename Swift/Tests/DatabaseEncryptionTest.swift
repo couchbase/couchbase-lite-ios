@@ -20,7 +20,6 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class DatabaseEncryptionTest: CBLTestCase {
     
     var seekrit: Database?

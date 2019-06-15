@@ -42,7 +42,6 @@
 
 @end
 
-
 @implementation CBLReplicatedDocument
 
 @synthesize id=_id, flags=_flags, c4Error=_c4Error, isTransientError=_isTransientError, error=_error;
@@ -70,12 +69,10 @@
     return self;
 }
 
-
 - (void) resetError {
     _c4Error = {};
     _error = nil;
 }
-
 
 - (void) updateError: (NSError*)error {
     _error = error;

@@ -20,8 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
-
 class DocumentTest: CBLTestCase {
+    
     let kTestDate = "2017-01-01T00:00:00.000Z"
     
     let kTestBlob = "i'm blob"
@@ -56,7 +56,6 @@ class DocumentTest: CBLTestCase {
         doc.setValue(blob, forKey: "blob")
     }
     
-    
     func testCreateDoc() throws {
         let doc1a = MutableDocument()
         XCTAssertNotNil(doc1a)
@@ -65,7 +64,6 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc1a)
     }
     
-    
     func testCreateDocWithID() throws {
         let doc1a = MutableDocument(id: "doc1")
         XCTAssertNotNil(doc1a)
@@ -73,7 +71,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(doc1a.toDictionary().count, 0);
         try saveDocument(doc1a)
     }
-    
     
     func testCreateDocwithEmptyStringID() throws {
         let doc1a = MutableDocument(id: "")
@@ -91,7 +88,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(error!.domain, CBLErrorDomain)
     }
     
-    
     func testCreateDocWithNilID() throws {
         let doc1a = MutableDocument(id: nil)
         XCTAssertNotNil(doc1a)
@@ -99,7 +95,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(doc1a.toDictionary().count, 0);
         try saveDocument(doc1a)
     }
-    
     
     func testCreateDocWithDict() throws {
         let dict: [String: Any] = ["name": "Scott Tiger",
@@ -115,7 +110,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertTrue(doc1a.toDictionary() == dict)
         try saveDocument(doc1a)
     }
-    
     
     func testSetDictionaryContent() throws {
         let dict: [String: Any] = ["name": "Scott Tiger",
@@ -141,7 +135,6 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc)
     }
     
-    
     func testGetValueFromNewEmptyDoc() throws {
         let doc = createDocument("doc1")
         try saveDocument(doc) { (d) in
@@ -159,7 +152,6 @@ class DocumentTest: CBLTestCase {
         }
     }
     
-    
     func testSaveThenGetFromAnotherDB() throws {
         let doc1a = createDocument("doc1")
         doc1a.setValue("Scott Tiger", forKey: "name")
@@ -176,7 +168,6 @@ class DocumentTest: CBLTestCase {
         
         try anotherDb.close()
     }
-    
     
     func testNoCacheNoLive() throws {
         let doc1a = createDocument("doc1")
@@ -213,7 +204,6 @@ class DocumentTest: CBLTestCase {
         try anotherDb.close()
     }
     
-    
     func testSetString() throws {
         var doc = createDocument("doc1")
         doc.setValue("string1", forKey: "string1")
@@ -241,7 +231,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetString() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -261,7 +250,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertNil(d.string(forKey: "non_existing_key"))
         })
     }
-    
     
     func testSetNumber() throws {
         var doc = createDocument("doc1")
@@ -311,7 +299,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetInteger() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -332,7 +319,6 @@ class DocumentTest: CBLTestCase {
         })
     }
 
-    
     func testGetFloat() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -353,7 +339,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetDouble() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -373,7 +358,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.double(forKey: "non_existing_key"), 0.0)
         })
     }
-    
     
     func testSetGetMinMaxNumbers() throws {
         let doc = createDocument("doc1")
@@ -409,7 +393,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetGetFloatNumbers() throws {
         let doc = createDocument("doc1")
         doc.setValue(1.00, forKey: "number1")
@@ -441,7 +424,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetBoolean() throws {
         var doc = createDocument("doc1")
         doc.setValue(true, forKey: "boolean1")
@@ -469,7 +451,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetBoolean() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -489,7 +470,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.boolean(forKey: "non_existing_key"), false)
         })
     }
-    
     
     func testSetDate() throws {
         var doc = createDocument("doc1")
@@ -525,7 +505,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetDate() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -545,7 +524,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertNil(d.date(forKey: "non_existing_key"))
         })
     }
-    
     
     func testSetBlob() throws {
         var doc = createDocument("doc1")
@@ -577,7 +555,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetBlob() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -597,7 +574,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertNil(d.blob(forKey: "non_existing_key"))
         })
     }
-    
     
     func testSetDictionary() throws {
         var doc = createDocument("doc1")
@@ -628,7 +604,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetImmutableDictionary() throws {
         let dict1 = MutableDictionaryObject()
         dict1.setValue("n1", forKey: "name")
@@ -653,7 +628,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetDictionary() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -674,7 +648,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertNil(d.dictionary(forKey: "non_existing_key"))
         })
     }
-    
     
     func testSetArray() throws {
         var doc = createDocument("doc1")
@@ -710,7 +683,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetImmutableArray() throws {
         let array1 = MutableArrayObject()
         array1.addString("a1")
@@ -737,7 +709,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testGetArray() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -758,7 +729,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetNSNull() throws {
         let doc = createDocument("doc1")
         doc.setValue(NSNull(), forKey: "null")
@@ -767,7 +737,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.count, 1)
         })
     }
-    
     
     func testSetNil() throws {
         // Note:
@@ -786,7 +755,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.count, 2)
         })
     }
-    
     
     func testSetNativeDictionary() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
@@ -839,7 +807,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetNativeArray() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
@@ -881,7 +848,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertTrue(d.toDictionary() == savedDict)
         })
     }
-    
     
     func testUpdateNestedDictionary() throws {
         var doc = createDocument("doc1")
@@ -929,7 +895,6 @@ class DocumentTest: CBLTestCase {
                          "zip": "94042"]]])
         })
     }
-    
     
     func testUpdateDictionaryInArray() throws {
         var doc = createDocument("doc1")
@@ -998,7 +963,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testUpdateNestedArray() throws {
         var doc = createDocument("doc1")
         let groups = MutableArrayObject()
@@ -1051,7 +1015,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertTrue(d.toDictionary() == ["groups": [["g", "h", "i"], [7, 8, 9]]])
         })
     }
-    
     
     func testUpdateArrayInDictionary() throws {
         var doc = createDocument("doc1")
@@ -1111,7 +1074,6 @@ class DocumentTest: CBLTestCase {
         })
     }
     
-    
     func testSetDictionaryToMultipleKeys() throws {
         let doc = createDocument("doc1")
         let address = MutableDictionaryObject()
@@ -1145,7 +1107,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(savedBilling !== address)
         XCTAssert(savedShipping !== savedBilling)
     }
-    
     
     func testSetArrayToMultipleKeys() throws {
         let doc = createDocument("doc1")
@@ -1185,14 +1146,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(savedMobile !== savedHome)
     }
     
-    
-    func failingTestToDictionary() throws {
-        // CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-        // [self populateData: doc1];
-        // TODO: Should blob be serialized into JSON dictionary?
-    }
-    
-    
     func testCount() throws {
         let doc = createDocument("doc1")
         populateData(doc)
@@ -1201,7 +1154,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(d.toDictionary().count, d.count)
         }
     }
-    
     
     func testContainsKey() throws {
         let doc = createDocument("doc1")
@@ -1216,7 +1168,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(doc.contains("address"))
         XCTAssertFalse(doc.contains("weight"))
     }
-    
     
     func testRemoveKeys() throws {
         let doc = createDocument("doc1")
@@ -1275,7 +1226,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
     }
     
-    
     func testDeleteDocument() throws {
         let doc = createDocument("doc1")
         doc.setValue("Scott Tiger", forKey: "name")
@@ -1318,7 +1268,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(address.string(forKey: "state"), "CA")
     }
     
-    
     func testPurgeDocument() throws {
         let doc1 = createDocument("doc1")
         doc1.setValue("profile", forKey: "type")
@@ -1343,7 +1292,6 @@ class DocumentTest: CBLTestCase {
         try db.purgeDocument(db.document(withID: doc2.id)!)
     }
     
-    
     func testReopenDB() throws {
         let doc = createDocument("doc1")
         doc.setValue("str", forKey: "string")
@@ -1356,7 +1304,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(savedDoc.string(forKey: "string"), "str")
         XCTAssert(savedDoc.toDictionary() == ["string": "str"] as [String: Any])
     }
-    
     
     func testBlob() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
@@ -1386,7 +1333,6 @@ class DocumentTest: CBLTestCase {
         stream.close()
     }
     
-    
     func testBlobWithStream() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)
         var stream = InputStream(data: content!)
@@ -1405,7 +1351,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(bytesRead, 8)
         stream.close()
     }
-    
     
     func testMultipleBlobRead() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
@@ -1438,7 +1383,6 @@ class DocumentTest: CBLTestCase {
         }
     }
     
-    
     func testReadingExistingBlob() throws {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
@@ -1462,7 +1406,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(savedDoc.value(forKey: "data") as? Blob != nil)
         XCTAssertEqual(savedDoc.blob(forKey: "data")!.content!, content)
     }
-    
     
     func testEnumeratingKeys() throws {
         let doc = createDocument("doc1")
@@ -1498,7 +1441,6 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(count, content.count)
         }
     }
-    
     
     func testEquality() throws {
         let data1 = "data1".data(using: String.Encoding.utf8)!
@@ -1544,7 +1486,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(mDoc != savedDoc)
     }
     
-    
     func testEqualityDifferentDocID() throws {
         let doc1 = createDocument("doc1")
         doc1.setInt(42, forKey: "answer")
@@ -1570,7 +1511,6 @@ class DocumentTest: CBLTestCase {
         XCTAssert(sdoc2 != sdoc1)
         XCTAssert(sdoc2 == sdoc2)
     }
-    
     
     func testEqualityDifferentDB() throws {
         let doc1a = createDocument("doc1")
@@ -1604,6 +1544,5 @@ class DocumentTest: CBLTestCase {
         XCTAssert(sdoc1a == anotherDoc1a)
         try sameDB.close()
     }
-    
     
 }

@@ -25,11 +25,9 @@
 
 @synthesize limit=_limit, offset=_offset;
 
-
 + (CBLQueryLimit*) limit: (CBLQueryExpression*)limit {
     return [self limit: limit offset: nil];
 }
-
 
 + (CBLQueryLimit*) limit: (CBLQueryExpression*)limit
                   offset: (nullable CBLQueryExpression*)offset
@@ -39,9 +37,7 @@
     return [[self alloc] initWithLimit: limit offset: offset];
 }
 
-
 #pragma mark - Internal
-
 
 - (instancetype) initWithLimit: (CBLQueryExpression*)limit
                         offset: (nullable CBLQueryExpression*)offset
@@ -53,7 +49,6 @@
     }
     return self;
 }
-
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];

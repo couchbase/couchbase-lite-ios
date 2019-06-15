@@ -27,6 +27,7 @@ public protocol OrderingProtocol {
 /// SortOrder allows to specify the ordering direction which is ascending or
 /// descending order. The default ordering is the ascending order.
 public protocol SortOrder: OrderingProtocol {
+    
     /// Specifies ascending order.
     ///
     /// - Returns: The ascending Ordering object.
@@ -36,6 +37,7 @@ public protocol SortOrder: OrderingProtocol {
     ///
     /// - Returns: The descending Ordering object.
     func descending() -> OrderingProtocol
+    
 }
 
 /// Ordering factory.
@@ -49,7 +51,6 @@ public final class Ordering {
     public static func property(_ property: String) -> SortOrder {
         return expression(Expression.property(property))
     }
-    
     
     /// Create an Ordering instance with the given expression.
     ///

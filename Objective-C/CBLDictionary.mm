@@ -33,16 +33,13 @@
 using namespace cbl;
 using namespace fleece;
 
-
 @implementation CBLDictionary
 {
     NSArray* _keys;
     __weak NSObject* _sharedLock;
 }
 
-
 @synthesize swiftObject=_swiftObject;
-
 
 - (instancetype) initEmpty {
     self = [super init];
@@ -51,7 +48,6 @@ using namespace fleece;
     }
     return self;
 }
-
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
                        inParent: (fleece::MCollection<id>*)parent
@@ -64,7 +60,6 @@ using namespace fleece;
     return self;
 }
 
-
 - (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict
                            isMutable: (bool)isMutable
 {
@@ -76,7 +71,6 @@ using namespace fleece;
     return self;
 }
 
-
 - (void) setupSharedLock {
     id db;
     auto docContext = dynamic_cast<DocContext*>(_dict.context());
@@ -85,26 +79,21 @@ using namespace fleece;
     _sharedLock = db != nil ? db : self;
 }
 
-
-- (id) copyWithZone:(NSZone *)zone {
+- (id) copyWithZone: (NSZone*)zone {
     return self;
 }
 
-
-- (CBLMutableDictionary*) mutableCopyWithZone:(NSZone *)zone {
+- (CBLMutableDictionary*) mutableCopyWithZone: (NSZone*)zone {
     CBL_LOCK(_sharedLock) {
         return [[CBLMutableDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
     }
 }
 
-
 - (MCollection<id>*) fl_collection {
     return &_dict;
 }
 
-
 #pragma mark - Counting Entries
-
 
 - (NSUInteger) count {
     CBL_LOCK(_sharedLock) {
@@ -112,9 +101,7 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Accessing Keys
-
 
 - (NSArray*) keys {
     // I cache the keys array because my -countByEnumeratingWithState method delegates to it,
@@ -131,7 +118,6 @@ using namespace fleece;
     }
 }
 
-
 - (void) keysChanged {
     // My subclass CBLMutableDictionary calls this when it's mutated, to invalidate the array
     CBL_LOCK(_sharedLock) {
@@ -139,15 +125,12 @@ using namespace fleece;
     }
 }
 
-
 #pragma mark - Type Getters
-
 
 static const MValue<id>& _get(MDict<id> &dict, NSString* key) {
     CBLStringBytes keySlice(key);
     return dict.get(keySlice);
 }
-
 
 static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
@@ -157,7 +140,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     return obj;
 }
 
-
 - (nullable id) valueForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -165,7 +147,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return _getObject(_dict, key, nil);
     }
 }
-
 
 - (nullable NSString*) stringForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -175,7 +156,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 - (nullable NSNumber*) numberForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -183,7 +163,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return _getObject(_dict, key, [NSNumber class]);
     }
 }
-
 
 - (NSInteger) integerForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -193,7 +172,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 - (long long) longLongForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -201,7 +179,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return asLongLong(_get(_dict, key), _dict);
     }
 }
-
 
 - (float) floatForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -211,7 +188,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 - (double) doubleForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -219,7 +195,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return asDouble(_get(_dict, key), _dict);
     }
 }
-
 
 - (BOOL) booleanForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -229,7 +204,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 - (nullable NSDate*) dateForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -237,7 +211,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return asDate(_getObject(_dict, key, nil));
     }
 }
-
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -247,7 +220,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
     CBLAssertNotNil(key);
     
@@ -255,7 +227,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         return _getObject(_dict, key, [CBLArray class]);
     }
 }
-
 
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -265,9 +236,7 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 #pragma mark - Check Existence
-
 
 - (BOOL) containsValueForKey: (NSString*)key {
     CBLAssertNotNil(key);
@@ -277,9 +246,7 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 #pragma mark - Data
-
 
 - (NSDictionary<NSString*,id>*) toDictionary {
     CBL_LOCK(_sharedLock) {
@@ -291,28 +258,22 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 #pragma mark - Mutable
-
 
 - (CBLMutableDictionary*) toMutable {
     return [self mutableCopy];
 }
 
-
 #pragma mark - NSFastEnumeration
 
-
-- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState*)state
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
     return [self.keys countByEnumeratingWithState: state objects: buffer count: len];
 }
 
-
 #pragma mark - Subscript
-
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     CBLAssertNotNil(key);
@@ -322,9 +283,7 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     return [[CBLFragment alloc] initWithParent: self key: key];
 }
 
-
 #pragma mark - Equality
-
 
 - (BOOL) isEqual: (id)object {
     if (self == object)
@@ -350,7 +309,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     return YES;
 }
 
-
 - (NSUInteger) hash {
     CBL_LOCK(self.sharedLock) {
         NSUInteger hash = 0;
@@ -361,29 +319,23 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
-
 #pragma mark - Lock
 
 - (NSObject*) sharedLock {
     return _sharedLock;
 }
 
-
 #pragma mark - CBLConversion
-
 
 - (id) cbl_toPlainObject {
     return [self toDictionary];
 }
 
-
 - (id) cbl_toCBLObject {
     return [self mutableCopy];
 }
 
-
 #pragma mark Fleece
-
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     CBL_LOCK(_sharedLock) {

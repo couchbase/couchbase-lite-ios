@@ -26,10 +26,8 @@
 #import "CBLQueryResultSet+Internal.h"
 #import "MRoot.hh"
 
-
 using namespace cbl;
 using namespace fleece;
-
 
 @implementation CBLQueryResult {
     CBLQueryResultSet* _rs;
@@ -37,7 +35,6 @@ using namespace fleece;
     NSArray<NSValue*>* _values;
     uint64_t _missingColumns;
 }
-
 
 - (instancetype) initWithResultSet: (CBLQueryResultSet*)rs
                       c4Enumerator: (C4QueryEnumerator*)e
@@ -53,9 +50,7 @@ using namespace fleece;
     return self;
 }
 
-
 #pragma mark - CBLArray
-
 
 - (NSUInteger) count {
     CBL_LOCK(_rs.database) {
@@ -63,31 +58,25 @@ using namespace fleece;
     }
 }
 
-
 - (nullable id) valueAtIndex: (NSUInteger)index {
     return [self fleeceValueToObjectAtIndex: index];
 }
-
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
     return asString([self fleeceValueToObjectAtIndex: index]);
 }
 
-
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
     return asNumber([self fleeceValueToObjectAtIndex: index]);
 }
-
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
     return (NSInteger)FLValue_AsInt([self fleeceValueAtIndex: index]);
 }
 
-
 - (long long) longLongAtIndex: (NSUInteger)index {
     return FLValue_AsInt([self fleeceValueAtIndex: index]);
 }
-
 
 - (float) floatAtIndex: (NSUInteger)index {
     return FLValue_AsFloat([self fleeceValueAtIndex: index]);
@@ -97,31 +86,25 @@ using namespace fleece;
     return FLValue_AsDouble([self fleeceValueAtIndex: index]);
 }
 
-
 - (BOOL) booleanAtIndex: (NSUInteger)index {
     return FLValue_AsBool([self fleeceValueAtIndex: index]);
 }
-
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
     return asDate([self fleeceValueToObjectAtIndex: index]);
 }
 
-
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
     return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
 }
-
 
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
     return $castIf(CBLArray, [self fleeceValueToObjectAtIndex: index]);
 }
 
-
 - (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
     return $castIf(CBLDictionary, [self fleeceValueToObjectAtIndex: index]);
 }
-
 
 - (NSArray*) toArray {
     NSMutableArray* array = [NSMutableArray array];
@@ -132,22 +115,18 @@ using namespace fleece;
     return array;
 }
 
-
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     if (index >= self.count)
         return nil;
     return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
-
 #pragma mark - CBLDictionary
-
 
 - (NSArray*) keys {
     // TODO: Support SELECT *
     return [_rs.columnNames allKeys];
 }
-
 
 - (nullable id) valueForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -156,14 +135,12 @@ using namespace fleece;
     return nil;
 }
 
-
 - (nullable NSString*) stringForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self stringAtIndex: index];
     return nil;
 }
-
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -172,14 +149,12 @@ using namespace fleece;
     return nil;
 }
 
-
 - (NSInteger) integerForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self integerAtIndex: index];
     return 0;
 }
-
 
 - (long long) longLongForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -188,14 +163,12 @@ using namespace fleece;
     return 0;
 }
 
-
 - (float) floatForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self floatAtIndex: index];
     return 0.0f;
 }
-
 
 - (double) doubleForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -204,14 +177,12 @@ using namespace fleece;
     return 0.0;
 }
 
-
 - (BOOL) booleanForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self booleanAtIndex: index];
     return NO;
 }
-
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -220,14 +191,12 @@ using namespace fleece;
     return nil;
 }
 
-
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self blobAtIndex: index];
     return nil;
 }
-
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
@@ -236,7 +205,6 @@ using namespace fleece;
     return nil;
 }
 
-
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
@@ -244,12 +212,10 @@ using namespace fleece;
     return nil;
 }
 
-
 - (BOOL) containsValueForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     return index >= 0;
 }
-
 
 - (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
@@ -263,25 +229,20 @@ using namespace fleece;
     return dict;
 }
 
-
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     return [self objectAtIndexedSubscript: [self indexForColumnName: key]];
 }
 
-
 #pragma mark - NSFastEnumeration
 
-
-- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState*)state
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
     return [_rs.columnNames countByEnumeratingWithState: state objects: buffer count: len];
 }
 
-
 #pragma mark - Private
-
 
 - (NSArray*) extractColumns: (FLArrayIterator)columns {
     NSUInteger count = _rs.columnNames.count;
@@ -292,7 +253,6 @@ using namespace fleece;
     }
     return values;
 }
-
 
 - (NSInteger) indexForColumnName: (NSString*)name {
     CBLAssertNotNil(name);
@@ -306,7 +266,6 @@ using namespace fleece;
     return hasValue ? index : -1;
 }
 
-
 - (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
     FLValue value = [self fleeceValueAtIndex: index];
     if (value == nullptr || FLValue_GetType(value) == kFLNull)
@@ -318,7 +277,6 @@ using namespace fleece;
     }
 }
 
-
 - (FLValue) fleeceValueAtIndex: (NSUInteger)index {
     NSUInteger count = _rs.columnNames.count;
     if (index >= count)
@@ -327,6 +285,5 @@ using namespace fleece;
                             (unsigned long)index, (unsigned long)count];
     return (FLValue)[[_values objectAtIndex: index] pointerValue];
 }
-
 
 @end

@@ -21,11 +21,13 @@ import Foundation
 
 /// Full-text expression.
 public protocol FullTextExpressionProtocol {
+    
     /// Creates a Full-text match expression with the given search text.
     ///
     /// - Parameter text: The query string.
     /// - Returns: The full-text match expression.
     func match(_ query: String) -> ExpressionProtocol
+    
 }
 
 /// Full-text expression factory.

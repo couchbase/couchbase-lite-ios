@@ -22,6 +22,7 @@ import Foundation
 /// Listener token returned when adding a change listener. The token is used
 /// for removing the added change listener.
 public class ListenerToken {
+    
     // MARK: Internal
     
     init(_ impl: CBLListenerToken) {
@@ -29,4 +30,5 @@ public class ListenerToken {
     }
     
     let _impl: CBLListenerToken
+    
 }

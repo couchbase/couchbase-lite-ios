@@ -22,12 +22,10 @@
 #import <SystemConfiguration/SystemConfiguration.h>
 #import <arpa/inet.h>
 
-
 @interface CBLReachability ()
 @property (readwrite, nonatomic) BOOL reachabilityKnown;
 @property (readwrite, nonatomic) SCNetworkReachabilityFlags reachabilityFlags;
 @end
-
 
 @implementation CBLReachability
 {
@@ -41,10 +39,8 @@
     CBLReachabilityOnChangeBlock _onChange;
 }
 
-
 @synthesize hostName=_hostName, onChange=_onChange,
             reachabilityKnown=_reachabilityKnown, reachabilityFlags=_reachabilityFlags;
-
 
 #if DEBUG
 static BOOL sAlwaysAssumeProxy = NO;
@@ -52,8 +48,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     sAlwaysAssumeProxy = alwaysAssumesProxy;
 }
 #endif
-
-
 
 + (BOOL) usingProxyForURL: (NSURL*)url {
     NSDictionary* settings = CFBridgingRelease(CFNetworkCopySystemProxySettings());
@@ -69,7 +63,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     return NO;
 }
 
-
 - (instancetype) initWithReachabilityRef: (CF_RELEASES_ARGUMENT SCNetworkReachabilityRef)ref {
     self = [super init];
     if (self) {
@@ -78,14 +71,12 @@ static BOOL sAlwaysAssumeProxy = NO;
     return self;
 }
 
-
 - (instancetype) init {
     struct sockaddr_in addr = {sizeof(addr), AF_INET};  // IP address 0.0.0.0
     SCNetworkReachabilityRef ref = SCNetworkReachabilityCreateWithAddress(NULL,
                                                                           (struct sockaddr*)&addr);
     return [self initWithReachabilityRef: ref];
 }
-
 
 - (instancetype) initWithURL: (NSURL*)url {
     NSString* hostName = url.host;
@@ -106,17 +97,14 @@ static BOOL sAlwaysAssumeProxy = NO;
     return self;
 }
 
-
 - (BOOL) setupCallback {
     SCNetworkReachabilityContext context = {0, (__bridge void *)(self)};
     return _ref && SCNetworkReachabilitySetCallback(_ref, ClientCallback, &context);
 }
 
-
 - (BOOL) removeCallback {
     return _ref && SCNetworkReachabilitySetCallback(_ref, NULL, NULL);
 }
-
 
 - (BOOL) startOnRunLoop: (CFRunLoopRef)runLoop {
     if (_runLoop || _queue)
@@ -129,7 +117,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     return [self started];
 }
 
-
 - (BOOL) startOnQueue: (dispatch_queue_t)queue {
     if (_runLoop || _queue)
         return _queue == queue;
@@ -140,7 +127,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     _queue = queue;
     return [self started];
 }
-
 
 - (BOOL) started {
     // See whether status is already known:
@@ -154,7 +140,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     return YES;
 }
 
-
 - (void) notifyFlagsChanged: (SCNetworkReachabilityFlags)flags {
     if (_queue) {
         dispatch_async(_queue, ^{
@@ -167,7 +152,6 @@ static BOOL sAlwaysAssumeProxy = NO;
         });
     }
 }
-
 
 - (void) stop {
     _reachabilityKnown = NO;
@@ -188,14 +172,12 @@ static BOOL sAlwaysAssumeProxy = NO;
     }
 }
 
-
 - (void)dealloc {
     if (_ref) {
         [self stop];
         CFRelease(_ref);
     }
 }
-
 
 - (NSString*) status {
     if (!_reachabilityKnown)
@@ -210,7 +192,6 @@ static BOOL sAlwaysAssumeProxy = NO;
         return @"reachable";
 }
 
-
 - (NSString*) description {
     NSString* desc;
     if (!_hostName)
@@ -222,14 +203,12 @@ static BOOL sAlwaysAssumeProxy = NO;
     return desc;
 }
 
-
 - (BOOL) reachable {
     // We want 'reachable' flag to be on, but not if user intervention is required (like PPP login)
     return _reachabilityKnown
         &&  (_reachabilityFlags & kSCNetworkReachabilityFlagsReachable)
         && !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
 }
-
 
 - (BOOL) reachableByWiFi {
     return self.reachable
@@ -239,7 +218,6 @@ static BOOL sAlwaysAssumeProxy = NO;
     ;
 }
 
-
 + (NSSet*) keyPathsForValuesAffectingReachable {
     return [NSSet setWithObjects: @"reachabilityKnown", @"reachabilityFlags", nil];
 }
@@ -247,7 +225,6 @@ static BOOL sAlwaysAssumeProxy = NO;
 + (NSSet*) keyPathsForValuesAffectingReachableByWiFi {
     return [NSSet setWithObjects: @"reachabilityKnown", @"reachabilityFlags", nil];
 }
-
 
 - (void) flagsChanged: (SCNetworkReachabilityFlags)flags {
     if (!_reachabilityKnown || flags != _reachabilityFlags) {
@@ -260,13 +237,11 @@ static BOOL sAlwaysAssumeProxy = NO;
     }
 }
 
-
 static void ClientCallback(SCNetworkReachabilityRef target,
                            SCNetworkReachabilityFlags flags,
                            void *info)
 {
     [(__bridge CBLReachability*)info flagsChanged: flags];
 }
-
 
 @end

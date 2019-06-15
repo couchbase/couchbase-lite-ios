@@ -19,12 +19,10 @@
 
 import Foundation
 
-
 extension Database {
     
     /// All index names.
     public var indexes: Array<String> { return _impl.indexes }
-    
     
     /// Creates an index which could be a value index or a full-text search index with the given
     /// name. The name can be used for deleting the index. Creating a new different index with an
@@ -38,7 +36,6 @@ extension Database {
     public func createIndex(_ index: Index, withName name: String) throws {
         try _impl.createIndex(index.toImpl(), withName: name)
     }
-    
     
     /// Deletes the index of the given index name.
     ///
