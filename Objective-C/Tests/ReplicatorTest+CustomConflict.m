@@ -20,6 +20,7 @@
 #import "ReplicatorTest.h"
 #import "CBLDocument+Internal.h"
 #import "CustomLogger.h"
+#import "CBLReplicator+Internal.h"
 
 @interface TestConflictResolver: NSObject<CBLConflictResolver>
 
@@ -732,6 +733,64 @@
     // in between second doc starts and finishes it.
     AssertEqualObjects(order.firstObject, order.lastObject);
     AssertEqualObjects(order[1], order[2]);
+}
+
+- (void) testDoubleConflictResolutionOnSameConflicts {
+    NSString* docID = @"doc1";
+    CustomLogger* custom = [[CustomLogger alloc] init];
+    custom.level = kCBLLogLevelWarning;
+    CBLDatabase.log.custom = custom;
+    XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
+    XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    __block int ccrCount = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        int c = ccrCount;
+        if (ccrCount++ == 0) {
+            [expCCR fulfill];
+            [NSThread sleepForTimeInterval: 2.0];
+        }
+        return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
+    }];
+    pullConfig.conflictResolver = resolver;
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: pullConfig];
+    __weak CBLReplicator* r = replicator;
+    id changeToken = [replicator addChangeListener:^(CBLReplicatorChange * change) {
+        __strong CBLReplicator* re = r;
+        if (change.status.activity == kCBLReplicatorOffline) {
+            [re setSuspended: NO];
+        }
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [expSTOP fulfill];
+        }
+    }];
+    __block int noOfNotificationReceived = 0;
+    id docReplToken = [replicator addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
+        noOfNotificationReceived++;
+        AssertEqualObjects(docRepl.documents.firstObject.id, docID);
+    }];
+    
+    [replicator start];
+    [self waitForExpectations: @[expCCR] timeout: 5.0];
+    
+    // in between the conflict, we wil suspend replicator.
+    [replicator setSuspended: YES];
+    
+    [self waitForExpectations: @[expSTOP] timeout: 15.0];
+    
+    AssertEqual(ccrCount, 2u);
+    AssertEqual(noOfNotificationReceived, 2u);
+    CBLDocument* doc = [self.db documentWithID: docID];
+    AssertEqualObjects([doc toDictionary], localData);
+    Assert([custom.lines containsObject: @"Unable to select conflicting revision for doc1, skipping..."]);
+    
+    [replicator removeChangeListenerWithToken: changeToken];
+    [replicator removeChangeListenerWithToken: docReplToken];
 }
 
 #endif
