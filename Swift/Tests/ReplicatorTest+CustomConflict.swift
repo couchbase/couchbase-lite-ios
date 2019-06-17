@@ -356,6 +356,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(docIds.first!, docID)
         replicator.removeChangeListener(withToken: token)
+        
+        // resolve any un-resolved conflict through pull replication.
+        run(config: getConfig(.pull), expectedError: nil)
     }
     
     
