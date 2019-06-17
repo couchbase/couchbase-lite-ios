@@ -650,6 +650,35 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(order[1], order[2])
     }
     
+    func testConflictResolverWhenDocumentIsPurged() throws {
+        let docID = "doc"
+        let localData = ["key1": "value1"]
+        let remoteData = ["key2": "value2"]
+        let config = getConfig(.pull)
+        var resolver: TestConflictResolver!
+        
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        resolver = TestConflictResolver() { (conflict) -> Document? in
+            try! self.db.purgeDocument(withID: conflict.documentID)
+            return conflict.remoteDocument
+        }
+        config.conflictResolver = resolver
+        var error: NSError? = nil
+        var replicator: Replicator!
+        var token: ListenerToken!
+        self.run(config: config, reset: false, expectedError: nil, onReplicatorReady: {(repl) in
+            replicator = repl
+            token = repl.addDocumentReplicationListener({ (docRepl) in
+                if let err = docRepl.documents.first?.error as NSError? {
+                    error = err
+                }
+            })
+        })
+        XCTAssertNotNil(error)
+        XCTAssertEqual(error?.code, CBLErrorNotFound)
+        replicator.removeChangeListener(withToken: token)
+    }
+    
     #endif
     
 }
