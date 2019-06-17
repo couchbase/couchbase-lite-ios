@@ -385,7 +385,6 @@ class DatabaseTest: CBLTestCase {
         
         // Modify doc1a:
         doc1a.setString("Scott", forKey: "firstName")
-        try db.saveDocument(doc1a)
         doc1a.setString("Scotty", forKey: "nickName")
         try db.saveDocument(doc1a)
         XCTAssertTrue(doc1a.toDictionary() == ["firstName": "Scott",
