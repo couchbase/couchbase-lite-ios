@@ -390,7 +390,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertTrue(doc1a.toDictionary() == ["firstName": "Scott",
                                                "lastName": "Tiger",
                                                "nickName": "Scotty"])
-        XCTAssertEqual(doc1a.sequence, 3)
+        XCTAssertEqual(doc1a.sequence, 2)
         
         // Modify doc1b:
         doc1b.setString("Lion", forKey: "middleName")
@@ -551,12 +551,14 @@ class DatabaseTest: CBLTestCase {
         
         // conflicting save
         doc1b.setString("Lion", forKey: "middleName")
-        XCTAssertFalse(try db.saveDocument(doc1b) { (cur, old) -> Bool in
-            NSException(name: .internalInconsistencyException,
-                        reason: "some exception happened inside save handler",
-                        userInfo: nil).raise()
-            return true
-            })
+        ignoreException {
+            XCTAssertFalse(try self.db.saveDocument(doc1b) { (cur, old) -> Bool in
+                NSException(name: .internalInconsistencyException,
+                            reason: "some exception happened inside save handler",
+                            userInfo: nil).raise()
+                return true
+                })
+        }
     }
     
     // MARK: Delete Document
