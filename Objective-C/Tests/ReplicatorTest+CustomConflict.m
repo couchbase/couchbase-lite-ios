@@ -862,6 +862,37 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testConflictResolverWhenDocumentIsPurged {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        [self.db purgeDocument: [self.db documentWithID: docId] error: nil];
+        return con.remoteDocument;
+    }];
+    pullConfig.conflictResolver = resolver;
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
+    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+            NSError* err = docRepl.documents.firstObject.error;
+            if (err)
+                [errors addObject: err];
+        }];
+    }];
+    
+    AssertEqual(errors.count, 1u);
+    AssertEqual(errors.firstObject.code, CBLErrorNotFound);
+    [replicator removeChangeListenerWithToken: token];
+}
+
 #endif
 
 @end
