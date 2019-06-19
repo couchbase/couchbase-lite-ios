@@ -39,9 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL isTransientError;
 
-- (void) resetError;
-
-- (void) updateError: (NSError*)error;
+- (void) updateError: (nullable NSError*)error;
 
 @end
 

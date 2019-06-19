@@ -960,7 +960,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
                 CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may "
                         "have been resolved...", docID);
-                return NO;
+                // this means no conflict, so returning success
+                return YES;
             }
         }
         
