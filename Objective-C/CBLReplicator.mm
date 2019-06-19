@@ -598,8 +598,10 @@ static void onDocsEnded(C4Replicator* repl,
                                               error: &error])
         [doc resetError];
     else {
-        CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
-        [doc updateError: error];
+        if (error) {
+            CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
+            [doc updateError: error];
+        }
     }
     [self logErrorOnDocument: doc pushing: NO];
     [self postDocumentReplications: @[doc] pushing: NO];

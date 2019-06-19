@@ -799,8 +799,8 @@
     AssertEqual(noOfNotificationReceived, 2u);
     CBLDocument* doc = [self.db documentWithID: docID];
     AssertEqualObjects([doc toDictionary], localData);
-    Assert([custom.lines containsObject: @"Unable to select conflicting revision for doc1, "
-            "the conflict may have been resolved..."]);
+    AssertEqualObjects(custom.lines.lastObject, @"Unable to select conflicting revision for doc1, "
+            "the conflict may have been resolved...");
     
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
