@@ -593,16 +593,13 @@ static void onDocsEnded(C4Replicator* repl,
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     NSError* error;
-    BOOL success = [_config.database resolveConflictInDocument: doc.id
-                                          withConflictResolver: _config.conflictResolver
-                                                         error: &error];
-    if (success && !error) {
-        [doc resetError];
-    } else {
+    if (![_config.database resolveConflictInDocument: doc.id
+                               withConflictResolver: _config.conflictResolver
+                                              error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
-        [doc updateError: error];
     }
     
+    [doc updateError: error];
     [self logErrorOnDocument: doc pushing: NO];
     [self postDocumentReplications: @[doc] pushing: NO];
 }
