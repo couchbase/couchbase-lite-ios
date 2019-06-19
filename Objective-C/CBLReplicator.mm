@@ -592,7 +592,7 @@ static void onDocsEnded(C4Replicator* repl,
 
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
-    NSError* error;
+    NSError* error = nil;
     if (![_config.database resolveConflictInDocument: doc.id
                                withConflictResolver: _config.conflictResolver
                                               error: &error]) {

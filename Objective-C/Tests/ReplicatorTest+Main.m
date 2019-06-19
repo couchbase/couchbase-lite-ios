@@ -1940,7 +1940,7 @@
     AssertEqual(replicatedDoc.c4Error.domain, 1);
     AssertEqual(replicatedDoc.error.code, kC4ErrorBusy);
     
-    [replicatedDoc resetError];
+    [replicatedDoc updateError: nil];
     AssertEqual(replicatedDoc.c4Error.code, 0);
     AssertEqual(replicatedDoc.c4Error.domain, 0);
     AssertNil(replicatedDoc.error);

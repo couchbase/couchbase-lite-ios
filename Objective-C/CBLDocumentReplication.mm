@@ -69,13 +69,11 @@
     return self;
 }
 
-- (void) resetError {
-    _c4Error = {};
-    _error = nil;
-}
-
 - (void) updateError: (NSError*)error {
     _error = error;
+    if (!error) {
+        _c4Error = {};
+    }
 }
 
 @end
