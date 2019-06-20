@@ -31,7 +31,6 @@ framework module CouchbaseLiteSwift {
         header "CBLBasicAuthenticator.h"
         header "CBLBlob.h"
         header "CBLConflict.h"
-        header "CBLConflictResolution.h"
         header "CBLConflictResolver.h"
         header "CBLConsoleLogger.h"
         header "CBLDatabase.h"

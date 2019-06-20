@@ -20,9 +20,38 @@
 import Foundation
 
 /// Conflict Resolver protocol
-public protocol ConflictResolver {
+public protocol ConflictResolverProtocol {
     
     /// The callback resolve method, if conflict occurs.
     func resolve(conflict: Conflict) -> Document?
+    
+}
+
+
+/// Conflict Resolution class
+public class ConflictResolver {
+    
+    /// The default conflict resolver used by the replicator.
+    public static var `default`: ConflictResolver {
+        return DefaultResolver()
+    }
+    
+}
+
+/* internal */ class DefaultResolver: ConflictResolver {
+    
+    let resolver: CBLConflictResolverProtocol
+    
+    override init() {
+        resolver = CBLConflictResolver.default()
+    }
+    
+    func resolve(conflict: Conflict) -> Document? {
+        guard let doc = resolver.resolve(conflict.impl) else {
+            return nil
+        }
+        
+        return Document(doc)
+    }
     
 }

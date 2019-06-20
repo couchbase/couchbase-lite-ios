@@ -684,7 +684,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
 }
 
 
-class TestConflictResolver: ConflictResolver {
+class TestConflictResolver: ConflictResolverProtocol {
     
     var winner: Document? = nil
     let _resolver: (Conflict) -> Document?

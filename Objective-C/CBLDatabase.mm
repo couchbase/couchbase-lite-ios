@@ -35,7 +35,6 @@
 #import "CBLLog+Admin.h"
 #import "CBLVersion.h"
 #import "fleece/Fleece.hh"
-#import "CBLConflictResolution.h"
 #import "CBLConflict+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -965,7 +964,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             }
         }
         
-        conflictResolver = conflictResolver ?: [CBLConflictResolution default];
+        conflictResolver = conflictResolver ?: [CBLConflictResolver default];
         
         CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
                                                   localDocument: localDoc.isDeleted ? nil : localDoc

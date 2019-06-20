@@ -140,7 +140,7 @@ public class ReplicatorConfiguration {
      The custom conflict resolver object can be set here. If this value is not set, or set to nil,
      the default conflict resolution will be applied.
      */
-    public var conflictResolver: ConflictResolver? {
+    public var conflictResolver: ConflictResolverProtocol? {
         willSet(newValue) {
             checkReadOnly()
         }
@@ -241,11 +241,11 @@ public class ReplicatorConfiguration {
 }
 
 
-/* internal */ fileprivate class BridgingConflictResolver: NSObject, CBLConflictResolver {
+/* internal */ fileprivate class BridgingConflictResolver: NSObject, CBLConflictResolverProtocol {
     
-    let _resolver: ConflictResolver
+    let _resolver: ConflictResolverProtocol
     
-    init(_ resolver: ConflictResolver) {
+    init(_ resolver: ConflictResolverProtocol) {
         _resolver = resolver
     }
     
