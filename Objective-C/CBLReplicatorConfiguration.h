@@ -105,7 +105,7 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
 
 /**
  The custom conflict resolver object can be set here. If this value is not set, or set to nil,
- the default conflict resolution will be applied.
+ the default conflict resolver will be applied.
  */
 @property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 

@@ -138,7 +138,7 @@ public class ReplicatorConfiguration {
     
     /**
      The custom conflict resolver object can be set here. If this value is not set, or set to nil,
-     the default conflict resolution will be applied.
+     the default conflict resolver will be applied.
      */
     public var conflictResolver: ConflictResolverProtocol? {
         willSet(newValue) {
