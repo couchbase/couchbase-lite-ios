@@ -1,5 +1,5 @@
 //
-//  CBLConflictResolution.m
+//  CBLConflictResolver.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,24 +17,34 @@
 //  limitations under the License.
 //
 
-#import "CBLConflictResolution.h"
+#import <Foundation/Foundation.h>
 #import "CBLConflictResolver.h"
 #import "CBLDocument+Internal.h"
-#import "CBLConflict.h"
 
-@interface CBLDefaultConflictResolution : NSObject <CBLConflictResolver>
+@interface CBLDefaultConflictResolver : NSObject <CBLConflictResolver>
+
++ (CBLDefaultConflictResolver*) shared;
 
 @end
 
-@implementation CBLConflictResolution
+@implementation CBLConflictResolver
 
 + (id) default {
-    return [[CBLDefaultConflictResolution alloc] init];
+    return [CBLDefaultConflictResolver shared];
 }
 
 @end
 
-@implementation CBLDefaultConflictResolution
+@implementation CBLDefaultConflictResolver
+
++ (CBLDefaultConflictResolver*) shared {
+    static CBLDefaultConflictResolver* shared = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        shared = [[self alloc] init];
+    });
+    return shared;
+}
 
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
     if (conflict.remoteDocument == nil || conflict.localDocument == nil)
