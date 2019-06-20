@@ -32,7 +32,6 @@ ONLY_ACTIVE_ARCH                   = NO
 SKIP_INSTALL                       = YES
 SUPPORTED_PLATFORMS                = macosx iphoneos iphonesimulator appletvos appletvsimulator
 TARGETED_DEVICE_FAMILY             = 1,2
-VALID_ARCHS                        = arm64 armv7 armv7a x86_64 i386
 
 ALWAYS_SEARCH_USER_PATHS           = NO
 
