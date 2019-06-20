@@ -29,7 +29,7 @@ public protocol ConflictResolverProtocol {
 
 
 /// ConflictResolver provides access to the default conflict resolver used by the replicator
-public class ConflictResolver {
+public final class ConflictResolver {
     
     /// The default conflict resolver used by the replicator.
     public static var `default`: ConflictResolver {
