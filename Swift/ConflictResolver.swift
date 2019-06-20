@@ -32,19 +32,19 @@ public protocol ConflictResolverProtocol {
 public final class ConflictResolver {
     
     /// The default conflict resolver used by the replicator.
-    public static var `default`: ConflictResolver {
+    public static var `default`: ConflictResolverProtocol {
         return DefaultResolver.shared
     }
     
 }
 
-/* internal */ class DefaultResolver: ConflictResolver {
+/* internal */ class DefaultResolver: ConflictResolverProtocol {
     
     let resolver: CBLConflictResolverProtocol
     
     static let shared: DefaultResolver = DefaultResolver()
     
-    private override init() {
+    private init() {
         resolver = CBLConflictResolver.default()
     }
     
