@@ -28,12 +28,12 @@ public protocol ConflictResolverProtocol {
 }
 
 
-/// Conflict Resolution class
+/// ConflictResolver provides access to the default conflict resolver used by the replicator
 public class ConflictResolver {
     
     /// The default conflict resolver used by the replicator.
     public static var `default`: ConflictResolver {
-        return DefaultResolver()
+        return DefaultResolver.shared
     }
     
 }
@@ -42,7 +42,9 @@ public class ConflictResolver {
     
     let resolver: CBLConflictResolverProtocol
     
-    override init() {
+    static let shared: DefaultResolver = DefaultResolver()
+    
+    private override init() {
         resolver = CBLConflictResolver.default()
     }
     
