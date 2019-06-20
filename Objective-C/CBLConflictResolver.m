@@ -23,17 +23,28 @@
 
 @interface CBLDefaultConflictResolver : NSObject <CBLConflictResolver>
 
++ (CBLDefaultConflictResolver*) shared;
+
 @end
 
 @implementation CBLConflictResolver
 
 + (id) default {
-    return [[CBLDefaultConflictResolver alloc] init];
+    return [CBLDefaultConflictResolver shared];
 }
 
 @end
 
 @implementation CBLDefaultConflictResolver
+
++ (CBLDefaultConflictResolver*) shared {
+    static CBLDefaultConflictResolver* shared = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        shared = [[self alloc] init];
+    });
+    return shared;
+}
 
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
     if (conflict.remoteDocument == nil || conflict.localDocument == nil)
