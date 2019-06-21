@@ -5,7 +5,7 @@
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
-Couchbase Lite is implementation on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
+This implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
 
 ## Requirements
