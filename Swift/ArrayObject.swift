@@ -21,7 +21,7 @@ import Foundation
 
 
 /// ArrayProtocol defines a set of methods for readonly accessing array data.
-protocol ArrayProtocol: ArrayFragment {
+public protocol ArrayProtocol: ArrayFragment {
     
     var count: Int { get }
     

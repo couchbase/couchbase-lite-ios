@@ -21,7 +21,7 @@ import Foundation
 
 
 /** MutableArrayProtocol protocol defines a set of methods for getting and setting array data. */
-protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
+public protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
     
     // MARK: Type Setters
     

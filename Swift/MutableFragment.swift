@@ -21,7 +21,7 @@ import Foundation
 
 /// MutableFragmentProtocol provides read and write access to the data value
 /// wrapped by a fragment object.
-protocol MutableFragmentProtocol: FragmentProtocol {
+public protocol MutableFragmentProtocol: FragmentProtocol {
     
     var value: Any? { get set }
     
@@ -51,13 +51,13 @@ protocol MutableFragmentProtocol: FragmentProtocol {
 
 /// MutableArrayFragment protocol provides subscript access to Fragment objects
 /// by index.
-protocol MutableArrayFragment {
+public protocol MutableArrayFragment {
     subscript(index: Int) -> MutableFragment { get }
 }
 
 /// MutableDictionaryFragment protocol provides subscript access to
 /// CBLMutableFragment objects by key.
-protocol MutableDictionaryFragment {
+public protocol MutableDictionaryFragment {
     subscript(key: String) -> MutableFragment { get }
 }
 
