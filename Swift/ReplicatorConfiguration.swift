@@ -221,7 +221,13 @@ public class ReplicatorConfiguration {
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
-        c.conflictResolver = self.conflictResolver != nil ? BridgingConflictResolver(self.conflictResolver!) : nil
+        
+        if let resolver = self.conflictResolver {
+            c.setConflictResolverUsing { (conflict) -> CBLDocument? in
+                return resolver.resolve(conflict: Conflict(impl: conflict))?._impl
+            }
+        }
+        
     #if os(iOS)
         c.allowReplicatingInBackground = self.allowReplicatingInBackground
     #endif
@@ -239,20 +245,3 @@ public class ReplicatorConfiguration {
     }
     
 }
-
-
-/* internal */ fileprivate class BridgingConflictResolver: NSObject, CBLConflictResolverProtocol {
-    
-    let _resolver: ConflictResolverProtocol
-    
-    init(_ resolver: ConflictResolverProtocol) {
-        _resolver = resolver
-    }
-    
-    func resolve(_ conflict: CBLConflict) -> CBLDocument? {
-        let doc = _resolver.resolve(conflict: Conflict(impl: conflict))
-        return doc?._impl
-    }
-    
-}
-
