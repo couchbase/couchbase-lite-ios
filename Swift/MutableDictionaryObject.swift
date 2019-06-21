@@ -21,7 +21,7 @@ import Foundation
 
 /// MutableDictionaryProtocol defines a set of methods for getting and setting
 /// dictionary data.
-protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragment {
+public protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragment {
 
     // MARK: Type Setters
     

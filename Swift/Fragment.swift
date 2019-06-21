@@ -20,7 +20,7 @@
 import Foundation
 
 /// FragmentProtocol provides readonly access to the data value wrapped by a fragment object.
-protocol FragmentProtocol {
+public protocol FragmentProtocol {
     
     var value: Any? { get }
     
@@ -51,7 +51,7 @@ protocol FragmentProtocol {
 }
 
 /// ArrayFragment protocol provides subscript access to Fragment objects by index.
-protocol ArrayFragment {
+public protocol ArrayFragment {
     subscript(index: Int) -> Fragment { get }
 }
 
