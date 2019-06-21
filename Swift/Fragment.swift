@@ -20,7 +20,7 @@
 import Foundation
 
 /// FragmentProtocol provides readonly access to the data value wrapped by a fragment object.
-public protocol FragmentProtocol {
+protocol FragmentProtocol {
     
     var value: Any? { get }
     

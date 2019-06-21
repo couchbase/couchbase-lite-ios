@@ -21,7 +21,7 @@ import Foundation
 
 /// MutableFragmentProtocol provides read and write access to the data value
 /// wrapped by a fragment object.
-public protocol MutableFragmentProtocol: FragmentProtocol {
+protocol MutableFragmentProtocol: FragmentProtocol {
     
     var value: Any? { get set }
     
