@@ -18,6 +18,7 @@
 //
 
 #import "CBLReplicatorConfiguration.h"
+#import "CBLReplicatorConfiguration+Swift.h"
 #import "CBLAuthenticator+Internal.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
