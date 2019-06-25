@@ -6,7 +6,7 @@
 
 #include "Project_Release.xcconfig"
 
-CBL_EXPORTED_SYMBOLS_FILE = Objective-C/CouchbaseLite-EE.exp
+CBL_EXPORTED_SYMBOLS_FILE = ../Sources/Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE = Swift/CouchbaseLiteSwift-EE.modulemap
 
 GCC_PREPROCESSOR_DEFINITIONS  = ${GCC_PREPROCESSOR_DEFINITIONS_DEF} COUCHBASE_ENTERPRISE

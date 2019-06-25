@@ -1779,6 +1779,7 @@
 		932565C021ED51290092F4E0 /* LogFileConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfiguration.swift; sourceTree = "<group>"; };
 		93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplicatorConfiguration+Swift.h"; sourceTree = "<group>"; };
 		93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLReplicatorConfiguration+Swift.m"; sourceTree = "<group>"; };
+		93292DBE22C19E7F00A0862A /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseEndpoint.h; sourceTree = "<group>"; };
 		932CC553207D9ED2000B4B78 /* CouchbaseLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CouchbaseLite.h; sourceTree = "<group>"; };
 		932CC554207D9ED2000B4B78 /* CBLDatabaseEndpoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseEndpoint.m; sourceTree = "<group>"; };
@@ -2063,7 +2064,6 @@
 		93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DictionaryTest.swift; sourceTree = "<group>"; };
 		93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExpirationTest.swift; sourceTree = "<group>"; };
 		93C50F0F21C068F300C7E980 /* CBLLog+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLog+Internal.h"; sourceTree = "<group>"; };
-		93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = "CouchbaseLite-EE.exp"; sourceTree = "<group>"; };
 		93CD02491E9DA0AC00AFB3FA /* CBLC4Document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLC4Document.h; sourceTree = "<group>"; };
 		93CD024A1E9DA0AC00AFB3FA /* CBLC4Document.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLC4Document.mm; sourceTree = "<group>"; };
 		93CD02601E9FFEC500AFB3FA /* CBLMutableArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMutableArray.h; sourceTree = "<group>"; };
@@ -2481,6 +2481,7 @@
 				9392608B20A0C8DF00E5748C /* Replicator */,
 				9369A675207DB3D4009B5B83 /* Internal */,
 				932CC553207D9ED2000B4B78 /* CouchbaseLite.h */,
+				93292DBE22C19E7F00A0862A /* CouchbaseLite.exp */,
 			);
 			name = "Objective-C";
 			path = "../Sources/Objective-C";
@@ -3101,7 +3102,6 @@
 				93BFCD931E0380A300E52F8A /* Tests */,
 				9398D9FD1E03531A00464432 /* CouchbaseLite.h */,
 				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
-				93C65C59203CCC2500384F6E /* CouchbaseLite-EE.exp */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 			);
 			path = "Objective-C";
