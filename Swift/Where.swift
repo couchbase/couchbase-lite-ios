@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Where class represents the WHERE clause of the query statement.
 public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {

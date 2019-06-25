@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Variable expression that expresses an array item in the ArrayExpression.
 public protocol VariableExpressionProtocol: ExpressionProtocol {

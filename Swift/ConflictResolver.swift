@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Conflict Resolver protocol
 public protocol ConflictResolverProtocol {

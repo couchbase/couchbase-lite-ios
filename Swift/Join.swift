@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Join component representing a JOIN clause in the query statement.
 public protocol JoinProtocol {

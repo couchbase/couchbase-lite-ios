@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.
 public protocol DictionaryProtocol: DictionaryFragment {

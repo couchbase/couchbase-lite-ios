@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// ArrayProtocol defines a set of methods for readonly accessing array data.
 public protocol ArrayProtocol: ArrayFragment {

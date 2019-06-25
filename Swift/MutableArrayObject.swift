@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /** MutableArrayProtocol protocol defines a set of methods for getting and setting array data. */
 public protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {

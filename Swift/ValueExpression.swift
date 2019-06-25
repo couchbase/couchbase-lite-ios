@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Value Expression.
 /* internal */ class ValueExpression: QueryExpression {

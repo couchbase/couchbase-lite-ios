@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Full-text expression.
 public protocol FullTextExpressionProtocol {

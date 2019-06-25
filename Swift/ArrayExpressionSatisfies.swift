@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /* internal */ enum QuantifiesType {
     case any, anyAndEvery, every

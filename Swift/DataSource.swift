@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// A query data source. used for specifiying the data source for your query.
 public protocol DataSourceProtocol {

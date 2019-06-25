@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// Query parameters used for setting values to the query parameters defined in the query.
 public class Parameters {

@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// FragmentProtocol provides readonly access to the data value wrapped by a fragment object.
 public protocol FragmentProtocol {

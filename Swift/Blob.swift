@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Blob contains arbitrary binary data, tagged with a MIME type.
 /// Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`

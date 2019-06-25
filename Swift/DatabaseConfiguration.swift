@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// Configuration for opening a database.
 public class DatabaseConfiguration {

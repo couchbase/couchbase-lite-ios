@@ -1,8 +1,9 @@
 //
-//  Limit.swift
+//  module.modulemap
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//
+//  Copyright (c) 2016 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,19 +18,19 @@
 //  limitations under the License.
 //
 
-import Foundation
-import CouchbaseLitePrivate
-
-/// A Limit component represents the LIMIT clause of the query statement.
-public final class Limit: Query  {
+module CouchbaseLitePrivate {
+    // CouchbaseLite.h:
+    header "../CouchbaseLite.h"
     
-    // MARK: Internal
+    // Internal:
+    header "../Internal/CBLNewDictionary.h"
+    header "../Internal/CBLQuery+JSON.h"
     
-    init(query: Query, limit: ExpressionProtocol, offset: ExpressionProtocol?) {
-        super.init()
-        
-        self.copy(query)
-        self.limitImpl = CBLQueryLimit(limit.toImpl(), offset: offset != nil ? offset!.toImpl() : nil)
-    }
-    
+    // Swift:
+    header "../Internal/CBLArray+Swift.h"
+    header "../Internal/CBLBlob+Swift.h"
+    header "../Internal/CBLDatabase+Swift.h"
+    header "../Internal/CBLDictionary+Swift.h"
+    header "../Internal/CBLLog+Swift.h"
+    header "../Internal/Replicator/CBLReplicatorConfiguration+Swift.h"
 }

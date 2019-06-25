@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// A replicator for replicating document changes between a local database and a target database.
 /// The replicator can be bidirectional or either push or pull. The replicator can also be one-short

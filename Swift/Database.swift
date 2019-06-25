@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Concurruncy control type used when saving or deleting a document.
 ///

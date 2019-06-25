@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// SelectResult represents a signle return value of the query statement.
 public protocol SelectResultProtocol {

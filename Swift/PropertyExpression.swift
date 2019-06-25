@@ -18,7 +18,7 @@
 //
 
 import Foundation
-
+import CouchbaseLitePrivate
 
 /// Property expression.
 public protocol PropertyExpressionProtocol: ExpressionProtocol {

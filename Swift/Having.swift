@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLitePrivate
 
 /// Having represents a HAVING clause of the query statement used for filtering the aggregated 
 /// values from the the GROUP BY clause.
