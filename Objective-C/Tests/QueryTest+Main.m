@@ -1764,4 +1764,17 @@
     AssertEqual(rows, 1u);
 }
 
+- (void) testQueryOnClosedDB {
+    NSError* error = nil;
+    [self.db close: &error];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"string"]
+                                            isNot: [CBLQueryExpression string: @"string1"]]];
+    CBLQueryResultSet* rs = [q execute: &error];
+    AssertNil(rs);
+    AssertEqualObjects(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, kC4ErrorNotOpen);
+}
+
 @end

@@ -66,6 +66,8 @@ NS_ASSUME_NONNULL_BEGIN
 // method of the PredictiveModel.
 - (instancetype) initWithC4Database: (C4Database*)c4db;
 
+- (BOOL) mustBeOpen: (NSError**)outError;
+
 @end
 
 /// CBLDatabaseConfiguration:
