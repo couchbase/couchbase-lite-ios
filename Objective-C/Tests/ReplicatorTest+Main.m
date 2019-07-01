@@ -241,7 +241,7 @@
         __weak typeof(self) wSelf = self;
         id token = [r addChangeListener: ^(CBLReplicatorChange *change) {
             [wSelf verifyChange: change errorCode: 0 errorDomain: nil];
-            int whenValue = [when intValue];
+            NSUInteger whenValue = [when intValue];
             if (change.status.activity == whenValue) {
                 NSLog(@"****** Stop Replicator (when %@) ******", activities[whenValue]);
                 [change.replicator stop];
