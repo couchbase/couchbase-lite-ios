@@ -1771,10 +1771,11 @@
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryExpression property: @"string"]
                                             isNot: [CBLQueryExpression string: @"string1"]]];
-    CBLQueryResultSet* rs = [q execute: &error];
-    AssertNil(rs);
-    AssertEqualObjects(error.domain, CBLErrorDomain);
-    AssertEqual(error.code, kC4ErrorNotOpen);
+    [self expectException: NSInternalInconsistencyException in: ^{
+        NSError* err = nil;
+        CBLQueryResultSet* set = [q execute: &err];
+        AssertNil(set);
+    }];
 }
 
 @end

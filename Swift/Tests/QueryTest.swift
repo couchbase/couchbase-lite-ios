@@ -1507,18 +1507,4 @@ class QueryTest: CBLTestCase {
         
         XCTAssertEqual(rs.allResults().count, 0)
     }
-    
-    func testQueryOnClosedDB() throws {
-        try db.close()
-        let q = QueryBuilder
-            .select(SelectResult.expression(Meta.id))
-            .from(DataSource.database(db))
-            .where( (Expression.property("type").equalTo(Expression.string("airport")))
-                .and(Expression.property("is_hub").equalTo(Expression.boolean(true))))
-        var rs: ResultSet?
-        ignoreException {
-            rs = try q.execute()
-        }
-        XCTAssertNil(rs)
-    }
 }

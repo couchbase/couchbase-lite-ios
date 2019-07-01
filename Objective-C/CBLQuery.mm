@@ -257,8 +257,7 @@ using namespace fleece;
         if (_c4Query)
             return YES;
         
-        if (![self.database mustBeOpen: outError])
-            return NO;
+        [self.database mustBeOpen];
         
         // Compile JSON query:
         C4Error c4Err;
