@@ -1507,4 +1507,5 @@ class QueryTest: CBLTestCase {
         
         XCTAssertEqual(rs.allResults().count, 0)
     }
+
 }
