@@ -173,14 +173,12 @@ typedef enum {
 - (void) scheduleRetry: (NSTimeInterval)delay {
     [self cancelPrviousRetry];
     
-    if (_state == kCBLStateOffline) {
-        // to register the perform selector in the main run loop
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self performSelector: @selector(retry)
-                       withObject: nil
-                       afterDelay: delay];
-        });
-    }
+    // to register the perform selector in the main run loop
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self performSelector: @selector(retry)
+                   withObject: nil
+                   afterDelay: delay];
+    });
 }
 
 - (void) resetRetryCount {
@@ -541,7 +539,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         auto delay = retryDelay(++_retryCount);
         CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
                    self, error.localizedDescription, delay);
-        [self scheduleRetry: delay];
+        if (_state == kCBLStateOffline)
+            [self scheduleRetry: delay];
     } else {
         CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
                    self, error.localizedDescription);
