@@ -200,17 +200,19 @@ typedef enum {
 }
 
 - (void) retry {
-    dispatch_async(_dispatchQueue, ^{
-        CBL_LOCK(self) {
-            CBLLogInfo(Sync, @"%@: Retrying...", self);
-            if (_repl || _state <= kCBLStateStopping) {
-                CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
-                           self, _state, _rawStatus.level);
-                return;
+    if (_state == kCBLStateOffline || _state == kCBLStateSuspended) {
+        dispatch_async(_dispatchQueue, ^{
+            CBL_LOCK(self) {
+                CBLLogInfo(Sync, @"%@: Retrying...", self);
+                if (_repl || _state <= kCBLStateStopping) {
+                    CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
+                               self, _state, _rawStatus.level);
+                    return;
+                }
+                [self _start];
             }
-            [self _start];
-        }
-    });
+        });
+    }
 }
 
 - (void) _start {
