@@ -165,18 +165,54 @@ typedef enum {
     }
 }
 
-- (void) retry: (BOOL)reset {
-    CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Retrying...", self);
-        if (reset)
-            _retryCount = 0;
-        if (_repl || _state <= kCBLStateStopping) {
-            CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
-                       self, _state, _rawStatus.level);
-            return;
-        }
-        [self _start];
+- (void) resetAndScheduleRetry {
+    [self resetRetryCount];
+    [self scheduleRetry: 0];
+}
+
+- (void) scheduleRetry: (NSTimeInterval)delay {
+    [self cancelPrviousRetry];
+    
+    if (_state == kCBLStateOffline) {
+        // to register the perform selector in the main run loop
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self performSelector: @selector(retry)
+                       withObject: nil
+                       afterDelay: delay];
+        });
     }
+}
+
+- (void) resetRetryCount {
+    CBLLogVerbose(Sync, @"%@: Resetting the retry count", self);
+    _retryCount = 0;
+}
+
+- (void) cancelPrviousRetry {
+    __weak CBLReplicator *weakSelf = self;
+    // remove already registered perform selector(retry) from main run loop
+    dispatch_async(dispatch_get_main_queue(), ^{
+        CBLReplicator *strongSelf = weakSelf;
+        if (strongSelf) {
+            [NSObject cancelPreviousPerformRequestsWithTarget: strongSelf
+                                                     selector: @selector(retry)
+                                                       object: nil];
+        }
+    });
+}
+
+- (void) retry {
+    dispatch_async(_dispatchQueue, ^{
+        CBL_LOCK(self) {
+            CBLLogInfo(Sync, @"%@: Retrying...", self);
+            if (_repl || _state <= kCBLStateStopping) {
+                CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
+                           self, _state, _rawStatus.level);
+                return;
+            }
+            [self _start];
+        }
+    });
 }
 
 - (void) _start {
@@ -368,7 +404,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         bool reachable = _reachability.reachable;
         if (reachable && _state == kCBLStateOffline) {
             CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
-            [self retry: YES];
+            [self resetAndScheduleRetry];
         }
     }
 }
@@ -475,7 +511,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self updateAndPostStatus];
         
         if (resume)
-            [self retry: YES];
+            [self resetAndScheduleRetry];
         
     #if TARGET_OS_IPHONE
         //  End the current background task when the replicator is idle:
@@ -505,14 +541,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         auto delay = retryDelay(++_retryCount);
         CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
                    self, error.localizedDescription, delay);
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
-                       _dispatchQueue, ^{
-                           CBL_LOCK(self) {
-                               // Retry if still in offline state:
-                               if (_state == kCBLStateOffline)
-                                   [self retry: NO];
-                           }
-                       });
+        [self scheduleRetry: delay];
     } else {
         CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
                    self, error.localizedDescription);
@@ -678,7 +707,7 @@ static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, voi
                 _state = kCBLStateSuspending;
                 [self _stop];
             } else
-                [self retry: YES];
+                [self resetAndScheduleRetry];
         }
     }
 }
