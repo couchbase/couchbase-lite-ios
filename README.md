@@ -81,7 +81,9 @@ $ cd couchbase-lite-ios
 $ git submodule update --init --recursive
 ```
 
-2. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
+2. If not already installed, install _doxygen_, `brew install doxygen`
+
+3. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
 
 ```
 $ ./Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o output    // For building the ObjC framework for iOS
