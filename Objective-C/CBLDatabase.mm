@@ -279,7 +279,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (![self prepareDocument: document error: error])
             return NO;
         
-        if (!document.revID)
+        if (!document.revisionID)
             return createError(CBLErrorNotFound,
                                @"Document doesn't exist in the database.", error);
         
@@ -826,7 +826,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
            asDeletion: (BOOL)deletion
                 error: (NSError**)outError
 {
-    if (deletion && !document.revID)
+    if (deletion && !document.revisionID)
         return createError(CBLErrorNotFound,
                            @"Cannot delete a document that has not yet been saved", outError);
     
@@ -974,7 +974,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         CBLDocument* resolvedDoc;
         @try {
             CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
-                       docID, localDoc.revID, remoteDoc.revID);
+                       docID, localDoc.revisionID, remoteDoc.revisionID);
             
             resolvedDoc = [conflictResolver resolve: conflict];
             
@@ -1033,8 +1033,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             resolvedDoc.database = self;
         
         // The remote branch has to win, so that the doc revision history matches the server's.
-        CBLStringBytes winningRevID = remoteDoc.revID;
-        CBLStringBytes losingRevID = localDoc.revID;
+        CBLStringBytes winningRevID = remoteDoc.revisionID;
+        CBLStringBytes losingRevID = localDoc.revisionID;
         
         alloc_slice mergedBody;
         C4RevisionFlags mergedFlags = 0;

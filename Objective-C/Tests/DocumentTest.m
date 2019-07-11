@@ -1826,5 +1826,35 @@
     Assert([sdoc1a isEqual: anotherDoc1a]);
     [sameDB close: nil];
 }
+    
+- (void) testRevisionIDNewDoc {
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    AssertNil(doc.revisionID);
+    
+    [self saveDocument: doc];
+    AssertNotNil(doc.revisionID);
+}
+    
+- (void) testRevisionIDExistingDoc {
+    [self generateDocumentWithID: @"doc"];
+    
+    // fetching a doc has a valid revision-id
+    CBLDocument* doc = [self.db documentWithID: @"doc"];
+    NSString* revisionID = doc.revisionID;
+    AssertNotNil(revisionID);
+    
+    // making mutable-doc also keeps the revision same.
+    CBLMutableDocument* mDoc = doc.toMutable;
+    AssertEqualObjects(mDoc.revisionID, revisionID);
+    
+    // when updating the mutable-doc and saving should update the revision to a new one
+    // keep the old document revision-id same as before.
+    [mDoc setString: @"modify" forKey: @"update"];
+    [self saveDocument: mDoc];
+    AssertNotNil(mDoc.revisionID);
+    AssertNotNil(doc.revisionID);
+    Assert(mDoc.revisionID != revisionID);
+    AssertEqualObjects(revisionID, doc.revisionID);
+}
 
 @end

@@ -1545,4 +1545,35 @@ class DocumentTest: CBLTestCase {
         try sameDB.close()
     }
     
+    func testRevisionIDNewDoc() throws {
+        let doc = createDocument("doc1")
+        doc.setString("some", forKey: "key")
+        XCTAssertNil(doc.revisionID)
+        
+        try saveDocument(doc)
+        XCTAssertNotNil(doc.revisionID)
+    }
+    
+    func testRevisionIDExistingDoc() throws {
+        let _ = try generateDocument(withID: "doc")
+        
+        // doc from database should always have a revision-id
+        let doc = db.document(withID: "doc")
+        let revisionID = doc?.revisionID
+        XCTAssertNotNil(revisionID)
+        
+        // making doc as mutable will keep the same revision-id
+        let mDoc = doc!.toMutable()
+        XCTAssertEqual(revisionID, mDoc.revisionID)
+        
+        // modifying the doc and saving will update the revision-id.
+        // also this will not affect the previous document revision-id
+        mDoc.setString("modify", forKey: "update")
+        try saveDocument(mDoc)
+        XCTAssertNotNil(mDoc.revisionID)
+        XCTAssertNotNil(doc?.revisionID)
+        XCTAssert(revisionID != mDoc.revisionID)
+        XCTAssertEqual(revisionID, doc?.revisionID)
+    }
+    
 }
