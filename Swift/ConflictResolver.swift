@@ -49,7 +49,7 @@ public final class ConflictResolver {
     }
     
     func resolve(conflict: Conflict) -> Document? {
-        guard let doc = resolver.resolve(conflict.impl) else {
+        guard let doc = resolver.resolve(conflict.toImpl()) else {
             return nil
         }
         
