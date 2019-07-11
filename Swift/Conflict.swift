@@ -24,12 +24,12 @@ public struct Conflict {
     
     ///The document id of the conflicting document.
     public var documentID: String {
-        return impl.documentID
+        return toImpl().documentID
     }
     
     /// The document in the local database. If nil, document is deleted.
     public var localDocument: Document? {
-        guard let doc = impl.localDocument else {
+        guard let doc = toImpl().localDocument else {
             return nil
         }
         return Document(doc)
@@ -37,13 +37,23 @@ public struct Conflict {
     
     /// The document replicated from the remote database. If nil, document is deleted.
     public var remoteDocument: Document? {
-        guard let doc = impl.remoteDocument else {
+        guard let doc = toImpl().remoteDocument else {
             return nil
         }
         return Document(doc)
     }
     
     // MARK: Internal
-    let impl: CBLConflict
+    
+    // Use Any to workaround
+    private var impl: Any
+    
+    init(impl: Any) {
+        self.impl = impl
+    }
+    
+    func toImpl() -> CBLConflict {
+        return self.impl as! CBLConflict
+    }
     
 }
