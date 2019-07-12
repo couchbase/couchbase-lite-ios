@@ -193,7 +193,7 @@ using namespace fleece;
                             andDoc: (CBLDocument*)doc2
 {
     CBL_LOCK(self) {
-        CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
+        CBLStringBytes rev1(doc1.revisionID), rev2(doc2.revisionID);
         if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
             || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
             return NO;
@@ -202,7 +202,7 @@ using namespace fleece;
     }
 }
 
-- (NSString*) revID {
+- (NSString*) revisionID {
     CBL_LOCK(self) {
         return _c4Doc != nil ?  slice2string(_c4Doc.revID) : nil;
     }

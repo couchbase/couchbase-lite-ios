@@ -29,6 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* id;
 
+/** The ID representing a document’s revision. */
+@property (readonly, nonatomic, nullable) NSString* revisionID;
+
 /** 
  Sequence number of the document in the database.
  This indicates how recently the document has been changed: every time any document is updated,

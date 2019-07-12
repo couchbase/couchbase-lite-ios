@@ -641,7 +641,7 @@
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1a.toDictionary);
     
     // make sure no update to revision and generation
-    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+    AssertEqualObjects([self.db documentWithID: docID].revisionID, doc1a.revisionID);
     AssertEqual([self.db documentWithID: docID].generation, 2u);
     
     // Some Updates to Current Mutable Document
@@ -664,7 +664,7 @@
     
     // make sure no update to revision and generation
     AssertEqual([self.db documentWithID: docID].generation, 3u);
-    AssertEqualObjects([self.db documentWithID: docID].revID, doc1a.revID);
+    AssertEqualObjects([self.db documentWithID: docID].revisionID, doc1a.revisionID);
 }
 
 - (void) testConflictHandlerWhenDocumentIsPurged {

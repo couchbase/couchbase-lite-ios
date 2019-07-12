@@ -53,7 +53,7 @@
         return conflict.localDocument;
     else if (conflict.localDocument.generation < conflict.remoteDocument.generation)
         return conflict.remoteDocument;
-    else if ([conflict.localDocument.revID compare: conflict.remoteDocument.revID] > 0)
+    else if ([conflict.localDocument.revisionID compare: conflict.remoteDocument.revisionID] > 0)
         return conflict.localDocument;
     else
         return conflict.remoteDocument;
