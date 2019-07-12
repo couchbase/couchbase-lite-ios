@@ -27,6 +27,11 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.id
     }
     
+    /// The ID representing a document’s revision.
+    public var revisionID: String? {
+        return _impl.revisionID
+    }
+    
     /// Sequence number of the document in the database.
     /// This indicates how recently the document has been changed: every time any document is updated,
     /// the database assigns it the next sequential sequence number. Thus, if a document's `sequence`

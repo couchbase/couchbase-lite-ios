@@ -63,8 +63,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
-@property (nonatomic, readonly, nullable) NSString* revID;
-
 @property (nonatomic, readonly) NSUInteger generation;
 
 @property (readonly, nonatomic) BOOL isDeleted;
