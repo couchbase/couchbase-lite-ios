@@ -1853,7 +1853,7 @@
     [self saveDocument: mDoc];
     AssertNotNil(mDoc.revisionID);
     AssertNotNil(doc.revisionID);
-    Assert(mDoc.revisionID != revisionID);
+    Assert(![mDoc.revisionID isEqual: revisionID]);
     AssertEqualObjects(revisionID, doc.revisionID);
 }
 
