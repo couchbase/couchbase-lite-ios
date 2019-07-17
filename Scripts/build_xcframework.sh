@@ -92,7 +92,7 @@ done
 FRAMEWORK_LOCATION=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 
 # create xcframework
-xcodebuild -create-xcframework -output ~/Desktop/output.xcframework -framework ${OUTPUT_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${OUTPUT_DIR}/macOS/${FRAMEWORK_LOCATION}
+xcodebuild -create-xcframework -output ${OUTPUT_DIR}/${BIN_NAME}.xcframework -framework ${OUTPUT_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${OUTPUT_DIR}/macOS/${FRAMEWORK_LOCATION}
 
 # remove all related files
 rm -rf ${OUTPUT_DIR}/iOS
