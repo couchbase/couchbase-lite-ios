@@ -3078,7 +3078,7 @@
 				27F961961ED777EA0060F804 /* libSupport.a */,
 				9398D94A1E0347B600464432 /* LiteCoreCppTests */,
 				9398D94C1E0347B600464432 /* C4Tests */,
-				9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */,
+				9398D94E1E0347B600464432 /* LiteCoreJNI.dylib */,
 				27DF7D841F424C840022F3DF /* libSQLite.a */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
 				2749B97F1EB25A660068DBF9 /* libcivetweb.a */,
@@ -4416,10 +4416,10 @@
 			remoteRef = 9398D94B1E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */ = {
+		9398D94E1E0347B600464432 /* LiteCoreJNI.dylib */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.dylib";
-			path = libLiteCoreJNI.dylib;
+			path = LiteCoreJNI.dylib;
 			remoteRef = 9398D94D1E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -5560,6 +5560,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 			};
 			name = Release;
 		};
@@ -5942,6 +5943,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
@@ -5954,6 +5956,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 			};
 			name = "Release-EE";
 		};
@@ -6127,6 +6130,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				SWIFT_VERSION = "";
@@ -6137,6 +6141,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				SWIFT_VERSION = "";
@@ -6161,6 +6166,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 			};
 			name = Release;
 		};
@@ -6168,6 +6174,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 			};
 			name = "Release-EE";
 		};
@@ -6752,6 +6759,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
