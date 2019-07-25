@@ -40,15 +40,12 @@ extern "C" {
 
 using namespace fleece;
 
+// Number of bytes to read from the socket at a time
 static constexpr size_t kReadBufferSize = 32 * 1024;
 
+// Max number of bytes read that haven't been processed by LiteCore yet.
+// Beyond this point, I will stop reading from the socket, sending backpressure to the peer.
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
-
-static constexpr NSTimeInterval kConnectTimeout = 15.0;
-
-// The value should be greater than the heartbeat to avoid read/write timeout;
-// the current default heartbeat is 300 sec:
-static constexpr NSTimeInterval kIdleTimeout = 320.0;
 
 
 struct PendingWrite {
@@ -76,7 +73,6 @@ struct PendingWrite {
     NSString* _clientCertID;
     std::atomic<C4Socket*> _c4socket;
     CFHTTPMessageRef _httpResponse;
-    CFAbsoluteTime _lastReadTime;
     id _keepMeAlive;
 
     NSInputStream* _in;
@@ -287,9 +283,6 @@ static void doDispose(C4Socket* s) {
         CBLLogInfo(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
         [self _sendWebSocketRequest];
     }
-
-    _lastReadTime = CFAbsoluteTimeGetCurrent();
-    [self checkForTimeoutIn: kConnectTimeout];
 }
 
 
@@ -647,7 +640,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 - (void) doRead {
     CBLLogVerbose(WebSocket, @"DoRead...");
-    _lastReadTime = CFAbsoluteTimeGetCurrent();
     Assert(_hasBytes);
     _hasBytes = false;
     while (_in.hasBytesAvailable) {
@@ -699,30 +691,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         default:
             break;
-    }
-}
-
-
-- (void) checkForTimeoutIn: (NSTimeInterval)interval {
-    interval += 1.0; // sometimes the timer goes off early
-    CBLLogVerbose(WebSocket, @"%@: Checking for timeout in %.3f sec", self, interval);
-    __weak CBLWebSocket* weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), _queue, ^{
-        [weakSelf checkForTimeout];
-    });
-}
-
-
-- (void) checkForTimeout {
-    if (!_in)
-        return;
-    NSTimeInterval idleTime = CFAbsoluteTimeGetCurrent() - _lastReadTime;
-    NSTimeInterval timeout = _gotResponseHeaders ? kIdleTimeout : kConnectTimeout;
-    if (idleTime < timeout) {
-        [self checkForTimeoutIn: timeout - idleTime];
-    } else {
-        [self closeWithError: MYError(NSURLErrorTimedOut, NSURLErrorDomain,
-                                      @"Connection timed out")];
     }
 }
 

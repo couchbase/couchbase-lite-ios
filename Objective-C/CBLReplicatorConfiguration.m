@@ -140,6 +140,8 @@
         _channels = config.channels;
         _pushFilter = config.pushFilter;
         _pullFilter = config.pullFilter;
+        _heartbeatInterval = config.heartbeatInterval;
+        _checkpointInterval = config.checkpointInterval;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif
