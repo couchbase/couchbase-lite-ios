@@ -85,26 +85,27 @@ then
 fi
 
 # archive
+BUILD_DIR=$OUTPUT_DIR/build
 DESTINATIONS=("iOS Simulator" "iOS" "macOS")
 for DESTINATION in "${DESTINATIONS[@]}"
 do
-  echo "Exporting ${DESTINATION}!!"
+  echo "Started to archive ${DESTINATION}..."
   FOLDER_NAME=$(echo ${DESTINATION} | sed 's/ /_/g')
-echo ${FOLDER_NAME}
-  ARCHIVE_PATH=${OUTPUT_DIR}/${FOLDER_NAME}/${BIN_NAME}.xcarchive
-echo ${ARCHIVE_PATH}
-  xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER}   -archivePath ${ARCHIVE_PATH} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean"  ${QUIET} "SKIP_INSTALL=NO"
-  echo "Exported ${DESTINATION}!!"
+  ARCHIVE_PATH=${BUILD_DIR}/${FOLDER_NAME}/${BIN_NAME}.xcarchive
+  xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER} -archivePath ${ARCHIVE_PATH} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean"  ${QUIET} "SKIP_INSTALL=NO"
+  echo "Finished archiving ${DESTINATION}."
 done
 
 FRAMEWORK_LOCATION=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 
 # create xcframework
-xcodebuild -create-xcframework -output ${OUTPUT_DIR}/${BIN_NAME}.xcframework -framework ${OUTPUT_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${OUTPUT_DIR}/macOS/${FRAMEWORK_LOCATION} -framework ${OUTPUT_DIR}/iOS_Simulator/${FRAMEWORK_LOCATION}
+echo "Make Objective-C framework zip file ..."
+mkdir -p "${OUTPUT_DIR}/${SCHEME}"
+xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" -framework ${BUILD_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/macOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/iOS_Simulator/${FRAMEWORK_LOCATION}
 
 # remove all related files
 for DESTINATION in "${DESTINATIONS[@]}"
 do
   FOLDER_NAME=$(echo ${DESTINATION} | sed 's/ /_/g')
-  rm -rf ${OUTPUT_DIR}/${FOLDER_NAME}
+  rm -rf ${BUILD_DIR}
 done
