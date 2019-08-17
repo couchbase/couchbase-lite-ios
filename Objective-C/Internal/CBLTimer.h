@@ -28,6 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
                            after: (double)seconds
                            block: (dispatch_block_t)block;
 
++ (void) cancel: (dispatch_source_t)timer;
+
 @end
 
 NS_ASSUME_NONNULL_END

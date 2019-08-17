@@ -363,7 +363,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [self cancelRequestsForPurgingExpiredDocuments];
+        [CBLTimer cancel: _docExpiryTimer];
     
         C4Error err;
         if (!c4db_close(_c4db, &err))
@@ -392,7 +392,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return createError(CBLErrorBusy, err, outError);
         }
         
-        [self cancelRequestsForPurgingExpiredDocuments];
+        [CBLTimer cancel: _docExpiryTimer];
         
         C4Error err;
         if (!c4db_delete(_c4db, &err))
@@ -1095,7 +1095,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 # pragma mark DOCUMENT EXPIRATION
 
 - (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
-    [self cancelRequestsForPurgingExpiredDocuments];
+    [CBLTimer cancel: _docExpiryTimer];
     
     UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
     if (nextExpiration > 0) {
@@ -1116,12 +1116,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         }];
     } else {
         CBLLogInfo(Database, @"No pending doc expirations");
-    }
-}
-
-- (void) cancelRequestsForPurgingExpiredDocuments {
-    if (_docExpiryTimer != nil) {
-        dispatch_source_cancel(_docExpiryTimer);
     }
 }
 

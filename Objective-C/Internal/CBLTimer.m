@@ -38,4 +38,10 @@
     return t;
 }
 
++ (void) cancel: (dispatch_source_t)timer {
+    if (timer != nil) {
+        dispatch_source_cancel(timer);
+    }
+}
+
 @end
