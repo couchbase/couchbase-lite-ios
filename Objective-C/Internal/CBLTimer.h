@@ -24,10 +24,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLTimer : NSObject
 
+/**
+ Schedules the block to execute after given seconds, on a given dispatch queue.
+ 
+ Returns the dispatch source object, which can be used to cancel already scheduled timer.
+ 
+ @param queue The dispatch queue on which the block will be executed. If nil, it uses global default queue.
+ @param seconds The delay after the block will start execute.
+ @param block The handler block to submit for later execution.
+ */
 + (dispatch_source_t) scheduleIn: (nullable dispatch_queue_t)queue
                            after: (double)seconds
                            block: (dispatch_block_t)block;
 
+/**
+Cancels an already scheduled timer.
+
+@param timer The dispatch source object, which receives during the schedule of timer.
+*/
 + (void) cancel: (dispatch_source_t)timer;
 
 @end
