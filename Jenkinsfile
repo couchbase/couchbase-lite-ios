@@ -16,10 +16,10 @@ pipeline {
                 """
             }
         }
-        stage('couchbase-lite-ios Build'){
+        stage('Build'){
             agent { label 'master' }
             steps {
-                sh ''' ./couchbase-lite-ios/Scripts/pull_request_build.sh
+                sh ''' couchbase-lite-ios/Scripts/pull_request_build.sh
                 '''
             }
         }
