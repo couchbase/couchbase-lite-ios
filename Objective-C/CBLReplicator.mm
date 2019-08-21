@@ -178,7 +178,7 @@ typedef enum {
     __weak CBLReplicator *weakSelf = self;
     _retryTimer = [CBLTimer scheduleIn: _dispatchQueue
                                  after: delayInSeconds
-                                 block:^{
+                                 block: ^{
         [weakSelf _retry];
     }];
 }
