@@ -5,7 +5,7 @@ pipeline {
    }
     stages {
         stage('Checkout'){
-            agent { label 'master' }
+            agent { label 'ios-pull-request' }
             steps {
                 cleanWs()
                 sh """
@@ -17,7 +17,7 @@ pipeline {
             }
         }
         stage('Build'){
-            agent { label 'master' }
+            agent { label 'ios-pull-request' }
             steps {
                 sh ''' couchbase-lite-ios/Scripts/pull_request_build.sh
                 '''
