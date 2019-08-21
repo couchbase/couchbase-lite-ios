@@ -19,7 +19,7 @@ pipeline {
         stage('couchbase-lite-ios Build'){
             agent { label 'master' }
             steps {
-                sh ''' ./Scripts/pull_request_build.sh
+                sh ''' ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 '''
             }
         }
