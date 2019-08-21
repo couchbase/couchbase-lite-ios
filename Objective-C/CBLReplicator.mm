@@ -173,12 +173,12 @@ typedef enum {
 }
 
 - (void) scheduleRetry: (NSTimeInterval)delayInSeconds {
-    [CBLTimer cancel: _retryTimer];
+    [self cancelRetry];
     
     __weak CBLReplicator *weakSelf = self;
     _retryTimer = [CBLTimer scheduleIn: _dispatchQueue
-                   after: delayInSeconds
-                   block:^{
+                                 after: delayInSeconds
+                                 block:^{
         [weakSelf _retry];
     }];
 }
@@ -190,16 +190,19 @@ typedef enum {
 
 - (void) _retry {
     CBL_LOCK(self) {
-        if (_state == kCBLStateOffline || _state == kCBLStateSuspended) {
-            CBLLogInfo(Sync, @"%@: Retrying...", self);
-            if (_repl || _state <= kCBLStateStopping) {
-                CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
-                           self, _state, _rawStatus.level);
-                return;
-            }
-            [self _start];
+        CBLLogInfo(Sync, @"%@: Retrying...", self);
+        if (_repl || _state <= kCBLStateStopping) {
+            CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
+                       self, _state, _rawStatus.level);
+            return;
         }
+        [self _start];
     }
+}
+
+- (void) cancelRetry {
+    [CBLTimer cancel: _retryTimer];
+    _retryTimer = nil;
 }
 
 - (void) _start {
@@ -333,6 +336,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) _stop {
+    [self cancelRetry];
+    
     if (_repl) {
         // Stop the replicator:
         c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
