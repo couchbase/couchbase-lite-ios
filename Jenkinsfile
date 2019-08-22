@@ -1,13 +1,11 @@
 pipeline {
-    agent none
+    agent { label 'ios-pull-request' }
     environment {
        PRODUCT = 'couchbase-lite-ios'
    }
     stages {
         stage('Checkout'){
-            agent { label 'ios-pull-request' }
             steps {
-                cleanWs()
                 sh """
                     git clone https://github.com/couchbase/${env.PRODUCT}.git
                     pushd ${env.PRODUCT}
@@ -17,10 +15,9 @@ pipeline {
             }
         }
         stage('Build'){
-            agent { label 'ios-pull-request' }
             steps {
-                sh ''' couchbase-lite-ios/Scripts/pull_request_build.sh
-                '''
+                sh """ ./${env.PRODUCT}/Scripts/pull_request_build.sh
+                """
             }
         }
     }
