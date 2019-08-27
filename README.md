@@ -25,7 +25,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for O
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite'
+  pod 'CouchbaseLite', '~> 2.6.0'
 end
 ```
 
@@ -33,7 +33,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Enterprise'
+  pod 'CouchbaseLite-Enterprise', '~> 2.6.0'
 end
 ```
 
@@ -43,7 +43,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift'
+  pod 'CouchbaseLite-Swift', '~> 2.6.0'
 end
 ```
 
@@ -51,7 +51,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite-Swift-Enterprise'
+  pod 'CouchbaseLite-Swift-Enterprise', '~> 2.6.0'
 end
 ```
 
@@ -61,12 +61,12 @@ You can use [Carthage](https://github.com/Carthage/Carthage) to install `Couchba
 
 ##### Community Edition
 ```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json"
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json" ~> 2.6.0
 ```
 
 ##### Enterprise Edition
 ```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json"
+binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json" ~> 2.6.0
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
@@ -90,8 +90,8 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Documentation
 
-- [Swift](https://docs.couchbase.com/couchbase-lite/2.5/swift.html)
-- [Objective-C](https://docs.couchbase.com/couchbase-lite/2.5/objc.html)
+- [Swift](https://docs.couchbase.com/couchbase-lite/2.6/swift.html)
+- [Objective-C](https://docs.couchbase.com/couchbase-lite/2.6/objc.html)
 
 ## Sample Apps
 
