@@ -103,3 +103,5 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 ## License
 
 Like all Couchbase source code, this is released under the Apache 2 [license](LICENSE).
+
+TEST
