@@ -264,20 +264,31 @@ class QueryTest: CBLTestCase {
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
-        let index = IndexBuilder.fullTextIndex(items: FullTextIndexItem.property("sentence"))
+        let fts_s = FullTextIndexItem.property("sentence")
+        let index = IndexBuilder.fullTextIndex(items: fts_s)
             .language(nil)
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
+
+        try checkMatchedQuery([kDOCID, SelectResult.property("sentence")],
+                              ds: DataSource.database(db))
         
+        let s = Expression.property("sentence").from("db")
+        try checkMatchedQuery([kDOCID, SelectResult.expression(s)],
+                              ds: DataSource.database(db).as("db"))
+        
+    }
+    
+    func checkMatchedQuery(_ select: [SelectResultProtocol],
+                           ds: DataSourceProtocol) throws {
         let sentence = FullTextExpression.index("sentence")
-        let s_sentence = SelectResult.property("sentence")
-        
         let w = sentence.match("'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
-        let numRows = try verifyQuery(q) { (n, r) in
-            
-        }
+        let q = QueryBuilder.select()
+            .from(ds)
+            .where(w)
+            .orderBy(o)
+        let numRows = try verifyQuery(q) { (n, r) in }
         XCTAssertEqual(numRows, 2)
     }
 
