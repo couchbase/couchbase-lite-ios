@@ -275,6 +275,7 @@ typedef enum {
         .onDocumentsEnded = &onDocsEnded,
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
+        .dontStart = true,
     };
     
     _state = kCBLStateStarting;
@@ -283,6 +284,15 @@ typedef enum {
     C4Error err;
     CBL_LOCK(_config.database) {
         _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
+        
+        if (!_repl) {
+            NSError *error = nil;
+            convertError(err, &error);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
+                         self, error.localizedDescription);
+            return;
+        }
+        c4repl_start(_repl);
     }
     
     C4ReplicatorStatus status;
