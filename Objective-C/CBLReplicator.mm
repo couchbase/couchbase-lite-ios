@@ -288,8 +288,8 @@ typedef enum {
         if (!_repl) {
             NSError *error = nil;
             convertError(err, &error);
-            CBLLogInfo(Sync, @"%@: Replicator cannot be created: %@", self,
-                       error.localizedDescription);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
+                         self, error.localizedDescription);
             return;
         }
         c4repl_start(_repl);
