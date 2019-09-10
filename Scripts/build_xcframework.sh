@@ -85,7 +85,8 @@ then
 fi
 
 # archive
-BUILD_DIR=$OUTPUT_DIR/build
+COMPACT_SCHEME_NAME=$(echo ${SCHEME} | sed 's/ /_/g')
+BUILD_DIR=$OUTPUT_DIR/build/${COMPACT_SCHEME_NAME}
 DESTINATIONS=("iOS Simulator" "iOS" "macOS")
 for DESTINATION in "${DESTINATIONS[@]}"
 do
