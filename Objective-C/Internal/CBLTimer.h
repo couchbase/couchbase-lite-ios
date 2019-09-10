@@ -38,11 +38,11 @@ NS_ASSUME_NONNULL_BEGIN
                            block: (dispatch_block_t)block;
 
 /**
-Cancels an already scheduled timer.
+Cancels an already scheduled timer. Ignores if timer instance is null.
 
 @param timer The dispatch source object, which receives during the schedule of timer.
 */
-+ (void) cancel: (dispatch_source_t)timer;
++ (void) cancel: (nullable dispatch_source_t)timer;
 
 @end
 
