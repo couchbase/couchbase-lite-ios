@@ -56,7 +56,7 @@ then
   COVERAGE_NAME="coverage"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 8"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
@@ -64,7 +64,7 @@ else
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 8"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 fi
 
 if [ -z "$PRETTY" ]
@@ -160,6 +160,7 @@ then
   sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
   sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 else
+  # xcframework
   sh Scripts/build_xcframework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
   sh Scripts/build_xcframework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 fi

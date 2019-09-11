@@ -63,6 +63,7 @@ else
   QUIET="-quiet"
 fi
 
+# clean the output directory
 OUTPUT_BASE_DIR=${OUTPUT_DIR}/${SCHEME}
 rm -rf "${OUTPUT_BASE_DIR}"
 
@@ -70,6 +71,7 @@ rm -rf "${OUTPUT_BASE_DIR}"
 BIN_NAME=`xcodebuild -scheme "${SCHEME}" -showBuildSettings|grep -w PRODUCT_NAME|head -n 1|awk '{ print $3 }'`
 FRAMEWORK_FILE_NAME=${BIN_NAME}.framework
 
+# build version and number
 BUILD_VERSION=""
 BUILD_NUMBER=""
 if [ ! -z "$VERSION" ]
@@ -85,28 +87,22 @@ then
 fi
 
 # archive
-COMPACT_SCHEME_NAME=$(echo ${SCHEME} | sed 's/ /_/g')
-BUILD_DIR=$OUTPUT_DIR/build/${COMPACT_SCHEME_NAME}
+BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 DESTINATIONS=("iOS Simulator" "iOS" "macOS")
 for DESTINATION in "${DESTINATIONS[@]}"
 do
-  echo "Started to archive ${DESTINATION}..."
-  FOLDER_NAME=$(echo ${DESTINATION} | sed 's/ /_/g')
-  ARCHIVE_PATH=${BUILD_DIR}/${FOLDER_NAME}/${BIN_NAME}.xcarchive
+  echo "Starting to archive ${DESTINATION}..."
+  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')/${BIN_NAME}.xcarchive
   xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER} -archivePath ${ARCHIVE_PATH} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean"  ${QUIET} "SKIP_INSTALL=NO"
   echo "Finished archiving ${DESTINATION}."
 done
 
-FRAMEWORK_LOCATION=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
-
 # create xcframework
-echo "Make Objective-C framework zip file ..."
+echo "Making XCFramework..."
+FRAMEWORK_LOCATION=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 mkdir -p "${OUTPUT_DIR}/${SCHEME}"
 xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" -framework ${BUILD_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/macOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/iOS_Simulator/${FRAMEWORK_LOCATION}
 
-# remove all related files
-for DESTINATION in "${DESTINATIONS[@]}"
-do
-  FOLDER_NAME=$(echo ${DESTINATION} | sed 's/ /_/g')
-  rm -rf ${BUILD_DIR}
-done
+# remove build directory
+rm -rf ${BUILD_DIR}
+echo "Finished creating XCFramework. Output at "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework""
