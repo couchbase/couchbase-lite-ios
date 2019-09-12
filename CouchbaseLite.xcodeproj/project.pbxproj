@@ -1718,6 +1718,7 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_xcframework.sh; sourceTree = "<group>"; };
 		69D6FFFB2307469A00250787 /* CBLTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTimer.h; sourceTree = "<group>"; };
 		69D6FFFC2307469A00250787 /* CBLTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTimer.m; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
@@ -2787,6 +2788,7 @@
 				9388CB9221BCDF8B005CA66D /* remove_private_headers.sh */,
 				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
 				9388CB9421BCDF8B005CA66D /* build_framework.sh */,
+				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
 			);
