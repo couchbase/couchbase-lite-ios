@@ -109,5 +109,5 @@ mkdir -p "${OUTPUT_DIR}/${SCHEME}"
 xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" ${FRAMEWORK_PATH_ARGS[*]}
 
 # remove build directory
-# rm -rf ${BUILD_DIR}
+rm -rf ${BUILD_DIR}
 echo "Finished creating XCFramework. Output at "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework""
