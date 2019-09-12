@@ -53,7 +53,7 @@ then
   COVERAGE_NAME="coverage"
   EDITION="community"
   EXTRA_CMD_OPTIONS=""
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 6"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL-EE"
   CONFIGURATION="Release-EE"
@@ -61,7 +61,7 @@ else
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone X"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 fi
 
 if [ -z "$PRETTY" ]
