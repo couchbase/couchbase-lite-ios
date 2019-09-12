@@ -89,20 +89,25 @@ fi
 # archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 DESTINATIONS=("iOS Simulator" "iOS" "macOS")
+FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
+
+# this will be used to collect all destination framework path with `-framework`
+# to include them in `-create-xcframework`
+FRAMEWORK_PATH_ARGS=()
 for DESTINATION in "${DESTINATIONS[@]}"
 do
   echo "Starting to archive ${DESTINATION}..."
-  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')/${BIN_NAME}.xcarchive
-  xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER} -archivePath ${ARCHIVE_PATH} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean"  ${QUIET} "SKIP_INSTALL=NO"
+  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')
+  xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER} -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" ${XCFRAMEWORK_FLAGS} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean" "SKIP_INSTALL=NO" ${QUIET}
+  FRAMEWORK_PATH_ARGS+=("-framework "${ARCHIVE_PATH}/${FRAMEWORK_LOC}"")
   echo "Finished archiving ${DESTINATION}."
 done
 
 # create xcframework
 echo "Making XCFramework..."
-FRAMEWORK_LOCATION=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 mkdir -p "${OUTPUT_DIR}/${SCHEME}"
-xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" -framework ${BUILD_DIR}/iOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/macOS/${FRAMEWORK_LOCATION} -framework ${BUILD_DIR}/iOS_Simulator/${FRAMEWORK_LOCATION}
+xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" ${FRAMEWORK_PATH_ARGS[*]}
 
 # remove build directory
-rm -rf ${BUILD_DIR}
+# rm -rf ${BUILD_DIR}
 echo "Finished creating XCFramework. Output at "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework""
