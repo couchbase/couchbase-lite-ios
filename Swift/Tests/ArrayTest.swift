@@ -25,6 +25,31 @@ class ArrayTest: CBLTestCase {
     let kTestDate = "2017-01-01T00:00:00.000Z"
     let kTestBlob = "i'm blob"
     
+    func arrayOfAllTypes() -> [Any] {
+        var array = [Any]()
+        array.append(true)                              // 0
+        array.append("string")                          // 1
+        array.append(17)                                // 2
+        array.append(23.0)                              // 3
+        array.append(dateFromJson(kTestDate))           // 4
+        
+        var dict = [String:String]()
+        dict["name"] = "Scott"
+        array.append(dict)                              // 5
+        
+        var subarray = [String]()
+        subarray.append("a")
+        subarray.append("b")
+        subarray.append("c")
+        array.append(subarray)                          // 6
+        
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        array.append(blob)                              // 7
+        
+        return array
+    }
+    
     func testEnumeratingArray() throws {
         let array = MutableArrayObject()
         for i in 0...19 {
@@ -87,31 +112,6 @@ class ArrayTest: CBLTestCase {
         XCTAssert(mArray3.toArray() == (["Scott", "Daniel", "Thomas"]))
     }
     
-    func arrayOfAllTypes() -> [Any] {
-        var array = [Any]()
-        array.append(true)                              // 0
-        array.append("string")                          // 1
-        array.append(17)                                // 2
-        array.append(23.0)                              // 3
-        array.append(dateFromJson(kTestDate))           // 4
-        
-        var dict = [String:String]()
-        dict["name"] = "Scott"
-        array.append(dict)                              // 5
-        
-        var subarray = [String]()
-        subarray.append("a")
-        subarray.append("b")
-        subarray.append("c")
-        array.append(subarray)                          // 6
-        
-        let content = kTestBlob.data(using: .utf8)!
-        let blob = Blob(contentType: "text/plain", data: content)
-        array.append(blob)                              // 7
-        
-        return array
-    }
-    
     func testAddMethodsIndividually() throws {
         let data = arrayOfAllTypes()
         let array = MutableArrayObject()
@@ -136,26 +136,7 @@ class ArrayTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
         try saveDocument(doc) { (d) in
-            let obj = d.array(forKey: "array")
-            
-            XCTAssertEqual(obj!.boolean(at: 0), data[0] as! Bool)
-            XCTAssertEqual(obj!.string(at: 1), data[1] as? String)
-            
-            XCTAssertEqual(obj!.int(at: 2), data[2] as! Int)
-            XCTAssertEqual(obj!.int64(at: 3), Int64(data[2] as! Int))
-            XCTAssertEqual(obj!.number(at: 4), NSNumber(integerLiteral: data[2] as! Int))
-            
-            XCTAssertEqual(obj!.double(at: 5), data[3] as! Double)
-            XCTAssertEqual(obj!.float(at: 6), Float(data[3] as! Double))
-            
-            XCTAssert(obj!.date(at: 7)!.timeIntervalSince((data[4] as! Date)) < 1.0)
-            XCTAssertEqual(obj!.dictionary(at: 8),
-                           MutableDictionaryObject(data: data[5] as! [String: String]))
-            XCTAssertEqual(obj!.array(at: 9),
-                           MutableArrayObject(data: data[6] as! [String]))
-            let b = obj!.blob(at: 10)
-            XCTAssertEqual(b?.content, (data[7] as! Blob).content)
-            XCTAssert(obj!.value(at: 11) as! NSNull == NSNull())
+            verifyResultsMethodsIndividually(d.array(forKey: "array")!, data: data)
         }
     }
     
@@ -188,26 +169,7 @@ class ArrayTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
         try saveDocument(doc) { (d) in
-            let obj = d.array(forKey: "array")
-            
-            XCTAssertEqual(obj!.boolean(at: 0), data[0] as! Bool)
-            XCTAssertEqual(obj!.string(at: 1), data[1] as? String)
-            
-            XCTAssertEqual(obj!.int(at: 2), data[2] as! Int)
-            XCTAssertEqual(obj!.int64(at: 3), Int64(data[2] as! Int))
-            XCTAssertEqual(obj!.number(at: 4), NSNumber(integerLiteral: data[2] as! Int))
-            
-            XCTAssertEqual(obj!.double(at: 5), data[3] as! Double)
-            XCTAssertEqual(obj!.float(at: 6), Float(data[3] as! Double))
-            
-            XCTAssert(obj!.date(at: 7)!.timeIntervalSince((data[4] as! Date)) < 1.0)
-            XCTAssertEqual(obj!.dictionary(at: 8),
-                           MutableDictionaryObject(data: data[5] as! [String: String]))
-            XCTAssertEqual(obj!.array(at: 9),
-                           MutableArrayObject(data: data[6] as! [String]))
-            let b = obj!.blob(at: 10)
-            XCTAssertEqual(b?.content, (data[7] as! Blob).content)
-            XCTAssert(obj!.value(at: 11) as! NSNull == NSNull())
+            verifyResultsMethodsIndividually(d.array(forKey: "array")!, data: data)
         }
     }
     
@@ -240,27 +202,30 @@ class ArrayTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
         try saveDocument(doc) { (d) in
-            let obj = d.array(forKey: "array")
-            
-            XCTAssertEqual(obj!.boolean(at: 0), data[0] as! Bool)
-            XCTAssertEqual(obj!.string(at: 1), data[1] as? String)
-            
-            XCTAssertEqual(obj!.int(at: 2), data[2] as! Int)
-            XCTAssertEqual(obj!.int64(at: 3), Int64(data[2] as! Int))
-            XCTAssertEqual(obj!.number(at: 4), NSNumber(integerLiteral: data[2] as! Int))
-            
-            XCTAssertEqual(obj!.double(at: 5), data[3] as! Double)
-            XCTAssertEqual(obj!.float(at: 6), Float(data[3] as! Double))
-            
-            XCTAssert(obj!.date(at: 7)!.timeIntervalSince((data[4] as! Date)) < 1.0)
-            XCTAssertEqual(obj!.dictionary(at: 8),
-                           MutableDictionaryObject(data: data[5] as! [String: String]))
-            XCTAssertEqual(obj!.array(at: 9),
-                           MutableArrayObject(data: data[6] as! [String]))
-            let b = obj!.blob(at: 10)
-            XCTAssertEqual(b?.content, (data[7] as! Blob).content)
-            XCTAssert(obj!.value(at: 11) as! NSNull == NSNull())
+            verifyResultsMethodsIndividually(d.array(forKey: "array")!, data: data)
         }
+    }
+    
+    // this method is tightly depended on the order of data which is inserted
+    func verifyResultsMethodsIndividually(_ obj: ArrayObject, data: [Any]) {
+        XCTAssertEqual(obj.boolean(at: 0), data[0] as! Bool)
+        XCTAssertEqual(obj.string(at: 1), data[1] as? String)
+        
+        XCTAssertEqual(obj.int(at: 2), data[2] as! Int)
+        XCTAssertEqual(obj.int64(at: 3), Int64(data[2] as! Int))
+        XCTAssertEqual(obj.number(at: 4), NSNumber(integerLiteral: data[2] as! Int))
+        
+        XCTAssertEqual(obj.double(at: 5), data[3] as! Double)
+        XCTAssertEqual(obj.float(at: 6), Float(data[3] as! Double))
+        
+        XCTAssert(obj.date(at: 7)!.timeIntervalSince((data[4] as! Date)) < 1.0)
+        XCTAssertEqual(obj.dictionary(at: 8),
+                       MutableDictionaryObject(data: data[5] as! [String: String]))
+        XCTAssertEqual(obj.array(at: 9),
+                       MutableArrayObject(data: data[6] as! [String]))
+        let b = obj.blob(at: 10)
+        XCTAssertEqual(b?.content, (data[7] as! Blob).content)
+        XCTAssert(obj.value(at: 11) as! NSNull == NSNull())
     }
 }
 
