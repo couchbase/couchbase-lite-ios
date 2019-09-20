@@ -27,6 +27,10 @@ class QueryTest: CBLTestCase {
     
     let kSEQUENCE = SelectResult.expression(Meta.sequence)
     
+    let kTestDate = "2017-01-01T00:00:00.000Z"
+    
+    let kTestBlob = "i'm blob"
+    
     @discardableResult  func createDoc(numbered i: (Int), of number: (Int)) throws -> Document {
         let doc = createDocument("doc\(i)")
         doc.setValue(i, forKey: "number1")
@@ -544,14 +548,37 @@ class QueryTest: CBLTestCase {
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
+        let blob = Blob(contentType: "text/plain", data: kTestBlob.data(using: .utf8)!)
+        let subarray = MutableArrayObject(data: ["a", "b"])
+        let dict = MutableDictionaryObject(data: ["a": "aa", "b": "bb"])
         q.parameters = Parameters()
             .setValue(2, forName: "num1")
             .setValue(5, forName: "num2")
+            .setString("someString", forName: "string")
+            .setInt(31, forName: "int")
+            .setInt64(Int64(32), forName: "int64")
+            .setFloat(Float(3.1), forName: "float")
+            .setDouble(Double(3.2), forName: "double")
+            .setBoolean(true, forName: "bool")
+            .setDate(dateFromJson(kTestDate), forName: "date")
+            .setBlob(blob, forName: "blob")
+            .setArray(subarray, forName: "array")
+            .setDictionary(dict, forName: "dict")
+        
+        XCTAssertEqual(q.parameters!.value(forName: "string") as? String, "someString")
+        XCTAssertEqual(q.parameters!.value(forName: "int") as! Int, 31)
+        XCTAssertEqual(q.parameters!.value(forName: "int64") as! Int64, Int64(32))
+        XCTAssertEqual(q.parameters!.value(forName: "float") as! Float, Float(3.1))
+        XCTAssertEqual(q.parameters!.value(forName: "double") as! Double, Double(3.2))
+        XCTAssertEqual(q.parameters!.value(forName: "bool") as! Bool, true)
+        XCTAssert((q.parameters!.value(forName: "date") as! Date).timeIntervalSince(dateFromJson(kTestDate)) < 1)
+        XCTAssertEqual((q.parameters!.value(forName: "blob") as! Blob).content, blob.content)
+        XCTAssertEqual(q.parameters!.value(forName: "array") as! MutableArrayObject, subarray)
+        XCTAssertEqual(q.parameters!.value(forName: "dict") as! MutableDictionaryObject, dict)
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
-            let number = r.int(at: 0)
-            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+            XCTAssertEqual(r.int(at: 0), expectedNumbers[Int(n-1)])
         })
         XCTAssertEqual(numRow, 4)
     }
