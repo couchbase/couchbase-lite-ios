@@ -463,7 +463,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         doc.setString("value4", forKey: "key4")
         try otherDB.saveDocument(doc)
         
-        run(config: getConfig(.pull), expectedError: nil)
+        let config = getConfig(.pull)
+        config.conflictResolver = ConflictResolver.default
+        run(config: config, expectedError: nil)
         
         // validate saved doc includes the key3, which is the highest generation.
         XCTAssertEqual(db.document(withID: "doc1")?.string(forKey: "key3"), "value3")
