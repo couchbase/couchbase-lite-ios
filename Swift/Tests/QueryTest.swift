@@ -797,7 +797,9 @@ class QueryTest: CBLTestCase {
                               sqrt(num),
                               tan(num),
                               trunc(num),
-                              trunc(num * 10.0) / 10.0]
+                              trunc(num * 10.0) / 10.0,
+                              M_E,
+                              Double.pi]
         
         let p = Expression.property("number")
         let functions = [Function.abs(p),
@@ -821,7 +823,9 @@ class QueryTest: CBLTestCase {
                          Function.sqrt(p),
                          Function.tan(p),
                          Function.trunc(p),
-                         Function.trunc(p, digits: Expression.int(1))]
+                         Function.trunc(p, digits: Expression.int(1)),
+                         Function.e(),
+                         Function.pi()]
         
         var index = 0
         for f in functions {

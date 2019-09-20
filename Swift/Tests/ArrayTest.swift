@@ -210,5 +210,57 @@ class ArrayTest: CBLTestCase {
             XCTAssert(obj!.value(at: 11) as! NSNull == NSNull())
         }
     }
+    
+    func testInsertMethodsIndividually() throws {
+        let data = arrayOfAllTypes()
+        let array = MutableArrayObject()
+        for _ in 0...11 {
+            array.addValue(NSNull())
+        }
+        array.insertBoolean(data[0] as! Bool, at: 0)
+        array.insertString(data[1] as? String, at: 1)
+        
+        array.insertInt(data[2] as! Int, at: 2)
+        array.insertInt64(Int64(data[2] as! Int), at: 3)
+        array.insertNumber(NSNumber(integerLiteral: data[2] as! Int), at: 4)
+        
+        array.insertDouble(data[3] as! Double, at: 5)
+        array.insertFloat(Float(data[3] as! Double), at: 6)
+        
+        array.insertDate(data[4] as? Date, at: 7)
+        
+        let dict = MutableDictionaryObject(data: data[5] as! [String: String])
+        array.insertDictionary(dict, at: 8)
+        
+        let subarray = MutableArrayObject(data: data[6] as! [String])
+        array.insertArray(subarray, at: 9)
+        array.insertBlob(data[7] as? Blob, at: 10)
+        array.insertValue(NSNull(), at: 11)
+        
+        let doc = createDocument("doc1")
+        doc.setArray(array, forKey: "array")
+        try saveDocument(doc) { (d) in
+            let obj = d.array(forKey: "array")
+            
+            XCTAssertEqual(obj!.boolean(at: 0), data[0] as! Bool)
+            XCTAssertEqual(obj!.string(at: 1), data[1] as? String)
+            
+            XCTAssertEqual(obj!.int(at: 2), data[2] as! Int)
+            XCTAssertEqual(obj!.int64(at: 3), Int64(data[2] as! Int))
+            XCTAssertEqual(obj!.number(at: 4), NSNumber(integerLiteral: data[2] as! Int))
+            
+            XCTAssertEqual(obj!.double(at: 5), data[3] as! Double)
+            XCTAssertEqual(obj!.float(at: 6), Float(data[3] as! Double))
+            
+            XCTAssert(obj!.date(at: 7)!.timeIntervalSince((data[4] as! Date)) < 1.0)
+            XCTAssertEqual(obj!.dictionary(at: 8),
+                           MutableDictionaryObject(data: data[5] as! [String: String]))
+            XCTAssertEqual(obj!.array(at: 9),
+                           MutableArrayObject(data: data[6] as! [String]))
+            let b = obj!.blob(at: 10)
+            XCTAssertEqual(b?.content, (data[7] as! Blob).content)
+            XCTAssert(obj!.value(at: 11) as! NSNull == NSNull())
+        }
+    }
 }
 
