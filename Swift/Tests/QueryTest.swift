@@ -543,7 +543,21 @@ class QueryTest: CBLTestCase {
         let PARAM_N2 = Expression.parameter("num2")
         
         let q = QueryBuilder
-            .select(SelectResult.expression(NUMBER1))
+            .select([SelectResult.expression(NUMBER1),
+                     SelectResult.expression(Expression.parameter("string")),
+                     SelectResult.expression(Expression.parameter("maxInt")),
+                     SelectResult.expression(Expression.parameter("minInt")),
+                     SelectResult.expression(Expression.parameter("maxInt64")),
+                     SelectResult.expression(Expression.parameter("minInt64")),
+                     SelectResult.expression(Expression.parameter("maxFloat")),
+                     SelectResult.expression(Expression.parameter("minFloat")),
+                     SelectResult.expression(Expression.parameter("maxDouble")),
+                     SelectResult.expression(Expression.parameter("minDouble")),
+                     SelectResult.expression(Expression.parameter("bool")),
+                     SelectResult.expression(Expression.parameter("date")),
+                     SelectResult.expression(Expression.parameter("blob")),
+                     SelectResult.expression(Expression.parameter("array")),
+                     SelectResult.expression(Expression.parameter("dict"))])
             .from(DataSource.database(db))
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
@@ -555,10 +569,14 @@ class QueryTest: CBLTestCase {
             .setValue(2, forName: "num1")
             .setValue(5, forName: "num2")
             .setString("someString", forName: "string")
-            .setInt(31, forName: "int")
-            .setInt64(Int64(32), forName: "int64")
-            .setFloat(Float(3.1), forName: "float")
-            .setDouble(Double(3.2), forName: "double")
+            .setInt(Int.max, forName: "maxInt")
+            .setInt(Int.min, forName: "minInt")
+            .setInt64(Int64.max, forName: "maxInt64")
+            .setInt64(Int64.min, forName: "minInt64")
+            .setFloat(Float.greatestFiniteMagnitude, forName: "maxFloat")
+            .setFloat(Float.leastNormalMagnitude, forName: "minFloat")
+            .setDouble(Double.greatestFiniteMagnitude, forName: "maxDouble")
+            .setDouble(Double.leastNormalMagnitude, forName: "minDouble")
             .setBoolean(true, forName: "bool")
             .setDate(dateFromJson(kTestDate), forName: "date")
             .setBlob(blob, forName: "blob")
@@ -566,10 +584,14 @@ class QueryTest: CBLTestCase {
             .setDictionary(dict, forName: "dict")
         
         XCTAssertEqual(q.parameters!.value(forName: "string") as? String, "someString")
-        XCTAssertEqual(q.parameters!.value(forName: "int") as! Int, 31)
-        XCTAssertEqual(q.parameters!.value(forName: "int64") as! Int64, Int64(32))
-        XCTAssertEqual(q.parameters!.value(forName: "float") as! Float, Float(3.1))
-        XCTAssertEqual(q.parameters!.value(forName: "double") as! Double, Double(3.2))
+        XCTAssertEqual(q.parameters!.value(forName: "maxInt") as! Int, Int.max)
+        XCTAssertEqual(q.parameters!.value(forName: "minInt") as! Int, Int.min)
+        XCTAssertEqual(q.parameters!.value(forName: "maxInt64") as! Int64, Int64.max)
+        XCTAssertEqual(q.parameters!.value(forName: "minInt64") as! Int64, Int64.min)
+        XCTAssertEqual(q.parameters!.value(forName: "maxFloat") as! Float, Float.greatestFiniteMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "minFloat") as! Float, Float.leastNormalMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "maxDouble") as! Double, Double.greatestFiniteMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "minDouble") as! Double, Double.leastNormalMagnitude)
         XCTAssertEqual(q.parameters!.value(forName: "bool") as! Bool, true)
         XCTAssert((q.parameters!.value(forName: "date") as! Date).timeIntervalSince(dateFromJson(kTestDate)) < 1)
         XCTAssertEqual((q.parameters!.value(forName: "blob") as! Blob).content, blob.content)
@@ -579,6 +601,20 @@ class QueryTest: CBLTestCase {
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
             XCTAssertEqual(r.int(at: 0), expectedNumbers[Int(n-1)])
+            XCTAssertEqual(r.string(at: 1) , "someString")
+            XCTAssertEqual(r.int(at: 2), Int.max)
+            XCTAssertEqual(r.int(at: 3), Int.min)
+            XCTAssertEqual(r.int64(at: 4), Int64.max)
+            XCTAssertEqual(r.int64(at: 5), Int64.min)
+            XCTAssertEqual(r.float(at: 6), Float.greatestFiniteMagnitude)
+            XCTAssertEqual(r.float(at: 7), Float.leastNormalMagnitude)
+            XCTAssertEqual(r.double(at: 8), Double.greatestFiniteMagnitude)
+            XCTAssertEqual(r.double(at: 9), Double.leastNormalMagnitude)
+            XCTAssertEqual(r.boolean(at: 10), true)
+            XCTAssert(r.date(at: 11)!.timeIntervalSince(dateFromJson(kTestDate)) < 1)
+            XCTAssertEqual(r.blob(at: 12)!.content, blob.content)
+            XCTAssertEqual(r.array(at: 13), subarray)
+            XCTAssertEqual(r.dictionary(at: 14), dict)
         })
         XCTAssertEqual(numRow, 4)
     }
