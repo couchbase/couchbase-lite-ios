@@ -27,6 +27,10 @@ class QueryTest: CBLTestCase {
     
     let kSEQUENCE = SelectResult.expression(Meta.sequence)
     
+    let kTestDate = "2017-01-01T00:00:00.000Z"
+    
+    let kTestBlob = "i'm blob"
+    
     @discardableResult  func createDoc(numbered i: (Int), of number: (Int)) throws -> Document {
         let doc = createDocument("doc\(i)")
         doc.setValue(i, forKey: "number1")
@@ -539,19 +543,78 @@ class QueryTest: CBLTestCase {
         let PARAM_N2 = Expression.parameter("num2")
         
         let q = QueryBuilder
-            .select(SelectResult.expression(NUMBER1))
+            .select([SelectResult.expression(NUMBER1),
+                     SelectResult.expression(Expression.parameter("string")),
+                     SelectResult.expression(Expression.parameter("maxInt")),
+                     SelectResult.expression(Expression.parameter("minInt")),
+                     SelectResult.expression(Expression.parameter("maxInt64")),
+                     SelectResult.expression(Expression.parameter("minInt64")),
+                     SelectResult.expression(Expression.parameter("maxFloat")),
+                     SelectResult.expression(Expression.parameter("minFloat")),
+                     SelectResult.expression(Expression.parameter("maxDouble")),
+                     SelectResult.expression(Expression.parameter("minDouble")),
+                     SelectResult.expression(Expression.parameter("bool")),
+                     SelectResult.expression(Expression.parameter("date")),
+                     SelectResult.expression(Expression.parameter("blob")),
+                     SelectResult.expression(Expression.parameter("array")),
+                     SelectResult.expression(Expression.parameter("dict"))])
             .from(DataSource.database(db))
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
+        let blob = Blob(contentType: "text/plain", data: kTestBlob.data(using: .utf8)!)
+        let subarray = MutableArrayObject(data: ["a", "b"])
+        let dict = MutableDictionaryObject(data: ["a": "aa", "b": "bb"])
         q.parameters = Parameters()
             .setValue(2, forName: "num1")
             .setValue(5, forName: "num2")
+            .setString("someString", forName: "string")
+            .setInt(Int.max, forName: "maxInt")
+            .setInt(Int.min, forName: "minInt")
+            .setInt64(Int64.max, forName: "maxInt64")
+            .setInt64(Int64.min, forName: "minInt64")
+            .setFloat(Float.greatestFiniteMagnitude, forName: "maxFloat")
+            .setFloat(Float.leastNormalMagnitude, forName: "minFloat")
+            .setDouble(Double.greatestFiniteMagnitude, forName: "maxDouble")
+            .setDouble(Double.leastNormalMagnitude, forName: "minDouble")
+            .setBoolean(true, forName: "bool")
+            .setDate(dateFromJson(kTestDate), forName: "date")
+            .setBlob(blob, forName: "blob")
+            .setArray(subarray, forName: "array")
+            .setDictionary(dict, forName: "dict")
+        
+        XCTAssertEqual(q.parameters!.value(forName: "string") as? String, "someString")
+        XCTAssertEqual(q.parameters!.value(forName: "maxInt") as! Int, Int.max)
+        XCTAssertEqual(q.parameters!.value(forName: "minInt") as! Int, Int.min)
+        XCTAssertEqual(q.parameters!.value(forName: "maxInt64") as! Int64, Int64.max)
+        XCTAssertEqual(q.parameters!.value(forName: "minInt64") as! Int64, Int64.min)
+        XCTAssertEqual(q.parameters!.value(forName: "maxFloat") as! Float, Float.greatestFiniteMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "minFloat") as! Float, Float.leastNormalMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "maxDouble") as! Double, Double.greatestFiniteMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "minDouble") as! Double, Double.leastNormalMagnitude)
+        XCTAssertEqual(q.parameters!.value(forName: "bool") as! Bool, true)
+        XCTAssert((q.parameters!.value(forName: "date") as! Date).timeIntervalSince(dateFromJson(kTestDate)) < 1)
+        XCTAssertEqual((q.parameters!.value(forName: "blob") as! Blob).content, blob.content)
+        XCTAssertEqual(q.parameters!.value(forName: "array") as! MutableArrayObject, subarray)
+        XCTAssertEqual(q.parameters!.value(forName: "dict") as! MutableDictionaryObject, dict)
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
-            let number = r.int(at: 0)
-            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+            XCTAssertEqual(r.int(at: 0), expectedNumbers[Int(n-1)])
+            XCTAssertEqual(r.string(at: 1) , "someString")
+            XCTAssertEqual(r.int(at: 2), Int.max)
+            XCTAssertEqual(r.int(at: 3), Int.min)
+            XCTAssertEqual(r.int64(at: 4), Int64.max)
+            XCTAssertEqual(r.int64(at: 5), Int64.min)
+            XCTAssertEqual(r.float(at: 6), Float.greatestFiniteMagnitude)
+            XCTAssertEqual(r.float(at: 7), Float.leastNormalMagnitude)
+            XCTAssertEqual(r.double(at: 8), Double.greatestFiniteMagnitude)
+            XCTAssertEqual(r.double(at: 9), Double.leastNormalMagnitude)
+            XCTAssertEqual(r.boolean(at: 10), true)
+            XCTAssert(r.date(at: 11)!.timeIntervalSince(dateFromJson(kTestDate)) < 1)
+            XCTAssertEqual(r.blob(at: 12)!.content, blob.content)
+            XCTAssertEqual(r.array(at: 13), subarray)
+            XCTAssertEqual(r.dictionary(at: 14), dict)
         })
         XCTAssertEqual(numRow, 4)
     }
