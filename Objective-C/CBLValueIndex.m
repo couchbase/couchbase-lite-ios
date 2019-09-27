@@ -75,14 +75,13 @@
     CBLAssertNotNil(expression);
     
     NSArray* asJson = [expression asJSON];
-    if (!(// prediction function
-          [asJson.firstObject isEqualToString: @"PREDICTION()"] ||
-          // property expression
-          [asJson.firstObject characterAtIndex: 0] == '.'
-          )) {
+    if (!([asJson.firstObject isEqualToString: @"PREDICTION()"] ||
+          [asJson.firstObject characterAtIndex: 0] == '.')) {
+        
+        // only allow in case of prediction function & property expression
         [NSException raise: NSInternalInconsistencyException
                     format: @"Partial Indexing is unsupported. Please use "
-                    "property or prediction-function"];
+         "property or prediction-function"];
     }
     
     return [[CBLValueIndexItem alloc] initWithExpression: expression];
