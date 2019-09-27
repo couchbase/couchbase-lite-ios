@@ -2045,17 +2045,13 @@
     CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
     
     CBLQueryExpression* sumExp = [CBLQueryFunction sum: fName];
+    [self expectException: NSInternalInconsistencyException in:^{
+         [CBLValueIndexItem expression: sumExp];
+     }];
+    
     
     [self expectException: NSInternalInconsistencyException in:^{
         [CBLValueIndexItem expression: [fName equalTo: lName]];
-    }];
-    
-    [self expectException: NSInternalInconsistencyException in:^{
-        [CBLValueIndexItem expression: sumExp];
-    }];
-    
-    [self expectException: NSInternalInconsistencyException in:^{
-        [CBLValueIndexItem expression: sumExp];
     }];
    
     CBLQueryVariableExpression* LIKE = [CBLQueryArrayExpression variableWithName: @"LIKE"];
@@ -2074,6 +2070,12 @@
     [self expectException: NSInternalInconsistencyException in:^{
         [CBLValueIndexItem expression: collationExp];
     }];
+    
+#ifdef COUCHBASE_ENTERPRISE
+    id input = EXPR_VAL(@{ @"fname": fName });
+    CBLQueryExpression* sumPrediction = PREDICTION_VALUE(@"name", input, @"sum");
+    [CBLValueIndexItem expression: sumPrediction];
+#endif
 }
 
 @end

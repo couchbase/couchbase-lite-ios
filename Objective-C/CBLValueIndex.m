@@ -24,7 +24,7 @@
 #import "CBLPropertyExpression.h"
 
 #ifdef COUCHBASE_ENTERPRISE
-#import "CBLQueryFunction+Prediction.h"
+#import "CBLFunctionExpression.h"
 #endif
 
 @implementation CBLValueIndex {
@@ -79,11 +79,12 @@
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
     
-    if (!([expression isKindOfClass: [CBLPropertyExpression class]]
-#ifdef COUCHBASE_ENTERPRISE
-        || [expression isKindOfClass: [CBLQueryPredictionFunction class]]
-#endif
-        )) {
+    NSArray* asJson = [expression asJSON];
+    if (!(// prediction function
+          [asJson.firstObject isEqualToString: @"PREDICTION()"] ||
+          // property expression
+          [asJson.firstObject characterAtIndex: 0] == '.'
+          )) {
         [NSException raise: NSInternalInconsistencyException
                     format: @"Partial Indexing is unsupported. Please use "
                     "property or prediction-function"];
