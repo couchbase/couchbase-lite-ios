@@ -21,11 +21,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQueryExpression+Internal.h"
-#import "CBLPropertyExpression.h"
-
-#ifdef COUCHBASE_ENTERPRISE
-#import "CBLFunctionExpression.h"
-#endif
 
 @implementation CBLValueIndex {
     NSArray<CBLValueIndexItem*>* _items;
