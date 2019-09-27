@@ -21,6 +21,11 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQueryExpression+Internal.h"
+#import "CBLPropertyExpression.h"
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLQueryFunction+Prediction.h"
+#endif
 
 @implementation CBLValueIndex {
     NSArray<CBLValueIndexItem*>* _items;
@@ -73,6 +78,16 @@
 
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
+    
+    if (!([expression isKindOfClass: [CBLPropertyExpression class]]
+#ifdef COUCHBASE_ENTERPRISE
+        || [expression isKindOfClass: [CBLQueryPredictionFunction class]]
+#endif
+        )) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Partial Indexing is unsupported. Please use "
+                    "property or prediction-function"];
+    }
     
     return [[CBLValueIndexItem alloc] initWithExpression: expression];
 }

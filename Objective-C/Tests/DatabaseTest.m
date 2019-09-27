@@ -2039,4 +2039,41 @@
     Assert([self.db deleteIndexForName: @"index3" error: &error]);
 }
 
+- (void) testUnsupportedValueIndexItem {
+    // Create value index:
+    CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
+    CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
+    
+    CBLQueryExpression* sumExp = [CBLQueryFunction sum: fName];
+    
+    [self expectException: NSInternalInconsistencyException in:^{
+        [CBLValueIndexItem expression: [fName equalTo: lName]];
+    }];
+    
+    [self expectException: NSInternalInconsistencyException in:^{
+        [CBLValueIndexItem expression: sumExp];
+    }];
+    
+    [self expectException: NSInternalInconsistencyException in:^{
+        [CBLValueIndexItem expression: sumExp];
+    }];
+   
+    CBLQueryVariableExpression* LIKE = [CBLQueryArrayExpression variableWithName: @"LIKE"];
+    CBLQueryExpression* nameLike = [LIKE equalTo: [CBLQueryExpression string: @"mary"]];
+    CBLQueryExpression* arrayExp = [CBLQueryArrayExpression any: LIKE
+                                                             in: fName
+                                                      satisfies: nameLike];
+    [self expectException: NSInternalInconsistencyException in:^{
+        [CBLValueIndexItem expression: arrayExp];
+    }];
+    
+    CBLQueryCollation* collation = [CBLQueryCollation unicodeWithLocale: @"en"
+                                                                 ignoreCase: YES
+                                                              ignoreAccents: YES];
+    CBLQueryExpression* collationExp = [fName collate: collation];
+    [self expectException: NSInternalInconsistencyException in:^{
+        [CBLValueIndexItem expression: collationExp];
+    }];
+}
+
 @end
