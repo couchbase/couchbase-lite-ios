@@ -106,7 +106,7 @@ then
   then
     # Objective-C:
     echo "Generate coverage report for ObjC ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
   fi
 
   echo "Run Swift macOS tests ..."
@@ -120,7 +120,7 @@ then
   then
     # Swift:
     echo "Generate coverage report for Swift ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
