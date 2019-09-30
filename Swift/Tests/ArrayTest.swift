@@ -47,6 +47,8 @@ class ArrayTest: CBLTestCase {
         let blob = Blob(contentType: "text/plain", data: content)
         array.append(blob)                              // 7
         
+        array.append(NSNull())                          // 8
+        
         return array
     }
     
@@ -131,7 +133,7 @@ class ArrayTest: CBLTestCase {
         let subarray = MutableArrayObject(data: data[6] as! [String])
         array.addArray(subarray)
         array.addBlob(data[7] as? Blob)
-        array.addValue(NSNull())
+        array.addValue(data[8] as? NSNull)
         
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
@@ -164,7 +166,7 @@ class ArrayTest: CBLTestCase {
         let subarray = MutableArrayObject(data: data[6] as! [String])
         array.setArray(subarray, at: 9)
         array.setBlob(data[7] as? Blob, at: 10)
-        array.setValue(NSNull(), at: 11)
+        array.setValue((data[8] as? NSNull), at: 11)
         
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
@@ -197,7 +199,7 @@ class ArrayTest: CBLTestCase {
         let subarray = MutableArrayObject(data: data[6] as! [String])
         array.insertArray(subarray, at: 9)
         array.insertBlob(data[7] as? Blob, at: 10)
-        array.insertValue(NSNull(), at: 11)
+        array.insertValue(data[8] as? NSNull, at: 11)
         
         let doc = createDocument("doc1")
         doc.setArray(array, forKey: "array")
@@ -225,7 +227,7 @@ class ArrayTest: CBLTestCase {
                        MutableArrayObject(data: data[6] as! [String]))
         let b = obj.blob(at: 10)
         XCTAssertEqual(b?.content, (data[7] as! Blob).content)
-        XCTAssert(obj.value(at: 11) as! NSNull == NSNull())
+        XCTAssert(obj.value(at: 11) as! NSNull == (data[8] as? NSNull))
     }
 }
 
