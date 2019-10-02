@@ -151,6 +151,7 @@
 		27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
 		27F9619C1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
+		69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
 		69D600002307469B00250787 /* CBLTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 69D6FFFC2307469A00250787 /* CBLTimer.m */; };
 		69D6000F230746B000250787 /* CBLTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 69D6FFFB2307469A00250787 /* CBLTimer.h */; };
 		69D60010230746B200250787 /* CBLTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 69D6FFFB2307469A00250787 /* CBLTimer.h */; };
@@ -5246,6 +5247,7 @@
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
 				9343F193207D636300F19A89 /* CBLTestHelper.m in Sources */,
 				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
+				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				1AA3D6C222A1A41F0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
