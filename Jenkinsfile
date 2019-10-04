@@ -1,7 +1,8 @@
 pipeline {
-    agent { label 'ios-pull-request' }
+    agent none
     environment {
        PRODUCT = 'couchbase-lite-ios'
+       timeout(time: 30, unit: 'MINUTES')
    }
     stages {
         stage('Checkout'){
