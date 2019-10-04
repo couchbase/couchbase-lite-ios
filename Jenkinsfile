@@ -1,8 +1,7 @@
 pipeline {
-    agent { label 'mobile-mac-mini'  }
+    agent { label 'mobile-builder-ios-pull-request'  }
     environment {
        PRODUCT = 'couchbase-lite-ios'
-       timeout(time: 30, unit: 'MINUTES')
    }
     stages {
         stage('Checkout'){
