@@ -20,12 +20,5 @@ pipeline {
                 """
             }
         }
-	stage('Cleanup'){
-	    steps {
-		sh """
-		rm -rf ${env.PRODUCT}
-		"""
-	    }
-	}
     }
 }
