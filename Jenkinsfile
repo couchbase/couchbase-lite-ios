@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ios-pull-request' }
+    agent { label 'mobile-builder-ios-pull-request'  }
     environment {
        PRODUCT = 'couchbase-lite-ios'
    }
