@@ -1,13 +1,13 @@
 pipeline {
     agent { label 'mobile-builder-ios-pull-request'  }
     environment {
-       PRODUCT = 'couchbase-lite-ios'
+       PRODUCT = 'couchbase-lite-ios-ee'
    }
     stages {
         stage('Checkout'){
             steps {
                 sh """
-                    git clone https://github.com/couchbase/${env.PRODUCT}.git
+                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git
                     pushd ${env.PRODUCT}
                     git submodule update --init --recursive
                     popd
@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Build'){
             steps {
-                sh """ ./${env.PRODUCT}/Scripts/pull_request_build.sh
+                sh """ ./${env.PRODUCT}/couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
         }
