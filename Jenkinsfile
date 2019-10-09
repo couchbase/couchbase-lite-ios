@@ -10,7 +10,8 @@ pipeline {
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git
                     pushd ${env.PRODUCT}
                     git submodule update --init --recursive
-		    cd couchbase-lite-ios
+                    ./Scripts/prepare_project.sh
+                    cd couchbase-lite-ios
 		    git checkout master
 		    git pull origin master
                     popd
