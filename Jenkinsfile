@@ -7,7 +7,7 @@ pipeline {
         stage('Checkout'){
             steps {
                 sh """
-                    git clone https://github.com/couchbaselabs/${env.PRODUCT}.git
+                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git
                     pushd ${env.PRODUCT}
                     git submodule update --init --recursive
 		    cd couchbase-lite-ios
