@@ -27,6 +27,7 @@
 #import "CBLStatus.h"
 #import "c4BlobStore.h"
 #import "CBLData.h"
+#import "CBLSharedMessage.h"
 
 using namespace cbl;
 
@@ -249,8 +250,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     if (_db) {
         if (_db != db) {
             [NSException raise: NSInternalInconsistencyException
-                        format: @"A document contains a blob that was saved "
-                                 "to a different database; the save operation cannot complete"];
+                        format: @"%@", kCBLMessageBlobDifferentDatabase];
         }
         return YES;
     }

@@ -37,6 +37,7 @@
 #import "fleece/Fleece.hh"
 #import "CBLConflict+Internal.h"
 #import "CBLTimer.h"
+#import "CBLSharedMessage.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -352,15 +353,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         CBLLogInfo(Database, @"Closing %@ at path %@", self, self.path);
     
         if (_activeReplications.count > 0) {
-            NSString* err = @"Cannot close the database. "
-                "Please stop all of the replicators before closing the database.";
-            return createError(CBLErrorBusy, err, outError);
+            return createError(CBLErrorBusy, kCBLMessageCloseDBFailedReplications, outError);
         }
         
         if (_liveQueries.count > 0) {
-            NSString* err = @"Cannot close the database. "
-                "Please remove all of the query listeners before closing the database.";
-            return createError(CBLErrorBusy, err, outError);
+            return createError(CBLErrorBusy, kCBLMessageCloseDBFailedQueryListeners, outError);
         }
         
         [self cancelDocExpiryTimer];
@@ -381,15 +378,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [self mustBeOpen];
         
         if (_activeReplications.count > 0) {
-            NSString* err = @"Cannot delete the database. "
-                "Please stop all of the replicators before deleting the database.";
-            return createError(CBLErrorBusy, err, outError);
+            return createError(CBLErrorBusy, kCBLMessageDeleteDBFailedReplications, outError);
         }
         
         if (_liveQueries.count > 0) {
-            NSString* err = @"Cannot delete the database. "
-                "Please remove all of the query listeners before deleting the database.";
-            return createError(CBLErrorBusy, err, outError);
+            return createError(CBLErrorBusy, kCBLMessageDeleteDBFailedQueryListeners, outError);
         }
         
         [self cancelDocExpiryTimer];
@@ -715,7 +708,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         document.database = self;
     } else if (document.database != self) {
         return createError(CBLErrorInvalidParameter,
-                           @"Cannot operate on a document from another database", error);
+                           kCBLMessageDocumentAnotherDatabase, error);
     }
     return YES;
 }
@@ -830,7 +823,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 {
     if (deletion && !document.revisionID)
         return createError(CBLErrorNotFound,
-                           @"Cannot delete a document that has not yet been saved", outError);
+                           kCBLMessageDeleteDocFailedNotSaved, outError);
     
     CBL_LOCK(self) {
         if (![self prepareDocument: document error: outError])
