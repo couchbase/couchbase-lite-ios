@@ -19,6 +19,7 @@
 
 #import "CBLBlobStream.h"
 #import "CBLStatus.h"
+#import "CBLErrorMessage.h"
 
 @implementation CBLBlobStream
 {
