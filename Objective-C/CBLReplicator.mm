@@ -37,6 +37,7 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLTimer.h"
+#import "CBLErrorMessage.h"
 
 #import "c4Replicator.h"
 #import "c4Socket.h"
@@ -415,8 +416,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBL_LOCK(self) {
         if (_state != kCBLStateStopped) {
             [NSException raise: NSInternalInconsistencyException
-                        format: @"Replicator is not stopped. Resetting checkpoint"
-                                 "is only allowed when the replicator is in the stopped state."];
+                        format: @"%@", kCBLErrorMessageReplicatorNotStopped];
         }
         _resetCheckpoint = YES;
     }

@@ -21,6 +21,7 @@
 #import "CBLDocument+Internal.h"
 #import "CustomLogger.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLErrorMessage.h"
 
 @interface TestConflictResolver: NSObject<CBLConflictResolver>
 
@@ -857,8 +858,7 @@
     }];
     AssertNotNil(error);
     AssertEqual(error.code, CBLErrorUnexpectedError);
-    AssertEqualObjects(error.userInfo[NSLocalizedDescriptionKey], @"A document contains a blob that"
-                       " was saved to a different database; the save operation cannot complete");
+    AssertEqualObjects(error.userInfo[NSLocalizedDescriptionKey], kCBLErrorMessageBlobDifferentDatabase);
     [replicator removeChangeListenerWithToken: token];
 }
 

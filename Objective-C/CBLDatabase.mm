@@ -37,7 +37,7 @@
 #import "fleece/Fleece.hh"
 #import "CBLConflict+Internal.h"
 #import "CBLTimer.h"
-#import "CBLSharedMessage.h"
+#import "CBLErrorMessage.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -353,11 +353,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         CBLLogInfo(Database, @"Closing %@ at path %@", self, self.path);
     
         if (_activeReplications.count > 0) {
-            return createError(CBLErrorBusy, kCBLMessageCloseDBFailedReplications, outError);
+            return createError(CBLErrorBusy, kCBLErrorMessageCloseDBFailedReplications, outError);
         }
         
         if (_liveQueries.count > 0) {
-            return createError(CBLErrorBusy, kCBLMessageCloseDBFailedQueryListeners, outError);
+            return createError(CBLErrorBusy, kCBLErrorMessageCloseDBFailedQueryListeners, outError);
         }
         
         [self cancelDocExpiryTimer];
@@ -378,11 +378,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [self mustBeOpen];
         
         if (_activeReplications.count > 0) {
-            return createError(CBLErrorBusy, kCBLMessageDeleteDBFailedReplications, outError);
+            return createError(CBLErrorBusy, kCBLErrorMessageDeleteDBFailedReplications, outError);
         }
         
         if (_liveQueries.count > 0) {
-            return createError(CBLErrorBusy, kCBLMessageDeleteDBFailedQueryListeners, outError);
+            return createError(CBLErrorBusy, kCBLErrorMessageDeleteDBFailedQueryListeners, outError);
         }
         
         [self cancelDocExpiryTimer];
@@ -603,7 +603,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (void) mustBeOpen {
     if (_c4db == nullptr) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to perform an operation on a closed database."];
+                    format: @"%@", kCBLErrorMessageDBClosed];
     }
 }
 
@@ -708,7 +708,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         document.database = self;
     } else if (document.database != self) {
         return createError(CBLErrorInvalidParameter,
-                           kCBLMessageDocumentAnotherDatabase, error);
+                           kCBLErrorMessageDocumentAnotherDatabase, error);
     }
     return YES;
 }
@@ -823,7 +823,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 {
     if (deletion && !document.revisionID)
         return createError(CBLErrorNotFound,
-                           kCBLMessageDeleteDocFailedNotSaved, outError);
+                           kCBLErrorMessageDeleteDocFailedNotSaved, outError);
     
     CBL_LOCK(self) {
         if (![self prepareDocument: document error: outError])
@@ -981,7 +981,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             
             if (resolvedDoc && resolvedDoc.database && resolvedDoc.database != self) {
                 [NSException raise: NSInternalInconsistencyException
-                            format: @"Resolved document db '%@' is different from expected db '%@'",
+                            format: kCBLErrorMessageResolvedDocWrongDb,
                  resolvedDoc.database.name, self.name];
             }
         } @catch (NSException *ex) {

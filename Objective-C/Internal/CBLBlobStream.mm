@@ -83,7 +83,7 @@
 }
 
 - (NSInteger)read: (uint8_t *)buffer maxLength: (NSUInteger)len {
-    Assert(_readStream != nullptr, @"Stream is not open");
+    Assert(_readStream != nullptr, kCBLErrorMessageBlobReadStreamNotOpen);
     size_t retVal = c4stream_read(_readStream, buffer, len, &_error);
     if (retVal == 0 && _error.code != 0)
         return -1;
@@ -92,7 +92,7 @@
 }
 
 - (BOOL)getBuffer: (uint8_t * _Nullable *)buffer length: (NSUInteger*)len {
-    Assert(_readStream != nullptr, @"Stream is not open");
+    Assert(_readStream != nullptr, kCBLErrorMessageBlobReadStreamNotOpen);
     *buffer = nullptr;
     *len = 0;
     return NO;
