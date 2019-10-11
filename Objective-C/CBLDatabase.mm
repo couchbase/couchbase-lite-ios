@@ -1047,8 +1047,12 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
                                                 userInfo: @{NSLocalizedDescriptionKey: ex.description}];
                     return false;
                 }
-                if (!mergedBody)
+                if (!mergedBody) {
+                    *outError = [NSError errorWithDomain: CBLErrorDomain
+                                                    code: CBLErrorUnexpectedError
+                                                userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessageResolvedDocContainsNull}];
                     return false;
+                }
                 isDeleted = resolvedDoc.isDeleted;
             } else
                 mergedBody = [self emptyFLSliceResult];

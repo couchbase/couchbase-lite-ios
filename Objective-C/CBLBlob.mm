@@ -181,7 +181,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         // No recourse but to read the initial stream into memory:
         if (!_initialContentStream) {
             [NSException raise: NSInternalInconsistencyException
-                    format: @"Blob has no data available"];
+                        format: @"%@", kCBLErrorMessageBlobContainsNoData];
         }
         
         NSMutableData *result = [NSMutableData new];

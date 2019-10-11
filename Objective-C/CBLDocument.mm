@@ -26,6 +26,7 @@
 #import "CBLStringBytes.h"
 #import "CBLFleece.hh"
 #import "MRoot.hh"
+#import "CBLErrorMessage.h"
 
 using namespace fleece;
 
@@ -177,11 +178,14 @@ using namespace fleece;
 
 - (BOOL) selectConflictingRevision {
     CBL_LOCK(self) {
+        if (!_c4Doc) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"%@", kCBLErrorMessageNoDocumentRevision];
+        }
+        
         BOOL foundConflict = NO;
-        if (_c4Doc) {
-            while(!foundConflict && c4doc_selectNextLeafRevision(_c4Doc.rawDoc, true, true, nullptr)) {
-                foundConflict = (_c4Doc.flags & kRevIsConflict) != 0;
-            }
+        while(!foundConflict && c4doc_selectNextLeafRevision(_c4Doc.rawDoc, true, true, nullptr)) {
+            foundConflict = (_c4Doc.flags & kRevIsConflict) != 0;
         }
         if (foundConflict)
             self.c4Doc = _c4Doc;     // This will update to the selected revision
