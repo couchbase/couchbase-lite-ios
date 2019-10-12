@@ -27,6 +27,7 @@
 #import "CBLStatus.h"
 #import "c4BlobStore.h"
 #import "CBLData.h"
+#import "CBLErrorMessage.h"
 
 using namespace cbl;
 
@@ -99,7 +100,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 {
     CBLAssertNotNil(contentType);
     CBLAssertNotNil(url);
-    Assert(url.isFileURL, @"url must be a file-based URL");
+    Assert(url.isFileURL, kCBLErrorMessageNotFileBasedURL);
     
     NSInputStream* stream = [[NSInputStream alloc] initWithURL: url];
     if (!stream) {
@@ -180,7 +181,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         // No recourse but to read the initial stream into memory:
         if (!_initialContentStream) {
             [NSException raise: NSInternalInconsistencyException
-                    format: @"Blob has no data available"];
+                        format: @"%@", kCBLErrorMessageBlobContainsNoData];
         }
         
         NSMutableData *result = [NSMutableData new];
@@ -249,8 +250,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     if (_db) {
         if (_db != db) {
             [NSException raise: NSInternalInconsistencyException
-                        format: @"A document contains a blob that was saved "
-                                 "to a different database; the save operation cannot complete"];
+                        format: @"%@", kCBLErrorMessageBlobDifferentDatabase];
         }
         return YES;
     }
@@ -265,7 +265,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     if (_content) {
         success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
     } else {
-        Assert(_initialContentStream);
+        Assert(_initialContentStream, kCBLErrorMessageBlobContentNull);
         C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
         if(!blobOut)
             return convertError(err, outError);

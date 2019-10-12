@@ -19,6 +19,7 @@
 
 #import "CBLURLEndpoint.h"
 #import "CBLURLEndpoint+Internal.h"
+#import "CBLErrorMessage.h"
 
 NSString* const kCBLURLEndpointScheme = @"ws";
 NSString* const kCBLURLEndpointTLSScheme = @"wss";
@@ -32,12 +33,9 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
     
     Assert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
            [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
-           @"Invalid scheme for URLEndpoint url (%@); must be either %@ or %@",
-           url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme);
+           kCBLErrorMessageInvalidSchemeURLEndpoint, url);
     
-    Assert(!url.user && !url.password,
-           @"Embedded credentials in a URL (username:password@hostname//...) "
-           "are not allowed; use the BasicAuthenticator class instead");
+    Assert(!url.user && !url.password, kCBLErrorMessageInvalidEmbeddedCredentialsInURL);
     
     self = [super init];
     if (self) {
