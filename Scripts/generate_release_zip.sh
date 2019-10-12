@@ -89,6 +89,9 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
+# FIXME: remove this, only for test purpose. No code coverage. 
+NO_COV=YES
+
 if [ -z "$NO_TEST" ]
 then
   echo "Running unit tests ..."
