@@ -89,11 +89,8 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
-# FIXME: installing the extensions to support code coverage
-gem pristine ffi
-gem pristine nokogiri
-gem pristine redcarpet
-gem pristine sqlite3
+# FIXME: workaround with no coverage
+NO_COV=YES
 
 if [ -z "$NO_TEST" ]
 then
