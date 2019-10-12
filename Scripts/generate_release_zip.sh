@@ -89,8 +89,11 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
-# FIXME: remove this, only for test purpose. No code coverage. 
-NO_COV=YES
+# FIXME: installing the extensions to support code coverage
+gem pristine ffi
+gem pristine nokogiri
+gem pristine redcarpet
+gem pristine sqlite3
 
 if [ -z "$NO_TEST" ]
 then
@@ -100,10 +103,10 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS tests ..."
-  xcodebuild clean test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run ObjC iOS tests ..."
-  xcodebuild clean test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
 
   if [ -z "$NO_COV" ]
   then
@@ -113,10 +116,10 @@ then
   fi
 
   echo "Run Swift macOS tests ..."
-  xcodebuild clean test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  xcodebuild clean test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
