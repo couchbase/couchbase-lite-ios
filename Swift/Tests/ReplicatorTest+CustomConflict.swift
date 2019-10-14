@@ -585,8 +585,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         }
         XCTAssertNotNil(error)
         XCTAssertEqual(error?.code, CBLErrorUnexpectedError)
-        XCTAssert((error?.userInfo[NSLocalizedDescriptionKey] as! String) == "A document contains" +
-            " a blob that was saved to a different database; the save operation cannot complete")
+        XCTAssert((error?.userInfo[NSLocalizedDescriptionKey] as! String) ==
+            "A document contains a blob that was saved to a different " +
+            "database. The save operation cannot complete.")
         replicator.removeChangeListener(withToken: token)
     }
     
