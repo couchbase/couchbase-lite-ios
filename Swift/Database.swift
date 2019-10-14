@@ -370,6 +370,7 @@ public final class Database {
     public class func setLogLevel(_ level: LogLevel, domain: LogDomain) {
         Log.log(domain: .database, level: .warning, message:
             "This method has been deprecated. Please use Database.log.console instead of setLogLevel(_, domain:)")
+        
         Database.log.console.domains = LogDomains(rawValue: Int(domain.rawValue))
         Database.log.console.level = level
     }
