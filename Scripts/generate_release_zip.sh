@@ -89,9 +89,6 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
-# FIXME: workaround with no coverage
-NO_COV=YES
-
 if [ -z "$NO_TEST" ]
 then
   echo "Running unit tests ..."
