@@ -2,7 +2,6 @@ pipeline {
     agent { label 'mobile-builder-ios-pull-request'  }
     environment {
        PRODUCT = 'couchbase-lite-ios-ee'
-       BRANCH = "${BRANCH_NAME}"
    }
     stages {
         stage('Checkout'){
@@ -13,8 +12,8 @@ pipeline {
                     git submodule update --init --recursive
                     ./Scripts/prepare_project.sh
                     cd couchbase-lite-ios
-		    git checkout ${BRANCH}
-		    git pull origin ${BRANCH}
+		    git checkout $CHANGE_TARGET
+		    git pull origin $CHANGE_TARGET
                     popd
                 """
             }
