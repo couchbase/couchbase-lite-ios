@@ -12,8 +12,8 @@ pipeline {
                     git submodule update --init --recursive
                     ./Scripts/prepare_project.sh
                     cd couchbase-lite-ios
-		    git checkout $CHANGE_TARGET
-		    git pull origin $CHANGE_TARGET
+		    git checkout ${GIT_BRANCH}
+		    git pull origin ${GIT_BRANCH}
                     popd
                 """
             }
