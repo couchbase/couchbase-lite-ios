@@ -99,7 +99,7 @@ typedef enum {
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
     BOOL _cancelSuspending;         // Cancel the current suspending request
     unsigned _conflictCount;        // Current number of conflict resolving tasks
-    BOOL _deferReplicatorNotification; // Defer the replicator notificayion until finishing all conflict resolving tasks
+    BOOL _deferReplicatorNotification; // Defer the replicator notification until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
 }
 
@@ -513,8 +513,10 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                 _state = kCBLStateStopping; // Will be stopped after all conflicts are resolved
             } else
                 [self stopped];
-        } else
+        } else {
+            _deferReplicatorNotification = NO;
             [self updateAndPostStatus];
+        }
         
         if (resume)
             [self resetAndScheduleRetry];
@@ -616,20 +618,13 @@ static void onDocsEnded(C4Replicator* repl,
     dispatch_async(_conflictQueue, ^{
         [self _resolveConflict: doc];
         CBL_LOCK(self) {
-            if (--_conflictCount == 0) {
-                if (_deferReplicatorNotification) {
-                    if (_rawStatus.level == kC4Stopped) {
-                        Assert(_state == kCBLStateStopping);
-                        
-                        [self stopped];
-                    } else {
-                        Assert(_rawStatus.level == kC4Idle);
-                        
-                        // Post status update:
-                        [self updateAndPostStatus];
-                    }
-                    _deferReplicatorNotification = NO;
+            if (--_conflictCount == 0 && _deferReplicatorNotification) {
+                if (_rawStatus.level == kC4Stopped && _state == kCBLStateStopping) {
+                    [self stopped];
+                } else if (_rawStatus.level == kC4Idle &&_state == kCBLStateRunning) {
+                    [self updateAndPostStatus];
                 }
+                _deferReplicatorNotification = NO;
             }
         }
     });
