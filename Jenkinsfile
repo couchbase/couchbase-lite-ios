@@ -7,6 +7,7 @@ pipeline {
         stage('Checkout'){
             steps {
                 sh """
+			echo "===>${GIT_BRANCH}; => ${GIT_LOCAL_BRANCH}; => ${BRANCH_NAME}; => ${CHANGE_TARGET}; =>$env:CHANGE_TARGET;"
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git
                     pushd ${env.PRODUCT}
                     git submodule update --init --recursive
