@@ -99,7 +99,7 @@ typedef enum {
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
     BOOL _cancelSuspending;         // Cancel the current suspending request
     unsigned _conflictCount;        // Current number of conflict resolving tasks
-    BOOL _deferStoppedNotification; // Defer the stopped until finishing all conflict resolving tasks
+    BOOL _deferReplicatorNotification; // Defer the replicator notificayion until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
 }
 
@@ -366,7 +366,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         Assert(_rawStatus.level == kC4Stopped);
         // Update state:
         _state = kCBLStateStopped;
-        _deferStoppedNotification = NO;
         
         // Prevent self to get released when removing from the active replications:
         CBLReplicator* repl = self;
@@ -502,10 +501,15 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
-            if (_conflictCount > 0) {
-                CBLLogInfo(Sync, @"%@: Stopped but waiting for conflict resolution (pending = %d) "
-                                  "to finish before notifying.", self, _conflictCount);
-                _deferStoppedNotification = YES;
+        }
+        
+        // handle replicator status callback
+        if (_conflictCount > 0 && (c4Status.level == kC4Stopped || c4Status.level == kC4Idle)) {
+            CBLLogInfo(Sync, @"%@: Status = %d, but waiting for conflict resolution (pending = %d) "
+            "to finish before notifying.", self, c4Status.level, _conflictCount);
+            
+            _deferReplicatorNotification = YES;
+            if (c4Status.level == kC4Stopped) {
                 _state = kCBLStateStopping; // Will be stopped after all conflicts are resolved
             } else
                 [self stopped];
@@ -612,10 +616,20 @@ static void onDocsEnded(C4Replicator* repl,
     dispatch_async(_conflictQueue, ^{
         [self _resolveConflict: doc];
         CBL_LOCK(self) {
-            if (--_conflictCount == 0 && _deferStoppedNotification) {
-                Assert(_rawStatus.level == kC4Stopped);
-                Assert(_state == kCBLStateStopping);
-                [self stopped];
+            if (--_conflictCount == 0) {
+                if (_deferReplicatorNotification) {
+                    if (_rawStatus.level == kC4Stopped) {
+                        Assert(_state == kCBLStateStopping);
+                        
+                        [self stopped];
+                    } else {
+                        Assert(_rawStatus.level == kC4Idle);
+                        
+                        // Post status update:
+                        [self updateAndPostStatus];
+                    }
+                    _deferReplicatorNotification = NO;
+                }
             }
         }
     });
