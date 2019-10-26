@@ -19,15 +19,15 @@ pipeline {
 		    # restructure folders
 		    mv couchbase-lite-ios-ee/* .
 		    mv tmp/* couchbase-lite-ios
-
-		    # update the lite-core-EE
-		    pushd couchbase-lite-core-EE
-		    git submodule update --init --recursive
-		    popd
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
                     git submodule update --init --recursive
+		    popd
+
+		    # update the lite-core-EE
+		    pushd couchbase-lite-core-EE
+		    git submodule update --init --recursive
 		    popd
 
 		    # remove unnecessary folders
