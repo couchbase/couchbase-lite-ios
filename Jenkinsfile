@@ -15,6 +15,7 @@ pipeline {
                     mv !(tmp) tmp
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
 		    mv couchbase-lite-ios-ee/* .
+		    git submodule update --init --recursive
 		    mv tmp/* couchbase-lite-ios
 		    
 		    pushd couchbase-lite-ios
