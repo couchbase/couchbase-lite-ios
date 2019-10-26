@@ -1,8 +1,5 @@
 pipeline {
     agent { label 'mobile-builder-ios-pull-request'  }
-    environment {
-       PRODUCT = 'couchbase-lite-ios-ee'
-   }
     stages {
         stage('Checkout'){
             steps {
@@ -14,7 +11,7 @@ pipeline {
 		    # move PR related repo to tmp folder
 		    mkdir tmp
                     mv !(tmp) tmp
-                    git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
+                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
 
 		    # restructure folders
 		    mv couchbase-lite-ios-ee/* .
