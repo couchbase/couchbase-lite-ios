@@ -11,16 +11,26 @@ pipeline {
                     set -e
                     shopt -s extglob dotglob
 
+		    # move PR related repo to tmp folder
 		    mkdir tmp
                     mv !(tmp) tmp
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
-		    mv couchbase-lite-ios-ee/* .
+
+		    # update the lite-core-EE & lite-ios(which is not used)
+		    pushd couchbase-lite-ios-ee
 		    git submodule update --init --recursive
+		    popd
+
+		    # restructure folders
+		    mv couchbase-lite-ios-ee/* .
 		    mv tmp/* couchbase-lite-ios
 		    
+		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
                     git submodule update --init --recursive
 		    popd
+
+		    # remove unnecessary folders
 		    rmdir tmp
 		    rmdir couchbase-lite-ios-ee
 		    
