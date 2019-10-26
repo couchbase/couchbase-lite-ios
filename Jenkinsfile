@@ -7,6 +7,10 @@ pipeline {
         stage('Checkout'){
             steps {
                 sh """
+		    #!/bin/bash
+                    set -e
+                    shopt -s extglob dotglob
+
 		    mkdir tmp
                     mv !(tmp) tmp
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
