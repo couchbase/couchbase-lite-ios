@@ -29,7 +29,7 @@ pipeline {
         }
         stage('Build'){
             steps {
-                sh """ ./${env.PRODUCT}/couchbase-lite-ios/Scripts/pull_request_build.sh
+                sh """ ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
         }
