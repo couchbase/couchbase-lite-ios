@@ -19,7 +19,7 @@ pipeline {
 
 		    # update the lite-core-EE
 		    pushd couchbase-lite-core-EE
-		    git submodule update --init ./
+		    git pull
 		    popd
 		    
 		    # submodule update inside lite-ios
