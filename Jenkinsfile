@@ -44,7 +44,12 @@ pipeline {
 		    pwd
 		    ls
 		    git rev-parse HEAD
+
+		    pushd couchbase-lite-ios
+		    ls
+		    git rev-parse HEAD
 		    git log --graph --full-history --all --pretty=format:"%h%x09%d%x20%s"
+		    popd
 
 		    cat couchbase-lite-ios/Scripts/pull_request_build.sh
 		    ./couchbase-lite-ios/Scripts/pull_request_build.sh
