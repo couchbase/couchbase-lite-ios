@@ -25,11 +25,6 @@ pipeline {
                     git submodule update --init --recursive
 		    popd
 
-		    # update the lite-core-EE
-		    pushd couchbase-lite-core-EE
-		    git submodule update --init
-		    popd
-
 		    # remove unnecessary folders
 		    rmdir tmp
 		    rmdir couchbase-lite-ios-ee
