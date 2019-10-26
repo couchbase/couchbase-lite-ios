@@ -1,6 +1,6 @@
 #!/bin/bash -xe
 
-cd couchbase-lite-ios-ee/couchbase-lite-ios
+cd couchbase-lite-ios
 EDITIONS=("EE" "CE")
 for EDITION in "${EDITIONS[@]}"
 do
