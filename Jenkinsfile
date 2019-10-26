@@ -16,14 +16,14 @@ pipeline {
                     mv !(tmp) tmp
                     git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
 
-		    # update the lite-core-EE & lite-ios(which is not used)
-		    pushd couchbase-lite-ios-ee
-		    git submodule update --init --recursive
-		    popd
-
 		    # restructure folders
 		    mv couchbase-lite-ios-ee/* .
 		    mv tmp/* couchbase-lite-ios
+
+		    # update the lite-core-EE
+		    pushd couchbase-lite-core-EE
+		    git submodule update --init --recursive
+		    popd
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
