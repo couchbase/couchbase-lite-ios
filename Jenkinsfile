@@ -41,6 +41,11 @@ pipeline {
         stage('Build'){
             steps {
                 sh """ 
+		    pwd
+		    ls
+		    git rev-parse HEAD
+		    git log --graph --full-history --all --pretty=format:"%h%x09%d%x20%s"
+
 		    cat couchbase-lite-ios/Scripts/pull_request_build.sh
 		    ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
