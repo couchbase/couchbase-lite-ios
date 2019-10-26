@@ -40,7 +40,9 @@ pipeline {
         }
         stage('Build'){
             steps {
-                sh """ ./couchbase-lite-ios/Scripts/pull_request_build.sh
+                sh """ 
+		    cat couchbase-lite-ios/Scripts/pull_request_build.sh
+		    ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
         }
