@@ -27,7 +27,7 @@ pipeline {
 
 		    # update the lite-core-EE
 		    pushd couchbase-lite-core-EE
-		    git submodule update --init --recursive
+		    git submodule update --init
 		    popd
 
 		    # remove unnecessary folders
