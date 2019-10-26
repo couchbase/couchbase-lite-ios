@@ -7,15 +7,19 @@ pipeline {
         stage('Checkout'){
             steps {
                 sh """
-			echo "===>${GIT_BRANCH}; => ${GIT_LOCAL_BRANCH}; => ${BRANCH_NAME}; => ${CHANGE_TARGET}; =>$env:CHANGE_TARGET;"
-                    git clone https://github.com/couchbaselabs/${env.PRODUCT}.git
-                    pushd ${env.PRODUCT}
+		    mkdir tmp
+                    mv !(tmp) tmp
+                    git clone https://github.com/couchbaselabs/${env.PRODUCT}.git --branch $CHANGE_TARGET
+		    mv couchbase-lite-ios-ee/* .
+		    mv tmp/* couchbase-lite-ios
+		    
+		    pushd couchbase-lite-ios
                     git submodule update --init --recursive
-                    ./Scripts/prepare_project.sh
-                    cd couchbase-lite-ios
-		    git checkout ${GIT_BRANCH}
-		    git pull origin ${GIT_BRANCH}
-                    popd
+		    popd
+		    rmdir tmp
+		    rmdir couchbase-lite-ios-ee
+		    
+		    ./Scripts/prepare_project.sh
                 """
             }
         }
