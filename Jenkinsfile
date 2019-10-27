@@ -12,6 +12,10 @@ pipeline {
 		    mkdir tmp
                     mv !(tmp) tmp
                     git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
+		    # submodule update inside lite-ios
+		    pushd couchbase-lite-ios-ee
+                    git submodule update --init --recursive
+		    popd
 
 		    # restructure folders
 		    mv couchbase-lite-ios-ee/* .
