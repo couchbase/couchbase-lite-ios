@@ -29,7 +29,7 @@ pipeline {
 		    popd
 
 		    # remove tmp folders
-		    rm -rf tmp/*
+		    rmdir tmp
 		    rmdir couchbase-lite-ios-ee
 		    
 		    ./Scripts/prepare_project.sh
