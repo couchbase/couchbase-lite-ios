@@ -372,9 +372,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         CBL_LOCK(_config.database) {
             [_config.database.activeReplications removeObject: repl];
         }
-        
-        // Post status update:
-        [self updateAndPostStatus];
     }
 }
 
@@ -625,10 +622,10 @@ static void onDocsEnded(C4Replicator* repl,
             if (--_conflictCount == 0 && _deferReplicatorNotification) {
                 if (_rawStatus.level == kC4Stopped && _state == kCBLStateStopping) {
                     [self stopped];
-                } else if (_rawStatus.level == kC4Idle &&_state == kCBLStateRunning) {
-                    [self updateAndPostStatus];
                 }
+                
                 _deferReplicatorNotification = NO;
+                [self updateAndPostStatus];
             }
         }
     });
