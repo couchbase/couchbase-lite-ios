@@ -501,20 +501,24 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
+            
+            if (_conflictCount == 0)
+                [self stopped];
         }
         
-        // handle replicator status callback
+        // replicator status callback
+        /// stopped and idle state, we will defer status callback till conflicts finish resolving
         if (_conflictCount > 0 && (c4Status.level == kC4Stopped || c4Status.level == kC4Idle)) {
             CBLLogInfo(Sync, @"%@: Status = %d, but waiting for conflict resolution (pending = %d) "
             "to finish before notifying.", self, c4Status.level, _conflictCount);
             
             _deferReplicatorNotification = YES;
-            if (c4Status.level == kC4Stopped) {
-                _state = kCBLStateStopping; // Will be stopped after all conflicts are resolved
-            } else
-                [self stopped];
-        } else {
+            if (c4Status.level == kC4Stopped)
+                _state = kCBLStateStopping;
+        } else
             _deferReplicatorNotification = NO;
+        
+        if(!_deferReplicatorNotification) {
             [self updateAndPostStatus];
         }
         
