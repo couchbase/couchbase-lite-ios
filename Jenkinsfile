@@ -19,7 +19,8 @@ pipeline {
 
 		    # restructure folders
 		    mv -v couchbase-lite-ios-ee/* .
-		    mv -vf tmp/* couchbase-lite-ios/
+		    rsync -a tmp/ couchbase-lite-ios/
+		    rm -rf tmp/*
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
