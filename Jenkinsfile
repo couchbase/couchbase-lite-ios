@@ -1,26 +1,44 @@
 pipeline {
     agent { label 'mobile-builder-ios-pull-request'  }
-    environment {
-       PRODUCT = 'couchbase-lite-ios-ee'
-   }
     stages {
         stage('Checkout'){
             steps {
                 sh """
-                    git clone https://github.com/couchbaselabs/${env.PRODUCT}.git
-                    pushd ${env.PRODUCT}
+                    #!/bin/bash
+                    set -e
+                    shopt -s extglob dotglob
+
+		    # move PR related repo to tmp folder
+		    mkdir tmp
+                    mv !(tmp) tmp
+
+		    # clone and update submodules here
+                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
+		    # submodule update inside lite-ios
+		    pushd couchbase-lite-ios-ee
                     git submodule update --init --recursive
-                    ./Scripts/prepare_project.sh
-                    cd couchbase-lite-ios
-		    git checkout master
-		    git pull origin master
-                    popd
+		    popd
+
+		    # restructure folders
+		    mv couchbase-lite-ios-ee/* .
+		    rm -rf couchbase-lite-ios && mv tmp couchbase-lite-ios
+		    
+		    # submodule update inside lite-ios
+		    pushd couchbase-lite-ios
+                    git submodule update --init --recursive
+		    popd
+
+		    # remove tmp folders
+		    rmdir couchbase-lite-ios-ee
+		    
+		    ./Scripts/prepare_project.sh
                 """
             }
         }
         stage('Build'){
             steps {
-                sh """ ./${env.PRODUCT}/couchbase-lite-ios/Scripts/pull_request_build.sh
+                sh """ 
+		    ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
         }
