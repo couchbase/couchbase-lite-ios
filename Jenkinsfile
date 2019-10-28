@@ -18,8 +18,8 @@ pipeline {
 		    popd
 
 		    # restructure folders
-		    mv couchbase-lite-ios-ee/* .
-		    mv tmp/* couchbase-lite-ios
+		    mv -v couchbase-lite-ios-ee/* .
+		    mv -v tmp/* couchbase-lite-ios
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
