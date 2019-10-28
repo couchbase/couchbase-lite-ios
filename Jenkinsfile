@@ -20,8 +20,8 @@ pipeline {
 		    popd
 
 		    # restructure folders
-		    mv -v couchbase-lite-ios-ee/* .
-		    rsync -a tmp/ couchbase-lite-ios/
+		    mv couchbase-lite-ios-ee/* .
+		    rm -rf couchbase-lite-ios && mv tmp couchbase-lite-ios
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
