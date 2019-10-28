@@ -620,7 +620,8 @@ static void onDocsEnded(C4Replicator* repl,
         [self _resolveConflict: doc];
         CBL_LOCK(self) {
             if (--_conflictCount == 0 && _deferReplicatorNotification) {
-                if (_rawStatus.level == kC4Stopped && _state == kCBLStateStopping) {
+                if (_rawStatus.level == kC4Stopped) {
+                    Assert(_state == kCBLStateStopping);
                     [self stopped];
                 }
                 
