@@ -11,6 +11,8 @@ pipeline {
 		    # move PR related repo to tmp folder
 		    mkdir tmp
                     mv !(tmp) tmp
+
+		    # clone and update submodules here
                     git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios-ee
@@ -20,15 +22,14 @@ pipeline {
 		    # restructure folders
 		    mv -v couchbase-lite-ios-ee/* .
 		    rsync -a tmp/ couchbase-lite-ios/
-		    rm -rf tmp/*
 		    
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios
                     git submodule update --init --recursive
 		    popd
 
-		    # remove unnecessary folders
-		    rmdir tmp
+		    # remove tmp folders
+		    rm -rf tmp/*
 		    rmdir couchbase-lite-ios-ee
 		    
 		    ./Scripts/prepare_project.sh
