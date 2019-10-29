@@ -101,6 +101,7 @@ typedef enum {
     unsigned _conflictCount;        // Current number of conflict resolving tasks
     BOOL _deferStoppedNotification; // Defer the stopped until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
+    NSSet<NSString*>* _pendingDocumentIds;
 }
 
 @synthesize config=_config;
@@ -452,6 +453,38 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
             _progressLevel = kCBLProgressLevelBasic;
     }
+}
+
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
+    // FIXME: Invalidate pending doc Id
+    if (!_pendingDocumentIds)
+        return _pendingDocumentIds;
+    
+    if (_config.replicatorType > 1) {
+        *error = [NSError errorWithDomain: CBLErrorDomain
+                                     code: CBLErrorUnsupported
+                                 userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return [NSSet set];
+    }
+    
+    
+    if (!_repl) {
+        return [NSSet set];
+    }
+    
+    C4Error err;
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
+    FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
+    FLArray arr = FLValue_AsArray(val);
+    uint32_t count = FLArray_Count(arr);
+    NSMutableSet* docIds = [[NSMutableSet alloc] initWithCapacity: count];
+    for (uint32_t i = 0; i < count; i++) {
+        FLValue item = FLArray_Get(arr, i);
+        FLString strId = FLValue_AsString(item);
+        [docIds addObject: slice2string(strId)];
+    }
+    _pendingDocumentIds = [NSSet setWithSet: docIds];
+    return _pendingDocumentIds;
 }
 
 #pragma mark - STATUS CHANGES:
