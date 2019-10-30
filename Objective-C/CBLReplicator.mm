@@ -464,8 +464,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return [NSSet set];
     }
     
-    if (!_repl)
+    if (!_repl) {
+        CBLLogInfo(Sync, @"Trying to fetch pending documentIds without a c4replicator %@", _repl);
         return [NSSet set];
+    }
     
     C4Error c4err = {};
     C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
