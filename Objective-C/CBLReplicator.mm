@@ -515,7 +515,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         } else
             _deferReplicatorNotification = NO;
         
-        if(!_deferReplicatorNotification) {
+        if (!_deferReplicatorNotification) {
             [self updateAndPostStatus];
         }
         
