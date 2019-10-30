@@ -464,7 +464,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return [NSSet set];
     }
     
-    
     if (!_repl)
         return [NSSet set];
     
