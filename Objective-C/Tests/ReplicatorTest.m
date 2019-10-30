@@ -71,8 +71,6 @@
 }
 
 - (void) setUp {
-    // FIXME: remove when finish with debugging
-   // CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     // Delete otherdb:
     [self deleteDBNamed: @"otherdb" error: nil];
     

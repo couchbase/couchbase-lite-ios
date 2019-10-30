@@ -26,7 +26,6 @@ class ReplicatorTest: CBLTestCase {
     var repl: Replicator!
     
     override func setUp() {
-        Database.log.console.level = .verbose
         // Delete otherdb:
         try? deleteDB(name: "otherdb")
         super.setUp()
