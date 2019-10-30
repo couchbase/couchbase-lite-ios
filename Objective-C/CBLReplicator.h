@@ -153,6 +153,9 @@ typedef struct {
  */
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
+
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error;
+
 @end
 
 

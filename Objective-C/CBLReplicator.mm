@@ -456,34 +456,29 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
-    // FIXME: Invalidate pending doc Id
-    if (!_pendingDocumentIds)
-        return _pendingDocumentIds;
-    
     if (_config.replicatorType > 1) {
-        *error = [NSError errorWithDomain: CBLErrorDomain
-                                     code: CBLErrorUnsupported
-                                 userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                                         code: CBLErrorUnsupported
+                                     userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
         return [NSSet set];
     }
     
     
-    if (!_repl) {
+    if (!_repl)
         return [NSSet set];
-    }
+
     
     C4Error err;
     C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
+    
+    if (!result.size)
+        return [NSSet set];
+        
     FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
-    FLArray arr = FLValue_AsArray(val);
-    uint32_t count = FLArray_Count(arr);
-    NSMutableSet* docIds = [[NSMutableSet alloc] initWithCapacity: count];
-    for (uint32_t i = 0; i < count; i++) {
-        FLValue item = FLArray_Get(arr, i);
-        FLString strId = FLValue_AsString(item);
-        [docIds addObject: slice2string(strId)];
-    }
-    _pendingDocumentIds = [NSSet setWithSet: docIds];
+    NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
+    
+    _pendingDocumentIds = [NSSet setWithArray: list];
     return _pendingDocumentIds;
 }
 
