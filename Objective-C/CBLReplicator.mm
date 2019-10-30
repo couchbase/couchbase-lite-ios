@@ -468,7 +468,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
     
     if (!_repl) {
-        CBLLogInfo(Sync, @"Trying to fetch document pending status without a c4replicator");
+        CBLLogInfo(Sync, @"Trying to fetch document pending status without a c4replicator %@", _repl);
         return false;
     }
     
