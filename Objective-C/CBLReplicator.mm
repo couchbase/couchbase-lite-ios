@@ -499,7 +499,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             [self endBackgrounding];
         #endif
             
-            if (!_conflictCount)
+            if (_conflictCount > 0)
                 [self stopped];
         }
         
