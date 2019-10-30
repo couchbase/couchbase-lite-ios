@@ -454,6 +454,36 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+
+
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                code: CBLErrorUnsupported
+            userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return false;
+    }
+    
+    if (!_repl) {
+        CBLLogInfo(Sync, @"Trying to fetch document pending status without a c4replicator");
+        return false;
+    }
+    
+    C4Error c4err = {};
+    CBLStringBytes docID(documentID);
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", c4err.domain, c4err.code);
+        return false;
+    }
+    
+    return isPending;
+}
+
 #pragma mark - STATUS CHANGES:
 
 static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *context) {
