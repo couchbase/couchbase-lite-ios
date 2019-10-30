@@ -467,7 +467,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     if (!_repl)
         return [NSSet set];
-
     
     C4Error err;
     C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
