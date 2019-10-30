@@ -467,8 +467,13 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     if (!_repl)
         return [NSSet set];
     
-    C4Error err;
-    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
+    C4Error c4err = {};
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
+        return [NSSet set];
+    }
     
     if (!result.size)
         return [NSSet set];
