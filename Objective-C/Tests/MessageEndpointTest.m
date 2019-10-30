@@ -124,7 +124,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 - (void)setUp {
     [super setUp];
     // FIXME: remove when finish with debugging 
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    // CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     
     NSError* error;
     _otherDB = [self openDBNamed: @"otherdb" error: &error];
