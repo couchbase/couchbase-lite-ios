@@ -76,6 +76,7 @@
     
     [super setUp];
     
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     timeout = 5.0;
     pinServerCert = YES;
     NSError* error;

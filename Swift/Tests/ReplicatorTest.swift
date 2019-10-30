@@ -29,6 +29,8 @@ class ReplicatorTest: CBLTestCase {
         // Delete otherdb:
         try? deleteDB(name: "otherdb")
         super.setUp()
+        
+        Database.log.console.level = .verbose
         // Create otherdb:
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)

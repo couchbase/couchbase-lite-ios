@@ -99,6 +99,7 @@ MultipeerConnectionDelegate {
     
     override func setUp() {
         super.setUp()
+        Database.log.console.level = .verbose
         otherDB = try! openDB(name: "otherdb")
         XCTAssertNotNil(otherDB)
     }

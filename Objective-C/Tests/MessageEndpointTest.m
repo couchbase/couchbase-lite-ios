@@ -124,6 +124,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 - (void)setUp {
     [super setUp];
     
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     NSError* error;
     _otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
