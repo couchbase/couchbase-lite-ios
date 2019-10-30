@@ -134,6 +134,79 @@ typedef enum {
     return _config;
 }
 
+- (void) dealloc {
+    c4repl_free(_repl);
+    [_reachability stop];
+}
+
+- (NSString*) description {
+    if (!_desc)
+        _desc = [NSString stringWithFormat: @"%@[%s%s%s %@]",
+                 self.class,
+                 (isPull(_config.replicatorType) ? "<" : ""),
+                 (_config.continuous ? "*" : "-"),
+                 (isPush(_config.replicatorType)  ? ">" : ""),
+                 _config.target];
+    return _desc;
+}
+
+- (void) clearRepl {
+    c4repl_free(_repl);
+    _repl = nullptr;
+}
+
+- (void) start {
+    CBL_LOCK(self) {
+        CBLLogInfo(Sync, @"%@: Starting...", self);
+        if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
+            CBLWarn(Sync, @"%@ has already started (state = %d, status = %d); ignored.",
+                    self,  _state, _rawStatus.level);
+            return;
+        }
+        
+        _retryCount = 0;
+        [self _start];
+    }
+}
+
+- (void) resetAndScheduleRetry {
+    [self resetRetryCount];
+    [self scheduleRetry: 0];
+}
+
+- (void) scheduleRetry: (NSTimeInterval)delayInSeconds {
+    [self cancelRetry];
+    
+    __weak CBLReplicator *weakSelf = self;
+    _retryTimer = [CBLTimer scheduleIn: _dispatchQueue
+                                 after: delayInSeconds
+                                 block: ^{
+        [weakSelf _retry];
+    }];
+}
+
+- (void) resetRetryCount {
+    CBLLogVerbose(Sync, @"%@: Resetting the retry count", self);
+    _retryCount = 0;
+}
+
+- (void) _retry {
+    CBL_LOCK(self) {
+        CBLLogInfo(Sync, @"%@: Retrying...", self);
+        if (_repl || _state <= kCBLStateStopping) {
+            CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
+                       self, _state, _rawStatus.level);
+            return;
+        }
+        [self _start];
+    }
+}
+
+- (void) cancelRetry {
+    [CBLTimer cancel: _retryTimer];
+    _retryTimer = nil;
+}
+
 - (C4Replicator*) c4repl: (nullable C4Error*)c4err {
     if (_repl)
         return _repl;
@@ -228,79 +301,6 @@ typedef enum {
     }
     
     return _repl;
-}
-
-- (void) dealloc {
-    c4repl_free(_repl);
-    [_reachability stop];
-}
-
-- (NSString*) description {
-    if (!_desc)
-        _desc = [NSString stringWithFormat: @"%@[%s%s%s %@]",
-                 self.class,
-                 (isPull(_config.replicatorType) ? "<" : ""),
-                 (_config.continuous ? "*" : "-"),
-                 (isPush(_config.replicatorType)  ? ">" : ""),
-                 _config.target];
-    return _desc;
-}
-
-- (void) clearRepl {
-    c4repl_free(_repl);
-    _repl = nullptr;
-}
-
-- (void) start {
-    CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Starting...", self);
-        if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
-            CBLWarn(Sync, @"%@ has already started (state = %d, status = %d); ignored.",
-                    self,  _state, _rawStatus.level);
-            return;
-        }
-        
-        _retryCount = 0;
-        [self _start];
-    }
-}
-
-- (void) resetAndScheduleRetry {
-    [self resetRetryCount];
-    [self scheduleRetry: 0];
-}
-
-- (void) scheduleRetry: (NSTimeInterval)delayInSeconds {
-    [self cancelRetry];
-    
-    __weak CBLReplicator *weakSelf = self;
-    _retryTimer = [CBLTimer scheduleIn: _dispatchQueue
-                                 after: delayInSeconds
-                                 block: ^{
-        [weakSelf _retry];
-    }];
-}
-
-- (void) resetRetryCount {
-    CBLLogVerbose(Sync, @"%@: Resetting the retry count", self);
-    _retryCount = 0;
-}
-
-- (void) _retry {
-    CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Retrying...", self);
-        if (_repl || _state <= kCBLStateStopping) {
-            CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
-                       self, _state, _rawStatus.level);
-            return;
-        }
-        [self _start];
-    }
-}
-
-- (void) cancelRetry {
-    [CBLTimer cancel: _retryTimer];
-    _retryTimer = nil;
 }
 
 - (void) _start {
