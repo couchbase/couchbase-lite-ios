@@ -74,7 +74,6 @@
     [doc setString:@"Smokey" forKey:@"name"];
     [self saveDocument: doc];
     
-    
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
 
