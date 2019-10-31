@@ -207,7 +207,7 @@ typedef enum {
     _retryTimer = nil;
 }
 
-- (C4Replicator*) c4repl: (nullable C4Error*)c4err {
+- (C4Replicator*) c4repl: (C4Error*)c4err {
     if (_repl)
         return _repl;
     
@@ -286,18 +286,8 @@ typedef enum {
     _state = kCBLStateStarting;
     _cancelSuspending = NO;
     
-    C4Error err;
     CBL_LOCK(_config.database) {
-        _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
-        
-        if (!_repl) {
-            NSError *error = nil;
-            convertError(err, &error);
-            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
-                         self, error.localizedDescription);
-            *c4err = err;
-            return nil;
-        }
+        _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
     }
     
     return _repl;
@@ -306,6 +296,13 @@ typedef enum {
 - (void) _start {
     C4Error err;
     C4Replicator* repl = [self c4repl: &err];
+    if (!_repl) {
+        NSError *error = nil;
+        convertError(err, &error);
+        CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, error.localizedDescription);
+        return;
+    }
+    
     CBL_LOCK(_config.database) {
         c4repl_start(repl);
     }
