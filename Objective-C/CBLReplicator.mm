@@ -101,6 +101,7 @@ typedef enum {
     unsigned _conflictCount;        // Current number of conflict resolving tasks
     BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
+    NSSet<NSString*>* _pendingDocumentIds;
 }
 
 @synthesize config=_config;
@@ -450,7 +451,37 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                                         code: CBLErrorUnsupported
+                                     userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return [NSSet set];
+    }
+    
+    if (!_repl) {
+        CBLLogInfo(Sync, @"Trying to fetch pending documentIds without a c4replicator %@", _repl);
+        return [NSSet set];
+    }
+    
+    C4Error c4err = {};
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
+        return [NSSet set];
+    }
+    
+    if (result.size <= 0)
+        return [NSSet set];
+        
+    FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
+    NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
+    
+    _pendingDocumentIds = [NSSet setWithArray: list];
+    return _pendingDocumentIds;
+}
 
 - (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);

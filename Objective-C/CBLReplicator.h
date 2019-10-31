@@ -153,8 +153,14 @@ typedef struct {
  */
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
-
-
+/**
+ Gets a set of document Ids, who have revisions pending push. This API is a snapshot and results may
+ change between the time the call was made and the time the call returns.
+ 
+ @param error error On return, the error if any.
+ @return A  set of document Ids, each of which has one or more pending revisions
+ */
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error;
 
 /**
  Checks if the document with the given ID has revisions pending push.  This API is a snapshot and results may
