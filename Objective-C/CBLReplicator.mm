@@ -296,7 +296,7 @@ typedef enum {
 - (void) _start {
     C4Error err;
     C4Replicator* repl = [self c4repl: &err];
-    if (!_repl) {
+    if (!repl) {
         NSError *error = nil;
         convertError(err, &error);
         CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, error.localizedDescription);
@@ -323,7 +323,7 @@ typedef enum {
     }
     
     // Post an initial notification:
-    statusChanged(_repl, status, (__bridge void*)self);
+    statusChanged(repl, status, (__bridge void*)self);
 }
 
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
