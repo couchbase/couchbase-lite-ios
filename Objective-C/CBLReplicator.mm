@@ -99,7 +99,7 @@ typedef enum {
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
     BOOL _cancelSuspending;         // Cancel the current suspending request
     unsigned _conflictCount;        // Current number of conflict resolving tasks
-    BOOL _deferReplicatorNotification; // Defer the replicator notification until finishing all conflict resolving tasks
+    BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
 }
 
