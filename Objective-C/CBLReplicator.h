@@ -162,6 +162,17 @@ typedef struct {
  */
 - (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error;
 
+/**
+ Checks if the document with the given ID has revisions pending push.  This API is a snapshot and results may
+ change between the time the call was made and the time the call returns.
+
+ @param documentID The ID of the document to check
+ @param error error On return, the error if any.
+ @return true if the document has one or more revisions pending, false otherwise
+ 
+ */
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error;
+
 @end
 
 
