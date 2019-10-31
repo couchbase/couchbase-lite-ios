@@ -99,8 +99,9 @@ typedef enum {
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
     BOOL _cancelSuspending;         // Cancel the current suspending request
     unsigned _conflictCount;        // Current number of conflict resolving tasks
-    BOOL _deferStoppedNotification; // Defer the stopped until finishing all conflict resolving tasks
+    BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
     dispatch_source_t _retryTimer;
+    NSSet<NSString*>* _pendingDocumentIds;
 }
 
 @synthesize config=_config;
@@ -376,16 +377,12 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         Assert(_rawStatus.level == kC4Stopped);
         // Update state:
         _state = kCBLStateStopped;
-        _deferStoppedNotification = NO;
         
         // Prevent self to get released when removing from the active replications:
         CBLReplicator* repl = self;
         CBL_LOCK(_config.database) {
             [_config.database.activeReplications removeObject: repl];
         }
-        
-        // Post status update:
-        [self updateAndPostStatus];
     }
 }
 
@@ -464,6 +461,66 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                                         code: CBLErrorUnsupported
+                                     userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return [NSSet set];
+    }
+    
+    if (!_repl) {
+        CBLLogInfo(Sync, @"Trying to fetch pending documentIds without a c4replicator %@", _repl);
+        return [NSSet set];
+    }
+    
+    C4Error c4err = {};
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
+        return [NSSet set];
+    }
+    
+    if (result.size <= 0)
+        return [NSSet set];
+        
+    FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
+    NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
+    
+    _pendingDocumentIds = [NSSet setWithArray: list];
+    return _pendingDocumentIds;
+}
+
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                code: CBLErrorUnsupported
+            userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return false;
+    }
+    
+    if (!_repl) {
+        CBLLogInfo(Sync, @"Trying to fetch document pending status without a c4replicator %@", _repl);
+        return false;
+    }
+    
+    C4Error c4err = {};
+    CBLStringBytes docID(documentID);
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", c4err.domain, c4err.code);
+        return false;
+    }
+    
+    return isPending;
+}
+
 #pragma mark - STATUS CHANGES:
 
 static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *context) {
@@ -512,14 +569,24 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
-            if (_conflictCount > 0) {
-                CBLLogInfo(Sync, @"%@: Stopped but waiting for conflict resolution (pending = %d) "
-                                  "to finish before notifying.", self, _conflictCount);
-                _deferStoppedNotification = YES;
-                _state = kCBLStateStopping; // Will be stopped after all conflicts are resolved
-            } else
+            
+            if (_conflictCount == 0)
                 [self stopped];
+        }
+        
+        // replicator status callback
+        /// stopped and idle state, we will defer status callback till conflicts finish resolving
+        if (_conflictCount > 0 && (c4Status.level == kC4Stopped || c4Status.level == kC4Idle)) {
+            CBLLogInfo(Sync, @"%@: Status = %d, but waiting for conflict resolution (pending = %d) "
+            "to finish before notifying.", self, c4Status.level, _conflictCount);
+            
+            _deferReplicatorNotification = YES;
+            if (c4Status.level == kC4Stopped)
+                _state = kCBLStateStopping;
         } else
+            _deferReplicatorNotification = NO;
+        
+        if (!_deferReplicatorNotification)
             [self updateAndPostStatus];
         
         if (resume)
@@ -622,10 +689,14 @@ static void onDocsEnded(C4Replicator* repl,
     dispatch_async(_conflictQueue, ^{
         [self _resolveConflict: doc];
         CBL_LOCK(self) {
-            if (--_conflictCount == 0 && _deferStoppedNotification) {
-                Assert(_rawStatus.level == kC4Stopped);
-                Assert(_state == kCBLStateStopping);
-                [self stopped];
+            if (--_conflictCount == 0 && _deferReplicatorNotification) {
+                if (_rawStatus.level == kC4Stopped) {
+                    Assert(_state == kCBLStateStopping);
+                    [self stopped];
+                }
+                
+                _deferReplicatorNotification = NO;
+                [self updateAndPostStatus];
             }
         }
     });
