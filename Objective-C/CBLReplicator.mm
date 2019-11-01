@@ -474,7 +474,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
     
     if (result.size <= 0)
-        return nil;
+        return [NSSet set];
         
     FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
     NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
