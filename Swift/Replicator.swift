@@ -175,6 +175,23 @@ public final class Replicator {
         _impl.removeChangeListener(with: token._impl)
     }
     
+    /// Gets a set of document Ids, who have revisions pending push. This API is a snapshot and results
+    /// may change between the time the call was made and the time the call returns.
+    ///
+    /// - Returns: A  set of document Ids, each of which has one or more pending revisions
+    public func pendingDocumentIds() throws -> Set<String> {
+        return try _impl.pendingDocumentIds()
+    }
+    
+    /// Checks if the document with the given ID has revisions pending push.  This API is a snapshot and
+    /// results may change between the time the call was made and the time the call returns.
+    ///
+    /// - Parameter documentID: The ID of the document to check
+    /// - Returns: true if the document has one or more revisions pending, false otherwise
+    public func isDocumentPending(_ documentID: String) throws -> Bool {
+        return try _impl.isDocumentPending(documentID)
+    }
+    
     // MARK: Internal
     
     func registerActiveReplicator() {
