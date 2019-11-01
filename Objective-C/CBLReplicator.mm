@@ -75,7 +75,8 @@ typedef enum {
     kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
     kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
     kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
-    kCBLStateStarting           ///< The replicator was asked to start but in progress.
+    kCBLStateStarting,          ///< The replicator was asked to start but in progress.
+    kCBLStateCreated            ///< The replicator was created but not ask to start.
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
@@ -137,6 +138,7 @@ typedef enum {
 - (void) dealloc {
     c4repl_free(_repl);
     [_reachability stop];
+    _repl = nullptr;
 }
 
 - (NSString*) description {
@@ -158,7 +160,7 @@ typedef enum {
 - (void) start {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Starting...", self);
-        if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
+        if (_state != kCBLStateStopped && _state != kCBLStateSuspended && _state != kCBLStateCreated) {
             CBLWarn(Sync, @"%@ has already started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
@@ -193,7 +195,7 @@ typedef enum {
 - (void) _retry {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Retrying...", self);
-        if (_repl || _state <= kCBLStateStopping) {
+        if ((_repl && _state != kCBLStateCreated) || _state <= kCBLStateStopping) {
             CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
                        self, _state, _rawStatus.level);
             return;
@@ -208,89 +210,89 @@ typedef enum {
 }
 
 - (C4Replicator*) c4repl: (C4Error*)c4err {
-    if (_repl)
-        return _repl;
-    
-    // Target:
-    id<CBLEndpoint> endpoint = _config.target;
-    C4Address addr = {};
-    CBLDatabase* otherDB = nil;
-    NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
-    CBLStringBytes dbName(remoteURL.path.lastPathComponent);
-    CBLStringBytes scheme(remoteURL.scheme);
-    CBLStringBytes host(remoteURL.host);
-    CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
-    if (remoteURL) {
-        // Fill out the C4Address:
-        NSUInteger port = [remoteURL.port unsignedIntegerValue];
-        addr = {
-            .scheme = scheme,
-            .hostname = host,
-            .port = (uint16_t)port,
-            .path = path
-        };
-    } else {
+    CBL_LOCK(self) {
+        if (_repl)
+            return _repl;
+        
+        // Target:
+        id<CBLEndpoint> endpoint = _config.target;
+        C4Address addr = {};
+        CBLDatabase* otherDB = nil;
+        NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
+        CBLStringBytes dbName(remoteURL.path.lastPathComponent);
+        CBLStringBytes scheme(remoteURL.scheme);
+        CBLStringBytes host(remoteURL.host);
+        CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
+        if (remoteURL) {
+            // Fill out the C4Address:
+            NSUInteger port = [remoteURL.port unsignedIntegerValue];
+            addr = {
+                .scheme = scheme,
+                .hostname = host,
+                .port = (uint16_t)port,
+                .path = path
+            };
+        } else {
 #ifdef COUCHBASE_ENTERPRISE
-        otherDB = $castIf(CBLDatabaseEndpoint, endpoint).database;
+            otherDB = $castIf(CBLDatabaseEndpoint, endpoint).database;
 #else
-        Assert(remoteURL, @"Endpoint has no URL");
+            Assert(remoteURL, @"Endpoint has no URL");
 #endif
-    }
-
-    // Encode the options:
-    alloc_slice optionsFleece;
-    
-    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
-    
-    // Update resetCheckpoint flag if needed:
-    if (_resetCheckpoint) {
-        options[@kC4ReplicatorResetCheckpoint] = @(YES);
-        _resetCheckpoint = NO;
-    }
-    
-    if (options.count) {
-        Encoder enc;
-        enc << options;
-        optionsFleece = enc.finish();
-    }
-    
-    _allowReachability = YES;
-    C4SocketFactory socketFactory = { };
+        }
+        
+        // Encode the options:
+        alloc_slice optionsFleece;
+        
+        NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+        options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
+        
+        // Update resetCheckpoint flag if needed:
+        if (_resetCheckpoint) {
+            options[@kC4ReplicatorResetCheckpoint] = @(YES);
+            _resetCheckpoint = NO;
+        }
+        
+        if (options.count) {
+            Encoder enc;
+            enc << options;
+            optionsFleece = enc.finish();
+        }
+        
+        _allowReachability = YES;
+        C4SocketFactory socketFactory = { };
 #ifdef COUCHBASE_ENTERPRISE
-    auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
-    if (messageEndpoint) {
-        socketFactory = messageEndpoint.socketFactory;
-        addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
-        _allowReachability = NO;
-    } else
+        auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
+        if (messageEndpoint) {
+            socketFactory = messageEndpoint.socketFactory;
+            addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
+            _allowReachability = NO;
+        } else
 #endif
-        if (remoteURL)
-            socketFactory = CBLWebSocket.socketFactory;
-    socketFactory.context = (__bridge void*)self;
-    
-    // Create a C4Replicator:
-    C4ReplicatorParameters params = {
-        .push = mkmode(isPush(_config.replicatorType), _config.continuous),
-        .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-        .pushFilter = filter(_config.pushFilter, true),
-        .validationFunc = filter(_config.pullFilter, false),
-        .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
-        .onStatusChanged = &statusChanged,
-        .onDocumentsEnded = &onDocsEnded,
-        .callbackContext = (__bridge void*)self,
-        .socketFactory = &socketFactory,
-        .dontStart = true,
-    };
-    
-    _state = kCBLStateStarting;
-    _cancelSuspending = NO;
-    
-    CBL_LOCK(_config.database) {
-        _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
+            if (remoteURL)
+                socketFactory = CBLWebSocket.socketFactory;
+        socketFactory.context = (__bridge void*)self;
+        
+        // Create a C4Replicator:
+        C4ReplicatorParameters params = {
+            .push = mkmode(isPush(_config.replicatorType), _config.continuous),
+            .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+            .pushFilter = filter(_config.pushFilter, true),
+            .validationFunc = filter(_config.pullFilter, false),
+            .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
+            .onStatusChanged = &statusChanged,
+            .onDocumentsEnded = &onDocsEnded,
+            .callbackContext = (__bridge void*)self,
+            .socketFactory = &socketFactory,
+            .dontStart = true,
+        };
+        
+        CBL_LOCK(_config.database) {
+            _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
+        }
+        
+        _state = kCBLStateCreated;
+        return _repl;
     }
-    
-    return _repl;
 }
 
 - (void) _start {
@@ -303,6 +305,9 @@ typedef enum {
         return;
     }
     
+    _state = kCBLStateStarting;
+    _cancelSuspending = NO;
+
     CBL_LOCK(_config.database) {
         c4repl_start(repl);
     }
@@ -318,9 +323,8 @@ typedef enum {
         if (!_config.allowReplicatingInBackground)
             [self setupBackgrounding];
     #endif
-    } else {
+    } else
         status = {kC4Stopped, {}, err};
-    }
     
     // Post an initial notification:
     statusChanged(repl, status, (__bridge void*)self);
@@ -360,7 +364,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) _stop {
     [self cancelRetry];
     
-    if (_repl) {
+    if (_repl && _state != kCBLStateCreated) {
         // Stop the replicator:
         c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
     } else if (_rawStatus.level == kC4Offline) {
@@ -470,13 +474,19 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return nil;
     }
     
-    if (!_repl) {
-        CBLLogInfo(Sync, @"Trying to fetch pending documentIds without a c4replicator %@", _repl);
+    C4Error c4err = {};
+    C4Replicator* repl = [self c4repl: &c4err];
+    if (!repl) {
+        NSError* err = nil;
+        convertError(c4err, &err);
+        CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, err.localizedDescription);
+        if (error)
+            *error = err;
         return nil;
     }
     
-    C4Error c4err = {};
-    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
+    c4err = {};
+    C4SliceResult result = c4repl_getPendingDocIDs(repl, &c4err);
     if (c4err.code > 0) {
         convertError(c4err, error);
         CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
@@ -504,14 +514,20 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return false;
     }
     
-    if (!_repl) {
-        CBLLogInfo(Sync, @"Trying to fetch document pending status without a c4replicator %@", _repl);
+    C4Error c4err = {};
+    C4Replicator* repl = [self c4repl: &c4err];
+    if (!repl) {
+        NSError* err = nil;
+        convertError(c4err, &err);
+        CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, err.localizedDescription);
+        if (error)
+            *error = err;
         return false;
     }
     
-    C4Error c4err = {};
+    c4err = {};
     CBLStringBytes docID(documentID);
-    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &c4err);
+    BOOL isPending = c4repl_isDocumentPending(repl, docID, &c4err);
     if (c4err.code > 0) {
         convertError(c4err, error);
         CBLWarnError(Sync, @"Error getting document pending status: %d/%d", c4err.domain, c4err.code);
