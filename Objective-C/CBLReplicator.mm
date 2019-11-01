@@ -457,12 +457,12 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
             *error = [NSError errorWithDomain: CBLErrorDomain
                                          code: CBLErrorUnsupported
                                      userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
-        return [NSSet set];
+        return nil;
     }
     
     if (!_repl) {
         CBLLogInfo(Sync, @"Trying to fetch pending documentIds without a c4replicator %@", _repl);
-        return [NSSet set];
+        return nil;
     }
     
     C4Error c4err = {};
@@ -470,11 +470,11 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     if (c4err.code > 0) {
         convertError(c4err, error);
         CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
-        return [NSSet set];
+        return nil;
     }
     
     if (result.size <= 0)
-        return [NSSet set];
+        return nil;
         
     FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
     NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
