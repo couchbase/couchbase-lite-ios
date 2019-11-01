@@ -21,6 +21,9 @@
 
 #define kDocIdFormat @"doc-%d"
 #define kActionKey @"action-key"
+#define kNoOfDocument 5
+#define kCreateActionValue @"doc-create"
+#define kUpdateActionValue @"doc-update"
 
 @interface ReplicatorTest_PendingDocIds : ReplicatorTest
 
@@ -32,66 +35,67 @@
 
 #pragma mark - Helper Methods
 
-- (void) createDocs: (int)count action: (NSString*)action {
-    for (int i = 0; i < count; i++) {
+- (NSSet*) createDocs {
+    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
+    for (int i = 0; i < kNoOfDocument; i++) {
         NSString* docId = [NSString stringWithFormat: kDocIdFormat, i];
         CBLMutableDocument* doc = [self createDocument: docId];
-        [doc setString: action forKey: kActionKey];
+        [doc setString: kCreateActionValue forKey: kActionKey];
         [self saveDocument: doc];
+        [docIds addObject: docId];
     }
+    return [NSSet setWithSet: docIds];
 }
 
-- (void) updateDocs: (int)count action: (NSString*)action {
-    for (int i = 0; i < count; i++) {
-        NSString* docId = [NSString stringWithFormat: kDocIdFormat, i];
-        CBLMutableDocument* doc = [[self.db documentWithID: docId] toMutable];
-        [doc setString: action forKey: kActionKey];
-        [self saveDocument: doc];
-    }
-}
-
-- (void) deleteDocs: (int)count {
-    for (int i = 0; i < count; i++) {
-        NSError* err = nil;
-        NSString* docId = [NSString stringWithFormat: kDocIdFormat, i];
-        CBLDocument* doc = [self.db documentWithID: docId];
-        [self.db deleteDocument: doc error: &err];
-        AssertNil(err);
-    }
-}
-
-- (void) validatePendingDocumentIds: (nullable NSString*)action {
+- (void) validatePendingDocumentIds: (NSSet*)docIds action: (nullable NSString*)action count: (NSUInteger)count {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
 
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
-    __block BOOL finishReplicating = NO;
     __weak typeof(self) wSelf = self;
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         replicator = r;
-        
-        [replicator addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
-            finishReplicating = YES;
-        }];
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
             __strong id strongSelf = wSelf;
             
             NSError* err = nil;
-            NSSet* docIds = [change.replicator pendingDocumentIds: &err];
-            XCTAssertNil(err);
+            NSSet* ids = [change.replicator pendingDocumentIds: &err];
+            AssertNil(err);
             
             if (action)
-                [strongSelf validateAction: action forDocIds: docIds];
+                [strongSelf validateAction: action forDocIds: ids];
             
             if (change.status.activity == kCBLReplicatorConnecting) {
-                XCTAssert(docIds.count == 5u);
-            } else if (change.status.activity == kCBLReplicatorBusy) {
-                if (!finishReplicating)
-                    XCTAssert(docIds.count != 0);
+                Assert([ids isEqualToSet: docIds]);
+                AssertEqual(ids.count, count);
             } else if (change.status.activity == kCBLReplicatorStopped) {
-                XCTAssertEqual(docIds.count, 0);
+                AssertEqual(ids.count, 0);
+            }
+        }];
+    }];
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) validateIsDocumentPending: (NSString*)docId isPresent: (BOOL)isPresent {
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        
+        token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+            NSError* err = nil;
+            BOOL present = [change.replicator isDocumentPending: docId error: &err];
+            AssertNil(err);
+            
+            if (change.status.activity == kCBLReplicatorConnecting) {
+                AssertEqual(present, isPresent);
+            } else if (change.status.activity == kCBLReplicatorStopped) {
+                AssertEqual(present, NO);
             }
         }];
     }];
@@ -106,6 +110,7 @@
 }
 
 #pragma mark - Unit Tests
+#pragma mark - pendingDocumentIds API
 
 - (void) testPendingDocIDsPullOnlyException {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
@@ -129,18 +134,123 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testPendingDocIDs {
-    NSString* action = @"create";
-    int total = 5;
-    [self createDocs: total action: action];
-    [self validatePendingDocumentIds: action];
+- (void) testPendingDocIDsWithCreate {
+    NSSet* docIds = [self createDocs];
+    [self validatePendingDocumentIds: docIds action: kCreateActionValue count: kNoOfDocument];
+}
+
+- (void) testPendingDocIDsWithEdit {
+    NSSet* docIds = [self createDocs];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
     
-    action = @"update";
-    [self updateDocs: total action: action];
-    [self validatePendingDocumentIds: action];
+    // update all docs
+    for (NSString* docId in docIds) {
+        CBLMutableDocument* doc = [[self.db documentWithID: docId] toMutable];
+        [doc setString: kUpdateActionValue forKey: kActionKey];
+        [self saveDocument: doc];
+    }
+    [self validatePendingDocumentIds: docIds action: kUpdateActionValue count: kNoOfDocument];
+}
+
+- (void) testPendingDocIdsWithDelete {
+    NSSet* docIds = [self createDocs];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
     
-    [self deleteDocs: total];
-    [self validatePendingDocumentIds: nil];
+    // delete all docs
+    for (NSString* docId in docIds) {
+        NSError* err = nil;
+        CBLDocument* doc = [self.db documentWithID: docId];
+        [self.db deleteDocument: doc error: &err];
+        AssertNil(err);
+    }
+    [self validatePendingDocumentIds: docIds action: nil count: kNoOfDocument];
+}
+
+- (void) testPendingDocIdsWithPurge {
+    NSSet* docIds = [self createDocs];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // purge random doc
+    NSError* err = nil;
+    int i = arc4random_uniform(kNoOfDocument);
+    NSString* docId = [NSString stringWithFormat: kDocIdFormat, i];
+    CBLDocument* doc = [self.db documentWithID: docId];
+    [self.db purgeDocument: doc error: &err];
+    AssertNil(err);
+    
+    NSMutableSet* updatedDocIds = [NSMutableSet setWithSet: docIds];
+    [updatedDocIds removeObject: docId];
+    [self validatePendingDocumentIds: updatedDocIds
+                              action: nil
+                               count: kNoOfDocument - 1];
+}
+
+#pragma mark - IsDocumentPending API
+
+- (void) testIsDocumentPendingPullOnlyException {
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    
+    __block id<CBLListenerToken> token;
+    __block CBLReplicator* replicator;
+    __weak typeof(self) wSelf = self;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        
+        token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+            if (change.status.activity == kCBLReplicatorBusy) {
+                [wSelf expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
+                    return [change.replicator isDocumentPending: @"document-id" error: err];
+                }];
+            }
+        }];
+    }];
+    
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) _testIsDocumentPendingWithCreate {
+    NSString* docId = @"doc-1";
+    CBLMutableDocument* doc = [self createDocument: docId];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    [self validateIsDocumentPending: docId isPresent: YES];
+    
+    docId = @"doc-2";
+    doc = [self createDocument: docId];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    [self validateIsDocumentPending: @"no-doc" isPresent: NO];
+}
+
+- (void) _testIsDocumentPendingWithUpdate {
+    NSString* docId = @"doc-1";
+    CBLMutableDocument* doc = [self createDocument: docId];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // update doc
+    doc = [[self.db documentWithID: docId] toMutable];
+    [doc setString: @"udpate1" forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    [self validateIsDocumentPending: docId isPresent: YES];
+    
+    // update doc
+    doc = [[self.db documentWithID: docId] toMutable];
+    [doc setString: @"update2" forKey: kActionKey];
+    [self saveDocument: doc];
+    [self validateIsDocumentPending: @"no-doc" isPresent: NO];
 }
 
 #endif
