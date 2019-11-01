@@ -180,7 +180,13 @@ public final class Replicator {
     ///
     /// - Returns: A  set of document Ids, each of which has one or more pending revisions
     public func pendingDocumentIds() throws -> Set<String> {
-        return try _impl.pendingDocumentIds()
+        var error: NSError?
+        let result = _impl.pendingDocumentIds(&error)
+        if let err = error {
+            throw err
+        }
+        
+        return result
     }
     
     /// Checks if the document with the given ID has revisions pending push.  This API is a snapshot and
@@ -189,7 +195,13 @@ public final class Replicator {
     /// - Parameter documentID: The ID of the document to check
     /// - Returns: true if the document has one or more revisions pending, false otherwise
     public func isDocumentPending(_ documentID: String) throws -> Bool {
-        return try _impl.isDocumentPending(documentID)
+        var error: NSError?
+        let result = _impl.isDocumentPending(documentID, error: &error)
+        if let err = error {
+            throw err
+        }
+        
+        return result
     }
     
     // MARK: Internal

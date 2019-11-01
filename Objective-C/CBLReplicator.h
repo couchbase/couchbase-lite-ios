@@ -160,7 +160,7 @@ typedef struct {
  @param error error On return, the error if any.
  @return A  set of document Ids, each of which has one or more pending revisions
  */
-- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error __attribute__((swift_error(nonnull_error)));
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  Checks if the document with the given ID has revisions pending push.  This API is a snapshot and results may
@@ -171,7 +171,7 @@ typedef struct {
  @return true if the document has one or more revisions pending, false otherwise
  
  */
-- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error __attribute__((swift_error(nonnull_error)));
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW;
 
 @end
 
