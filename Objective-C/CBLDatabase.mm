@@ -974,7 +974,10 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
                        docID, localDoc.revisionID, remoteDoc.revisionID);
             
-            resolvedDoc = [conflictResolver resolve: conflict];
+            if (localDoc.isDeleted && remoteDoc.isDeleted)
+                resolvedDoc = remoteDoc;
+            else
+                resolvedDoc = [conflictResolver resolve: conflict];
             
             if (resolvedDoc && resolvedDoc.id != docID) {
                 CBLWarn(Sync, @"The document ID of the resolved document '%@' is not matching "
