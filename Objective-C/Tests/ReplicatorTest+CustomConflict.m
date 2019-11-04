@@ -269,7 +269,8 @@
     
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    // it should only come into this once.
+    // it should only call resolver once. 
+    // since second time, both revisions are deleted, and automatically resolve
     AssertEqual(count, 1);
     
     // Check whether it deletes the document and returns nil.
