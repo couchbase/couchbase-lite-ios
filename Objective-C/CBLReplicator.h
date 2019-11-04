@@ -173,6 +173,8 @@ typedef struct {
  */
 - (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW;
 
+- (void) test;
+
 @end
 
 

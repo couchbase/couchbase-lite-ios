@@ -134,13 +134,28 @@
     int total = 5;
     [self createDocs: total action: action];
     [self validatePendingDocumentIds: action];
+//    
+//    action = @"update";
+//    [self updateDocs: total action: action];
+//    [self validatePendingDocumentIds: action];
+//    
+//    [self deleteDocs: total];
+//    [self validatePendingDocumentIds: nil];
+}
+
+- (void) testReplicator {
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     
-    action = @"update";
-    [self updateDocs: total action: action];
-    [self validatePendingDocumentIds: action];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    [replicator test];
     
-    [self deleteDocs: total];
-    [self validatePendingDocumentIds: nil];
+    
+    [replicator start];
+    
+    // time to stop and clear the replicator
+    [NSThread sleepForTimeInterval: 1.0];
+
 }
 
 #endif

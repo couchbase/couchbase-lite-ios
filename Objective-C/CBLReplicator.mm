@@ -209,6 +209,18 @@ typedef enum {
     _retryTimer = nil;
 }
 
+- (void) test {
+    C4Error err = {};
+    C4Replicator* repl = [self c4repl: &err];
+    if (!repl) {
+        NSError* error;
+        convertError(err,  &error);
+        NSLog(@"----------- > Error %@", error);
+        return;
+    }
+    NSLog(@"--------- > created successfully");
+}
+
 - (C4Replicator*) c4repl: (C4Error*)c4err {
     CBL_LOCK(self) {
         if (_repl)
