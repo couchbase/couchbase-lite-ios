@@ -379,7 +379,6 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-
 #endif
 
 @end
