@@ -964,20 +964,21 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         
         conflictResolver = conflictResolver ?: [CBLConflictResolver default];
         
-        CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
-                                                  localDocument: localDoc.isDeleted ? nil : localDoc
-                                                 remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
-        
         // Resolve conflict:
         CBLDocument* resolvedDoc;
         @try {
             CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
                        docID, localDoc.revisionID, remoteDoc.revisionID);
             
-            if (localDoc.isDeleted && remoteDoc.isDeleted)
+            if (localDoc.isDeleted && remoteDoc.isDeleted) {
                 resolvedDoc = remoteDoc;
-            else
+            } else {
+                CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
+                                                          localDocument: localDoc.isDeleted ? nil : localDoc
+                                                         remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
+                
                 resolvedDoc = [conflictResolver resolve: conflict];
+            }
             
             if (resolvedDoc && resolvedDoc.id != docID) {
                 CBLWarn(Sync, @"The document ID of the resolved document '%@' is not matching "
