@@ -247,6 +247,37 @@
                                                            includeDeleted: YES error: &error].sequence);
 }
 
+- (void) testConflictResolverDeletedBothRev {
+    NSString* docId = @"doc";
+    NSDictionary* localData = @{@"key1": @"value1"};
+    [self makeConflictFor: docId withLocal: localData withRemote: nil];
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    __block int count = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        count++;
+        AssertNil(con.remoteDocument);
+        AssertNotNil(con.localDocument);
+        NSError* error = nil;
+        [self.db deleteDocument: [self.db documentWithID: docId]
+                          error: &error];
+        return nil;
+    }];
+    pullConfig.conflictResolver = resolver;
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // it should only call resolver once. 
+    // since second time, both revisions are deleted, and automatically resolve
+    AssertEqual(count, 1);
+    
+    // Check whether it deletes the document and returns nil.
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: @"doc"]);
+}
+
 - (void) testConflictResolverMergeDoc {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
