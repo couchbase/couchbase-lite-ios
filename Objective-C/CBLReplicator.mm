@@ -75,7 +75,7 @@ typedef enum {
     kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
     kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
     kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
-    kCBLStateStarting          ///< The replicator was asked to start but in progress.
+    kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
@@ -137,7 +137,6 @@ typedef enum {
 - (void) dealloc {
     c4repl_free(_repl);
     [_reachability stop];
-    _repl = nullptr;
 }
 
 - (NSString*) description {
