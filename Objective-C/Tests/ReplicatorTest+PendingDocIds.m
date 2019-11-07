@@ -87,9 +87,6 @@
             
             if (change.status.activity == kCBLReplicatorConnecting) {
                 XCTAssert(docIds.count == 5u);
-            } else if (change.status.activity == kCBLReplicatorBusy) {
-                if (!finishReplicating)
-                    XCTAssert(docIds.count != 0);
             } else if (change.status.activity == kCBLReplicatorStopped) {
                 XCTAssertEqual(docIds.count, 0);
             }
@@ -134,28 +131,13 @@
     int total = 5;
     [self createDocs: total action: action];
     [self validatePendingDocumentIds: action];
-//    
-//    action = @"update";
-//    [self updateDocs: total action: action];
-//    [self validatePendingDocumentIds: action];
-//    
-//    [self deleteDocs: total];
-//    [self validatePendingDocumentIds: nil];
-}
-
-- (void) testReplicator {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     
-    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
-    [replicator test];
+    action = @"update";
+    [self updateDocs: total action: action];
+    [self validatePendingDocumentIds: action];
     
-    
-    [replicator start];
-    
-    // time to stop and clear the replicator
-    [NSThread sleepForTimeInterval: 1.0];
-
+    [self deleteDocs: total];
+    [self validatePendingDocumentIds: nil];
 }
 
 #endif
