@@ -75,8 +75,7 @@ typedef enum {
     kCBLStateSuspending,        ///< The replicator was asked to suspend but in progress.
     kCBLStateOffline,           ///< The replicator is offline due to a transient or network error.
     kCBLStateRunning,           ///< The replicator is running which is either idle or busy.
-    kCBLStateStarting,          ///< The replicator was asked to start but in progress.
-    kCBLStateCreated            ///< The replicator was created but not ask to start.
+    kCBLStateStarting          ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
 @interface CBLReplicator ()
@@ -160,7 +159,7 @@ typedef enum {
 - (void) start {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Starting...", self);
-        if (_state != kCBLStateStopped && _state != kCBLStateSuspended && _state != kCBLStateCreated) {
+        if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
             CBLWarn(Sync, @"%@ has already started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
@@ -195,7 +194,7 @@ typedef enum {
 - (void) _retry {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Retrying...", self);
-        if ((_repl && _state != kCBLStateCreated) || _state <= kCBLStateStopping) {
+        if ((_repl && (_state != kCBLStateOffline || _state != kCBLStateSuspended)) || _state <= kCBLStateStopping) {
             CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
                        self, _state, _rawStatus.level);
             return;
@@ -301,8 +300,6 @@ typedef enum {
         CBL_LOCK(_config.database) {
             _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
         }
-        
-        _state = kCBLStateCreated;
         return _repl;
     }
 }
@@ -376,7 +373,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) _stop {
     [self cancelRetry];
     
-    if (_repl && _state != kCBLStateCreated) {
+    if (_repl && (_rawStatus.level != kC4Connecting || _rawStatus.level != kC4Offline)) {
         // Stop the replicator:
         c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
     } else if (_rawStatus.level == kC4Offline) {
