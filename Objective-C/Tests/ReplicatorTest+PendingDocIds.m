@@ -54,6 +54,7 @@
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        // FIXME: Check pending-document-id before starting the replicator. depends on #2569
         replicator = r;
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
@@ -81,6 +82,7 @@
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        // FIXME: Check pending-document-id before starting the replicator. depends on #2569
         replicator = r;
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
