@@ -207,123 +207,124 @@ typedef enum {
     _retryTimer = nil;
 }
 
+// thread unsafe, lock it when you use
 - (C4Replicator*) c4repl: (C4Error*)c4err {
-    CBL_LOCK(self) {
-        if (_repl)
-            return _repl;
-        
-        // Target:
-        id<CBLEndpoint> endpoint = _config.target;
-        C4Address addr = {};
-        CBLDatabase* otherDB = nil;
-        NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
-        CBLStringBytes dbName(remoteURL.path.lastPathComponent);
-        CBLStringBytes scheme(remoteURL.scheme);
-        CBLStringBytes host(remoteURL.host);
-        CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
-        if (remoteURL) {
-            // Fill out the C4Address:
-            NSUInteger port = [remoteURL.port unsignedIntegerValue];
-            addr = {
-                .scheme = scheme,
-                .hostname = host,
-                .port = (uint16_t)port,
-                .path = path
-            };
-        } else {
-#ifdef COUCHBASE_ENTERPRISE
-            otherDB = $castIf(CBLDatabaseEndpoint, endpoint).database;
-#else
-            Assert(remoteURL, @"Endpoint has no URL");
-#endif
-        }
-        
-        // Encode the options:
-        alloc_slice optionsFleece;
-        
-        NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-        options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
-        
-        // Update resetCheckpoint flag if needed:
-        if (_resetCheckpoint) {
-            options[@kC4ReplicatorResetCheckpoint] = @(YES);
-            _resetCheckpoint = NO;
-        }
-        
-        if (options.count) {
-            Encoder enc;
-            enc << options;
-            optionsFleece = enc.finish();
-        }
-        
-        _allowReachability = YES;
-        C4SocketFactory socketFactory = { };
-#ifdef COUCHBASE_ENTERPRISE
-        auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
-        if (messageEndpoint) {
-            socketFactory = messageEndpoint.socketFactory;
-            addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
-            _allowReachability = NO;
-        } else
-#endif
-            if (remoteURL)
-                socketFactory = CBLWebSocket.socketFactory;
-        socketFactory.context = (__bridge void*)self;
-        
-        // Create a C4Replicator:
-        C4ReplicatorParameters params = {
-            .push = mkmode(isPush(_config.replicatorType), _config.continuous),
-            .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-            .pushFilter = filter(_config.pushFilter, true),
-            .validationFunc = filter(_config.pullFilter, false),
-            .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
-            .onStatusChanged = &statusChanged,
-            .onDocumentsEnded = &onDocsEnded,
-            .callbackContext = (__bridge void*)self,
-            .socketFactory = &socketFactory,
-            .dontStart = true,
-        };
-        
-        CBL_LOCK(_config.database) {
-            _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
-        }
+    if (_repl)
         return _repl;
+    
+    // Target:
+    id<CBLEndpoint> endpoint = _config.target;
+    C4Address addr = {};
+    CBLDatabase* otherDB = nil;
+    NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
+    CBLStringBytes dbName(remoteURL.path.lastPathComponent);
+    CBLStringBytes scheme(remoteURL.scheme);
+    CBLStringBytes host(remoteURL.host);
+    CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
+    if (remoteURL) {
+        // Fill out the C4Address:
+        NSUInteger port = [remoteURL.port unsignedIntegerValue];
+        addr = {
+            .scheme = scheme,
+            .hostname = host,
+            .port = (uint16_t)port,
+            .path = path
+        };
+    } else {
+#ifdef COUCHBASE_ENTERPRISE
+        otherDB = $castIf(CBLDatabaseEndpoint, endpoint).database;
+#else
+        Assert(remoteURL, @"Endpoint has no URL");
+#endif
     }
+    
+    // Encode the options:
+    alloc_slice optionsFleece;
+    
+    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
+    
+    // Update resetCheckpoint flag if needed:
+    if (_resetCheckpoint) {
+        options[@kC4ReplicatorResetCheckpoint] = @(YES);
+        _resetCheckpoint = NO;
+    }
+    
+    if (options.count) {
+        Encoder enc;
+        enc << options;
+        optionsFleece = enc.finish();
+    }
+    
+    _allowReachability = YES;
+    C4SocketFactory socketFactory = { };
+#ifdef COUCHBASE_ENTERPRISE
+    auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
+    if (messageEndpoint) {
+        socketFactory = messageEndpoint.socketFactory;
+        addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
+        _allowReachability = NO;
+    } else
+#endif
+        if (remoteURL)
+            socketFactory = CBLWebSocket.socketFactory;
+    socketFactory.context = (__bridge void*)self;
+    
+    // Create a C4Replicator:
+    C4ReplicatorParameters params = {
+        .push = mkmode(isPush(_config.replicatorType), _config.continuous),
+        .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+        .pushFilter = filter(_config.pushFilter, true),
+        .validationFunc = filter(_config.pullFilter, false),
+        .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
+        .onStatusChanged = &statusChanged,
+        .onDocumentsEnded = &onDocsEnded,
+        .callbackContext = (__bridge void*)self,
+        .socketFactory = &socketFactory,
+        .dontStart = true,
+    };
+    
+    CBL_LOCK(_config.database) {
+        _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, c4err);
+    }
+    return _repl;
 }
 
 - (void) _start {
     C4Error err;
-    C4Replicator* repl = [self c4repl: &err];
-    if (!repl) {
-        NSError *error = nil;
-        convertError(err, &error);
-        CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, error.localizedDescription);
-        return;
-    }
-    
-    _state = kCBLStateStarting;
-    _cancelSuspending = NO;
-
-    CBL_LOCK(_config.database) {
-        c4repl_start(repl);
-    }
-    
-    C4ReplicatorStatus status;
-    if (repl) {
-        status = c4repl_getStatus(repl);
-        CBL_LOCK(_config.database) {
-            [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
+    CBL_LOCK(self) {
+        C4Replicator* repl = [self c4repl: &err];
+        if (!repl) {
+            NSError *error = nil;
+            convertError(err, &error);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@", self, error.localizedDescription);
+            return;
         }
         
-    #if TARGET_OS_IPHONE
-        if (!_config.allowReplicatingInBackground)
-            [self setupBackgrounding];
-    #endif
-    } else
-        status = {kC4Stopped, {}, err};
-    
-    // Post an initial notification:
-    statusChanged(repl, status, (__bridge void*)self);
+        _state = kCBLStateStarting;
+        _cancelSuspending = NO;
+
+        CBL_LOCK(_config.database) {
+            c4repl_start(repl);
+        }
+        
+        C4ReplicatorStatus status;
+        if (repl) {
+            status = c4repl_getStatus(repl);
+            CBL_LOCK(_config.database) {
+                [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
+            }
+            
+        #if TARGET_OS_IPHONE
+            if (!_config.allowReplicatingInBackground)
+                [self setupBackgrounding];
+        #endif
+        } else
+            status = {kC4Stopped, {}, err};
+        
+        // Post an initial notification:
+        statusChanged(repl, status, (__bridge void*)self);
+    }
 }
 
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
