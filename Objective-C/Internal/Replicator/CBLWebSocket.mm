@@ -289,17 +289,19 @@ static void doDispose(C4Socket* s) {
     _checkSSLCert = false;
     if (_logic.useTLS) {
         CBLLogVerbose(WebSocket, @"%@ enabling TLS", self);
-        auto settings = CFDictionaryCreateMutable(nullptr, 0, nullptr, nullptr);
-        if (_connectedThruProxy) {
-            CFDictionarySetValue(settings, kCFStreamSSLPeerName,
-                                 (__bridge CFStringRef)_logic.directHost);
-        }
+        NSMutableDictionary* settings = [NSMutableDictionary dictionary];
+        if (_connectedThruProxy)
+            [settings setObject: _logic.directHost
+                         forKey: (__bridge id)kCFStreamSSLPeerName];
+        
         if (_options[kC4ReplicatorOptionPinnedServerCert])
-            CFDictionarySetValue(settings, kCFStreamSSLValidatesCertificateChain,
-                                 kCFBooleanFalse);
-        CFReadStreamSetProperty((__bridge CFReadStreamRef)_in,
-                                kCFStreamPropertySSLSettings, settings);
-        CFRelease(settings);
+            [settings setObject: @NO
+                         forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
+
+        if (![_in setProperty: settings
+                       forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
+            CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
+        }
         _checkSSLCert = true;
     }
 }
