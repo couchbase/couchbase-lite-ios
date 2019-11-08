@@ -22,6 +22,7 @@
 #import "CBLMisc.h"
 #import "CBLBase64.h"
 #import "CBLParseDate.h"
+#import "CBLVersion.h"
 
 @interface MiscTest : CBLTestCase
 
@@ -130,6 +131,16 @@
                                                    error: &error];
         AssertEqualObjects(string, outs[i]);
     }
+}
+
+- (void) testCBLVersionAndLiteCoreVersion {
+    NSString* agent = [CBLVersion userAgent];
+    NSRange cblRange = [agent rangeOfString: @"CouchbaseLite/"];
+    NSRange liteRange = [agent rangeOfString: @"LiteCore/"];
+    
+    NSString* cblVersion = [agent substringWithRange: NSMakeRange(cblRange.length + cblRange.location, 5)];
+    NSString* liteVersion = [agent substringWithRange: NSMakeRange(liteRange.length + liteRange.location, 5)];
+    AssertEqualObjects(cblVersion, liteVersion);
 }
 
 @end
