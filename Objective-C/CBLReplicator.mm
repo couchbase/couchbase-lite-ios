@@ -360,7 +360,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) _stop {
     [self cancelRetry];
     
-    if (_repl && (_rawStatus.level != kC4Connecting || _rawStatus.level != kC4Offline)) {
+    if (_repl) {
         // Stop the replicator:
         c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
     } else if (_rawStatus.level == kC4Offline) {
