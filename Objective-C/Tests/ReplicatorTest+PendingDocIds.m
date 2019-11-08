@@ -66,14 +66,9 @@
 
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
-    __block BOOL finishReplicating = NO;
     __weak typeof(self) wSelf = self;
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         replicator = r;
-        
-        [replicator addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
-            finishReplicating = YES;
-        }];
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
             __strong id strongSelf = wSelf;
