@@ -237,7 +237,6 @@ typedef enum {
         Assert(remoteURL, @"Endpoint has no URL");
 #endif
     }
-    
     // Encode the options:
     alloc_slice optionsFleece;
     
