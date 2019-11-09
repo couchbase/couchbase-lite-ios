@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLReplicator+Internal.h"
 
 #define kDocIdFormat @"doc-%d"
 #define kActionKey @"action-key"
@@ -133,6 +134,41 @@
     
     [self deleteDocs: total];
     [self validatePendingDocumentIds: nil];
+}
+
+- (void) testRetry {
+    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    XCTestExpectation* stop = [self expectationWithDescription: @"stop"];
+    __block int idleCount = 0;
+    __block CBLReplicator* wRepl = r;
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        
+        CBLReplicator* sRepl = wRepl;
+        if (change.status.activity == kCBLReplicatorIdle) {
+            if (idleCount == 0)
+                [sRepl setSuspended: YES];
+            else if (idleCount == 1)
+                [sRepl stop];
+            idleCount++;
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            NSError* err = nil;
+            NSSet* docIds = [sRepl pendingDocumentIds: &err];
+            AssertEqual(docIds.count, 0);
+            [sRepl setSuspended: NO];
+        } else if (change.status.activity == kCBLReplicatorStopped)
+            [stop fulfill];
+    }];
+    
+    [r start];
+    [self waitForExpectations: @[stop] timeout: 5.0];
+    
+    [r removeChangeListenerWithToken: token];
 }
 
 #endif
