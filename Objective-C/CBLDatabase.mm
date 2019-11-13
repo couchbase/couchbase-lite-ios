@@ -900,29 +900,33 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
     C4RevisionFlags revFlags = 0;
     if (deletion)
         revFlags = kRevDeleted;
-    alloc_slice body;
+    FLSliceResult body;
     if (!deletion && !document.isEmpty) {
         // Encode properties to Fleece data:
         body = [document encode: outError];
-        if (!body) {
+        if (!body.buf) {
             *outDoc = nullptr;
             return NO;
         }
-        Doc doc(body, kFLTrusted, self.sharedKeys);
-        if (c4doc_dictContainsBlobs(doc))
+        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.sharedKeys,
+                                         nullslice);
+        if (c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc)))
             revFlags |= kRevHasAttachments;
+    } else {
+        body = [self emptyFLSliceResult];
     }
     
     // Save to database:
     C4Error err;
     C4Document *c4Doc = base != nullptr ? base : document.c4Doc.rawDoc;
     if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, body, revFlags, &err);
+        *outDoc = c4doc_update(c4Doc, (FLSlice)body, revFlags, &err);
     } else {
         CBLStringBytes docID(document.id);
-        *outDoc = c4doc_create(_c4db, docID, body, revFlags, &err);
+        *outDoc = c4doc_create(_c4db, docID, (FLSlice)body, revFlags, &err);
     }
     
+    FLSliceResult_Free(body);
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
         // conflict is not an error, at this level
         return convertError(err, outError);
