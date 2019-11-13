@@ -70,6 +70,10 @@
             [self connectionBroken: error];
             [connection close: error];
         } else {
+            if(!_connection) {
+                NSLog(@"%@: WARNING: _connection is nil, data is not going to be received", self);
+            }
+            
             [_connection receive: [CBLMessage fromData: message]];
         }
     });
