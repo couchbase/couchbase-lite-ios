@@ -538,7 +538,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssert(db.document(withID: doc1b.id)!.toDictionary() == dict)
     }
     
-    func testConflictHandlerThrowingException() throws {
+    func _testConflictHandlerThrowingException() throws {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")

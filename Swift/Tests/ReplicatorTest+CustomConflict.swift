@@ -383,7 +383,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
-    func testConflictResolverThrowingException() throws {
+    func _testConflictResolverThrowingException() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
