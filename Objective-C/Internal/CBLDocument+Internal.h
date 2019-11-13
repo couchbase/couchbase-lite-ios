@@ -53,6 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
     @protected
     CBLDictionary* _dict;
     BOOL _isInvalidated;
+    NSString* _revID;
 }
 
 @property (nonatomic, nullable) CBLDatabase* database;
@@ -75,6 +76,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
+                             body: (nullable FLDict)body;
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                       revisionID: (NSString*)revisionID
                              body: (nullable FLDict)body;
 
 - (nullable instancetype) initWithDatabase: (CBLDatabase*)database

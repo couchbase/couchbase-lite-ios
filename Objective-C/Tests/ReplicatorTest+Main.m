@@ -1153,6 +1153,7 @@
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         // isDeleted:
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
@@ -1230,6 +1231,7 @@
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         // isDeleted:
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
@@ -1341,6 +1343,7 @@
                                                      continuous: isContinuous];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
         if (isAccessRemoved) {
             [docIds addObject: document.id];
@@ -1411,6 +1414,7 @@
                                                      continuous: isContinuous];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
         if (isDeleted) {
@@ -1462,6 +1466,7 @@
                                                      continuous: isContinuous];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
         if (isDeleted) {
@@ -1516,6 +1521,7 @@
                                                      continuous: YES];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         [docIds addObject: document.id];
         
         // allow all docs with `name = pass`
@@ -1566,6 +1572,8 @@
                                                      continuous: YES];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
         [docIds addObject: document.id];
         
         // allow all docs with `name = pass`
@@ -1853,9 +1861,13 @@
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     id pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         return (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
     };
     id pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         return [[document valueForKey: @"someKey"] isEqualToString: @"pass"];
     };
     config.pushFilter = pushFilter;

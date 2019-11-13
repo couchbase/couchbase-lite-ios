@@ -67,6 +67,23 @@ using namespace fleece;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
+                       revisionID: (NSString*)revisionID
+                             body: (nullable FLDict)body {
+    NSParameterAssert(documentID != nil);
+    NSParameterAssert(revisionID != nil);
+    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    if (self) {
+        _database = database;
+        _id = documentID;
+        _fleeceData = body;
+        _revID = revisionID;
+        [self updateDictionary];
+    }
+    return self;
+}
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
                    includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError
 {
@@ -208,7 +225,7 @@ using namespace fleece;
 
 - (NSString*) revisionID {
     CBL_LOCK(self) {
-        return _c4Doc != nil ?  slice2string(_c4Doc.revID) : nil;
+        return _c4Doc != nil ?  slice2string(_c4Doc.revID) : _revID;
     }
 }
 

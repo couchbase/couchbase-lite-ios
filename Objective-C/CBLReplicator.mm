@@ -722,25 +722,30 @@ static void onDocsEnded(C4Replicator* repl,
 
 #pragma mark - Push/Pull Filter
 
-static bool pushFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
+static bool pushFilter(C4String docID, C4String revID, C4RevisionFlags flags,
+                       FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
-    return [replicator filterDocument: docID flags: flags body: flbody pushing: true];
+    return [replicator filterDocument: docID revID: revID flags: flags
+                                 body: flbody pushing: true];
 }
 
-static bool pullFilter(C4String docID, C4RevisionFlags flags, FLDict flbody, void *context) {
+static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
+                       FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
-    return [replicator filterDocument: docID flags: flags body: flbody pushing: false];
+    return [replicator filterDocument: docID revID: revID flags: flags
+                                 body: flbody pushing: false];
 }
 
 - (bool) filterDocument: (C4String)docID
+                  revID: (C4String)revID
                   flags: (C4RevisionFlags)flags
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
     auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
                                           documentID: slice2string(docID)
+                                          revisionID: slice2string(revID)
                                                 body: body];
-    
     CBLDocumentFlags docFlags = 0;
     if ((flags & kRevDeleted) == kRevDeleted)
         docFlags |= kCBLDocumentFlagsDeleted;
