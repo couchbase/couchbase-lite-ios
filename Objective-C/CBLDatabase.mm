@@ -925,8 +925,9 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         CBLStringBytes docID(document.id);
         *outDoc = c4doc_create(_c4db, docID, (FLSlice)body, revFlags, &err);
     }
-    
+
     FLSliceResult_Free(body);
+    
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
         // conflict is not an error, at this level
         return convertError(err, outError);
