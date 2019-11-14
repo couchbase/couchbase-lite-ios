@@ -528,8 +528,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBL_LOCK(self) {
         [self mustBeOpen];
         
-        Doc doc(c4db_getIndexes(_c4db, nullptr));
-        return FLValue_GetNSObject(doc.root(), nullptr);
+        FLSliceResult res = c4db_getIndexes(_c4db, nullptr);
+        FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
+        return FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
     }
 }
 
