@@ -383,7 +383,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
-    func testConflictResolverThrowingException() throws {
+    /// disabling since, exceptions inside conflict handler will leak, since objc doesn't perform release
+    /// when exception happens
+    func _testConflictResolverThrowingException() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
