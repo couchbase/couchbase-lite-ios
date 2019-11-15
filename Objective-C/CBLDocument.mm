@@ -125,6 +125,9 @@ using namespace fleece;
 }
 
 - (CBLMutableDocument*) toMutable {
+    if (_revID)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"%@", kCBLErrorMessageNoDocEditInReplicationFilter];
     return [self mutableCopy];
 }
 

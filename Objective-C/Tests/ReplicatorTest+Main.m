@@ -1958,4 +1958,58 @@
     AssertNil(replicatedDoc.error);
 }
 
+- (void) testRevisionIdInPushPullFilters {
+    // Create documents:
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Stripes" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    // Create replicator with push filter:
+    NSMutableSet<NSString*>* pushDocIds = [NSMutableSet set];
+    NSMutableSet<NSString*>* pullDocIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: false];
+    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
+        [self expectException: @"NSInternalInconsistencyException" in:^{
+            [document toMutable];
+        }];
+        
+        // Gather document ID:
+        [pushDocIds addObject: document.id];
+        return YES;
+    };
+    
+    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
+        [self expectException: @"NSInternalInconsistencyException" in:^{
+            [document toMutable];
+        }];
+        
+        // Gather document ID:
+        [pullDocIds addObject: document.id];
+        return YES;
+    };
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(pullDocIds.count, 1u);
+    Assert([pullDocIds containsObject: @"doc2"]);
+    
+    AssertEqual(pushDocIds.count, 1u);
+    Assert([pushDocIds containsObject: @"doc1"]);
+}
+
 @end

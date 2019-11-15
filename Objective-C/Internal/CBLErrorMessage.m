@@ -58,6 +58,7 @@ NSString* const kCBLErrorMessageNoAliasInJoin = @"The default database must have
 NSString* const kCBLErrorMessageInvalidQueryDBNull = @"Invalid query: The database is null.";
 NSString* const kCBLErrorMessageInvalidQueryMissingSelectOrFrom = @"Invalid query: missing Select or From.";
 NSString* const kCBLErrorMessagePullOnlyPendingDocIDs = @"Pending Document IDs are not supported on pull-only replicators.";
+NSString* const kCBLErrorMessageNoDocEditInReplicationFilter = @"Documents from a replication filter cannot be edited.";
 
 @end
 
