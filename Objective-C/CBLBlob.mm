@@ -184,6 +184,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         if (!_initialContentStream) {
             [NSException raise: NSInternalInconsistencyException
                         format: @"%@", kCBLErrorMessageBlobContainsNoData];
+            return nil;
         }
         
         NSMutableData *result = [NSMutableData new];
