@@ -46,6 +46,7 @@ using namespace fleece;
     if (self) {
         _database = database;
         _id = documentID;
+        _revID = nil;
         [self setC4Doc: c4Doc];
     }
     return self;
@@ -60,6 +61,24 @@ using namespace fleece;
         _database = database;
         _id = documentID;
         _fleeceData = body;
+        _revID = nil;
+        [self updateDictionary];
+    }
+    return self;
+}
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                       revisionID: (NSString*)revisionID
+                             body: (nullable FLDict)body {
+    NSParameterAssert(documentID != nil);
+    NSParameterAssert(revisionID != nil);
+    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    if (self) {
+        _database = database;
+        _id = documentID;
+        _fleeceData = body;
+        _revID = revisionID;
         [self updateDictionary];
     }
     return self;
@@ -73,6 +92,7 @@ using namespace fleece;
     self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
     if (self) {
         _database = database;
+        _revID = nil;
         CBLStringBytes docId(documentID);
         C4Error err;
         auto doc = c4doc_get(database.c4db, docId, true, &err);
@@ -108,6 +128,9 @@ using namespace fleece;
 }
 
 - (CBLMutableDocument*) toMutable {
+    if (_revID && !_c4Doc)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"%@", kCBLErrorMessageNoDocEditInReplicationFilter];
     return [self mutableCopy];
 }
 
@@ -208,7 +231,7 @@ using namespace fleece;
 
 - (NSString*) revisionID {
     CBL_LOCK(self) {
-        return _c4Doc != nil ?  slice2string(_c4Doc.revID) : nil;
+        return _c4Doc != nil ?  slice2string(_c4Doc.revID) : _revID;
     }
 }
 

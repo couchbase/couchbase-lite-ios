@@ -60,6 +60,7 @@ extern NSString* const kCBLErrorMessageNoAliasInJoin;
 extern NSString* const kCBLErrorMessageInvalidQueryDBNull;
 extern NSString* const kCBLErrorMessageInvalidQueryMissingSelectOrFrom;
 extern NSString* const kCBLErrorMessagePullOnlyPendingDocIDs;
+extern NSString* const kCBLErrorMessageNoDocEditInReplicationFilter;
 
 @end
 

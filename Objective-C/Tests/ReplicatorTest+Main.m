@@ -1153,6 +1153,7 @@
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         // isDeleted:
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
@@ -1230,6 +1231,7 @@
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         // Check document ID:
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         // isDeleted:
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
@@ -1341,6 +1343,7 @@
                                                      continuous: isContinuous];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
         if (isAccessRemoved) {
             [docIds addObject: document.id];
@@ -1411,6 +1414,7 @@
                                                      continuous: isContinuous];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
         if (isDeleted) {
@@ -1462,6 +1466,7 @@
                                                      continuous: isContinuous];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         
         BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
         if (isDeleted) {
@@ -1516,6 +1521,7 @@
                                                      continuous: YES];
     config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         [docIds addObject: document.id];
         
         // allow all docs with `name = pass`
@@ -1566,6 +1572,8 @@
                                                      continuous: YES];
     config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
         [docIds addObject: document.id];
         
         // allow all docs with `name = pass`
@@ -1600,6 +1608,60 @@
     AssertNil([self.db documentWithID: @"doc3"]);
     AssertEqual(otherDB.count, 3u);
     AssertEqual(self.db.count, 2u);
+}
+
+- (void) testRevisionIdInPushPullFilters {
+    // Create documents:
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Stripes" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    
+    // Create replicator with push filter:
+    NSMutableSet<NSString*>* pushDocIds = [NSMutableSet set];
+    NSMutableSet<NSString*>* pullDocIds = [NSMutableSet set];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: false];
+    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
+        [self expectException: @"NSInternalInconsistencyException" in:^{
+            [document toMutable];
+        }];
+        
+        // Gather document ID:
+        [pushDocIds addObject: document.id];
+        return YES;
+    };
+    
+    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
+        
+        [self expectException: @"NSInternalInconsistencyException" in:^{
+            [document toMutable];
+        }];
+        
+        // Gather document ID:
+        [pullDocIds addObject: document.id];
+        return YES;
+    };
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Check documents passed to the filter:
+    AssertEqual(pullDocIds.count, 1u);
+    Assert([pullDocIds containsObject: @"doc2"]);
+    
+    AssertEqual(pushDocIds.count, 1u);
+    Assert([pushDocIds containsObject: @"doc1"]);
 }
 
 #endif // COUCHBASE_ENTERPRISE
@@ -1853,9 +1915,13 @@
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     id pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         return (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
     };
     id pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        AssertNotNil(document.id);
+        AssertNotNil(document.revisionID);
         return [[document valueForKey: @"someKey"] isEqualToString: @"pass"];
     };
     config.pushFilter = pushFilter;
