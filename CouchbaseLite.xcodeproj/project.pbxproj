@@ -160,8 +160,6 @@
 		69002EBF234E695600776107 /* CBLErrorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 69002EA9234E693F00776107 /* CBLErrorMessage.h */; };
 		69002EC0234E695600776107 /* CBLErrorMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 69002EB8234E693F00776107 /* CBLErrorMessage.m */; };
 		69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
-		69B4D926236901A7006BB235 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 69B4D92323690194006BB235 /* ReplicatorTest+PendingDocIds.m */; };
-		69B4D927236901A9006BB235 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 69B4D92323690194006BB235 /* ReplicatorTest+PendingDocIds.m */; };
 		69D600002307469B00250787 /* CBLTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 69D6FFFC2307469A00250787 /* CBLTimer.m */; };
 		69D6000F230746B000250787 /* CBLTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 69D6FFFB2307469A00250787 /* CBLTimer.h */; };
 		69D60010230746B200250787 /* CBLTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 69D6FFFB2307469A00250787 /* CBLTimer.h */; };
@@ -1732,7 +1730,6 @@
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
 		69002EB8234E693F00776107 /* CBLErrorMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLErrorMessage.m; sourceTree = "<group>"; };
 		6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_xcframework.sh; sourceTree = "<group>"; };
-		69B4D92323690194006BB235 /* ReplicatorTest+PendingDocIds.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+PendingDocIds.m"; sourceTree = "<group>"; };
 		69D6FFFB2307469A00250787 /* CBLTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTimer.h; sourceTree = "<group>"; };
 		69D6FFFC2307469A00250787 /* CBLTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTimer.m; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
@@ -3182,7 +3179,6 @@
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
-				69B4D92323690194006BB235 /* ReplicatorTest+PendingDocIds.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
@@ -5203,7 +5199,6 @@
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
-				69B4D926236901A7006BB235 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
 				9369A6AE207DD0FD009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F146207D61EC00F19A89 /* QueryTest.m in Sources */,
@@ -5230,7 +5225,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69B4D927236901A9006BB235 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
