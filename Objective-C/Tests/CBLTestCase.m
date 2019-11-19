@@ -236,6 +236,9 @@
 
 // helper method to check error
 - (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block {
+    if ([self isProfiling])
+        return;
+    
     ++gC4ExpectExceptions;
     NSError* error;
     BOOL succeeded = block(&error);
@@ -251,12 +254,18 @@
 }
 
 - (void) expectException: (NSString*)name in: (void (^) (void))block {
+    if ([self isProfiling])
+        return;
+    
     ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed(block(), NSException, name);
     --gC4ExpectExceptions;
 }
 
 - (void) mayHaveException: (NSString*)name in: (void (^) (void))block {
+    if ([self isProfiling])
+        return;
+    
     @try {
         ++gC4ExpectExceptions;
         block();
@@ -270,6 +279,9 @@
 }
 
 - (void) ignoreException: (void (^) (void))block {
+    if ([self isProfiling])
+        return;
+    
     @try {
         ++gC4ExpectExceptions;
         block();
@@ -302,6 +314,10 @@
         block(n/2 + 1, all[(NSUInteger)(n/2)]);
     }
     return n;
+}
+
+- (BOOL) isProfiling {
+    return NSProcessInfo.processInfo.environment[@"PROFILING"] != nil;
 }
 
 @end

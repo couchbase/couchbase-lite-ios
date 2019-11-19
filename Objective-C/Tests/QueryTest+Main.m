@@ -1698,12 +1698,10 @@
 
 - (void) testValueExpressionUnsupportedValueType {
     NSData* data = [[NSData alloc] init];
-    @try {
+    [self expectException: NSInternalInconsistencyException in:^{
         CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: data];
         AssertNil(v);
-    } @catch (NSException *exception) {
-        AssertEqualObjects(exception.name, @"NSInternalInconsistencyException");
-    }
+    }];
 }
 
 - (void) testValueExpression {
