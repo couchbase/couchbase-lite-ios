@@ -41,4 +41,9 @@
     return @[@"COLLATE", [_collation asJSON], [_operand asJSON]];
 }
 
+- (void) dealloc {
+    _collation = nil;
+    _operand = nil;
+}
+
 @end
