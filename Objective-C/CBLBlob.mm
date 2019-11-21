@@ -135,12 +135,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return self;
 }
 
-- (void) dealloc {
-    if (_initialContentStream)
-        [_initialContentStream close];
-    _initialContentStream = nil;
-}
-
 - (NSDictionary*) properties {
     if (_properties) {
         // Blob read from database;
@@ -218,7 +212,8 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
             return nil;
         return [[CBLBlobStream alloc] initWithStore: blobStore key: key];
     } else {
-        return _content ? [[NSInputStream alloc] initWithData: _content] : nil;
+        NSData* content = self.content;
+        return content ? [[NSInputStream alloc] initWithData: content] : nil;
     }
 }
 
