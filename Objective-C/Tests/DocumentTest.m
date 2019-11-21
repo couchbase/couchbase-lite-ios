@@ -1578,27 +1578,58 @@
     AssertEqual(bytesRead, 0);
 }
 
-- (void)testBlobWithStream {
-    NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
+- (NSURL*) writeBlobToFile {
+    NSError* error;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *documentsPath =
+        [NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+                                             NSUserDomainMask, YES) firstObject];
+    NSString *filePath = [documentsPath stringByAppendingPathComponent:@"sample.txt"];
+    [fileManager createFileAtPath: filePath contents:nil attributes: nil];
+    [kDocumentTestBlob writeToFile: filePath
+                        atomically: YES
+                          encoding: NSUTF8StringEncoding error: &error];
+    return [NSURL fileURLWithPath: filePath];
+}
+
+- (void)testBlobStream {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream];
-    Assert(data, @"Failed to create blob: %@", error);
+    CBLBlob *blob1 = [[CBLBlob alloc] initWithContentType: @"text/plain"
+                                            contentStream:contentStream];
+    Assert(blob1, @"Failed to create blob: %@", error);
+    
+    CBLBlob *blob2 = [[CBLBlob alloc] initWithContentType: @"text/plain"
+                                                     data: content];
+    Assert(blob2, @"Failed to create blob: %@", error);
+    
+    CBLBlob *blob3 = [[CBLBlob alloc] initWithContentType: @"text/plain"
+                                                  fileURL: [self writeBlobToFile]
+                                                    error: &error];
+    Assert(blob3, @"Failed to create blob: %@", error);
+    
+    // SAVE
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setValue: data forKey: @"data"];
+    [doc setValue: blob1 forKey: @"blob1"];
+    [doc setValue: blob2 forKey: @"blob2"];
+    [doc setValue: blob3 forKey: @"blob3"];
     Assert([self.db saveDocument: doc error: &error], @"Saving error: %@", error);
     
+    // Validate result
     CBLDocument* savedDoc = [self.db documentWithID: doc.id];
-    Assert([[savedDoc valueForKey: @"data"] isKindOfClass:[CBLBlob class]]);
-    data = [savedDoc valueForKey: @"data"];
-    AssertEqual(data.length, 0ull);
-    AssertEqualObjects(data.content, content);
-    contentStream = data.contentStream;
-    [contentStream open];
-    uint8_t buffer[10];
-    NSInteger bytesRead = [contentStream read:buffer maxLength:10];
-    [contentStream close];
-    AssertEqual(bytesRead, 0);
+    for (NSString* key in @[@"blob1", @"blob2", @"blob3"]) {
+        Assert([[savedDoc valueForKey: key] isKindOfClass:[CBLBlob class]]);
+        CBLBlob *savedData = [savedDoc valueForKey: key];
+        AssertEqual(savedData.length, blob1.length);
+        AssertEqualObjects(savedData.content, content);
+        contentStream = savedData.contentStream;
+        [contentStream open];
+        uint8_t buffer[10];
+        NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+        [contentStream close];
+        AssertEqual(bytesRead, 8);
+    }
 }
 
 - (void)testMultipleBlobRead {
