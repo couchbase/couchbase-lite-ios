@@ -280,7 +280,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         uint8_t buffer[kReadBufferSize];
         NSInteger bytesRead = 0;
         _length = 0;
-        NSInputStream *contentStream = [self contentStream];
+        NSInputStream *contentStream = _initialContentStream;
         [contentStream open];
         success = true;
         while(success && (bytesRead = [contentStream read:buffer maxLength: kReadBufferSize]) > 0) {

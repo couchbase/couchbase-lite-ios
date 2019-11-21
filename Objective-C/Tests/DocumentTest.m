@@ -1579,7 +1579,7 @@
 }
 
 - (void)testBlobWithStream {
-    NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream];
@@ -1590,15 +1590,15 @@
     
     CBLDocument* savedDoc = [self.db documentWithID: doc.id];
     Assert([[savedDoc valueForKey: @"data"] isKindOfClass:[CBLBlob class]]);
-    data = [savedDoc valueForKey: @"data"];
-    AssertEqual(data.length, 0ull);
-    AssertEqualObjects(data.content, content);
-    contentStream = data.contentStream;
+    CBLBlob *savedData = [savedDoc valueForKey: @"data"];
+    AssertEqual(savedData.length, data.length);
+    AssertEqualObjects(savedData.content, content);
+    contentStream = savedData.contentStream;
     [contentStream open];
     uint8_t buffer[10];
     NSInteger bytesRead = [contentStream read:buffer maxLength:10];
     [contentStream close];
-    AssertEqual(bytesRead, 0);
+    AssertEqual(bytesRead, 8);
 }
 
 - (void)testMultipleBlobRead {
