@@ -1582,7 +1582,7 @@
     NSError* error;
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *documentsPath =
-        [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+        [NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
                                              NSUserDomainMask, YES) firstObject];
     NSString *filePath = [documentsPath stringByAppendingPathComponent:@"sample.txt"];
     [fileManager createFileAtPath: filePath contents:nil attributes: nil];
