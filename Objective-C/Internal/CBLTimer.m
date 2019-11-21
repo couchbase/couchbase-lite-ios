@@ -30,7 +30,7 @@
     if (t) {
         dispatch_source_set_timer(t,
                                   dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC)),
-                                  (int64_t)(seconds * NSEC_PER_SEC),
+                                  DISPATCH_TIME_FOREVER,
                                   (1ull * NSEC_PER_SEC) / 10);
         dispatch_source_set_event_handler(t, block);
         dispatch_resume(t);
