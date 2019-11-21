@@ -1592,7 +1592,7 @@
     return [NSURL fileURLWithPath: filePath];
 }
 
-- (void)testBlobWithStream {
+- (void)testBlobStream {
     NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
     NSError* error;
