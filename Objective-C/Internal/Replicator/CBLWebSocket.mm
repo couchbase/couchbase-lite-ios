@@ -303,6 +303,11 @@ static void doDispose(C4Socket* s) {
             CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
         }
         _checkSSLCert = true;
+        
+        // When using client proxy, the stream will be reset after setting
+        // the SSL properties. Make sure to update the _hasSpace flag to reflect
+        // the current status of the stream.
+        _hasSpace = _out.hasSpaceAvailable;
     }
 }
 
@@ -585,6 +590,9 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void) doWrite {
+    if (_checkSSLCert && ![self checkSSLCert])
+        return;
+    
     while (!_pendingWrites.empty()) {
         auto &w = _pendingWrites.front();
         auto nBytes = [_out write: (const uint8_t*)w.data.bytes + w.bytesWritten
@@ -641,8 +649,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         case NSStreamEventHasSpaceAvailable:
             CBLLogVerbose(WebSocket, @"%@: HasSpaceAvailable", self);
-            if (_checkSSLCert && ![self checkSSLCert])
-                break;
             _hasSpace = true;
             [self doWrite];
             break;
