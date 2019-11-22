@@ -306,7 +306,7 @@ static void doDispose(C4Socket* s) {
         
         // When using client proxy, the stream will be reset after setting
         // the SSL properties. Make sure to update the _hasSpace flag to reflect
-        // the current statusof the stream.
+        // the current status of the stream.
         _hasSpace = _out.hasSpaceAvailable;
     }
 }
