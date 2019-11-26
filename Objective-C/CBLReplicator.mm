@@ -550,11 +550,14 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
                    self, error.localizedDescription, delay);
         [self scheduleRetry: delay];
-    } else {
+    } else if (!_reachability.reachable) {
         CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
                    self, error.localizedDescription);
-        // Also retry when the network changes:
+        // retry when the network changes:
         [self startReachabilityObserver];
+    } else {
+        CBLLogInfo(Sync, @"%@: Permanent failure (%@);", self, error.localizedDescription);
+        return false;
     }
     return true;
 }
