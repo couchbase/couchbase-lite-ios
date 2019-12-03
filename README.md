@@ -92,8 +92,8 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Documentation
 
-- [Swift](https://docs.couchbase.com/couchbase-lite/2.5/swift.html)
-- [Objective-C](https://docs.couchbase.com/couchbase-lite/2.5/objc.html)
+- [Swift](https://docs.couchbase.com/couchbase-lite/2.6/swift.html)
+- [Objective-C](https://docs.couchbase.com/couchbase-lite/2.6/objc.html)
 
 ## Sample Apps
 
