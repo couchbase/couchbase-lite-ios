@@ -4288,6 +4288,9 @@
 					9343F135207D61EC00F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
+					9343F153207D62C900F19A89 = {
+						DevelopmentTeam = N2Q372V7W2;
+					};
 					9343F18A207D636300F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
@@ -5832,6 +5835,7 @@
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6002,6 +6006,7 @@
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6236,7 +6241,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6250,7 +6257,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6264,7 +6273,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6278,7 +6289,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6713,6 +6726,7 @@
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
@@ -6727,6 +6741,7 @@
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
