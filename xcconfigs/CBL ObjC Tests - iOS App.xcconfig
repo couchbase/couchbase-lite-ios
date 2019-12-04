@@ -26,3 +26,4 @@ LD_RUNPATH_SEARCH_PATHS                    = $(inherited) @executable_path/Frame
 PRODUCT_BUNDLE_IDENTIFIER                  = com.couchbase.cbl-ios-tests-app
 PRODUCT_NAME                               = CBL Tests
 SDKROOT                                    = iphoneos
+HEADER_SEARCH_PATHS                        = $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece/Support/
