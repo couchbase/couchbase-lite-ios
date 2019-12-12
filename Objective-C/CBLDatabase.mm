@@ -530,7 +530,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         FLSliceResult res = c4db_getIndexes(_c4db, nullptr);
         FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
-        return FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        FLSliceResult_Free(res);
+        
+        id indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        FLDoc_Release(doc);
+        
+        return indexes;
     }
 }
 
@@ -913,6 +918,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
                                          nullslice);
         if (c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc)))
             revFlags |= kRevHasAttachments;
+        
+        FLDoc_Release(doc);
     } else {
         body = [self emptyFLSliceResult];
     }
