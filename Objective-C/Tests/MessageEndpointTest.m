@@ -174,7 +174,9 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _browser.delegate = self;
     [_browser startBrowsingForPeers];
     
-    [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
+    [self ignoreException:^{
+        [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
+    }];
 }
 
 - (void) run: (CBLReplicatorConfiguration*)config
