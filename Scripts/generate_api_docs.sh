@@ -44,9 +44,9 @@ fi
 
 if [ -z "$EE" ]
 then
-  SCHEME="CBL\ Swift"
+  SCHEME="CBL Swift"
 else
-  SCHEME="CBL-EE\ Swift"
+  SCHEME="CBL-EE Swift"
 fi
 
 jazzy --clean --xcodebuild-arguments "-scheme,"$SCHEME",-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
