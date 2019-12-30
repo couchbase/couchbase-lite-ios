@@ -174,9 +174,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _browser.delegate = self;
     [_browser startBrowsingForPeers];
     
-    [self ignoreException:^{
-        [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
-    }];
+    [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
 }
 
 - (void) run: (CBLReplicatorConfiguration*)config
@@ -370,7 +368,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_otherDB.count, 2u);
     CBLDocument* savedDoc = [_otherDB documentWithID: @"doc1"];
@@ -392,7 +392,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_db.count, 2u);
     CBLDocument* savedDoc = [_db documentWithID: @"doc2"];
@@ -414,7 +416,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_otherDB.count, 2u);
     CBLDocument* savedDoc1 = [_db documentWithID: @"doc1"];
@@ -440,7 +444,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_otherDB.count, 2u);
     CBLDocument* savedDoc = [_otherDB documentWithID: @"doc1"];
@@ -462,7 +468,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_db.count, 2u);
     CBLDocument* savedDoc = [_db documentWithID: @"doc2"];
@@ -484,7 +492,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self ignoreException:^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_otherDB.count, 2u);
     CBLDocument* savedDoc1 = [_db documentWithID: @"doc1"];
