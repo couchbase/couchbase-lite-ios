@@ -91,7 +91,6 @@ typedef enum {
     CBLReplicatorState _state;
     C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
-    BOOL _allowReachability;
     CBLReachability* _reachability;
     CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
@@ -251,19 +250,22 @@ typedef enum {
         optionsFleece = enc.finish();
     }
     
-    _allowReachability = YES;
+    BOOL allowReachability = YES;
     C4SocketFactory socketFactory = { };
 #ifdef COUCHBASE_ENTERPRISE
     auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
     if (messageEndpoint) {
         socketFactory = messageEndpoint.socketFactory;
         addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
-        _allowReachability = NO;
+        allowReachability = NO;
     } else
 #endif
         if (remoteURL)
             socketFactory = CBLWebSocket.socketFactory;
     socketFactory.context = (__bridge void*)self;
+    
+    if (allowReachability)
+        [self initReachability: remoteURL];
     
     // Create a C4Replicator:
     C4ReplicatorParameters params = {
@@ -375,39 +377,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-- (void) startReachabilityObserver {
-    if (!_allowReachability || _reachability)
-        return;
-    
-    NSURL* remoteURL = $castIf(CBLURLEndpoint, _config.target).url;
-    if (!remoteURL)
-        return;
-    
-    NSString* hostname = remoteURL.host;
-    if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
-        return;
-    _reachability = [[CBLReachability alloc] initWithURL: remoteURL];
-    __weak auto weakSelf = self;
-    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
-    [_reachability startOnQueue: _dispatchQueue];
-}
-
-// Should be called from _dispatchQueue
-- (void) stopReachabilityObserver {
-    [_reachability stop];
-    _reachability = nil;
-}
-
-- (void) reachabilityChanged {
-    CBL_LOCK(self) {
-        bool reachable = _reachability.reachable;
-        if (reachable && _state == kCBLStateOffline) {
-            CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
-            [self resetAndScheduleRetry];
-        }
-    }
-}
-
 - (void) resetCheckpoint {
     CBL_LOCK(self) {
         if (_state != kCBLStateStopped) {
@@ -447,6 +416,45 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBL_LOCK(self) {
         if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
             _progressLevel = kCBLProgressLevelBasic;
+    }
+}
+
+#pragma mark - Reachability
+
+- (void) initReachability: (NSURL*)remoteURL {
+    if (!remoteURL)
+        return;
+    
+    NSString* hostname = remoteURL.host;
+    if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
+        return;
+    
+    _reachability = [[CBLReachability alloc] initWithURL: remoteURL];
+}
+
+- (void) startReachabilityObserver {
+    if (!_reachability) {
+        CBLLogVerbose(Sync, @"%@: Not starting reachability observer, `_reachability` not initialized", self);
+        return;
+    }
+    
+    __weak auto weakSelf = self;
+    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
+    [_reachability startOnQueue: _dispatchQueue];
+}
+
+// Should be called from _dispatchQueue
+- (void) stopReachabilityObserver {
+    [_reachability stop];
+}
+
+- (void) reachabilityChanged {
+    CBL_LOCK(self) {
+        bool reachable = _reachability.reachable;
+        if (reachable && _state == kCBLStateOffline) {
+            CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
+            [self resetAndScheduleRetry];
+        }
     }
 }
 

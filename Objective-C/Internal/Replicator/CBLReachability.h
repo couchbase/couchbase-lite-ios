@@ -59,8 +59,8 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
 - (BOOL) startOnQueue: (dispatch_queue_t)queue;
 
 /** Stops tracking reachability.
-    This is called automatically by -dealloc, but to be safe you can call it when you release your
-    CBLReachability instance, to make sure that in case of a leak it isn't left running forever. */
+    This is called automatically by -dealloc, but to be safe you can call it when you want to unschedule
+    and remove `onChange` callbacks, to make sure that in case of a leak it isn't left running forever. */
 - (void) stop;
 
 /** YES if the host's reachability has been determined, NO if it hasn't or if there was an error. */
