@@ -430,6 +430,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return;
     
     _reachability = [[CBLReachability alloc] initWithURL: remoteURL];
+    __weak auto weakSelf = self;
+    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
 }
 
 - (void) startReachabilityObserver {
@@ -438,8 +440,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return;
     }
     
-    __weak auto weakSelf = self;
-    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
     [_reachability startOnQueue: _dispatchQueue];
 }
 
