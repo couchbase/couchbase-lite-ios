@@ -210,6 +210,15 @@ static BOOL sAlwaysAssumeProxy = NO;
         && !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
 }
 
+- (BOOL) reachableWithoutStart {
+    SCNetworkReachabilityFlags flag;
+    if (SCNetworkReachabilityGetFlags(_ref, &flag)) {
+        return (flag & kSCNetworkReachabilityFlagsReachable) &&
+        !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
+    }
+    return false;
+}
+
 - (BOOL) reachableByWiFi {
     return self.reachable
 #if TARGET_OS_IPHONE
