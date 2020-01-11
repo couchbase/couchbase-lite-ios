@@ -39,7 +39,7 @@
     return _rawDoc;
 }
 
-- (C4DocumentFlags) flags {
+- (C4RevisionFlags) revFlags {
     return _rawDoc->selectedRev.flags;
 }
 
