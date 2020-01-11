@@ -1056,6 +1056,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         if (resolvedDoc != remoteDoc) {
             BOOL isDeleted = YES;
             if (resolvedDoc) {
+                mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
                 @try {
                     // Unless the remote revision is being used as-is, we need a new revision:
                     mergedBody = [resolvedDoc encode: outError];

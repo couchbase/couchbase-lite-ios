@@ -924,6 +924,34 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testConflictResolverPreservesFlags {
+    NSString* docId = @"doc";
+    NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    NSDictionary* localData = @{@"key1": @"value1", @"blob": blob};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docId withLocal: localData withRemote: remoteData];
+    
+    CBLDocument* localDoc = [self.db documentWithID: docId];
+    Assert(0 != localDoc.c4Doc.revFlags);
+    Assert(localDoc.c4Doc.revFlags & kRevHasAttachments);
+    
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    __block C4RevisionFlags localRevFlags = 0;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        localRevFlags = con.localDocument.c4Doc.revFlags;
+        return con.localDocument;
+    }];
+    
+    pullConfig.conflictResolver = resolver;
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    localDoc = [self.db documentWithID: docId];
+    Assert(localDoc.c4Doc.revFlags & kRevHasAttachments & localRevFlags);
+}
+
 #endif
 
 @end
