@@ -552,7 +552,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     convertError(c4err, &error);
     
     // Transient error or maybe still reachable:
-    if (transient || _reachability.reachableWithoutStart) {
+    if (transient || _reachability.reachable) {
         // On transient error, retry periodically, with exponential backoff:
         auto delay = retryDelay(++_retryCount);
         CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",

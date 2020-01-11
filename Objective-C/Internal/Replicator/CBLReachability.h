@@ -79,9 +79,6 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
     The call will be on the runloop or dispatch queue specified in the start method. */
 @property (copy, nullable, nonatomic) CBLReachabilityOnChangeBlock onChange;
 
-/** Is this host reachable via SCNetworkReachabilityGetFlags */
-@property (readonly, nonatomic) BOOL reachableWithoutStart;
-
 #if DEBUG
 + (void) setAlwaysAssumesProxy: (BOOL)alwaysAssumesProxy;   // For debugging
 #endif
