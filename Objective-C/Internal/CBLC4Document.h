@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) C4Document* rawDoc;
 
-@property (readonly, nonatomic) C4DocumentFlags flags;
+@property (readonly, nonatomic) C4RevisionFlags revFlags;
 
 @property (readonly, nonatomic) C4SequenceNumber sequence;
 

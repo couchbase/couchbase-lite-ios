@@ -208,7 +208,7 @@ using namespace fleece;
         
         BOOL foundConflict = NO;
         while(!foundConflict && c4doc_selectNextLeafRevision(_c4Doc.rawDoc, true, true, nullptr)) {
-            foundConflict = (_c4Doc.flags & kRevIsConflict) != 0;
+            foundConflict = (_c4Doc.revFlags & kRevIsConflict) != 0;
         }
         if (foundConflict)
             self.c4Doc = _c4Doc;     // This will update to the selected revision
@@ -244,7 +244,7 @@ using namespace fleece;
 
 - (BOOL) isDeleted {
     CBL_LOCK(self) {
-        return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
+        return _c4Doc != nil ? (_c4Doc.revFlags & kRevDeleted) != 0 : NO;
     }
 }
 
