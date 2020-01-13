@@ -180,9 +180,7 @@ static BOOL sAlwaysAssumeProxy = NO;
 }
 
 - (NSString*) status {
-    if (!_reachabilityKnown)
-        return @"unknown";
-    else if (!self.reachable)
+    if (!self.reachable)
         return @"unreachable";
 #if TARGET_OS_IPHONE
     else if (!self.reachableByWiFi)
@@ -205,10 +203,15 @@ static BOOL sAlwaysAssumeProxy = NO;
 
 - (BOOL) reachable {
     // We want 'reachable' flag to be on, but not if user intervention is required (like PPP login)
+    if (_reachabilityKnown)
+        return (_reachabilityFlags & kSCNetworkReachabilityFlagsReachable)
+        && !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
+    
     SCNetworkReachabilityFlags flag;
     if (SCNetworkReachabilityGetFlags(_ref, &flag))
         return (flag & kSCNetworkReachabilityFlagsReachable) &&
         !(flag & kSCNetworkReachabilityFlagsInterventionRequired);
+    
     return false;
 }
 
