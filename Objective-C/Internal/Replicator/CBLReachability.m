@@ -203,16 +203,13 @@ static BOOL sAlwaysAssumeProxy = NO;
 
 - (BOOL) reachable {
     // We want 'reachable' flag to be on, but not if user intervention is required (like PPP login)
+    SCNetworkReachabilityFlags flags;
     if (_reachabilityKnown)
-        return (_reachabilityFlags & kSCNetworkReachabilityFlagsReachable)
-        && !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
+        flags = _reachabilityFlags;
+    else if (!SCNetworkReachabilityGetFlags(_ref, &flags))
+        return false;
     
-    SCNetworkReachabilityFlags flag;
-    if (SCNetworkReachabilityGetFlags(_ref, &flag))
-        return (flag & kSCNetworkReachabilityFlagsReachable) &&
-        !(flag & kSCNetworkReachabilityFlagsInterventionRequired);
-    
-    return false;
+    return (flags & kSCNetworkReachabilityFlagsReachable) && !(flags & kSCNetworkReachabilityFlagsInterventionRequired);
 }
 
 - (BOOL) reachableByWiFi {
