@@ -209,9 +209,7 @@ typedef enum {
     // Target:
     id<CBLEndpoint> endpoint = _config.target;
     C4Address addr = {};
-#ifdef COUCHBASE_ENTERPRISE
     CBLDatabase* otherDB = nil;
-#endif
     NSURL* remoteURL = $castIf(CBLURLEndpoint, endpoint).url;
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
     CBLStringBytes scheme(remoteURL.scheme);
@@ -287,11 +285,12 @@ typedef enum {
     
     C4Error err;
     CBL_LOCK(_config.database) {
-        if (remoteURL) {
+        if (remoteURL || !otherDB)
             _repl = c4repl_new(_config.database.c4db, addr, dbName, params, &err);
-        } else  {
+        else  {
 #ifdef COUCHBASE_ENTERPRISE
-            _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, &err);
+            if (otherDB)
+                _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, &err);
 #else
             Assert(remoteURL, @"Endpoint has no URL");
 #endif
