@@ -172,7 +172,9 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         if (![self getBlobStore: &blobStore andKey: &key])
             return nil;
         //TODO: If data is large, can get the file path & memory-map it
-        NSData* content = sliceResult2data(c4blob_getContents(blobStore, key, nullptr));
+        FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
+        NSData* content = sliceResult2data(res);
+        FLSliceResult_Free(res);
         if (content && content.length <= kMaxCachedContentLength)
             _content = content;
         return content;
