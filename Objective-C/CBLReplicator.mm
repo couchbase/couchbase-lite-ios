@@ -36,7 +36,6 @@
 #import "CBLReachability.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
-#import "CBLTimer.h"
 #import "CBLErrorMessage.h"
 
 #import "c4Replicator.h"
@@ -48,18 +47,6 @@
 using namespace std;
 using namespace fleece;
 
-// Maximum number of retries before a one-shot replication gives up
-static constexpr unsigned kMaxOneShotRetryCount = 2;
-
-// Longest possible retry delay (only a continuous replication will reach this)
-// But a change in reachability will also trigger a retry.
-static constexpr NSTimeInterval kMaxRetryDelay = 10 * 60;
-
-// The function governing the exponential backoff of retries
-static NSTimeInterval retryDelay(unsigned retryCount) {
-    NSTimeInterval delay = 1 << min(retryCount, 30u);
-    return min(delay, kMaxRetryDelay);
-}
 
 // Replicator progress level types:
 typedef enum {
@@ -90,16 +77,13 @@ typedef enum {
     NSString* _desc;
     CBLReplicatorState _state;
     C4ReplicatorStatus _rawStatus;
-    unsigned _retryCount;
     CBLReachability* _reachability;
     CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
     CBLChangeNotifier<CBLDocumentReplication*>* _docReplicationNotifier;
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
-    BOOL _cancelSuspending;         // Cancel the current suspending request
     unsigned _conflictCount;        // Current number of conflict resolving tasks
     BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
-    dispatch_source_t _retryTimer;
 }
 
 @synthesize config=_config;
@@ -148,11 +132,6 @@ typedef enum {
     return _desc;
 }
 
-- (void) clearRepl {
-    c4repl_free(_repl);
-    _repl = nullptr;
-}
-
 - (void) start {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Starting...", self);
@@ -162,47 +141,8 @@ typedef enum {
             return;
         }
         Assert(!_repl);
-        _retryCount = 0;
         [self _start];
     }
-}
-
-- (void) resetAndScheduleRetry {
-    [self resetRetryCount];
-    [self scheduleRetry: 0];
-}
-
-- (void) scheduleRetry: (NSTimeInterval)delayInSeconds {
-    [self cancelRetry];
-    
-    __weak CBLReplicator *weakSelf = self;
-    _retryTimer = [CBLTimer scheduleIn: _dispatchQueue
-                                 after: delayInSeconds
-                                 block: ^{
-        [weakSelf _retry];
-    }];
-}
-
-- (void) resetRetryCount {
-    CBLLogVerbose(Sync, @"%@: Resetting the retry count", self);
-    _retryCount = 0;
-}
-
-- (void) _retry {
-    CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Retrying...", self);
-        if (_repl || _state <= kCBLStateStopping) {
-            CBLLogInfo(Sync, @"%@: Ignore retrying (state = %d, status = %d)",
-                       self, _state, _rawStatus.level);
-            return;
-        }
-        [self _start];
-    }
-}
-
-- (void) cancelRetry {
-    [CBLTimer cancel: _retryTimer];
-    _retryTimer = nil;
 }
 
 - (void) _start {
@@ -281,8 +221,7 @@ typedef enum {
     };
     
     _state = kCBLStateStarting;
-    _cancelSuspending = NO;
-    
+
     C4Error err;
     CBL_LOCK(_config.database) {
         if (remoteURL || !otherDB)
@@ -313,10 +252,10 @@ typedef enum {
             [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
         }
         
-    #if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
         if (!_config.allowReplicatingInBackground)
             [self setupBackgrounding];
-    #endif
+#endif
     } else {
         status = {kC4Stopped, {}, err};
     }
@@ -352,22 +291,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         
         CBLLogInfo(Sync, @"%@: Stopping...", self);
         _state = kCBLStateStopping;
-        [self _stop];
-    }
-}
-
-- (void) _stop {
-    [self cancelRetry];
-    
-    if (_repl) {
-        // Stop the replicator:
-        c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
-    } else if (_rawStatus.level == kC4Offline) {
-        // Switch the offline status to stoppped:
-        dispatch_async(_dispatchQueue, ^{
-            [self stopReachabilityObserver];
-            [self c4StatusChanged: {.level = kC4Stopped}];
-        });
+        if (_repl)
+            c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
     }
 }
 
@@ -457,13 +382,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) reachabilityChanged {
-    CBL_LOCK(self) {
-        bool reachable = _reachability.reachable;
-        if (reachable && _state == kCBLStateOffline) {
-            CBLLogInfo(Sync, @"%@: Server may now be reachable; retrying...", self);
-            [self resetAndScheduleRetry];
-        }
-    }
+    c4repl_setHostReachable(_repl, _reachability.reachable);
 }
 
 #pragma mark - STATUS CHANGES:
@@ -479,12 +398,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Should be called from the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        // Convert stopped to offline if suspending or having a transient/network error:
-        if (c4Status.level == kC4Stopped && _state > kCBLStateStopping) {
-            if (_state == kCBLStateSuspending || [self handleError: c4Status.error])
-                c4Status.level = kC4Offline;
-        }
-        
+        NSLog(@"STATUS CHANGED %d", c4Status.level);
         // Record raw status:
         _rawStatus = c4Status;
         
@@ -493,24 +407,19 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             if (_state == kCBLStateStarting) {
                 _state = kCBLStateRunning;
             }
-            _retryCount = 0;
             [self stopReachabilityObserver];
         }
         
         // Offline / suspending:
-        BOOL resume = NO;
         if (c4Status.level == kC4Offline) {
-            [self clearRepl];
-            if (_state == kCBLStateSuspending) {
+            if (_state == kCBLStateSuspending)
                 _state = kCBLStateSuspended;
-                resume = _cancelSuspending;
-            } else
+            else
                 _state = kCBLStateOffline;
         }
         
         // Stopped:
         if (c4Status.level == kC4Stopped) {
-            [self clearRepl];
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
@@ -533,46 +442,13 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         
         if (!_deferReplicatorNotification)
             [self updateAndPostStatus];
-        
-        if (resume)
-            [self resetAndScheduleRetry];
-        
+
     #if TARGET_OS_IPHONE
         //  End the current background task when the replicator is idle:
         if (c4Status.level == kC4Idle)
             [self endCurrentBackgroundTask];
     #endif
     }
-}
-
-- (bool) handleError: (C4Error)c4err {
-    // If this is a transient error, or if I'm continuous and the error might go away with a change
-    // in network (i.e. network down, hostname unknown), then go offline and retry later.
-    bool transient = c4error_mayBeTransient(c4err) ||
-        (c4err.domain == WebSocketDomain && c4err.code == kCBLWebSocketCloseUserTransient);
-    if (!transient && !(_config.continuous && c4error_mayBeNetworkDependent(c4err)))
-        return false;   // nope, this is permanent
-    if (!_config.continuous && _retryCount >= kMaxOneShotRetryCount)
-        return false;   // too many retries
-
-    [self clearRepl];
-    NSError *error = nil;
-    convertError(c4err, &error);
-    
-    // Transient error or maybe still reachable:
-    if (transient || _reachability.reachable) {
-        // On transient error, retry periodically, with exponential backoff:
-        auto delay = retryDelay(++_retryCount);
-        CBLLogInfo(Sync, @"%@: Transient error (%@); will retry in %.0f sec...",
-                   self, error.localizedDescription, delay);
-        [self scheduleRetry: delay];
-    } else {
-        CBLLogInfo(Sync, @"%@: Network error (%@); will retry when network changes...",
-                   self, error.localizedDescription);
-        // Also retry when the network changes:
-        [self startReachabilityObserver];
-    }
-    return true;
 }
 
 - (void) updateAndPostStatus {
@@ -721,27 +597,7 @@ static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
 
 - (void) setSuspended: (BOOL)suspended {
     CBL_LOCK(self) {
-        if (_state <= kCBLStateStopping) {
-            CBLLogInfo(Sync, @"%@: Ignore suspended = %d (state = %d, status = %d)",
-                       self, suspended, _state, _rawStatus.level);
-            return;
-        }
-        
-        BOOL changed = suspended != (_state == kCBLStateSuspended || _state == kCBLStateSuspending);
-        if (changed) {
-            CBLLogInfo(Sync, @"%@: Set suspended = %d (state = %d, status = %d)",
-                       self, suspended, _state, _rawStatus.level);
-            if (_state == kCBLStateSuspending) {
-                _cancelSuspending = !suspended;
-                return;
-            }
-            
-            if (suspended) {
-                _state = kCBLStateSuspending;
-                [self _stop];
-            } else
-                [self resetAndScheduleRetry];
-        }
+        c4repl_setSuspended(_repl, suspended);
     }
 }
 
