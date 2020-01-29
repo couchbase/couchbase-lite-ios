@@ -77,6 +77,7 @@ typedef enum {
     NSString* _desc;
     CBLReplicatorState _state;
     C4ReplicatorStatus _rawStatus;
+    NSURL* _reachabilityURL;
     CBLReachability* _reachability;
     CBLReplicatorProgressLevel _progressLevel;
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
@@ -112,13 +113,9 @@ typedef enum {
     return self;
 }
 
-- (CBLReplicatorConfiguration*) config {
-    return _config;
-}
-
 - (void) dealloc {
-    c4repl_free(_repl);
     [_reachability stop];
+    c4repl_free(_repl);
 }
 
 - (NSString*) description {
@@ -140,13 +137,44 @@ typedef enum {
                     self,  _state, _rawStatus.level);
             return;
         }
-        Assert(!_repl);
-        [self _start];
+
+        C4ReplicatorStatus status;
+        C4Error err;
+        if ([self _setupC4Replicator: &err]) {
+            // Start the C4Replicator:
+            c4repl_start(_repl);
+            status = c4repl_getStatus(_repl);
+            CBL_LOCK(_config.database) {
+                [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
+            }
+#if TARGET_OS_IPHONE
+            if (!_config.allowReplicatingInBackground)
+                [self setupBackgrounding];
+#endif
+        } else {
+            // Failed to create C4Replicator:
+            NSError *error = nil;
+            convertError(err, &error);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
+                         self, error.localizedDescription);
+            status = {kC4Stopped, {}, err};
+        }
+
+        // Post an initial notification:
+        statusChanged(_repl, status, (__bridge void*)self);
     }
 }
 
-- (void) _start {
-    // Target:
+// Initializes _repl with a new C4Replicator the first time it's called.
+// On subsequent calls, just updates the options.
+- (bool) _setupC4Replicator: (C4Error*)outErr {
+    if (_repl) {
+        // If _repl exists, just update the options dict, in case -resetCheckpoint has been called:
+        c4repl_setOptions(_repl, self._encodedOptions);
+        return true;
+    }
+
+    // Address:
     id<CBLEndpoint> endpoint = _config.target;
     C4Address addr = {};
     CBLDatabase* otherDB = nil;
@@ -157,11 +185,10 @@ typedef enum {
     CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
     if (remoteURL) {
         // Fill out the C4Address:
-        NSUInteger port = [remoteURL.port unsignedIntegerValue];
         addr = {
             .scheme = scheme,
             .hostname = host,
-            .port = (uint16_t)port,
+            .port = remoteURL.port.unsignedShortValue,
             .path = path
         };
     } else {
@@ -171,49 +198,37 @@ typedef enum {
         Assert(remoteURL, @"Endpoint has no URL");
 #endif
     }
-    
-    // Encode the options:
-    alloc_slice optionsFleece;
-    
-    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
-    
-    // Update resetCheckpoint flag if needed:
-    if (_resetCheckpoint) {
-        options[@kC4ReplicatorResetCheckpoint] = @(YES);
-        _resetCheckpoint = NO;
-    }
-    
-    if (options.count) {
-        Encoder enc;
-        enc << options;
-        optionsFleece = enc.finish();
-    }
-    
-    BOOL allowReachability = YES;
+
+    // Socket factory:
     C4SocketFactory socketFactory = { };
+    _reachabilityURL = nil;
 #ifdef COUCHBASE_ENTERPRISE
     auto messageEndpoint = $castIf(CBLMessageEndpoint, endpoint);
     if (messageEndpoint) {
         socketFactory = messageEndpoint.socketFactory;
         addr.scheme = C4STR("x-msg-endpt"); // put something in the address so it's not illegal
-        allowReachability = NO;
     } else
 #endif
-        if (remoteURL)
+    {
+        if (remoteURL) {
             socketFactory = CBLWebSocket.socketFactory;
+            NSString* hostname = remoteURL.host;
+            if (hostname.length > 0 && ![hostname isEqualToString: @"localhost"]
+                                    && ![hostname isEqualToString: @"127.0.0.1"]) {
+                _reachabilityURL = remoteURL;
+            }
+        }
+    }
     socketFactory.context = (__bridge void*)self;
-    
-    if (allowReachability)
-        [self initReachability: remoteURL];
-    
-    // Create a C4Replicator:
+
+    // Parameters:
+    alloc_slice optionsFleece = self._encodedOptions;
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
         .pushFilter = filter(_config.pushFilter, true),
         .validationFunc = filter(_config.pullFilter, false),
-        .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
+        .optionsDictFleece = optionsFleece,
         .onStatusChanged = &statusChanged,
         .onDocumentsEnded = &onDocsEnded,
         .callbackContext = (__bridge void*)self,
@@ -222,46 +237,36 @@ typedef enum {
     
     _state = kCBLStateStarting;
 
-    C4Error err;
+    // Create a C4Replicator:
     CBL_LOCK(_config.database) {
         if (remoteURL || !otherDB)
-            _repl = c4repl_new(_config.database.c4db, addr, dbName, params, &err);
+            _repl = c4repl_new(_config.database.c4db, addr, dbName, params, outErr);
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB)
-                _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, &err);
+                _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
 #else
             Assert(remoteURL, @"Endpoint has no URL");
 #endif
         }
-        
-        if (!_repl) {
-            NSError *error = nil;
-            convertError(err, &error);
-            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
-                         self, error.localizedDescription);
-            return;
-        }
-        c4repl_start(_repl);
     }
-    
-    C4ReplicatorStatus status;
-    if (_repl) {
-        status = c4repl_getStatus(_repl);
-        CBL_LOCK(_config.database) {
-            [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
-        }
-        
-#if TARGET_OS_IPHONE
-        if (!_config.allowReplicatingInBackground)
-            [self setupBackgrounding];
-#endif
-    } else {
-        status = {kC4Stopped, {}, err};
+
+    return (_repl != nullptr);
+}
+
+- (alloc_slice) _encodedOptions {
+    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
+
+    // Update resetCheckpoint flag if needed:
+    if (_resetCheckpoint) {
+        options[@kC4ReplicatorResetCheckpoint] = @(YES);
+        _resetCheckpoint = NO;
     }
-    
-    // Post an initial notification:
-    statusChanged(_repl, status, (__bridge void*)self);
+
+    Encoder enc;
+    enc << options;
+    return enc.finish();
 }
 
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
@@ -320,6 +325,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+#pragma mark - CHANGE NOTIFIERS:
+
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLReplicatorChange*))listener {
     return [self addChangeListenerWithQueue: nil listener: listener];
 }
@@ -352,37 +359,36 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-#pragma mark - Reachability
-
-- (void) initReachability: (NSURL*)remoteURL {
-    if (!remoteURL)
-        return;
-    
-    NSString* hostname = remoteURL.host;
-    if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
-        return;
-    
-    _reachability = [[CBLReachability alloc] initWithURL: remoteURL];
-    __weak auto weakSelf = self;
-    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
-}
+#pragma mark - REACHABILITY:
 
 - (void) startReachabilityObserver {
-    if (!_reachability) {
-        CBLLogVerbose(Sync, @"%@: Not starting reachability observer, `_reachability` not initialized", self);
+    if (!_reachabilityURL)
         return;
+
+    if (!_reachability) {
+        CBLLogVerbose(Sync, @"%@: Starting reachability observer", self);
+        _reachability = [[CBLReachability alloc] initWithURL: _reachabilityURL];
+        __weak auto weakSelf = self;
+        _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
+        [_reachability startOnQueue: _dispatchQueue];
     }
-    
-    [_reachability startOnQueue: _dispatchQueue];
 }
 
 // Should be called from _dispatchQueue
 - (void) stopReachabilityObserver {
-    [_reachability stop];
+    if (_reachability) {
+        CBLLogVerbose(Sync, @"%@: Stopping reachability observer", self);
+        [_reachability stop];
+        _reachability = nil;
+    }
 }
 
+// Callback from reachability observer
 - (void) reachabilityChanged {
-    c4repl_setHostReachable(_repl, _reachability.reachable);
+    CBL_LOCK(self) {
+        if (_reachability)
+            c4repl_setHostReachable(_repl, _reachability.reachable);
+    }
 }
 
 #pragma mark - STATUS CHANGES:
@@ -395,10 +401,10 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     });
 }
 
-// Should be called from the dispatch queue
+// Called from statusChanged(), on the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        NSLog(@"STATUS CHANGED %d", c4Status.level);
+        NSLog(@"STATUS CHANGED %d", c4Status.level);//TEMP
         // Record raw status:
         _rawStatus = c4Status;
         
@@ -412,14 +418,17 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         
         // Offline / suspending:
         if (c4Status.level == kC4Offline) {
-            if (_state == kCBLStateSuspending)
+            if (_state == kCBLStateSuspending) {
                 _state = kCBLStateSuspended;
-            else
+            } else {
                 _state = kCBLStateOffline;
+                [self startReachabilityObserver];
+            }
         }
         
         // Stopped:
         if (c4Status.level == kC4Stopped) {
+            [self stopReachabilityObserver];
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
@@ -427,7 +436,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             if (_conflictCount == 0)
                 [self stopped];
         }
-        
+
         // replicator status callback
         /// stopped and idle state, we will defer status callback till conflicts finish resolving
         if (_conflictCount > 0 && (c4Status.level == kC4Stopped || c4Status.level == kC4Idle)) {
@@ -455,18 +464,20 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     NSError* error = nil;
     if (_rawStatus.error.code)
         convertError(_rawStatus.error, &error);
-    
-    self.status = [[CBLReplicatorStatus alloc] initWithStatus: _rawStatus];
-    
+
     CBLLogInfo(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
                self, kC4ReplicatorActivityLevelNames[_rawStatus.level],
-               _rawStatus.progress.unitsCompleted, _rawStatus.progress.unitsTotal, self.status.error);
+               _rawStatus.progress.unitsCompleted, _rawStatus.progress.unitsTotal, error);
+
+    // This calls KV observers:
+    self.status = [[CBLReplicatorStatus alloc] initWithStatus: _rawStatus];
     
+    // This calls listeners:
     [_changeNotifier postChange: [[CBLReplicatorChange alloc] initWithReplicator: self
                                                                           status: self.status]];
 }
 
-#pragma mark - DOCUMENT-LEVEL ERRORS:
+#pragma mark - DOCUMENT-LEVEL 0:
 
 static void onDocsEnded(C4Replicator* repl,
                         bool pushing,
@@ -551,7 +562,7 @@ static void onDocsEnded(C4Replicator* repl,
                    (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
 }
 
-#pragma mark - Push/Pull Filter
+#pragma mark - PUSH/PULL FILTER:
 
 static bool pushFilter(C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
@@ -587,7 +598,7 @@ static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 }
 
-#pragma mark - BACKGROUNDING SUPPORT
+#pragma mark - BACKGROUNDING SUPPORT:
 
 - (BOOL) active {
     CBL_LOCK(self) {
@@ -603,7 +614,7 @@ static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
 
 @end
 
-#pragma mark - CBLReplicatorStatus
+#pragma mark - CBLReplicatorStatus:
 
 @implementation CBLReplicatorStatus
 
