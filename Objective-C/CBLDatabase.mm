@@ -989,7 +989,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
                 CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
                                                           localDocument: localDoc.isDeleted ? nil : localDoc
                                                          remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
-                 
+                
                 resolvedDoc = [conflictResolver resolve: conflict];
             }
             
