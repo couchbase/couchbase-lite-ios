@@ -989,7 +989,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
                 CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
                                                           localDocument: localDoc.isDeleted ? nil : localDoc
                                                          remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
-                
+                 
                 resolvedDoc = [conflictResolver resolve: conflict];
             }
             
@@ -1057,21 +1057,17 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             BOOL isDeleted = YES;
             if (resolvedDoc) {
                 mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
-                @try {
-                    // Unless the remote revision is being used as-is, we need a new revision:
-                    mergedBody = [resolvedDoc encode: outError];
-                } @catch (NSException *ex) {
-                    CBLWarn(Sync, @"Exception while encoding the doc '%@' body: %@",
-                            resolvedDoc.id, ex.description);
-                    *outError = [NSError errorWithDomain: CBLErrorDomain
-                                                    code: CBLErrorUnexpectedError
-                                                userInfo: @{NSLocalizedDescriptionKey: ex.description}];
+                
+                // Unless the remote revision is being used as-is, we need a new revision:
+                NSError* err = nil;
+                mergedBody = [resolvedDoc encode: &err];
+                if (err) {
+                    createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
                     return false;
                 }
+                
                 if (!mergedBody) {
-                    *outError = [NSError errorWithDomain: CBLErrorDomain
-                                                    code: CBLErrorUnexpectedError
-                                                userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessageResolvedDocContainsNull}];
+                    createError(CBLErrorUnexpectedError, kCBLErrorMessageResolvedDocContainsNull, outError);
                     return false;
                 }
                 isDeleted = resolvedDoc.isDeleted;

@@ -838,7 +838,7 @@
     [replicator removeChangeListenerWithToken: docReplToken];
 }
 
-- (void)testConflictResolverReturningBlobFromDifferentDB {
+- (void) testConflictResolverReturningBlobFromDifferentDB {
     NSString* docID = @"doc";
     NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
@@ -867,6 +867,7 @@
     [replicator removeChangeListenerWithToken: token];
     
     // using blob from remote document of user's- which is a different database
+    
     CBLDocument* otherDBDoc = [otherDB documentWithID: docID];
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
