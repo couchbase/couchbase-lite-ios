@@ -867,7 +867,6 @@
     [replicator removeChangeListenerWithToken: token];
     
     // using blob from remote document of user's- which is a different database
-    
     CBLDocument* otherDBDoc = [otherDB documentWithID: docID];
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
