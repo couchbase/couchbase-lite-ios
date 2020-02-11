@@ -776,6 +776,15 @@
     AssertEqualObjects(order[1], order[2]);
 }
 
+/*
+ 1. starts replication and tries to resolve the conflict
+ 2. inside CCR, it wait for same conflict to resolve(via another attempt separately).
+ 3. suspend the replicator
+ 4. once replicator becomes offline, make replicator unsuspend.
+ 5. when replcator becomes unsuspend, it will attempt to resolve conflict separately.
+ 6. document resolved successfully, with second attempt,
+ 7. once the first CCR tries again, conflict is already been resolved.
+ */
 - (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
@@ -794,9 +803,11 @@
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         int c = ccrCount;
         if (ccrCount++ == 0) {
+            // 2
             [expCCR fulfill];
             [self waitForExpectations: @[expFirstDocResolve] timeout: 5.0];
         }
+        // 5
         return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
     }];
     pullConfig.conflictResolver = resolver;
@@ -805,6 +816,7 @@
     id changeToken = [replicator addChangeListener:^(CBLReplicatorChange * change) {
         __strong CBLReplicator* re = r;
         if (change.status.activity == kCBLReplicatorOffline) {
+            // 4
             [re setSuspended: NO];
         }
         if (change.status.activity == kCBLReplicatorStopped) {
@@ -815,14 +827,17 @@
     id docReplToken = [replicator addDocumentReplicationListener:^(CBLDocumentReplication * docRepl) {
         noOfNotificationReceived++;
         if (noOfNotificationReceived == 1) {
+            // 6
             [expFirstDocResolve fulfill];
         }
         AssertEqualObjects(docRepl.documents.firstObject.id, docID);
     }];
     
+    // 1
     [replicator start];
     [self waitForExpectations: @[expCCR] timeout: 5.0];
     
+    // 3
     // in between the conflict, we wil suspend replicator.
     [replicator setSuspended: YES];
     [self waitForExpectations: @[expSTOP] timeout: 15.0];
@@ -831,6 +846,8 @@
     AssertEqual(noOfNotificationReceived, 2u);
     CBLDocument* doc = [self.db documentWithID: docID];
     AssertEqualObjects([doc toDictionary], localData);
+    
+    // 7
     AssertEqualObjects(custom.lines.lastObject, @"Unable to select conflicting revision for doc1, "
             "the conflict may have been resolved...");
     
@@ -838,7 +855,8 @@
     [replicator removeChangeListenerWithToken: docReplToken];
 }
 
-- (void) testConflictResolverReturningBlobFromDifferentDB {
+// TODO: CBL-649
+- (void) _testConflictResolverReturningBlobFromDifferentDB {
     NSString* docID = @"doc";
     NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
