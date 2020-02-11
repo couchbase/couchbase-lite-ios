@@ -142,6 +142,7 @@ typedef enum {
         C4Error err;
         if ([self _setupC4Replicator: &err]) {
             // Start the C4Replicator:
+            _state = kCBLStateStarting;
             c4repl_start(_repl);
             status = c4repl_getStatus(_repl);
             CBL_LOCK(_config.database) {
@@ -234,8 +235,6 @@ typedef enum {
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
     };
-    
-    _state = kCBLStateStarting;
 
     // Create a C4Replicator:
     CBL_LOCK(_config.database) {
