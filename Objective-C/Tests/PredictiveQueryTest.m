@@ -543,7 +543,8 @@
     AssertEqual(aggregateModel.numberOfCalls, 2u); // The value should be cached by the index
 }
 
-- (void) testIndexMultiplePredictionValuesUsingValueIndex {
+// TODO: CBL-671
+- (void) _testIndexMultiplePredictionValuesUsingValueIndex {
     [self createDocumentWithNumbers: @[@1, @2, @3, @4, @5]];
     [self createDocumentWithNumbers: @[@6, @7, @8, @9, @10]];
     
