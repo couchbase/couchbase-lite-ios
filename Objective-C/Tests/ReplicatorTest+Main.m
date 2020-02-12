@@ -572,7 +572,8 @@
     AssertEqual(self.db.count, 2u);
 }
 
-- (void)testShortP2P {
+// TODO: CBL-683
+- (void) _testShortP2P {
     //int testNo = 1;
     for(int i = 0; i < 2; i++) {
         CBLProtocolType protocolType = i % 1 ? kCBLProtocolTypeMessageStream : kCBLProtocolTypeByteStream;
@@ -674,15 +675,19 @@
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePushAndPull usingUID:@"p2ptest3"];
 }
 
-- (void) testP2PRecoverableFailureDuringOpen {
+
+// TODO: CBL-652
+- (void) _testP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
 }
 
-- (void)testP2PRecoverableFailureDuringSend {
+// TODO: CBL-652
+- (void) _testP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
 }
 
-- (void)testP2PRecoverableFailureDuringReceive {
+// TODO: CBL-652
+- (void) _testP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
 }
 

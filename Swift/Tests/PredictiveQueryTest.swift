@@ -504,7 +504,8 @@ class PredictiveQueryTest: CBLTestCase {
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
     }
     
-    func testIndexMultiplePredictionValuesUsingValueIndex() throws {
+    // TODO: CBL-671
+    func _testIndexMultiplePredictionValuesUsingValueIndex() throws {
         createDocument(withNumbers: [1, 2, 3, 4, 5])
         createDocument(withNumbers: [6, 7, 8, 9, 10])
         

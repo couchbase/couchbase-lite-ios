@@ -856,7 +856,7 @@
 }
 
 // TODO: CBL-649
-- (void) _testConflictResolverReturningBlobFromDifferentDB {
+- (void) testConflictResolverReturningBlobFromDifferentDB {
     NSString* docID = @"doc";
     NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
