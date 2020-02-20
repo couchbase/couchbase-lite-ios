@@ -855,7 +855,6 @@
     [replicator removeChangeListenerWithToken: docReplToken];
 }
 
-// TODO: CBL-649
 - (void) testConflictResolverReturningBlobFromDifferentDB {
     NSString* docID = @"doc";
     NSData* content = [@"I'm a blob." dataUsingEncoding: NSUTF8StringEncoding];

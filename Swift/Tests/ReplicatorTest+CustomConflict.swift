@@ -538,8 +538,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(db.document(withID: docID)?.string(forKey: "key2"), "value2")
     }
     
-    // TODO: CBL-649
-    func _testConflictResolverReturningBlobFromDifferentDB() throws {
+    func testConflictResolverReturningBlobFromDifferentDB() throws {
         let docID = "doc"
         let content = "I am a blob".data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
