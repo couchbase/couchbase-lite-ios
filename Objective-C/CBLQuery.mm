@@ -150,7 +150,7 @@ using namespace fleece;
     [_liveQuery stop];
     
     CBL_LOCK(self.database) {
-        c4query_free(_c4Query);
+        c4query_release(_c4Query);
     }
 }
 

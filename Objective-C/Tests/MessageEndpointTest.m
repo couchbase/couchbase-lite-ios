@@ -145,6 +145,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     
     Assert([_otherDB close: nil]);
     _otherDB = nil;
+    _replicator = nil;
     [super tearDown];
 }
 
@@ -272,6 +273,10 @@ withDiscoveryInfo: (nullable NSDictionary<NSString*,NSString*>*)info {
 - (void)browser:(nonnull MCNearbyServiceBrowser*)browser
        lostPeer:(nonnull MCPeerID*)peerID { }
 
+- (void)browser:(MCNearbyServiceBrowser *)browser didNotStartBrowsingForPeers:(NSError *)error {
+    NSLog(@"*** Multipeer browser ERROR: %@", error);
+}
+
 #pragma mark - MCNearbyServiceAdvertiserDelegate
 
 - (void) advertiser: (nonnull MCNearbyServiceAdvertiser*)advertiser
@@ -279,6 +284,10 @@ didReceiveInvitationFromPeer: (nonnull MCPeerID*)peerID
         withContext: (nullable NSData*)context
   invitationHandler: (nonnull void (^)(BOOL, MCSession* _Nullable))invitationHandler {
     invitationHandler(YES, _serverSession);
+}
+
+- (void)advertiser:(MCNearbyServiceAdvertiser *)advertiser didNotStartAdvertisingPeer:(NSError *)error {
+    NSLog(@"*** Multipeer advertiser ERROR: %@", error);
 }
 
 #pragma mark - MCSessionDelegate

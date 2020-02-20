@@ -183,9 +183,10 @@
         return {};
     }
     FLError flErr;
+    const char* errMessage = FLEncoder_GetErrorMessage(encoder);
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
     if (!body.buf)
-        convertError(flErr, outError);
+        createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     return body;
 }
 

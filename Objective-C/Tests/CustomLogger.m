@@ -43,7 +43,7 @@
 }
 
 - (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    [_lines addObject: message];
+    [_lines addObject: message];        
 }
 
 @end

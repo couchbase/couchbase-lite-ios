@@ -56,7 +56,7 @@
 }
 
 - (void) dealloc {
-    c4doc_free(_rawDoc);
+    c4doc_release(_rawDoc);
 }
 
 @end

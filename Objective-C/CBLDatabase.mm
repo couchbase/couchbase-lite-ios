@@ -530,7 +530,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         FLSliceResult res = c4db_getIndexes(_c4db, nullptr);
         FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
-        FLSliceResult_Free(res);
+        FLSliceResult_Release(res);
         
         id indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
         FLDoc_Release(doc);
@@ -818,7 +818,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 }
 
 - (void) freeC4DB {
-    c4db_free(_c4db);
+    c4db_release(_c4db);
     _c4db = nil;
 }
 
@@ -890,8 +890,8 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             return YES;
         }
         @finally {
-            c4doc_free(curDoc);
-            c4doc_free(newDoc);
+            c4doc_release(curDoc);
+            c4doc_release(newDoc);
         }
     }
 }
@@ -934,7 +934,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         *outDoc = c4doc_create(_c4db, docID, (FLSlice)body, revFlags, &err);
     }
 
-    FLSliceResult_Free(body);
+    FLSliceResult_Release(body);
     
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
         // conflict is not an error, at this level
@@ -1057,21 +1057,17 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
             BOOL isDeleted = YES;
             if (resolvedDoc) {
                 mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
-                @try {
-                    // Unless the remote revision is being used as-is, we need a new revision:
-                    mergedBody = [resolvedDoc encode: outError];
-                } @catch (NSException *ex) {
-                    CBLWarn(Sync, @"Exception while encoding the doc '%@' body: %@",
-                            resolvedDoc.id, ex.description);
-                    *outError = [NSError errorWithDomain: CBLErrorDomain
-                                                    code: CBLErrorUnexpectedError
-                                                userInfo: @{NSLocalizedDescriptionKey: ex.description}];
+                
+                // Unless the remote revision is being used as-is, we need a new revision:
+                NSError* err = nil;
+                mergedBody = [resolvedDoc encode: &err];
+                if (err) {
+                    createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
                     return false;
                 }
+                
                 if (!mergedBody) {
-                    *outError = [NSError errorWithDomain: CBLErrorDomain
-                                                    code: CBLErrorUnexpectedError
-                                                userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessageResolvedDocContainsNull}];
+                    createError(CBLErrorUnexpectedError, kCBLErrorMessageResolvedDocContainsNull, outError);
                     return false;
                 }
                 isDeleted = resolvedDoc.isDeleted;
