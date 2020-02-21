@@ -370,7 +370,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     C4Error c4err = {};
     if (![self _setupC4Replicator: &c4err]) {
         convertError(c4err, error);
-        CBLWarnError(Sync, @"Error while setting up replicator: %d/%d", c4err.domain, c4err.code);
+        CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, c4err.domain, c4err.code);
         return nil;
     }
     
@@ -404,7 +404,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     C4Error c4err = {};
     if (![self _setupC4Replicator: &c4err]) {
         convertError(c4err, error);
-        CBLWarnError(Sync, @"Error while setting up replicator: %d/%d", c4err.domain, c4err.code);
+        CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, c4err.domain, c4err.code);
         return NO;
     }
     
