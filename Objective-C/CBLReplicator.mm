@@ -358,6 +358,67 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                                         code: CBLErrorUnsupported
+                                     userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return nil;
+    }
+    
+    C4Error c4err = {};
+    if (![self _setupC4Replicator: &c4err]) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while setting up replicator: %d/%d", c4err.domain, c4err.code);
+        return nil;
+    }
+    
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
+        return nil;
+    }
+
+    if (result.size <= 0)
+        return [NSSet set];
+
+    FLValue val = FLValue_FromData(C4Slice(result), kFLTrusted);
+    NSArray<NSString*>* list = FLValue_GetNSObject(val, nullptr);
+
+    return [NSSet setWithArray: list];
+}
+
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+
+    if (_config.replicatorType > 1) {
+        if (error)
+            *error = [NSError errorWithDomain: CBLErrorDomain
+                code: CBLErrorUnsupported
+            userInfo: @{NSLocalizedDescriptionKey: kCBLErrorMessagePullOnlyPendingDocIDs}];
+        return NO;
+    }
+
+    C4Error c4err = {};
+    if (![self _setupC4Replicator: &c4err]) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error while setting up replicator: %d/%d", c4err.domain, c4err.code);
+        return NO;
+    }
+    
+    CBLStringBytes docID(documentID);
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &c4err);
+    if (c4err.code > 0) {
+        convertError(c4err, error);
+        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", c4err.domain, c4err.code);
+        return false;
+    }
+
+    return isPending;
+}
+
 #pragma mark - REACHABILITY:
 
 - (void) startReachabilityObserver {
