@@ -358,7 +358,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-- (NSSet<NSString*>*) pendingDocumentIds: (NSError**)error {
+- (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
     if (_config.replicatorType > 1) {
         if (error)
             *error = [NSError errorWithDomain: CBLErrorDomain
@@ -367,17 +367,20 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return nil;
     }
     
-    C4Error c4err = {};
-    if (![self _setupC4Replicator: &c4err]) {
-        convertError(c4err, error);
-        CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, c4err.domain, c4err.code);
-        return nil;
+    CBL_LOCK(self) {
+        C4Error err = {};
+        if (![self _setupC4Replicator: &err]) {
+            convertError(err, error);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, err.domain, err.code);
+            return nil;
+        }
     }
     
-    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &c4err);
-    if (c4err.code > 0) {
-        convertError(c4err, error);
-        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", c4err.domain, c4err.code);
+    C4Error err = {};
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
+    if (err.code > 0) {
+        convertError(err, error);
+        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", err.domain, err.code);
         return nil;
     }
 
@@ -401,18 +404,21 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         return NO;
     }
 
-    C4Error c4err = {};
-    if (![self _setupC4Replicator: &c4err]) {
-        convertError(c4err, error);
-        CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, c4err.domain, c4err.code);
-        return NO;
+    CBL_LOCK(self) {
+        C4Error err = {};
+        if (![self _setupC4Replicator: &err]) {
+            convertError(err, error);
+            CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, err.domain, err.code);
+            return NO;
+        }
     }
     
+    C4Error err = {};
     CBLStringBytes docID(documentID);
-    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &c4err);
-    if (c4err.code > 0) {
-        convertError(c4err, error);
-        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", c4err.domain, c4err.code);
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &err);
+    if (err.code > 0) {
+        convertError(err, error);
+        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", err.domain, err.code);
         return false;
     }
 

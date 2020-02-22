@@ -47,7 +47,7 @@
     return [NSSet setWithSet: docIds];
 }
 
-- (void) validatePendingDocumentIds: (NSSet*)docIds count: (NSUInteger)count {
+- (void) validatePendingDocumentIDs: (NSSet*)docIds count: (NSUInteger)count {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
 
@@ -58,21 +58,20 @@
         
         // verify before starting the replicator
         NSError* err = nil;
-        NSSet* ids = [replicator pendingDocumentIds: &err];
+        NSSet* ids = [replicator pendingDocumentIDs: &err];
         Assert([ids isEqualToSet: docIds]);
         AssertEqual(ids.count, count);
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
-
-            NSError* err = nil;
-            NSSet* ids = [replicator pendingDocumentIds: &err];
-            AssertNil(err);
+            NSError* pendingErr = nil;
+            NSSet* pendingIds = [change.replicator pendingDocumentIDs: &pendingErr];
+            AssertNil(pendingErr);
 
             if (change.status.activity == kCBLReplicatorConnecting) {
-                Assert([ids isEqualToSet: docIds]);
-                AssertEqual(ids.count, count);
+                Assert([pendingIds isEqualToSet: docIds]);
+                AssertEqual(pendingIds.count, count);
             } else if (change.status.activity == kCBLReplicatorStopped) {
-                AssertEqual(ids.count, 0);
+                AssertEqual(pendingIds.count, 0);
             }
         }];
     }];
@@ -124,7 +123,7 @@
 }
 
 #pragma mark - Unit Tests
-#pragma mark - pendingDocumentIds API
+#pragma mark - pendingDocumentIDs API
 
 - (void) testPendingDocIDsPullOnlyException {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
@@ -139,7 +138,7 @@
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
             if (change.status.activity == kCBLReplicatorBusy) {
                 [wSelf expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
-                    return [change.replicator pendingDocumentIds: err].count != 0;
+                    return [change.replicator pendingDocumentIDs: err].count != 0;
                 }];
             }
         }];
@@ -150,7 +149,7 @@
 
 - (void) testPendingDocIDsWithCreate {
     NSSet* docIds = [self createDocs];
-    [self validatePendingDocumentIds: docIds count: kNoOfDocument];
+    [self validatePendingDocumentIDs: docIds count: kNoOfDocument];
 }
 
 - (void) testPendingDocIDsWithUpdate {
@@ -167,7 +166,7 @@
         [self saveDocument: doc];
     }
 
-    [self validatePendingDocumentIds: updatedDocIds count: updatedDocIds.count];
+    [self validatePendingDocumentIDs: updatedDocIds count: updatedDocIds.count];
 }
 
 - (void) testPendingDocIdsWithDelete {
@@ -184,7 +183,7 @@
         [self.db deleteDocument: doc error: &err];
         AssertNil(err);
     }
-    [self validatePendingDocumentIds: updatedDocIds count: updatedDocIds.count];
+    [self validatePendingDocumentIDs: updatedDocIds count: updatedDocIds.count];
 }
 
 - (void) testPendingDocIdsWithPurge {
@@ -198,7 +197,7 @@
 
     NSMutableSet* updatedDocIds = [NSMutableSet setWithSet: docIds];
     [updatedDocIds removeObject: @"doc-3"];
-    [self validatePendingDocumentIds: updatedDocIds count: kNoOfDocument - 1];
+    [self validatePendingDocumentIDs: updatedDocIds count: kNoOfDocument - 1];
 }
 
 - (void) testPendingDocIdsWithFilter {
@@ -223,7 +222,7 @@
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
 
             NSError* err = nil;
-            NSSet* ids = [change.replicator pendingDocumentIds: &err];
+            NSSet* ids = [change.replicator pendingDocumentIDs: &err];
             AssertNil(err);
 
             if (change.status.activity == kCBLReplicatorConnecting) {

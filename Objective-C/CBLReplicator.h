@@ -160,7 +160,7 @@ typedef struct {
  @param error error On return, the error if any.
  @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
  */
-- (nullable NSSet<NSString*>*) pendingDocumentIds: (NSError**)error;
+- (nullable NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error;
 
 /**
  Checks if the document with the given ID has revisions pending push.  This API is a snapshot and results may
