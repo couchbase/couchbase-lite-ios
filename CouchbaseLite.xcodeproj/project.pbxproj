@@ -71,6 +71,10 @@
 		1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
+		1ACDD8D323FF5C4200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
+		1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
+		1ACDD8D523FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
 		1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
@@ -1380,26 +1384,19 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1ACDD8D123FF5BB300AF5D56 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2771A098228624C000B18E0A;
+			remoteInfo = LiteCoreWebSocket;
+		};
 		2749B9761EB25A660068DBF9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 27FC81E81EAAB0D90028E38E;
 			remoteInfo = "LiteCoreREST static";
-		};
-		2749B9781EB25A660068DBF9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 279D410E1EA5558100D8DD9D;
-			remoteInfo = "LiteCoreREST dylib";
-		};
-		2749B97E1EB25A660068DBF9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 279D40FE1EA54A9D00D8DD9D;
-			remoteInfo = civetweb;
 		};
 		275F927E1E4D30A4007FD5A2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1414,13 +1411,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 9398D9111E03434200464432;
 			remoteInfo = "CBL ObjC";
-		};
-		276740CC1EE7381F0036DE42 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 93FA3F481EE21A4D00D15CF5;
-			remoteInfo = "LiteCoreServ-iOS";
 		};
 		27BF03331FB6292D003D5BB8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1670,6 +1660,7 @@
 		1AAF6371226A8B060016754C /* QueryTest+Meta.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Meta.m"; sourceTree = "<group>"; };
 		1AAF6382226A8DBF0016754C /* QueryTest+Join.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Join.m"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
+		1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+PendingDocIds.m"; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
 		1AF555C322946ED90077DF6D /* QueryTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Main.m"; sourceTree = "<group>"; };
@@ -3094,16 +3085,14 @@
 				9398D9461E0347B600464432 /* libLiteCore.dylib */,
 				9369A36620775B2F009B5B83 /* LiteCore.framework */,
 				2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */,
-				2749B9791EB25A660068DBF9 /* libLiteCoreREST.dylib */,
+				1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */,
 				27F961961ED777EA0060F804 /* libSupport.a */,
 				9398D94A1E0347B600464432 /* LiteCoreCppTests */,
 				9398D94C1E0347B600464432 /* C4Tests */,
+				9398D9481E0347B600464432 /* LiteCoreTests.xctest */,
 				27DF7D841F424C840022F3DF /* libSQLite.a */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
-				2749B97F1EB25A660068DBF9 /* libcivetweb.a */,
-				9398D9481E0347B600464432 /* LiteCore Tests.xctest */,
 				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
-				276740CD1EE7381F0036DE42 /* LiteCoreServ-iOS.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
 			name = Products;
@@ -3179,6 +3168,7 @@
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
+				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
@@ -4362,32 +4352,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libLiteCoreWebSocket.a;
+			remoteRef = 1ACDD8D123FF5BB300AF5D56 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = "libLiteCoreREST-static.a";
 			remoteRef = 2749B9761EB25A660068DBF9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		2749B9791EB25A660068DBF9 /* libLiteCoreREST.dylib */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.dylib";
-			path = libLiteCoreREST.dylib;
-			remoteRef = 2749B9781EB25A660068DBF9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		2749B97F1EB25A660068DBF9 /* libcivetweb.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libcivetweb.a;
-			remoteRef = 2749B97E1EB25A660068DBF9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		276740CD1EE7381F0036DE42 /* LiteCoreServ-iOS.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "LiteCoreServ-iOS.app";
-			remoteRef = 276740CC1EE7381F0036DE42 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27DF7D841F424C840022F3DF /* libSQLite.a */ = {
@@ -4425,10 +4401,10 @@
 			remoteRef = 9398D9451E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D9481E0347B600464432 /* LiteCore Tests.xctest */ = {
+		9398D9481E0347B600464432 /* LiteCoreTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = "LiteCore Tests.xctest";
+			path = LiteCoreTests.xctest;
 			remoteRef = 9398D9471E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -5202,6 +5178,7 @@
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
+				1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
 				9369A6AE207DD0FD009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F146207D61EC00F19A89 /* QueryTest.m in Sources */,
@@ -5228,6 +5205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1ACDD8D523FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
@@ -5322,6 +5300,7 @@
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				1AA3D78622AB07D50098E16B /* CustomLogger.m in Sources */,
 				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
+				1ACDD8D323FF5C4200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
@@ -5447,6 +5426,7 @@
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				9388CC3E21C1E2AD005CA66D /* LogTest.m in Sources */,
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
+				1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
 				1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */,
 				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
