@@ -153,7 +153,7 @@ OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation_$EDITION$VERSION_SU
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
 
-if [[ -z "$XCFRAMEWORK" ]]
+if [[ -z $XCFRAMEWORK ]]
 then
   sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
   sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
@@ -169,9 +169,7 @@ fi
 echo "Make Objective-C framework zip file ..."
 mkdir -p "$OUTPUT_OBJC_DIR"
 cp -R "$BUILD_DIR/$SCHEME_PREFIX ObjC"/* "$OUTPUT_OBJC_DIR"
-if [[ -z ${WORKSPACE} ]]; then
-    cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
-else # official Jenkins build's license
+if [[ -n $WORKSPACE ]]; then
     cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
 pushd "$OUTPUT_OBJC_DIR"
@@ -182,9 +180,7 @@ popd
 echo "Make Swift framework zip file ..."
 mkdir -p "$OUTPUT_SWIFT_DIR"
 cp -R "$BUILD_DIR/$SCHEME_PREFIX Swift"/* "$OUTPUT_SWIFT_DIR"
-if [[ -z ${WORKSPACE} ]]; then
-    cp Scripts/Support/License/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
-else # official Jenkins build's license
+if [[ -n $WORKSPACE ]]; then
     cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi
 pushd "$OUTPUT_SWIFT_DIR" > /dev/null
