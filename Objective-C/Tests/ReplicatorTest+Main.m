@@ -255,10 +255,6 @@
         [r start];
         [self waitForExpectations: @[x] timeout: 10.0];
         [r removeChangeListenerWithToken: token];
-        
-        // TODO: Remove this:
-        // Add some delay:
-        // [NSThread sleepForTimeInterval: 1.0];
     }
     r = nil;
 }
@@ -620,10 +616,6 @@
         [self run:replConfig errorCode:0 errorDomain:nil];
         AssertEqual(_db.count, 2UL);
         
-        // TODO: Remove this:
-        // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-        // [NSThread sleepForTimeInterval: 0.5];
-        
         CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
         Assert([savedDoc booleanForKey:@"modified"]);
         savedDoc = [otherDB documentWithID:@"livesinotherdb"];
@@ -650,10 +642,6 @@
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePush usingUID:@"p2ptest1"];
     
-    // TODO: Remove this:
-    // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-    // [NSThread sleepForTimeInterval: 0.5];
-    
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
     Assert(success);
@@ -661,10 +649,6 @@
     Assert(success);
     [self reopenDB];
     [self runTwoStepContinuousWithType:kCBLReplicatorTypePull usingUID:@"p2ptest2"];
-    
-    // TODO: Remove this:
-    // Workaround : https://github.com/couchbase/couchbase-lite-core/issues/539
-    // [NSThread sleepForTimeInterval: 0.5];
     
     success = [otherDB delete:&err];
     otherDB = [self openDBNamed:otherDB.name error:&err];
@@ -676,17 +660,17 @@
 }
 
 
-// TODO: CBL-652
+// TODO: CBL-704
 - (void) _testP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
 }
 
-// TODO: CBL-652
+// TODO: CBL-704
 - (void) _testP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
 }
 
-// TODO: CBL-652
+// TODO: CBL-704
 - (void) _testP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
 }
