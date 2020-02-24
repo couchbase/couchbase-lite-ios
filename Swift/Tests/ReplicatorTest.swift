@@ -35,11 +35,6 @@ class ReplicatorTest: CBLTestCase {
     }
     
     override func tearDown() {
-        // TODO: Remove this
-        // Workaround to ensure that replicator's background cleaning task was done:
-        // https://github.com/couchbase/couchbase-lite-core/issues/520
-        // Thread.sleep(forTimeInterval: 0.3);
-        
         try! otherDB.close()
         otherDB = nil
         repl = nil

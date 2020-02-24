@@ -87,12 +87,6 @@
 }
 
 - (void) tearDown {
-    // TODO: Remove this:
-    // Workaround to ensure that replicator's background cleaning task was done:
-    // https://github.com/couchbase/couchbase-lite-core/issues/520
-    // https://github.com/couchbase/couchbase-lite-core/issues/539
-    // [NSThread sleepForTimeInterval: 0.5];
-    
     Assert([otherDB close: nil]);
     otherDB = nil;
     repl = nil;
