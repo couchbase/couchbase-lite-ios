@@ -20,6 +20,11 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Logs** 
+Sharing logs will make debugging and troubleshooting easier. 
+ - Enable console/file logging: [reference](https://docs.couchbase.com/couchbase-lite/2.7/swift.html#logging)
+ - Attach the logs(hide any sensitive data from it before submitting).
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
