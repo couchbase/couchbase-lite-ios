@@ -11,11 +11,10 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **To Reproduce**
-Steps to reproduce the behavior:
-1. Create document '...'
-2. Save document to database '....'
-3. Fetch document '....'
-4. See error
+Share a unit test or sample project or steps to reproduce the behavior
+1. Unit test or 
+2. Sample project or 
+3. Steps to reproduce it. 
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
