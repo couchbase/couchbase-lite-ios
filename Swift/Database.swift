@@ -418,7 +418,7 @@ public final class Database {
 
 extension CBLDatabase {
     func inBatch(block: () throws -> Void) throws -> Void {
-        try __inBatch(usingThrowableBlock: { (errPtr) in
+        try __inBatch(usingBlockWithError: { (errPtr) in
             do {
                 try block()
             } catch {
