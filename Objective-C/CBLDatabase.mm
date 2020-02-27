@@ -336,7 +336,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             NSError* err = nil;
             block(&err);
             if (err) {
-                // if swift throws an exception, `err` will be populated
+                // if swift throws an error, `err` will be populated
                 transaction.abort();
                 return createError(CBLErrorUnexpectedError,
                                    [NSString stringWithFormat: @"%@", err.localizedDescription],
