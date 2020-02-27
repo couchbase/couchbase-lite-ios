@@ -362,9 +362,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (BOOL) inBatch: (NSError**)outError usingBlock: (void (NS_NOESCAPE ^)())block {
     CBLAssertNotNil(block);
     
-    return [self inBatch: outError usingThrowableBlock:^(NSError **) {
-        block();
-    }];
+    return [self inBatch: outError usingThrowableBlock:^(NSError **) { block(); }];
 }
 
 #pragma mark - DATABASE MAINTENANCE
