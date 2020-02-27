@@ -231,11 +231,12 @@ class DatabaseTest: CBLTestCase {
         validateDocs(10)
     }
     
-    func testPartialSaveInBatch() throws {
+    func testSaveWithErrorInBatch() throws {
         do {
             try self.db.inBatch {
                 try self.createDocs(10)
-                throw NSError(domain: "X", code: 101, userInfo: nil)
+                XCTAssertEqual(db.count, 10)
+                throw NSError(domain: "someDomain", code: 500, userInfo: nil)
             }
         } catch {
             XCTAssertNotNil(error);
@@ -642,6 +643,24 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(db.count, 0)
     }
     
+    func testDeleteWithErrorInBatch() throws {
+        let docs = try createDocs(10)
+        do {
+            try self.db.inBatch {
+                for i in 0...9 {
+                    let doc = db.document(withID: docs[i].id)!
+                    try db.deleteDocument(doc)
+                    XCTAssertEqual(db.count, UInt64(9 - i))
+                }
+                throw NSError(domain: "someDomain", code: 500, userInfo: nil)
+            }
+        } catch {
+            XCTAssertNotNil(error);
+            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+        }
+        XCTAssertEqual(db.count, 10)
+    }
+    
     func testDeleteDocOnDeletedDB() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Daniel", forKey: "firstName")
@@ -794,6 +813,25 @@ class DatabaseTest: CBLTestCase {
                 XCTAssertEqual(self.db.count, UInt64(9 - i))
             }
         }
+        XCTAssertEqual(db.count, 0)
+    }
+    
+    func testPurgeWithErrorInBatch() throws {
+        let docs = try createDocs(10)
+        do {
+            try self.db.inBatch {
+                for i in 0...9 {
+                    let doc = db.document(withID: docs[i].id)!
+                    try db.purgeDocument(doc)
+                    XCTAssertEqual(db.count, UInt64(9 - i))
+                }
+                throw NSError(domain: "someDomain", code: 500, userInfo: nil)
+            }
+        } catch {
+            XCTAssertNotNil(error);
+            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+        }
+        XCTAssertEqual(db.count, 10)
     }
     
     func testPurgeDocumentOnADeletedDocument() throws {
@@ -874,6 +912,23 @@ class DatabaseTest: CBLTestCase {
             }
         }
         XCTAssertEqual(db.count, 0)
+    }
+    
+    func testPurgeDocIDWithErrorInBatch() throws {
+        let docs = try createDocs(10)
+        do {
+            try self.db.inBatch {
+                for i in 0...9 {
+                    try self.db.purgeDocument(withID: docs[i].id)
+                    XCTAssertEqual(db.count, UInt64(9 - i))
+                }
+                throw NSError(domain: "someDomain", code: 500, userInfo: nil)
+            }
+        } catch {
+            XCTAssertNotNil(error);
+            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+        }
+        XCTAssertEqual(db.count, 10)
     }
     
     func testDeletePurgedDocumentWithID() throws {
