@@ -231,6 +231,19 @@ class DatabaseTest: CBLTestCase {
         validateDocs(10)
     }
     
+    func testPartialSaveInBatch() throws {
+        do {
+            try self.db.inBatch {
+                try self.createDocs(10)
+                throw NSError(domain: "X", code: 101, userInfo: nil)
+            }
+        } catch {
+            XCTAssertNotNil(error);
+            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+        }
+        XCTAssertEqual(db.count, 0)
+    }
+    
     func testSaveManyDocs() throws {
         try createDocs(1000)
         XCTAssertEqual(db.count, 1000)

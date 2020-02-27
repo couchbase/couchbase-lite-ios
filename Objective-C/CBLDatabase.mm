@@ -319,7 +319,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark - BATCH OPERATION
 
-- (BOOL) inBatch: (NSError**)outError usingBlock: (void (NS_NOESCAPE ^)())block {
+- (BOOL) inBatch: (NSError**)outError usingThrowableBlock: (void (NS_NOESCAPE ^)(NSError**))block {
     CBLAssertNotNil(block);
     
     CBL_LOCK(self) {
@@ -332,7 +332,23 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (!transaction.begin())
             return convertError(transaction.error(), outError);
         
-        block();
+        @try {
+            NSError* err = nil;
+            block(&err);
+            if (err) {
+                // if swift throws an exception, `err` will be populated
+                transaction.abort();
+                return createError(CBLErrorUnexpectedError,
+                                   [NSString stringWithFormat: @"%@", err.localizedDescription],
+                                   outError);
+            }
+        } @catch(NSException* e) {
+            // if objc block throws an exception, control reaches here
+            transaction.abort();
+            return createError(CBLErrorUnexpectedError,
+                               [NSString stringWithFormat: @"%@ %@ %@", e.name, e.reason, e.userInfo],
+                               outError);
+        }
         
         if (!transaction.commit())
             return convertError(transaction.error(), outError);
@@ -341,6 +357,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     [self postDatabaseChanged];
     
     return YES;
+}
+
+- (BOOL) inBatch: (NSError**)outError usingBlock: (void (NS_NOESCAPE ^)())block {
+    CBLAssertNotNil(block);
+    
+    return [self inBatch: outError usingThrowableBlock:^(NSError **) {
+        block();
+    }];
 }
 
 #pragma mark - DATABASE MAINTENANCE

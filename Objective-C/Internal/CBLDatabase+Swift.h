@@ -23,4 +23,6 @@
 
 + (void) checkFileLogging: (BOOL)swift;
 
+- (BOOL) inBatch: (NSError**)error usingThrowableBlock: (void (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT;
+
 @end

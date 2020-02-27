@@ -368,6 +368,21 @@
     [self validateDocs: 10];
 }
 
+- (void) testPartialSaveInBatch {
+    __block NSError* error = nil;
+    [self ignoreException: ^{
+        BOOL success = [self.db inBatch: &error usingBlock: ^{
+            [self createDocs: 5];
+            [NSException raise: NSInternalInconsistencyException format: @""];
+        }];
+        AssertFalse(success);
+    }];
+    
+    AssertNotNil(error);
+    AssertEqual(error.code, CBLErrorUnexpectedError);
+    AssertEqual(self.db.count, 0u);
+}
+
 - (void) testSaveDocToClosedDB {
     [self closeDatabase: self.db];
     

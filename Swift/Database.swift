@@ -204,16 +204,8 @@ public final class Database {
     /// - Parameter block: The block to be executed as a batch operations.
     /// - Throws: An error on a failure.
     public func inBatch(using block: () throws -> Void ) throws {
-        var caught: Error? = nil
-        try _impl.inBatch(usingBlock: {
-            do {
-                try block()
-            } catch let error {
-                caught = error
-            }
-        })
-        if let caught = caught {
-            throw caught
+        try _impl.inBatch {
+            try block()
         }
     }
     
@@ -422,4 +414,16 @@ public final class Database {
 
     let _impl: CBLDatabase
     
+}
+
+extension CBLDatabase {
+    func inBatch(block: () throws -> Void) throws -> Void {
+        try __inBatch(usingThrowableBlock: { (errPtr) in
+            do {
+                try block()
+            } catch {
+                errPtr?.pointee = error as NSError
+            }
+        })
+    }
 }
