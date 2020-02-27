@@ -370,17 +370,13 @@
 
 - (void) testSaveWithErrorInBatch {
     __block NSError* error = nil;
-    [self ignoreException: ^{
-        BOOL success = [self.db inBatch: &error usingBlock: ^{
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db inBatch: &error usingBlock: ^{
             [self createDocs: 5];
             AssertEqual(self.db.count, 5);
             [NSException raise: NSInternalInconsistencyException format: @"some exception"];
         }];
-        AssertFalse(success);
     }];
-    
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorUnexpectedError);
     AssertEqual(self.db.count, 0u);
 }
 
@@ -909,29 +905,6 @@
     AssertEqual(self.db.count, 0u);
 }
 
-- (void) testDeleteWithErrorInBatch {
-    NSArray<CBLDocument*>* docs = [self createDocs: 10];
-    
-    __block NSError* error = nil;
-    [self ignoreException: ^{
-        BOOL success = [self.db inBatch: &error usingBlock: ^{
-            for(int i = 0; i < 10; i++) {
-                NSError* err;
-                CBLDocument* doc = [self.db documentWithID: docs[i].id];
-                Assert([self.db deleteDocument: doc error: &err]);
-                AssertNil(err);
-                AssertEqual((int)self.db.count, 9-i);
-            }
-            [NSException raise: NSInternalInconsistencyException format: @"some exception"];
-        }];
-        AssertFalse(success);
-    }];
-    
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorUnexpectedError);
-    AssertEqual(self.db.count, 10u);
-}
-
 - (void) testDeleteDocOnClosedDB {
     // Store doc
     CBLDocument* doc = [self generateDocumentWithID: @"doc1"];
@@ -1141,27 +1114,6 @@
     AssertEqual(0, (long)self.db.count);
 }
 
-- (void) testPurgeWithErrorInBatch {
-    NSArray<CBLDocument*>* docs = [self createDocs: 10];
-    
-    __block NSError* error = nil;
-    [self ignoreException: ^{
-        BOOL success = [self.db inBatch: &error usingBlock: ^{
-            for(int i = 0; i < 10; i++) {
-                CBLDocument* doc = [self.db documentWithID: docs[i].id];
-                [self purgeDocAndVerify: doc];
-                AssertEqual((int)self.db.count, 9-i);
-            }
-            [NSException raise: NSInternalInconsistencyException format: @"some exception"];
-        }];
-        AssertFalse(success);
-    }];
-    
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorUnexpectedError);
-    AssertEqual(self.db.count, 10u);
-}
-
 - (void) testPurgeDocOnClosedDB {
     // store doc
     CBLDocument* doc = [self generateDocumentWithID: @"doc1"];
@@ -1347,28 +1299,6 @@
     Assert(success);
     AssertNil(error);
     AssertEqual(0, (long)self.db.count);
-}
-
-- (void) testPurgeIDWithErrorInBatch {
-    NSArray<CBLDocument*>* docs = [self createDocs: 10];
-    
-    __block NSError* error = nil;
-    [self ignoreException: ^{
-        BOOL success = [self.db inBatch: &error usingBlock: ^{
-            for(int i = 0; i < 10; i++) {
-                NSError* err;
-                [self.db purgeDocumentWithID: docs[i].id error: &err];
-                AssertNil(err);
-                AssertEqual((int)self.db.count, 9-i);
-            }
-            [NSException raise: NSInternalInconsistencyException format: @"some exception"];
-        }];
-        AssertFalse(success);
-    }];
-    
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorUnexpectedError);
-    AssertEqual(self.db.count, 10u);
 }
 
 - (void) testPurgeDocumentWithIDOnClosedDB {

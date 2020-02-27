@@ -332,21 +332,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (!transaction.begin())
             return convertError(transaction.error(), outError);
         
-        @try {
-            NSError* err = nil;
-            block(&err);
-            if (err) {
-                // if swift throws an error, `err` will be populated
-                transaction.abort();
-                return createError(CBLErrorUnexpectedError,
-                                   [NSString stringWithFormat: @"%@", err.localizedDescription],
-                                   outError);
-            }
-        } @catch(NSException* e) {
-            // if objc block throws an exception, control reaches here
+        NSError* err = nil;
+        block(&err);
+        if (err) {
+            // if swift throws an error, `err` will be populated
             transaction.abort();
             return createError(CBLErrorUnexpectedError,
-                               [NSString stringWithFormat: @"%@ %@ %@", e.name, e.reason, e.userInfo],
+                               [NSString stringWithFormat: @"%@", err.localizedDescription],
                                outError);
         }
         
