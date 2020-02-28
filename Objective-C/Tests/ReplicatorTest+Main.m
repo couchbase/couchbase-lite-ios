@@ -439,7 +439,8 @@
     r = nil;
 }
 
-- (void) testBackgroundingWhenStopping {
+// TODO: CBL-722
+- (void) _testBackgroundingWhenStopping {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
