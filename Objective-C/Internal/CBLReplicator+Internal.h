@@ -24,11 +24,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(uint32_t, CBLCustomWebSocketCloseCode) {
-    kCBLWebSocketCloseUserTransient = kWebSocketCloseFirstAvailable + 1,
-    kCBLWebSocketCloseUserPermanent = kWebSocketCloseFirstAvailable + 2
-};
-
 @interface CBLReplicatorConfiguration ()
 
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
