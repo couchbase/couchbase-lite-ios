@@ -661,18 +661,15 @@
 }
 
 
-// TODO: CBL-704
-- (void) _testP2PRecoverableFailureDuringOpen {
+- (void) testP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
 }
 
-// TODO: CBL-704
-- (void) _testP2PRecoverableFailureDuringSend {
+- (void) testP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
 }
 
-// TODO: CBL-704
-- (void) _testP2PRecoverableFailureDuringReceive {
+- (void) testP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
 }
 
