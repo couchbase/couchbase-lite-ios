@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLReplicator+Internal.h"
 
 #define kDocIdFormat @"doc-%d"
 #define kActionKey @"action-key"
@@ -236,6 +237,49 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testPendingDocIdsWhenOffline {
+    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
+    CBLMutableDocument* doc = [self createDocument: @"doc-1"];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: YES];
+    
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    __block CBLReplicator* r;
+    id<CBLListenerToken> token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+        r = replicator;
+        NSError* err = nil;
+        NSSet* ids = [change.replicator pendingDocumentIDs: &err];
+        AssertNil(err);
+
+        if (change.status.activity == kCBLReplicatorConnecting) {
+            AssertEqual(ids.count, 1);
+        } else if (change.status.activity == kCBLReplicatorIdle) {
+            AssertEqual(ids.count, 0);
+            [r setSuspended: YES];
+            
+            CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
+            [doc2 setString: kCreateActionValue forKey: kActionKey];
+            [self saveDocument: doc2];
+            
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            AssertEqual(ids.count, 1);
+            [ids containsObject: @"doc-2"];
+            
+            [x fulfill];
+        }
+    }];
+    [replicator start];
+    [self waitForExpectations: @[x] timeout: 5.0];
+    
+    [replicator stop];
+    [replicator removeChangeListenerWithToken: token];
+}
+
 #pragma mark - IsDocumentPending API
 
 - (void) testIsDocumentPendingPullOnlyException {
@@ -350,6 +394,44 @@
             }
         }];
     }];
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) testIsDocumentPendingWhenOffline {
+    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
+    CBLMutableDocument* doc = [self createDocument: @"doc-1"];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: YES];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    __block CBLReplicator* r;
+    id<CBLListenerToken> token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+        r = replicator;
+        NSError* err = nil;
+        if (change.status.activity == kCBLReplicatorConnecting) {
+            Assert([change.replicator isDocumentPending: @"doc-1" error: &err]);
+        } else if (change.status.activity == kCBLReplicatorIdle) {
+            AssertFalse([change.replicator isDocumentPending: @"doc-1" error: &err]);
+            [r setSuspended: YES];
+            
+            CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
+            [doc2 setString: kCreateActionValue forKey: kActionKey];
+            [self saveDocument: doc2];
+            
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            Assert([change.replicator isDocumentPending: @"doc-2" error: &err]);
+            [x fulfill];
+        }
+        AssertNil(err);
+    }];
+    [replicator start];
+    [self waitForExpectations: @[x] timeout: 5.0];
+    
+    [replicator stop];
     [replicator removeChangeListenerWithToken: token];
 }
 
