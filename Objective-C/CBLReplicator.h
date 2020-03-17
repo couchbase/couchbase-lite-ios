@@ -170,7 +170,7 @@ typedef struct {
  @return true if the document has one or more revisions pending, false otherwise
  
  */
-- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error;
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW;
 
 @end
 
