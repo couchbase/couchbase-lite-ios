@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLReplicator+Internal.h"
 
 #define kDocIdFormat @"doc-%d"
 #define kActionKey @"action-key"
@@ -236,6 +237,55 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testPendingDocIdsWhenOffline {
+    XCTestExpectation* offline = [self expectationWithDescription: @"Replicator Offline"];
+    CBLMutableDocument* doc = [self createDocument: @"doc-1"];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: YES];
+    
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    __block CBLReplicator* r;
+    id<CBLListenerToken> token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+        r = replicator;
+        
+        if (change.status.activity == kCBLReplicatorIdle) {
+            // doc-1 is synced and becomes idle, suspend the replicator
+            NSError* err = nil;
+            NSSet* ids = [change.replicator pendingDocumentIDs: &err];
+            AssertNil(err);
+            AssertEqual(ids.count, 0);
+            [r setSuspended: YES];
+            
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            [offline fulfill];
+        }
+    }];
+    [replicator start];
+    
+    // repicator is offline
+    [self waitForExpectations: @[offline] timeout: 5.0];
+    
+    // create doc-2
+    CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
+    [doc2 setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc2];
+    
+    // validate
+    NSError* err = nil;
+    NSSet* ids = [change.replicator pendingDocumentIDs: &err];
+    AssertNil(err);
+    AssertEqual(ids.count, 1);
+    [ids containsObject: @"doc-2"];
+    
+    [replicator stop];
+    [replicator removeChangeListenerWithToken: token];
+}
+
 #pragma mark - IsDocumentPending API
 
 - (void) testIsDocumentPendingPullOnlyException {
@@ -350,6 +400,49 @@
             }
         }];
     }];
+    [replicator removeChangeListenerWithToken: token];
+}
+
+- (void) testIsDocumentPendingWhenOffline {
+    XCTestExpectation* offline = [self expectationWithDescription: @"Replicator Offline"];
+    CBLMutableDocument* doc = [self createDocument: @"doc-1"];
+    [doc setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: YES];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    __block CBLReplicator* r;
+    id<CBLListenerToken> token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+        r = replicator;
+        
+        if (change.status.activity == kCBLReplicatorIdle) {
+            // doc-1 is syned and replicator becomes idle, suspend replicator.
+            NSError* err = nil;
+            AssertFalse([change.replicator isDocumentPending: @"doc-1" error: &err]);
+            AssertNil(err);
+            
+            [r setSuspended: YES];
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            [offline fulfill];
+        }
+    }];
+    [replicator start];
+    
+    // replicator is offline
+    [self waitForExpectations: @[x] timeout: 5.0];
+    
+    // create doc-2
+    CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
+    [doc2 setString: kCreateActionValue forKey: kActionKey];
+    [self saveDocument: doc2];
+    
+    // validate
+    Assert([replicator isDocumentPending: @"doc-2" error: &err]);
+    
+    [replicator stop];
     [replicator removeChangeListenerWithToken: token];
 }
 
