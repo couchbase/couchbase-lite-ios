@@ -32,13 +32,15 @@
     
     CBLQueryExpression* DOC_ID  = [CBLQueryMeta id];
     CBLQueryExpression* DOC_SEQ = [CBLQueryMeta sequence];
+    CBLQueryExpression* DOC_REVID = [CBLQueryMeta revisionID];
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     CBLQuerySelectResult* S_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
+    CBLQuerySelectResult* S_DOC_REVID = [CBLQuerySelectResult expression: DOC_REVID];
     CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
     
-    CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID, S_DOC_SEQ, S_NUMBER1]
+    CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID, S_DOC_SEQ, S_DOC_REVID, S_NUMBER1]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
@@ -54,13 +56,19 @@
         NSInteger sequence1 = [r integerAtIndex: 1];
         NSInteger sequence2 = [r integerForKey: @"sequence"];
         
-        NSInteger number = [[r valueAtIndex: 2] integerValue];
+        NSString* revID1 = [r stringAtIndex: 2];
+        NSString* revID2 = [r stringForKey: @"revisionID"];
+        
+        NSInteger number = [[r valueAtIndex: 3] integerValue];
         
         AssertEqualObjects(id1,  id2);
         AssertEqualObjects(id1,  expectedDocIDs[(NSUInteger)(n-1)]);
         
         AssertEqual(sequence1, sequence2);
         AssertEqual(sequence1, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
+        
+        AssertEqualObjects(revID1,  revID2);
+        AssertEqualObjects(revID1,  [self.db documentWithID: id1].revisionID);
         
         AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
     }];
@@ -282,6 +290,55 @@
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], 0u);
+}
+
+- (void) testRevisionID {
+    // Create doc:
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
+    Assert([self.db saveDocument: doc error: &error], @"Error when saving a document: %@", error);
+    AssertNil(error);
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[kREVID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryMeta id] equalTo:
+                                            [CBLQueryExpression string: doc.id]]];
+    
+    [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r stringAtIndex: 0], doc.revisionID);
+    }];
+    
+    // Update doc:
+    [doc setValue: @"bar" forKey: @"foo"];
+    Assert([self.db saveDocument: doc error: &error], @"Error when updating a document: %@", error);
+    AssertNil(error);
+    
+    [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r stringAtIndex: 0], doc.revisionID);
+    }];
+    
+    // Use meta.revisionID in WHERE clause
+    q = [CBLQueryBuilder select: @[kDOCID]
+                                 from: [CBLQueryDataSource database: self.db]
+                                where: [[CBLQueryMeta revisionID] equalTo:
+                                        [CBLQueryExpression string: doc.revisionID]]];
+    
+    [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r stringAtIndex: 0], doc.id);
+    }];
+    
+    // Delete doc:
+    Assert([self.db deleteDocument: doc error: &error], @"Error when deleting a document: %@", error);
+    AssertNil(error);
+    
+    q = [CBLQueryBuilder select: @[kREVID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [[CBLQueryMeta isDeleted] equalTo:
+                                  [CBLQueryExpression boolean: YES]]];
+    
+    [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r) {
+        AssertEqualObjects([r stringAtIndex: 0], doc.revisionID);
+    }];
 }
 
 @end

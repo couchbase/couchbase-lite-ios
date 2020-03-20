@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 
 #define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
+#define kREVID      [CBLQuerySelectResult expression: [CBLQueryMeta revisionID]]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
 
 @interface QueryTest : CBLTestCase

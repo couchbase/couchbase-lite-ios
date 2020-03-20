@@ -28,14 +28,9 @@ extern NSString* const kCBLAllPropertiesName;
 
 @property(nonatomic, readonly) NSString* keyPath;
 
-@property(nonatomic, readonly) NSString* columnName;
-
 @property(nonatomic, readonly, nullable) NSString* from; // Data Source Alias
 
-- (instancetype) initWithKeyPath: (NSString*)keyPath
-                      columnName: (nullable NSString*)columnName
-                            from: (nullable NSString*)from;
-
+- (instancetype) initWithKeyPath: (NSString*)keyPath from: (nullable NSString*)from;
 
 + (instancetype) allFrom: (nullable NSString*)from;
 

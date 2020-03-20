@@ -69,8 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression
                                  as: (nullable NSString*)alias;
 
-@property (nonatomic, readonly, nullable) NSString* columnName;
-
 @end
 
 

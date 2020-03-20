@@ -623,15 +623,17 @@ class QueryTest: CBLTestCase {
         try loadNumbers(5)
         
         let DOC_ID  = Meta.id
+        let REV_ID = Meta.revisionID
         let DOC_SEQ = Meta.sequence
         let NUMBER1 = Expression.property("number1")
         
         let S_DOC_ID  = SelectResult.expression(DOC_ID)
+        let S_REV_ID  = SelectResult.expression(REV_ID)
         let S_DOC_SEQ = SelectResult.expression(DOC_SEQ)
         let S_NUMBER1 = SelectResult.expression(NUMBER1)
         
         let q = QueryBuilder
-            .select(S_DOC_ID, S_DOC_SEQ, S_NUMBER1)
+            .select(S_DOC_ID, S_REV_ID, S_DOC_SEQ, S_NUMBER1)
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(DOC_SEQ))
         
@@ -643,13 +645,19 @@ class QueryTest: CBLTestCase {
             let id1 = r.string(at: 0)!
             let id2 = r.string(forKey: "id")
             
-            let sequence1 = r.int(at: 1)
+            let revID1 = r.string(at: 1)!
+            let revID2 = r.string(forKey: "revisionID")
+            
+            let sequence1 = r.int(at: 2)
             let sequence2 = r.int(forKey: "sequence")
             
-            let number = r.int(at: 2)
+            let number = r.int(at: 3)
             
             XCTAssertEqual(id1, id2)
             XCTAssertEqual(id1, expectedDocIDs[Int(n-1)])
+            
+            XCTAssertEqual(revID1, revID2)
+            XCTAssertEqual(revID1, db.document(withID: id1)!.revisionID)
             
             XCTAssertEqual(sequence1, sequence2)
             XCTAssertEqual(sequence1, expectedSeqs[Int(n-1)])
@@ -1584,6 +1592,53 @@ class QueryTest: CBLTestCase {
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 0)
+    }
+    
+    // MARK: META - revisionID
+    
+    func testMetaRevisionID() throws {
+        // Create doc:
+        let doc = MutableDocument()
+        try db.saveDocument(doc)
+        
+        var q = QueryBuilder
+            .select(SelectResult.expression(Meta.revisionID))
+            .from(DataSource.database(db))
+            .where(Meta.id.equalTo(Expression.string(doc.id)))
+        
+        try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0)!, doc.revisionID!)
+        })
+        
+        // Update doc:
+        doc.setValue("bar", forKey: "foo")
+        try db.saveDocument(doc)
+        
+        try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0)!, doc.revisionID!)
+        })
+        
+        // Use meta.revisionID in WHERE clause
+        q = QueryBuilder
+        .select(SelectResult.expression(Meta.id))
+        .from(DataSource.database(db))
+        .where(Meta.revisionID.equalTo(Expression.string(doc.revisionID!)))
+        
+        try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0)!, doc.id)
+        })
+        
+        // Delete doc:
+        try db.deleteDocument(doc)
+        
+        q = QueryBuilder
+        .select(SelectResult.expression(Meta.revisionID))
+        .from(DataSource.database(db))
+        .where(Meta.isDeleted.equalTo(Expression.boolean(true)))
+        
+        try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0)!, doc.revisionID!)
+        })
     }
     
 }

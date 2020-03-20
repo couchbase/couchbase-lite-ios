@@ -39,6 +39,11 @@ public final class Meta {
         return MetaExpression(type: .id)
     }
     
+    /// A metadata expression refering to the revisionID of the document.
+    public static var revisionID: MetaExpressionProtocol {
+        return MetaExpression(type: .revisionID)
+    }
+    
     /// A metadata expression refering to the sequence number of the document.
     /// The sequence number indicates how recently the document has been changed. If one document's
     /// `sequence` is greater than another's, that means it was changed more recently.
@@ -59,7 +64,7 @@ public final class Meta {
 }
 
 /* internal */ enum MetaType {
-    case id, sequence, isDeleted, expiration
+    case id, revisionID, sequence, isDeleted, expiration
 }
 
 /* internal */ class MetaExpression: QueryExpression, MetaExpressionProtocol {
@@ -85,6 +90,8 @@ public final class Meta {
         switch type {
         case .id:
             return CBLQueryMeta.id(from: from)
+        case .revisionID:
+            return CBLQueryMeta.revisionID(from: from)
         case .sequence:
             return CBLQueryMeta.sequence(from: from)
         case .isDeleted:

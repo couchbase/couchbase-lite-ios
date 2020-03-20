@@ -69,17 +69,6 @@
     return self;
 }
 
-- (nullable NSString*) columnName {
-    if (_alias)
-        return _alias;
-    
-    CBLPropertyExpression* property = $castIf(CBLPropertyExpression, _expression);
-    if (property)
-        return property.columnName;
-    
-    return nil;
-}
-
 - (id) asJSON {
     id json = [_expression asJSON];
     if (_alias)
