@@ -21,6 +21,7 @@
 #include "c4.h"
 
 #define kDatabaseName @"testdb"
+#define kOtherDatabaseName @"otherdb"
 
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"
@@ -33,12 +34,13 @@
     int _c4ObjectCount;
 }
 
-@synthesize db=_db;
+@synthesize db=_db, otherDB=_otherDB;
 
 - (void) setUp {
     [super setUp];
     
     [self deleteDBNamed: kDatabaseName error: nil];
+    [self deleteDBNamed: kOtherDatabaseName error: nil];
     
     _c4ObjectCount = c4_getObjectCount();
     NSString* dir = self.directory;
@@ -52,11 +54,15 @@
 
 - (void) tearDown {
     if (_db) {
-        @autoreleasepool {
-            NSError* error;
-            Assert([_db close: &error], @"Failed to close db: %@", error);
-            _db = nil;
-        }
+        NSError* error;
+        Assert([_db close: &error], @"Failed to close db: %@", error);
+        _db = nil;
+    }
+    
+    if (_otherDB) {
+        NSError* error;
+        Assert([_otherDB close: &error], @"Failed to close otherdb: %@", error);
+        _otherDB = nil;
     }
 
     // Wait a little while for objects to be cleaned up:
@@ -96,8 +102,10 @@
 
 - (void) reopenDB {
     NSError *error;
-    Assert([_db close: &error], @"Close error: %@", error);
-    _db = nil;
+    if (_db) {
+        Assert([_db close: &error], @"Close error: %@", error);
+        _db = nil;
+    }
     [self openDB];
 }
 
@@ -107,8 +115,26 @@
     [self reopenDB];
 }
 
+- (void) openOtherDB {
+    Assert(!_otherDB);
+    NSError* error;
+    _otherDB = [self openDBNamed: kOtherDatabaseName error: &error];
+    AssertNil(error);
+    AssertNotNil(_db);
+}
+
+- (void) reopenOtherDB {
+    if (_otherDB) {
+        NSError *error;
+        Assert([_otherDB close: &error], @"Close error: %@", error);
+        AssertNil(error);
+        _otherDB = nil;
+    }
+    [self openOtherDB];
+}
+
 - (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error {
-    return [CBLDatabase deleteDatabase: name inDirectory:self.directory error: error];
+    return [CBLDatabase deleteDatabase: name inDirectory: self.directory error: error];
 }
 
 - (void) deleteDatabase: (CBLDatabase*)database {

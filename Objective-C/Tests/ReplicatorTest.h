@@ -43,7 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 #endif
 
 @interface ReplicatorTest : CBLTestCase {
-    CBLDatabase* otherDB;
     CBLReplicator* repl;
     NSTimeInterval timeout;    
     BOOL pinServerCert;

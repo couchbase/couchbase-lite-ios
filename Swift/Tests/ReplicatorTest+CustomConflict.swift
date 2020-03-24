@@ -39,7 +39,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     #if COUCHBASE_ENTERPRISE
     
     func getConfig(_ type: ReplicatorType) -> ReplicatorConfiguration {
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         return config(target: target, type: type, continuous: false)
     }
     
@@ -54,7 +54,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let config = getConfig(.push)
         run(config: config, expectedError: nil)
         
-        // Now make different changes in db and otherDBs
+        // Now make different changes in db and oDBs
         if let data = localData {
             let doc1a = db.document(withID: docID)!.toMutable()
             doc1a.setData(data)
@@ -64,11 +64,11 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         }
         
         if let data = remoteData {
-            let doc1b = otherDB.document(withID: docID)!.toMutable()
+            let doc1b = oDB.document(withID: docID)!.toMutable()
             doc1b.setData(data)
-            try otherDB.saveDocument(doc1b)
+            try oDB.saveDocument(doc1b)
         } else {
-            try otherDB.deleteDocument(otherDB.document(withID: docID)!)
+            try oDB.deleteDocument(oDB.document(withID: docID)!)
         }
     }
     
@@ -243,9 +243,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     func testDocumentReplicationEventForConflictedDocs() throws {
         var resolver: TestConflictResolver!
         
-        // when resolution is skipped: here doc from otherDB throws an exception & skips it
+        // when resolution is skipped: here doc from oDB throws an exception & skips it
         resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
-            return self.otherDB.document(withID: "doc")
+            return self.oDB.document(withID: "doc")
         }
         ignoreException {
             try self.validateDocumentReplicationEventForConflictedDocs(resolver)
@@ -353,7 +353,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
-            return self.otherDB.document(withID: docID) // doc from different DB!!
+            return self.oDB.document(withID: docID) // doc from different DB!!
         }
         config.conflictResolver = resolver
         var token: ListenerToken!
@@ -442,9 +442,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         docID = "doc2"
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         try db.deleteDocument(db.document(withID: docID)!)
-        doc = otherDB.document(withID: docID)!.toMutable()
+        doc = oDB.document(withID: docID)!.toMutable()
         doc.setString("value3", forKey: "key3")
-        try otherDB.saveDocument(doc)
+        try oDB.saveDocument(doc)
         
         // delete remote
         docID = "doc3"
@@ -452,18 +452,18 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         doc = db.document(withID: docID)!.toMutable()
         doc.setString("value3", forKey: "key3")
         try db.saveDocument(doc)
-        try otherDB.deleteDocument(otherDB.document(withID: docID)!)
+        try oDB.deleteDocument(oDB.document(withID: docID)!)
         
         // delete local but higher remote generation
         docID = "doc4"
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         try db.deleteDocument(db.document(withID: docID)!)
-        doc = otherDB.document(withID: docID)!.toMutable()
+        doc = oDB.document(withID: docID)!.toMutable()
         doc.setString("value3", forKey: "key3")
-        try otherDB.saveDocument(doc)
-        doc = otherDB.document(withID: docID)!.toMutable()
+        try oDB.saveDocument(doc)
+        doc = oDB.document(withID: docID)!.toMutable()
         doc.setString("value4", forKey: "key4")
-        try otherDB.saveDocument(doc)
+        try oDB.saveDocument(doc)
         
         let config = getConfig(.pull)
         config.conflictResolver = ConflictResolver.default
@@ -566,11 +566,11 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
         
         // using blob from remote document of user's- which is a different database
-        let otherDBDoc = otherDB.document(withID: docID)!
+        let oDBDoc = oDB.document(withID: docID)!
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         resolver = TestConflictResolver() { (conflict) -> Document? in
             let mDoc = conflict.localDocument?.toMutable()
-            mDoc?.setBlob(otherDBDoc.blob(forKey: "blob"), forKey: "blob")
+            mDoc?.setBlob(oDBDoc.blob(forKey: "blob"), forKey: "blob")
             return mDoc
         }
         config.conflictResolver = resolver

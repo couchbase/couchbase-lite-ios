@@ -21,6 +21,9 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest_PendingDocIds: ReplicatorTest {
+    
+    #if COUCHBASE_ENTERPRISE
+    
     let kActionKey = "action-key"
     var noOfDocument = 5
     let kCreateActionValue = "doc-create"
@@ -46,7 +49,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         if rConfig != nil {
             replConfig = rConfig
         } else {
-            replConfig = config(target: DatabaseEndpoint(database: otherDB),
+            replConfig = config(target: DatabaseEndpoint(database: oDB),
                                 type: .push, continuous: false)
         }
         
@@ -81,7 +84,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         if rConfig != nil {
             replConfig = rConfig
         } else {
-            replConfig = config(target: DatabaseEndpoint(database: otherDB),
+            replConfig = config(target: DatabaseEndpoint(database: oDB),
                                 type: .push, continuous: false)
         }
         
@@ -113,7 +116,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
     // MARK: Unit Tests
     func testPendingDocIDsPullOnlyException() throws {
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .pull, continuous: false)
         
         var replicator: Replicator!
@@ -147,7 +150,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testPendingDocIDsWithUpdate() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         run(config: replConfig, expectedError: nil)
         
@@ -164,7 +167,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testPendingDocIdsWithDelete() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         run(config: replConfig, expectedError: nil)
         
@@ -189,7 +192,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testPendingDocIdsWithFilter() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         replConfig.pushFilter = { (doc, flags) -> Bool in
             return doc.id == "doc-3"
@@ -201,7 +204,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     // MARK: isDocumentPending
     
     func testIsDocumentPendingPullOnlyException() throws {
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .pull, continuous: false)
         
         var replicator: Replicator!
@@ -237,7 +240,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testIsDocumentPendingWithUpdate() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         run(config: replConfig, expectedError: nil)
         
@@ -254,7 +257,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testIsDocumentPendingWithDelete() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         run(config: replConfig, expectedError: nil)
         
@@ -279,7 +282,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testIsDocumentPendingWithPushFilter() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         replConfig.pushFilter = { (doc, flags) -> Bool in
             return doc.id == "doc-3"
@@ -287,4 +290,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
         try validateIsDocumentPending(["doc-3": true, "doc-1": false], config: replConfig)
     }
+    
+    #endif
+    
 }
