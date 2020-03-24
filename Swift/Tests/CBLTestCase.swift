@@ -24,9 +24,15 @@ import CouchbaseLiteSwift
 
 class CBLTestCase: XCTestCase {
 
+    /// Opened when setting up each test case.
     var db: Database!
-
+    
+    /// Need to explicitly open by calling openOtherDB() function.
+    var otherDB: Database?
+    
     let databaseName = "testdb"
+    
+    let otherDatabaseName = "otherdb"
     
     #if COUCHBASE_ENTERPRISE
         let directory = NSTemporaryDirectory().appending("CouchbaseLite-EE")
@@ -39,6 +45,8 @@ class CBLTestCase: XCTestCase {
         
         try? deleteDB(name: databaseName);
         
+        try? deleteDB(name: otherDatabaseName);
+        
         if FileManager.default.fileExists(atPath: self.directory) {
             try! FileManager.default.removeItem(atPath: self.directory)
         }
@@ -49,6 +57,7 @@ class CBLTestCase: XCTestCase {
     
     override func tearDown() {
         try! db.close()
+        try! otherDB?.close()
         super.tearDown()
     }
     
@@ -71,6 +80,16 @@ class CBLTestCase: XCTestCase {
     func cleanDB() throws {
         try db.delete()
         try reopenDB()
+    }
+    
+    func openOtherDB() throws {
+        otherDB = try openDB(name: otherDatabaseName)
+    }
+    
+    func reopenOtherDB() throws {
+        try otherDB?.close()
+        otherDB = nil
+        try openOtherDB()
     }
     
     func deleteDB(name: String) throws {

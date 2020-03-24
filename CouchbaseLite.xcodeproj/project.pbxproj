@@ -5827,6 +5827,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = "Debug-EE";
@@ -5998,6 +5999,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = "Release-EE";
@@ -6235,6 +6237,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = Debug;
@@ -6251,6 +6254,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = "Debug-EE";
@@ -6267,6 +6271,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = Release;
@@ -6283,6 +6288,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = "Release-EE";
@@ -6718,6 +6724,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = Debug;
@@ -6733,6 +6740,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
 			name = Release;

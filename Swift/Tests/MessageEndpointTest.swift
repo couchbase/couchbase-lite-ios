@@ -77,7 +77,7 @@ class MessageEndpointTest: CBLTestCase, MCNearbyServiceBrowserDelegate,
 MCNearbyServiceAdvertiserDelegate, MCSessionDelegate, MessageEndpointDelegate,
 MultipeerConnectionDelegate {
     
-    var otherDB: Database!
+    var oDB: Database!
     
     var clientPeer: MCPeerID?
     var serverPeer: MCPeerID?
@@ -99,8 +99,8 @@ MultipeerConnectionDelegate {
     
     override func setUp() {
         super.setUp()
-        otherDB = try! openDB(name: "otherdb")
-        XCTAssertNotNil(otherDB)
+        try! openOtherDB()
+        oDB = otherDB!
     }
     
     override func tearDown() {
@@ -115,9 +115,6 @@ MultipeerConnectionDelegate {
         
         clientSession?.disconnect()
         serverSession?.disconnect()
-        
-        try! otherDB.close()
-        otherDB = nil
         
         super.tearDown()
     }
@@ -150,7 +147,7 @@ MultipeerConnectionDelegate {
         let x1 = self.expectation(description: "Listener Connecting")
         let x2 = self.expectation(description: "Listener Stopped")
         let listenerConfig = MessageEndpointListenerConfiguration(
-            database: otherDB, protocolType: .messageStream)
+            database: oDB, protocolType: .messageStream)
         listener = MessageEndpointListener(config: listenerConfig)
         let token1 = listener!.addChangeListener({ (change) in
             let status = change.status
@@ -297,14 +294,14 @@ MultipeerConnectionDelegate {
 
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.otherDB.count, 2)
-        let savedDoc = self.otherDB.document(withID: "doc1")!
+        XCTAssertEqual(self.oDB.count, 2)
+        let savedDoc = self.oDB.document(withID: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -315,7 +312,7 @@ MultipeerConnectionDelegate {
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: false)
@@ -333,14 +330,14 @@ MultipeerConnectionDelegate {
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.otherDB.count, 2)
-        let savedDoc1 = self.otherDB.document(withID: "doc1")!
+        XCTAssertEqual(self.oDB.count, 2)
+        let savedDoc1 = self.oDB.document(withID: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
         XCTAssertEqual(self.db.count, 2)
@@ -355,14 +352,14 @@ MultipeerConnectionDelegate {
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.otherDB.count, 2)
-        let savedDoc = self.otherDB.document(withID: "doc1")!
+        XCTAssertEqual(self.oDB.count, 2)
+        let savedDoc = self.oDB.document(withID: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -373,7 +370,7 @@ MultipeerConnectionDelegate {
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: true)
@@ -391,14 +388,14 @@ MultipeerConnectionDelegate {
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.otherDB.count, 2)
-        let savedDoc1 = self.otherDB.document(withID: "doc1")!
+        XCTAssertEqual(self.oDB.count, 2)
+        let savedDoc1 = self.oDB.document(withID: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
         XCTAssertEqual(self.db.count, 2)

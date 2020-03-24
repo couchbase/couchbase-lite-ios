@@ -21,24 +21,19 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
-    
-    var otherDB: Database!
+    var oDB: Database!
     var repl: Replicator!
     
     override func setUp() {
-        // Delete otherdb:
-        try? deleteDB(name: "otherdb")
         super.setUp()
-        // Create otherdb:
-        otherDB = try! openDB(name: "otherdb")
-        XCTAssertNotNil(otherDB)
+        try! openOtherDB()
+        oDB = otherDB!
     }
     
     override func tearDown() {
-        try! otherDB.close()
-        otherDB = nil
+        try! oDB.close()
+        oDB = nil
         repl = nil
-        
         super.tearDown()
     }
     
@@ -103,7 +98,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     #if COUCHBASE_ENTERPRISE
     
     func testEmptyPush() throws {
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
     }
@@ -120,7 +115,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try db.saveDocument(doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         var config = self.config(target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
         
@@ -159,7 +154,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try db.saveDocument(doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         var config = self.config(target: target, type: .push, continuous: true)
         run(config: config, expectedError: nil)
         
@@ -198,7 +193,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try db.saveDocument(doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
@@ -267,10 +262,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1b = MutableDocument(id: "doc1")
         doc1b.setString("Tiger", forKey: "species")
         doc1b.setString("Striped", forKey: "pattern")
-        try otherDB.saveDocument(doc1b)
+        try oDB.saveDocument(doc1b)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
@@ -309,10 +304,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1b = MutableDocument(id: "doc1")
         doc1b.setString("Tiger", forKey: "species")
         doc1b.setString("Striped", forKey: "pattern")
-        try otherDB.saveDocument(doc1b)
+        try oDB.saveDocument(doc1b)
         
         // Pull:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .pull, continuous: false)
         
         var replicator: Replicator!
@@ -349,7 +344,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try db.deleteDocument(doc1)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
@@ -410,7 +405,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -446,9 +441,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         
         // Check replicated documents:
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNil(otherDB.document(withID: "doc2"))
-        XCTAssertNil(otherDB.document(withID: "doc3"))
+        XCTAssertNotNil(oDB.document(withID: "doc1"))
+        XCTAssertNil(oDB.document(withID: "doc2"))
+        XCTAssertNil(oDB.document(withID: "doc3"))
     }
     
     func testPullFilter() throws {
@@ -465,24 +460,24 @@ class ReplicatorTest_Main: ReplicatorTest {
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
         doc1.setBlob(blob, forKey: "photo")
-        try self.otherDB.saveDocument(doc1)
+        try self.oDB.saveDocument(doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("Striped", forKey: "pattern")
         doc2.setBlob(blob, forKey: "photo")
-        try self.otherDB.saveDocument(doc2)
+        try self.oDB.saveDocument(doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("Tiger", forKey: "species")
         doc3.setString("Star", forKey: "pattern")
         doc3.setBlob(blob, forKey: "photo")
-        try self.otherDB.saveDocument(doc3)
-        try self.otherDB.deleteDocument(doc3)
+        try self.oDB.saveDocument(doc3)
+        try self.oDB.deleteDocument(doc3)
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .pull, continuous: false)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -540,10 +535,10 @@ class ReplicatorTest_Main: ReplicatorTest {
                 }
         }
         XCTAssertEqual(self.db.count, 1)
-        XCTAssertEqual(otherDB.count, 0)
+        XCTAssertEqual(oDB.count, 0)
         
         // Push:
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: false)
         var replicator: Replicator!
         var docReplicationToken: ListenerToken!
@@ -560,7 +555,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         db.removeChangeListener(withToken: docChangeToken);
         
         XCTAssertEqual(self.db.count, 0)
-        XCTAssertEqual(otherDB.count, 1)
+        XCTAssertEqual(oDB.count, 1)
     }
     
     // MARK: Removed Doc with Filter
@@ -577,15 +572,15 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc1)
+        try oDB.saveDocument(doc1)
         
         let doc2 = MutableDocument(id: "pass")
         doc2.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc2)
+        try oDB.saveDocument(doc2)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .pull, continuous: isContinuous)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -605,17 +600,17 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "pass"))
         
-        guard let doc1Mutable = otherDB.document(withID: "doc1")?.toMutable() else {
+        guard let doc1Mutable = oDB.document(withID: "doc1")?.toMutable() else {
             fatalError("Docs must exists")
         }
         doc1Mutable.setData(["_removed": true])
-        try otherDB.saveDocument(doc1Mutable)
+        try oDB.saveDocument(doc1Mutable)
         
-        guard let doc2Mutable = otherDB.document(withID: "pass")?.toMutable() else {
+        guard let doc2Mutable = oDB.document(withID: "pass")?.toMutable() else {
             fatalError("Docs must exists")
         }
         doc2Mutable.setData(["_removed": true])
-        try otherDB.saveDocument(doc2Mutable)
+        try oDB.saveDocument(doc2Mutable)
         
         run(config: config, expectedError: nil)
         
@@ -658,7 +653,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -675,8 +670,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
         
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNotNil(otherDB.document(withID: "pass"))
+        XCTAssertNotNil(oDB.document(withID: "doc1"))
+        XCTAssertNotNil(oDB.document(withID: "pass"))
         
         try db.deleteDocument(doc1)
         try db.deleteDocument(doc2)
@@ -688,23 +683,23 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc1"))
         XCTAssert(docIds.contains("pass"))
         
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNil(otherDB.document(withID: "pass"))
+        XCTAssertNotNil(oDB.document(withID: "doc1"))
+        XCTAssertNil(oDB.document(withID: "pass"))
     }
     
     func testPullDeletedDocWithFilter(_ isContinuous: Bool) throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc1)
+        try oDB.saveDocument(doc1)
         
         let doc2 = MutableDocument(id: "pass")
         doc2.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc2)
+        try oDB.saveDocument(doc2)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .pull, continuous: isContinuous)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -724,8 +719,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "pass"))
         
-        try otherDB.deleteDocument(doc1)
-        try otherDB.deleteDocument(doc2)
+        try oDB.deleteDocument(doc1)
+        try oDB.deleteDocument(doc2)
         
         run(config: config, expectedError: nil)
         
@@ -748,7 +743,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .push, continuous: true)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -761,7 +756,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         run(withReplicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
-        XCTAssertEqual(otherDB.count, 1)
+        XCTAssertEqual(oDB.count, 1)
         XCTAssertEqual(db.count, 1)
         
         // make some more changes
@@ -782,22 +777,22 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         XCTAssert(docIds.contains("doc2"))
         
-        XCTAssertNotNil(otherDB.document(withID: "doc1"))
-        XCTAssertNotNil(otherDB.document(withID: "doc2"))
-        XCTAssertNil(otherDB.document(withID: "doc3"))
+        XCTAssertNotNil(oDB.document(withID: "doc1"))
+        XCTAssertNotNil(oDB.document(withID: "doc2"))
+        XCTAssertNil(oDB.document(withID: "doc3"))
         XCTAssertEqual(db.count, 3)
-        XCTAssertEqual(otherDB.count, 2)
+        XCTAssertEqual(oDB.count, 2)
     }
     
     func testStopAndRestartPullReplicationWithFilter() throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc1)
+        try oDB.saveDocument(doc1)
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: otherDB)
+        let target = DatabaseEndpoint(database: oDB)
         let config = self.config(target: target, type: .pull, continuous: true)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
@@ -810,17 +805,17 @@ class ReplicatorTest_Main: ReplicatorTest {
         run(withReplicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
-        XCTAssertEqual(otherDB.count, 1)
+        XCTAssertEqual(oDB.count, 1)
         XCTAssertEqual(db.count, 1)
         
         // make some more changes
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("pass", forKey: "name")
-        try otherDB.saveDocument(doc2)
+        try oDB.saveDocument(doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("donotpass", forKey: "name")
-        try otherDB.saveDocument(doc3)
+        try oDB.saveDocument(doc3)
         
         // restart the same replicator
         docIds.removeAllObjects()
@@ -834,7 +829,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNotNil(db.document(withID: "doc1"))
         XCTAssertNotNil(db.document(withID: "doc2"))
         XCTAssertNil(db.document(withID: "doc3"))
-        XCTAssertEqual(otherDB.count, 3)
+        XCTAssertEqual(oDB.count, 3)
         XCTAssertEqual(db.count, 2)
     }
     

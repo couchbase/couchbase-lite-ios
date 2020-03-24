@@ -71,24 +71,15 @@
 }
 
 - (void) setUp {
-    // Delete otherdb:
-    [self deleteDBNamed: @"otherdb" error: nil];
-    
     [super setUp];
     
     timeout = 5.0;
     pinServerCert = YES;
-    NSError* error;
     
-    // Create otherdb:
-    otherDB = [self openDBNamed: @"otherdb" error: &error];
-    AssertNil(error);
-    AssertNotNil(otherDB);
+    [self openOtherDB];
 }
 
 - (void) tearDown {
-    Assert([otherDB close: nil]);
-    otherDB = nil;
     repl = nil;
     [super tearDown];
 }
@@ -402,7 +393,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                                                        withRecoverability: (BOOL)isRecoverable {
     NSInteger recoveryCount = isRecoverable ? 1 : 0;
     CBLTestErrorLogic* errorLogic = [[CBLTestErrorLogic alloc] initAtLocation:location withRecoveryCount:recoveryCount];
-    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:protocolType];
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
     CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
     server.errorLogic = errorLogic;
@@ -433,7 +424,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 }
 
 - (void) runTwoStepContinuousWithType:(CBLReplicatorType)replicatorType usingUID:(NSString*)uid {
-    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:otherDB protocolType:kCBLProtocolTypeByteStream];
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:kCBLProtocolTypeByteStream];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
     CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:kCBLProtocolTypeByteStream];
     MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
@@ -449,20 +440,20 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     CBLDatabase* firstTarget = nil;
     CBLDatabase* secondTarget = nil;
     if(replicatorType == kCBLReplicatorTypePush) {
-        firstSource = _db;
-        secondSource = _db;
-        firstTarget = otherDB;
-        secondTarget = otherDB;
+        firstSource = self.db;
+        secondSource = self.db;
+        firstTarget = self.otherDB;
+        secondTarget = self.otherDB;
     } else if(replicatorType == kCBLReplicatorTypePull) {
-        firstSource = otherDB;
-        secondSource = otherDB;
-        firstTarget = _db;
-        secondTarget = _db;
+        firstSource = self.otherDB;
+        secondSource = self.otherDB;
+        firstTarget = self.db;
+        secondTarget = self.db;
     } else {
-        firstSource = _db;
-        secondSource = otherDB;
-        firstTarget = otherDB;
-        secondTarget = _db;
+        firstSource = self.db;
+        secondSource = self.otherDB;
+        firstTarget = self.otherDB;
+        secondTarget = self.db;
     }
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID:@"livesindb"];
