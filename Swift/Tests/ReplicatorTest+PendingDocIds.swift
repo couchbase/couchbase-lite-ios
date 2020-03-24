@@ -21,6 +21,9 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest_PendingDocIds: ReplicatorTest {
+    
+    #if COUCHBASE_ENTERPRISE
+    
     let kActionKey = "action-key"
     var noOfDocument = 5
     let kCreateActionValue = "doc-create"
@@ -287,4 +290,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
         try validateIsDocumentPending(["doc-3": true, "doc-1": false], config: replConfig)
     }
+    
+    #endif
+    
 }
