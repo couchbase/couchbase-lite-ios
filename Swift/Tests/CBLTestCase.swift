@@ -191,6 +191,7 @@ class CBLTestCase: XCTestCase {
         }
     }
     
+    @discardableResult
     func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
         for row in try query.execute() {

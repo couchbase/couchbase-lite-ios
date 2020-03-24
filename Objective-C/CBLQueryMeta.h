@@ -44,6 +44,21 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) idFrom: (nullable NSString*)alias;
 
 /**
+ A metadata expression refering to the revision ID of the document.
+ 
+ @return The revision ID expression.
+ */
++ (CBLQueryExpression*) revisionID;
+
+/**
+ A metadata expression refering to the revision ID of the document.
+ 
+ @param alias The data source alias name.
+ @return The revision ID expression.
+ */
++ (CBLQueryExpression*) revisionIDFrom: (nullable NSString*)alias;
+
+/**
  Sequence number expression. The sequence number indicates how recently
  the document has been changed. If one document's `sequence` is greater
  than another's, that means it was changed more recently.

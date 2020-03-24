@@ -22,16 +22,10 @@
 #import "CBLPropertyExpression.h"
 
 #define kCBLQueryMetaIDKeyPath @"_id"
-#define kCBLQueryMetaIDColumnName @"id"
-
+#define kCBLQueryMetaRevIDKeyPath @"_revisionID"
 #define kCBLQueryMetaSequenceKeyPath @"_sequence"
-#define kCBLQueryMetaSequenceColumnName @"sequence"
-
 #define kCBLQueryMetaIsDeletedKeyPath @"_deleted"
-#define kCBLQueryMetaIsDeletedColumnName @"deleted"
-
 #define kCBLQueryMetaExpiredKeyPath @"_expiration"
-#define kCBLQueryMetaExpiredColumnName @"expiration"
 
 @implementation CBLQueryMeta
 
@@ -41,7 +35,6 @@
 
 + (CBLQueryExpression*) idFrom: (nullable NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIDKeyPath
-                                               columnName: kCBLQueryMetaIDColumnName
                                                      from: alias];
 }
 
@@ -51,7 +44,6 @@
 
 + (CBLQueryExpression*) sequenceFrom: (nullable NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
-                                               columnName: kCBLQueryMetaSequenceColumnName
                                                      from: alias];
 }
 
@@ -61,7 +53,6 @@
 
 + (CBLQueryExpression*) isDeletedFrom: (nullable NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIsDeletedKeyPath
-                                               columnName: kCBLQueryMetaIsDeletedColumnName
                                                      from: alias];
 }
 
@@ -71,7 +62,15 @@
 
 + (CBLQueryExpression*) expirationFrom: (NSString*)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaExpiredKeyPath
-                                               columnName: kCBLQueryMetaExpiredColumnName
+                                                     from: alias];
+}
+
++ (CBLQueryExpression*) revisionID {
+    return [self revisionIDFrom: nil];
+}
+
++ (CBLQueryExpression*) revisionIDFrom: (NSString*)alias {
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaRevIDKeyPath
                                                      from: alias];
 }
 

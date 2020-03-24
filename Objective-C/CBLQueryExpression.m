@@ -40,9 +40,7 @@
 + (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)alias {
     CBLAssertNotNil(property);
     
-    return [[CBLPropertyExpression alloc] initWithKeyPath: property
-                                               columnName: nil
-                                                     from: alias];
+    return [[CBLPropertyExpression alloc] initWithKeyPath: property from: alias];
 }
 
 + (CBLQueryExpression*) all {
