@@ -145,9 +145,8 @@ typedef enum {
             _state = kCBLStateStarting;
             c4repl_start(_repl);
             status = c4repl_getStatus(_repl);
-            CBL_LOCK(_config.database) {
-                [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
-            }
+            [_config.database addActiveReplicator: self];
+            
 #if TARGET_OS_IPHONE
             if (!_config.allowReplicatingInBackground)
                 [self setupBackgrounding];
@@ -301,17 +300,13 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) stopped {
-    CBL_LOCK(self) {
-        Assert(_rawStatus.level == kC4Stopped);
-        // Update state:
-        _state = kCBLStateStopped;
-        
-        // Prevent self to get released when removing from the active replications:
-        CBLReplicator* repl = self;
-        CBL_LOCK(_config.database) {
-            [_config.database.activeReplications removeObject: repl];
-        }
-    }
+    Assert(_rawStatus.level == kC4Stopped);
+    // Update state:
+    _state = kCBLStateStopped;
+    
+    // Prevent self to get released when removing from the active replications:
+    CBLReplicator* repl = self;
+    [_config.database removeActiveReplicator: repl];
 }
 
 - (void) resetCheckpoint {

@@ -1477,6 +1477,125 @@
     [self deleteDatabase: self.db];
 }
 
+- (void) testCloseWithActiveLiveQueries {
+    XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
+    XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
+    
+    CBLQueryDataSource* ds = [CBLQueryDataSource database: self.db];
+    
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
+    
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
+    
+    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    
+    [self closeDatabase: self.db];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+#ifdef COUCHBASE_ENTERPRISE
+
+- (void) testCloseWithActiveReplicators {
+    [self openOtherDB];
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config =
+        [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: target];
+    config.continuous = YES;
+    
+    CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stopped 1"];
+    [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
+    
+    CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
+    [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
+    
+    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    
+    [self closeDatabase: self.db];
+    
+    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+- (void) testCloseWithActiveLiveQueriesAndReplicators {
+    // Live Queries:
+    
+    XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
+    XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
+    
+    CBLQueryDataSource* ds = [CBLQueryDataSource database: self.db];
+    
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
+    
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
+    
+    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    
+    // Replicators:
+    
+    [self openOtherDB];
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config =
+        [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: target];
+    config.continuous = YES;
+    
+    CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stop 1"];
+    [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
+    
+    CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
+    [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
+    
+    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    
+    // Close database:
+    [self closeDatabase: self.db];
+    
+    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+- (void) startReplicator: (CBLReplicator*)repl
+         idleExpectation: (XCTestExpectation*)idleExp
+      stoppedExpectation: (XCTestExpectation*)stopedExp
+{
+    [repl addChangeListener: ^(CBLReplicatorChange* change) {
+        if (change.status.activity == kCBLReplicatorIdle) { [idleExp fulfill]; }
+        else if (change.status.activity == kCBLReplicatorStopped) { [stopedExp fulfill]; }
+    }];
+    
+    [repl start];
+}
+
+#endif
+
 #pragma mark - Delete Database
 
 - (void) testDelete {
@@ -1575,6 +1694,108 @@
     }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
 }
+
+- (void) testDeleteWithActiveLiveQueries {
+    XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
+    XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
+    
+    CBLQueryDataSource* ds = [CBLQueryDataSource database: self.db];
+    
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
+    
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
+    
+    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    
+    [self deleteDatabase: self.db];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+#ifdef COUCHBASE_ENTERPRISE
+
+- (void) testDeleteWithActiveReplicators {
+    [self openOtherDB];
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config =
+        [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: target];
+    config.continuous = YES;
+    
+    CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stopped 1"];
+    [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
+    
+    CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
+    [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
+    
+    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    
+    [self deleteDatabase: self.db];
+    
+    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+- (void) testDeleteWithActiveLiveQueriesAndReplicators {
+    [self openOtherDB];
+    
+    XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
+    XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
+    
+    CBLQueryDataSource* ds = [CBLQueryDataSource database: self.db];
+    
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
+    
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
+    
+    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config =
+        [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: target];
+    config.continuous = YES;
+    
+    CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stop 1"];
+    [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
+    
+    CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
+    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
+    [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
+    
+    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    
+    [self deleteDatabase: self.db];
+    
+    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    
+    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    Assert([self.db isClosedLocked]);
+}
+
+#endif
 
 #pragma mark - Delate Database (static)
 

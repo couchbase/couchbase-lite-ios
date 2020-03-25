@@ -32,7 +32,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     __weak CBLQuery* _query;
     NSTimeInterval _updateInterval;
     
-    BOOL _observing, _willUpdate;
+    BOOL _observing, _willUpdate, _updating, _stopping;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryResultSet* _rs;
     id _dbListenerToken;
@@ -67,9 +67,8 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         if (!_dbListenerToken) {
             CBLDatabase* db = _query.database;
             Assert(db);
-            CBL_LOCK(db) {
-                [db.liveQueries addObject:self];
-            }
+            
+            [db addActiveLiveQuery: self];
             
             __weak typeof(self) wSelf = self;
             _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
@@ -86,20 +85,35 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) stop {
     CBL_LOCK(self) {
+        if (!_observing)
+            return;
+        
+        // Since we are accessing weak _query multiple times which can become nil.
+        CBLQuery* strongQuery = _query;
         if (_dbListenerToken) {
-            CBLQuery* strongQuery = _query; // since we are accessing weak _query multiple times which can become nil
-            CBL_LOCK(strongQuery.database) {
-                [strongQuery.database.liveQueries removeObject:self];
-            }
             [strongQuery.database removeChangeListenerWithToken: _dbListenerToken];
             _dbListenerToken = nil;
         }
         
         _observing = NO;
-        _changeNotifier = nil;
         _willUpdate = NO; // cancels the delayed update started by -databaseChanged
+        _changeNotifier = nil;
         _rs = nil;
+        
+        if (!_updating)
+            [self stopped];
+        else
+            _stopping = YES;
     }
+}
+
+// Called under self lock.
+- (void) stopped {
+    // Since we are accessing weak _query multiple times which can become nil.
+    CBLQuery* strongQuery = _query;
+    [strongQuery.database removeActiveLiveQuery: self];
+    
+    _stopping = NO;
 }
 
 - (void) queryParametersChanged {
@@ -172,6 +186,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBL_LOCK(self) {
         if (!_willUpdate)
             return;
+        _updating = true;
     }
     
     CBLQuery* strongQuery = _query;
@@ -185,9 +200,15 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         newRs = [oldRs refresh: &error];
 
     CBL_LOCK(self) {
+        _updating = false;
         _willUpdate = false;
-        _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
         
+        if(_stopping) {
+            [self stopped];
+            return;
+        }
+        
+        _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
         BOOL changed = YES;
         if (newRs) {
             if (oldRs)
