@@ -363,18 +363,21 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     NSArray *activeReplicators, *activeLiveQueries = nil;
     
     CBL_LOCK(self) {
-        if ([self isClosed] || _isClosing)
+        if ([self isClosed])
             return YES;
         
         CBLLogInfo(Database, @"Closing %@ at path %@", self, self.path);
         
-        _isClosing = YES;
-        
-        _closeCondition = [[NSCondition alloc] init];
-        
-        activeReplicators = [_activeReplicators allObjects];
-        
-        activeLiveQueries = [_activeLiveQueries allObjects];
+        if (!_isClosing) {
+            _isClosing = YES;
+            
+            if (!_closeCondition)
+                _closeCondition = [[NSCondition alloc] init];
+            
+            activeReplicators = [_activeReplicators allObjects];
+            
+            activeLiveQueries = [_activeLiveQueries allObjects];
+        }
     }
     
     // Stop active replicators:
@@ -395,6 +398,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     [_closeCondition unlock];
     
     CBL_LOCK(self) {
+        if ([self isClosed])
+            return YES;
+        
         // Cancel doc expiry timer:
         [self cancelDocExpiryTimer];
         
