@@ -558,6 +558,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
+        [self mustBeOpen];
+            
         if (((CBLChangeListenerToken*)token).key)
             [self removeDocumentChangeListenerWithToken: token];
         else

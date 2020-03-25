@@ -299,6 +299,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+// Always being called inside the lock
 - (void) stopped {
     Assert(_rawStatus.level == kC4Stopped);
     // Update state:
