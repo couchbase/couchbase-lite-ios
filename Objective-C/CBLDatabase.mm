@@ -654,6 +654,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark - INTERNAL
 
+// Must be called inside self lock
 - (void) mustBeOpen {
     if ([self isClosed])
         [NSException raise: NSInternalInconsistencyException
@@ -666,12 +667,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
+// Must be called inside self lock
 - (void) mustBeOpenAndNotClosing {
     if ([self isClosed] || _isClosing)
         [NSException raise: NSInternalInconsistencyException
                     format: @"%@", kCBLErrorMessageDBClosed];
 }
 
+// Must be called inside self lock
 - (BOOL) isClosed {
     return _c4db == nullptr;
 }
@@ -1038,8 +1041,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 }
 
 #pragma mark - REPLICATOR
-
-// NOTE: These methods are called from the replicator thread.
 
 - (void) addActiveReplicator: (CBLReplicator*)replicator {
     CBL_LOCK(self) {
