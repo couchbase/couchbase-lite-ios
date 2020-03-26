@@ -1078,4 +1078,98 @@ class DatabaseTest: CBLTestCase {
         try db.deleteIndex(forName: "index3")
     }
     
+    func testCloseWithActiveLiveQueries() throws {
+        let change1 = expectation(description: "changes 1")
+        let change2 = expectation(description: "changes 2")
+        
+        let ds = DataSource.database(db)
+        
+        let q1 = QueryBuilder.select().from(ds)
+        q1.addChangeListener { (ch) in change1.fulfill() }
+        
+        let q2 = QueryBuilder.select().from(ds)
+        q2.addChangeListener { (ch) in change2.fulfill() }
+        
+        wait(for: [change1, change2], timeout: 5.0)
+        
+        try db.close()
+    }
+    
+    #if COUCHBASE_ENTERPRISE
+    
+    func testCloseWithActiveReplicators() throws {
+        // Live Queries:
+        
+        let change1 = expectation(description: "changes 1")
+        let change2 = expectation(description: "changes 2")
+        
+        let ds = DataSource.database(db)
+        
+        let q1 = QueryBuilder.select().from(ds)
+        q1.addChangeListener { (ch) in change1.fulfill() }
+        
+        let q2 = QueryBuilder.select().from(ds)
+        q2.addChangeListener { (ch) in change2.fulfill() }
+        
+        wait(for: [change1, change2], timeout: 5.0)
+        
+        // Replicators:
+        
+        try! openOtherDB()
+        
+        let target = DatabaseEndpoint(database: otherDB!)
+        let config = ReplicatorConfiguration(database: db, target: target)
+        config.continuous = true
+        
+        let r1 = Replicator(config: config)
+        let idle1 = expectation(description: "Idle 1")
+        let stopped1 = expectation(description: "Stopped 1")
+        startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
+     
+        let r2 = Replicator(config: config)
+        let idle2 = expectation(description: "Idle 2")
+        let stopped2 = expectation(description: "Stopped 2")
+        startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
+        
+        wait(for: [idle1, idle2], timeout: 5.0)
+        
+        try! db.close()
+        
+        wait(for: [stopped1, stopped2], timeout: 5.0)
+    }
+    
+    func startReplicator(_ replicator: Replicator, idleExpectation: XCTestExpectation, stoppedExpectation: XCTestExpectation) {
+        replicator.addChangeListener { (change) in
+            if change.status.activity == .idle { idleExpectation.fulfill() }
+            else if change.status.activity == .stopped { stoppedExpectation.fulfill() }
+        }
+        replicator.start()
+    }
+    
+    func testCloseWithActiveLiveQueriesAndReplicators() throws {
+        try! openOtherDB()
+              
+        let target = DatabaseEndpoint(database: otherDB!)
+        let config = ReplicatorConfiguration(database: db, target: target)
+        config.continuous = true
+              
+        let r1 = Replicator(config: config)
+        let idle1 = expectation(description: "Idle 1")
+        let stopped1 = expectation(description: "Stopped 1")
+        startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
+           
+        let r2 = Replicator(config: config)
+        let idle2 = expectation(description: "Idle 2")
+        let stopped2 = expectation(description: "Stopped 2")
+        startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
+              
+        wait(for: [idle1, idle2], timeout: 5.0)
+              
+        try! db.close()
+              
+        wait(for: [stopped1, stopped2], timeout: 5.0)
+    }
+    
+    #endif
+    
 }

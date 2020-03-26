@@ -50,13 +50,21 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
 @property (readonly, nonatomic) dispatch_queue_t queryQueue;
-@property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
-@property (readonly, nonatomic) NSMutableSet<CBLReplicator*>* activeReplications;
-@property (readonly, nonatomic) NSMutableSet<CBLLiveQuery*>* liveQueries;
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
-- (void) mustBeOpen;
+- (void) mustBeOpenLocked;
+- (BOOL) isClosedLocked;
+
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
+
+- (void) addActiveReplicator: (CBLReplicator*)replicator;
+- (void) removeActiveReplicator: (CBLReplicator*)replicator;
+- (uint64_t) activeReplicatorCount; // For testing only
+
+- (void) addActiveLiveQuery: (CBLLiveQuery*)liveQuery;
+- (void) removeActiveLiveQuery: (CBLLiveQuery*)liveQuery;
+- (uint64_t) activeLiveQueryCount; // For testing only
+
 - (bool) resolveConflictInDocument: (NSString*)docID
               withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
                              error: (NSError**)outError;
