@@ -43,7 +43,7 @@
     [dictionary setValue: address forKey: @"address"];
     
     // Array:
-    CBLMutableArray* array = array = [[CBLMutableArray alloc] init];
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @"650-123-0001"];
     [array addValue: @"650-123-0002"];
     [dictionary setValue: array forKey: @"phones"];

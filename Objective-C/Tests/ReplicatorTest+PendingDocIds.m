@@ -48,7 +48,7 @@
     return [NSSet setWithSet: docIds];
 }
 
-- (void) validatePendingDocumentIDs: (NSSet*)docIds count: (NSUInteger)count {
+- (void) validatePendingDocumentIDs: (NSSet*)docIds {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
 
@@ -61,7 +61,7 @@
         NSError* err = nil;
         NSSet* ids = [replicator pendingDocumentIDs: &err];
         Assert([ids isEqualToSet: docIds]);
-        AssertEqual(ids.count, count);
+        AssertEqual(ids.count, docIds.count);
         
         token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
             NSError* pendingErr = nil;
@@ -70,7 +70,7 @@
 
             if (change.status.activity == kCBLReplicatorConnecting) {
                 Assert([pendingIds isEqualToSet: docIds]);
-                AssertEqual(pendingIds.count, count);
+                AssertEqual(pendingIds.count, docIds.count);
             } else if (change.status.activity == kCBLReplicatorStopped) {
                 AssertEqual(pendingIds.count, 0);
             }
@@ -150,7 +150,7 @@
 
 - (void) testPendingDocIDsWithCreate {
     NSSet* docIds = [self createDocs];
-    [self validatePendingDocumentIDs: docIds count: kNoOfDocument];
+    [self validatePendingDocumentIDs: docIds];
 }
 
 - (void) testPendingDocIDsWithUpdate {
@@ -167,7 +167,7 @@
         [self saveDocument: doc];
     }
 
-    [self validatePendingDocumentIDs: updatedDocIds count: updatedDocIds.count];
+    [self validatePendingDocumentIDs: updatedDocIds];
 }
 
 - (void) testPendingDocIdsWithDelete {
@@ -184,7 +184,7 @@
         [self.db deleteDocument: doc error: &err];
         AssertNil(err);
     }
-    [self validatePendingDocumentIDs: updatedDocIds count: updatedDocIds.count];
+    [self validatePendingDocumentIDs: updatedDocIds];
 }
 
 - (void) testPendingDocIdsWithPurge {
@@ -198,7 +198,7 @@
 
     NSMutableSet* updatedDocIds = [NSMutableSet setWithSet: docIds];
     [updatedDocIds removeObject: @"doc-3"];
-    [self validatePendingDocumentIDs: updatedDocIds count: kNoOfDocument - 1];
+    [self validatePendingDocumentIDs: updatedDocIds];
 }
 
 - (void) testPendingDocIdsWithFilter {

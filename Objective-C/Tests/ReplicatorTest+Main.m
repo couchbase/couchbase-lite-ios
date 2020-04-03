@@ -370,8 +370,7 @@
     r = nil;
 }
 
-// TODO: CBL-722
-- (void) _testBackgroundingWhenStopping {
+- (void) testBackgroundingWhenStopping {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
@@ -500,8 +499,7 @@
     AssertEqual(self.db.count, 2u);
 }
 
-// TODO: CBL-683
-- (void) _testShortP2P {
+- (void) testShortP2P {
     //int testNo = 1;
     for(int i = 0; i < 2; i++) {
         CBLProtocolType protocolType = i % 1 ? kCBLProtocolTypeMessageStream : kCBLProtocolTypeByteStream;
