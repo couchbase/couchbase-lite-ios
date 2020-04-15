@@ -21,6 +21,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Backgrounding.h"
+#import "CBLReplicator+Internal.h"
 
 @interface ReplicatorTest_Main : ReplicatorTest
 @end
@@ -366,6 +367,44 @@
     AssertEqual(foregroundCount, numRounds + 1);
     AssertEqual(backgroundCount, numRounds);
     
+    [r removeChangeListenerWithToken: token];
+    r = nil;
+}
+
+- (void) testSwitchToForegroundImmediately {
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+
+    XCTestExpectation* idle = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* foregroundExp = [self expectationWithDescription: @"Foregrounding"];
+    XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
+
+    __block int idleCount = 0;
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        AssertNil(change.status.error);
+        if (change.status.activity == kCBLReplicatorIdle) {
+            if (idleCount++)
+                [foregroundExp fulfill];
+            else
+                [idle fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopped fulfill];
+        }
+    }];
+
+    [r start];
+    [self waitForExpectations: @[idle] timeout: 5.0];
+
+    // Switch to background and immediately comes back to foreground
+    [r setSuspended: YES];
+    [r setSuspended: NO];
+
+    [self waitForExpectations: @[foregroundExp] timeout: 5.0];
+
+    [r stop];
+    [self waitForExpectations: @[stopped] timeout: 5.0];
+
     [r removeChangeListenerWithToken: token];
     r = nil;
 }
