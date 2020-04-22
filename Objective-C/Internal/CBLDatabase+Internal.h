@@ -55,6 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) mustBeOpenLocked;
 - (BOOL) isClosedLocked;
 
+- (C4SliceResult) getPublicUUID: (NSError**)outError;
+
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 
 - (void) addActiveReplicator: (CBLReplicator*)replicator;
