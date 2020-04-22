@@ -685,6 +685,21 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
+- (C4SliceResult) getPublicUUID: (NSError**)outError {
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: outError])
+            return C4SliceResult{};
+        
+        C4Error err = {};
+        C4UUID uuid;
+        if (!c4db_getUUIDs(_c4db, &uuid, nullptr, &err)) {
+            convertError(err, outError);
+            return C4SliceResult{};
+        }
+        return FLSlice_Copy({&uuid, sizeof(uuid)});
+    }
+}
+
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
     CBL_LOCK(self) {
         if (![self mustBeOpen: outError])

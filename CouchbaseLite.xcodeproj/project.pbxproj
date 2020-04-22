@@ -1192,6 +1192,17 @@
 		939B1B5D2009C04100FAA3CB /* CBLQueryVariableExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 939B1B592009C04100FAA3CB /* CBLQueryVariableExpression.m */; };
 		939B1B5F2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */; };
 		939B1B602009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */; };
+		939C5E52244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4C244FC3B7007CEBAC /* CBLURLEndpointListenerConfiguration.mm */; };
+		939C5E54244FC3B8007CEBAC /* CBLTLSIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E4D244FC3B7007CEBAC /* CBLTLSIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		939C5E56244FC3B8007CEBAC /* CBLURLEndpointListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E4E244FC3B7007CEBAC /* CBLURLEndpointListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		939C5E58244FC3B8007CEBAC /* CBLTLSIdentity.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */; };
+		939C5E5A244FC3B8007CEBAC /* CBLURLEndpointListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E50244FC3B7007CEBAC /* CBLURLEndpointListener.mm */; };
+		939C5E5C244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E51244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		939C5E61244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */; };
+		939C5E62244FC72A007CEBAC /* CBLTLSIdentity+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E60244FC72A007CEBAC /* CBLTLSIdentity+Internal.h */; };
+		939C5E67244FC7DE007CEBAC /* libLiteCoreREST-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */; };
+		939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */; };
+		939C5E6D244FD3DF007CEBAC /* CBLListenerAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E6B244FD3DF007CEBAC /* CBLListenerAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93A4F2452221058500257423 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93A4F2352221058500257423 /* CoreImage.framework */; };
 		93A4F2462221059500257423 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93A4F2352221058500257423 /* CoreImage.framework */; };
 		93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1595,6 +1606,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
 			remoteInfo = "LiteCore static";
+		};
+		939C5E63244FC7D0007CEBAC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27FC81E71EAAB0D90028E38E;
+			remoteInfo = "LiteCoreREST static";
+		};
+		939C5E65244FC7D0007CEBAC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 2771A097228624C000B18E0A;
+			remoteInfo = LiteCoreWebSocket;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -2053,6 +2078,15 @@
 		939B1B592009C04100FAA3CB /* CBLQueryVariableExpression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryVariableExpression.m; sourceTree = "<group>"; };
 		939B1B5E2009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQueryVariableExpression+Internal.h"; sourceTree = "<group>"; };
 		939B79241E679017009A70EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		939C5E4C244FC3B7007CEBAC /* CBLURLEndpointListenerConfiguration.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLURLEndpointListenerConfiguration.mm; sourceTree = "<group>"; };
+		939C5E4D244FC3B7007CEBAC /* CBLTLSIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTLSIdentity.h; sourceTree = "<group>"; };
+		939C5E4E244FC3B7007CEBAC /* CBLURLEndpointListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLURLEndpointListener.h; sourceTree = "<group>"; };
+		939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLTLSIdentity.mm; sourceTree = "<group>"; };
+		939C5E50244FC3B7007CEBAC /* CBLURLEndpointListener.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLURLEndpointListener.mm; sourceTree = "<group>"; };
+		939C5E51244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLURLEndpointListenerConfiguration.h; sourceTree = "<group>"; };
+		939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLURLEndpointListenerConfiguration+Internal.h"; sourceTree = "<group>"; };
+		939C5E60244FC72A007CEBAC /* CBLTLSIdentity+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLTLSIdentity+Internal.h"; sourceTree = "<group>"; };
+		939C5E6B244FD3DF007CEBAC /* CBLListenerAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLListenerAuthenticator.h; sourceTree = "<group>"; };
 		93A4F2352221058500257423 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
 		93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PredictiveQueryTest+CoreML.swift"; sourceTree = "<group>"; };
@@ -2183,6 +2217,8 @@
 			files = (
 				9343EF8E207D611600F19A89 /* libz.tbd in Frameworks */,
 				9343EF8F207D611600F19A89 /* libLiteCore-static.a in Frameworks */,
+				939C5E67244FC7DE007CEBAC /* libLiteCoreREST-static.a in Frameworks */,
+				939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */,
 				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2487,6 +2523,7 @@
 			isa = PBXGroup;
 			children = (
 				9392607920A0C8BD00E5748C /* Database */,
+				939C5E3E244FC381007CEBAC /* Listener */,
 				931713AE22C182AE00F1B5BF /* Query */,
 				9392608B20A0C8DF00E5748C /* Replicator */,
 				9369A675207DB3D4009B5B83 /* Internal */,
@@ -2673,6 +2710,7 @@
 		9369A675207DB3D4009B5B83 /* Internal */ = {
 			isa = PBXGroup;
 			children = (
+				939C5E5E244FC6F0007CEBAC /* Listener */,
 				931713E922C1833300F1B5BF /* Query */,
 				9392608C20A0C90600E5748C /* Database */,
 				9392609220A0CACF00E5748C /* Replicator */,
@@ -3119,6 +3157,29 @@
 			path = "Objective-C";
 			sourceTree = "<group>";
 		};
+		939C5E3E244FC381007CEBAC /* Listener */ = {
+			isa = PBXGroup;
+			children = (
+				939C5E6B244FD3DF007CEBAC /* CBLListenerAuthenticator.h */,
+				939C5E4D244FC3B7007CEBAC /* CBLTLSIdentity.h */,
+				939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */,
+				939C5E4E244FC3B7007CEBAC /* CBLURLEndpointListener.h */,
+				939C5E50244FC3B7007CEBAC /* CBLURLEndpointListener.mm */,
+				939C5E51244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h */,
+				939C5E4C244FC3B7007CEBAC /* CBLURLEndpointListenerConfiguration.mm */,
+			);
+			path = Listener;
+			sourceTree = "<group>";
+		};
+		939C5E5E244FC6F0007CEBAC /* Listener */ = {
+			isa = PBXGroup;
+			children = (
+				939C5E60244FC72A007CEBAC /* CBLTLSIdentity+Internal.h */,
+				939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */,
+			);
+			path = Listener;
+			sourceTree = "<group>";
+		};
 		93B75BF71E79B0A20033B61B /* Query */ = {
 			isa = PBXGroup;
 			children = (
@@ -3523,6 +3584,7 @@
 				9388CC5A21C25FDE005CA66D /* CBLLog+Swift.h in Headers */,
 				932565A621ED13290092F4E0 /* CBLLogFileConfiguration.h in Headers */,
 				9343EF92207D611600F19A89 /* CBLQueryResultArray.h in Headers */,
+				939C5E54244FC3B8007CEBAC /* CBLTLSIdentity.h in Headers */,
 				9343EF93207D611600F19A89 /* CBLQueryArrayExpression.h in Headers */,
 				932CC559207D9ED2000B4B78 /* CouchbaseLite.h in Headers */,
 				9343EF94207D611600F19A89 /* CBLQueryFullTextFunction.h in Headers */,
@@ -3531,6 +3593,7 @@
 				9343EF97207D611600F19A89 /* CBLQueryMeta.h in Headers */,
 				9343EF98207D611600F19A89 /* CBLIndexBuilder.h in Headers */,
 				939260AC20A0F5EA00E5748C /* CBLMessagingError.h in Headers */,
+				939C5E5C244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h in Headers */,
 				9343EF99207D611600F19A89 /* CBLQueryResult+Internal.h in Headers */,
 				9343EF9A207D611600F19A89 /* CBLBinaryExpression.h in Headers */,
 				9343EF9B207D611600F19A89 /* CBLBlob.h in Headers */,
@@ -3570,6 +3633,7 @@
 				9343EFBB207D611600F19A89 /* CBLMutableArray.h in Headers */,
 				9343EFBC207D611600F19A89 /* CollectionUtils.h in Headers */,
 				9343EFBD207D611600F19A89 /* CBLMutableArrayFragment.h in Headers */,
+				939C5E56244FC3B8007CEBAC /* CBLURLEndpointListener.h in Headers */,
 				9369A68A207DB3D4009B5B83 /* CBLEncryptionKey+Internal.h in Headers */,
 				9343EFBE207D611600F19A89 /* CBLReplicator.h in Headers */,
 				931713CE22C182F500F1B5BF /* CBLIndexBuilder+Prediction.h in Headers */,
@@ -3580,6 +3644,7 @@
 				9369A69E207DBAA9009B5B83 /* CBLDatabase+Encryption.h in Headers */,
 				9343EFC2207D611600F19A89 /* CBLVersion.h in Headers */,
 				932CC557207D9ED2000B4B78 /* CBLDatabaseEndpoint.h in Headers */,
+				939C5E61244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h in Headers */,
 				9343EFC3207D611600F19A89 /* CBLMisc.h in Headers */,
 				93E18738211122EB001D52B9 /* MYURLUtils.h in Headers */,
 				9343EFC4207D611600F19A89 /* CBLBlob+Swift.h in Headers */,
@@ -3596,6 +3661,7 @@
 				9343EFCB207D611600F19A89 /* CBLCoreBridge.h in Headers */,
 				931713D422C182F500F1B5BF /* CBLQueryFunction+Prediction.h in Headers */,
 				9343EFCC207D611600F19A89 /* CBLQueryArrayFunction.h in Headers */,
+				939C5E6D244FD3DF007CEBAC /* CBLListenerAuthenticator.h in Headers */,
 				9343EFCD207D611600F19A89 /* CBLMutableDictionaryFragment.h in Headers */,
 				9388CC0721BF750E005CA66D /* CBLFileLogger.h in Headers */,
 				9343EFCE207D611600F19A89 /* CBLQuantifiedExpression.h in Headers */,
@@ -3667,6 +3733,7 @@
 				9343F002207D611600F19A89 /* CBLQueryFunction.h in Headers */,
 				9343F003207D611600F19A89 /* CBLDictionary+Swift.h in Headers */,
 				9343F004207D611600F19A89 /* CBLQueryChange+Internal.h in Headers */,
+				939C5E62244FC72A007CEBAC /* CBLTLSIdentity+Internal.h in Headers */,
 				9343F005207D611600F19A89 /* CBLQueryDataSource.h in Headers */,
 				9343F006207D611600F19A89 /* CBLFragment.h in Headers */,
 				9343F007207D611600F19A89 /* CBLArray+Swift.h in Headers */,
@@ -4054,6 +4121,8 @@
 			);
 			dependencies = (
 				9343EF2B207D611600F19A89 /* PBXTargetDependency */,
+				939C5E64244FC7D0007CEBAC /* PBXTargetDependency */,
+				939C5E66244FC7D0007CEBAC /* PBXTargetDependency */,
 			);
 			name = "CBL-EE ObjC";
 			productName = CouchbaseLite;
@@ -4278,6 +4347,7 @@
 					};
 					9343EF2A207D611600F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 1140;
 					};
 					9343F135207D61EC00F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
@@ -4844,6 +4914,7 @@
 				93EB25C521CDCEC20006FB88 /* CBLQueryParameters.mm in Sources */,
 				9388CC0121BF74FD005CA66D /* CBLConsoleLogger.m in Sources */,
 				69D600002307469B00250787 /* CBLTimer.m in Sources */,
+				939C5E5A244FC3B8007CEBAC /* CBLURLEndpointListener.mm in Sources */,
 				9343EF34207D611600F19A89 /* CBLBasicAuthenticator.m in Sources */,
 				9343EF35207D611600F19A89 /* CBLStatus.mm in Sources */,
 				9343EF37207D611600F19A89 /* CBLMisc.m in Sources */,
@@ -4919,6 +4990,7 @@
 				9343EF72207D611600F19A89 /* CBLQueryVariableExpression.m in Sources */,
 				9343EF73207D611600F19A89 /* CBLQuery.mm in Sources */,
 				9369A6AA207DC8CA009B5B83 /* CBLDatabase+EncryptionInternal.mm in Sources */,
+				939C5E52244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.mm in Sources */,
 				9343EF74207D611600F19A89 /* CBLArray.mm in Sources */,
 				931713D122C182F500F1B5BF /* CBLPrediction.mm in Sources */,
 				9343EF75207D611600F19A89 /* CBLQuantifiedExpression.m in Sources */,
@@ -4947,6 +5019,7 @@
 				9343EF89207D611600F19A89 /* CBLDocumentFragment.m in Sources */,
 				9343EF8A207D611600F19A89 /* CBLDictionary.mm in Sources */,
 				939260A320A0CBAC00E5748C /* CBLMessageEndpointListener.mm in Sources */,
+				939C5E58244FC3B8007CEBAC /* CBLTLSIdentity.mm in Sources */,
 				9343EF8B207D611600F19A89 /* CBLQueryResult.mm in Sources */,
 				9343EF8C207D611600F19A89 /* CBLValueExpression.m in Sources */,
 			);
@@ -5545,6 +5618,16 @@
 			name = "LiteCore static";
 			targetProxy = 9399E4AE1E932EE800B57600 /* PBXContainerItemProxy */;
 		};
+		939C5E64244FC7D0007CEBAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "LiteCoreREST static";
+			targetProxy = 939C5E63244FC7D0007CEBAC /* PBXContainerItemProxy */;
+		};
+		939C5E66244FC7D0007CEBAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LiteCoreWebSocket;
+			targetProxy = 939C5E65244FC7D0007CEBAC /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -6128,7 +6211,9 @@
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
@@ -6139,7 +6224,9 @@
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
@@ -6150,7 +6237,9 @@
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
 			name = Release;
@@ -6160,7 +6249,9 @@
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
 			name = "Release-EE";
