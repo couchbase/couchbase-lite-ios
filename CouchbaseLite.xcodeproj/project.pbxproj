@@ -280,6 +280,7 @@
 		93292D9F22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		93292DA022BD448400A0862A /* CBLReplicatorConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */; };
 		93292DA122BD448400A0862A /* CBLReplicatorConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */; };
+		932C69DB2453634800C382FB /* CBL Swift.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 932C69DA2453634800C382FB /* CBL Swift.xcconfig */; };
 		932CC557207D9ED2000B4B78 /* CBLDatabaseEndpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		932CC558207D9ED2000B4B78 /* CBLDatabaseEndpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932CC559207D9ED2000B4B78 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 932CC553207D9ED2000B4B78 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1814,6 +1815,9 @@
 		93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplicatorConfiguration+Swift.h"; sourceTree = "<group>"; };
 		93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLReplicatorConfiguration+Swift.m"; sourceTree = "<group>"; };
 		93292DBE22C19E7F00A0862A /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
+		932C69DA2453634800C382FB /* CBL Swift.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "CBL Swift.xcconfig"; sourceTree = "<group>"; };
+		932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
+		932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
 		932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseEndpoint.h; sourceTree = "<group>"; };
 		932CC553207D9ED2000B4B78 /* CouchbaseLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CouchbaseLite.h; sourceTree = "<group>"; };
 		932CC554207D9ED2000B4B78 /* CBLDatabaseEndpoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseEndpoint.m; sourceTree = "<group>"; };
@@ -1839,7 +1843,7 @@
 		9343F00F207D611600F19A89 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9343F16D207D62C900F19A89 /* CBL Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9343F16D207D62C900F19A89 /* CBL-EE Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F188207D633300F19A89 /* CBL-EE Objc Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL-EE Objc Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1B7207D63BF00F19A89 /* CBLPerfTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2721,17 +2725,20 @@
 		9378C5D11E26CC46001BB196 /* xcconfigs */ = {
 			isa = PBXGroup;
 			children = (
-				27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */,
 				9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */,
 				9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */,
 				9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */,
-				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
 				275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */,
-				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
-				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
-				9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */,
+				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
+				27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */,
+				932C69DA2453634800C382FB /* CBL Swift.xcconfig */,
+				932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */,
+				932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */,
 				2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */,
+				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
 				2791EA6720327E8B00BD813C /* Project_Release_EE.xcconfig */,
+				9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */,
+				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
 			);
 			path = xcconfigs;
 			sourceTree = "<group>";
@@ -3103,7 +3110,7 @@
 				9343F00F207D611600F19A89 /* CouchbaseLite.framework */,
 				9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */,
 				9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */,
-				9343F16D207D62C900F19A89 /* CBL Tests.app */,
+				9343F16D207D62C900F19A89 /* CBL-EE Tests.app */,
 				9343F188207D633300F19A89 /* CBL-EE Objc Tests - iOS.xctest */,
 				9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F1B7207D63BF00F19A89 /* CBLPerfTests */,
@@ -4183,7 +4190,7 @@
 			);
 			name = "CBL-EE Objc Tests - iOS App";
 			productName = "ios-tests";
-			productReference = 9343F16D207D62C900F19A89 /* CBL Tests.app */;
+			productReference = 9343F16D207D62C900F19A89 /* CBL-EE Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		9343F16F207D633300F19A89 /* CBL-EE Objc Tests - iOS */ = {
@@ -4587,6 +4594,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				932C69DB2453634800C382FB /* CBL Swift.xcconfig in Resources */,
 				93DECF3F200DBE5900F44953 /* Support in Resources */,
 				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
 			);
@@ -6318,7 +6326,7 @@
 		};
 		9343F169207D62C900F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
@@ -6335,7 +6343,7 @@
 		};
 		9343F16A207D62C900F19A89 /* Debug-EE */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
@@ -6352,7 +6360,7 @@
 		};
 		9343F16B207D62C900F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
@@ -6369,7 +6377,7 @@
 		};
 		9343F16C207D62C900F19A89 /* Release-EE */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
+			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
@@ -6386,28 +6394,28 @@
 		};
 		9343F184207D633300F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		9343F185207D633300F19A89 /* Debug-EE */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = "Debug-EE";
 		};
 		9343F186207D633300F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		9343F187207D633300F19A89 /* Release-EE */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
+			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = "Release-EE";
