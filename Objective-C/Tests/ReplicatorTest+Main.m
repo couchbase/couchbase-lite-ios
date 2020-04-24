@@ -1955,6 +1955,8 @@
     end.revID = c4str("revID");
     end.flags = kRevDeleted;
     end.error = c4error_make(1, kC4ErrorBusy, c4str("error"));
+    end.errorIsTransient = true;
+    
     CBLReplicatedDocument* replicatedDoc = [[CBLReplicatedDocument alloc] initWithC4DocumentEnded: &end];
     AssertEqualObjects(replicatedDoc.id, @"docID");
     Assert((replicatedDoc.flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted);
