@@ -38,6 +38,7 @@ extern C4LogDomain kCBL_LogDomainDatabase;
 extern C4LogDomain kCBL_LogDomainQuery;
 extern C4LogDomain kCBL_LogDomainSync;
 extern C4LogDomain kCBL_LogDomainWebSocket;
+extern C4LogDomain kCBL_LogDomainListener;
     
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \

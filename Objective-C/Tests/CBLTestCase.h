@@ -76,6 +76,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** Directory that keeps the test databases */
 @property (readonly, nonatomic) NSString* directory;
 
+@property (readonly, nonatomic) BOOL hasHostApp;
+
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
 - (nullable CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;

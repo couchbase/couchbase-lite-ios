@@ -32,6 +32,7 @@ C4LogDomain kCBL_LogDomainDatabase;
 C4LogDomain kCBL_LogDomainQuery;
 C4LogDomain kCBL_LogDomainSync;
 C4LogDomain kCBL_LogDomainWebSocket;
+C4LogDomain kCBL_LogDomainListener;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
 
@@ -84,7 +85,8 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"Sync": @(kCBLLogDomainReplicator),
                               @"SyncBusy": @(kCBLLogDomainReplicator),
                               @"BLIP": @(kCBLLogDomainNetwork),
-                              @"WS": @(kCBLLogDomainNetwork) };
+                              @"WS": @(kCBLLogDomainNetwork),
+                              @"Listener": @(kCBLLogDomainListener) };
     }
     
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
@@ -158,6 +160,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         kCBL_LogDomainQuery     = setNamedLogDomainLevel("Query", kC4LogDebug);
         kCBL_LogDomainSync      = setNamedLogDomainLevel("Sync", kC4LogDebug);
         kCBL_LogDomainWebSocket = setNamedLogDomainLevel("WS", kC4LogDebug);
+        kCBL_LogDomainListener  = setNamedLogDomainLevel("Listener", kC4LogDebug);
         setNamedLogDomainLevel("BLIP", kC4LogDebug);
         setNamedLogDomainLevel("SyncBusy", kC4LogDebug);
         
@@ -234,6 +237,9 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         case kCBLLogDomainNetwork:
             c4Domain = kCBL_LogDomainWebSocket;
             break;
+        case kCBLLogDomainListener:
+            c4Domain = kCBL_LogDomainListener;
+            break;
         default:
             c4Domain = kCBL_LogDomainDatabase;
     }
@@ -275,6 +281,9 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
             break;
         case kCBLLogDomainNetwork:
             return @"Network";
+            break;
+        case kCBLLogDomainListener:
+            return @"Listener";
             break;
         default:
             return @"Database";
