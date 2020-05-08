@@ -874,6 +874,9 @@
 		934A27C21F31073E003946A7 /* ArrayExpressionIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934A27C11F31073E003946A7 /* ArrayExpressionIn.swift */; };
 		934A27D51F310764003946A7 /* ArrayExpressionSatisfies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934A27D41F310764003946A7 /* ArrayExpressionSatisfies.swift */; };
 		934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
+		934EF8302460D0360053A47C /* CBLTLSIdentity.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */; };
+		934EF8312460D0770053A47C /* TLSIdentityTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 934EF80B2453770E0053A47C /* TLSIdentityTest.m */; };
+		934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 934EF80B2453770E0053A47C /* TLSIdentityTest.m */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BE91E1EF19000F90659 /* MYErrorUtils.h */; };
@@ -1196,7 +1199,6 @@
 		939C5E52244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4C244FC3B7007CEBAC /* CBLURLEndpointListenerConfiguration.mm */; };
 		939C5E54244FC3B8007CEBAC /* CBLTLSIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E4D244FC3B7007CEBAC /* CBLTLSIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		939C5E56244FC3B8007CEBAC /* CBLURLEndpointListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E4E244FC3B7007CEBAC /* CBLURLEndpointListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		939C5E58244FC3B8007CEBAC /* CBLTLSIdentity.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */; };
 		939C5E5A244FC3B8007CEBAC /* CBLURLEndpointListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E50244FC3B7007CEBAC /* CBLURLEndpointListener.mm */; };
 		939C5E5C244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E51244FC3B8007CEBAC /* CBLURLEndpointListenerConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		939C5E61244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */; };
@@ -1868,6 +1870,7 @@
 		934C2CDB1F4FC0D20010316F /* CBL Swift Tests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBL Swift Tests-Bridging-Header.h"; sourceTree = "<group>"; };
 		934C2CDC1F4FC0D20010316F /* CBLTestHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTestHelper.h; sourceTree = "<group>"; };
 		934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTestHelper.m; sourceTree = "<group>"; };
+		934EF80B2453770E0053A47C /* TLSIdentityTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TLSIdentityTest.m; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
 		934F4BE91E1EF19000F90659 /* MYErrorUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
@@ -3241,6 +3244,7 @@
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
+				934EF80B2453770E0053A47C /* TLSIdentityTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
@@ -4965,6 +4969,7 @@
 				9343EF58207D611600F19A89 /* CBLReplicator+Backgrounding.m in Sources */,
 				9343EF59207D611600F19A89 /* CBLReplicator.mm in Sources */,
 				9343EF5A207D611600F19A89 /* CBLBlobStream.mm in Sources */,
+				934EF8302460D0360053A47C /* CBLTLSIdentity.mm in Sources */,
 				9343EF5B207D611600F19A89 /* CBLQueryFunction.m in Sources */,
 				9343EF5C207D611600F19A89 /* CBLURLEndpoint.m in Sources */,
 				9343EF5D207D611600F19A89 /* CBLFleece.mm in Sources */,
@@ -5027,7 +5032,6 @@
 				9343EF89207D611600F19A89 /* CBLDocumentFragment.m in Sources */,
 				9343EF8A207D611600F19A89 /* CBLDictionary.mm in Sources */,
 				939260A320A0CBAC00E5748C /* CBLMessageEndpointListener.mm in Sources */,
-				939C5E58244FC3B8007CEBAC /* CBLTLSIdentity.mm in Sources */,
 				9343EF8B207D611600F19A89 /* CBLQueryResult.mm in Sources */,
 				9343EF8C207D611600F19A89 /* CBLValueExpression.m in Sources */,
 			);
@@ -5251,6 +5255,7 @@
 				1A4160DB22836E8C0061A567 /* ReplicatorTest+Main.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
+				934EF8312460D0770053A47C /* TLSIdentityTest.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
@@ -5297,6 +5302,7 @@
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
+				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,

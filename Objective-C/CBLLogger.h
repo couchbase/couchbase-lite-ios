@@ -23,11 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
  Log domain.
  */
 typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
-    kCBLLogDomainAll            = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3, ///< All domains
+    kCBLLogDomainAll            = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4, ///< All domains
     kCBLLogDomainDatabase       = 1 << 0, ///< Database domain.
     kCBLLogDomainQuery          = 1 << 1, ///< Query domain.
     kCBLLogDomainReplicator     = 1 << 2, ///< Replicator domain.
-    kCBLLogDomainNetwork        = 1 << 3  ///< Network domain.
+    kCBLLogDomainNetwork        = 1 << 3, ///< Network domain.
+    kCBLLogDomainListener       = 1 << 4  ///< Listener domain.
 };
 
 /**
