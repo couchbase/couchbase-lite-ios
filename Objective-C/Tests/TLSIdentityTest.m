@@ -102,14 +102,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     NSLog(@"%lu", (unsigned long)publicKeyData.length);
 }
 
-- (void) deleteAllItemsInKeyChain {
-    NSArray *classes = @[(id)kSecClassKey, (id)kSecClassCertificate, (id)kSecClassIdentity];
-    for (id clazz in classes) {
-        NSDictionary *query = @{(__bridge id)kSecClass: clazz};
-        SecItemDelete((__bridge CFDictionaryRef)query);
-    }
-}
-
 /** For Debugging */
 - (void) printItemsInKeyChain {
     NSArray *classes = @[(id)kSecClassKey, (id)kSecClassCertificate, (id)kSecClassIdentity];
@@ -137,11 +129,13 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 - (void) setUp {
     [super setUp];
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
 }
 
 - (void) tearDown {
     [super tearDown];
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
 }
 
 - (void) testCreateGetDeleteServerIdentity {
@@ -190,7 +184,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     if (!self.hasHostApp) return;
     
     NSError* error;
-    CBLTLSIdentity* identity;
+    __block CBLTLSIdentity* identity;
     
     // Create:
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
@@ -215,9 +209,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
                                             expiration: nil
                                                  label: kServerCertLabel
                                                  error: &error];
-    
     AssertNil(identity);
-    AssertNotNil(error);
+    AssertEqual(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, CBLErrorCrypto);
+    Assert([error.localizedDescription containsString: @"-25299"]);
 }
 
 - (void) testCreateGetDeleteClientIdentity {
@@ -291,9 +286,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
                                             expiration: nil
                                                  label: kClientCertLabel
                                                  error: &error];
-    
     AssertNil(identity);
-    AssertNotNil(error);
+    AssertEqual(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, CBLErrorCrypto);
+    Assert([error.localizedDescription containsString: @"-25299"]);
 }
 
 - (void) testCreateIdentityFromData {
@@ -303,7 +299,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     
     // When importing P12 file on macOS unit test, there is an internal exception thrown
     // inside SecPKCS12Import() which doesn't actually cause anything. Ignore the exception
-    // so that the exception brekpoint will not be triggered.
+    // so that the exception breakpoint will not be triggered.
     __block NSError* error;
     __block CBLTLSIdentity* identity;
     [self ignoreException: ^{
