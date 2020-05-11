@@ -18,7 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLTLSIdentity.h"
+#import "CBLTLSIdentity+Internal.h"
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 @interface TLSIdentityTest : CBLTestCase
@@ -162,12 +162,14 @@ API_AVAILABLE(macos(10.12), ios(10.0))
                                                  error: &error];
     AssertNotNil(identity);
     AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
     [self checkIdentityInKeyChain: identity];
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNotNil(identity);
     AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
     [self checkIdentityInKeyChain: identity];
     
     // Delete:
@@ -231,7 +233,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     AssertNil(error);
     
     // Create:
-    NSDictionary* attrs = @{ @"CN": @"CBL-Client" };
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Client" };
     identity = [CBLTLSIdentity createIdentityForServer: NO
                                             attributes: attrs
                                             expiration: nil
@@ -239,12 +241,14 @@ API_AVAILABLE(macos(10.12), ios(10.0))
                                                  error: &error];
     AssertNotNil(identity);
     AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
     [self checkIdentityInKeyChain: identity];
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNotNil(identity);
     AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
     [self checkIdentityInKeyChain: identity];
     
     // Delete:
@@ -264,7 +268,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     CBLTLSIdentity* identity;
     
     // Create:
-    NSDictionary* attrs = @{ @"CN": @"CBL-Client" };
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Client" };
     identity = [CBLTLSIdentity createIdentityForServer: NO
                                             attributes: attrs
                                             expiration: nil
@@ -330,6 +334,76 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
     AssertNil(error);
+}
+
+- (void) testCreateIdentityWithNoAttributes {
+    if (!self.hasHostApp) return;
+    
+    NSError* error;
+    CBLTLSIdentity* identity;
+    
+    // Delete:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    
+    // Get:
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNil(identity);
+    AssertNil(error);
+    
+    // Create:
+    identity = [CBLTLSIdentity createIdentityForServer: YES
+                                            attributes: @{ }
+                                            expiration: nil
+                                                 label: kServerCertLabel
+                                                 error: &error];
+    AssertNil(identity);
+    AssertEqual(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, CBLErrorCrypto);
+    Assert([error.localizedDescription containsString: @"-67655"]);
+}
+
+- (void) testCertificateExpiration {
+    if (!self.hasHostApp) return;
+
+    NSError* error;
+    CBLTLSIdentity* identity;
+    
+    // Delete:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    
+    // Get:
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNil(identity);
+    AssertNil(error);
+    
+    // Create:
+    NSDate* expiration = [NSDate dateWithTimeIntervalSinceNow: 300];
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
+    identity = [CBLTLSIdentity createIdentityForServer: YES
+                                            attributes: attrs
+                                            expiration: expiration
+                                                 label: kServerCertLabel
+                                                 error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
+    
+    /* Lite-Core minus 60 seconds to the setup expiration time to allow some clock diff b/w devices. */
+    NSDate* certExpiration = [NSDate dateWithTimeIntervalSince1970: (identity.expiration / 1000.0) + 60];
+    Assert(ABS(certExpiration.timeIntervalSince1970 - expiration.timeIntervalSince1970) < 5);
+    
+#if TARGET_OS_OSX
+    SecCertificateRef cert = (__bridge SecCertificateRef)(identity.certs[0]);
+    
+    // ONLY Available on macOS:
+    NSDictionary* certAttrs = CFBridgingRelease(SecCertificateCopyValues(cert, NULL, NULL));
+    NSDictionary* expInfo = certAttrs[(id)kSecOIDX509V1ValidityNotAfter];
+    NSNumber *expValue = expInfo[(id)kSecPropertyKeyValue];
+    certExpiration = [NSDate dateWithTimeIntervalSinceReferenceDate: [expValue doubleValue] + 60];
+    Assert(ABS(certExpiration.timeIntervalSince1970 - expiration.timeIntervalSince1970) < 5);
+#endif
 }
 
 @end
