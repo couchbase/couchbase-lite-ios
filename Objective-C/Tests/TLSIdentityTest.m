@@ -99,7 +99,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert(errRef == nil);
     AssertNotNil(publicKeyData);
     Assert(publicKeyData.length > 0);
-    NSLog(@"%lu", (unsigned long)publicKeyData.length);
 }
 
 /** For Debugging */
@@ -186,7 +185,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     if (!self.hasHostApp) return;
     
     NSError* error;
-    __block CBLTLSIdentity* identity;
+    CBLTLSIdentity* identity;
     
     // Create:
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
