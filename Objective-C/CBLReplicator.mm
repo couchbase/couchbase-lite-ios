@@ -143,7 +143,8 @@ typedef enum {
         if ([self _setupC4Replicator: &err]) {
             // Start the C4Replicator:
             _state = kCBLStateStarting;
-            c4repl_start(_repl);
+            c4repl_start(_repl, _resetCheckpoint);
+            _resetCheckpoint = NO;
             status = c4repl_getStatus(_repl);
             [_config.database addActiveReplicator: self];
             
@@ -255,13 +256,6 @@ typedef enum {
 - (alloc_slice) _encodedOptions {
     NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
     options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
-
-    // Update resetCheckpoint flag if needed:
-    if (_resetCheckpoint) {
-        options[@kC4ReplicatorResetCheckpoint] = @(YES);
-        _resetCheckpoint = NO;
-    }
-
     Encoder enc;
     enc << options;
     return enc.finish();
