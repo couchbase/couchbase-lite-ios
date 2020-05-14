@@ -35,7 +35,8 @@ typedef CBLURLEndpointListener Listener;
 @implementation URLEndpointListenerTest
 
 - (Listener*) listenAt: (uint16)port {
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: port];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = port;
     config.disableTLS = YES;
     Listener* list = [[Listener alloc] initWithConfig: config];
     
@@ -49,7 +50,8 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) testPort {
     // initialize a listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: kPort];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = kPort;
     config.disableTLS = YES;
     Listener* list = [[Listener alloc] initWithConfig: config];
     AssertEqual(list.port, 0);
@@ -67,7 +69,8 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) testEmptyPort {
     // initialize a listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: 0];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = 0;
     config.disableTLS = YES;
     Listener* list = [[Listener alloc] initWithConfig: config];
     AssertEqual(list.port, 0);
@@ -87,7 +90,8 @@ typedef CBLURLEndpointListener Listener;
     Listener* list1 = [self listenAt: kPort];
     
     // initialize a listener at same port
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: kPort];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = kPort;
     config.disableTLS = YES;
     Listener* list2 = [[Listener alloc] initWithConfig: config];
     
@@ -105,7 +109,8 @@ typedef CBLURLEndpointListener Listener;
 
 // TODO: https://issues.couchbase.com/browse/CBL-948
 - (void) _testURLs {
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: kPort];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = kPort;
     config.disableTLS = YES;
     Listener* list = [[Listener alloc] initWithConfig: config];
     AssertEqual(list.urls.count, 0);
@@ -121,10 +126,10 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(list.urls.count, 0);
 }
 
-// TODO: LiteCore-EE C++ Test "P2P Sync connection count" Failure!
-- (void) _testStatus {
+- (void) testStatus {
     CBLDatabase.log.console.level = kCBLLogLevelDebug;
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB port: kPort];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = kPort;
     config.disableTLS = YES;
     Listener* list = [[Listener alloc] initWithConfig: config];
     AssertEqual(list.status.connectionCount, 0);
