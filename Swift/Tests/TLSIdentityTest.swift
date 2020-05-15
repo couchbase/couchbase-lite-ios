@@ -22,7 +22,6 @@ import CouchbaseLiteSwift
 @available(macOS 10.12, iOS 10.0, *)
 class TLSIdentityTest: CBLTestCase {
     let serverCertLabel = "CBL-Swift-Server-Cert"
-    
     let clientCertLabel = "CBL-Swift-Client-Cert"
     
     func findInKeyChain(params: [String: Any]) -> CFTypeRef? {
@@ -263,4 +262,3 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssert(abs(expiration.timeIntervalSince1970 - identity!.expiration.timeIntervalSince1970) < 5.0)
     }
 }
-
