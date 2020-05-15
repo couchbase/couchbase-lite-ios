@@ -40,6 +40,15 @@ class CBLTestCase: XCTestCase {
         let directory = NSTemporaryDirectory().appending("CouchbaseLite")
     #endif
     
+    var isHostApp: Bool {
+    #if os(iOS)
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: "hostApp")
+    #else
+        return true
+    #endif
+    }
+    
     override func setUp() {
         super.setUp()
         

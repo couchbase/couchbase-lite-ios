@@ -28,6 +28,10 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Mark as host app for test:
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool: YES forKey: @"hostApp"];
+    [defaults synchronize];
 #ifndef DEBUG
     // In an optimized build, run the performance tests:
     [TunesPerfTest runWithConfig: nil];

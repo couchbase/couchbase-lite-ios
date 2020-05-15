@@ -25,6 +25,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Mark as host app for test:
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: "hostApp")
+        defaults.synchronize()
         return true
     }
     
