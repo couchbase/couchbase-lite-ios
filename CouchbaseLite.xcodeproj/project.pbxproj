@@ -197,6 +197,9 @@
 		93095B09246BC325005633B4 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		93095B0B246BC69B005633B4 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; };
 		93095B0C246BC69B005633B4 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */; };
+		93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */; };
+		93095B32246DDF34005633B4 /* TLSIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93095B31246DDF34005633B4 /* TLSIdentity.swift */; };
 		930AE46D1EAA6C9100E92E9A /* CBLData.h in Headers */ = {isa = PBXBuildFile; fileRef = 930AE46B1EAA6C9100E92E9A /* CBLData.h */; };
 		930AE46E1EAA6C9100E92E9A /* CBLData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 930AE46C1EAA6C9100E92E9A /* CBLData.mm */; };
 		930B63D3246B9CD1006D94FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930B63D2246B9CD1006D94FF /* AppDelegate.swift */; };
@@ -282,7 +285,6 @@
 		93249D6A246B6E1C000A8A6E /* CBLURLEndpointListenerConfiguration.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939C5E4C244FC3B7007CEBAC /* CBLURLEndpointListenerConfiguration.mm */; };
 		93249D7A246B6EB0000A8A6E /* libLiteCoreREST-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */; };
 		93249D7B246B6EB0000A8A6E /* libLiteCoreWebSocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */; };
-		93249D7F246B6EFF000A8A6E /* TLSIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93249D7E246B6EFF000A8A6E /* TLSIdentity.swift */; };
 		932565A421ED13290092F4E0 /* CBLLogFileConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 932565A221ED13290092F4E0 /* CBLLogFileConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		932565A521ED13290092F4E0 /* CBLLogFileConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 932565A221ED13290092F4E0 /* CBLLogFileConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932565A621ED13290092F4E0 /* CBLLogFileConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 932565A221ED13290092F4E0 /* CBLLogFileConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1884,6 +1886,8 @@
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
 		72A87A041E2E0E70008466FF /* CBLBlobStream.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStream.mm; sourceTree = "<group>"; };
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
+		93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLSIdentityTest.swift; sourceTree = "<group>"; };
+		93095B31246DDF34005633B4 /* TLSIdentity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TLSIdentity.swift; sourceTree = "<group>"; };
 		930AE46B1EAA6C9100E92E9A /* CBLData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLData.h; sourceTree = "<group>"; };
 		930AE46C1EAA6C9100E92E9A /* CBLData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLData.mm; sourceTree = "<group>"; };
 		930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE Swift Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1945,7 +1949,6 @@
 		9322DCF41F14654E00C4ACF7 /* Limit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Limit.swift; sourceTree = "<group>"; };
 		9322DCF61F14671F00C4ACF7 /* LimitRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LimitRouter.swift; sourceTree = "<group>"; };
 		93248DE72005E72A00C15B00 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
-		93249D7E246B6EFF000A8A6E /* TLSIdentity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TLSIdentity.swift; sourceTree = "<group>"; };
 		932565A221ED13290092F4E0 /* CBLLogFileConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLLogFileConfiguration.h; sourceTree = "<group>"; };
 		932565A321ED13290092F4E0 /* CBLLogFileConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLLogFileConfiguration.m; sourceTree = "<group>"; };
 		932565BB21ED16BF0092F4E0 /* CBLLogFileConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLogFileConfiguration+Internal.h"; sourceTree = "<group>"; };
@@ -2587,6 +2590,7 @@
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
 				1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */,
+				93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -2703,7 +2707,7 @@
 		93249D7D246B6EFF000A8A6E /* Listener */ = {
 			isa = PBXGroup;
 			children = (
-				93249D7E246B6EFF000A8A6E /* TLSIdentity.swift */,
+				93095B31246DDF34005633B4 /* TLSIdentity.swift */,
 			);
 			path = Listener;
 			sourceTree = "<group>";
@@ -5279,6 +5283,7 @@
 				93BB1CA9246BB2D4004FFA00 /* DocumentExpirationTest.swift in Sources */,
 				93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CAA246BB2D4004FFA00 /* FragmentTest.swift in Sources */,
+				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
 				93BB1CAB246BB2D4004FFA00 /* LogTest.swift in Sources */,
 				93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */,
@@ -5447,7 +5452,7 @@
 				9343F025207D61AB00F19A89 /* DocumentChange.swift in Sources */,
 				9343F026207D61AB00F19A89 /* CBLValueIndex.m in Sources */,
 				9343F027207D61AB00F19A89 /* CBLQueryFunction.m in Sources */,
-				93249D7F246B6EFF000A8A6E /* TLSIdentity.swift in Sources */,
+				93095B32246DDF34005633B4 /* TLSIdentity.swift in Sources */,
 				9343F028207D61AB00F19A89 /* CBLIndexBuilder.m in Sources */,
 				9388CC4E21C25141005CA66D /* ConsoleLogger.swift in Sources */,
 				93249D68246B6E1C000A8A6E /* CBLURLEndpointListener.mm in Sources */,
@@ -5722,6 +5727,7 @@
 				9343F191207D636300F19A89 /* NotificationTest.swift in Sources */,
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
 				9343F193207D636300F19A89 /* CBLTestHelper.m in Sources */,
+				93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */,
 				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
 				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,

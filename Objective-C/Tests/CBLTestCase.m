@@ -88,8 +88,8 @@
 
 - (BOOL) hasHostApp {
 #if TARGET_OS_IPHONE
-    NSDictionary* env = NSProcessInfo.processInfo.environment;
-    return env[@"CBL_TEST_HOST_APP"] != nil;
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    return [defaults boolForKey: @"hostApp"];
 #else
     return YES;
 #endif
