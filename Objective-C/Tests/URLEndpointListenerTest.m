@@ -37,121 +37,116 @@ typedef CBLURLEndpointListener Listener;
 - (Listener*) listenAt: (uint16)port {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = port;
-    config.disableTLS = YES;
-    Listener* list = [[Listener alloc] initWithConfig: config];
+    Listener* listener = [[Listener alloc] initWithConfig: config];
     
     // start listener
     NSError* err = nil;
-    Assert([list startWithError: &err]);
+    Assert([listener startWithError: &err]);
     AssertNil(err);
     
-    return list;
+    return listener;
 }
 
 - (void) testPort {
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
-    config.disableTLS = YES;
-    Listener* list = [[Listener alloc] initWithConfig: config];
-    AssertEqual(list.port, 0);
+    Listener* listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(listener.port, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([list startWithError: &err]);
+    Assert([listener startWithError: &err]);
     AssertNil(err);
-    AssertEqual(list.port, kPort);
+    AssertEqual(listener.port, kPort);
     
     // stops
-    [list stop];
-    AssertEqual(list.port, 0);
+    [listener stop];
+    AssertEqual(listener.port, 0);
 }
 
 - (void) testEmptyPort {
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = 0;
-    config.disableTLS = YES;
-    Listener* list = [[Listener alloc] initWithConfig: config];
-    AssertEqual(list.port, 0);
+    Listener* listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(listener.port, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([list startWithError: &err]);
+    Assert([listener startWithError: &err]);
     AssertNil(err);
-    Assert(list.port != 0);
+    Assert(listener.port != 0);
     
     // stops
-    [list stop];
-    AssertEqual(list.port, 0);
+    [listener stop];
+    AssertEqual(listener.port, 0);
 }
 
 - (void) testBusyPort {
-    Listener* list1 = [self listenAt: kPort];
+    Listener* listener1 = [self listenAt: kPort];
     
     // initialize a listener at same port
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
-    config.disableTLS = YES;
-    Listener* list2 = [[Listener alloc] initWithConfig: config];
+    Listener* listener2 = [[Listener alloc] initWithConfig: config];
     
     // already in use when starting the second listener
     [self ignoreException:^{
         NSError* err = nil;
-        [list2 startWithError: &err];
+        [listener2 startWithError: &err];
         AssertEqual(err.code, EADDRINUSE);
         AssertEqual(err.domain, NSPOSIXErrorDomain);
     }];
     
     // stops
-    [list1 stop];
+    [listener1 stop];
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-948
 - (void) _testURLs {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
-    config.disableTLS = YES;
-    Listener* list = [[Listener alloc] initWithConfig: config];
-    AssertEqual(list.urls.count, 0);
+    Listener* listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(listener.urls.count, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([list startWithError: &err]);
+    Assert([listener startWithError: &err]);
     AssertNil(err);
-    Assert(list.urls.count != 0);
+    Assert(listener.urls.count != 0);
     
     // stops
-    [list stop];
-    AssertEqual(list.urls.count, 0);
+    [listener stop];
+    AssertEqual(listener.urls.count, 0);
 }
 
-- (void) testStatus {
+- (void) _testStatus {
     CBLDatabase.log.console.level = kCBLLogLevelDebug;
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
-    config.disableTLS = YES;
-    Listener* list = [[Listener alloc] initWithConfig: config];
-    AssertEqual(list.status.connectionCount, 0);
-    AssertEqual(list.status.activeConnectionCount, 0);
+    Listener* listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(listener.status.connectionCount, 0);
+    AssertEqual(listener.status.activeConnectionCount, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([list startWithError: &err]);
+    Assert([listener startWithError: &err]);
     AssertNil(err);
-    AssertEqual(list.status.connectionCount, 0);
-    AssertEqual(list.status.activeConnectionCount, 0);
+    AssertEqual(listener.status.connectionCount, 0);
+    AssertEqual(listener.status.activeConnectionCount, 0);
     
     [self generateDocumentWithID: @"doc-1"];
     CBLURLEndpoint* target = [[CBLURLEndpoint alloc] initWithURL: kURL];
     id rConfig = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    __block Listener* tempListener = list;
+    [rConfig setPinnedServerCertificate: (SecCertificateRef)(listener.config.tlsIdentity.certs.firstObject)];
+    __block Listener* weakListener = listener;
     __block uint64 maxConnectionCount = 0, maxActiveCount = 0;
     [self run: rConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
-        Listener* sListener = tempListener;
+        Listener* strongListener = weakListener;
         [r addChangeListener:^(CBLReplicatorChange * change) {
-            maxConnectionCount = MAX(sListener.status.connectionCount, maxConnectionCount);
-            maxActiveCount = MAX(sListener.status.activeConnectionCount, maxActiveCount);
+            maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
+            maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
         }];
     }];
     AssertEqual(maxActiveCount, 1);
@@ -159,9 +154,9 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 1);
     
     // stops
-    [list stop];
-    AssertEqual(list.status.connectionCount, 0);
-    AssertEqual(list.status.activeConnectionCount, 0);
+    [listener stop];
+    AssertEqual(listener.status.connectionCount, 0);
+    AssertEqual(listener.status.activeConnectionCount, 0);
 }
 
 @end
