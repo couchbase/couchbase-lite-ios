@@ -2,7 +2,7 @@
 //  TLSIdentityTest.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2020 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Couchbase License Agreement (the "License");
 //  you may not use this file except in compliance with the License.
