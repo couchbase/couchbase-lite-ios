@@ -34,7 +34,7 @@ typedef CBLURLEndpointListener Listener;
 
 @implementation URLEndpointListenerTest
 
-- (Listener*) listenAt: (uint16)port {
+- (Listener*) listenAt: (uint16_t)port {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = port;
     Listener* listener = [[Listener alloc] initWithConfig: config];
@@ -141,7 +141,7 @@ typedef CBLURLEndpointListener Listener;
     id rConfig = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
     [rConfig setPinnedServerCertificate: (SecCertificateRef)(listener.config.tlsIdentity.certs.firstObject)];
     __block Listener* weakListener = listener;
-    __block uint64 maxConnectionCount = 0, maxActiveCount = 0;
+    __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
     [self run: rConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
         Listener* strongListener = weakListener;
         [r addChangeListener:^(CBLReplicatorChange * change) {

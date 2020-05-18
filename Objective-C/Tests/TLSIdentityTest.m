@@ -365,7 +365,8 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert([error.localizedDescription containsString: @"-67655"]);
 }
 
-- (void) testCertificateExpiration {
+// TODO: https://issues.couchbase.com/browse/CBL-970
+- (void) _testCertificateExpiration {
     if (!self.hasHostApp) return;
 
     NSError* error;
