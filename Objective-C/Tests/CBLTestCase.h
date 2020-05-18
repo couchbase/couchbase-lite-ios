@@ -78,6 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) BOOL hasHostApp;
 
+@property (readonly, nonatomic) BOOL keyChainAccessAllowed;
+
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
 - (nullable CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;

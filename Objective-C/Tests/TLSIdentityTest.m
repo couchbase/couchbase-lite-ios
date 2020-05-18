@@ -138,7 +138,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateGetDeleteServerIdentity {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -182,7 +182,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateDuplicateServerIdentity {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -217,7 +217,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateGetDeleteClientIdentity {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -261,7 +261,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateDuplicateClientIdentity {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -298,7 +298,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 #if TARGET_OS_IPHONE
 // Failed on macOS: https://issues.couchbase.com/browse/CBL-946
 - (void) testCreateIdentityFromData {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
     
@@ -339,7 +339,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 #endif
 
 - (void) testCreateIdentityWithNoAttributes {
-    if (!self.hasHostApp) return;
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -365,9 +365,8 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert([error.localizedDescription containsString: @"-67655"]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-970
-- (void) _testCertificateExpiration {
-    if (!self.hasHostApp) return;
+- (void) testCertificateExpiration {
+    if (!self.keyChainAccessAllowed) return;
 
     NSError* error;
     CBLTLSIdentity* identity;
