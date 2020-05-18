@@ -295,8 +295,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert([error.localizedDescription containsString: @"-25299"]);
 }
 
-#if TARGET_OS_IPHONE
-// Failed on macOS: https://issues.couchbase.com/browse/CBL-946
 - (void) testCreateIdentityFromData {
     if (!self.keyChainAccessAllowed) return;
     
@@ -336,7 +334,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     AssertNil(identity);
     AssertNil(error);
 }
-#endif
 
 - (void) testCreateIdentityWithNoAttributes {
     if (!self.keyChainAccessAllowed) return;
