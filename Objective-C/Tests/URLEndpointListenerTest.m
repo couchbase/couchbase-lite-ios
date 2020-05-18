@@ -37,6 +37,7 @@ typedef CBLURLEndpointListener Listener;
 - (Listener*) listenAt: (uint16_t)port {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = port;
+    config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     
     // start listener
@@ -51,6 +52,7 @@ typedef CBLURLEndpointListener Listener;
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
+    config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertEqual(listener.port, 0);
     
@@ -69,6 +71,7 @@ typedef CBLURLEndpointListener Listener;
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = 0;
+    config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertEqual(listener.port, 0);
     
@@ -89,6 +92,7 @@ typedef CBLURLEndpointListener Listener;
     // initialize a listener at same port
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kPort;
+    config.disableTLS = YES;
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
     
     // already in use when starting the second listener
