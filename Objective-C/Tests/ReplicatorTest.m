@@ -73,7 +73,7 @@
 - (void) setUp {
     [super setUp];
     
-    timeout = 5.0;
+    timeout = 15.0; // TODO: CBL-973
     pinServerCert = YES;
     
     [self openOtherDB];
