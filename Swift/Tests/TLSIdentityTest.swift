@@ -83,6 +83,59 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssert(data!.count > 0)
     }
     
+    func store(privateKey: SecKey, certs: [SecCertificate], label: String) {
+        XCTAssert(certs.count > 0)
+        
+        // Private Key:
+        store(privateKey: privateKey)
+        
+        // Certs:
+        var i = 0;
+        for cert in certs {
+            store(cert: cert, label: (i == 0 ? label : nil))
+            i = i + 1
+        }
+    }
+    
+    func store(privateKey: SecKey) {
+        let params: [String : Any] = [
+            String(kSecClass):          kSecClassKey,
+            String(kSecAttrKeyType):    kSecAttrKeyTypeRSA,
+            String(kSecAttrKeyClass):   kSecAttrKeyClassPrivate,
+            String(kSecValueRef):       privateKey
+        ]
+        let status = SecItemAdd(params as CFDictionary, nil)
+        XCTAssertEqual(status, errSecSuccess)
+    }
+    
+    func store(cert: SecCertificate, label: String?) {
+        var params: [String : Any] = [
+            String(kSecClass):          kSecClassCertificate,
+            String(kSecValueRef):       cert
+        ]
+        if let l = label {
+            params[String(kSecAttrLabel)] = l
+        }
+        let status = SecItemAdd(params as CFDictionary, nil)
+        XCTAssertEqual(status, errSecSuccess)
+    }
+    
+    func update(cert: SecCertificate, label: String) {
+        let query: [String : Any] = [
+            String(kSecClass):          kSecClassCertificate,
+            String(kSecValueRef):       cert
+        ]
+        
+        let update: [String: Any] = [
+            String(kSecClass):          kSecClassCertificate,
+            String(kSecValueRef):       cert,
+            String(kSecAttrLabel):      label
+        ]
+        
+        let status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        XCTAssertEqual(status, errSecSuccess)
+    }
+    
     override func setUp() {
         super.setUp()
         try! TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -96,7 +149,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateGetDeleteServerIdentity() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -130,7 +183,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateDuplicateServerIdentity() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Create:
         var identity: TLSIdentity?
@@ -158,7 +211,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateGetDeleteClientIdentity() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
@@ -192,7 +245,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateDuplicateClientIdentity() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Create:
         var identity: TLSIdentity?
@@ -219,8 +272,86 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
+    func testGetIdentityWithIdentity() throws {
+        if (!keyChainAccessAllowed) { return }
+        
+        // Use SecPKCS12Import to import the PKCS12 data:
+        var result : CFArray?
+        var status = errSecSuccess
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        let options = [String(kSecImportExportPassphrase): "123"]
+        ignoreException {
+            status = SecPKCS12Import(data as CFData, options as CFDictionary, &result)
+        }
+        XCTAssertEqual(status, errSecSuccess)
+        
+        // Identity:
+        let importedItems = result! as NSArray
+        XCTAssert(importedItems.count > 0)
+        let item = importedItems[0] as! [String: Any]
+        let secIdentity = item[String(kSecImportItemIdentity)] as! SecIdentity
+        
+        // Private Key:
+        var privateKey : SecKey?
+        status = SecIdentityCopyPrivateKey(secIdentity, &privateKey)
+        XCTAssertEqual(status, errSecSuccess)
+        
+        // Certs:
+        let certs = item[String(kSecImportItemCertChain)] as! [SecCertificate]
+        XCTAssertEqual(certs.count, 2)
+        
+        // For iOS, need to save the identity into the KeyChain.
+        // Save or Update identity with a label so that it could be cleaned up easily:
+        #if os(iOS)
+            store(privateKey: privateKey!, certs: certs, label: serverCertLabel)
+        #else
+            update(cert: certs[0] as SecCertificate, label: serverCertLabel)
+        #endif
+        
+        // Get identity:
+        let identity = try TLSIdentity.identity(withIdentity: secIdentity, certs: [certs[1]])
+        XCTAssertNotNil(identity)
+        XCTAssertEqual(identity.certs.count, 2)
+        
+        // Delete from KeyChain:
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
+    func testImportIdentity() throws {
+        if (!keyChainAccessAllowed) { return }
+        
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        
+        var identity: TLSIdentity?
+        // When importing P12 file on macOS unit test, there is an internal exception thrown
+        // inside SecPKCS12Import() which doesn't actually cause anything. Ignore the exception
+        // so that the exception breakpoint will not be triggered.
+        ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        
+        XCTAssertNotNil(identity)
+        XCTAssertEqual(identity!.certs.count, 2)
+        checkIdentityInKeyChain(identity: identity!)
+        
+        // Get:
+        identity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        XCTAssertNotNil(identity)
+        XCTAssertEqual(identity!.certs.count, 2)
+        checkIdentityInKeyChain(identity: identity!)
+        
+        // Delete:
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        
+        // Get:
+        identity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        XCTAssertNil(identity)
+    }
+    
     func testCreateIdentityWithNoAttributes() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -239,7 +370,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCertificateExpiration() throws {
-        if (!isHostApp) { return }
+        if (!keyChainAccessAllowed) { return }
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -248,8 +379,8 @@ class TLSIdentityTest: CBLTestCase {
         var identity = try TLSIdentity.identity(withLabel: serverCertLabel)
         XCTAssertNil(identity)
         
-        let expiration = Date.init(timeIntervalSinceNow: 300)
         let attrs = [certAttrCommonName: "CBL-Server"]
+        let expiration = Date(timeIntervalSinceNow: 300)
         identity = try TLSIdentity.createIdentity(forServer: true,
                                                   attributes: attrs,
                                                   expiration: expiration,

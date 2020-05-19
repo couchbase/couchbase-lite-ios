@@ -49,6 +49,14 @@ class CBLTestCase: XCTestCase {
     #endif
     }
     
+    var keyChainAccessAllowed: Bool {
+    #if os(iOS)
+        return self.isHostApp
+    #else
+        return true
+    #endif
+    }
+    
     override func setUp() {
         super.setUp()
         
