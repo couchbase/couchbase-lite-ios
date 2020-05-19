@@ -99,8 +99,6 @@
     #if TARGET_OS_IPHONE
         return self.hasHostApp;
     #else
-        // https://issues.couchbase.com/browse/CBL-970
-        // Disable macOS test to make jenkin build pass:
         return YES;
     #endif
 }
