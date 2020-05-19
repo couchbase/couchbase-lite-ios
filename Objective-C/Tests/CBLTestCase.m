@@ -39,6 +39,9 @@
 - (void) setUp {
     [super setUp];
     
+    // debug: why replicator tests are failing!
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];
     
