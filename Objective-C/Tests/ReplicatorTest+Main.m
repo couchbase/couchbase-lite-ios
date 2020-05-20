@@ -656,57 +656,40 @@
     Assert(success);
 }
 
-- (void)testContinuousP2P {
-    NSError* err = nil;
-    BOOL success = [self.otherDB delete:&err];
-    [self reopenOtherDB];
-    
-    Assert(success);
-    success = [_db delete:&err];
-    Assert(success);
-    [self reopenDB];
-    [self runTwoStepContinuousWithType:kCBLReplicatorTypePush usingUID:@"p2ptest1"];
-    
-    success = [self.otherDB delete:&err];
-    [self reopenOtherDB];
-    Assert(success);
-    success = [_db delete:&err];
-    Assert(success);
-    [self reopenDB];
-    [self runTwoStepContinuousWithType:kCBLReplicatorTypePull usingUID:@"p2ptest2"];
-    
-    success = [self.otherDB delete:&err];
-    [self reopenOtherDB];
-    Assert(success);
-    success = [_db delete:&err];
-    Assert(success);
-    [self reopenDB];
-    [self runTwoStepContinuousWithType:kCBLReplicatorTypePushAndPull usingUID:@"p2ptest3"];
+- (void)testContinuousPushP2P {
+    [self runTwoStepContinuousWithType: kCBLReplicatorTypePush usingUID: @"p2ptest1"];
 }
 
+- (void)testContinuousPullP2P {
+    [self runTwoStepContinuousWithType: kCBLReplicatorTypePull usingUID: @"p2ptest2"];
+}
+
+- (void)testContinuousPushPullP2P {
+    [self runTwoStepContinuousWithType: kCBLReplicatorTypePushAndPull usingUID: @"p2ptest3"];
+}
 
 - (void) testP2PRecoverableFailureDuringOpen {
-    [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:YES];
+    [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: YES];
 }
 
 - (void) testP2PRecoverableFailureDuringSend {
-    [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:YES];
+    [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: YES];
 }
 
 - (void) testP2PRecoverableFailureDuringReceive {
-    [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:YES];
+    [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: YES];
 }
 
 - (void)testP2PPermanentFailureDuringOpen {
-    [self runP2PErrorScenario:kCBLMockConnectionConnect withRecoverability:NO];
+    [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: NO];
 }
 
 - (void)testP2PPermanentFailureDuringSend {
-    [self runP2PErrorScenario:kCBLMockConnectionSend withRecoverability:NO];
+    [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: NO];
 }
 
 - (void)testP2PPermanentFailureDuringReceive {
-    [self runP2PErrorScenario:kCBLMockConnectionReceive withRecoverability:NO];
+    [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: NO];
 }
 
 - (void)testP2PPassiveClose {
