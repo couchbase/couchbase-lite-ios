@@ -39,7 +39,6 @@
 .objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLLog
 .objc_class_name_CBLLogFileConfiguration
-.objc_class_name_CBLLogger
 .objc_class_name_CBLMutableArray
 .objc_class_name_CBLMutableDictionary
 .objc_class_name_CBLMutableDocument
