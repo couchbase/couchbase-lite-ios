@@ -40,6 +40,7 @@
 		1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
 		1A4160E02283759A0061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
 		1A41912B2475DB3B008122BE /* URLEndpointListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4191292475DB3B008122BE /* URLEndpointListener.swift */; };
+		1A4191482475ED3D008122BE /* URLEndpointListenerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
@@ -1812,6 +1813,7 @@
 		1A4160D6228367520061A567 /* ReplicatorTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReplicatorTest.h; sourceTree = "<group>"; };
 		1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+Main.m"; sourceTree = "<group>"; };
 		1A4191292475DB3B008122BE /* URLEndpointListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListener.swift; sourceTree = "<group>"; };
+		1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListenerConfiguration.swift; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
@@ -2722,6 +2724,7 @@
 			children = (
 				93095B31246DDF34005633B4 /* TLSIdentity.swift */,
 				1A4191292475DB3B008122BE /* URLEndpointListener.swift */,
+				1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */,
 			);
 			path = Listener;
 			sourceTree = "<group>";
@@ -4707,7 +4710,7 @@
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1150;
 						ProvisioningStyle = Automatic;
 					};
 					9398D91A1E03434200464432 = {
@@ -5631,6 +5634,7 @@
 				9343F0A3207D61AB00F19A89 /* CBLReplicator.mm in Sources */,
 				931713DB22C182F500F1B5BF /* CBLDatabase+Prediction.m in Sources */,
 				9343F0A4207D61AB00F19A89 /* CBLMutableDictionary.mm in Sources */,
+				1A4191482475ED3D008122BE /* URLEndpointListenerConfiguration.swift in Sources */,
 				931713DF22C182F500F1B5BF /* CBLPrediction.mm in Sources */,
 				9343F0A5207D61AB00F19A89 /* MutableArrayObject.swift in Sources */,
 				932E913420A3F16800FB8EF0 /* MessageEndpointConnection.swift in Sources */,
