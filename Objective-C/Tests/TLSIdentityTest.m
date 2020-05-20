@@ -101,6 +101,61 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert(publicKeyData.length > 0);
 }
 
+- (void) storePrivateKey: (SecKeyRef)privateKey certs: (NSArray*)certs label: (NSString*)label {
+    Assert(certs.count > 0);
+    
+    // Private Key:
+    [self storePrivateKey: privateKey];
+    
+    // Certificates:
+    int i = 0;
+    for (id cert in certs) {
+        [self storeCertificate: (SecCertificateRef) cert label: (i++) == 0 ? label : nil];
+    }
+}
+
+- (void) updateCert: (SecCertificateRef)cert withLabel: (NSString*)label {
+    NSDictionary* query = @{
+        (id)kSecClass:              (id)kSecClassCertificate,
+        (id)kSecValueRef:           (__bridge id)cert,
+    };
+    
+    NSDictionary* update = @{
+        (id)kSecClass:              (id)kSecClassCertificate,
+        (id)kSecValueRef:           (__bridge id)cert,
+        (id)kSecAttrLabel:          label
+    };
+    
+    OSStatus status = SecItemUpdate((CFDictionaryRef)query, (CFDictionaryRef)update);
+    Assert(status == errSecSuccess);
+}
+
+- (void) storePrivateKey: (SecKeyRef)key {
+    NSDictionary* params = @{
+        (id)kSecClass:              (id)kSecClassKey,
+        (id)kSecAttrKeyType:        (id)kSecAttrKeyTypeRSA,
+        (id)kSecAttrKeyClass:       (id)kSecAttrKeyClassPrivate,
+        (id)kSecReturnRef:          @NO,
+        (id)kSecValueRef:           (__bridge id)key
+    };
+    
+    OSStatus status = SecItemAdd((CFDictionaryRef)params, NULL);
+    Assert(status == errSecSuccess);
+}
+
+- (void) storeCertificate: (SecCertificateRef)cert label: (NSString*)label {
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithDictionary: @{
+        (id)kSecClass:              (id)kSecClassCertificate,
+        (id)kSecReturnRef:          @NO,
+        (id)kSecValueRef:           (__bridge id)cert
+    }];
+    if (label)
+        params[(id)kSecAttrLabel] = label;
+    
+    OSStatus status = SecItemAdd((CFDictionaryRef)params, NULL);
+    Assert(status == errSecSuccess);
+}
+
 /** For Debugging */
 - (void) printItemsInKeyChain {
     NSArray *classes = @[(id)kSecClassKey, (id)kSecClassCertificate, (id)kSecClassIdentity];
@@ -295,7 +350,60 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert([error.localizedDescription containsString: @"-25299"]);
 }
 
-- (void) testCreateIdentityFromData {
+- (void) testGetIdentityWithIdentity {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Use SecPKCS12Import to import the PKCS12 data:
+    __block CFArrayRef result = NULL;
+    __block OSStatus status;
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    NSDictionary* options = @{ (id)kSecImportExportPassphrase: @"123" };
+    [self ignoreException:^{
+        status = SecPKCS12Import((__bridge CFDataRef)data, (__bridge CFDictionaryRef)options, &result);
+    }];
+    AssertEqual(status, errSecSuccess);
+    
+    // Identity:
+    NSArray* importedItems = (NSArray*)CFBridgingRelease(result);
+    Assert(importedItems.count > 0);
+    NSDictionary* item = importedItems[0];
+    SecIdentityRef identityRef = (__bridge SecIdentityRef) item[(id)kSecImportItemIdentity];
+    Assert(identityRef);
+    
+    // Private Key:
+    SecKeyRef privateKeyRef;
+    status = SecIdentityCopyPrivateKey(identityRef, &privateKeyRef);
+    AssertEqual(status, errSecSuccess);
+    CFAutorelease(privateKeyRef);
+    
+    // Certs:
+    NSArray* certs = item[(id)kSecImportItemCertChain];
+    Assert(certs.count == 2);
+    
+    // For iOS, need to store the identity into the KeyChain as SecPKCS12Import doesn't do it.
+    // Save or Update identity with a label so that it could be cleaned up easily using
+    // CBLTLSIdentity's -deleteIdentityWithLabel method.
+    NSError* error;
+#if TARGET_OS_IPHONE
+    [self storePrivateKey: privateKeyRef certs: certs label: kServerCertLabel];
+#else
+    [self updateCert: (SecCertificateRef)certs[0] withLabel: kServerCertLabel];
+#endif
+    
+    // Get identity:
+    CBLTLSIdentity* identity = [CBLTLSIdentity identityWithIdentity: identityRef
+                                                              certs: @[certs[1]]
+                                                              error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 2u);
+    
+    // Delete from KeyChain:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+}
+
+- (void) testImportIdentity {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -306,7 +414,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     __block NSError* error;
     __block CBLTLSIdentity* identity;
     [self ignoreException: ^{
-        identity = [CBLTLSIdentity createIdentityWithData: data
+        identity = [CBLTLSIdentity importIdentityWithData: data
         password: @"123"
            label: kServerCertLabel
            error: &error];
@@ -322,8 +430,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     AssertNotNil(identity);
     AssertNil(error);
     AssertEqual(identity.certs.count, 2);
-    
-    [self printItemsInKeyChain];
     
     // Delete:
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
