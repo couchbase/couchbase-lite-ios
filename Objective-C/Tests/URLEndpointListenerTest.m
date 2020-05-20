@@ -22,22 +22,59 @@
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
 
-#define kPort 4984
-#define kURL [NSURL URLWithString: $sprintf(@"ws://localhost:%d/otherdb", kPort)]
+#define kWsPort 4984
+#define kWssPort 4985
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface CBLURLEndpointListener (Test)
+@property (nonatomic, readonly) NSURL* localURL;
+@property (nonatomic, readonly) CBLURLEndpoint* localEndpoint;
+@end
+
+NS_ASSUME_NONNULL_END
+
+@implementation CBLURLEndpointListener (Test)
+
+- (NSURL*) localURL {
+    assert(self.port > 0);
+    NSURLComponents* comps = [[NSURLComponents alloc] init];
+    comps.scheme = self.config.disableTLS ? @"ws" : @"wss";
+    comps.host = @"localhost";
+    comps.port = @(self.port);
+    comps.path = $sprintf(@"/%@",self.config.database.name);
+    return comps.URL;
+}
+
+- (CBLURLEndpoint*) localEndpoint {
+    return [[CBLURLEndpoint alloc] initWithURL: self.localURL];
+}
+
+@end
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 @interface URLEndpointListenerTest : ReplicatorTest
 typedef CBLURLEndpointListenerConfiguration Config;
 typedef CBLURLEndpointListener Listener;
-
 @end
 
-@implementation URLEndpointListenerTest
+@implementation URLEndpointListenerTest {
+    CBLURLEndpointListener* _listener;
+}
 
-- (Listener*) listenAt: (uint16_t)port {
+- (Listener*) listen {
+    return [self listenWithTLS: YES];
+}
+
+- (Listener*) listenWithTLS: (BOOL)tls {
+    return [self listenWithTLS: tls auth: nil];
+}
+
+- (Listener*) listenWithTLS: (BOOL)tls auth: (id<CBLListenerAuthenticator>)auth {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.port = port;
-    config.disableTLS = YES;
+    config.port = tls ? kWssPort : kWsPort;
+    config.disableTLS = !tls;
+    config.authenticator = auth;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     
     // start listener
@@ -45,13 +82,24 @@ typedef CBLURLEndpointListener Listener;
     Assert([listener startWithError: &err]);
     AssertNil(err);
     
+    _listener = listener;
     return listener;
+}
+
+- (void) tearDown {
+    if (_listener) {
+        [_listener stop];
+        if (_listener.config.tlsIdentity) {
+            // TODO: Cleanup KeyChain
+        }
+    }
+    [super tearDown];
 }
 
 - (void) testPort {
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.port = kPort;
+    config.port = kWsPort;
     config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertEqual(listener.port, 0);
@@ -60,7 +108,7 @@ typedef CBLURLEndpointListener Listener;
     NSError* err = nil;
     Assert([listener startWithError: &err]);
     AssertNil(err);
-    AssertEqual(listener.port, kPort);
+    AssertEqual(listener.port, kWsPort);
     
     // stops
     [listener stop];
@@ -87,11 +135,11 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testBusyPort {
-    Listener* listener1 = [self listenAt: kPort];
+    Listener* listener1 = [self listenWithTLS: NO];
     
     // initialize a listener at same port
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.port = kPort;
+    config.port = listener1.config.port;
     config.disableTLS = YES;
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
     
@@ -110,41 +158,40 @@ typedef CBLURLEndpointListener Listener;
 // TODO: https://issues.couchbase.com/browse/CBL-948
 - (void) _testURLs {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.port = kPort;
-    Listener* listener = [[Listener alloc] initWithConfig: config];
-    AssertEqual(listener.urls.count, 0);
+    _listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(_listener.urls.count, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([listener startWithError: &err]);
+    Assert([_listener startWithError: &err]);
     AssertNil(err);
-    Assert(listener.urls.count != 0);
+    Assert(_listener.urls.count != 0);
     
     // stops
-    [listener stop];
-    AssertEqual(listener.urls.count, 0);
+    [_listener stop];
+    AssertEqual(_listener.urls.count, 0);
 }
 
 - (void) _testStatus {
     CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.port = kPort;
-    Listener* listener = [[Listener alloc] initWithConfig: config];
-    AssertEqual(listener.status.connectionCount, 0);
-    AssertEqual(listener.status.activeConnectionCount, 0);
+    _listener = [[Listener alloc] initWithConfig: config];
+    AssertEqual(_listener.status.connectionCount, 0);
+    AssertEqual(_listener.status.activeConnectionCount, 0);
     
     // start listener
     NSError* err = nil;
-    Assert([listener startWithError: &err]);
+    Assert([_listener startWithError: &err]);
     AssertNil(err);
-    AssertEqual(listener.status.connectionCount, 0);
-    AssertEqual(listener.status.activeConnectionCount, 0);
+    AssertEqual(_listener.status.connectionCount, 0);
+    AssertEqual(_listener.status.activeConnectionCount, 0);
     
     [self generateDocumentWithID: @"doc-1"];
-    CBLURLEndpoint* target = [[CBLURLEndpoint alloc] initWithURL: kURL];
-    id rConfig = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    [rConfig setPinnedServerCertificate: (SecCertificateRef)(listener.config.tlsIdentity.certs.firstObject)];
-    __block Listener* weakListener = listener;
+    
+    id rConfig = [self configWithTarget: _listener.localEndpoint type: kCBLReplicatorTypePush continuous: NO];
+    [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.config.tlsIdentity.certs.firstObject)];
+    __block Listener* weakListener = _listener;
     __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
     [self run: rConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
         Listener* strongListener = weakListener;
@@ -158,9 +205,44 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 1);
     
     // stops
+    [_listener stop];
+    AssertEqual(_listener.status.connectionCount, 0);
+    AssertEqual(_listener.status.activeConnectionCount, 0);
+}
+
+- (void) testPaswordAuthenticator {
+    // Listener:
+    CBLListenerPasswordAuthenticator* listenerAuth = [[CBLListenerPasswordAuthenticator alloc] initWithBlock:
+        ^BOOL(NSString *username, NSString *password) {
+            return ([username isEqualToString: @"daniel"] && [password isEqualToString: @"123"]);
+        }];
+    Listener* listener = [self listenWithTLS: NO auth: listenerAuth];
+    
+    // Replicator - Failed:
+    CBLReplicatorConfiguration* config = nil;
+    CBLBasicAuthenticator* auth = nil;
+    config = [self configWithTarget: listener.localEndpoint
+                               type: kCBLReplicatorTypePushAndPull
+                         continuous: NO
+                      authenticator: auth];
+    [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
+    
+    auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"daniel" password: @"456"];
+    config = [self configWithTarget: listener.localEndpoint
+                               type: kCBLReplicatorTypePushAndPull
+                         continuous: NO
+                      authenticator: auth];
+    [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
+    
+    // Replicator - OK:
+    auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"daniel" password: @"123"];
+    config = [self configWithTarget: listener.localEndpoint
+                               type: kCBLReplicatorTypePushAndPull
+                         continuous: NO
+                      authenticator: auth];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
     [listener stop];
-    AssertEqual(listener.status.connectionCount, 0);
-    AssertEqual(listener.status.activeConnectionCount, 0);
 }
 
 @end
