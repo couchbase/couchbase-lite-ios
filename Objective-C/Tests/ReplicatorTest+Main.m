@@ -538,67 +538,122 @@
     AssertEqual(self.db.count, 2u);
 }
 
-- (void) testShortP2P {
-    //int testNo = 1;
-    for(int i = 0; i < 2; i++) {
-        CBLProtocolType protocolType = i % 1 ? kCBLProtocolTypeMessageStream : kCBLProtocolTypeByteStream;
-        CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID:@"livesindb"];
-        [mdoc setString:@"db" forKey:@"name"];
-        [self saveDocument:mdoc];
-        
-        mdoc = [CBLMutableDocument documentWithID:@"livesinotherdb"];
-        [mdoc setString:@"otherdb" forKey:@"name"];
-        [self saveDocument:mdoc toDatabase: self.otherDB];
-        
-        // PUSH
-        CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
-        CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
-        CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
-        MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic:nil];
-        CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
-        CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
-        replConfig.replicatorType = kCBLReplicatorTypePush;
-        [self run:replConfig errorCode:0 errorDomain:nil];
-        AssertEqual(self.otherDB.count, 2UL);
-        AssertEqual(_db.count, 1UL);
-        
-        // PULL
-        server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
-        target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
-        replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
-        replConfig.replicatorType = kCBLReplicatorTypePull;
-        [self run:replConfig errorCode:0 errorDomain:nil];
-        AssertEqual(_db.count, 2UL);
-        
-        mdoc = [[_db documentWithID:@"livesinotherdb"] toMutable];
-        [mdoc setBoolean:YES forKey:@"modified"];
-        [self saveDocument:mdoc];
-        
-        mdoc = [[self.otherDB documentWithID:@"livesindb"] toMutable];
-        [mdoc setBoolean:YES forKey:@"modified"];
-        [self saveDocument:mdoc toDatabase: self.otherDB];
-        
-        // PUSH & PULL
-        server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
-        target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
-        replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
-        [self run:replConfig errorCode:0 errorDomain:nil];
-        AssertEqual(_db.count, 2UL);
-        
-        CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
-        Assert([savedDoc booleanForKey:@"modified"]);
-        savedDoc = [self.otherDB documentWithID:@"livesinotherdb"];
-        Assert([savedDoc booleanForKey:@"modified"]);
-        
-        NSError* err = nil;
-        BOOL success = [_db delete: &err];
-        Assert(success);
-        [self reopenDB];
-        success = [self.otherDB delete: &err];
-        Assert(success);
-        
-        [self reopenOtherDB];
-    }
+- (void) testShortP2PWithMessageStream {
+    CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
+    
+    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID:@"livesindb"];
+    [mdoc setString:@"db" forKey:@"name"];
+    [self saveDocument:mdoc];
+    
+    mdoc = [CBLMutableDocument documentWithID:@"livesinotherdb"];
+    [mdoc setString:@"otherdb" forKey:@"name"];
+    [self saveDocument:mdoc toDatabase: self.otherDB];
+    
+    // PUSH
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
+    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
+    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic:nil];
+    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    replConfig.replicatorType = kCBLReplicatorTypePush;
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(self.otherDB.count, 2UL);
+    AssertEqual(_db.count, 1UL);
+    
+    // PULL
+    server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    replConfig.replicatorType = kCBLReplicatorTypePull;
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(_db.count, 2UL);
+    
+    mdoc = [[_db documentWithID:@"livesinotherdb"] toMutable];
+    [mdoc setBoolean:YES forKey:@"modified"];
+    [self saveDocument:mdoc];
+    
+    mdoc = [[self.otherDB documentWithID:@"livesindb"] toMutable];
+    [mdoc setBoolean:YES forKey:@"modified"];
+    [self saveDocument:mdoc toDatabase: self.otherDB];
+    
+    // PUSH & PULL
+    server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(_db.count, 2UL);
+    
+    CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
+    Assert([savedDoc booleanForKey:@"modified"]);
+    savedDoc = [self.otherDB documentWithID:@"livesinotherdb"];
+    Assert([savedDoc booleanForKey:@"modified"]);
+    
+    NSError* err = nil;
+    BOOL success = [_db delete: &err];
+    Assert(success);
+    [self reopenDB];
+    success = [self.otherDB delete: &err];
+    Assert(success);
+}
+
+- (void) testShortP2PWithByteStream {
+    CBLProtocolType protocolType = kCBLProtocolTypeByteStream;
+    
+    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID:@"livesindb"];
+    [mdoc setString:@"db" forKey:@"name"];
+    [self saveDocument:mdoc];
+    
+    mdoc = [CBLMutableDocument documentWithID:@"livesinotherdb"];
+    [mdoc setString:@"otherdb" forKey:@"name"];
+    [self saveDocument:mdoc toDatabase: self.otherDB];
+    
+    // PUSH
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
+    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
+    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic:nil];
+    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    replConfig.replicatorType = kCBLReplicatorTypePush;
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(self.otherDB.count, 2UL);
+    AssertEqual(_db.count, 1UL);
+    
+    // PULL
+    server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    replConfig.replicatorType = kCBLReplicatorTypePull;
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(_db.count, 2UL);
+    
+    mdoc = [[_db documentWithID:@"livesinotherdb"] toMutable];
+    [mdoc setBoolean:YES forKey:@"modified"];
+    [self saveDocument:mdoc];
+    
+    mdoc = [[self.otherDB documentWithID:@"livesindb"] toMutable];
+    [mdoc setBoolean:YES forKey:@"modified"];
+    [self saveDocument:mdoc toDatabase: self.otherDB];
+    
+    // PUSH & PULL
+    server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
+    target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
+    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
+    [self run:replConfig errorCode:0 errorDomain:nil];
+    AssertEqual(_db.count, 2UL);
+    
+    CBLDocument* savedDoc = [_db documentWithID:@"livesindb"];
+    Assert([savedDoc booleanForKey:@"modified"]);
+    savedDoc = [self.otherDB documentWithID:@"livesinotherdb"];
+    Assert([savedDoc booleanForKey:@"modified"]);
+    
+    NSError* err = nil;
+    BOOL success = [_db delete: &err];
+    Assert(success);
+    [self reopenDB];
+    success = [self.otherDB delete: &err];
+    Assert(success);
 }
 
 - (void)testContinuousP2P {

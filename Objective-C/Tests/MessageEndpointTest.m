@@ -399,7 +399,11 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
+    // Ignore internal exception thrown inside Apple MultipeerConnection Framework
+    // for unknown reason:
+    [self ignoreException: ^{
+        [self run: config errorCode: 0 errorDomain: nil];
+    }];
     
     AssertEqual(_db.count, 2u);
     CBLDocument* savedDoc = [_db documentWithID: @"doc2"];
