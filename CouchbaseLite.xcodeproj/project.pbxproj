@@ -1320,6 +1320,11 @@
 		93BB1CBC246BB301004FFA00 /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
 		93BB726B1E446FC500427251 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		93BB72781E446FE000427251 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		93BD00F72474875B00BAD40B /* CBLListenerPasswordAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93BD00F82474875B00BAD40B /* CBLListenerPasswordAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		93BD00F92474875B00BAD40B /* CBLListenerPasswordAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */; };
+		93BD00FA2474875B00BAD40B /* CBLListenerPasswordAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */; };
+		93BD01072474882C00BAD40B /* CBLListenerPasswordAuthenticator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BD01062474882300BAD40B /* CBLListenerPasswordAuthenticator+Internal.h */; };
 		93C18E6A1FB638620029B567 /* DatabaseConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C18E691FB638620029B567 /* DatabaseConfiguration.swift */; };
 		93C18E801FB638E80029B567 /* CBLDatabaseConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 93C18E7E1FB638E80029B567 /* CBLDatabaseConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93C18E811FB638E80029B567 /* CBLDatabaseConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 93C18E7E1FB638E80029B567 /* CBLDatabaseConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -2253,6 +2258,9 @@
 		93BB1C7C246BB151004FFA00 /* CBL-EE Swift Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE Swift Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		93BB1C89246BB1DB004FFA00 /* CBL Swift Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL Swift Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Swift Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLListenerPasswordAuthenticator.h; sourceTree = "<group>"; };
+		93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLListenerPasswordAuthenticator.m; sourceTree = "<group>"; };
+		93BD01062474882300BAD40B /* CBLListenerPasswordAuthenticator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLListenerPasswordAuthenticator+Internal.h"; sourceTree = "<group>"; };
 		93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
 		93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDatabase.mm; sourceTree = "<group>"; };
 		93C18E691FB638620029B567 /* DatabaseConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfiguration.swift; sourceTree = "<group>"; };
@@ -3383,6 +3391,8 @@
 			isa = PBXGroup;
 			children = (
 				939C5E6B244FD3DF007CEBAC /* CBLListenerAuthenticator.h */,
+				93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */,
+				93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */,
 				939C5E4D244FC3B7007CEBAC /* CBLTLSIdentity.h */,
 				939C5E4F244FC3B7007CEBAC /* CBLTLSIdentity.mm */,
 				939C5E4E244FC3B7007CEBAC /* CBLURLEndpointListener.h */,
@@ -3398,6 +3408,7 @@
 			children = (
 				939C5E60244FC72A007CEBAC /* CBLTLSIdentity+Internal.h */,
 				939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */,
+				93BD01062474882300BAD40B /* CBLListenerPasswordAuthenticator+Internal.h */,
 			);
 			path = Listener;
 			sourceTree = "<group>";
@@ -3877,6 +3888,7 @@
 				9343EFC6207D611600F19A89 /* CBLAuthenticator.h in Headers */,
 				9343EFC7207D611600F19A89 /* CBLPrefix.h in Headers */,
 				9343EFC8207D611600F19A89 /* CBLDatabaseConfiguration.h in Headers */,
+				93BD01072474882C00BAD40B /* CBLListenerPasswordAuthenticator+Internal.h in Headers */,
 				9369A68E207DB3D4009B5B83 /* CBLEncryptionKey.h in Headers */,
 				9388CBF721BF74E8005CA66D /* CBLLogger.h in Headers */,
 				9343EFC9207D611600F19A89 /* CBLQuerySelectResult.h in Headers */,
@@ -3959,6 +3971,7 @@
 				9343F004207D611600F19A89 /* CBLQueryChange+Internal.h in Headers */,
 				939C5E62244FC72A007CEBAC /* CBLTLSIdentity+Internal.h in Headers */,
 				9343F005207D611600F19A89 /* CBLQueryDataSource.h in Headers */,
+				93BD00F72474875B00BAD40B /* CBLListenerPasswordAuthenticator.h in Headers */,
 				9343F006207D611600F19A89 /* CBLFragment.h in Headers */,
 				9343F007207D611600F19A89 /* CBLArray+Swift.h in Headers */,
 				9343F008207D611600F19A89 /* CBLIndex+Internal.h in Headers */,
@@ -4055,6 +4068,7 @@
 				931713F422C1836600F1B5BF /* CBLPredictiveIndex+Internal.h in Headers */,
 				9343F0EE207D61AB00F19A89 /* CBLMutableDictionaryFragment.h in Headers */,
 				9343F0EF207D61AB00F19A89 /* CBLVersion.h in Headers */,
+				93BD00F82474875B00BAD40B /* CBLListenerPasswordAuthenticator.h in Headers */,
 				9343F0F0207D61AB00F19A89 /* CBLQueryArrayFunction.h in Headers */,
 				931713DA22C182F500F1B5BF /* CBLDatabase+Prediction.h in Headers */,
 				9388CC0821BF750E005CA66D /* CBLFileLogger.h in Headers */,
@@ -5371,6 +5385,7 @@
 				9388CC0B21BF750E005CA66D /* CBLFileLogger.mm in Sources */,
 				9343EF63207D611600F19A89 /* CBLStringBytes.mm in Sources */,
 				9343EF64207D611600F19A89 /* MYBackgroundMonitor.m in Sources */,
+				93BD00F92474875B00BAD40B /* CBLListenerPasswordAuthenticator.m in Sources */,
 				9343EF65207D611600F19A89 /* CBLFunctionExpression.m in Sources */,
 				9343EF66207D611600F19A89 /* CBLQueryJoin.m in Sources */,
 				9343EF67207D611600F19A89 /* CBLC4Document.mm in Sources */,
@@ -5497,6 +5512,7 @@
 				9343F043207D61AB00F19A89 /* Result.swift in Sources */,
 				931713E722C182F500F1B5BF /* CBLCoreMLPredictiveModel.m in Sources */,
 				9343F044207D61AB00F19A89 /* DatabaseChange.swift in Sources */,
+				93BD00FA2474875B00BAD40B /* CBLListenerPasswordAuthenticator.m in Sources */,
 				9343F045207D61AB00F19A89 /* CBLQueryChange.m in Sources */,
 				9343F046207D61AB00F19A89 /* CBLDatabaseChange.m in Sources */,
 				9343F048207D61AB00F19A89 /* CBLDatabaseConfiguration.m in Sources */,
