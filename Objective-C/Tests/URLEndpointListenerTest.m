@@ -172,10 +172,10 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(_listener.urls.count, 0);
 }
 
-- (void) _testStatus {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
-    
+- (void) testStatus {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.port = kWsPort;
+    config.disableTLS = YES;
     _listener = [[Listener alloc] initWithConfig: config];
     AssertEqual(_listener.status.connectionCount, 0);
     AssertEqual(_listener.status.activeConnectionCount, 0);
