@@ -19,6 +19,7 @@
 
 #import "CBLStatus.h"
 #import "CBLCoreBridge.h"
+#import "CBLStringBytes.h"
 #import <netdb.h>
 
 NSErrorDomain const CBLErrorDomain          = @"CouchbaseLite";
@@ -110,6 +111,19 @@ BOOL createError(int status,  NSString* desc, NSError** outError) {
         NSDictionary* info = @{ NSLocalizedFailureReasonErrorKey: desc,
                                 NSLocalizedDescriptionKey: desc };
         *outError = [NSError errorWithDomain: CBLErrorDomain code: status userInfo: info];
+    }
+    return NO;
+}
+
+BOOL createSecError(OSStatus status, NSString* _Nullable desc, NSError* _Nullable * outError) {
+    Assert(status != errSecSuccess);
+    if (outError) {
+        NSString* mesg = desc ?
+            $sprintf(@"%@; OSStatus = %d", desc, (int)status) :
+            $sprintf(@"OSStatus = %d", (int)status);
+        CBLStringBytes mesgBytes(mesg);
+        C4Error c4error = c4error_make(LiteCoreDomain, kC4ErrorCrypto, mesgBytes);
+        return convertError(c4error, outError);
     }
     return NO;
 }

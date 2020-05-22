@@ -20,6 +20,7 @@
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
 #import "CBLTrustCheck.h"
+#import "CBLCert.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
@@ -67,7 +68,6 @@ struct PendingWrite {
     dispatch_queue_t _queue;
     NSString* _expectedAcceptHeader;
     CBLHTTPLogic* _logic;
-    NSString* _clientCertID;
     std::atomic<C4Socket*> _c4socket;
     CFHTTPMessageRef _httpResponse;
     id _keepMeAlive;
@@ -82,6 +82,8 @@ struct PendingWrite {
     bool _gotResponseHeaders;
     BOOL _connectingToProxy;
     BOOL _connectedThruProxy;
+    
+    NSArray* _clientIdentity;
 }
 
 + (C4SocketFactory) socketFactory {
@@ -198,7 +200,7 @@ static void doDispose(C4Socket* s) {
     Dict auth = _options[kC4ReplicatorOptionAuthentication].asDict();
     if (!auth)
         return;
-
+    
     NSString* authType = slice2string(auth[kC4ReplicatorAuthType].asString());
     if (authType == nil || [authType isEqualToString: @kC4AuthTypeBasic]) {
         NSString* username = slice2string(auth[kC4ReplicatorAuthUserName].asString());
@@ -209,11 +211,28 @@ static void doDispose(C4Socket* s) {
                                                      persistence: NSURLCredentialPersistenceNone];
             return;
         }
-
-    } else if ([authType isEqualToString: @ kC4AuthTypeClientCert]) {
-        _clientCertID = slice2string(auth[kC4ReplicatorAuthClientCert].asString());
-        if (_clientCertID)
-            return;
+    } else if ([authType isEqualToString: @kC4AuthTypeClientCert]) {
+        C4Slice certData = auth[kC4ReplicatorAuthClientCert].asData();
+        if (certData.buf) {
+            C4Error err = {};
+            C4Cert* c4cert = c4cert_fromData(certData, &err);
+            if (c4cert) {
+                NSError* error;
+                if (@available(macOS 10.12, iOS 10.0, *)) {
+                    _clientIdentity = toSecIdentityWithCertChain(c4cert, &error);
+                    if (_clientIdentity) {
+                        return;
+                    }
+                    CBLWarnError(Sync, @"Couldn't lookup the identity from the KeyChain: %@", error);
+                } else {
+                    CBLWarnError(Sync, @"Client Cert Auth is not supported by macOS < 10.12 and iOS < 10.0");
+                }
+            } else {
+                NSError* error;
+                convertError(err, &error);
+                CBLWarnError(Sync, @"Couldn't create C4Cert from the certificate data: %@", error);
+            }
+        }
     }
 
     CBLWarn(Sync, @"Unknown auth type or missing parameters for auth");
@@ -298,6 +317,10 @@ static void doDispose(C4Socket* s) {
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
 
+        if (_clientIdentity)
+            [settings setObject: _clientIdentity
+                         forKey: (__bridge id)kCFStreamSSLCertificates];
+        
         if (![_in setProperty: settings
                        forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
             CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
@@ -569,7 +592,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         check.pinnedCertData = slice(pin.asData()).copiedNSData();
         Assert(check.pinnedCertData, @"Invalid value for replicator %s property (must be NSData)",
                kC4ReplicatorOptionPinnedServerCert);
-    }
+    } else
+        return true;
 
     NSError* error;
     if (![check checkTrust: &error]) {
