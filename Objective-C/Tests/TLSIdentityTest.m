@@ -392,7 +392,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     
     // Get identity:
     CBLTLSIdentity* identity = [CBLTLSIdentity identityWithIdentity: identityRef
-                                                          rootCerts: @[certs[1]]
+                                                              certs: @[certs[1]]
                                                               error: &error];
     AssertNotNil(identity);
     AssertNil(error);
