@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLTLSIdentity+Internal.h"
 #import "CBLURLEndpointListener.h"
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
@@ -90,7 +91,11 @@ typedef CBLURLEndpointListener Listener;
     if (_listener) {
         [_listener stop];
         if (_listener.config.tlsIdentity) {
-            // TODO: Cleanup KeyChain
+            [self ignoreException:^{
+                NSError* error;
+                Assert([_listener.config.tlsIdentity deleteFromKeyChainWithError: &error],
+                       @"Couldn't delete identity: %@", error);
+            }];
         }
     }
     [super tearDown];
@@ -218,7 +223,7 @@ typedef CBLURLEndpointListener Listener;
         }];
     Listener* listener = [self listenWithTLS: NO auth: listenerAuth];
     
-    // Replicator - Failed:
+    // Replicator - Auth Error:
     CBLReplicatorConfiguration* config = nil;
     CBLBasicAuthenticator* auth = nil;
     config = [self configWithTarget: listener.localEndpoint
@@ -227,6 +232,7 @@ typedef CBLURLEndpointListener Listener;
                       authenticator: auth];
     [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
     
+    // Replicator - Auth Error:
     auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"daniel" password: @"456"];
     config = [self configWithTarget: listener.localEndpoint
                                type: kCBLReplicatorTypePushAndPull
@@ -243,6 +249,53 @@ typedef CBLURLEndpointListener Listener;
     [self run: config errorCode: 0 errorDomain: nil];
     
     [listener stop];
+}
+
+// Disable until completing change in CBLWebSocket:
+- (void) _testClientCertAuthenticatorWithBlock API_AVAILABLE(ios(10.3), macosx(10.5)) {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    CBLListenerCertificateAuthenticator* listenerAuth =
+    [[CBLListenerCertificateAuthenticator alloc] initWithBlock:
+    ^BOOL(NSArray *certs) {
+        SecCertificateRef cert = (__bridge SecCertificateRef)(certs[0]);
+        CFStringRef cnRef;
+        OSStatus status = SecCertificateCopyCommonName(cert, &cnRef);
+        AssertEqual(status, errSecSuccess);
+        NSString* cn = (NSString*)CFBridgingRelease(cnRef);
+        return [cn isEqualToString: @"daniel"];
+    }];
+    
+    Listener* listener = [self listenWithTLS: YES auth: listenerAuth];
+    AssertNotNil(listener);
+    
+    // Cleanup:
+    NSError* error;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: @"client1" error: &error]);
+    
+    // Create client identity:
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"daniel" };
+    CBLTLSIdentity* identity1 = [CBLTLSIdentity createIdentityForServer: NO
+                                                             attributes: attrs
+                                                             expiration: nil
+                                                                  label: @"client1"
+                                                                  error: &error];
+    AssertNotNil(identity1);
+    AssertNil(error);
+    
+    CBLReplicatorConfiguration* config = nil;
+    CBLClientCertificateAuthenticator* auth = nil;
+    auth = [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity1];
+    pinServerCert = NO;
+    config = [self configWithTarget: listener.localEndpoint
+                               type: kCBLReplicatorTypePushAndPull
+                         continuous: NO
+                      authenticator: auth];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Cleanup:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: @"client1" error: &error]);
 }
 
 @end
