@@ -309,7 +309,7 @@ class TLSIdentityTest: CBLTestCase {
         #endif
         
         // Get identity:
-        let identity = try TLSIdentity.identity(withIdentity: secIdentity, rootCerts: [certs[1]])
+        let identity = try TLSIdentity.identity(withIdentity: secIdentity, certs: [certs[1]])
         XCTAssertNotNil(identity)
         XCTAssertEqual(identity.certs.count, 2)
         
