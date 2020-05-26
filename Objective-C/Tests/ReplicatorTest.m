@@ -31,6 +31,8 @@
 #endif
 }
 
+@synthesize disableDefaultServerCertPinning=_disableDefaultServerCertPinning;
+
 + (void) initialize {
     if (self == [ReplicatorTest class]) {
         // You can set environment variables to force use of a proxy:
@@ -74,7 +76,6 @@
     [super setUp];
     
     timeout = 15.0; // TODO: CBL-973
-    pinServerCert = YES;
     
     [self openOtherDB];
 }
@@ -186,7 +187,7 @@
 
 #pragma mark - Certifciate
 
-- (SecCertificateRef) secureServerCert {
+- (SecCertificateRef) defaultServerCert {
     NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert);
@@ -213,13 +214,26 @@
     return [self configWithTarget: target
                              type: type
                        continuous: continuous
-                    authenticator: nil];
+                    authenticator: nil
+                 pinnedServerCert: nil];
 }
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
-                                   authenticator: (CBLAuthenticator*)authenticator
+                                   authenticator: (nullable CBLAuthenticator*)authenticator {
+    return [self configWithTarget: target
+                             type: type
+                       continuous: continuous
+                    authenticator: authenticator
+                 pinnedServerCert: nil];
+}
+
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (nullable CBLAuthenticator*)authenticator
+                                pinnedServerCert: (nullable SecCertificateRef)serverCert
 {
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                   target: target];
@@ -227,8 +241,12 @@
     c.continuous = continuous;
     c.authenticator = authenticator;
     
-    if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"] && pinServerCert)
-        c.pinnedServerCertificate = self.secureServerCert;
+    if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"]) {
+        if (serverCert)
+            c.pinnedServerCertificate = serverCert;
+        else if (!_disableDefaultServerCertPinning)
+            c.pinnedServerCertificate = self.defaultServerCert;
+    }
     
     if (continuous)
         c.checkpointInterval = 1.0; // For testing only

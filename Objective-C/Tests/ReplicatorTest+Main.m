@@ -1716,7 +1716,7 @@
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
-    pinServerCert = NO;    // without this, SSL handshake will fail
+    self.disableDefaultServerCertPinning = YES;    // without this, SSL handshake will fail
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
 }
@@ -1957,7 +1957,7 @@
                              @"someObject", @"someKey", nil];
     [temp setHeaders: headers];
     
-    SecCertificateRef cert = [self secureServerCert];
+    SecCertificateRef cert = [self defaultServerCert];
     [temp setPinnedServerCertificate: cert];
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithConfig: temp];
     

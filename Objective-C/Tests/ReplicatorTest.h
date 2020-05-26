@@ -44,8 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ReplicatorTest : CBLTestCase {
     CBLReplicator* repl;
-    NSTimeInterval timeout;    
-    BOOL pinServerCert;
+    NSTimeInterval timeout;
 }
 
 - (void) saveDocument: (CBLMutableDocument*)document
@@ -71,7 +70,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Certifciate
 
-- (SecCertificateRef) secureServerCert;
+@property (nonatomic) BOOL disableDefaultServerCertPinning;
+
+- (SecCertificateRef) defaultServerCert;
 
 - (NSString*) getCertificateID: (SecCertificateRef)cert;
 
@@ -85,6 +86,12 @@ NS_ASSUME_NONNULL_BEGIN
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator;
+
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (nullable CBLAuthenticator*)authenticator
+                                pinnedServerCert: (nullable SecCertificateRef)serverCert;
 
 #pragma mark - Run Replicator
 

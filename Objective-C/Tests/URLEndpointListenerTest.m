@@ -251,8 +251,7 @@ typedef CBLURLEndpointListener Listener;
     [listener stop];
 }
 
-// Disable until completing change in CBLWebSocket:
-- (void) _testClientCertAuthenticatorWithBlock API_AVAILABLE(ios(10.3), macosx(10.5)) {
+- (void) testClientCertAuthenticatorWithBlock API_AVAILABLE(ios(10.3), macosx(10.5)) {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
@@ -284,14 +283,18 @@ typedef CBLURLEndpointListener Listener;
     AssertNotNil(identity1);
     AssertNil(error);
     
+    // Create Replicator:
     CBLReplicatorConfiguration* config = nil;
     CBLClientCertificateAuthenticator* auth = nil;
     auth = [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity1];
-    pinServerCert = NO;
+    SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.config.tlsIdentity.certs[0];
     config = [self configWithTarget: listener.localEndpoint
                                type: kCBLReplicatorTypePushAndPull
                          continuous: NO
-                      authenticator: auth];
+                      authenticator: auth
+                   pinnedServerCert: serverCert];
+    
+    // Start Replicator:
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Cleanup:
