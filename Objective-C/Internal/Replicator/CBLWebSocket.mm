@@ -211,7 +211,9 @@ static void doDispose(C4Socket* s) {
                                                      persistence: NSURLCredentialPersistenceNone];
             return;
         }
-    } else if ([authType isEqualToString: @kC4AuthTypeClientCert]) {
+    }
+#ifdef COUCHBASE_ENTERPRISE
+    else if ([authType isEqualToString: @kC4AuthTypeClientCert]) {
         C4Slice certData = auth[kC4ReplicatorAuthClientCert].asData();
         if (certData.buf) {
             C4Error err = {};
@@ -234,6 +236,7 @@ static void doDispose(C4Socket* s) {
             }
         }
     }
+#endif
 
     CBLWarn(Sync, @"Unknown auth type or missing parameters for auth");
 }
