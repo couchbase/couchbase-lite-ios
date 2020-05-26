@@ -20,7 +20,6 @@
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
 #import "CBLTrustCheck.h"
-#import "CBLCert.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
@@ -33,6 +32,10 @@
 #import <memory>
 #import <netdb.h>
 #import <vector>
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLCert.h"
+#endif
 
 extern "C" {
 #import "MYAnonymousIdentity.h"
