@@ -1,7 +1,7 @@
 SCHEME=$1
 if [ -z "$SCHEME" ]
 then
-  echo "\nUsage: ${0} <Scheme name: \"CBL ObjC\" or \"CBL Swift\">\n\n" 
+  echo "\nUsage: ${0} <Scheme name: \"CBL_ObjC\" or \"CBL_Swift\">\n\n"
   exit 1
 fi
 
