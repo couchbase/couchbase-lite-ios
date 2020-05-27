@@ -59,8 +59,8 @@ then
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL-EE"
-  CONFIGURATION="Release-EE"
-  CONFIGURATION_TEST="Debug-EE"
+  CONFIGURATION="Release_EE"
+  CONFIGURATION_TEST="Debug_EE"
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
