@@ -2,7 +2,7 @@
 //  CBLErrorMessage.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -59,6 +59,11 @@ NSString* const kCBLErrorMessageInvalidQueryDBNull = @"Invalid query: The databa
 NSString* const kCBLErrorMessageInvalidQueryMissingSelectOrFrom = @"Invalid query: missing Select or From.";
 NSString* const kCBLErrorMessagePullOnlyPendingDocIDs = @"Pending Document IDs are not supported on pull-only replicators.";
 NSString* const kCBLErrorMessageNoDocEditInReplicationFilter = @"Documents from a replication filter cannot be edited.";
+NSString* const kCBLErrorMessageIdentityNotFound = @"The identity is not present in the %1$@";
+NSString* const kCBLErrorMessageFailToConvertC4Cert = @"Couldn't convert from C4Cert to %1$@ Array: %2$@";
+NSString* const kCBLErrorMessageDuplicateCertificate = @"Certificate already exists with the label";
+NSString* const kCBLErrorMessageMissingCommonName = @"The Common Name attribute is required";
+NSString* const kCBLErrorMessageFailToRemoveKeyPair = @"Couldn't remove a keypair with error: %1$@";
 
 @end
 
