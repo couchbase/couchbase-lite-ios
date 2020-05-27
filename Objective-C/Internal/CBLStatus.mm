@@ -128,6 +128,12 @@ BOOL createSecError(OSStatus status, NSString* _Nullable desc, NSError* _Nullabl
     return NO;
 }
 
+BOOL createError(NSError* error, NSError* _Nullable * outError) {
+    if (outError)
+        *outError = error;
+    return NO;
+}
+
 struct ErrorMapping {int code; C4Error c4err;};
 
 static bool mapToC4Error(int code, const ErrorMapping map[], C4Error *outError) {
