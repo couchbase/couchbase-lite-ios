@@ -61,6 +61,11 @@ extern NSString* const kCBLErrorMessageInvalidQueryDBNull;
 extern NSString* const kCBLErrorMessageInvalidQueryMissingSelectOrFrom;
 extern NSString* const kCBLErrorMessagePullOnlyPendingDocIDs;
 extern NSString* const kCBLErrorMessageNoDocEditInReplicationFilter;
+extern NSString* const kCBLErrorMessageIdentityNotFound;
+extern NSString* const kCBLErrorMessageFailToConvertC4Cert;
+extern NSString* const kCBLErrorMessageDuplicateCertificate;
+extern NSString* const kCBLErrorMessageMissingCommonName;
+extern NSString* const kCBLErrorMessageFailToRemoveKeyPair;
 
 @end
 
