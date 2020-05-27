@@ -4348,9 +4348,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		275F92731E4D30A4007FD5A2 /* CBL Swift */ = {
+		275F92731E4D30A4007FD5A2 /* CBL_Swift */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift" */;
+			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */;
 			buildPhases = (
 				93D119001F5604C8000F6D3E /* Check Git Commit */,
 				275F926F1E4D30A4007FD5A2 /* Sources */,
@@ -4363,7 +4363,7 @@
 			dependencies = (
 				9308F40E1E64B24700F53EE4 /* PBXTargetDependency */,
 			);
-			name = "CBL Swift";
+			name = CBL_Swift;
 			productName = CouchbaseLiteSwift;
 			productReference = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */;
 			productType = "com.apple.product-type.framework";
@@ -4441,9 +4441,9 @@
 			productReference = 930B63E3246B9CD2006D94FF /* CBL-EE Swift Tests - iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9343EF2A207D611600F19A89 /* CBL-EE ObjC */ = {
+		9343EF2A207D611600F19A89 /* CBL_EE_ObjC */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F00A207D611600F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE ObjC" */;
+			buildConfigurationList = 9343F00A207D611600F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC" */;
 			buildPhases = (
 				9343EF2D207D611600F19A89 /* Check Git Commit */,
 				9343EF2E207D611600F19A89 /* Sources */,
@@ -4457,14 +4457,14 @@
 				939C5E64244FC7D0007CEBAC /* PBXTargetDependency */,
 				939C5E66244FC7D0007CEBAC /* PBXTargetDependency */,
 			);
-			name = "CBL-EE ObjC";
+			name = CBL_EE_ObjC;
 			productName = CouchbaseLite;
 			productReference = 9343F00F207D611600F19A89 /* CouchbaseLite.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		9343F011207D61AB00F19A89 /* CBL-EE Swift */ = {
+		9343F011207D61AB00F19A89 /* CBL_EE_Swift */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F12E207D61AB00F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Swift" */;
+			buildConfigurationList = 9343F12E207D61AB00F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Swift" */;
 			buildPhases = (
 				9343F014207D61AB00F19A89 /* Check Git Commit */,
 				9343F015207D61AB00F19A89 /* Sources */,
@@ -4479,7 +4479,7 @@
 				93249D77246B6EA4000A8A6E /* PBXTargetDependency */,
 				93249D79246B6EA4000A8A6E /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Swift";
+			name = CBL_EE_Swift;
 			productName = CouchbaseLiteSwift;
 			productReference = 9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */;
 			productType = "com.apple.product-type.framework";
@@ -4612,9 +4612,9 @@
 			productReference = 938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9398D9111E03434200464432 /* CBL ObjC */ = {
+		9398D9111E03434200464432 /* CBL_ObjC */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC" */;
+			buildConfigurationList = 9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL_ObjC" */;
 			buildPhases = (
 				93D118ED1F560232000F6D3E /* Check Git Commit */,
 				9398D90D1E03434200464432 /* Sources */,
@@ -4626,14 +4626,14 @@
 			dependencies = (
 				9399E4AF1E932EE800B57600 /* PBXTargetDependency */,
 			);
-			name = "CBL ObjC";
+			name = CBL_ObjC;
 			productName = CouchbaseLite;
 			productReference = 9398D9121E03434200464432 /* CouchbaseLite.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		9398D91A1E03434200464432 /* CBL ObjC Tests */ = {
+		9398D91A1E03434200464432 /* CBL_ObjC_Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9398D9291E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC Tests" */;
+			buildConfigurationList = 9398D9291E03434200464432 /* Build configuration list for PBXNativeTarget "CBL_ObjC_Tests" */;
 			buildPhases = (
 				9398D9171E03434200464432 /* Sources */,
 				9398D9181E03434200464432 /* Frameworks */,
@@ -4644,7 +4644,7 @@
 			dependencies = (
 				9398D91E1E03434200464432 /* PBXTargetDependency */,
 			);
-			name = "CBL ObjC Tests";
+			name = CBL_ObjC_Tests;
 			productName = CouchbaseLiteTests;
 			productReference = 9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -4797,17 +4797,17 @@
 			);
 			projectRoot = "";
 			targets = (
-				9398D9111E03434200464432 /* CBL ObjC */,
-				275F92731E4D30A4007FD5A2 /* CBL Swift */,
-				9398D91A1E03434200464432 /* CBL ObjC Tests */,
+				9398D9111E03434200464432 /* CBL_ObjC */,
+				275F92731E4D30A4007FD5A2 /* CBL_Swift */,
+				9398D91A1E03434200464432 /* CBL_ObjC_Tests */,
 				938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */,
 				938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */,
 				93BB1C8A246BB1F1004FFA00 /* CBL Swift Tests - iOS App */,
 				93BB1C7D246BB1DB004FFA00 /* CBL Swift Tests - iOS */,
 				275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */,
 				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
-				9343EF2A207D611600F19A89 /* CBL-EE ObjC */,
-				9343F011207D61AB00F19A89 /* CBL-EE Swift */,
+				9343EF2A207D611600F19A89 /* CBL_EE_ObjC */,
+				9343F011207D61AB00F19A89 /* CBL_EE_Swift */,
 				9343F135207D61EC00F19A89 /* CBL-EE ObjC Tests */,
 				9343F153207D62C900F19A89 /* CBL-EE Objc Tests - iOS App */,
 				9343F16F207D633300F19A89 /* CBL-EE Objc Tests - iOS */,
@@ -6056,12 +6056,12 @@
 /* Begin PBXTargetDependency section */
 		275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
+			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 275F927E1E4D30A4007FD5A2 /* PBXContainerItemProxy */;
 		};
 		275FF6271E3FECB1005F90DD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
 			targetProxy = 275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */;
 		};
 		27BF03341FB6292D003D5BB8 /* PBXTargetDependency */ = {
@@ -6071,12 +6071,12 @@
 		};
 		27BF03361FB62931003D5BB8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
 			targetProxy = 27BF03351FB62931003D5BB8 /* PBXContainerItemProxy */;
 		};
 		27BF03381FB62933003D5BB8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
+			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 27BF03371FB62933003D5BB8 /* PBXContainerItemProxy */;
 		};
 		9308F40E1E64B24700F53EE4 /* PBXTargetDependency */ = {
@@ -6086,7 +6086,7 @@
 		};
 		93095AFF246BBEF9005633B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343F011207D61AB00F19A89 /* CBL-EE Swift */;
+			target = 9343F011207D61AB00F19A89 /* CBL_EE_Swift */;
 			targetProxy = 93095AFE246BBEF9005633B4 /* PBXContainerItemProxy */;
 		};
 		93095B04246BBFC5005633B4 /* PBXTargetDependency */ = {
@@ -6126,12 +6126,12 @@
 		};
 		9382351A207D80490022328B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343EF2A207D611600F19A89 /* CBL-EE ObjC */;
+			target = 9343EF2A207D611600F19A89 /* CBL_EE_ObjC */;
 			targetProxy = 93823519207D80490022328B /* PBXContainerItemProxy */;
 		};
 		9382351C207D80560022328B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343EF2A207D611600F19A89 /* CBL-EE ObjC */;
+			target = 9343EF2A207D611600F19A89 /* CBL_EE_ObjC */;
 			targetProxy = 9382351B207D80560022328B /* PBXContainerItemProxy */;
 		};
 		9382351E207D805F0022328B /* PBXTargetDependency */ = {
@@ -6141,22 +6141,22 @@
 		};
 		93823520207D806D0022328B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343F011207D61AB00F19A89 /* CBL-EE Swift */;
+			target = 9343F011207D61AB00F19A89 /* CBL_EE_Swift */;
 			targetProxy = 9382351F207D806D0022328B /* PBXContainerItemProxy */;
 		};
 		93823522207D80760022328B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343EF2A207D611600F19A89 /* CBL-EE ObjC */;
+			target = 9343EF2A207D611600F19A89 /* CBL_EE_ObjC */;
 			targetProxy = 93823521207D80760022328B /* PBXContainerItemProxy */;
 		};
 		938CFA1F1E442A9100291631 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
 			targetProxy = 938CFA1E1E442A9100291631 /* PBXContainerItemProxy */;
 		};
 		9398D91E1E03434200464432 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
 			targetProxy = 9398D91D1E03434200464432 /* PBXContainerItemProxy */;
 		};
 		9399E4AF1E932EE800B57600 /* PBXTargetDependency */ = {
@@ -6176,7 +6176,7 @@
 		};
 		93BB1CBE246BB603004FFA00 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
+			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 93BB1CBD246BB603004FFA00 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -8522,7 +8522,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift" */ = {
+		275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92861E4D30A4007FD5A2 /* Debug */,
@@ -8588,7 +8588,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F00A207D611600F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE ObjC" */ = {
+		9343F00A207D611600F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F00B207D611600F19A89 /* Debug */,
@@ -8599,7 +8599,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F12E207D61AB00F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Swift" */ = {
+		9343F12E207D61AB00F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Swift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F12F207D61AB00F19A89 /* Debug */,
@@ -8698,7 +8698,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC" */ = {
+		9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL_ObjC" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D9271E03434200464432 /* Debug */,
@@ -8709,7 +8709,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9398D9291E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC Tests" */ = {
+		9398D9291E03434200464432 /* Build configuration list for PBXNativeTarget "CBL_ObjC_Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D92A1E03434200464432 /* Debug */,
