@@ -6429,14 +6429,14 @@
 			};
 			name = Release;
 		};
-		2791EA4320327D4E00BD813C /* Debug-EE */ = {
+		2791EA4320327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4420327D4E00BD813C /* Debug-EE */ = {
+		2791EA4420327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -6447,16 +6447,16 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4520327D4E00BD813C /* Debug-EE */ = {
+		2791EA4520327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4620327D4E00BD813C /* Debug-EE */ = {
+		2791EA4620327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
@@ -6466,9 +6466,9 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4720327D4E00BD813C /* Debug-EE */ = {
+		2791EA4720327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -6482,16 +6482,16 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4820327D4E00BD813C /* Debug-EE */ = {
+		2791EA4820327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4920327D4E00BD813C /* Debug-EE */ = {
+		2791EA4920327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 930B63FF246BA5F8006D94FF /* CBL Swift Tests.xcconfig */;
 			buildSettings = {
@@ -6545,9 +6545,9 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4A20327D4E00BD813C /* Debug-EE */ = {
+		2791EA4A20327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -6595,23 +6595,23 @@
 				PRODUCT_NAME = CBLPerfTests;
 				SDKROOT = macosx;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA4B20327D4E00BD813C /* Debug-EE */ = {
+		2791EA4B20327D4E00BD813C /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = All;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		2791EA5D20327D5600BD813C /* Release-EE */ = {
+		2791EA5D20327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2791EA6720327E8B00BD813C /* Project_Release_EE.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA5E20327D5600BD813C /* Release-EE */ = {
+		2791EA5E20327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
@@ -6621,16 +6621,16 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA5F20327D5600BD813C /* Release-EE */ = {
+		2791EA5F20327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6020327D5600BD813C /* Release-EE */ = {
+		2791EA6020327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
@@ -6639,9 +6639,9 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = 5.0;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6120327D5600BD813C /* Release-EE */ = {
+		2791EA6120327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -6655,16 +6655,16 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6220327D5600BD813C /* Release-EE */ = {
+		2791EA6220327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6320327D5600BD813C /* Release-EE */ = {
+		2791EA6320327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 930B63FF246BA5F8006D94FF /* CBL Swift Tests.xcconfig */;
 			buildSettings = {
@@ -6711,9 +6711,9 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6420327D5600BD813C /* Release-EE */ = {
+		2791EA6420327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -6754,14 +6754,14 @@
 				PRODUCT_NAME = CBLPerfTests;
 				SDKROOT = macosx;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		2791EA6520327D5600BD813C /* Release-EE */ = {
+		2791EA6520327D5600BD813C /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = All;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		27BF031D1FB6290C003D5BB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -6843,7 +6843,7 @@
 			};
 			name = Debug;
 		};
-		930B63EB246B9CD2006D94FF /* Debug-EE */ = {
+		930B63EB246B9CD2006D94FF /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7C246BB151004FFA00 /* CBL-EE Swift Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -6907,7 +6907,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		930B63EC246B9CD2006D94FF /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -6968,7 +6968,7 @@
 			};
 			name = Release;
 		};
-		930B63ED246B9CD2006D94FF /* Release-EE */ = {
+		930B63ED246B9CD2006D94FF /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7C246BB151004FFA00 /* CBL-EE Swift Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -7025,7 +7025,7 @@
 				SWIFT_VERSION = 4.2;
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		930B63EE246B9CD2006D94FF /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7097,7 +7097,7 @@
 			};
 			name = Debug;
 		};
-		930B63EF246B9CD2006D94FF /* Debug-EE */ = {
+		930B63EF246B9CD2006D94FF /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C79246BAF89004FFA00 /* CBL-EE Swift Tests - iOS.xcconfig */;
 			buildSettings = {
@@ -7165,7 +7165,7 @@
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		930B63F0246B9CD2006D94FF /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7230,7 +7230,7 @@
 			};
 			name = Release;
 		};
-		930B63F1246B9CD2006D94FF /* Release-EE */ = {
+		930B63F1246B9CD2006D94FF /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C79246BAF89004FFA00 /* CBL-EE Swift Tests - iOS.xcconfig */;
 			buildSettings = {
@@ -7291,7 +7291,7 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F00B207D611600F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7306,7 +7306,7 @@
 			};
 			name = Debug;
 		};
-		9343F00C207D611600F19A89 /* Debug-EE */ = {
+		9343F00C207D611600F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -7317,7 +7317,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F00D207D611600F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7331,7 +7331,7 @@
 			};
 			name = Release;
 		};
-		9343F00E207D611600F19A89 /* Release-EE */ = {
+		9343F00E207D611600F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
@@ -7341,7 +7341,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F12F207D61AB00F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7350,12 +7350,12 @@
 			};
 			name = Debug;
 		};
-		9343F130207D61AB00F19A89 /* Debug-EE */ = {
+		9343F130207D61AB00F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F131207D61AB00F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7364,12 +7364,12 @@
 			};
 			name = Release;
 		};
-		9343F132207D61AB00F19A89 /* Release-EE */ = {
+		9343F132207D61AB00F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F14D207D61EC00F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7379,13 +7379,13 @@
 			};
 			name = Debug;
 		};
-		9343F14E207D61EC00F19A89 /* Debug-EE */ = {
+		9343F14E207D61EC00F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F14F207D61EC00F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7395,13 +7395,13 @@
 			};
 			name = Release;
 		};
-		9343F150207D61EC00F19A89 /* Release-EE */ = {
+		9343F150207D61EC00F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F169207D62C900F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7420,7 +7420,7 @@
 			};
 			name = Debug;
 		};
-		9343F16A207D62C900F19A89 /* Debug-EE */ = {
+		9343F16A207D62C900F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -7435,7 +7435,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F16B207D62C900F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7454,7 +7454,7 @@
 			};
 			name = Release;
 		};
-		9343F16C207D62C900F19A89 /* Release-EE */ = {
+		9343F16C207D62C900F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -7469,7 +7469,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F184207D633300F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7478,12 +7478,12 @@
 			};
 			name = Debug;
 		};
-		9343F185207D633300F19A89 /* Debug-EE */ = {
+		9343F185207D633300F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F186207D633300F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7492,12 +7492,12 @@
 			};
 			name = Release;
 		};
-		9343F187207D633300F19A89 /* Release-EE */ = {
+		9343F187207D633300F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F19E207D636300F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7555,7 +7555,7 @@
 			};
 			name = Debug;
 		};
-		9343F19F207D636300F19A89 /* Debug-EE */ = {
+		9343F19F207D636300F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 930B63FF246BA5F8006D94FF /* CBL Swift Tests.xcconfig */;
 			buildSettings = {
@@ -7609,7 +7609,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F1A0207D636300F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7660,7 +7660,7 @@
 			};
 			name = Release;
 		};
-		9343F1A1207D636300F19A89 /* Release-EE */ = {
+		9343F1A1207D636300F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 930B63FF246BA5F8006D94FF /* CBL Swift Tests.xcconfig */;
 			buildSettings = {
@@ -7707,7 +7707,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Swift/Tests/CBL Swift Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		9343F1B3207D63BF00F19A89 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -7759,7 +7759,7 @@
 			};
 			name = Debug;
 		};
-		9343F1B4207D63BF00F19A89 /* Debug-EE */ = {
+		9343F1B4207D63BF00F19A89 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -7807,7 +7807,7 @@
 				PRODUCT_NAME = CBLPerfTests;
 				SDKROOT = macosx;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		9343F1B5207D63BF00F19A89 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -7852,7 +7852,7 @@
 			};
 			name = Release;
 		};
-		9343F1B6207D63BF00F19A89 /* Release-EE */ = {
+		9343F1B6207D63BF00F19A89 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
@@ -7893,7 +7893,7 @@
 				PRODUCT_NAME = CBLPerfTests;
 				SDKROOT = macosx;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		938CFA0D1E442A3E00291631 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -8073,7 +8073,7 @@
 			};
 			name = Debug;
 		};
-		93BB1C86246BB1DB004FFA00 /* Debug-EE */ = {
+		93BB1C86246BB1DB004FFA00 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7A246BAFBB004FFA00 /* CBL Swift Tests - iOS.xcconfig */;
 			buildSettings = {
@@ -8141,7 +8141,7 @@
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		93BB1C87246BB1DB004FFA00 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -8206,7 +8206,7 @@
 			};
 			name = Release;
 		};
-		93BB1C88246BB1DB004FFA00 /* Release-EE */ = {
+		93BB1C88246BB1DB004FFA00 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7A246BAFBB004FFA00 /* CBL Swift Tests - iOS.xcconfig */;
 			buildSettings = {
@@ -8267,7 +8267,7 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		93BB1C94246BB1F1004FFA00 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -8335,7 +8335,7 @@
 			};
 			name = Debug;
 		};
-		93BB1C95246BB1F1004FFA00 /* Debug-EE */ = {
+		93BB1C95246BB1F1004FFA00 /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7B246BB145004FFA00 /* CBL Swift Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -8399,7 +8399,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
 		93BB1C96246BB1F1004FFA00 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -8460,7 +8460,7 @@
 			};
 			name = Release;
 		};
-		93BB1C97246BB1F1004FFA00 /* Release-EE */ = {
+		93BB1C97246BB1F1004FFA00 /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 93BB1C7B246BB145004FFA00 /* CBL Swift Tests - iOS App.xcconfig */;
 			buildSettings = {
@@ -8517,7 +8517,7 @@
 				SWIFT_VERSION = 4.2;
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 /* End XCBuildConfiguration section */
 
@@ -8526,9 +8526,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92861E4D30A4007FD5A2 /* Debug */,
-				2791EA4520327D4E00BD813C /* Debug-EE */,
+				2791EA4520327D4E00BD813C /* Debug_EE */,
 				275F92871E4D30A4007FD5A2 /* Release */,
-				2791EA5F20327D5600BD813C /* Release-EE */,
+				2791EA5F20327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8537,9 +8537,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92891E4D30A4007FD5A2 /* Debug */,
-				2791EA4920327D4E00BD813C /* Debug-EE */,
+				2791EA4920327D4E00BD813C /* Debug_EE */,
 				275F928A1E4D30A4007FD5A2 /* Release */,
-				2791EA6320327D5600BD813C /* Release-EE */,
+				2791EA6320327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8548,9 +8548,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275FF6171E3FE9DB005F90DD /* Debug */,
-				2791EA4A20327D4E00BD813C /* Debug-EE */,
+				2791EA4A20327D4E00BD813C /* Debug_EE */,
 				275FF6181E3FE9DB005F90DD /* Release */,
-				2791EA6420327D5600BD813C /* Release-EE */,
+				2791EA6420327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8559,9 +8559,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27BF031D1FB6290C003D5BB8 /* Debug */,
-				2791EA4B20327D4E00BD813C /* Debug-EE */,
+				2791EA4B20327D4E00BD813C /* Debug_EE */,
 				27BF031E1FB6290C003D5BB8 /* Release */,
-				2791EA6520327D5600BD813C /* Release-EE */,
+				2791EA6520327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8570,9 +8570,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				930B63EA246B9CD2006D94FF /* Debug */,
-				930B63EB246B9CD2006D94FF /* Debug-EE */,
+				930B63EB246B9CD2006D94FF /* Debug_EE */,
 				930B63EC246B9CD2006D94FF /* Release */,
-				930B63ED246B9CD2006D94FF /* Release-EE */,
+				930B63ED246B9CD2006D94FF /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8581,9 +8581,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				930B63EE246B9CD2006D94FF /* Debug */,
-				930B63EF246B9CD2006D94FF /* Debug-EE */,
+				930B63EF246B9CD2006D94FF /* Debug_EE */,
 				930B63F0246B9CD2006D94FF /* Release */,
-				930B63F1246B9CD2006D94FF /* Release-EE */,
+				930B63F1246B9CD2006D94FF /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8592,9 +8592,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F00B207D611600F19A89 /* Debug */,
-				9343F00C207D611600F19A89 /* Debug-EE */,
+				9343F00C207D611600F19A89 /* Debug_EE */,
 				9343F00D207D611600F19A89 /* Release */,
-				9343F00E207D611600F19A89 /* Release-EE */,
+				9343F00E207D611600F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8603,9 +8603,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F12F207D61AB00F19A89 /* Debug */,
-				9343F130207D61AB00F19A89 /* Debug-EE */,
+				9343F130207D61AB00F19A89 /* Debug_EE */,
 				9343F131207D61AB00F19A89 /* Release */,
-				9343F132207D61AB00F19A89 /* Release-EE */,
+				9343F132207D61AB00F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8614,9 +8614,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F14D207D61EC00F19A89 /* Debug */,
-				9343F14E207D61EC00F19A89 /* Debug-EE */,
+				9343F14E207D61EC00F19A89 /* Debug_EE */,
 				9343F14F207D61EC00F19A89 /* Release */,
-				9343F150207D61EC00F19A89 /* Release-EE */,
+				9343F150207D61EC00F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8625,9 +8625,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F169207D62C900F19A89 /* Debug */,
-				9343F16A207D62C900F19A89 /* Debug-EE */,
+				9343F16A207D62C900F19A89 /* Debug_EE */,
 				9343F16B207D62C900F19A89 /* Release */,
-				9343F16C207D62C900F19A89 /* Release-EE */,
+				9343F16C207D62C900F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8636,9 +8636,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F184207D633300F19A89 /* Debug */,
-				9343F185207D633300F19A89 /* Debug-EE */,
+				9343F185207D633300F19A89 /* Debug_EE */,
 				9343F186207D633300F19A89 /* Release */,
-				9343F187207D633300F19A89 /* Release-EE */,
+				9343F187207D633300F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8647,9 +8647,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F19E207D636300F19A89 /* Debug */,
-				9343F19F207D636300F19A89 /* Debug-EE */,
+				9343F19F207D636300F19A89 /* Debug_EE */,
 				9343F1A0207D636300F19A89 /* Release */,
-				9343F1A1207D636300F19A89 /* Release-EE */,
+				9343F1A1207D636300F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8658,9 +8658,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F1B3207D63BF00F19A89 /* Debug */,
-				9343F1B4207D63BF00F19A89 /* Debug-EE */,
+				9343F1B4207D63BF00F19A89 /* Debug_EE */,
 				9343F1B5207D63BF00F19A89 /* Release */,
-				9343F1B6207D63BF00F19A89 /* Release-EE */,
+				9343F1B6207D63BF00F19A89 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8669,9 +8669,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0D1E442A3E00291631 /* Debug */,
-				2791EA4720327D4E00BD813C /* Debug-EE */,
+				2791EA4720327D4E00BD813C /* Debug_EE */,
 				938CFA0E1E442A3E00291631 /* Release */,
-				2791EA6120327D5600BD813C /* Release-EE */,
+				2791EA6120327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8680,9 +8680,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0F1E442A3E00291631 /* Debug */,
-				2791EA4820327D4E00BD813C /* Debug-EE */,
+				2791EA4820327D4E00BD813C /* Debug_EE */,
 				938CFA101E442A3E00291631 /* Release */,
-				2791EA6220327D5600BD813C /* Release-EE */,
+				2791EA6220327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8691,9 +8691,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D9241E03434200464432 /* Debug */,
-				2791EA4320327D4E00BD813C /* Debug-EE */,
+				2791EA4320327D4E00BD813C /* Debug_EE */,
 				9398D9251E03434200464432 /* Release */,
-				2791EA5D20327D5600BD813C /* Release-EE */,
+				2791EA5D20327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8702,9 +8702,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D9271E03434200464432 /* Debug */,
-				2791EA4420327D4E00BD813C /* Debug-EE */,
+				2791EA4420327D4E00BD813C /* Debug_EE */,
 				9398D9281E03434200464432 /* Release */,
-				2791EA5E20327D5600BD813C /* Release-EE */,
+				2791EA5E20327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8713,9 +8713,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9398D92A1E03434200464432 /* Debug */,
-				2791EA4620327D4E00BD813C /* Debug-EE */,
+				2791EA4620327D4E00BD813C /* Debug_EE */,
 				9398D92B1E03434200464432 /* Release */,
-				2791EA6020327D5600BD813C /* Release-EE */,
+				2791EA6020327D5600BD813C /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8724,9 +8724,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				93BB1C85246BB1DB004FFA00 /* Debug */,
-				93BB1C86246BB1DB004FFA00 /* Debug-EE */,
+				93BB1C86246BB1DB004FFA00 /* Debug_EE */,
 				93BB1C87246BB1DB004FFA00 /* Release */,
-				93BB1C88246BB1DB004FFA00 /* Release-EE */,
+				93BB1C88246BB1DB004FFA00 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -8735,9 +8735,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				93BB1C94246BB1F1004FFA00 /* Debug */,
-				93BB1C95246BB1F1004FFA00 /* Debug-EE */,
+				93BB1C95246BB1F1004FFA00 /* Debug_EE */,
 				93BB1C96246BB1F1004FFA00 /* Release */,
-				93BB1C97246BB1F1004FFA00 /* Release-EE */,
+				93BB1C97246BB1F1004FFA00 /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
