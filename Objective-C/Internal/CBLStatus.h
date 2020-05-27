@@ -38,6 +38,8 @@ BOOL createError(int status, NSError* _Nullable * outError);
 
 BOOL createError(int status, NSString  * _Nullable  desc, NSError* _Nullable * outError);
 
+BOOL createError(NSError* error, NSError* _Nullable * outError);
+
 // Security Error:
 BOOL createSecError(OSStatus status, NSString* _Nullable desc, NSError* _Nullable * outError);
 
