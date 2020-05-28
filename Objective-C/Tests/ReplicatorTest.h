@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
-                                pinnedServerCert: (nullable SecCertificateRef)serverCert;
+                                      serverCert: (nullable SecCertificateRef)serverCert;
 
 #pragma mark - Run Replicator
 
@@ -109,6 +109,14 @@ NS_ASSUME_NONNULL_BEGIN
    errorCode: (NSInteger)errorCode
  errorDomain: (nullable NSString*)errorDomain
 onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
+
+- (BOOL) runWithTarget: (id<CBLEndpoint>)target
+                  type: (CBLReplicatorType)type
+            continuous: (BOOL)continuous
+         authenticator: (nullable CBLAuthenticator*)authenticator
+            serverCert: (nullable SecCertificateRef)serverCert
+             errorCode: (NSInteger)errorCode
+           errorDomain: (nullable NSString*)errorDomain;
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator
                  errorCode: (NSInteger)errorCode

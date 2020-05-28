@@ -98,6 +98,7 @@ framework module CouchbaseLiteSwift {
         header "CBLLog+Swift.h"
         
         // Enterprise:
+        header "CBLClientCertificateAuthenticator.h"
         header "CBLCoreMLPredictiveModel.h"
         header "CBLDatabaseConfiguration+Encryption.h"
         header "CBLDatabaseEndpoint.h"
@@ -106,6 +107,8 @@ framework module CouchbaseLiteSwift {
         header "CBLEncryptionKey.h"
         header "CBLIndexBuilder+Prediction.h"
         header "CBLListenerAuthenticator.h"
+        header "CBLListenerCertificateAuthenticator.h"
+        header "CBLListenerPasswordAuthenticator.h"
         header "CBLMessage.h"
         header "CBLMessageEndpoint.h"
         header "CBLMessageEndpointConnection.h"
@@ -120,5 +123,8 @@ framework module CouchbaseLiteSwift {
         header "CBLTLSIdentity.h"
         header "CBLURLEndpointListener.h"
         header "CBLURLEndpointListenerConfiguration.h"
+        
+        // Enterprise Swift Extensions:
+        header "CBLTLSIdentity+Swift.h"
     }
 }

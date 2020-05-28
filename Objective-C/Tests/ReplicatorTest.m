@@ -215,7 +215,7 @@
                              type: type
                        continuous: continuous
                     authenticator: nil
-                 pinnedServerCert: nil];
+                       serverCert: nil];
 }
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
@@ -226,14 +226,14 @@
                              type: type
                        continuous: continuous
                     authenticator: authenticator
-                 pinnedServerCert: nil];
+                       serverCert: nil];
 }
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
-                                pinnedServerCert: (nullable SecCertificateRef)serverCert
+                                      serverCert: (nullable SecCertificateRef)serverCert
 {
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                   target: target];
@@ -287,6 +287,21 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         onReplicatorReady(repl);
     
     return [self runWithReplicator: repl errorCode: errorCode errorDomain: errorDomain];
+}
+
+- (BOOL) runWithTarget: (id<CBLEndpoint>)target
+                  type: (CBLReplicatorType)type
+            continuous: (BOOL)continuous
+         authenticator: (nullable CBLAuthenticator*)authenticator
+            serverCert: (nullable SecCertificateRef)serverCert
+             errorCode: (NSInteger)errorCode
+           errorDomain: (nullable NSString*)errorDomain {
+    id config = [self configWithTarget: target
+                                  type: type
+                            continuous: continuous
+                         authenticator: authenticator
+                            serverCert: serverCert];
+    return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator

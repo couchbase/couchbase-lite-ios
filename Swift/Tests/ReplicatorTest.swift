@@ -37,10 +37,13 @@ class ReplicatorTest: CBLTestCase {
         super.tearDown()
     }
     
-    func config(target: Endpoint, type: ReplicatorType, continuous: Bool) -> ReplicatorConfiguration {
+    func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
+                continuous: Bool = false, auth: Authenticator? = nil, serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
+        config.authenticator = auth
+        config.pinnedServerCertificate = serverCert
         return config
     }
     
@@ -63,6 +66,12 @@ class ReplicatorTest: CBLTestCase {
         run(withReplicator: repl, expectedError: expectedError)
     }
     
+    func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
+             continuous: Bool = false, auth: Authenticator? = nil, serverCert: SecCertificate? = nil, expectedError: Int? = nil) {
+        let config = self.config(target: target, type: type, continuous: continuous, auth: auth, serverCert:  serverCert)
+        run(config: config, reset: false, expectedError: expectedError)
+    }
+    
     func run(withReplicator replicator: Replicator, expectedError: Int?) {
         let x = self.expectation(description: "change")
         
@@ -74,10 +83,12 @@ class ReplicatorTest: CBLTestCase {
             }
             
             if status.activity == .stopped {
+                let error = status.error as NSError?
                 if let err = expectedError {
-                    let error = status.error as NSError?
                     XCTAssertNotNil(error)
                     XCTAssertEqual(error!.code, err)
+                } else {
+                    XCTAssertNil(error)
                 }
                 x.fulfill()
             }

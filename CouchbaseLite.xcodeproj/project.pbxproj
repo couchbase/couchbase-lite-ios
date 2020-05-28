@@ -869,6 +869,13 @@
 		9343F1AD207D63BF00F19A89 /* DocPerfTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6581E412C66005F90DD /* DocPerfTest.m */; };
 		9343F1AF207D63BF00F19A89 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		9343F1B1207D63BF00F19A89 /* iTunesMusicLibrary.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
+		934608EB247F2B4500CF2F27 /* ListenerAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608DD247F2B4400CF2F27 /* ListenerAuthenticator.swift */; };
+		934608EC247F2B4500CF2F27 /* ListenerCertificateAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608E9247F2B4400CF2F27 /* ListenerCertificateAuthenticator.swift */; };
+		934608ED247F2B4500CF2F27 /* ListenerPasswordAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608EA247F2B4400CF2F27 /* ListenerPasswordAuthenticator.swift */; };
+		934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */; };
+		934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */; };
+		934608F4247F694900CF2F27 /* ClientCertificateAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934608F3247F694900CF2F27 /* ClientCertificateAuthenticator.swift */; };
+		934608F7247F85E300CF2F27 /* CBLTLSIdentity+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 934608F6247F85DE00CF2F27 /* CBLTLSIdentity+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		934A278C1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */ = {isa = PBXBuildFile; fileRef = 934A278A1F30E5A5003946A7 /* CBLAggregateExpression.h */; };
 		934A278D1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */ = {isa = PBXBuildFile; fileRef = 934A278A1F30E5A5003946A7 /* CBLAggregateExpression.h */; };
 		934A278E1F30E5A5003946A7 /* CBLAggregateExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 934A278B1F30E5A5003946A7 /* CBLAggregateExpression.m */; };
@@ -2016,6 +2023,12 @@
 		9343F1B7207D63BF00F19A89 /* CBLPerfTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
+		934608DD247F2B4400CF2F27 /* ListenerAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerAuthenticator.swift; sourceTree = "<group>"; };
+		934608E9247F2B4400CF2F27 /* ListenerCertificateAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerCertificateAuthenticator.swift; sourceTree = "<group>"; };
+		934608EA247F2B4400CF2F27 /* ListenerPasswordAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerPasswordAuthenticator.swift; sourceTree = "<group>"; };
+		934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListenerTest.swift; sourceTree = "<group>"; };
+		934608F3247F694900CF2F27 /* ClientCertificateAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientCertificateAuthenticator.swift; sourceTree = "<group>"; };
+		934608F6247F85DE00CF2F27 /* CBLTLSIdentity+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLTLSIdentity+Swift.h"; sourceTree = "<group>"; };
 		934A278A1F30E5A5003946A7 /* CBLAggregateExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAggregateExpression.h; sourceTree = "<group>"; };
 		934A278B1F30E5A5003946A7 /* CBLAggregateExpression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAggregateExpression.m; sourceTree = "<group>"; };
 		934A27901F30E5CA003946A7 /* CBLBinaryExpression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBinaryExpression.h; sourceTree = "<group>"; };
@@ -2630,6 +2643,7 @@
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
 				1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */,
 				93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */,
+				934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -2744,6 +2758,9 @@
 		93249D7D246B6EFF000A8A6E /* Listener */ = {
 			isa = PBXGroup;
 			children = (
+				934608DD247F2B4400CF2F27 /* ListenerAuthenticator.swift */,
+				934608E9247F2B4400CF2F27 /* ListenerCertificateAuthenticator.swift */,
+				934608EA247F2B4400CF2F27 /* ListenerPasswordAuthenticator.swift */,
 				93095B31246DDF34005633B4 /* TLSIdentity.swift */,
 				1A4191292475DB3B008122BE /* URLEndpointListener.swift */,
 				1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */,
@@ -2846,6 +2863,14 @@
 				27CDE75F207407280082D458 /* CBLDocumentChangeNotifier.mm */,
 			);
 			name = Database;
+			sourceTree = "<group>";
+		};
+		934608F2247F691200CF2F27 /* Authenticator */ = {
+			isa = PBXGroup;
+			children = (
+				934608F3247F694900CF2F27 /* ClientCertificateAuthenticator.swift */,
+			);
+			name = Authenticator;
 			sourceTree = "<group>";
 		};
 		934A27961F30E5CF003946A7 /* Expression */ = {
@@ -3298,6 +3323,7 @@
 		9392608E20A0C94100E5748C /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
+				934608F2247F691200CF2F27 /* Authenticator */,
 				93E8FE8D20A363630061347F /* Message */,
 				932CC556207D9ED2000B4B78 /* DatabaseEndpoint.swift */,
 			);
@@ -3442,6 +3468,7 @@
 				93BD01692477792F00BAD40B /* CBLKeyChain.h */,
 				93BD016A2477792F00BAD40B /* CBLKeyChain.mm */,
 				939C5E60244FC72A007CEBAC /* CBLTLSIdentity+Internal.h */,
+				934608F6247F85DE00CF2F27 /* CBLTLSIdentity+Swift.h */,
 				939C5E5F244FC72A007CEBAC /* CBLURLEndpointListenerConfiguration+Internal.h */,
 				93BD01392474ECD500BAD40B /* CBLListenerCertificateAuthenticator+Internal.h */,
 				93BD01062474882300BAD40B /* CBLListenerPasswordAuthenticator+Internal.h */,
@@ -4079,6 +4106,7 @@
 				93E1873A211122EB001D52B9 /* MYURLUtils.h in Headers */,
 				9343F0D2207D61AB00F19A89 /* CBLQueryArrayExpression.h in Headers */,
 				9343F0D3207D61AB00F19A89 /* CBLQueryFullTextFunction.h in Headers */,
+				934608F7247F85E300CF2F27 /* CBLTLSIdentity+Swift.h in Headers */,
 				9343F0D4207D61AB00F19A89 /* CBLDictionaryFragment.h in Headers */,
 				9343F0D5207D61AB00F19A89 /* CBLQueryMeta.h in Headers */,
 				9343F0D6207D61AB00F19A89 /* CBLIndexBuilder.h in Headers */,
@@ -5356,6 +5384,7 @@
 				93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CAA246BB2D4004FFA00 /* FragmentTest.swift in Sources */,
 				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
+				934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
 				93BB1CAB246BB2D4004FFA00 /* LogTest.swift in Sources */,
 				93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */,
@@ -5568,8 +5597,10 @@
 				9343F03F207D61AB00F19A89 /* CBLReplicatorChange.m in Sources */,
 				9343F040207D61AB00F19A89 /* CBLTrustCheck.m in Sources */,
 				9343F041207D61AB00F19A89 /* DocumentFragment.swift in Sources */,
+				934608ED247F2B4500CF2F27 /* ListenerPasswordAuthenticator.swift in Sources */,
 				93BD019124784C8D00BAD40B /* CBLCert.mm in Sources */,
 				93E8FEAE20A367090061347F /* CBLMessageSocket.mm in Sources */,
+				934608EC247F2B4500CF2F27 /* ListenerCertificateAuthenticator.swift in Sources */,
 				9369A6A1207DBAA9009B5B83 /* CBLDatabase+Encryption.mm in Sources */,
 				9343F042207D61AB00F19A89 /* CBLFullTextMatchExpression.m in Sources */,
 				9343F043207D61AB00F19A89 /* Result.swift in Sources */,
@@ -5635,6 +5666,7 @@
 				9369A6B3207DDBE7009B5B83 /* Database+Encryption.swift in Sources */,
 				9343F074207D61AB00F19A89 /* CBLDocument.mm in Sources */,
 				9343F075207D61AB00F19A89 /* DataConverter.swift in Sources */,
+				934608F4247F694900CF2F27 /* ClientCertificateAuthenticator.swift in Sources */,
 				932CC55E207D9ED3000B4B78 /* DatabaseEndpoint.swift in Sources */,
 				9343F076207D61AB00F19A89 /* MutableDictionaryObject.swift in Sources */,
 				9343F077207D61AB00F19A89 /* DictionaryObject.swift in Sources */,
@@ -5711,6 +5743,7 @@
 				9388CC4821C250D1005CA66D /* Log.swift in Sources */,
 				9343F0B0207D61AB00F19A89 /* CollectionUtils.m in Sources */,
 				931713E522C182F500F1B5BF /* CBLQueryFunction+Vector.m in Sources */,
+				934608EB247F2B4500CF2F27 /* ListenerAuthenticator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5814,6 +5847,7 @@
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
 				9343F193207D636300F19A89 /* CBLTestHelper.m in Sources */,
 				93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */,
+				934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
 				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
