@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> [-c <Configuration Name, default is 'Release'>] -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--quiet]"
+  echo "Usage: ${0} -s <Scheme: \"CBL_ObjC\" or \"CBL_Swift\"> [-c <Configuration Name, default is 'Release'>] -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--quiet]"
 }
 
 while [[ $# -gt 0 ]]

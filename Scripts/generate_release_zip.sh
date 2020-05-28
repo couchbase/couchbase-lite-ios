@@ -58,7 +58,7 @@ then
   EXTRA_CMD_OPTIONS=""
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
-  SCHEME_PREFIX="CBL-EE"
+  SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
   COVERAGE_NAME="coverage-ee"
@@ -97,30 +97,30 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run ObjC iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
 
   if [ -z "$NO_COV" ]
   then
     # Objective-C:
     echo "Generate coverage report for ObjC ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html --scheme "${SCHEME_PREFIX}_ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
   fi
 
   echo "Run Swift macOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME_PREFIX Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
   then
     # Swift:
     echo "Generate coverage report for Swift ..."
-    slather coverage --html --scheme "$SCHEME_PREFIX Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html --scheme "${SCHEME_PREFIX}_Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
@@ -155,20 +155,20 @@ OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_
 
 if [[ -z $XCFRAMEWORK ]]
 then
-  sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  sh Scripts/build_framework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  sh Scripts/build_framework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 else
   # xcframework
-  sh Scripts/build_xcframework.sh -s "$SCHEME_PREFIX ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  sh Scripts/build_xcframework.sh -s "$SCHEME_PREFIX Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 fi
 
 # Objective-C
 echo "Make Objective-C framework zip file ..."
 mkdir -p "$OUTPUT_OBJC_DIR"
-cp -R "$BUILD_DIR/$SCHEME_PREFIX ObjC"/* "$OUTPUT_OBJC_DIR"
+cp -R "$BUILD_DIR/${SCHEME_PREFIX}_ObjC"/* "$OUTPUT_OBJC_DIR"
 if [[ -n $WORKSPACE ]]; then
     cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
 fi
@@ -179,7 +179,7 @@ popd
 # Swift
 echo "Make Swift framework zip file ..."
 mkdir -p "$OUTPUT_SWIFT_DIR"
-cp -R "$BUILD_DIR/$SCHEME_PREFIX Swift"/* "$OUTPUT_SWIFT_DIR"
+cp -R "$BUILD_DIR/${SCHEME_PREFIX}_Swift"/* "$OUTPUT_SWIFT_DIR"
 if [[ -n $WORKSPACE ]]; then
     cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
 fi

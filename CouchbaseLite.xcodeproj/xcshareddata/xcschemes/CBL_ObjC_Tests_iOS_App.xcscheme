@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D9111E03434200464432"
-               BuildableName = "CouchbaseLite.framework"
-               BlueprintName = "CBL ObjC"
+               BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+               BuildableName = "CBL Tests.app"
+               BlueprintName = "CBL_Objc_Tests_iOS_App"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,55 +26,28 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      enableAddressSanitizer = "YES"
-      enableASanStackUseAfterReturn = "YES"
-      enableUBSanitizer = "YES"
-      shouldUseLaunchSchemeArgsEnv = "NO">
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
+            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9398D91A1E03434200464432"
-               BuildableName = "CouchbaseLiteTests.xctest"
-               BlueprintName = "CBL ObjC Tests"
+               BlueprintIdentifier = "938CFA051E442A3E00291631"
+               BuildableName = "CBL_Objc_Tests_iOS.xctest"
+               BlueprintName = "CBL_Objc_Tests_iOS"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
-            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "CBL_TEST_HOST"
-            value = "localhost"
-            isEnabled = "NO">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "CBL_TEST_PROXY_HOST"
-            value = "127.0.0.1"
-            isEnabled = "NO">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "CBL_TEST_PROXY_PORT"
-            value = "8888"
-            isEnabled = "NO">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
-      <AdditionalOptions>
-         <AdditionalOption
-            key = "MallocScribble"
-            value = ""
-            isEnabled = "YES">
-         </AdditionalOption>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -86,17 +59,16 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -104,15 +76,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9398D9111E03434200464432"
-            BuildableName = "CouchbaseLite.framework"
-            BlueprintName = "CBL ObjC"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

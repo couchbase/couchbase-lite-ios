@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "938CF9ED1E442A3E00291631"
                BuildableName = "CBL Tests.app"
-               BlueprintName = "CBL Objc Tests - iOS App"
+               BlueprintName = "CBL_Objc_Tests_iOS_App"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -27,19 +27,17 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-      </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <Testables>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Release"
@@ -57,12 +55,10 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -76,7 +72,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

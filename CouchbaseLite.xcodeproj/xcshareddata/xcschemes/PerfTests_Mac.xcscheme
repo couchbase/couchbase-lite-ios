@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-               BuildableName = "CBL Tests.app"
-               BlueprintName = "CBL Objc Tests - iOS App"
+               BlueprintIdentifier = "275FF6121E3FE9DB005F90DD"
+               BuildableName = "CBLPerfTests"
+               BlueprintName = "PerfTests_Mac"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,29 +30,20 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintIdentifier = "275FF6121E3FE9DB005F90DD"
+            BuildableName = "CBLPerfTests"
+            BlueprintName = "PerfTests_Mac"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "938CFA051E442A3E00291631"
-               BuildableName = "CBL Objc Tests - iOS.xctest"
-               BlueprintName = "CBL Objc Tests - iOS"
-               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      disableMainThreadChecker = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -63,12 +54,22 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintIdentifier = "275FF6121E3FE9DB005F90DD"
+            BuildableName = "CBLPerfTests"
+            BlueprintName = "PerfTests_Mac"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-CBLLogLevel verbose"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-CBLLogSQL info"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -80,9 +81,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintIdentifier = "275FF6121E3FE9DB005F90DD"
+            BuildableName = "CBLPerfTests"
+            BlueprintName = "PerfTests_Mac"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
