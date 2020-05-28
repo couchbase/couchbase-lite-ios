@@ -60,6 +60,8 @@ class CBLTestCase: XCTestCase {
     override func setUp() {
         super.setUp()
         
+        Database.log.console.level = .info
+        
         try? deleteDB(name: databaseName);
         
         try? deleteDB(name: otherDatabaseName);
