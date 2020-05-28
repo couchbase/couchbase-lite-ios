@@ -52,7 +52,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "275F927B1E4D30A4007FD5A2"
                BuildableName = "CouchbaseLiteSwiftTests.xctest"
-               BlueprintName = "CBL Swift Tests"
+               BlueprintName = "CBL_Swift_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>

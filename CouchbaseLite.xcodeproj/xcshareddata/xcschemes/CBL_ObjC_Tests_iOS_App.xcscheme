@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1140"
+   LastUpgradeVersion = "1020"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
-               BuildableName = "CBL Swift Tests.app"
-               BlueprintName = "CBL Swift Tests - iOS App"
-               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "93BB1C7D246BB1DB004FFA00"
-               BuildableName = "CBL Swift Tests - iOS.xctest"
-               BlueprintName = "CBL Swift Tests - iOS"
+               BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+               BuildableName = "CBL Tests.app"
+               BlueprintName = "CBL_Objc_Tests_iOS_App"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -41,14 +27,23 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
+            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "275F927B1E4D30A4007FD5A2"
-               BuildableName = "CouchbaseLiteSwiftTests.xctest"
-               BlueprintName = "CBL Swift Tests"
+               BlueprintIdentifier = "938CFA051E442A3E00291631"
+               BuildableName = "CBL_Objc_Tests_iOS.xctest"
+               BlueprintName = "CBL_Objc_Tests_iOS"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -68,9 +63,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
-            BuildableName = "CBL Swift Tests.app"
-            BlueprintName = "CBL Swift Tests - iOS App"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -85,9 +80,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
-            BuildableName = "CBL Swift Tests.app"
-            BlueprintName = "CBL Swift Tests - iOS App"
+            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
+            BuildableName = "CBL Tests.app"
+            BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

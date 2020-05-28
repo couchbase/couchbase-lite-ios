@@ -1924,7 +1924,7 @@
 		930B63D9246B9CD2006D94FF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		930B63DC246B9CD2006D94FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		930B63DE246B9CD2006D94FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		930B63E3246B9CD2006D94FF /* CBL-EE Swift Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL-EE Swift Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_EE_Swift_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		930B63E9246B9CD2006D94FF /* Info-Tests.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Tests.plist"; sourceTree = "<group>"; };
 		930B63FF246BA5F8006D94FF /* CBL Swift Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift Tests.xcconfig"; sourceTree = "<group>"; };
 		930C7F7D20FE4F7400C74A12 /* CBLMockConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMockConnection.h; sourceTree = "<group>"; };
@@ -2011,7 +2011,7 @@
 		9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F16D207D62C900F19A89 /* CBL-EE Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		9343F188207D633300F19A89 /* CBL-EE Objc Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL-EE Objc Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_EE_Objc_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1B7207D63BF00F19A89 /* CBLPerfTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
@@ -2218,7 +2218,7 @@
 		938CDF261E807F8F002EE790 /* WhereRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhereRouter.swift; sourceTree = "<group>"; };
 		938CDF281E807F9F002EE790 /* OrderByRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderByRouter.swift; sourceTree = "<group>"; };
 		938CF9EE1E442A3E00291631 /* CBL Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL Objc Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		938CFA061E442A3E00291631 /* CBL_Objc_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_Objc_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		938E387F1F3A5BB4006806C7 /* CBLQueryCollation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLQueryCollation.h; sourceTree = "<group>"; };
 		938E38801F3A5BB4006806C7 /* CBLQueryCollation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLQueryCollation.m; sourceTree = "<group>"; };
 		938E389B1F3A7A47006806C7 /* CBLCollationExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLCollationExpression.h; sourceTree = "<group>"; };
@@ -2275,7 +2275,7 @@
 		93BB1C7A246BAFBB004FFA00 /* CBL Swift Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift Tests - iOS.xcconfig"; sourceTree = "<group>"; };
 		93BB1C7B246BB145004FFA00 /* CBL Swift Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		93BB1C7C246BB151004FFA00 /* CBL-EE Swift Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE Swift Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
-		93BB1C89246BB1DB004FFA00 /* CBL Swift Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL Swift Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_Swift_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Swift Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLListenerPasswordAuthenticator.h; sourceTree = "<group>"; };
 		93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLListenerPasswordAuthenticator.m; sourceTree = "<group>"; };
@@ -3352,19 +3352,19 @@
 				9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */,
 				275FF6131E3FE9DB005F90DD /* CBLPerfTests */,
 				938CF9EE1E442A3E00291631 /* CBL Tests.app */,
-				938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */,
+				938CFA061E442A3E00291631 /* CBL_Objc_Tests_iOS.xctest */,
 				275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */,
 				275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F00F207D611600F19A89 /* CouchbaseLite.framework */,
 				9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */,
 				9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */,
 				9343F16D207D62C900F19A89 /* CBL-EE Tests.app */,
-				9343F188207D633300F19A89 /* CBL-EE Objc Tests - iOS.xctest */,
+				9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */,
 				9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F1B7207D63BF00F19A89 /* CBLPerfTests */,
 				930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */,
-				930B63E3246B9CD2006D94FF /* CBL-EE Swift Tests - iOS.xctest */,
-				93BB1C89246BB1DB004FFA00 /* CBL Swift Tests - iOS.xctest */,
+				930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */,
+				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
 				93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */,
 			);
 			name = Products;
@@ -4368,9 +4368,9 @@
 			productReference = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */ = {
+		275F927B1E4D30A4007FD5A2 /* CBL_Swift_Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift Tests" */;
+			buildConfigurationList = 275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests" */;
 			buildPhases = (
 				275F92781E4D30A4007FD5A2 /* Sources */,
 				275F92791E4D30A4007FD5A2 /* Frameworks */,
@@ -4381,14 +4381,14 @@
 			dependencies = (
 				275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */,
 			);
-			name = "CBL Swift Tests";
+			name = CBL_Swift_Tests;
 			productName = CouchbaseLiteSwiftTests;
 			productReference = 275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		275FF6121E3FE9DB005F90DD /* PerfTests-Mac */ = {
+		275FF6121E3FE9DB005F90DD /* PerfTests_Mac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */;
+			buildConfigurationList = 275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests_Mac" */;
 			buildPhases = (
 				275FF60F1E3FE9DB005F90DD /* Sources */,
 				275FF6101E3FE9DB005F90DD /* Frameworks */,
@@ -4399,14 +4399,14 @@
 			dependencies = (
 				275FF6271E3FECB1005F90DD /* PBXTargetDependency */,
 			);
-			name = "PerfTests-Mac";
+			name = PerfTests_Mac;
 			productName = PerfTest;
 			productReference = 275FF6131E3FE9DB005F90DD /* CBLPerfTests */;
 			productType = "com.apple.product-type.tool";
 		};
-		930B63CF246B9CD1006D94FF /* CBL-EE Swift Tests - iOS App */ = {
+		930B63CF246B9CD1006D94FF /* CBL_EE_Swift_Tests_iOS_App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 930B63FD246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests - iOS App" */;
+			buildConfigurationList = 930B63FD246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests_iOS_App" */;
 			buildPhases = (
 				930B63CC246B9CD1006D94FF /* Sources */,
 				930B63CD246B9CD1006D94FF /* Frameworks */,
@@ -4418,14 +4418,14 @@
 			dependencies = (
 				93095AFF246BBEF9005633B4 /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Swift Tests - iOS App";
+			name = CBL_EE_Swift_Tests_iOS_App;
 			productName = "cbl-swift-ios-tests-app";
 			productReference = 930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
-		930B63E2246B9CD2006D94FF /* CBL-EE Swift Tests - iOS */ = {
+		930B63E2246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 930B63FE246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests - iOS" */;
+			buildConfigurationList = 930B63FE246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests_iOS" */;
 			buildPhases = (
 				930B63DF246B9CD2006D94FF /* Sources */,
 				930B63E0246B9CD2006D94FF /* Frameworks */,
@@ -4436,9 +4436,9 @@
 			dependencies = (
 				930B63E5246B9CD2006D94FF /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Swift Tests - iOS";
+			name = CBL_EE_Swift_Tests_iOS;
 			productName = "cbl-swift-ios-tests-appTests";
-			productReference = 930B63E3246B9CD2006D94FF /* CBL-EE Swift Tests - iOS.xctest */;
+			productReference = 930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		9343EF2A207D611600F19A89 /* CBL_EE_ObjC */ = {
@@ -4484,9 +4484,9 @@
 			productReference = 9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		9343F135207D61EC00F19A89 /* CBL-EE ObjC Tests */ = {
+		9343F135207D61EC00F19A89 /* CBL_EE_ObjC_Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F14C207D61EC00F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE ObjC Tests" */;
+			buildConfigurationList = 9343F14C207D61EC00F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC_Tests" */;
 			buildPhases = (
 				9343F138207D61EC00F19A89 /* Sources */,
 				9343F147207D61EC00F19A89 /* Frameworks */,
@@ -4497,14 +4497,14 @@
 			dependencies = (
 				9382351A207D80490022328B /* PBXTargetDependency */,
 			);
-			name = "CBL-EE ObjC Tests";
+			name = CBL_EE_ObjC_Tests;
 			productName = CouchbaseLiteTests;
 			productReference = 9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9343F153207D62C900F19A89 /* CBL-EE Objc Tests - iOS App */ = {
+		9343F153207D62C900F19A89 /* CBL_EE_Objc_Tests_iOS_App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F168207D62C900F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Objc Tests - iOS App" */;
+			buildConfigurationList = 9343F168207D62C900F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Objc_Tests_iOS_App" */;
 			buildPhases = (
 				9343F156207D62C900F19A89 /* Sources */,
 				9343F15F207D62C900F19A89 /* Frameworks */,
@@ -4516,14 +4516,14 @@
 			dependencies = (
 				9382351C207D80560022328B /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Objc Tests - iOS App";
+			name = CBL_EE_Objc_Tests_iOS_App;
 			productName = "ios-tests";
 			productReference = 9343F16D207D62C900F19A89 /* CBL-EE Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
-		9343F16F207D633300F19A89 /* CBL-EE Objc Tests - iOS */ = {
+		9343F16F207D633300F19A89 /* CBL_EE_Objc_Tests_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F183207D633300F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Objc Tests - iOS" */;
+			buildConfigurationList = 9343F183207D633300F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Objc_Tests_iOS" */;
 			buildPhases = (
 				9343F172207D633300F19A89 /* Sources */,
 				9343F180207D633300F19A89 /* Frameworks */,
@@ -4534,14 +4534,14 @@
 			dependencies = (
 				9382351E207D805F0022328B /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Objc Tests - iOS";
+			name = CBL_EE_Objc_Tests_iOS;
 			productName = "ios-testsTests";
-			productReference = 9343F188207D633300F19A89 /* CBL-EE Objc Tests - iOS.xctest */;
+			productReference = 9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9343F18A207D636300F19A89 /* CBL-EE Swift Tests */ = {
+		9343F18A207D636300F19A89 /* CBL_EE_Swift_Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F19D207D636300F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests" */;
+			buildConfigurationList = 9343F19D207D636300F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests" */;
 			buildPhases = (
 				9343F18D207D636300F19A89 /* Sources */,
 				9343F199207D636300F19A89 /* Frameworks */,
@@ -4552,14 +4552,14 @@
 			dependencies = (
 				93823520207D806D0022328B /* PBXTargetDependency */,
 			);
-			name = "CBL-EE Swift Tests";
+			name = CBL_EE_Swift_Tests;
 			productName = CouchbaseLiteSwiftTests;
 			productReference = 9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9343F1A4207D63BF00F19A89 /* PerfTests-EE-Mac */ = {
+		9343F1A4207D63BF00F19A89 /* PerfTests_EE_Mac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9343F1B2207D63BF00F19A89 /* Build configuration list for PBXNativeTarget "PerfTests-EE-Mac" */;
+			buildConfigurationList = 9343F1B2207D63BF00F19A89 /* Build configuration list for PBXNativeTarget "PerfTests_EE_Mac" */;
 			buildPhases = (
 				9343F1A7207D63BF00F19A89 /* Sources */,
 				9343F1AE207D63BF00F19A89 /* Frameworks */,
@@ -4570,14 +4570,14 @@
 			dependencies = (
 				93823522207D80760022328B /* PBXTargetDependency */,
 			);
-			name = "PerfTests-EE-Mac";
+			name = PerfTests_EE_Mac;
 			productName = PerfTest;
 			productReference = 9343F1B7207D63BF00F19A89 /* CBLPerfTests */;
 			productType = "com.apple.product-type.tool";
 		};
-		938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */ = {
+		938CF9ED1E442A3E00291631 /* CBL_Objc_Tests_iOS_App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS App" */;
+			buildConfigurationList = 938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL_Objc_Tests_iOS_App" */;
 			buildPhases = (
 				938CF9EA1E442A3E00291631 /* Sources */,
 				938CF9EB1E442A3E00291631 /* Frameworks */,
@@ -4589,14 +4589,14 @@
 			dependencies = (
 				938CFA1F1E442A9100291631 /* PBXTargetDependency */,
 			);
-			name = "CBL Objc Tests - iOS App";
+			name = CBL_Objc_Tests_iOS_App;
 			productName = "ios-tests";
 			productReference = 938CF9EE1E442A3E00291631 /* CBL Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
-		938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */ = {
+		938CFA051E442A3E00291631 /* CBL_Objc_Tests_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS" */;
+			buildConfigurationList = 938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL_Objc_Tests_iOS" */;
 			buildPhases = (
 				938CFA021E442A3E00291631 /* Sources */,
 				938CFA031E442A3E00291631 /* Frameworks */,
@@ -4607,9 +4607,9 @@
 			dependencies = (
 				936483911E442F15008D08B3 /* PBXTargetDependency */,
 			);
-			name = "CBL Objc Tests - iOS";
+			name = CBL_Objc_Tests_iOS;
 			productName = "ios-testsTests";
-			productReference = 938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */;
+			productReference = 938CFA061E442A3E00291631 /* CBL_Objc_Tests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		9398D9111E03434200464432 /* CBL_ObjC */ = {
@@ -4649,9 +4649,9 @@
 			productReference = 9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		93BB1C7D246BB1DB004FFA00 /* CBL Swift Tests - iOS */ = {
+		93BB1C7D246BB1DB004FFA00 /* CBL_Swift_Tests_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 93BB1C84246BB1DB004FFA00 /* Build configuration list for PBXNativeTarget "CBL Swift Tests - iOS" */;
+			buildConfigurationList = 93BB1C84246BB1DB004FFA00 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests_iOS" */;
 			buildPhases = (
 				93BB1C80246BB1DB004FFA00 /* Sources */,
 				93BB1C82246BB1DB004FFA00 /* Frameworks */,
@@ -4662,14 +4662,14 @@
 			dependencies = (
 				93095B04246BBFC5005633B4 /* PBXTargetDependency */,
 			);
-			name = "CBL Swift Tests - iOS";
+			name = CBL_Swift_Tests_iOS;
 			productName = "cbl-swift-ios-tests-appTests";
-			productReference = 93BB1C89246BB1DB004FFA00 /* CBL Swift Tests - iOS.xctest */;
+			productReference = 93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		93BB1C8A246BB1F1004FFA00 /* CBL Swift Tests - iOS App */ = {
+		93BB1C8A246BB1F1004FFA00 /* CBL_Swift_Tests_iOS_App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 93BB1C93246BB1F1004FFA00 /* Build configuration list for PBXNativeTarget "CBL Swift Tests - iOS App" */;
+			buildConfigurationList = 93BB1C93246BB1F1004FFA00 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests_iOS_App" */;
 			buildPhases = (
 				93BB1C8B246BB1F1004FFA00 /* Sources */,
 				93BB1C8E246BB1F1004FFA00 /* Frameworks */,
@@ -4681,7 +4681,7 @@
 			dependencies = (
 				93BB1CBE246BB603004FFA00 /* PBXTargetDependency */,
 			);
-			name = "CBL Swift Tests - iOS App";
+			name = CBL_Swift_Tests_iOS_App;
 			productName = "cbl-swift-ios-tests-app";
 			productReference = 93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */;
 			productType = "com.apple.product-type.application";
@@ -4800,21 +4800,21 @@
 				9398D9111E03434200464432 /* CBL_ObjC */,
 				275F92731E4D30A4007FD5A2 /* CBL_Swift */,
 				9398D91A1E03434200464432 /* CBL_ObjC_Tests */,
-				938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */,
-				938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */,
-				93BB1C8A246BB1F1004FFA00 /* CBL Swift Tests - iOS App */,
-				93BB1C7D246BB1DB004FFA00 /* CBL Swift Tests - iOS */,
-				275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */,
-				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
+				938CF9ED1E442A3E00291631 /* CBL_Objc_Tests_iOS_App */,
+				938CFA051E442A3E00291631 /* CBL_Objc_Tests_iOS */,
+				93BB1C8A246BB1F1004FFA00 /* CBL_Swift_Tests_iOS_App */,
+				93BB1C7D246BB1DB004FFA00 /* CBL_Swift_Tests_iOS */,
+				275F927B1E4D30A4007FD5A2 /* CBL_Swift_Tests */,
+				275FF6121E3FE9DB005F90DD /* PerfTests_Mac */,
 				9343EF2A207D611600F19A89 /* CBL_EE_ObjC */,
 				9343F011207D61AB00F19A89 /* CBL_EE_Swift */,
-				9343F135207D61EC00F19A89 /* CBL-EE ObjC Tests */,
-				9343F153207D62C900F19A89 /* CBL-EE Objc Tests - iOS App */,
-				9343F16F207D633300F19A89 /* CBL-EE Objc Tests - iOS */,
-				930B63CF246B9CD1006D94FF /* CBL-EE Swift Tests - iOS App */,
-				930B63E2246B9CD2006D94FF /* CBL-EE Swift Tests - iOS */,
-				9343F18A207D636300F19A89 /* CBL-EE Swift Tests */,
-				9343F1A4207D63BF00F19A89 /* PerfTests-EE-Mac */,
+				9343F135207D61EC00F19A89 /* CBL_EE_ObjC_Tests */,
+				9343F153207D62C900F19A89 /* CBL_EE_Objc_Tests_iOS_App */,
+				9343F16F207D633300F19A89 /* CBL_EE_Objc_Tests_iOS */,
+				930B63CF246B9CD1006D94FF /* CBL_EE_Swift_Tests_iOS_App */,
+				930B63E2246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS */,
+				9343F18A207D636300F19A89 /* CBL_EE_Swift_Tests */,
+				9343F1A4207D63BF00F19A89 /* PerfTests_EE_Mac */,
 				27BF031C1FB6290C003D5BB8 /* All */,
 			);
 		};
@@ -6091,12 +6091,12 @@
 		};
 		93095B04246BBFC5005633B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 93BB1C8A246BB1F1004FFA00 /* CBL Swift Tests - iOS App */;
+			target = 93BB1C8A246BB1F1004FFA00 /* CBL_Swift_Tests_iOS_App */;
 			targetProxy = 93095B03246BBFC5005633B4 /* PBXContainerItemProxy */;
 		};
 		930B63E5246B9CD2006D94FF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 930B63CF246B9CD1006D94FF /* CBL-EE Swift Tests - iOS App */;
+			target = 930B63CF246B9CD1006D94FF /* CBL_EE_Swift_Tests_iOS_App */;
 			targetProxy = 930B63E4246B9CD2006D94FF /* PBXContainerItemProxy */;
 		};
 		93249D77246B6EA4000A8A6E /* PBXTargetDependency */ = {
@@ -6121,7 +6121,7 @@
 		};
 		936483911E442F15008D08B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */;
+			target = 938CF9ED1E442A3E00291631 /* CBL_Objc_Tests_iOS_App */;
 			targetProxy = 936483901E442F15008D08B3 /* PBXContainerItemProxy */;
 		};
 		9382351A207D80490022328B /* PBXTargetDependency */ = {
@@ -6136,7 +6136,7 @@
 		};
 		9382351E207D805F0022328B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9343F153207D62C900F19A89 /* CBL-EE Objc Tests - iOS App */;
+			target = 9343F153207D62C900F19A89 /* CBL_EE_Objc_Tests_iOS_App */;
 			targetProxy = 9382351D207D805F0022328B /* PBXContainerItemProxy */;
 		};
 		93823520207D806D0022328B /* PBXTargetDependency */ = {
@@ -8533,7 +8533,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift Tests" */ = {
+		275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275F92891E4D30A4007FD5A2 /* Debug */,
@@ -8544,7 +8544,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */ = {
+		275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests_Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				275FF6171E3FE9DB005F90DD /* Debug */,
@@ -8566,7 +8566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		930B63FD246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests - iOS App" */ = {
+		930B63FD246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests_iOS_App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				930B63EA246B9CD2006D94FF /* Debug */,
@@ -8577,7 +8577,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		930B63FE246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests - iOS" */ = {
+		930B63FE246B9CD2006D94FF /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				930B63EE246B9CD2006D94FF /* Debug */,
@@ -8610,7 +8610,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F14C207D61EC00F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE ObjC Tests" */ = {
+		9343F14C207D61EC00F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC_Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F14D207D61EC00F19A89 /* Debug */,
@@ -8621,7 +8621,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F168207D62C900F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Objc Tests - iOS App" */ = {
+		9343F168207D62C900F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Objc_Tests_iOS_App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F169207D62C900F19A89 /* Debug */,
@@ -8632,7 +8632,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F183207D633300F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Objc Tests - iOS" */ = {
+		9343F183207D633300F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Objc_Tests_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F184207D633300F19A89 /* Debug */,
@@ -8643,7 +8643,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F19D207D636300F19A89 /* Build configuration list for PBXNativeTarget "CBL-EE Swift Tests" */ = {
+		9343F19D207D636300F19A89 /* Build configuration list for PBXNativeTarget "CBL_EE_Swift_Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F19E207D636300F19A89 /* Debug */,
@@ -8654,7 +8654,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9343F1B2207D63BF00F19A89 /* Build configuration list for PBXNativeTarget "PerfTests-EE-Mac" */ = {
+		9343F1B2207D63BF00F19A89 /* Build configuration list for PBXNativeTarget "PerfTests_EE_Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9343F1B3207D63BF00F19A89 /* Debug */,
@@ -8665,7 +8665,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS App" */ = {
+		938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL_Objc_Tests_iOS_App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0D1E442A3E00291631 /* Debug */,
@@ -8676,7 +8676,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS" */ = {
+		938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL_Objc_Tests_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0F1E442A3E00291631 /* Debug */,
@@ -8720,7 +8720,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		93BB1C84246BB1DB004FFA00 /* Build configuration list for PBXNativeTarget "CBL Swift Tests - iOS" */ = {
+		93BB1C84246BB1DB004FFA00 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				93BB1C85246BB1DB004FFA00 /* Debug */,
@@ -8731,7 +8731,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		93BB1C93246BB1F1004FFA00 /* Build configuration list for PBXNativeTarget "CBL Swift Tests - iOS App" */ = {
+		93BB1C93246BB1F1004FFA00 /* Build configuration list for PBXNativeTarget "CBL_Swift_Tests_iOS_App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				93BB1C94246BB1F1004FFA00 /* Debug */,

@@ -18,13 +18,11 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "275F927B1E4D30A4007FD5A2"
                BuildableName = "CouchbaseLiteSwiftTests.xctest"
-               BlueprintName = "CBL Swift Tests"
+               BlueprintName = "CBL_Swift_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -36,8 +34,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

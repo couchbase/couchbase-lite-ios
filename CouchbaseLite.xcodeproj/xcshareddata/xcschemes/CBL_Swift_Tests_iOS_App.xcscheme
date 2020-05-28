@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1020"
+   LastUpgradeVersion = "1140"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-               BuildableName = "CBL Tests.app"
-               BlueprintName = "CBL Objc Tests - iOS App"
+               BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
+               BuildableName = "CBL Swift Tests.app"
+               BlueprintName = "CBL_Swift_Tests_iOS_App"
+               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "93BB1C7D246BB1DB004FFA00"
+               BuildableName = "CBL_Swift_Tests_iOS.xctest"
+               BlueprintName = "CBL_Swift_Tests_iOS"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,21 +42,20 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "275F927B1E4D30A4007FD5A2"
+               BuildableName = "CouchbaseLiteSwiftTests.xctest"
+               BlueprintName = "CBL_Swift_Tests"
+               ReferencedContainer = "container:CouchbaseLite.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
-            ReferencedContainer = "container:CouchbaseLite.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -55,14 +68,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
+            BuildableName = "CBL Swift Tests.app"
+            BlueprintName = "CBL_Swift_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -74,9 +85,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL Objc Tests - iOS App"
+            BlueprintIdentifier = "93BB1C8A246BB1F1004FFA00"
+            BuildableName = "CBL Swift Tests.app"
+            BlueprintName = "CBL_Swift_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
