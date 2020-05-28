@@ -15,4 +15,4 @@ derived_src/
 
 # CBL files:
 vendor/couchbase-lite-core-EE
-*-EE*.xcscheme
+*_EE*.xcscheme
