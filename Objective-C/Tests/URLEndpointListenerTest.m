@@ -358,4 +358,48 @@ typedef CBLURLEndpointListener Listener;
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
 }
 
+// TODO: https://issues.couchbase.com/browse/CBL-948
+// TODO: https://issues.couchbase.com/browse/CBL-1008
+- (void) _testEmptyNetworkInterface {
+    [self listen];
+    
+    NSArray* urls = _listener.urls;
+    NSError* err = nil;
+    for (uint i = 0; i < urls.count; i++ ) {
+        // separate db instance!
+        NSURL* url = urls[i];
+        CBLDatabase* db = [[CBLDatabase alloc] initWithName: $sprintf(@"db-%d", i) error: &err];
+        AssertNil(err);
+        CBLMutableDocument* doc = [self createDocument];
+        [doc setString: url.absoluteString forKey: @"url"];
+        [db saveDocument: doc error: &err];
+        AssertNil(err);
+        
+        // separate replicator instance
+        id end = [[CBLURLEndpoint alloc] initWithURL: url];
+        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: end];
+        [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.config.tlsIdentity.certs.firstObject)];
+        [self run: rConfig errorCode: 0 errorDomain: nil];
+        
+        // remove the separate db
+        [self deleteDatabase: db];
+    }
+    
+    AssertEqual(self.otherDB.count, urls.count);
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: [CBLQueryDataSource database: self.otherDB]];
+    CBLQueryResultSet* rs = [q execute: &err];
+    AssertNil(err);
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: urls.count];
+    for(CBLQueryResult* res in rs.allObjects) {
+        CBLDictionary* dict = [res dictionaryAtIndex: 0];
+        [result addObject: [NSURL URLWithString: [dict stringForKey: @"url"]]];
+    }
+    
+    AssertEqualObjects(result, urls);
+    
+    // stops
+    [_listener stop];
+}
+
 @end
