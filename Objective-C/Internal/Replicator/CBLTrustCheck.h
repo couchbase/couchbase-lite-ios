@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecTrust.h>
+#import "CBLReplicatorConfiguration.h"
 
 @interface CBLTrustCheck : NSObject
 
@@ -33,6 +34,7 @@
 
 @property (copy, atomic) NSData* pinnedCertData;
 
-- (NSURLCredential*) checkTrust: (NSError**)outError;
+- (NSURLCredential*) checkTrust: (NSError**)outError
+                           mode: (CBLServerCertificateVerificationMode)mode;
 
 @end

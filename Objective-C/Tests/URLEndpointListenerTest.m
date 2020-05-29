@@ -280,7 +280,7 @@ typedef CBLURLEndpointListener Listener;
     [listener stop];
 }
 
-#ifdef TARGET_OS_OSX
+#if TARGET_OS_OSX
 // Not working on iOS:
 // https://issues.couchbase.com/browse/CBL-995
 - (void) testClientCertAuthenticatorWithBlock {
@@ -358,28 +358,91 @@ typedef CBLURLEndpointListener Listener;
     AssertNotNil(identity);
     AssertNil(error);
     
-    // Create Replicator:
-    CBLReplicatorConfiguration* config = nil;
-    CBLClientCertificateAuthenticator* auth = nil;
-    auth = [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity];
-    SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.config.tlsIdentity.certs[0];
-    config = [self configWithTarget: listener.localEndpoint
-                               type: kCBLReplicatorTypePushAndPull
-                         continuous: NO
-                      authenticator: auth
-                         serverCert: serverCert];
-    
     // Start Replicator:
     [self ignoreException: ^{
-        [self run: config errorCode: 0 errorDomain: nil];
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity]
+                 serverCert: (__bridge SecCertificateRef) listener.config.tlsIdentity.certs[0]
+                  errorCode: 0
+                errorDomain: nil];
     }];
-    
+
     // Cleanup:
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-948
-// TODO: https://issues.couchbase.com/browse/CBL-1008
+- (void) testServerCertVerificationModeSelfSignedCert {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.config.tlsIdentity.certs.count, 1);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Replicator - TLS Error:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUnknownRoot
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // Replicator - Success:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       serverCertVerifyMode: kCBLServerCertVerificationModeSelfSignedCert
+                 serverCert: nil
+                  errorCode: 0
+                errorDomain: nil];
+    }];
+}
+
+- (void) testServerCertVerificationModeCACert {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.config.tlsIdentity.certs.count, 1);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Replicator - TLS Error:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUnknownRoot
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // Replicator - Success:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+                 serverCert: (__bridge SecCertificateRef) listener.config.tlsIdentity.certs[0]
+                  errorCode: 0
+                errorDomain: nil];
+    }];
+}
+
 - (void) _testEmptyNetworkInterface {
     [self listen];
     

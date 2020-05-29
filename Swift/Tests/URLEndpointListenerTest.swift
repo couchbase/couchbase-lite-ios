@@ -78,12 +78,12 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Replicator - No Authenticator:
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: nil, serverCert: nil, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: nil, expectedError: CBLErrorHTTPAuthRequired)
         
         // Replicator - Wrong Credentials:
         var auth = BasicAuthenticator.init(username: "daniel", password: "456")
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: auth, serverCert: nil, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: auth, expectedError: CBLErrorHTTPAuthRequired)
         
         // Replicator - Success:
         auth = BasicAuthenticator.init(username: "daniel", password: "123")
@@ -163,8 +163,57 @@ class URLEndpontListenerTest: ReplicatorTest {
         // Cleanup:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
     }
+    
+    func testServerCertVerificationModeSelfSignedCert() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.config.tlsIdentity)
+        XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+        
+        // Replicator - TLS Error:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     serverCertVerifyMode: .caCert, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // Replicator - Success:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     serverCertVerifyMode: .selfSignedCert, serverCert: nil)
+        }
+    }
+    
+    func testServerCertVerificationModeCACert() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.config.tlsIdentity)
+        XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+        
+        // Replicator - TLS Error:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     serverCertVerifyMode: .caCert, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // Replicator - Success:
+        self.ignoreException {
+            let serverCert = listener.config.tlsIdentity!.certs[0]
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     serverCertVerifyMode: .caCert, serverCert: serverCert)
+        }
+    }
+    
 }
 
+@available(macOS 10.12, iOS 10.0, *)
 extension URLEndpointListener {
     var localURL: URL {
         assert(self.port != nil && self.port! > UInt16(0))

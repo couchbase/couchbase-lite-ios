@@ -87,6 +87,9 @@ struct PendingWrite {
     BOOL _connectedThruProxy;
     
     NSArray* _clientIdentity;
+    
+    // Workaround for: CBL-1003:
+    CBLServerCertificateVerificationMode _serverCertVerificationMode;
 }
 
 + (C4SocketFactory) socketFactory {
@@ -119,7 +122,10 @@ static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, vo
             c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
             return;
         }
-        auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s options: optionsFleece];
+        auto socket = [[CBLWebSocket alloc] initWithURL: url
+                                               c4socket: s
+                                                options: optionsFleece
+                                                context: context];
         s->nativeHandle = (__bridge void*)socket;
         socket->_keepMeAlive = socket;          // Prevents dealloc until doDispose is called
         [socket start];
@@ -142,11 +148,18 @@ static void doDispose(C4Socket* s) {
     [(__bridge CBLWebSocket*)s->nativeHandle dispose];
 }
 
-- (instancetype) initWithURL: (NSURL*)url c4socket: (C4Socket*)c4socket options: (slice)options {
+- (instancetype) initWithURL: (NSURL*)url
+                    c4socket: (C4Socket*)c4socket
+                     options: (slice)options
+                     context: (void*)context {
     self = [super init];
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
+        
+        // Workaround for CBL-1003:
+        CBLReplicator* replicator = (__bridge CBLReplicator*)context;
+        _serverCertVerificationMode = replicator.config.serverCertificateVerificationMode;
 
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         request.HTTPShouldHandleCookies = NO;
@@ -319,7 +332,8 @@ static void doDispose(C4Socket* s) {
             [settings setObject: _logic.directHost
                          forKey: (__bridge id)kCFStreamSSLPeerName];
         
-        if (_options[kC4ReplicatorOptionPinnedServerCert])
+        if (_options[kC4ReplicatorOptionPinnedServerCert] ||
+            _serverCertVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
 
@@ -591,18 +605,19 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
     NSURL* url = _logic.URL;
     auto check = [[CBLTrustCheck alloc] initWithTrust: sslTrust
-                                                 host: url.host port: url.port.shortValue];
+                                                 host: url.host
+                                                 port: url.port.shortValue];
     CFRelease(sslTrust);
     Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
     if (pin) {
         check.pinnedCertData = slice(pin.asData()).copiedNSData();
         Assert(check.pinnedCertData, @"Invalid value for replicator %s property (must be NSData)",
                kC4ReplicatorOptionPinnedServerCert);
-    } else
+    } else if (_serverCertVerificationMode == kCBLServerCertVerificationModeCACert) /* Without pinned cert */
         return true;
-
+    
     NSError* error;
-    if (![check checkTrust: &error]) {
+    if (![check checkTrust: &error mode: _serverCertVerificationMode]) {
         CBLWarn(WebSocket, @"TLS handshake failed: %@", error.localizedDescription);
         [self closeWithError: error];
         return false;
