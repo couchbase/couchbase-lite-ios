@@ -68,7 +68,6 @@ static BOOL sOnlyTrustAnchorCerts;
 
 // Checks whether the reported problems with a SecTrust are OK for us
 - (BOOL) shouldAcceptProblems: (NSError**)outError {
-    BOOL localDomain = ([_host hasSuffix: @".local"] || [_host hasSuffix: @".local."]);
     NSDictionary* resultDict = CFBridgingRelease(SecTrustCopyResult(_trust));
     NSArray* detailsArray = resultDict[@"TrustResultDetails"];
     NSUInteger i = 0;
@@ -83,16 +82,9 @@ static BOOL sOnlyTrustAnchorCerts;
                          && [details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
 #endif
             ) {
-                // This is a self-signed cert, or an unknown root cert:
-                if (localDomain && i == 0 && SecTrustGetCertificateCount(_trust) == 1) {
-                    // Accept a self-signed cert from a local host (".local" domain)
-                    continue;
-                } else {
-                    MYReturnError(outError,
-                                  NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                                  @"Server has self-signed or unknown root SSL certificate");
-                    return NO;
-                }
+                MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                              @"Server has self-signed or unknown root SSL certificate!!");
+                return NO;
             } else {
                 // Any other problem:
                 MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
@@ -103,6 +95,32 @@ static BOOL sOnlyTrustAnchorCerts;
         i++;
     }
     return YES;
+}
+
+- (BOOL) isSelfSignedCert: (NSError**)outError {
+    CFIndex certCount = SecTrustGetCertificateCount(_trust);
+    if (certCount != 1)
+        return NO;
+    
+    SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
+    NSDictionary* params = @{
+        (id)kSecClass:                  (__bridge id)kSecClassCertificate,
+        (id)kSecValueRef:               (__bridge id)certRef,
+        (id)kSecReturnAttributes:       @YES
+    };
+    
+    CFTypeRef values;
+    OSStatus status = SecItemCopyMatching((CFDictionaryRef)params, &values);
+    if (status != errSecSuccess) {
+        MYReturnError(outError, status, NSOSStatusErrorDomain,
+                      @"Couldn't get the issuer from the certificate");
+        return NO;
+    }
+    
+    NSDictionary* attrs = (NSDictionary*)CFBridgingRelease(values);
+    NSData* issuer = attrs[(id)kSecAttrIssuer];
+    NSData* subject = attrs[(id)kSecAttrSubject];
+    return [issuer isEqualToData: subject];
 }
 
 // Updates a SecTrust's result to kSecTrustResultProceed
@@ -117,7 +135,8 @@ static BOOL sOnlyTrustAnchorCerts;
     return YES;
 }
 
-- (NSURLCredential*) checkTrust: (NSError**)outError {
+- (NSURLCredential*) checkTrust: (NSError**)outError
+                           mode: (CBLServerCertificateVerificationMode)mode {
     // Register any global anchor certificates:
     @synchronized(self) {
         if (sAnchorCerts.count > 0) {
@@ -125,44 +144,63 @@ static BOOL sOnlyTrustAnchorCerts;
             SecTrustSetAnchorCertificatesOnly(_trust, sOnlyTrustAnchorCerts);
         }
     }
-
-    // Evaluate trust:
-    SecTrustResultType result;
-    OSStatus err = SecTrustEvaluate(_trust, &result);
-    if (err) {
-        CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
-        MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
-        return nil;
-    }
-    if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified
-                                         && result != kSecTrustResultRecoverableTrustFailure) {
-        MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-                      @"Server SSL certificate is untrustworthy");
-        return nil;
-    }
-
+    
     NSURLCredential* credential = [NSURLCredential credentialForTrust: _trust];
-
-    // If using cert-pinning, accept cert iff it matches the pin:
-    if (_pinnedCertData) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
-        if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
-            [self forceTrusted];
-            return credential;
-        } else {
-            MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                          @"Certificate does not match pinned cert");
+    
+    if (mode == kCBLServerCertVerificationModeSelfSignedCert) {
+        // Check if the certificate is a self-signed cert:
+        NSError* error;
+        BOOL isSelfSigned = [self isSelfSignedCert: &error];
+        if (error) {
+            MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                          @"Server SSL certificate is invalid");
             return nil;
         }
-    }
-
-    if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
-        return credential;          // explicitly trusted
-    } else if ([self shouldAcceptProblems: outError]) {
-        [self forceTrusted];    // self-signed or host mismatch but we'll accept it anyway
+        
+        if (!isSelfSigned) {
+            MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                @"Server SSL certificate is not self-signed");
+        }
+        
+        [self forceTrusted];
         return credential;
     } else {
-        return nil;
+        // Evaluate trust:
+        SecTrustResultType result;
+        OSStatus err = SecTrustEvaluate(_trust, &result);
+        if (err) {
+            CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
+            MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
+            return nil;
+        }
+        if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified
+                                             && result != kSecTrustResultRecoverableTrustFailure) {
+            MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                          @"Server SSL certificate is untrustworthy");
+            return nil;
+        }
+
+        // If using cert-pinning, accept cert iff it matches the pin:
+        if (_pinnedCertData) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
+            if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
+                [self forceTrusted];
+                return credential;
+            } else {
+                MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                              @"Server SSL Certificate does not match pinned cert");
+                return nil;
+            }
+        }
+
+        if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
+            return credential;          // explicitly trusted
+        } else if ([self shouldAcceptProblems: outError]) {
+            [self forceTrusted];    // self-signed or host mismatch but we'll accept it anyway
+            return credential;
+        } else {
+            return nil;
+        }
     }
 }
 

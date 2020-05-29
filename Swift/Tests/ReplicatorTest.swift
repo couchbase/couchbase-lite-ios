@@ -38,11 +38,15 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
-                continuous: Bool = false, auth: Authenticator? = nil, serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
+                continuous: Bool = false, auth: Authenticator? = nil,
+                serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
+                serverCert: SecCertificate? = nil)
+        -> ReplicatorConfiguration {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
+        config.serverCertificateVerificationMode = serverCertVerifyMode
         config.pinnedServerCertificate = serverCert
         return config
     }
@@ -67,8 +71,13 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
-             continuous: Bool = false, auth: Authenticator? = nil, serverCert: SecCertificate? = nil, expectedError: Int? = nil) {
-        let config = self.config(target: target, type: type, continuous: continuous, auth: auth, serverCert:  serverCert)
+             continuous: Bool = false, auth: Authenticator? = nil,
+             serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
+             serverCert: SecCertificate? = nil,
+             expectedError: Int? = nil) {
+        let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
+                                 serverCertVerifyMode: serverCertVerifyMode,
+                                 serverCert: serverCert)
         run(config: config, reset: false, expectedError: expectedError)
     }
     

@@ -233,6 +233,20 @@
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
+                                      serverCert: (nullable SecCertificateRef)serverCert {
+    return [self configWithTarget: target
+                             type: type
+                       continuous: continuous
+                    authenticator: authenticator
+             serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+                       serverCert: serverCert];
+}
+
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (nullable CBLAuthenticator*)authenticator
+                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
                                       serverCert: (nullable SecCertificateRef)serverCert
 {
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
@@ -240,6 +254,7 @@
     c.replicatorType = type;
     c.continuous = continuous;
     c.authenticator = authenticator;
+    c.serverCertificateVerificationMode = serverCertVerifyMode;
     
     if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"]) {
         if (serverCert)
@@ -303,6 +318,24 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                             serverCert: serverCert];
     return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }
+
+- (BOOL) runWithTarget: (id<CBLEndpoint>)target
+                  type: (CBLReplicatorType)type
+            continuous: (BOOL)continuous
+         authenticator: (nullable CBLAuthenticator*)authenticator
+  serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+            serverCert: (nullable SecCertificateRef)serverCert
+             errorCode: (NSInteger)errorCode
+           errorDomain: (nullable NSString*)errorDomain {
+    id config = [self configWithTarget: target
+                                  type: type
+                            continuous: continuous
+                         authenticator: authenticator
+                  serverCertVerifyMode: serverCertVerifyMode
+                            serverCert: serverCert];
+    return [self run: config errorCode: errorCode errorDomain: errorDomain];
+}
+
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator
                  errorCode: (NSInteger)errorCode

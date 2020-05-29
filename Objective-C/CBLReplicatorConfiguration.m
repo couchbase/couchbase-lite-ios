@@ -35,6 +35,7 @@
 @synthesize database=_database, target=_target;
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
 @synthesize authenticator=_authenticator;
+@synthesize serverCertificateVerificationMode=_serverCertificateVerificationMode;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize documentIDs=_documentIDs, channels=_channels;
@@ -57,6 +58,7 @@
         _database = database;
         _target = target;
         _replicatorType = kCBLReplicatorTypePushAndPull;
+        _serverCertificateVerificationMode = kCBLServerCertVerificationModeCACert;
     }
     return self;
 }
@@ -80,6 +82,11 @@
 - (void) setAuthenticator: (CBLAuthenticator*)authenticator {
     [self checkReadonly];
     _authenticator = authenticator;
+}
+
+- (void) setServerCertificateVerificationMode: (CBLServerCertificateVerificationMode)serverCertificateVerificationMode {
+    [self checkReadonly];
+    _serverCertificateVerificationMode = serverCertificateVerificationMode;
 }
 
 - (void) setPinnedServerCertificate: (SecCertificateRef)pinnedServerCertificate {
@@ -130,6 +137,7 @@
         _replicatorType = config.replicatorType;
         _continuous = config.continuous;
         _authenticator = config.authenticator;
+        _serverCertificateVerificationMode = config.serverCertificateVerificationMode;
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
         _headers = config.headers;

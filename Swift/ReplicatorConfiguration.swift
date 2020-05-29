@@ -30,6 +30,15 @@ public enum ReplicatorType: UInt8 {
     case pull
 }
 
+///  Server Certificate Verification Mode.
+///
+/// - caCert: Verify by using trusted anchor CA certs or by using the configured pinned server certs (Default Mode).
+/// - selfSignedCert: Verify by accepting any and only self-signed certs. Any non-self-signed certs will be rejected.
+public enum ServerCertificateVerificationMode: UInt8 {
+    case caCert = 0
+    case selfSignedCert
+}
+
 /// Document flags describing a replicated document.
 public struct DocumentFlags: OptionSet {
     
@@ -79,6 +88,20 @@ public class ReplicatorConfiguration {
     
     /// The Authenticator to authenticate with a remote target.
     public var authenticator: Authenticator? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    
+    /// The remote target's SSL certificate.
+    public var s: SecCertificate? {
+        willSet(newValue) {
+            checkReadOnly()
+        }
+    }
+    
+    /// Specify how the replicator verifies TLS server certificates. The default mode is .caCert.
+    public var serverCertificateVerificationMode: ServerCertificateVerificationMode = .caCert {
         willSet(newValue) {
             checkReadOnly()
         }
@@ -193,6 +216,7 @@ public class ReplicatorConfiguration {
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
         self.authenticator = config.authenticator
+        self.serverCertificateVerificationMode = config.serverCertificateVerificationMode
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
         self.channels = config.channels
@@ -215,6 +239,8 @@ public class ReplicatorConfiguration {
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
+        c.serverCertificateVerificationMode = CBLServerCertificateVerificationMode(rawValue:
+            UInt(self.serverCertificateVerificationMode.rawValue))!
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.channels = self.channels

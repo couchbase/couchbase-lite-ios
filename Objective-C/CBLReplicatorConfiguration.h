@@ -30,9 +30,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Replicator type. */
 typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
-    kCBLReplicatorTypePushAndPull = 0,          ///< Bidirectional; both push and pull
-    kCBLReplicatorTypePush,                     ///< Pushing changes to the target
-    kCBLReplicatorTypePull                      ///< Pulling changes from the target
+    kCBLReplicatorTypePushAndPull = 0,              ///< Bidirectional; both push and pull
+    kCBLReplicatorTypePush,                         ///< Pushing changes to the target
+    kCBLReplicatorTypePull                          ///< Pulling changes from the target
+};
+
+/** Server Certificate Verification Mode to specify how the replicator verifies TLS server certificates. */
+typedef NS_ENUM(NSUInteger, CBLServerCertificateVerificationMode) {
+    kCBLServerCertVerificationModeCACert = 0,       ///< Verify by using trusted anchor CA certs or by using the configured pinned server certs (Default Mode).
+    kCBLServerCertVerificationModeSelfSignedCert    ///< Verify by accepting any and only self-signed certs. Any non-self-signed certs will be rejected.
 };
 
 /** Replication Filter */
@@ -66,6 +72,11 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported.
  */
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
+
+/**
+ Specify how the replicator verifies TLS server certificates. The default mode is kCBLServerCertVerificationModeCACert.
+ */
+@property (nonatomic) CBLServerCertificateVerificationMode serverCertificateVerificationMode;
 
 /**
  If this property is non-null, the server is required to have this exact SSL/TLS certificate,

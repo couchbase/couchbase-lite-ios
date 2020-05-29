@@ -53,11 +53,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Endpoint
 
 /** Returns an endpoint for a Sync Gateway test database, or nil if SG tests are not enabled.
- To enable these tests, set the hostname of the server in the environment variable
- "CBL_TEST_HOST".
- The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
- variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
- Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
+    To enable these tests, set the hostname of the server in the environment variable
+    "CBL_TEST_HOST".
+    The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
+    variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
+    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
  */
 - (nullable CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure;
 
@@ -93,6 +93,13 @@ NS_ASSUME_NONNULL_BEGIN
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert;
 
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (nullable CBLAuthenticator*)authenticator
+                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+                                      serverCert: (nullable SecCertificateRef)serverCert;
+
 #pragma mark - Run Replicator
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
@@ -114,6 +121,15 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
                   type: (CBLReplicatorType)type
             continuous: (BOOL)continuous
          authenticator: (nullable CBLAuthenticator*)authenticator
+            serverCert: (nullable SecCertificateRef)serverCert
+             errorCode: (NSInteger)errorCode
+           errorDomain: (nullable NSString*)errorDomain;
+
+- (BOOL) runWithTarget: (id<CBLEndpoint>)target
+                  type: (CBLReplicatorType)type
+            continuous: (BOOL)continuous
+         authenticator: (nullable CBLAuthenticator*)authenticator
+  serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
             serverCert: (nullable SecCertificateRef)serverCert
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain;
