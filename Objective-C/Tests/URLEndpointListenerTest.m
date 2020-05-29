@@ -424,11 +424,6 @@ typedef CBLURLEndpointListener Listener;
     [self listen: config];
     AssertEqualObjects(urls, _listener.urls);
     
-    // IPV6 meta-address
-    config.networkInterface = @"::1";
-    [self listen: config];
-    AssertEqualObjects(urls, _listener.urls);
-    
     [_listener stop];
 }
 
@@ -436,11 +431,6 @@ typedef CBLURLEndpointListener Listener;
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     
     config.networkInterface = @"1.1.1.256";
-    [self ignoreException:^{
-        [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
-    }];
-    
-    config.networkInterface = @"ffff::ffff::ffff::ffff::ffff::ffff::ffff::fffg";
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
     }];
