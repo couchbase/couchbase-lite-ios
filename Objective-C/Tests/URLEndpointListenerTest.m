@@ -283,7 +283,7 @@ typedef CBLURLEndpointListener Listener;
 #if TARGET_OS_OSX
 // Not working on iOS:
 // https://issues.couchbase.com/browse/CBL-995
-- (void) testClientCertAuthenticatorWithBlock {
+- (void) testClientCertAuthenticatorWithBlock API_AVAILABLE(macos(10.12), ios(10.3)) {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
