@@ -67,7 +67,7 @@
                                                                 host: _host
                                                                 port: 443];
     if (policy) { CFRelease(policy); }
-    NSURLCredential* credential = [trustCheck checkTrust: &error];
+    NSURLCredential* credential = [trustCheck checkTrust: &error mode: kCBLServerCertVerificationModeCACert];
     AssertNotNil(credential, @"Credentials is empty, certificate is expired or is invalid.");
 }
 
@@ -80,7 +80,7 @@
                                                                 host: _host
                                                                 port: 443];
     if (policy) { CFRelease(policy); }
-    NSURLCredential* credential = [trustCheck checkTrust: &error];
+    NSURLCredential* credential = [trustCheck checkTrust: &error mode: kCBLServerCertVerificationModeCACert];
     AssertNil(credential);
 }
 
@@ -95,7 +95,7 @@
                                                                 port: 443];
     if (policy) { CFRelease(policy); }
     trustCheck.pinnedCertData = certData;
-    NSURLCredential* credential = [trustCheck checkTrust: &error];
+    NSURLCredential* credential = [trustCheck checkTrust: &error mode: kCBLServerCertVerificationModeCACert];
     AssertNotNil(credential);
 }
 
