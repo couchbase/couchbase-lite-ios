@@ -438,6 +438,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testMultipleListenersOnSameDatabase {
+    if (!self.keyChainAccessAllowed) return;
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     Listener* listener1 = [[Listener alloc] initWithConfig: config];
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
@@ -460,11 +462,20 @@ typedef CBLURLEndpointListener Listener;
     
     [listener1 stop];
     [listener2 stop];
+    [self ignoreException:^{
+        NSError* error = nil;
+        Assert([listener1.config.tlsIdentity deleteFromKeyChainWithError: &error],
+               @"Couldn't delete identity1: %@", error);
+        Assert([listener2.config.tlsIdentity deleteFromKeyChainWithError: &error],
+               @"Couldn't delete identity2: %@", error);
+    }];
     
     AssertEqual(self.otherDB.count, 1);
 }
 
 - (void) testMultipleReplicatorsOnSameListener {
+    if (!self.keyChainAccessAllowed) return;
+    
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     [self listen]; // writable listener
@@ -545,13 +556,14 @@ typedef CBLURLEndpointListener Listener;
     [repl2 removeChangeListenerWithToken: token2];
     repl1 = nil;
     repl2 = nil;
-    Assert([db2 delete: &err]);
+    [db2 delete: &err];
     AssertNil(err);
     db2 = nil;
-    [self deleteDBNamed: @"db2" error: &err];
 }
 
 - (void) testMultipleReplicatorsOnReadOnlyListener {
+    if (!self.keyChainAccessAllowed) return;
+    
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
@@ -627,11 +639,9 @@ typedef CBLURLEndpointListener Listener;
     [repl2 removeChangeListenerWithToken: token2];
     repl1 = nil;
     repl2 = nil;
-    Assert([db2 close: &err]);
+    Assert([db2 delete: &err]);
     AssertNil(err);
     db2 = nil;
-
-    [self deleteDBNamed: @"db2" error: &err];
 }
 
 
