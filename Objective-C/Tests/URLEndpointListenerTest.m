@@ -187,8 +187,7 @@ typedef CBLURLEndpointListener Listener;
     [listener1 stop];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-948
-- (void) _testURLs {
+- (void) testURLs {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     _listener = [[Listener alloc] initWithConfig: config];
     AssertEqual(_listener.urls.count, 0);
