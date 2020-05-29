@@ -484,7 +484,9 @@ typedef CBLURLEndpointListener Listener;
     [self saveDocument: doc1];
     
     // save blob on db#2
-    CBLDatabase* db2 = [[CBLDatabase alloc] initWithName: @"db2" error: &err];
+    [self deleteDBNamed: @"db2" error: &err];
+    AssertNil(err);
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
     AssertNil(err);
     CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
     CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
@@ -546,6 +548,7 @@ typedef CBLURLEndpointListener Listener;
     Assert([db2 delete: &err]);
     AssertNil(err);
     db2 = nil;
+    [self deleteDBNamed: @"db2" error: &err];
 }
 
 - (void) testMultipleReplicatorsOnReadOnlyListener {
@@ -564,8 +567,11 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 1u);
     
     // db
-    CBLDatabase* db2 = [[CBLDatabase alloc] initWithName: @"db2" error: &err];
+    [self deleteDBNamed: @"db2" error: &err];
     AssertNil(err);
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
+    AssertNil(err);
+    
     AssertEqual(self.db.count, 0u);
     AssertEqual(db2.count, 0u);
     
@@ -621,9 +627,11 @@ typedef CBLURLEndpointListener Listener;
     [repl2 removeChangeListenerWithToken: token2];
     repl1 = nil;
     repl2 = nil;
-    Assert([db2 delete: &err]);
+    Assert([db2 close: &err]);
     AssertNil(err);
     db2 = nil;
+
+    [self deleteDBNamed: @"db2" error: &err];
 }
 
 
