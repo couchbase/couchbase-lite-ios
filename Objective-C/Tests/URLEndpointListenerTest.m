@@ -367,7 +367,7 @@ typedef CBLURLEndpointListener Listener;
                                type: kCBLReplicatorTypePushAndPull
                          continuous: NO
                       authenticator: auth
-                   serverCert: serverCert];
+                         serverCert: serverCert];
     
     // Start Replicator:
     [self ignoreException: ^{
