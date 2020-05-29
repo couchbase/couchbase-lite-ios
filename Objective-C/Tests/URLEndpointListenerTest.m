@@ -84,12 +84,32 @@ typedef CBLURLEndpointListener Listener;
     config.port = tls ? kWssPort : kWsPort;
     config.disableTLS = !tls;
     config.authenticator = auth;
+    
+    return [self listen: config];
+}
+
+- (Listener*) listen: (Config*)config {
+    return [self listen: config errorCode: 0 errorDomain: nil];
+}
+
+- (Listener*) listen: (Config*)config errorCode: (NSInteger)code errorDomain: (nullable NSString*)domain  {
+    // Stop:
+    if (_listener) {
+        [_listener stop];
+    }
+    
     _listener = [[Listener alloc] initWithConfig: config];
     
     // Start:
     NSError* err = nil;
-    Assert([_listener startWithError: &err]);
-    AssertNil(err);
+    BOOL success = [_listener startWithError: &err];
+    Assert(success == (code == 0));
+    if (code != 0) {
+        AssertEqual(err.code, code);
+        if (domain)
+            AssertEqualObjects(err.domain, domain);
+    } else
+        AssertNil(err);
     
     return _listener;
 }
@@ -347,7 +367,7 @@ typedef CBLURLEndpointListener Listener;
                                type: kCBLReplicatorTypePushAndPull
                          continuous: NO
                       authenticator: auth
-                   pinnedServerCert: serverCert];
+                         serverCert: serverCert];
     
     // Start Replicator:
     [self ignoreException: ^{
@@ -398,7 +418,22 @@ typedef CBLURLEndpointListener Listener;
     
     AssertEqualObjects(result, urls);
     
-    // stops
+    // validate 0.0.0.0 meta-address should return same empty response.
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.networkInterface = @"0.0.0.0";
+    [self listen: config];
+    AssertEqualObjects(urls, _listener.urls);
+    
+    [_listener stop];
+}
+
+- (void) testUnavailableNetworkInterface {
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.networkInterface = @"1.1.1.256";
+    [self ignoreException:^{
+        [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
+    }];
+
     [_listener stop];
 }
 
