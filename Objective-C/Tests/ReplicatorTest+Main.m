@@ -1748,14 +1748,20 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
+    __block BOOL isOffline = NO;
     XCTestExpectation* x1 = [self expectationWithDescription: @"Offline"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"Stopped"];
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
         if (change.status.activity == kCBLReplicatorOffline) {
-            [change.replicator stop];
-            [x1 fulfill];
+            // CBL-983: The replicator might retry right away and report offline again
+            // before it gets stopped due to the reachability changed report. Hence
+            // adding isOffline check to prevent fulfilling twice.
+            if (!isOffline) {
+                [change.replicator stop];
+                [x1 fulfill];
+                isOffline = YES;
+            }
         }
-        
         if (change.status.activity == kCBLReplicatorStopped) {
             [x2 fulfill];
         }

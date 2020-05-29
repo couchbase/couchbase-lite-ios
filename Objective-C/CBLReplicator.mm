@@ -114,7 +114,7 @@ typedef enum {
 }
 
 - (void) dealloc {
-    [_reachability stop];
+    [self stopReachability];
     c4repl_free(_repl);
 }
 
@@ -235,6 +235,8 @@ typedef enum {
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
     };
+    
+    [self initReachability: _reachabilityURL];
 
     // Create a C4Replicator:
     CBL_LOCK(_config.database) {
@@ -417,33 +419,40 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 #pragma mark - REACHABILITY:
 
-- (void) startReachabilityObserver {
-    if (!_reachabilityURL)
+- (void) initReachability: (NSURL*)remoteURL {
+    if (!remoteURL || _reachability)
         return;
+    
+    CBLLogInfo(Sync, @"%@: initialize reachability", self);
+    NSString* hostname = remoteURL.host;
+    if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
+        return;
+    
+    _reachability = [[CBLReachability alloc] initWithURL: remoteURL];
+    __weak auto weakSelf = self;
+    _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
+}
 
-    if (!_reachability) {
-        CBLLogVerbose(Sync, @"%@: Starting reachability observer", self);
-        _reachability = [[CBLReachability alloc] initWithURL: _reachabilityURL];
-        __weak auto weakSelf = self;
-        _reachability.onChange = ^{ [weakSelf reachabilityChanged]; };
-        [_reachability startOnQueue: _dispatchQueue];
-    }
+
+- (void) startReachability {
+    [_reachability startOnQueue: _dispatchQueue];
 }
 
 // Should be called from _dispatchQueue
-- (void) stopReachabilityObserver {
+- (void) stopReachability {
     if (_reachability) {
-        CBLLogVerbose(Sync, @"%@: Stopping reachability observer", self);
+        CBLLogInfo(Sync, @"%@: Stopping reachability observer", self);
         [_reachability stop];
-        _reachability = nil;
     }
 }
 
 // Callback from reachability observer
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
-        if (_reachability)
+        if (_reachability) {
+            CBLLogInfo(Sync, @"%@: Reachability reported server may now be reachable ...", self);
             c4repl_setHostReachable(_repl, _reachability.reachable);
+        }
     }
 }
 
@@ -469,7 +478,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             if (_state == kCBLStateStarting) {
                 _state = kCBLStateRunning;
             }
-            [self stopReachabilityObserver];
+            [self stopReachability];
         }
         
         // Offline / suspending:
@@ -478,13 +487,13 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                 _state = kCBLStateSuspended;
             } else {
                 _state = kCBLStateOffline;
-                [self startReachabilityObserver];
+                [self startReachability];
             }
         }
         
         // Stopped:
         if (c4Status.level == kC4Stopped) {
-            [self stopReachabilityObserver];
+            [self stopReachability];
         #if TARGET_OS_IPHONE
             [self endBackgrounding];
         #endif
