@@ -429,7 +429,6 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) testUnavailableNetworkInterface {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    
     config.networkInterface = @"1.1.1.256";
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
