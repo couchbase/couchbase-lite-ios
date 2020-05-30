@@ -550,6 +550,7 @@
     [self saveDocument:mdoc toDatabase: self.otherDB];
     
     // PUSH
+    Log(@"----> Push Replication ...");
     CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
     CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
@@ -562,6 +563,7 @@
     AssertEqual(_db.count, 1UL);
     
     // PULL
+    Log(@"----> Pull Replication ...");
     server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
     target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
     replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
@@ -578,6 +580,7 @@
     [self saveDocument:mdoc toDatabase: self.otherDB];
     
     // PUSH & PULL
+    Log(@"----> Push and Pull Replication ...");
     server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
     target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
     replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
@@ -609,6 +612,7 @@
     [self saveDocument:mdoc toDatabase: self.otherDB];
     
     // PUSH
+    Log(@"----> Push Replication ...");
     CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase:self.otherDB protocolType:protocolType];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
     CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
@@ -621,6 +625,7 @@
     AssertEqual(_db.count, 1UL);
     
     // PULL
+    Log(@"----> Pull Replication ...");
     server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
     target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
     replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
@@ -637,6 +642,7 @@
     [self saveDocument:mdoc toDatabase: self.otherDB];
     
     // PUSH & PULL
+    Log(@"----> Push and Pull Replication ...");
     server = [[CBLMockServerConnection alloc] initWithListener:listener andProtocol:protocolType];
     target = [[CBLMessageEndpoint alloc] initWithUID:[NSString stringWithFormat:@"test1"] target:server protocolType:protocolType delegate:delegate];
     replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
