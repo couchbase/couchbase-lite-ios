@@ -177,7 +177,7 @@ typedef CBLURLEndpointListener Listener;
     // start & wait for replication
     [repl1 start];
     [repl2 start];
-    [self waitForExpectations: @[exp1, exp2] timeout: 5];
+    [self waitForExpectations: @[exp1, exp2] timeout: timeout];
     
     // check both replicators access listener at same time
     AssertEqual(maxConnectionCount, 2u);
