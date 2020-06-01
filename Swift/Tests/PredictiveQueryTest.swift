@@ -257,6 +257,8 @@ class PredictiveQueryTest: CBLTestCase {
     }
     
     func testPredictionWithNonSupportedInputTypes() throws {
+        try db.saveDocument(MutableDocument())
+        
         let echoModel = EchoModel()
         echoModel.registerModel()
         
