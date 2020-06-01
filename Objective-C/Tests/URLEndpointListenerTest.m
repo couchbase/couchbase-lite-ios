@@ -560,7 +560,8 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 1);
 }
 
-- (void) testMultipleReplicatorsToListener {
+// TODO: https://issues.couchbase.com/browse/CBL-1033
+- (void) _testMultipleReplicatorsToListener {
     if (!self.keyChainAccessAllowed) return;
     
     [self listen]; // writable listener
@@ -577,7 +578,8 @@ typedef CBLURLEndpointListener Listener;
     [_listener stop];
 }
 
-- (void) testMultipleReplicatorsOnReadOnlyListener {
+// TODO: https://issues.couchbase.com/browse/CBL-1033
+- (void) _testMultipleReplicatorsOnReadOnlyListener {
     if (!self.keyChainAccessAllowed) return;
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
