@@ -18,7 +18,12 @@
 //
 
 #import "CBLTrustCheck.h"
+#import "CBLCert.h"
+#import "c4.h"
+
+extern "C" {
 #import "MYErrorUtils.h"
+}
 
 @implementation CBLTrustCheck
 {
@@ -103,24 +108,13 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
     
     SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
-    NSDictionary* params = @{
-        (id)kSecClass:                  (__bridge id)kSecClassCertificate,
-        (id)kSecValueRef:               (__bridge id)certRef,
-        (id)kSecReturnAttributes:       @YES
-    };
-    
-    CFTypeRef values;
-    OSStatus status = SecItemCopyMatching((CFDictionaryRef)params, &values);
-    if (status != errSecSuccess) {
-        MYReturnError(outError, status, NSOSStatusErrorDomain,
-                      @"Couldn't get the issuer from the certificate");
+    C4Cert* c4cert = toC4Cert(@[(__bridge id) certRef], outError);
+    if (!c4cert)
         return NO;
-    }
     
-    NSDictionary* attrs = (NSDictionary*)CFBridgingRelease(values);
-    NSData* issuer = attrs[(id)kSecAttrIssuer];
-    NSData* subject = attrs[(id)kSecAttrSubject];
-    return [issuer isEqualToData: subject];
+    BOOL isSelfSigned = c4cert_isSelfSigned(c4cert);
+    c4cert_release(c4cert);
+    return isSelfSigned;
 }
 
 // Updates a SecTrust's result to kSecTrustResultProceed
