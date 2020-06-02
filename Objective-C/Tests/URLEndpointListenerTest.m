@@ -660,4 +660,95 @@ typedef CBLURLEndpointListener Listener;
     [_listener stop];
 }
 
+
+- (CBLReplicator*) replicator: (CBLDatabase*)db
+                       target: (id<CBLEndpoint>)target
+                   serverCert: (nullable SecCertificateRef)cert {
+    CBLReplicatorConfiguration* c;
+    c = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: target];
+    c.continuous = YES;
+    c.pinnedServerCertificate = cert;
+    return [[CBLReplicator alloc] initWithConfig: c];
+}
+
+/**
+ 1. Listener on `otherDB`
+ 2. Replicator#1 on `otherDB` (otherDB -> DB#1)
+ 3. Replicator#2  (DB#2 -> otherDB)
+ */
+- (void) testReplicatorAndListenerOnSameDatabase {
+    if (!self.keyChainAccessAllowed) return;
+    
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
+    
+    // For keeping the replication long enough to validate connection status, we will use blob
+    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
+    
+    // Listener
+    NSError* err = nil;
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    [doc setValue: blob forKey: @"blob"];
+    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
+    
+    [self listen];
+    
+    // Replicator#1 (otherDB -> DB#1)
+    CBLBlob* blob1 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
+    [doc1 setValue: blob1 forKey: @"blob"];
+    Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
+    CBLReplicator* repl1 = [self replicator: self.otherDB  target: target serverCert: nil];
+    
+    // Replicator#2 (DB#2 -> otherDB)
+    Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
+    AssertNil(err);
+    
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
+    [doc2 setValue: blob2 forKey: @"blob"];
+    Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
+    CBLReplicator* repl2 = [self replicator: db2 target: _listener.localEndpoint
+                                 serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]];
+    
+    id changeListener = ^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorStopped) {
+            if (change.replicator == repl1)
+                [exp1 fulfill];
+            else
+                [exp2 fulfill];
+        }
+    };
+    
+    id token1 = [repl1 addChangeListener: changeListener];
+    id token2 = [repl2 addChangeListener: changeListener];
+    
+    [repl1 start];
+    [repl2 start];
+    
+    [self waitForExpectations: @[exp1, exp2] timeout: timeout];
+    
+    // all data are transferred to/from
+    AssertEqual(_listener.config.database.count, 3u);
+    AssertEqual(self.db.count, 3u);
+    AssertEqual(db2.count, 3u);
+    /**
+     when listener to db2 sync happens, listener only has 1 doc. should we sync 2docs, when listener gets a new doc from repl1??
+     */
+    
+    // cleanup
+    [repl1 removeChangeListenerWithToken: token1];
+    [repl2 removeChangeListenerWithToken: token2];
+    repl1 = nil;
+    repl2 = nil;
+    Assert([db2 close: &err], @"Failed to close db2 %@", err);
+    db2 = nil;
+    
+}
+
+
 @end
