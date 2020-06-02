@@ -735,7 +735,7 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 3u);
     AssertEqual(self.db.count, 3u);
     AssertEqual(db2.count, 3u);
-    
+
     // cleanup
     [repl1 removeChangeListenerWithToken: token1];
     [repl2 removeChangeListenerWithToken: token2];
