@@ -26,6 +26,7 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
+#import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
 @implementation CBLReplicatorConfiguration {
@@ -35,13 +36,16 @@
 @synthesize database=_database, target=_target;
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
 @synthesize authenticator=_authenticator;
-@synthesize serverCertificateVerificationMode=_serverCertificateVerificationMode;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
 @synthesize conflictResolver=_conflictResolver;
+
+#ifdef COUCHBASE_ENTERPRISE
+@synthesize serverCertificateVerificationMode=_serverCertificateVerificationMode;
+#endif
 
 #if TARGET_OS_IPHONE
 @synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
@@ -58,7 +62,9 @@
         _database = database;
         _target = target;
         _replicatorType = kCBLReplicatorTypePushAndPull;
+#ifdef COUCHBASE_ENTERPRISE
         _serverCertificateVerificationMode = kCBLServerCertVerificationModeCACert;
+#endif
     }
     return self;
 }
@@ -84,10 +90,12 @@
     _authenticator = authenticator;
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) setServerCertificateVerificationMode: (CBLServerCertificateVerificationMode)serverCertificateVerificationMode {
     [self checkReadonly];
     _serverCertificateVerificationMode = serverCertificateVerificationMode;
 }
+#endif
 
 - (void) setPinnedServerCertificate: (SecCertificateRef)pinnedServerCertificate {
     [self checkReadonly];
@@ -137,7 +145,9 @@
         _replicatorType = config.replicatorType;
         _continuous = config.continuous;
         _authenticator = config.authenticator;
+#ifdef COUCHBASE_ENTERPRISE
         _serverCertificateVerificationMode = config.serverCertificateVerificationMode;
+#endif
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
         _headers = config.headers;

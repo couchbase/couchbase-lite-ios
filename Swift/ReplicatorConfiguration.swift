@@ -100,12 +100,14 @@ public class ReplicatorConfiguration {
         }
     }
     
+    #if COUCHBASE_ENTERPRISE
     /// Specify how the replicator verifies TLS server certificates. The default mode is .caCert.
     public var serverCertificateVerificationMode: ServerCertificateVerificationMode = .caCert {
         willSet(newValue) {
             checkReadOnly()
         }
     }
+    #endif
     
     /// The remote target's SSL certificate.
     public var pinnedServerCertificate: SecCertificate? {
@@ -216,15 +218,19 @@ public class ReplicatorConfiguration {
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
         self.authenticator = config.authenticator
-        self.serverCertificateVerificationMode = config.serverCertificateVerificationMode
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
         self.channels = config.channels
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
-    #if os(iOS)
+        
+        #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground
-    #endif
+        #endif
+        
+        #if COUCHBASE_ENTERPRISE
+        self.serverCertificateVerificationMode = config.serverCertificateVerificationMode
+        #endif
     }
     
     func checkReadOnly() {
@@ -239,8 +245,6 @@ public class ReplicatorConfiguration {
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
-        c.serverCertificateVerificationMode = CBLServerCertificateVerificationMode(rawValue:
-            UInt(self.serverCertificateVerificationMode.rawValue))!
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.channels = self.channels
@@ -254,9 +258,14 @@ public class ReplicatorConfiguration {
             }
         }
         
-    #if os(iOS)
+        #if os(iOS)
         c.allowReplicatingInBackground = self.allowReplicatingInBackground
-    #endif
+        #endif
+        
+        #if COUCHBASE_ENTERPRISE
+        c.serverCertificateVerificationMode = CBLServerCertificateVerificationMode(rawValue:
+            UInt(self.serverCertificateVerificationMode.rawValue))!
+        #endif
         return c
     }
     

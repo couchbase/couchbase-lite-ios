@@ -120,6 +120,7 @@ framework module CouchbaseLiteSwift {
         header "CBLProtocolType.h"
         header "CBLQueryFunction+Prediction.h"
         header "CBLQueryFunction+Vector.h"
+        header "CBLReplicatorConfiguration+ServerCert.h"
         header "CBLTLSIdentity.h"
         header "CBLURLEndpointListener.h"
         header "CBLURLEndpointListenerConfiguration.h"
