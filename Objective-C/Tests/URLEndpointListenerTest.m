@@ -703,7 +703,7 @@ typedef CBLURLEndpointListener Listener;
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
     CBLReplicator* repl1 = [self replicator: self.otherDB  target: target serverCert: nil];
     
-    // Replicator#2 (DB#2 -> otherDB)
+    // Replicator#2 (DB#2 -> Listener(otherDB))
     Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
     CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
     AssertNil(err);
@@ -716,6 +716,12 @@ typedef CBLURLEndpointListener Listener;
                                  serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]];
     
     id changeListener = ^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            if (self.otherDB.count == 3u && self.db.count == 3u && db2.count == 3u)
+                [change.replicator stop];
+        }
+        
         if (change.status.activity == kCBLReplicatorStopped) {
             if (change.replicator == repl1)
                 [exp1 fulfill];
@@ -729,16 +735,12 @@ typedef CBLURLEndpointListener Listener;
     
     [repl1 start];
     [repl2 start];
-    
     [self waitForExpectations: @[exp1, exp2] timeout: timeout];
     
     // all data are transferred to/from
-    AssertEqual(_listener.config.database.count, 3u);
+    AssertEqual(self.otherDB.count, 3u);
     AssertEqual(self.db.count, 3u);
     AssertEqual(db2.count, 3u);
-    /**
-     when listener to db2 sync happens, listener only has 1 doc. should we sync 2docs, when listener gets a new doc from repl1??
-     */
     
     // cleanup
     [repl1 removeChangeListenerWithToken: token1];
