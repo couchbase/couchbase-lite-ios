@@ -956,7 +956,8 @@
                                      from: kDATA_SRC_DB];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
-        AssertEqual([r valueAtIndex: 0], [r valueAtIndex: 1]);
+        AssertEqual([r integerAtIndex: 0], [r integerAtIndex: 1]);
+        AssertEqualObjects([r valueAtIndex: 0], [r valueAtIndex: 1]);   
     }];
     AssertEqual(numRows, tests.count);
 }
