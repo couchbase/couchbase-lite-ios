@@ -114,6 +114,17 @@ typedef CBLURLEndpointListener Listener;
     return _listener;
 }
 
+- (CBLReplicator*) replicator: (CBLDatabase*)db
+                    continous: (BOOL)continous
+                       target: (id<CBLEndpoint>)target
+                   serverCert: (nullable SecCertificateRef)cert {
+    CBLReplicatorConfiguration* c;
+    c = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: target];
+    c.continuous = continous;
+    c.pinnedServerCertificate = cert;
+    return [[CBLReplicator alloc] initWithConfig: c];
+}
+
 // Two replicators, replicates docs to the listener; validates connection status
 - (void) validateMultipleReplicationsTo: (Listener*)listener replType: (CBLReplicatorType)type {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
@@ -654,17 +665,6 @@ typedef CBLURLEndpointListener Listener;
     [_listener stop];
 }
 
-
-- (CBLReplicator*) replicator: (CBLDatabase*)db
-                       target: (id<CBLEndpoint>)target
-                   serverCert: (nullable SecCertificateRef)cert {
-    CBLReplicatorConfiguration* c;
-    c = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: target];
-    c.continuous = YES;
-    c.pinnedServerCertificate = cert;
-    return [[CBLReplicator alloc] initWithConfig: c];
-}
-
 /**
  1. Listener on `otherDB`
  2. Replicator#1 on `otherDB` (otherDB -> DB#1)
@@ -695,7 +695,8 @@ typedef CBLURLEndpointListener Listener;
     Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
-    CBLReplicator* repl1 = [self replicator: self.otherDB  target: target serverCert: nil];
+    CBLReplicator* repl1 = [self replicator: self.otherDB continous: YES target: target
+                                 serverCert: nil];
     
     // Replicator#2 (DB#2 -> Listener(otherDB))
     Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
@@ -706,7 +707,7 @@ typedef CBLURLEndpointListener Listener;
     CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
     [doc2 setValue: blob2 forKey: @"blob"];
     Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
-    CBLReplicator* repl2 = [self replicator: db2 target: _listener.localEndpoint
+    CBLReplicator* repl2 = [self replicator: db2 continous: YES target: _listener.localEndpoint
                                  serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]];
     
     id changeListener = ^(CBLReplicatorChange * change) {
@@ -743,7 +744,6 @@ typedef CBLURLEndpointListener Listener;
     repl2 = nil;
     Assert([db2 close: &err], @"Failed to close db2 %@", err);
     db2 = nil;
-    
 }
 
 
