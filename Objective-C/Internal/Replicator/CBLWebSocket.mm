@@ -88,8 +88,9 @@ struct PendingWrite {
     
     NSArray* _clientIdentity;
     
-    // Workaround for: CBL-1003:
-    CBLServerCertificateVerificationMode _serverCertVerificationMode;
+#ifdef COUCHBASE_ENTERPRISE
+    BOOL _acceptOnlySelfSignedCert;
+#endif
 }
 
 + (C4SocketFactory) socketFactory {
@@ -157,10 +158,13 @@ static void doDispose(C4Socket* s) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
         
+#ifdef COUCHBASE_ENTERPRISE
         // Workaround for CBL-1003:
         CBLReplicator* replicator = (__bridge CBLReplicator*)context;
-        _serverCertVerificationMode = replicator.config.serverCertificateVerificationMode;
-
+        if (replicator.config.serverCertificateVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
+            _acceptOnlySelfSignedCert = YES;
+#endif
+        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
@@ -332,11 +336,16 @@ static void doDispose(C4Socket* s) {
             [settings setObject: _logic.directHost
                          forKey: (__bridge id)kCFStreamSSLPeerName];
         
-        if (_options[kC4ReplicatorOptionPinnedServerCert] ||
-            _serverCertVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
+        if (_options[kC4ReplicatorOptionPinnedServerCert])
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
-
+      
+#ifdef COUCHBASE_ENTERPRISE
+        if (_acceptOnlySelfSignedCert)
+            [settings setObject: @NO
+                         forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
+#endif
+        
         if (_clientIdentity)
             [settings setObject: _clientIdentity
                          forKey: (__bridge id)kCFStreamSSLCertificates];
@@ -613,17 +622,30 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         check.pinnedCertData = slice(pin.asData()).copiedNSData();
         Assert(check.pinnedCertData, @"Invalid value for replicator %s property (must be NSData)",
                kC4ReplicatorOptionPinnedServerCert);
-    } else if (_serverCertVerificationMode == kCBLServerCertVerificationModeCACert) /* Without pinned cert */
+    }
+#ifdef COUCHBASE_ENTERPRISE
+    else if (!_acceptOnlySelfSignedCert)  {
+        // CFStream validates the certs (kCFStreamSSLValidatesCertificateChain = true)
         return true;
+    }
+#endif
     
     NSError* error;
-    if (![check checkTrust: &error mode: _serverCertVerificationMode]) {
+#ifdef COUCHBASE_ENTERPRISE
+    NSURLCredential* credentials = _acceptOnlySelfSignedCert ?
+        [check acceptOnlySelfSignedCert: &error] :
+        [check checkTrust: &error];
+#else
+    NSURLCredential* credentials = [check checkTrust: &error];
+#endif
+    
+    if (!credentials) {
         CBLWarn(WebSocket, @"TLS handshake failed: %@", error.localizedDescription);
         [self closeWithError: error];
         return false;
-    } else {
+    } else
         CBLLogVerbose(WebSocket, @"TLS handshake succeeded");
-    }
+    
     return true;
 }
 

@@ -37,19 +37,27 @@ class ReplicatorTest: CBLTestCase {
         super.tearDown()
     }
     
-    func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
-                continuous: Bool = false, auth: Authenticator? = nil,
-                serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
-                serverCert: SecCertificate? = nil)
-        -> ReplicatorConfiguration {
+    func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
+                auth: Authenticator? = nil, serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
-        config.serverCertificateVerificationMode = serverCertVerifyMode
         config.pinnedServerCertificate = serverCert
         return config
     }
+
+    #if COUCHBASE_ENTERPRISE
+    func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
+                continuous: Bool = false, auth: Authenticator? = nil,
+                serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
+                serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
+        let config = self.config(target: target, type: type, continuous: continuous,
+                                 auth: auth, serverCert: serverCert)
+        config.serverCertificateVerificationMode = serverCertVerifyMode
+        return config
+    }
+    #endif
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         run(config: config, reset: false, expectedError: expectedError)
@@ -72,14 +80,24 @@ class ReplicatorTest: CBLTestCase {
     
     func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
              continuous: Bool = false, auth: Authenticator? = nil,
+             serverCert: SecCertificate? = nil,
+             expectedError: Int? = nil) {
+        let config = self.config(target: target, type: type, continuous: continuous,
+                                 auth: auth, serverCert: serverCert)
+        run(config: config, reset: false, expectedError: expectedError)
+    }
+    
+    #if COUCHBASE_ENTERPRISE
+    func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
+             continuous: Bool = false, auth: Authenticator? = nil,
              serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
              serverCert: SecCertificate? = nil,
              expectedError: Int? = nil) {
         let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
-                                 serverCertVerifyMode: serverCertVerifyMode,
-                                 serverCert: serverCert)
+                                 serverCertVerifyMode: serverCertVerifyMode, serverCert: serverCert)
         run(config: config, reset: false, expectedError: expectedError)
     }
+    #endif
     
     func run(withReplicator replicator: Replicator, expectedError: Int?) {
         let x = self.expectation(description: "change")

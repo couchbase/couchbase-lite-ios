@@ -24,6 +24,7 @@
 #import "CBLMockConnection.h"
 #import "CBLMockConnectionErrorLogic.h"
 #import "CBLMockConnectionLifecycleLocation.h"
+#import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -93,12 +94,14 @@ NS_ASSUME_NONNULL_BEGIN
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert;
 
+#ifdef COUCHBASE_ENTERPRISE
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                             serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
                                       serverCert: (nullable SecCertificateRef)serverCert;
+#endif
 
 #pragma mark - Run Replicator
 
@@ -125,6 +128,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain;
 
+#ifdef COUCHBASE_ENTERPRISE
 - (BOOL) runWithTarget: (id<CBLEndpoint>)target
                   type: (CBLReplicatorType)type
             continuous: (BOOL)continuous
@@ -133,6 +137,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
             serverCert: (nullable SecCertificateRef)serverCert
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain;
+#endif
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator
                  errorCode: (NSInteger)errorCode

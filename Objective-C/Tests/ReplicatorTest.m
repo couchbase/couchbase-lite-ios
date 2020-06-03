@@ -24,6 +24,10 @@
 #import "CBLURLEndpoint+Internal.h"
 #import "CBLReplicator+Internal.h"
 
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLReplicatorConfiguration+ServerCert.h"
+#endif
+
 @implementation ReplicatorTest {
     BOOL _stopped;
 #ifdef COUCHBASE_ENTERPRISE
@@ -185,7 +189,7 @@
     }
 }
 
-#pragma mark - Certifciate
+#pragma mark - Certificate
 
 - (SecCertificateRef) defaultServerCert {
     NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
@@ -234,27 +238,11 @@
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert {
-    return [self configWithTarget: target
-                             type: type
-                       continuous: continuous
-                    authenticator: authenticator
-             serverCertVerifyMode: kCBLServerCertVerificationModeCACert
-                       serverCert: serverCert];
-}
-
-- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
-                                            type: (CBLReplicatorType)type
-                                      continuous: (BOOL)continuous
-                                   authenticator: (nullable CBLAuthenticator*)authenticator
-                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
-                                      serverCert: (nullable SecCertificateRef)serverCert
-{
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                   target: target];
     c.replicatorType = type;
     c.continuous = continuous;
     c.authenticator = authenticator;
-    c.serverCertificateVerificationMode = serverCertVerifyMode;
     
     if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"]) {
         if (serverCert)
@@ -268,6 +256,23 @@
     
     return c;
 }
+
+#ifdef COUCHBASE_ENTERPRISE
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (nullable CBLAuthenticator*)authenticator
+                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+                                      serverCert: (nullable SecCertificateRef)serverCert {
+    CBLReplicatorConfiguration* c = [self configWithTarget: target
+                                                      type: type
+                                                continuous: continuous
+                                             authenticator: authenticator
+                                                serverCert: serverCert];
+    c.serverCertificateVerificationMode = serverCertVerifyMode;
+    return c;
+}
+#endif
 
 #pragma mark - Run Replicator
 
@@ -319,6 +324,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
     return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (BOOL) runWithTarget: (id<CBLEndpoint>)target
                   type: (CBLReplicatorType)type
             continuous: (BOOL)continuous
@@ -335,7 +341,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
                             serverCert: serverCert];
     return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }
-
+#endif
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator
                  errorCode: (NSInteger)errorCode

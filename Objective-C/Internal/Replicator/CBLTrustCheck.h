@@ -34,7 +34,10 @@
 
 @property (copy, atomic) NSData* pinnedCertData;
 
-- (NSURLCredential*) checkTrust: (NSError**)outError
-                           mode: (CBLServerCertificateVerificationMode)mode;
+- (NSURLCredential*) checkTrust: (NSError**)outError;
+
+#ifdef COUCHBASE_ENTERPRISE
+- (NSURLCredential*) acceptOnlySelfSignedCert: (NSError**)outError;
+#endif
 
 @end

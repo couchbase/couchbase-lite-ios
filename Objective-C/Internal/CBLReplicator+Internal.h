@@ -20,6 +20,11 @@
 #import "CBLReplicator.h"
 #import "CBLReplicatorConfiguration.h"
 #import "c4.h"
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLReplicatorConfiguration+ServerCert.h"
+#endif
+
 @class MYBackgroundMonitor;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -29,6 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
 @property (nonatomic) NSTimeInterval checkpointInterval;
 @property (nonatomic) NSTimeInterval heartbeatInterval;
+
+#ifdef COUCHBASE_ENTERPRISE
+@property (nonatomic) CBLServerCertificateVerificationMode serverCertificateVerificationMode;
+#endif
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
                        readonly: (BOOL)readonly;
