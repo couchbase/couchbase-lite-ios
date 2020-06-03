@@ -609,12 +609,10 @@ typedef CBLURLEndpointListener Listener;
     [listener2 stop];
     [self ignoreException:^{
         NSError* error = nil;
+        // Note: listener 1 and 2 are sharing the same anonymous identity:
         Assert([listener1.config.tlsIdentity deleteFromKeyChainWithError: &error],
                @"Couldn't delete identity1: %@", error);
-        Assert([listener2.config.tlsIdentity deleteFromKeyChainWithError: &error],
-               @"Couldn't delete identity2: %@", error);
     }];
-    
     AssertEqual(self.otherDB.count, 1);
 }
 
