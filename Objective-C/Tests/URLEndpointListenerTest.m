@@ -676,22 +676,15 @@ typedef CBLURLEndpointListener Listener;
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     
-    // For keeping the replication long enough to validate connection status, we will use blob
-    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
-    
     // Listener
     NSError* err = nil;
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
-    CBLMutableDocument* doc = [self createDocument: @"doc"];
-    [doc setValue: blob forKey: @"blob"];
+    CBLMutableDocument* doc = [self createDocument];
     Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
     
     [self listen];
     
     // Replicator#1 (otherDB -> DB#1)
-    CBLBlob* blob1 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
-    [doc1 setValue: blob1 forKey: @"blob"];
+    CBLMutableDocument* doc1 =  [self createDocument];
     Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
@@ -703,9 +696,7 @@ typedef CBLURLEndpointListener Listener;
     CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
     AssertNil(err);
     
-    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
-    [doc2 setValue: blob2 forKey: @"blob"];
+    CBLMutableDocument* doc2 =  [self createDocument];
     Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
     CBLReplicator* repl2 = [self replicator: db2 continous: YES target: _listener.localEndpoint
                                  serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]];
