@@ -67,15 +67,11 @@ class ReplicatorTest: CBLTestCase {
              onReplicatorReady: ((Replicator) -> Void)? = nil) {
         repl = Replicator(config: config)
         
-        if reset {
-            repl.resetCheckpoint()
-        }
-        
         if let ready = onReplicatorReady {
             ready(repl)
         }
         
-        run(withReplicator: repl, expectedError: expectedError)
+        run(replicator: repl, reset: reset, expectedError: expectedError)
     }
     
     func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
@@ -99,7 +95,11 @@ class ReplicatorTest: CBLTestCase {
     }
     #endif
     
-    func run(withReplicator replicator: Replicator, expectedError: Int?) {
+    func run(replicator: Replicator, expectedError: Int?) {
+        run(replicator: replicator, reset: false, expectedError: expectedError);
+    }
+    
+    func run(replicator: Replicator, reset: Bool, expectedError: Int?) {
         let x = self.expectation(description: "change")
         
         let token = replicator.addChangeListener { (change) in
@@ -121,7 +121,12 @@ class ReplicatorTest: CBLTestCase {
             }
         }
         
-        replicator.start()
+        if (reset) {
+            replicator.start(reset: reset)
+        } else {
+            replicator.start()
+        }
+        
         wait(for: [x], timeout: 5.0)
         
         if replicator.status.activity != .stopped {
@@ -176,11 +181,95 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(db.count, 0)
         
         // Reset and pull:
-        run(config: config, reset: true, expectedError: nil)
+        let replicator = Replicator.init(config: config)
+        replicator.resetCheckpoint()
+        
+        run(replicator: replicator, expectedError: nil)
         XCTAssertEqual(db.count, 2)
     }
     
     func testResetCheckpointContinuous() throws {
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Hobbes", forKey: "pattern")
+        try db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("Tiger", forKey: "species")
+        doc2.setString("striped", forKey: "pattern")
+        try db.saveDocument(doc2)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: true)
+        run(config: config, expectedError: nil)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: true)
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.count, 2)
+        
+        var doc = db.document(withID: "doc1")!
+        try db.purgeDocument(doc)
+        
+        doc = db.document(withID: "doc2")!
+        try db.purgeDocument(doc)
+        
+        XCTAssertEqual(db.count, 0)
+        
+        // Pull again, shouldn't have any new changes:
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(db.count, 0)
+        
+        // Reset and pull:
+        let replicator = Replicator.init(config: config)
+        replicator.resetCheckpoint()
+        
+        run(replicator: replicator, expectedError: nil)
+        XCTAssertEqual(db.count, 2)
+    }
+    
+    func testStartWithCheckpoint() throws {
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Hobbes", forKey: "pattern")
+        try db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument(id: "doc2")
+        doc2.setString("Tiger", forKey: "species")
+        doc2.setString("striped", forKey: "pattern")
+        try db.saveDocument(doc2)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        // Pull:
+        config = self.config(target: target, type: .pull, continuous: false)
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(db.count, 2)
+        
+        var doc = db.document(withID: "doc1")!
+        try db.purgeDocument(doc)
+        
+        doc = db.document(withID: "doc2")!
+        try db.purgeDocument(doc)
+        
+        XCTAssertEqual(db.count, 0)
+        
+        // Pull again, shouldn't have any new changes:
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(db.count, 0)
+        
+        // Reset and pull:
+        run(config: config, reset: true, expectedError: nil)
+        XCTAssertEqual(db.count, 2)
+    }
+    
+    func testStartWithResetCheckpointContinuous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
@@ -266,7 +355,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try db.saveDocument(doc3)
         
         // Run the replicator again:
-        self.run(withReplicator: replicator, expectedError: nil)
+        self.run(replicator: replicator, expectedError: nil)
         
         // Check if getting a new document replication event:
         XCTAssertEqual(docs.count, 3)
@@ -285,7 +374,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
         
         // Run the replicator again:
-        self.run(withReplicator: replicator, expectedError: nil)
+        self.run(replicator: replicator, expectedError: nil)
         
         // Should not getting a new document replication event:
         XCTAssertEqual(docs.count, 3)
@@ -791,7 +880,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // create a replicator
         repl = Replicator(config: config)
-        run(withReplicator: repl, expectedError: nil)
+        run(replicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(oDB.count, 1)
@@ -808,7 +897,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // restart the same replicator
         docIds.removeAllObjects()
-        run(withReplicator: repl, expectedError: nil)
+        run(replicator: repl, expectedError: nil)
         
         // should use the same replicator filter.
         XCTAssertEqual(docIds.count, 2)
@@ -840,7 +929,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // create a replicator
         repl = Replicator(config: config)
-        run(withReplicator: repl, expectedError: nil)
+        run(replicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(oDB.count, 1)
@@ -857,7 +946,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // restart the same replicator
         docIds.removeAllObjects()
-        run(withReplicator: repl, expectedError: nil)
+        run(replicator: repl, expectedError: nil)
         
         // should use the same replicator filter.
         XCTAssertEqual(docIds.count, 2)

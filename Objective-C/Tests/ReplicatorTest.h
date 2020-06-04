@@ -143,6 +143,11 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
                  errorCode: (NSInteger)errorCode
                errorDomain: (nullable NSString*)errorDomain;
 
+- (BOOL) runWithReplicator: (CBLReplicator*)replicator
+                     reset: (BOOL)reset
+                 errorCode: (NSInteger)errorCode
+               errorDomain: (nullable NSString*)errorDomain;
+
 #pragma mark - Verify Replicator Change
 
 - (void) verifyChange: (CBLReplicatorChange*)change

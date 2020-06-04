@@ -98,6 +98,15 @@ public final class Replicator {
         _impl.start()
     }
     
+    /// Starts the replicator with an option to reset the local checkpoint of the replicator. When the local checkpoint
+    /// is reset, the replicator will sync all changes since the beginning of time from the remote database.
+    /// This method returns immediately; the replicator runs asynchronously and will report its progress throuh
+    /// the replicator change notification.
+    public func start(reset: Bool) {
+        registerActiveReplicator()
+        _impl.start(withReset: reset);
+    }
+    
     /// Stops a running replicator. This method returns immediately; when the replicator actually
     /// stops, the replicator will change its status's activity level to `.stopped`
     /// and the replicator change notification will be notified accordingly.
@@ -105,9 +114,10 @@ public final class Replicator {
         _impl.stop()
     }
     
-    /// Resets the local checkpoint of the replicator, meaning that it will read all
+    /// Resets the local checkpoint of the replicator, meaning that it will sync all
     /// changes since the beginning of time from the remote database. This can only be
     /// called when the replicator is in a stopped state.
+    @available(*, deprecated, message: "Use start(reset:) instead.")
     public func resetCheckpoint() {
         _impl.resetCheckpoint()
     }
