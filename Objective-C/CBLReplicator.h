@@ -97,6 +97,8 @@ Starts the replicator with an option to reset the local checkpoint of the replic
 is reset, the replicator will sync all changes since the beginning of time from the remote database.
 This method returns immediately; the replicator runs asynchronously and will report its progress throuh
 the replicator change notification.
+ 
+ @param reset Reset the local checkpoint before starting the replicator.
 */
 - (void) startWithReset: (BOOL)reset;
 

@@ -102,6 +102,9 @@ public final class Replicator {
     /// is reset, the replicator will sync all changes since the beginning of time from the remote database.
     /// This method returns immediately; the replicator runs asynchronously and will report its progress throuh
     /// the replicator change notification.
+    ///
+    /// - Parameters:
+    ///   - reset: Reset the local checkpoint before starting the replicator.
     public func start(reset: Bool) {
         registerActiveReplicator()
         _impl.start(withReset: reset);
