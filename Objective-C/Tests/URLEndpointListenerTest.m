@@ -114,6 +114,17 @@ typedef CBLURLEndpointListener Listener;
     return _listener;
 }
 
+- (CBLReplicator*) replicator: (CBLDatabase*)db
+                    continous: (BOOL)continous
+                       target: (id<CBLEndpoint>)target
+                   serverCert: (nullable SecCertificateRef)cert {
+    CBLReplicatorConfiguration* c;
+    c = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: target];
+    c.continuous = continous;
+    c.pinnedServerCertificate = cert;
+    return [[CBLReplicator alloc] initWithConfig: c];
+}
+
 // Two replicators, replicates docs to the listener; validates connection status
 - (void) validateMultipleReplicationsTo: (Listener*)listener replType: (CBLReplicatorType)type {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
@@ -653,5 +664,78 @@ typedef CBLURLEndpointListener Listener;
     // cleanup
     [_listener stop];
 }
+
+/**
+ 1. Listener on `otherDB`
+ 2. Replicator#1 on `otherDB` (otherDB -> DB#1)
+ 3. Replicator#2  (DB#2 -> otherDB)
+ */
+- (void) testReplicatorAndListenerOnSameDatabase {
+    if (!self.keyChainAccessAllowed) return;
+    
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
+    
+    // Listener
+    NSError* err = nil;
+    CBLMutableDocument* doc = [self createDocument];
+    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
+    
+    [self listen];
+    
+    // Replicator#1 (otherDB -> DB#1)
+    CBLMutableDocument* doc1 =  [self createDocument];
+    Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    
+    CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
+    CBLReplicator* repl1 = [self replicator: self.otherDB continous: YES target: target
+                                 serverCert: nil];
+    
+    // Replicator#2 (DB#2 -> Listener(otherDB))
+    Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
+    AssertNil(err);
+    
+    CBLMutableDocument* doc2 =  [self createDocument];
+    Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
+    CBLReplicator* repl2 = [self replicator: db2 continous: YES target: _listener.localEndpoint
+                                 serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]];
+    
+    id changeListener = ^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            if (self.otherDB.count == 3u && self.db.count == 3u && db2.count == 3u)
+                [change.replicator stop];
+        }
+        
+        if (change.status.activity == kCBLReplicatorStopped) {
+            if (change.replicator == repl1)
+                [exp1 fulfill];
+            else
+                [exp2 fulfill];
+        }
+    };
+    
+    id token1 = [repl1 addChangeListener: changeListener];
+    id token2 = [repl2 addChangeListener: changeListener];
+    
+    [repl1 start];
+    [repl2 start];
+    [self waitForExpectations: @[exp1, exp2] timeout: timeout];
+    
+    // all data are transferred to/from
+    AssertEqual(self.otherDB.count, 3u);
+    AssertEqual(self.db.count, 3u);
+    AssertEqual(db2.count, 3u);
+
+    // cleanup
+    [repl1 removeChangeListenerWithToken: token1];
+    [repl2 removeChangeListenerWithToken: token2];
+    repl1 = nil;
+    repl2 = nil;
+    Assert([db2 close: &err], @"Failed to close db2 %@", err);
+    db2 = nil;
+}
+
 
 @end
