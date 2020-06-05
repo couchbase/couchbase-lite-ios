@@ -38,6 +38,15 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
     kCBLConcurrencyControlFailOnConflict    ///< The operation will fail if there is a conflict.
 };
 
+/**
+Maintenance Type used when performing database maintenance .
+*/
+typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
+    kCBLMaintenanceTypeCompact,             ///< Compact the database file and delete unused attachments.
+    kCBLMaintenanceTypeReindex,             ///< (Volatile API) Rebuild the entire database's indexes.
+    kCBLMaintenanceTypeIntegrityCheck       ///< (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+};
+
 /** A Couchbase Lite database. */
 @interface CBLDatabase : NSObject
 
@@ -245,13 +254,22 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
 - (BOOL) delete: (NSError**)error;
 
 /**
+ Performs database maintenance.
+ 
+ @param type Maintenance type.
+ @param error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)error;
+
+/**
  Compacts the database file by deleting unused attachment files and vacuuming 
  the SQLite database
 
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) compact: (NSError**)error;
+- (BOOL) compact: (NSError**)error __attribute__((deprecated("Use -performMaintenance: instead.")));
 
 /**
  Deletes a database of the given name in the given directory.

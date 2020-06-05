@@ -1942,6 +1942,7 @@
 }
 
 - (void) testCompact {
+    // Create docs:
     NSArray* docs = [self createDocs: 20];
     
     // Update each doc 25 times:
@@ -1972,7 +1973,10 @@
     AssertEqual(atts.count, 20u);
     
     // Compact:
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     Assert([_db compact: &error], @"Error when compacting the database");
+    #pragma clang diagnostic pop
     
     // Delete all docs:
     for (CBLDocument* doc in docs) {
@@ -1982,11 +1986,153 @@
     }
     AssertEqual(_db.count, 0u);
     
+    atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 20u);
+    
     // Compact:
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     Assert([_db compact: &error], @"Error when compacting the database: %@", error);
+    #pragma clang diagnostic pop
     
     atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
     AssertEqual(atts.count, 0u);
+}
+
+- (void) testPerformMaintenanceCompact {
+    // Create docs:
+    NSArray* docs = [self createDocs: 20];
+    
+    // Update each doc 25 times:
+    NSError* error;
+    [_db inBatch: &error usingBlock: ^{
+        for (CBLDocument* doc in docs) {
+            for (NSUInteger i = 0; i < 25; i++) {
+                CBLMutableDocument* mDoc = [doc toMutable];
+                [mDoc setValue: @(i) forKey: @"number"];
+                [self saveDocument: mDoc];
+            }
+        }
+    }];
+    
+    // Add each doc with a blob object:
+    for (CBLDocument* doc in docs) {
+        CBLMutableDocument* mDoc = [[_db documentWithID: doc.id] toMutable];
+        NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
+        CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+        [mDoc setValue: blob forKey: @"blob"];
+        [self saveDocument: mDoc];
+    }
+    
+    AssertEqual(_db.count, 20u);
+    
+    NSString* attsDir = [_db.path stringByAppendingPathComponent:@"Attachments"];
+    NSArray* atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 20u);
+    
+    // Compact:
+    Assert([_db performMaintenance: kCBLMaintenanceTypeCompact error: &error],
+           @"Error when compacting the database");
+    
+    // Delete all docs:
+    for (CBLDocument* doc in docs) {
+        CBLDocument* savedDoc = [_db documentWithID: doc.id];
+        Assert([_db deleteDocument: savedDoc error: &error], @"Error when deleting doc: %@", error);
+        AssertNil([_db documentWithID: doc.id]);
+    }
+    AssertEqual(_db.count, 0u);
+    
+    atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 20u);
+    
+    // Compact:
+    Assert([_db performMaintenance: kCBLMaintenanceTypeCompact error: &error],
+           @"Error when compacting the database: %@", error);
+    
+    atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 0u);
+}
+
+- (void) testPerformMaintenanceReindex {
+    // Create docs:
+    [self createDocs: 20];
+    
+    // Reindex when there is no index:
+    NSError* error;
+    Assert([_db performMaintenance: kCBLMaintenanceTypeReindex error: &error],
+           @"Error when reindex the database: %@", error);
+    
+    // Create an index:
+    CBLQueryExpression* key = [CBLQueryExpression property: @"key"];
+    CBLValueIndexItem* keyItem = [CBLValueIndexItem expression: key];
+    CBLValueIndex* keyIndex = [CBLIndexBuilder valueIndexWithItems: @[keyItem]];
+    Assert([self.db createIndex: keyIndex withName: @"KeyIndex" error: &error],
+           @"Error when creating value index: %@", error);
+    AssertEqual(self.db.indexes.count, 1u);
+    
+    // Check if the index is used:
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: key]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [key greaterThan: [CBLQueryExpression integer: 9]]];
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"USING INDEX KeyIndex"].location != NSNotFound);
+    
+    // Reindex:
+    Assert([_db performMaintenance: kCBLMaintenanceTypeReindex error: &error],
+           @"Error when reindexing the database: %@", error);
+    
+    // Check if the index is still there and used:
+    AssertEqual(self.db.indexes.count, 1u);
+    explain = [q explain: &error];
+    Assert([explain rangeOfString: @"USING INDEX KeyIndex"].location != NSNotFound);
+}
+
+- (void) testPerformMaintenanceIntegrityCheck {
+    // Create docs:
+    NSArray* docs = [self createDocs: 20];
+    
+    // Update each doc 25 times:
+    NSError* error;
+    [_db inBatch: &error usingBlock: ^{
+        for (CBLDocument* doc in docs) {
+            for (NSUInteger i = 0; i < 25; i++) {
+                CBLMutableDocument* mDoc = [doc toMutable];
+                [mDoc setValue: @(i) forKey: @"number"];
+                [self saveDocument: mDoc];
+            }
+        }
+    }];
+    
+    // Add each doc with a blob object:
+    for (CBLDocument* doc in docs) {
+        CBLMutableDocument* mDoc = [[_db documentWithID: doc.id] toMutable];
+        NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
+        CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+        [mDoc setValue: blob forKey: @"blob"];
+        [self saveDocument: mDoc];
+    }
+    
+    AssertEqual(_db.count, 20u);
+    
+    NSString* attsDir = [_db.path stringByAppendingPathComponent:@"Attachments"];
+    NSArray* atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 20u);
+    
+    // Integrity Check:
+    Assert([_db performMaintenance: kCBLMaintenanceTypeIntegrityCheck error: &error],
+           @"Error when performing integrity check on the database: %@", error);
+    
+    // Delete all docs:
+    for (CBLDocument* doc in docs) {
+        CBLDocument* savedDoc = [_db documentWithID: doc.id];
+        Assert([_db deleteDocument: savedDoc error: &error], @"Error when deleting doc: %@", error);
+        AssertNil([_db documentWithID: doc.id]);
+    }
+    AssertEqual(_db.count, 0u);
+    
+    // Integrity Check:
+    Assert([_db performMaintenance: kCBLMaintenanceTypeIntegrityCheck error: &error],
+           @"Error when performing integrity check on the database: %@", error);
 }
 
 - (void) testCopy {

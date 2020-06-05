@@ -462,6 +462,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                 error: outError];
 }
 
+- (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)outError {
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4Error err;
+        if (!c4db_maintenance(_c4db, (C4MaintenanceType)type, &err))
+            return convertError(err, outError);
+        return YES;
+    }
+}
+
 - (BOOL) compact: (NSError**)outError {
     CBL_LOCK(self) {
         [self mustBeOpen];

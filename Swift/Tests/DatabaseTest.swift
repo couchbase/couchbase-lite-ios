@@ -103,6 +103,181 @@ class DatabaseTest: CBLTestCase {
         
         try db.saveDocument(doc)
     }
+    
+    func testCompact() throws {
+        // Create docs:
+        let docs = try createDocs(20)
+        
+        // Update each doc 25 times:
+        try db.inBatch {
+            for doc in docs {
+                for i in 0...25{
+                    let mdoc = doc.toMutable()
+                    mdoc.setValue(i, forKey: "number")
+                    try db.saveDocument(mdoc)
+                }
+            }
+        }
+        
+        // Add each doc with a blob object:
+        for doc in docs {
+            let mdoc = db.document(withID: doc.id)!.toMutable()
+            let data = doc.id.data(using: .utf8)
+            let blob = Blob.init(contentType: "text/plain", data: data!)
+            mdoc.setValue(blob, forKey: "blob")
+            try db.saveDocument(mdoc)
+        }
+        
+        XCTAssertEqual(db.count, 20)
+        
+        let attachmentDir = (db.path! as NSString).appendingPathComponent("Attachments")
+        var attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 20)
+        
+        // Compact:
+        try db.compact()
+        
+        // Delete all docs:
+        for doc in docs {
+            let doc = db.document(withID: doc.id)!
+            try db.deleteDocument(doc)
+            XCTAssertNil(db.document(withID: doc.id))
+        }
+        XCTAssertEqual(db.count, 0)
+        
+        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 20)
+        
+        // Compact:
+        try db.compact()
+        
+        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 0)
+    }
+    
+    func testPerformMaintenanceCompact() throws {
+        // Create docs:
+        let docs = try createDocs(20)
+        
+        // Update each doc 25 times:
+        try db.inBatch {
+            for doc in docs {
+                for i in 0...25{
+                    let mdoc = doc.toMutable()
+                    mdoc.setValue(i, forKey: "number")
+                    try db.saveDocument(mdoc)
+                }
+            }
+        }
+        
+        // Add each doc with a blob object:
+        for doc in docs {
+            let mdoc = db.document(withID: doc.id)!.toMutable()
+            let data = doc.id.data(using: .utf8)
+            let blob = Blob.init(contentType: "text/plain", data: data!)
+            mdoc.setValue(blob, forKey: "blob")
+            try db.saveDocument(mdoc)
+        }
+        
+        XCTAssertEqual(db.count, 20)
+        
+        let attachmentDir = (db.path! as NSString).appendingPathComponent("Attachments")
+        var attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 20)
+        
+        // Compact:
+        try db.performMaintenance(type: .compact)
+        
+        // Delete all docs:
+        for doc in docs {
+            let doc = db.document(withID: doc.id)!
+            try db.deleteDocument(doc)
+            XCTAssertNil(db.document(withID: doc.id))
+        }
+        XCTAssertEqual(db.count, 0)
+        
+        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 20)
+        
+        // Compact:
+        try db.performMaintenance(type: .compact)
+        
+        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
+        XCTAssertEqual(attachments.count, 0)
+    }
+    
+    func testPerformMaintenanceReindex() throws {
+        // Create docs:
+        try createDocs(20)
+        
+        // Reindex with no index:
+        try db.performMaintenance(type: .reindex)
+        
+        // Create an index:
+        let key = Expression.property("key")
+        let keyItem = ValueIndexItem.expression(key)
+        let keyIndex = IndexBuilder.valueIndex(items: keyItem)
+        try db.createIndex(keyIndex, withName: "KeyIndex")
+        XCTAssertEqual(db.indexes.count, 1)
+        
+        // Check if the index is used:
+        let q = QueryBuilder
+            .select(SelectResult.expression(key))
+            .from(DataSource.database(db))
+            .where(key.greaterThan(Expression.int(9)))
+        
+        var explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "USING INDEX KeyIndex").location, NSNotFound)
+        
+        // Reindex:
+        try db.performMaintenance(type: .reindex)
+        
+        // Check if the index is still there and used:
+        XCTAssertEqual(db.indexes.count, 1)
+        explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "USING INDEX KeyIndex").location, NSNotFound)
+    }
+    
+    func testPerformMaintenanceIntegrityCheck() throws {
+        // Create docs:
+        let docs = try createDocs(20)
+        
+        // Update each doc 25 times:
+        try db.inBatch {
+            for doc in docs {
+                for i in 0...25{
+                    let mdoc = doc.toMutable()
+                    mdoc.setValue(i, forKey: "number")
+                    try db.saveDocument(mdoc)
+                }
+            }
+        }
+        
+        // Add each doc with a blob object:
+        for doc in docs {
+            let mdoc = db.document(withID: doc.id)!.toMutable()
+            let data = doc.id.data(using: .utf8)
+            let blob = Blob.init(contentType: "text/plain", data: data!)
+            mdoc.setValue(blob, forKey: "blob")
+            try db.saveDocument(mdoc)
+        }
+        
+        XCTAssertEqual(db.count, 20)
+        
+        // Integrity Check:
+        try db.performMaintenance(type: .integrityCheck)
+        
+        // Delete all docs:
+        for doc in docs {
+            let doc = db.document(withID: doc.id)!
+            try db.deleteDocument(doc)
+            XCTAssertNil(db.document(withID: doc.id))
+        }
+        XCTAssertEqual(db.count, 0)
+        
+        // Integrity Check:
+        try db.performMaintenance(type: .integrityCheck)
+    }
 
     func testInBatch() throws {
         try db.inBatch {

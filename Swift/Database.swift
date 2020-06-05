@@ -28,6 +28,17 @@ public enum ConcurrencyControl: UInt8 {
     case failOnConflict
 }
 
+/// Maintenance Type used when performing database maintenance
+///
+/// - compact: Compact the database file and delete unused attachments.
+/// - reindex: (Volatile API) Rebuild the entire database's indexes.
+/// - integrityCheck: (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+public enum MaintenanceType: UInt8 {
+    case compact = 0
+    case reindex
+    case integrityCheck
+}
+
 /// A Couchbase Lite database.
 public final class Database {
     
@@ -309,10 +320,18 @@ public final class Database {
         stopActiveQueries()
     }
     
+    /// Performs database maintenance.
+    ///
+    /// - Throws: An error on a failure
+    public func performMaintenance(type: MaintenanceType) throws {
+        try _impl.perform(CBLMaintenanceType(rawValue: UInt32(type.rawValue))!)
+    }
+    
     /// Compacts the database file by deleting unused attachment files and
     /// vacuuming the SQLite database.
     ///
     /// - Throws: An error on a failure
+    @available(*, deprecated, message: "Use performMaintenance(type:) instead.")
     public func compact() throws {
         try _impl.compact()
     }

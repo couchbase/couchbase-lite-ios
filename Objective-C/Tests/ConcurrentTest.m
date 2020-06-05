@@ -283,7 +283,10 @@
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (NSUInteger i = 0; i < kNRounds; i++) {
             NSError* error;
+            #pragma clang diagnostic push
+            #pragma clang diagnostic ignored "-Wdeprecated-declarations"
             Assert([self.db compact: &error], @"Error when compact: %@", error);
+            #pragma clang diagnostic pop
         }
     }];
 }
