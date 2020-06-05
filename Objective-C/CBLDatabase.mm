@@ -65,7 +65,9 @@ using namespace fleece;
     
     NSMutableSet<CBLReplicator*>* _activeReplicators;
     NSMutableSet<CBLLiveQuery*>* _activeLiveQueries;
+#ifdef COUCHBASE_ENTERPRISE
     NSMutableSet* _activeListeners;
+#endif
     
     BOOL _isClosing;
     NSCondition* _closeCondition;
@@ -361,7 +363,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - DATABASE MAINTENANCE
 
 - (BOOL) close: (NSError**)outError {
-    NSArray *activeReplicators, *activeLiveQueries, *activeListeners = nil;
+    NSArray *activeReplicators, *activeLiveQueries = nil;
+#ifdef COUCHBASE_ENTERPRISE
+    NSArray* activeListeners = nil;
+#endif
     
     CBL_LOCK(self) {
         if ([self isClosed])
@@ -378,8 +383,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             activeReplicators = [_activeReplicators allObjects];
             
             activeLiveQueries = [_activeLiveQueries allObjects];
-            
+#ifdef COUCHBASE_ENTERPRISE
             activeListeners = [_activeListeners allObjects];
+#endif
         }
     }
     
@@ -1098,7 +1104,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 
 #pragma mark - Listener
 #ifdef COUCHBASE_ENTERPRISE
-- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12)) {
+- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
     CBL_LOCK(self) {
         [self mustBeOpenAndNotClosing];
         if (!_activeListeners)
@@ -1108,7 +1114,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
     }
 }
 
-- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12)) {
+- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
     CBL_LOCK(self) {
         [_activeListeners removeObject: listener];
         
