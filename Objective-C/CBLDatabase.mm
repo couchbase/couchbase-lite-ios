@@ -1096,7 +1096,6 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
     }
 }
 
-
 #pragma mark - Listener
 #ifdef COUCHBASE_ENTERPRISE
 - (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12)) {
