@@ -104,7 +104,7 @@ public final class Replicator {
     /// the replicator change notification.
     ///
     /// - Parameters:
-    ///   - reset: Reset the local checkpoint before starting the replicator.
+    ///   - reset: Resets the local checkpoint before starting the replicator.
     public func start(reset: Bool) {
         registerActiveReplicator()
         _impl.start(withReset: reset);
