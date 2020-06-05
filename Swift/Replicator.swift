@@ -100,7 +100,7 @@ public final class Replicator {
     
     /// Starts the replicator with an option to reset the local checkpoint of the replicator. When the local checkpoint
     /// is reset, the replicator will sync all changes since the beginning of time from the remote database.
-    /// This method returns immediately; the replicator runs asynchronously and will report its progress throuh
+    /// This method returns immediately; the replicator runs asynchronously and will report its progress through
     /// the replicator change notification.
     ///
     /// - Parameters:
