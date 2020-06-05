@@ -263,7 +263,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 - (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)error;
 
 /**
- Compacts the database file by deleting unused attachment files and vacuuming 
+ This method is deprecated. Compacts the database file by deleting unused attachment files and vacuuming 
  the SQLite database
 
  @param error On return, the error if any.

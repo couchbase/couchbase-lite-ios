@@ -327,7 +327,7 @@ public final class Database {
         try _impl.perform(CBLMaintenanceType(rawValue: UInt32(type.rawValue))!)
     }
     
-    /// Compacts the database file by deleting unused attachment files and
+    /// This function is deprecated. Compacts the database file by deleting unused attachment files and
     /// vacuuming the SQLite database.
     ///
     /// - Throws: An error on a failure
