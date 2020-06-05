@@ -65,6 +65,9 @@ using namespace fleece;
     
     NSMutableSet<CBLReplicator*>* _activeReplicators;
     NSMutableSet<CBLLiveQuery*>* _activeLiveQueries;
+#ifdef COUCHBASE_ENTERPRISE
+    NSMutableSet<CBLURLEndpointListener*>* _activeListeners API_AVAILABLE(macos(10.12), ios(10.0));
+#endif
     
     BOOL _isClosing;
     NSCondition* _closeCondition;
@@ -361,6 +364,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (BOOL) close: (NSError**)outError {
     NSArray *activeReplicators, *activeLiveQueries = nil;
+#ifdef COUCHBASE_ENTERPRISE
+    NSArray* activeListeners = nil;
+#endif
     
     CBL_LOCK(self) {
         if ([self isClosed])
@@ -377,6 +383,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             activeReplicators = [_activeReplicators allObjects];
             
             activeLiveQueries = [_activeLiveQueries allObjects];
+#ifdef COUCHBASE_ENTERPRISE
+            activeListeners = [_activeListeners allObjects];
+#endif
         }
     }
     
@@ -389,6 +398,16 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     for (CBLLiveQuery* q in activeLiveQueries) {
         [q stop];
     }
+    
+#ifdef COUCHBASE_ENTERPRISE
+    // Stop all active listeners
+    if (@available(macOS 10.12, ios 10.0, *)) {
+        for (CBLURLEndpointListener* listener in activeListeners) {
+            [listener stop];
+        }
+    } else
+        Assert(activeListeners.count == 0);
+#endif
     
     // Wait for all active replicators and live queries to stop:
     [_closeCondition lock];
@@ -1082,6 +1101,34 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
         return _activeReplicators.count;
     }
 }
+
+#pragma mark - Listener
+#ifdef COUCHBASE_ENTERPRISE
+- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
+    CBL_LOCK(self) {
+        [self mustBeOpenAndNotClosing];
+        if (!_activeListeners)
+            _activeListeners = [NSMutableSet new];
+        
+        [_activeListeners addObject: listener];
+    }
+}
+
+- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
+    CBL_LOCK(self) {
+        [_activeListeners removeObject: listener];
+        
+        if (_activeListeners.count == 0)
+            [_closeCondition broadcast];
+    }
+}
+
+- (uint64_t) activeListenerCount {
+    CBL_LOCK(self) {
+        return _activeListeners.count;
+    }
+}
+#endif
 
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 

@@ -33,6 +33,7 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLEncryptionKey.h"
+#import "CBLURLEndpointListener.h"
 #endif
 
 struct c4BlobStore;
@@ -66,6 +67,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) addActiveLiveQuery: (CBLLiveQuery*)liveQuery;
 - (void) removeActiveLiveQuery: (CBLLiveQuery*)liveQuery;
 - (uint64_t) activeLiveQueryCount; // For testing only
+
+#ifdef COUCHBASE_ENTERPRISE
+- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0));
+- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0));
+- (uint64_t) activeListenerCount; // For testing only
+#endif
 
 - (bool) resolveConflictInDocument: (NSString*)docID
               withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
