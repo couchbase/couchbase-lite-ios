@@ -211,6 +211,92 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
     }
     
+    func testPort() throws {
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = wsPort
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.port)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssertEqual(self.listener!.port, wsPort)
+
+        self.listener!.stop()
+        XCTAssertNil(self.listener!.port)
+    }
+    
+    func testEmptyPort() throws {
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.port)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssertNotEqual(self.listener!.port, 0)
+
+        self.listener!.stop()
+        XCTAssertNil(self.listener!.port)
+    }
+    
+    func testBusyPort() throws {
+        try listen()
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = self.listener!.port
+        let listener2 = URLEndpointListener(config: config)
+        
+        expectError(domain: NSPOSIXErrorDomain, code: Int(EADDRINUSE)) {
+            try listener2.start()
+        }
+    }
+    
+    func testURLs() throws {
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = wsPort
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.urls)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssert(self.listener!.urls?.count != 0)
+
+        self.listener!.stop()
+        XCTAssertNil(self.listener!.urls)
+    }
+    
+    func testConnectionStatus() throws {
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = wsPort
+        config.disableTLS = true
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertEqual(self.listener!.status.connectionCount, 0)
+        XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssertEqual(self.listener!.status.connectionCount, 0)
+        XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
+        
+        try generateDocument(withID: "doc-1")
+        let rConfig = self.config(target: self.listener!.localURLEndpoint,
+                                 type: .pushAndPull, continuous: false, auth: nil,
+                                 serverCertVerifyMode: .caCert, serverCert: nil)
+        var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
+        run(config: rConfig, reset: false, expectedError: nil) { (replicator) in
+            replicator.addChangeListener { (change) in
+                maxConnectionCount = max(self.listener!.status.connectionCount, maxConnectionCount)
+                maxActiveCount = max(self.listener!.status.activeConnectionCount, maxActiveCount)
+            }
+        }
+        XCTAssertEqual(maxConnectionCount, 1)
+        XCTAssertEqual(maxActiveCount, 1)
+        XCTAssertEqual(self.oDB.count, 1)
+
+        self.listener!.stop()
+        XCTAssertEqual(self.listener!.status.connectionCount, 0)
+        XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
+    }
+    
 }
 
 @available(macOS 10.12, iOS 10.0, *)

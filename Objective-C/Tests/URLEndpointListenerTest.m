@@ -288,7 +288,7 @@ typedef CBLURLEndpointListener Listener;
 - (void) testURLs {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     _listener = [[Listener alloc] initWithConfig: config];
-    AssertEqual(_listener.urls.count, 0);
+    AssertNil(_listener.urls);
     
     // start listener
     NSError* err = nil;
@@ -298,7 +298,7 @@ typedef CBLURLEndpointListener Listener;
     
     // stops
     [_listener stop];
-    AssertEqual(_listener.urls.count, 0);
+    AssertNil(_listener.urls);
 }
 
 - (void) testStatus {

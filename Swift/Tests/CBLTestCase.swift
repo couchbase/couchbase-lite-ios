@@ -127,6 +127,7 @@ class CBLTestCase: XCTestCase {
         return MutableDocument(id: id, data: data)
     }
     
+    @discardableResult
     func generateDocument(withID id: String?) throws -> MutableDocument {
         let doc = createDocument(id);
         doc.setValue(1, forKey: "key")
