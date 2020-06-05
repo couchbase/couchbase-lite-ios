@@ -737,5 +737,17 @@ typedef CBLURLEndpointListener Listener;
     db2 = nil;
 }
 
+- (void) testCloseWithActiveListener {
+    if (!self.keyChainAccessAllowed) return;
+    
+    [self listen];
+    
+    NSError* err = nil;
+    Assert([self.otherDB close: &err]);
+    AssertNil(err);
+    
+    AssertEqual(_listener.port, 0);
+    AssertEqual(_listener.urls.count, 0);
+}
 
 @end
