@@ -66,7 +66,7 @@ using namespace fleece;
     NSMutableSet<CBLReplicator*>* _activeReplicators;
     NSMutableSet<CBLLiveQuery*>* _activeLiveQueries;
 #ifdef COUCHBASE_ENTERPRISE
-    NSMutableSet* _activeListeners;
+    NSMutableSet<CBLURLEndpointListener*>* _activeListeners API_AVAILABLE(macos(10.12), ios(10.0));
 #endif
     
     BOOL _isClosing;
