@@ -737,5 +737,25 @@ typedef CBLURLEndpointListener Listener;
     db2 = nil;
 }
 
+// TODO: https://issues.couchbase.com/browse/CBL-954
+- (void) _testReadOnlyListener {
+    if (!self.keyChainAccessAllowed) return;
+    
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.readOnly = YES;
+    [self listen: config];
+    
+    // Push Replication to ReadOnly Listener
+    [self ignoreException: ^{
+        [self runWithTarget: _listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+                 serverCert: (__bridge SecCertificateRef) _listener.config.tlsIdentity.certs[0]
+                  errorCode: CBLErrorHTTPForbidden
+                errorDomain: CBLErrorDomain];
+    }];
+}
 
 @end
+
