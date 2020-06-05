@@ -92,6 +92,16 @@ typedef struct {
  */
 - (void) start;
 
+/**
+Starts the replicator with an option to reset the local checkpoint of the replicator. When the local checkpoint
+is reset, the replicator will sync all changes since the beginning of time from the remote database.
+This method returns immediately; the replicator runs asynchronously and will report its progress throuh
+the replicator change notification.
+ 
+ @param reset Resets the local checkpoint before starting the replicator.
+*/
+- (void) startWithReset: (BOOL)reset;
+
 /** 
  Stops a running replicator. This method returns immediately; when the replicator actually
  stops, the replicator will change its status's activity level to `kCBLStopped`
@@ -100,11 +110,11 @@ typedef struct {
 - (void) stop;
 
 /**
- Resets the local checkpoint of the replicator, meaning that it will read all
+ This method is deprecated. Resets the local checkpoint of the replicator, meaning that it will sync all
  changes since the beginning of time from the remote database. This can only be
  called when the replicator is in a stopped state.
  */
-- (void) resetCheckpoint;
+- (void) resetCheckpoint __attribute__((deprecated("Use -startWithReset: instead.")));
 
 /** 
  Adds a replicator change listener. Changes will be posted on the main queue.

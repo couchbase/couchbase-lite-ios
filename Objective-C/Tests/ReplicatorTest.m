@@ -278,35 +278,39 @@
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
    errorCode: (NSInteger)errorCode
- errorDomain: (NSString*)errorDomain
-{
-    return [self run: config reset: NO
-           errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
+ errorDomain: (NSString*)errorDomain {
+    return [self run: config
+               reset: NO
+           errorCode: errorCode
+         errorDomain: errorDomain
+   onReplicatorReady: nil];
 }
 
 - (BOOL)  run: (CBLReplicatorConfiguration*)config
         reset: (BOOL)reset
     errorCode: (NSInteger)errorCode
-  errorDomain: (NSString*)errorDomain
-{
-    return [self run: config reset: reset errorCode: errorCode errorDomain: errorDomain onReplicatorReady: nil];
+  errorDomain: (NSString*)errorDomain {
+    return [self run: config
+               reset: reset
+           errorCode: errorCode
+         errorDomain: errorDomain
+   onReplicatorReady: nil];
 }
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config
        reset: (BOOL)reset
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
-onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
-{
+onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    
-    if (reset)
-        [repl resetCheckpoint];
     
     if (onReplicatorReady)
         onReplicatorReady(repl);
     
-    return [self runWithReplicator: repl errorCode: errorCode errorDomain: errorDomain];
+    return [self runWithReplicator: repl
+                             reset: reset
+                         errorCode: errorCode
+                       errorDomain: errorDomain];
 }
 
 - (BOOL) runWithTarget: (id<CBLEndpoint>)target
@@ -345,17 +349,28 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
 
 - (BOOL) runWithReplicator: (CBLReplicator*)replicator
                  errorCode: (NSInteger)errorCode
-               errorDomain: (NSString*)errorDomain
-{
+               errorDomain: (NSString*)errorDomain {
+    return [self runWithReplicator: replicator
+                             reset: NO
+                         errorCode: errorCode
+                       errorDomain: errorDomain];
+}
+
+- (BOOL) runWithReplicator: (CBLReplicator*)replicator
+                     reset: (BOOL)reset
+                 errorCode: (NSInteger)errorCode
+               errorDomain: (NSString*)errorDomain {
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
     __block BOOL fulfilled = NO;
     __weak typeof(self) wSelf = self;
-    id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
+    __weak CBLReplicator* wRepl = replicator;
+    id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
+        CBLReplicator* strongRepl = wRepl;
         [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
-        if (replicator.config.continuous && change.status.activity == kCBLReplicatorIdle
+        if (strongRepl.config.continuous && change.status.activity == kCBLReplicatorIdle
             && change.status.progress.completed == change.status.progress.total) {
-            [strongSelf->repl stop];
+            [strongRepl stop];
         }
         if (change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
@@ -363,7 +378,11 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady
         }
     }];
     
-    [replicator start];
+    if (reset) {
+        [replicator startWithReset: reset];
+    } else {
+        [replicator start];
+    }
     
     @try {
         [self waitForExpectations: @[x] timeout: timeout];

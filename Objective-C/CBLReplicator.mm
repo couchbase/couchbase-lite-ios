@@ -130,6 +130,10 @@ typedef enum {
 }
 
 - (void) start {
+    [self startWithReset: _resetCheckpoint];
+}
+
+- (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Starting...", self);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
@@ -137,13 +141,13 @@ typedef enum {
                     self,  _state, _rawStatus.level);
             return;
         }
-
+        
         C4ReplicatorStatus status;
         C4Error err;
         if ([self _setupC4Replicator: &err]) {
             // Start the C4Replicator:
             _state = kCBLStateStarting;
-            c4repl_start(_repl, _resetCheckpoint);
+            c4repl_start(_repl, reset);
             _resetCheckpoint = NO;
             status = c4repl_getStatus(_repl);
             [_config.database addActiveReplicator: self];
@@ -160,7 +164,7 @@ typedef enum {
                          self, error.localizedDescription);
             status = {kC4Stopped, {}, err};
         }
-
+        
         // Post an initial notification:
         statusChanged(_repl, status, (__bridge void*)self);
     }
