@@ -92,7 +92,7 @@ public final class Replicator {
     }
     
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
-    /// and will report its progress throuh the replicator change notification.
+    /// and will report its progress through the replicator change notification.
     public func start() {
         registerActiveReplicator()
         _impl.start()
