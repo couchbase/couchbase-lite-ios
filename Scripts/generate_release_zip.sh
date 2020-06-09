@@ -43,7 +43,7 @@ do
 done
 
 # TODO: CBL-973
-NO_TEST=YES
+# NO_TEST=YES
 
 if [ -z "$OUTPUT_DIR" ]
 then
