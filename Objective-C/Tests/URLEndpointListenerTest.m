@@ -660,7 +660,6 @@ typedef CBLURLEndpointListener Listener;
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
     }];
-    [self stopListen];
 }
 
 - (void) testMultipleListenersOnSameDatabase {
@@ -843,4 +842,3 @@ typedef CBLURLEndpointListener Listener;
 }
 
 @end
-
