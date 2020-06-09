@@ -133,7 +133,10 @@
     Assert([_seekrit saveDocument: doc error: &error], @"Saving Error: %@", error);
     
     // Compact:
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     Assert([_seekrit compact: &error], @"Compaction failed: %@", error);
+    #pragma clang diagnostic pop
     
     // Update the document again:
     [doc setValue: @(85) forKey: @"answer"];
