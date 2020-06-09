@@ -23,6 +23,7 @@ import XCTest
 class URLEndpontListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4984
     let wssPort: UInt16 = 4985
+    let serverCertLabel = "CBL-Server-Cert"
     let clientCertLabel = "CBL-Client-Cert"
     
     var listener: URLEndpointListener?
@@ -34,7 +35,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     @discardableResult
     func listen(tls: Bool) throws -> URLEndpointListener {
-    return try! listen(tls: tls, auth: nil)
+        return try! listen(tls: tls, auth: nil)
     }
     
     @discardableResult
@@ -57,14 +58,68 @@ class URLEndpontListenerTest: ReplicatorTest {
         return self.listener!
     }
     
-    override func tearDown() {
+    func stopListen() throws {
         if let listener = self.listener {
-            listener.stop()
-            if let identity = listener.config.tlsIdentity {
-                try! identity.deleteFromKeyChain()
-            }
+            try stopListener(listener: listener)
         }
+    }
+    
+    func stopListener(listener: URLEndpointListener) throws {
+        let identity = listener.tlsIdentity
+        listener.stop()
+        if let id = identity {
+            try id.deleteFromKeyChain()
+        }
+    }
+    
+    override func tearDown() {
+        try! stopListen()
         super.tearDown()
+    }
+    
+    func testTLSIdentity() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
+        // Disabled TLS:
+        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.disableTLS = true
+        var listener = URLEndpointListener.init(config: config)
+        XCTAssertNil(listener.tlsIdentity)
+        
+        try listener.start()
+        XCTAssertNil(listener.tlsIdentity)
+        try stopListener(listener: listener)
+        XCTAssertNil(listener.tlsIdentity)
+        
+        // Anonymous Identity:
+        config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        listener = URLEndpointListener.init(config: config)
+        XCTAssertNil(listener.tlsIdentity)
+        
+        try listener.start()
+        XCTAssertNotNil(listener.tlsIdentity)
+        try stopListener(listener: listener)
+        XCTAssertNil(listener.tlsIdentity)
+        
+        // User Identity:
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel);
+        let attrs = [certAttrCommonName: "CBL-Server"]
+        let identity = try TLSIdentity.createIdentity(forServer: true,
+                                                      attributes: attrs,
+                                                      expiration: nil,
+                                                      label: serverCertLabel)
+        config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        listener = URLEndpointListener.init(config: config)
+        XCTAssertNil(listener.tlsIdentity)
+        
+        try listener.start()
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssert(identity === listener.tlsIdentity!)
+        try stopListener(listener: listener)
+        XCTAssertNil(listener.tlsIdentity)
     }
     
     func testPasswordAuthenticator() throws {
@@ -90,12 +145,10 @@ class URLEndpontListenerTest: ReplicatorTest {
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
                  auth: auth)
         
-        listener.stop()
+        // Cleanup:
+        try stopListen()
     }
     
-    #if os(OSX)
-    // Not working on iOS:
-    // https://issues.couchbase.com/browse/CBL-995
     func testClientCertAuthenticatorWithClosure() throws {
         if !self.keyChainAccessAllowed {
             return
@@ -112,8 +165,8 @@ class URLEndpontListenerTest: ReplicatorTest {
             return true
         }
         let listener = try listen(tls: true, auth: listenerAuth)
-        XCTAssertNotNil(listener.config.tlsIdentity)
-        XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
         
         // Cleanup:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
@@ -124,13 +177,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Replicator:
         let auth = ClientCertificateAuthenticator.init(identity: identity)
-        let serverCert = listener.config.tlsIdentity!.certs[0]
+        let serverCert = listener.tlsIdentity!.certs[0]
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert)
         
         // Cleanup:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try stopListen()
     }
-    #endif
     
     func testClientCertAuthenticatorWithRootCerts() throws {
         if !self.keyChainAccessAllowed {
@@ -154,7 +207,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Replicator:
         let auth = ClientCertificateAuthenticator.init(identity: identity)
-        let serverCert = listener.config.tlsIdentity!.certs[0]
+        let serverCert = listener.tlsIdentity!.certs[0]
         
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert)
@@ -162,6 +215,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Cleanup:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try stopListen()
     }
     
     func testServerCertVerificationModeSelfSignedCert() throws {
@@ -171,8 +225,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Listener:
         let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.config.tlsIdentity)
-        XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
         
         // Replicator - TLS Error:
         self.ignoreException {
@@ -185,6 +239,9 @@ class URLEndpontListenerTest: ReplicatorTest {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
                      serverCertVerifyMode: .selfSignedCert, serverCert: nil)
         }
+        
+        // Cleanup
+        try stopListen()
     }
     
     func testServerCertVerificationModeCACert() throws {
@@ -194,8 +251,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Listener:
         let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.config.tlsIdentity)
-        XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
         
         // Replicator - TLS Error:
         self.ignoreException {
@@ -205,10 +262,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Replicator - Success:
         self.ignoreException {
-            let serverCert = listener.config.tlsIdentity!.certs[0]
+            let serverCert = listener.tlsIdentity!.certs[0]
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
                      serverCertVerifyMode: .caCert, serverCert: serverCert)
         }
+        
+        // Cleanup
+        try stopListen()
     }
     
     func testPort() throws {
@@ -221,7 +281,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssertEqual(self.listener!.port, wsPort)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.port)
     }
     
@@ -234,7 +294,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssertNotEqual(self.listener!.port, 0)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.port)
     }
     
@@ -260,7 +320,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssert(self.listener!.urls?.count != 0)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.urls)
     }
     
@@ -292,7 +352,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertEqual(maxActiveCount, 1)
         XCTAssertEqual(self.oDB.count, 1)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertEqual(self.listener!.status.connectionCount, 0)
         XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
     }
