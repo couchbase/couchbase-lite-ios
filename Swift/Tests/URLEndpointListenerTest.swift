@@ -281,7 +281,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssertEqual(self.listener!.port, wsPort)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.port)
     }
     
@@ -294,7 +294,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssertNotEqual(self.listener!.port, 0)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.port)
     }
     
@@ -320,7 +320,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.listener!.start()
         XCTAssert(self.listener!.urls?.count != 0)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertNil(self.listener!.urls)
     }
     
@@ -352,7 +352,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertEqual(maxActiveCount, 1)
         XCTAssertEqual(self.oDB.count, 1)
 
-        self.listener!.stop()
+        try stopListen()
         XCTAssertEqual(self.listener!.status.connectionCount, 0)
         XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
     }
