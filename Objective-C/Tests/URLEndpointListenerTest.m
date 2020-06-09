@@ -838,7 +838,6 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(_listener.urls.count, 0);
     
     // cleanup
-    [self stopListen];
 }
 
 @end
