@@ -100,13 +100,16 @@
 
 - (void) send: (CBLMessage*)message
    completion: (void (^)(BOOL success, CBLMessagingError* _Nullable))completion {
+    NSLog(@"%@: Sending message ...", self);
     dispatch_async(_dispatchQueue, ^{
         if(self.isClient && [_errorLogic shouldCloseAtLocation: kCBLMockConnectionSend]) {
             CBLMessagingError* error = [_errorLogic createError];
             [self connectionBroken: error];
+            NSLog(@"%@: Send message failed with error : %@", self, error);
             completion(NO, error);
         } else {
             [self performWrite: [message toData]];
+            NSLog(@"%@: Send message completed", self);
             completion(YES, nil);
         }
     });
@@ -163,6 +166,7 @@
 }
 
 - (void) performWrite: (NSData*)data {
+    NSLog(@"%@: perform write with data size = %lu bytes", self, (unsigned long)data.length);
     [_server acceptBytes: data];
 }
 
@@ -204,6 +208,7 @@
 }
 
 - (void) performWrite: (NSData*)data {
+    NSLog(@"%@: perform write with data size = %lu bytes", self, (unsigned long)data.length);
     [_client acceptBytes: data];
 }
 
