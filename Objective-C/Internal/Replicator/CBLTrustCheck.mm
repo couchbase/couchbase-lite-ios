@@ -18,8 +18,11 @@
 //
 
 #import "CBLTrustCheck.h"
-#import "CBLCert.h"
 #import "c4.h"
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLCert.h"
+#endif
 
 extern "C" {
 #import "MYErrorUtils.h"
