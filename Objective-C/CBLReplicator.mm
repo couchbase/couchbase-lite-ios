@@ -456,7 +456,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 // Callback from reachability observer
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
-        if (_reachability.isMonitoring) {
+        if (_reachability.isMonitoring && _reachability.reachable) {
             CBLLogInfo(Sync, @"%@: Reachability reported server may now be reachable ...", self);
             c4repl_setHostReachable(_repl, _reachability.reachable);
         }
