@@ -19,7 +19,7 @@
 
 #import "ReplicatorTest.h"
 #import "CBLTLSIdentity+Internal.h"
-#import "CBLURLEndpointListener.h"
+#import "CBLURLEndpointListener+Internal.h"
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
 
@@ -124,7 +124,7 @@ typedef CBLURLEndpointListener Listener;
 - (void) stopListener: (CBLURLEndpointListener*)listener {
     CBLTLSIdentity* identity = listener.tlsIdentity;
     [listener stop];
-    if (identity) {
+    if (identity && self.keyChainAccessAllowed) {
         [self deleteFromKeyChain: identity];
     }
 }
@@ -235,9 +235,22 @@ typedef CBLURLEndpointListener Listener;
     db2 = nil;
 }
 
+- (void) cleanUpIdentities {
+    if (self.keyChainAccessAllowed) {
+        NSError* error;
+        Assert([CBLURLEndpointListener deleteAnonymousIdentitiesWithError: &error],
+               @"Cannot delete anonymous identity: %@", error);
+    }
+}
+
+- (void) setUp {
+    [super setUp];
+    [self cleanUpIdentities];
+}
+
 - (void) tearDown {
     [self stopListen];
-    
+    [self cleanUpIdentities];
     [super tearDown];
 }
 
@@ -837,13 +850,19 @@ typedef CBLURLEndpointListener Listener;
     [self listen];
     
     NSError* err = nil;
+    CBLTLSIdentity* identity = _listener.tlsIdentity;
+    
+    // Close database should also stop the listener:
     Assert([self.otherDB close: &err]);
     AssertNil(err);
     
     AssertEqual(_listener.port, 0);
     AssertEqual(_listener.urls.count, 0);
     
-    // cleanup
+    // Cleanup:
+    if (identity) {
+        [self deleteFromKeyChain: identity];
+    }
 }
 
 @end

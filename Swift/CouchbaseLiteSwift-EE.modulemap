@@ -127,5 +127,6 @@ framework module CouchbaseLiteSwift {
         
         // Enterprise Swift Extensions:
         header "CBLTLSIdentity+Swift.h"
+        header "CBLURLEndpointListener+Swift.h"
     }
 }

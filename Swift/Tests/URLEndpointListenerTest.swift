@@ -72,8 +72,18 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
     }
     
+    func cleanUpIdentities() throws {
+        try URLEndpointListener.deleteAnonymousIdentities()
+    }
+    
+    override func setUp() {
+        super.setUp()
+        try! cleanUpIdentities()
+    }
+    
     override func tearDown() {
         try! stopListen()
+        try! cleanUpIdentities()
         super.tearDown()
     }
     
