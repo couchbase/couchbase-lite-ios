@@ -1560,7 +1560,8 @@
     [self waitForExpectations: @[x] timeout: 1e9];
 }
 
-- (void) testStopReplicatorAfterOffline_SG {
+// https://issues.couchbase.com/browse/CBL-1054
+- (void) _testStopReplicatorAfterOffline_SG {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.couchbase.com/db"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
