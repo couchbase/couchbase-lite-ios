@@ -135,9 +135,9 @@ typedef enum {
 
 - (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Starting...", self);
+        CBLLogInfo(Sync, @"%@: Starting ...", self);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
-            CBLWarn(Sync, @"%@ has already started (state = %d, status = %d); ignored.",
+            CBLWarn(Sync, @"%@: Replicaator has already been started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
         }
@@ -287,15 +287,16 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) stop {
     CBL_LOCK(self) {
         if (_state <= kCBLStateStopping) {
-            CBLWarn(Sync, @"%@ has been stopped or is stopping (state = %d, status = %d); ignore stop.",
+            CBLWarn(Sync, @"%@: Replicator has been stopped or is stopping (state = %d, status = %d); ignore stop.",
                     self,  _state, _rawStatus.level);
             return;
         }
         
         CBLLogInfo(Sync, @"%@: Stopping...", self);
         _state = kCBLStateStopping;
-        if (_repl)
-            c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
+        
+        Assert(_repl);
+        c4repl_stop(_repl); // Async calls, status will change when repl actually stops.
     }
 }
 
@@ -309,7 +310,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBLReplicator* repl = self;
     [_config.database removeActiveReplicator: repl];
     
-    CBLLogInfo(Sync, @"%@: Replicator is now stopped", self);
+    CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
 }
 
 - (void) resetCheckpoint {
@@ -429,7 +430,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     if (!remoteURL || _reachability)
         return;
     
-    CBLLogInfo(Sync, @"%@: initialize reachability", self);
+    CBLLogInfo(Sync, @"%@: Initialize reachability", self);
     NSString* hostname = remoteURL.host;
     if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
         return;
@@ -448,7 +449,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 // Should be called from _dispatchQueue
 - (void) stopReachability {
     if (_reachability.isMonitoring) {
-        CBLLogInfo(Sync, @"%@: Stopping reachability observer", self);
+        CBLLogInfo(Sync, @"%@: Stopping Reachability ...", self);
         [_reachability stop];
     }
 }
@@ -476,7 +477,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Called from statusChanged(), on the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        CBLDebug(Sync, @"%@: Received C4ReplicatorStatus Changed, status = %d (_state = %d)",
+        CBLDebug(Sync, @"%@: Received C4ReplicatorStatus Changed, status = %d (state = %d)",
                  self, c4Status.level, _state);
         
         // Record raw status:

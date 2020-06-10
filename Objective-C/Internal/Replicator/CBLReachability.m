@@ -155,8 +155,9 @@ static BOOL sAlwaysAssumeProxy = NO;
 
 - (void) stop {
     _reachabilityKnown = NO;
-    if (_runLoop || _queue)
-        CBLLogInfo(Sync, @"%@: stopped", self);
+    if (_runLoop || _queue) {
+        CBLLogInfo(Sync, @"%@: Reachability stopped ...", self);
+    }
     
     if (![self removeCallback])
         CBLWarn(Sync, @"%@: cannot remove reachability callback", self);
@@ -236,7 +237,7 @@ static BOOL sAlwaysAssumeProxy = NO;
     if (!_reachabilityKnown || flags != _reachabilityFlags) {
         self.reachabilityFlags = flags;
         self.reachabilityKnown = YES;
-        CBLLogInfo(Sync, @"%@: flags <-- %x", self, flags);
+        CBLLogInfo(Sync, @"%@: Reachability flags changed: %x", self, flags);
         __typeof(_onChange) onChange = _onChange;
         if (onChange)
             onChange();
