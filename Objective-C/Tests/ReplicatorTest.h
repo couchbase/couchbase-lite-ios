@@ -20,28 +20,10 @@
 #import "CBLTestCase.h"
 
 #ifdef COUCHBASE_ENTERPRISE
-#import "CBLMessageEndpoint.h"
-#import "CBLMockConnection.h"
-#import "CBLMockConnectionErrorLogic.h"
-#import "CBLMockConnectionLifecycleLocation.h"
 #import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
-
-#ifdef COUCHBASE_ENTERPRISE
-
-#pragma mark - Helper Class Interface
-
-@interface MockConnectionFactory : NSObject <CBLMessageEndpointDelegate>
-
-- (instancetype) initWithErrorLogic: (nullable id<CBLMockConnectionErrorLogic>)errorLogic;
-
-- (id<CBLMessageEndpointConnection>) createConnectionForEndpoint: (CBLMessageEndpoint *)endpoint;
-
-@end
-
-#endif
 
 @interface ReplicatorTest : CBLTestCase {
     CBLReplicator* repl;
@@ -161,27 +143,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
 
 - (XCTestExpectation *) waitForReplicatorStopped: (CBLReplicator*)replicator;
 
-
-#ifdef COUCHBASE_ENTERPRISE
-
-- (XCTestExpectation *) waitForListenerIdle: (CBLMessageEndpointListener*)listener;
-
-- (XCTestExpectation *) waitForListenerStopped: (CBLMessageEndpointListener*)listener;
-
-#pragma mark - P2P Helpers
-
-- (CBLReplicatorConfiguration *)createFailureP2PConfigurationWithProtocol: (CBLProtocolType)protocolType
-                                                               atLocation: (CBLMockConnectionLifecycleLocation)location
-                                                       withRecoverability: (BOOL)isRecoverable;
-
-
-- (void) runP2PErrorScenario: (CBLMockConnectionLifecycleLocation)location
-          withRecoverability: (BOOL)isRecoverable;
-
-- (void) runTwoStepContinuousWithType: (CBLReplicatorType)replicatorType
-                             usingUID: (NSString*)uid;
-
-#endif
 
 @end
 

@@ -1480,6 +1480,8 @@
 		93F5D1A01EFAE90200E2DF53 /* CBLBasicAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */; };
 		93F5D1A61EFAEA2400E2DF53 /* CBLSessionAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93F5D1A71EFAEA2400E2DF53 /* CBLSessionAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */; };
+		93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */; };
+		93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */; };
 		93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
 		93FD61492020446300E7F6A1 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93FD614A2020446300E7F6A1 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -2381,6 +2383,7 @@
 		93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLBasicAuthenticator.m; sourceTree = "<group>"; };
 		93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLSessionAuthenticator.h; sourceTree = "<group>"; };
 		93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLSessionAuthenticator.m; sourceTree = "<group>"; };
+		93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+MessageEndPoint.m"; sourceTree = "<group>"; };
 		93F74A8A1EC5549C001289F8 /* FragmentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FragmentTest.swift; sourceTree = "<group>"; };
 		93FD61472020446300E7F6A1 /* CBLQueryBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLQueryBuilder.h; sourceTree = "<group>"; };
 		93FD61482020446300E7F6A1 /* CBLQueryBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLQueryBuilder.m; sourceTree = "<group>"; };
@@ -3551,6 +3554,7 @@
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
+				93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */,
 				934EF80B2453770E0053A47C /* TLSIdentityTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */,
@@ -5786,6 +5790,7 @@
 				1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
+				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
@@ -5819,6 +5824,7 @@
 				1ACDD8D523FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
+				93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
