@@ -287,7 +287,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) stop {
     CBL_LOCK(self) {
         if (_state <= kCBLStateStopping) {
-            CBLWarn(Sync, @"%@ has stopped or is stopping (state = %d, status = %d); ignore stop.",
+            CBLWarn(Sync, @"%@ has been stopped or is stopping (state = %d, status = %d); ignore stop.",
                     self,  _state, _rawStatus.level);
             return;
         }
@@ -308,6 +308,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     // Prevent self to get released when removing from the active replications:
     CBLReplicator* repl = self;
     [_config.database removeActiveReplicator: repl];
+    
+    CBLLogInfo(Sync, @"%@: Replicator is now stopped", self);
 }
 
 - (void) resetCheckpoint {
@@ -439,12 +441,13 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 
 - (void) startReachability {
+    Assert(_state > kCBLStateStopping);
     [_reachability startOnQueue: _dispatchQueue];
 }
 
 // Should be called from _dispatchQueue
 - (void) stopReachability {
-    if (_reachability) {
+    if (_reachability.isMonitoring) {
         CBLLogInfo(Sync, @"%@: Stopping reachability observer", self);
         [_reachability stop];
     }
@@ -453,7 +456,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 // Callback from reachability observer
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
-        if (_reachability) {
+        if (_reachability.isMonitoring) {
             CBLLogInfo(Sync, @"%@: Reachability reported server may now be reachable ...", self);
             c4repl_setHostReachable(_repl, _reachability.reachable);
         }
@@ -473,7 +476,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Called from statusChanged(), on the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        NSLog(@"STATUS CHANGED %d", c4Status.level);//TEMP
+        CBLDebug(Sync, @"%@: Received C4ReplicatorStatus Changed, status = %d (_state = %d)",
+                 self, c4Status.level, _state);
+        
         // Record raw status:
         _rawStatus = c4Status;
         
@@ -489,7 +494,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         if (c4Status.level == kC4Offline) {
             if (_state == kCBLStateSuspending) {
                 _state = kCBLStateSuspended;
-            } else {
+            } else if (_state > kCBLStateStopping) {
                 _state = kCBLStateOffline;
                 [self startReachability];
             }

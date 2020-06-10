@@ -220,6 +220,10 @@ static BOOL sAlwaysAssumeProxy = NO;
     ;
 }
 
+- (BOOL) isMonitoring {
+    return (_runLoop || _queue);
+}
+
 + (NSSet*) keyPathsForValuesAffectingReachable {
     return [NSSet setWithObjects: @"reachabilityKnown", @"reachabilityFlags", nil];
 }
