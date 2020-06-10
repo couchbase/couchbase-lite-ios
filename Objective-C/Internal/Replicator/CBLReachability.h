@@ -75,6 +75,9 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
 /** Is this host reachable by WiFi (or wired Ethernet)? */
 @property (readonly, nonatomic) BOOL reachableByWiFi;
 
+/** Is this host reachable by WiFi (or wired Ethernet)? */
+@property (readonly, nonatomic) BOOL isMonitoring;
+
 /** If you set this, the block will be called whenever the reachability related properties change.
     The call will be on the runloop or dispatch queue specified in the start method. */
 @property (copy, nullable, nonatomic) CBLReachabilityOnChangeBlock onChange;
