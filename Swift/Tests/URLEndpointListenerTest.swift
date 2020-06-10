@@ -272,6 +272,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testPort() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
@@ -286,6 +290,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testEmptyPort() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.port)
@@ -299,6 +307,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testBusyPort() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
         try listen()
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
@@ -311,6 +323,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testURLs() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
@@ -325,6 +341,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testConnectionStatus() throws {
+        if !self.keyChainAccessAllowed {
+            return
+        }
+        
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         config.disableTLS = true

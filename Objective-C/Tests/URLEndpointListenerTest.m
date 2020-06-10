@@ -349,6 +349,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testURLs {
+    if (!self.keyChainAccessAllowed) return;
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     _listener = [[Listener alloc] initWithConfig: config];
     AssertNil(_listener.urls);
@@ -608,6 +610,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) _testEmptyNetworkInterface {
+    if (!self.keyChainAccessAllowed) return;
+    
     [self listen];
     
     NSArray* urls = _listener.urls;
@@ -655,6 +659,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testUnavailableNetworkInterface {
+    if (!self.keyChainAccessAllowed) return;
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.networkInterface = @"1.1.1.256";
     [self ignoreException:^{
