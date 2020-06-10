@@ -70,7 +70,7 @@ static C4LogLevel string2level(NSString* value) {
 }
 
 static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel level) {
-    C4LogDomain domain = c4log_getDomain(domainName, false);
+    C4LogDomain domain = c4log_getDomain(domainName, true);
     if (domain)
         c4log_setLevel(domain, level);
     return domain;
