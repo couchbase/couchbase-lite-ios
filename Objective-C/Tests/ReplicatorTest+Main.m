@@ -1367,6 +1367,9 @@
     AssertNil([self.otherDB documentWithID: @"doc3"]);
     AssertEqual(self.db.count, 3u);
     AssertEqual(self.otherDB.count, 2u);
+    
+    // Cleanup:
+    repl = nil;
 }
 
 - (void) testStopAndRestartPullReplicationWithFilter {
@@ -1419,6 +1422,9 @@
     AssertNil([self.db documentWithID: @"doc3"]);
     AssertEqual(self.otherDB.count, 3u);
     AssertEqual(self.db.count, 2u);
+    
+    // Cleanup:
+    repl = nil;
 }
 
 - (void) testRevisionIdInPushPullFilters {
@@ -1757,6 +1763,9 @@
     AssertEqualObjects(repl.config.pullFilter, pushFilter);
     Assert([repl.config.pushFilter isEqual: pullFilter]);
     Assert([repl.config.pullFilter isEqual: pushFilter]);
+    
+    // Cleanup:
+    repl = nil;
 }
 
 - (void) testReplicationConfigSetterMethods {
@@ -1809,6 +1818,9 @@
     Assert(docReplication.isPush);
     AssertEqualObjects(docReplication.documents, @[]);
     AssertEqualObjects(docReplication.replicator, repl);
+    
+    // Cleanup:
+    repl = nil;
 }
 
 - (void) testReplicatedDocument {
