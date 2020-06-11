@@ -173,7 +173,7 @@
         if([self.errorLogic shouldCloseAtLocation: kCBLMockConnectionClose]) {
             error = [self.errorLogic createError];
         }
-        NSLog(@"%@: Tell server's replicator to close connection with error: %@", self, error);
+        NSLog(@"%@: Tell replicator to close connection with error: %@", self, error);
         [self.replicatorConnection close: error];
     }
 }
@@ -199,7 +199,7 @@
 - (void) clientDisconnected: (CBLMessagingError*)error {
     NSLog(@"%@: Client Disconnected with error: %@", self, error);
     if (!self.isClosed) {
-        NSLog(@"%@: Tell client's replicator to close connection with error: %@", self, error);
+        NSLog(@"%@: Tell replicator to close connection with error: %@", self, error);
         [self.replicatorConnection close: error];
     }
 }
