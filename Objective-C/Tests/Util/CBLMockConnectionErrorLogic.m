@@ -32,8 +32,7 @@
 
 @end
 
-@implementation CBLTestErrorLogic
-{
+@implementation CBLTestErrorLogic {
     CBLMockConnectionLifecycleLocation _location;
     CBLMessagingError* _error;
     NSInteger _current;
@@ -41,8 +40,7 @@
 }
 
 - (instancetype)initAtLocation: (CBLMockConnectionLifecycleLocation)location
-             withRecoveryCount: (NSInteger)recoveryCount
-{
+             withRecoveryCount: (NSInteger)recoveryCount {
     self = [super init];
     if(self) {
         if(recoveryCount <= 0) {
@@ -61,7 +59,6 @@
                                       userInfo: @{@"message":@"Test Recoverable Exception"}]
                                                 isRecoverable: YES];
         }
-        
         _location = location;
     }
     
@@ -69,28 +66,33 @@
 }
 
 - (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location {
-    return _current < _total && location == _location;
+    @synchronized (self) {
+        return _current < _total && location == _location;
+    }
 }
 
 - (CBLMessagingError*) createError {
-    _current++;
-    return _error;
+    @synchronized (self) {
+        _current++;
+        return _error;
+    }
 }
 
 @end
 
 @implementation CBLReconnectErrorLogic
+
 @synthesize isErrorActive;
 
 - (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location {
-    return isErrorActive;
+    return self.isErrorActive;
 }
 
 - (CBLMessagingError*) createError {
     return [[CBLMessagingError alloc] initWithError:
             [NSError errorWithDomain: CBLErrorDomain
                                 code: -1
-                            userInfo: @{@"message":@"Server is no longer listening"}]
+                            userInfo: @{@"message": @"Server is no longer listening"}]
                                       isRecoverable: false];
 }
 
