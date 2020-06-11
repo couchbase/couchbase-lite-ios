@@ -22,24 +22,24 @@
 
 @protocol CBLMockConnectionErrorLogic <NSObject>
 
-- (BOOL)shouldCloseAtLocation:(CBLMockConnectionLifecycleLocation)location;
+- (BOOL) shouldCloseAtLocation: (CBLMockConnectionLifecycleLocation)location;
 
-- (CBLMessagingError *)createError;
-
-@end
-
-@interface CBLNoErrorLogic : NSObject <CBLMockConnectionErrorLogic>
+- (CBLMessagingError*) createError;
 
 @end
 
-@interface CBLTestErrorLogic : NSObject <CBLMockConnectionErrorLogic>
+@interface CBLNoErrorLogic : NSObject<CBLMockConnectionErrorLogic>
 
-- (instancetype)initAtLocation:(CBLMockConnectionLifecycleLocation)location withRecoveryCount:(NSInteger)recoveryCount;
+@end
+
+@interface CBLTestErrorLogic : NSObject<CBLMockConnectionErrorLogic>
+
+- (instancetype) initAtLocation: (CBLMockConnectionLifecycleLocation)location withRecoveryCount: (NSInteger)recoveryCount;
 
 @end
 
 @interface CBLReconnectErrorLogic : NSObject <CBLMockConnectionErrorLogic>
 
-@property (nonatomic) BOOL isErrorActive;
+@property (atomic) BOOL isErrorActive;
 
 @end

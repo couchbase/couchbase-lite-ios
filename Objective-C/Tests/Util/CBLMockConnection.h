@@ -20,35 +20,46 @@
 #import "CBLProtocolType.h"
 @protocol CBLMockConnectionErrorLogic;
 @class CBLMessageEndpointListener;
+@class CBLMockServerConnection;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLMockConnection : NSObject <CBLMessageEndpointConnection>
 
-@property (nonatomic) id<CBLMockConnectionErrorLogic> errorLogic;
+@property (atomic, readonly, nullable) CBLMessageEndpointListener* listener;
 
-@property (nonatomic, readonly) BOOL isClient;
+@property (atomic, readonly, nullable) id<CBLReplicatorConnection> replicatorConnection;
 
-- (instancetype)initWithListener:(CBLMessageEndpointListener*)listener andProtocol:(CBLProtocolType)protocolType;
+@property (atomic, readonly) CBLProtocolType protocolType;
 
-- (void)acceptBytes:(NSData *)message;
+@property (atomic, readonly) BOOL isClient;
 
-- (void)connectionBroken:(CBLMessagingError *)error;
+@property (atomic, nullable) id<CBLMockConnectionErrorLogic> errorLogic;
 
-- (void)performWrite:(NSData *)data;
+- (instancetype) initWithListener: (nullable CBLMessageEndpointListener*)listener protocol: (CBLProtocolType)protocolType;
+
+- (void) acceptBytes: (NSData*)message;
+
+- (void) connectionBroken: (nullable CBLMessagingError*)error;
+
+- (void) performWrite: (NSData*)data;
 
 @end
 
 @interface CBLMockClientConnection : CBLMockConnection
 
-- (instancetype)initWithEndpoint:(CBLMessageEndpoint *)endpoint;
+- (instancetype) initWithEndpoint: (CBLMessageEndpoint*)endpoint;
 
-- (void)serverDisconnected;
+- (void) serverDisconnected;
 
 @end
 
 @interface CBLMockServerConnection : CBLMockConnection
 
-- (void)clientOpened:(CBLMockClientConnection *)client;
+- (void) clientOpened: (CBLMockClientConnection*)client;
 
-- (void)clientDisconnected:(CBLMessagingError *)error;
+- (void) clientDisconnected: (nullable CBLMessagingError*)error;
 
 @end
+
+NS_ASSUME_NONNULL_END
