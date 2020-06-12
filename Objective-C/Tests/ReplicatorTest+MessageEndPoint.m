@@ -199,9 +199,6 @@
 }
 
 - (void) testMEP2PWithMessageStream {
-    int* p = 0;
-    *p = 0;
-    
     CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
