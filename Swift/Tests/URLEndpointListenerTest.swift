@@ -50,6 +50,12 @@ class URLEndpontListenerTest: ReplicatorTest {
         config.port = tls ? wssPort : wsPort
         config.disableTLS = !tls
         config.authenticator = auth
+        
+        return try listen(config: config)
+    }
+    
+    @discardableResult
+    func listen(config: URLEndpointListenerConfiguration) throws -> URLEndpointListener {
         self.listener = URLEndpointListener.init(config: config)
         
         // Start:
@@ -74,6 +80,89 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     func cleanUpIdentities() throws {
         try URLEndpointListener.deleteAnonymousIdentities()
+    }
+    
+    func replicator(db: Database, continuous: Bool, target: Endpoint, serverCert: SecCertificate?) -> Replicator {
+        let config = ReplicatorConfiguration(database: db, target: target)
+        config.replicatorType = .pushAndPull
+        config.continuous = continuous
+        config.pinnedServerCertificate = serverCert
+        return Replicator(config: config)
+    }
+    
+    /// Two replicators, replicates docs to the self.listener; validates connection status
+    func validateMultipleReplicationsTo() throws {
+        let exp1 = expectation(description: "replicator#1 stop")
+        let exp2 = expectation(description: "replicator#2 stop")
+        let count = self.listener!.config.database.count
+        
+        // open DBs
+        try deleteDB(name: "db1")
+        try deleteDB(name: "db2")
+        let db1 = try openDB(name: "db1")
+        let db2 = try openDB(name: "db2")
+        
+        // For keeping the replication long enough to validate connection status, we will use blob
+        let imageData = try dataFromResource(name: "image", ofType: "jpg")
+        
+        // DB#1
+        let doc1 = createDocument()
+        let blob1 = Blob(contentType: "image/jpg", data: imageData)
+        doc1.setBlob(blob1, forKey: "blob")
+        try db1.saveDocument(doc1)
+        
+        // DB#2
+        let doc2 = createDocument()
+        let blob2 = Blob(contentType: "image/jpg", data: imageData)
+        doc2.setBlob(blob2, forKey: "blob")
+        try db2.saveDocument(doc2)
+        
+        let repl1 = replicator(db: db1,
+                               continuous: false,
+                               target: self.listener!.localURLEndpoint,
+                               serverCert: self.listener!.tlsIdentity!.certs[0])
+        let repl2 = replicator(db: db2,
+                               continuous: false,
+                               target: self.listener!.localURLEndpoint,
+                               serverCert: self.listener!.tlsIdentity!.certs[0])
+        
+        var maxConnectionCount: UInt64 = 0, maxActiveCount: UInt64 = 0
+        let changeListener = { (change: ReplicatorChange) in
+            if change.status.activity == .busy {
+                maxConnectionCount = max(self.listener!.status.connectionCount, maxConnectionCount);
+                maxActiveCount = max(self.listener!.status.activeConnectionCount, maxActiveCount);
+            }
+            
+            if change.status.activity == .stopped {
+                if change.replicator.config.database.name == "db1" {
+                    exp1.fulfill()
+                } else {
+                    exp2.fulfill()
+                }
+            }
+            
+        }
+        let token1 = repl1.addChangeListener(changeListener)
+        let token2 = repl2.addChangeListener(changeListener)
+        
+        repl1.start()
+        repl2.start()
+        wait(for: [exp1, exp2], timeout: 5.0)
+        
+        // check both replicators access listener at same time
+        XCTAssertEqual(maxConnectionCount, 2);
+        XCTAssertEqual(maxActiveCount, 2);
+        
+        // all data are transferred to/from
+        XCTAssertEqual(self.listener!.config.database.count, count + 2);
+        XCTAssertEqual(db1.count, count + 1/* db2 doc*/);
+        XCTAssertEqual(db2.count, count + 1/* db1 doc*/);
+        
+        repl1.removeChangeListener(withToken: token1)
+        repl2.removeChangeListener(withToken: token2)
+        
+        try db1.close()
+        try db2.close()
     }
     
     override func setUp() {
@@ -410,14 +499,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertEqual(self.oDB.count, 1)
     }
     
-    func replicator(db: Database, continuous: Bool, target: Endpoint, serverCert: SecCertificate?) -> Replicator {
-        let config = ReplicatorConfiguration(database: db, target: target)
-        config.replicatorType = .pushAndPull
-        config.continuous = continuous
-        config.pinnedServerCertificate = serverCert
-        return Replicator(config: config)
-    }
-    
     func testReplicatorAndListenerOnSameDatabase() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -492,6 +573,77 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(self.listener!.urls)
         
         try stopListen()
+    }
+    
+    // TODO: https://issues.couchbase.com/browse/CBL-1008
+    func _testEmptyNetworkInterface() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        try listen()
+        
+        for (i, url) in self.listener!.urls!.enumerated() {
+            // separate db instance!
+            let db = try Database(name: "db-\(i)")
+            let doc = createDocument()
+            doc.setString(url.absoluteString, forKey: "url")
+            try db.saveDocument(doc)
+            
+            // separate replicator instance
+            let target = URLEndpoint(url: url)
+            let rConfig = ReplicatorConfiguration(database: db, target: target)
+            rConfig.pinnedServerCertificate = self.listener?.tlsIdentity!.certs[0]
+            run(config: rConfig, expectedError: nil)
+            
+            // remove the db
+            try db.delete()
+        }
+        
+        XCTAssertEqual(self.oDB.count, UInt64(self.listener!.urls!.count))
+        
+        let q = QueryBuilder.select([SelectResult.all()]).from(DataSource.database(self.oDB))
+        let rs = try q.execute()
+        var result = [URL]()
+        for res in rs.allResults() {
+            let dict = res.dictionary(at: 0)
+            result.append(URL(string: dict!.string(forKey: "url")!)!)
+        }
+        
+        XCTAssertEqual(result, self.listener!.urls)
+        try stopListen()
+        
+        // validate 0.0.0.0 meta-address should return same empty response.
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.networkInterface = "0.0.0.0"
+        try listen(config: config)
+        XCTAssertEqual(self.listener!.urls!, result)
+        try stopListen()
+    }
+    
+    func testMultipleReplicatorsToListener() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        try listen()
+        
+        let doc = createDocument()
+        doc.setString("Tiger", forKey: "species")
+        try self.oDB.saveDocument(doc)
+        
+        try validateMultipleReplicationsTo()
+        
+        try stopListen()
+    }
+    
+    // TODO: https://issues.couchbase.com/browse/CBL-954
+    func _testReadOnlyListener() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.readOnly = true
+        try listen(config: config)
+        
+        self.run(target: self.listener!.localURLEndpoint, type: .pushAndPull, continuous: false,
+                 auth: nil, serverCert: self.listener!.tlsIdentity!.certs[0],
+                 expectedError: CBLErrorHTTPForbidden)
     }
 }
 
