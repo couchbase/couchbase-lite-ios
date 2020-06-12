@@ -862,7 +862,8 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: stop and restart replication with filter
     
-    func testStopAndRestartPushReplicationWithFilter() throws {
+    // https://issues.couchbase.com/browse/CBL-1061
+    func _testStopAndRestartPushReplicationWithFilter() throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
