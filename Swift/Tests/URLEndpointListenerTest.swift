@@ -387,6 +387,112 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
     }
     
+    func testMultipleListenersOnSameDatabase() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let listener1 = URLEndpointListener(config: config)
+        let listener2 = URLEndpointListener(config: config)
+        
+        try listener1.start()
+        try listener2.start()
+        
+        try generateDocument(withID: "doc-1")
+        self.run(target: listener1.localURLEndpoint,
+                 type: .pushAndPull,
+                 continuous: false,
+                 auth: nil,
+                 serverCert: listener1.tlsIdentity!.certs[0])
+        
+        // since listener1 and listener2 are using same certificates, one listener only needs stop.
+        listener2.stop()
+        try stopListener(listener: listener1)
+        XCTAssertEqual(self.oDB.count, 1)
+    }
+    
+    func replicator(db: Database, continuous: Bool, target: Endpoint, serverCert: SecCertificate?) -> Replicator {
+        let config = ReplicatorConfiguration(database: db, target: target)
+        config.replicatorType = .pushAndPull
+        config.continuous = continuous
+        config.pinnedServerCertificate = serverCert
+        return Replicator(config: config)
+    }
+    
+    func testReplicatorAndListenerOnSameDatabase() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let exp1 = expectation(description: "replicator#1 stop")
+        let exp2 = expectation(description: "replicator#2 stop")
+        
+        // listener
+        let doc = createDocument()
+        try self.oDB.saveDocument(doc)
+        try listen()
+        
+        // Replicator#1 (otherDB -> DB#1)
+        let doc1 = createDocument()
+        try self.db.saveDocument(doc1)
+        let target = DatabaseEndpoint(database: self.db)
+        let repl1 = replicator(db: self.oDB, continuous: true, target: target, serverCert: nil)
+        
+        // Replicator#2 (DB#2 -> Listener(otherDB))
+        try deleteDB(name: "db2")
+        let db2 = try openDB(name: "db2")
+        let doc2 = createDocument()
+        try db2.saveDocument(doc2)
+        let repl2 = replicator(db: db2,
+                               continuous: true,
+                               target: self.listener!.localURLEndpoint,
+                               serverCert: self.listener!.tlsIdentity!.certs[0])
+        
+        let changeListener = { (change: ReplicatorChange) in
+            if change.status.activity == .idle &&
+                change.status.progress.completed == change.status.progress.total {
+                if self.oDB.count == 3 && self.db.count == 3 && db2.count == 3 {
+                    change.replicator.stop()
+                }
+            }
+            
+            if change.status.activity == .stopped {
+                if change.replicator.config.database.name == "db2" {
+                    exp2.fulfill()
+                } else {
+                    exp1.fulfill()
+                }
+            }
+            
+        }
+        let token1 = repl1.addChangeListener(changeListener)
+        let token2 = repl2.addChangeListener(changeListener)
+        
+        repl1.start()
+        repl2.start()
+        wait(for: [exp1, exp2], timeout: 5.0)
+        
+        XCTAssertEqual(self.oDB.count, 3)
+        XCTAssertEqual(self.db.count, 3)
+        XCTAssertEqual(db2.count, 3)
+        
+        repl1.removeChangeListener(withToken: token1)
+        repl2.removeChangeListener(withToken: token2)
+        
+        try db2.close()
+        try stopListen()
+    }
+    
+    func testCloseWithActiveListener() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        try listen()
+        
+        // Close database should also stop the listener:
+        try self.oDB.close()
+        
+        XCTAssertNil(self.listener!.port)
+        XCTAssertNil(self.listener!.urls)
+        
+        try stopListen()
+    }
 }
 
 @available(macOS 10.12, iOS 10.0, *)
