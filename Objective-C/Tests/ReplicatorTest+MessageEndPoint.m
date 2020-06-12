@@ -180,25 +180,28 @@
         [self waitForExpectations: @[listenerStop] timeout: 10.0];
     }
     
-//    config = [self createFailureP2PConfigurationWithProtocol: kCBLProtocolTypeMessageStream
-//                                                  atLocation: location
-//                                          withRecoverability: isRecoverable
-//                                                    listener: &listener];
-//    
-//    if (location != kCBLMockConnectionConnect) {
-//        listenerStop = [self waitForListenerStopped: listener];
-//    }
-//    
-//    [self run: config reset: YES errorCode: expectedCode errorDomain: expectedDomain];
-//    
-//    if (listenerStop) {
-//        [self waitForExpectations: @[listenerStop] timeout: 10.0];
-//    }
+    config = [self createFailureP2PConfigurationWithProtocol: kCBLProtocolTypeMessageStream
+                                                  atLocation: location
+                                          withRecoverability: isRecoverable
+                                                    listener: &listener];
+    
+    if (location != kCBLMockConnectionConnect) {
+        listenerStop = [self waitForListenerStopped: listener];
+    }
+    
+    [self run: config reset: YES errorCode: expectedCode errorDomain: expectedDomain];
+    
+    if (listenerStop) {
+        [self waitForExpectations: @[listenerStop] timeout: 10.0];
+    }
     
     timeout = oldTimeout;
 }
 
 - (void) testMEP2PWithMessageStream {
+    int* p = 0;
+    *p = 0;
+    
     CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
