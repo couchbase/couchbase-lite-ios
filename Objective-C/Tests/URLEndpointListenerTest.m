@@ -237,9 +237,11 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) cleanUpIdentities {
     if (self.keyChainAccessAllowed) {
-        NSError* error;
-        Assert([CBLURLEndpointListener deleteAnonymousIdentitiesWithError: &error],
-               @"Cannot delete anonymous identity: %@", error);
+        [self ignoreException: ^{
+            NSError* error;
+            Assert([CBLURLEndpointListener deleteAnonymousIdentitiesWithError: &error],
+                   @"Cannot delete anonymous identity: %@", error);
+        }];
     }
 }
 

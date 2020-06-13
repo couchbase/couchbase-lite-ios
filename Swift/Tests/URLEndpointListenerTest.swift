@@ -79,7 +79,9 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func cleanUpIdentities() throws {
-        try URLEndpointListener.deleteAnonymousIdentities()
+        self.ignoreException {
+            try URLEndpointListener.deleteAnonymousIdentities()
+        }
     }
     
     func replicator(db: Database, continuous: Bool, target: Endpoint, serverCert: SecCertificate?) -> Replicator {
