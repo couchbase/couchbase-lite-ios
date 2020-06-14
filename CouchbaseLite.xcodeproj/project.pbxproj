@@ -2094,6 +2094,7 @@
 		936483B41E4431C6008D08B3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		936483B51E4431C6008D08B3 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		936483B61E4431C6008D08B3 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		9367E86E24948C3F00775F97 /* xctest_crash_log.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = xctest_crash_log.sh; sourceTree = "<group>"; };
 		9369A676207DB3D4009B5B83 /* CBLEncryptionKey+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLEncryptionKey+Internal.h"; sourceTree = "<group>"; };
 		9369A677207DB3D4009B5B83 /* CBLEncryptionKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLEncryptionKey.m; sourceTree = "<group>"; };
 		9369A678207DB3D4009B5B83 /* CBLEncryptionKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLEncryptionKey.h; sourceTree = "<group>"; };
@@ -3138,6 +3139,7 @@
 				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
+				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
 			);
 			path = Scripts;
 			sourceTree = "<group>";

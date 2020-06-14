@@ -199,6 +199,8 @@
 }
 
 - (void) testMEP2PWithMessageStream {
+    self.crashWhenStoppedTimeoutOccurred = YES;
+    
     CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
@@ -287,6 +289,8 @@
 }
 
 - (void) testMEP2PWithByteStream {
+    self.crashWhenStoppedTimeoutOccurred = YES;
+    
     CBLProtocolType protocolType = kCBLProtocolTypeByteStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];

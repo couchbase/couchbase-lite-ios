@@ -7,6 +7,13 @@ function usage
   echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--xcframework] [--EE] [--notest] [--nocov] [--pretty]"
 }
 
+function checkCrashLogs
+{
+  echo "Check for xctest crash logs ..."
+  sh Scripts/xctest_crash_log.sh
+  exit 1
+}
+
 while [[ $# -gt 0 ]]
 do
   key=${1}
@@ -100,11 +107,14 @@ then
   instruments -s devices
 
   echo "Run ObjC macOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx
-
+  sh Scripts/xctest_crash_log.sh --delete-all
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx || checkCrashLogs
+  
   echo "Run ObjC iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
-
+  sh Scripts/xctest_crash_log.sh --delete-all
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES || checkCrashLogs
+  
+  
   if [ -z "$NO_COV" ]
   then
     # Objective-C:

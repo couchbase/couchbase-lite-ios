@@ -1118,7 +1118,7 @@
         }];
     }];
     
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectations: @[expectation] timeout:5.0];
     
     AssertEqual(self.db.count, 0u);
     AssertEqual(self.otherDB.count, 1u);
@@ -1707,7 +1707,7 @@
     AssertNil(err);
     
     // Wait for the document get expired.
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectations: @[expectation] timeout: 5.0];
     [self.db removeChangeListenerWithToken: token];
     
     // Erase remote data:

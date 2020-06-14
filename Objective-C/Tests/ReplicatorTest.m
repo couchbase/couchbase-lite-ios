@@ -33,6 +33,7 @@
 }
 
 @synthesize disableDefaultServerCertPinning=_disableDefaultServerCertPinning;
+@synthesize crashWhenStoppedTimeoutOccurred=_crashWhenStoppedTimeoutOccurred;
 
 + (void) initialize {
     if (self == [ReplicatorTest class]) {
@@ -75,7 +76,7 @@
 
 - (void) setUp {
     [super setUp];
-    
+    self.crashWhenStoppedTimeoutOccurred = NO;
     timeout = 15.0; // TODO: CBL-973
     
     [self openOtherDB];
@@ -382,7 +383,15 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     }
     
     @try {
-        [self waitForExpectations: @[x] timeout: timeout];
+        XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: timeout];
+        if (result != XCTWaiterResultCompleted) {
+            if (result == XCTWaiterResultTimedOut) {
+                assert(!self.crashWhenStoppedTimeoutOccurred);
+                XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, timeout);
+            } else {
+                XCTFail(@"Unfulfilled expectations for %@ as result = %ld", x.expectationDescription, (long)result);
+            }
+        }
     }
     @finally {
         if (replicator.status.activity != kCBLReplicatorStopped)

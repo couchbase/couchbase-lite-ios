@@ -55,6 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) BOOL disableDefaultServerCertPinning;
 
+@property (nonatomic) BOOL crashWhenStoppedTimeoutOccurred;
+
 - (SecCertificateRef) defaultServerCert;
 
 - (NSString*) getCertificateID: (SecCertificateRef)cert;
