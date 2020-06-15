@@ -49,8 +49,8 @@ do
   shift
 done
 
-# TODO: CBL-973
-# NO_TEST=YES
+# TODO: CBL-1078
+NO_COV=YES
 
 if [ -z "$OUTPUT_DIR" ]
 then
