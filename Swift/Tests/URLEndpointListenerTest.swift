@@ -577,13 +577,16 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1008
-    func _testEmptyNetworkInterface() throws {
+    func testEmptyNetworkInterface() throws {
         if !self.keyChainAccessAllowed { return }
         
         try listen()
+        let urls = self.listener!.urls!
         
-        for (i, url) in self.listener!.urls!.enumerated() {
+        /// Link local addresses cannot be assigned via network interface because they don't map to any given interface.
+        let notLinkLocal: [URL] = urls.filter { !$0.host!.starts(with: "fe80::") }
+        
+        for (i, url) in notLinkLocal.enumerated() {
             // separate db instance!
             let db = try Database(name: "db-\(i)")
             let doc = createDocument()
@@ -600,7 +603,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             try db.delete()
         }
         
-        XCTAssertEqual(self.oDB.count, UInt64(self.listener!.urls!.count))
+        XCTAssertEqual(self.oDB.count, UInt64(notLinkLocal.count))
         
         let q = QueryBuilder.select([SelectResult.all()]).from(DataSource.database(self.oDB))
         let rs = try q.execute()
@@ -610,14 +613,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             result.append(URL(string: dict!.string(forKey: "url")!)!)
         }
         
-        XCTAssertEqual(result, self.listener!.urls)
-        try stopListen()
-        
-        // validate 0.0.0.0 meta-address should return same empty response.
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        config.networkInterface = "0.0.0.0"
-        try listen(config: config)
-        XCTAssertEqual(self.listener!.urls!, result)
+        XCTAssertEqual(result, notLinkLocal)
         try stopListen()
     }
     
