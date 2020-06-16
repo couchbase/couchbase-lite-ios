@@ -70,7 +70,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
             
             [db addActiveLiveQuery: self];
             
-            __weak typeof(self) wSelf = self;
+            __weak CBLLiveQuery* wSelf = self;
             _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
                 [wSelf databaseChanged: change];
             }];
@@ -171,7 +171,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         return;  // Already a pending update scheduled
     _willUpdate = YES;
     
-    __strong typeof(_query) query = _query;
+    __strong CBLQuery* query = _query;
     dispatch_queue_t queue = query.database.queryQueue;
     if (!queue)
         return;

@@ -688,6 +688,22 @@ typedef CBLURLEndpointListener Listener;
     }];
 }
 
+- (void) testNetworkInterfaceName {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSArray* interfaces = [Listener allInterfaceNames];
+    for (NSString* i in interfaces) {
+        Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+        config.networkInterface = i;
+        
+        [self listen: config];
+        
+        /// make sure, connection is successful and no error thrown!
+        
+        [self stopListen];
+    }
+}
+
 - (void) testMultipleListenersOnSameDatabase {
     if (!self.keyChainAccessAllowed) return;
     
