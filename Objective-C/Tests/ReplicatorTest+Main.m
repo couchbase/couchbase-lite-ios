@@ -28,6 +28,11 @@
 
 @implementation ReplicatorTest_Main
 
+- (void) setUp {
+    [super setUp];
+    self.crashWhenStoppedTimeoutOccurred = YES;
+}
+
 #ifdef COUCHBASE_ENTERPRISE
 
 - (void)testEmptyPush {

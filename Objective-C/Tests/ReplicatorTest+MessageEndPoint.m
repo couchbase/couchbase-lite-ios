@@ -198,11 +198,6 @@
     timeout = oldTimeout;
 }
 
-- (void) setUp {
-    [super setUp];
-    self.crashWhenStoppedTimeoutOccurred = YES;
-}
-
 - (void) testMEP2PWithMessageStream {
     CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
     
