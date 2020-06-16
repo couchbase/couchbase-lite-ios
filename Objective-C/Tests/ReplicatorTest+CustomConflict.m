@@ -856,6 +856,8 @@
     
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
+    
+    CBLDatabase.log.custom = nil;
 }
 
 - (void) testConflictResolverReturningBlobFromDifferentDB {
