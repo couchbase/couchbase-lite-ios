@@ -342,6 +342,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(customLogger.lines.last,
                        "The document ID of the resolved document '\(wrongDocID)' is not matching " +
             "with the document ID of the conflicting document '\(docID)'.")
+        
+        Database.log.custom = nil
     }
     
     func testConflictResolverDifferentDBDoc() throws {
