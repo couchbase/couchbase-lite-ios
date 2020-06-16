@@ -858,6 +858,10 @@
     [replicator removeChangeListenerWithToken: docReplToken];
     
     CBLDatabase.log.custom = nil;
+    
+    // Workaround:
+    // https://issues.couchbase.com/browse/CBL-1061
+    [NSThread sleepForTimeInterval: 0.5];
 }
 
 - (void) testConflictResolverReturningBlobFromDifferentDB {

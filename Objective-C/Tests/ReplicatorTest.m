@@ -399,7 +399,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
         [replicator removeChangeListenerWithToken: token];
     }
     
-    // Workaround
+    // Workaround:
     // https://issues.couchbase.com/browse/CBL-1061
     [NSThread sleepForTimeInterval: 0.5];
     
