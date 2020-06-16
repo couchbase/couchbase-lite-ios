@@ -76,7 +76,9 @@
 
 - (void) setUp {
     [super setUp];
-    self.crashWhenStoppedTimeoutOccurred = NO;
+    
+    self.crashWhenStoppedTimeoutOccurred = YES;
+    
     timeout = 15.0; // TODO: CBL-973
     
     [self openOtherDB];
@@ -386,7 +388,10 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
         XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: timeout];
         if (result != XCTWaiterResultCompleted) {
             if (result == XCTWaiterResultTimedOut) {
-                assert(!self.crashWhenStoppedTimeoutOccurred);
+                if (self.crashWhenStoppedTimeoutOccurred) {
+                    NSLog(@"!!! Exceeding stopped timeout, let's crash the test to get thread dump ...");
+                    assert(false);
+                }
                 XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, timeout);
             } else {
                 XCTFail(@"Unfulfilled expectations for %@ as result = %ld", x.expectationDescription, (long)result);
