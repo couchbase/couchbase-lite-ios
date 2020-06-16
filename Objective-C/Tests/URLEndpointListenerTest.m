@@ -624,16 +624,20 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) _testEmptyNetworkInterface {
+- (void) testEmptyNetworkInterface {
     if (!self.keyChainAccessAllowed) return;
     
     [self listen];
-    
     NSArray* urls = _listener.urls;
+    
+    /** Link local addresses cannot be assigned via network interface because they don't map to any given interface.  */
+    NSPredicate* p = [NSPredicate predicateWithFormat: @"NOT(SELF.host BEGINSWITH 'fe80::')"];
+    NSArray* notLinkLocal = [urls filteredArrayUsingPredicate: p];
+    
     NSError* err = nil;
-    for (uint i = 0; i < urls.count; i++ ) {
+    for (uint i = 0; i < notLinkLocal.count; i++ ) {
         // separate db instance!
-        NSURL* url = urls[i];
+        NSURL* url = notLinkLocal[i];
         CBLDatabase* db = [[CBLDatabase alloc] initWithName: $sprintf(@"db-%d", i) error: &err];
         AssertNil(err);
         CBLMutableDocument* doc = [self createDocument];
@@ -651,22 +655,23 @@ typedef CBLURLEndpointListener Listener;
         [self deleteDatabase: db];
     }
     
-    AssertEqual(self.otherDB.count, urls.count);
+    AssertEqual(self.otherDB.count, notLinkLocal.count);
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                                      from: [CBLQueryDataSource database: self.otherDB]];
     CBLQueryResultSet* rs = [q execute: &err];
     AssertNil(err);
-    NSMutableArray* result = [NSMutableArray arrayWithCapacity: urls.count];
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: notLinkLocal.count];
     for(CBLQueryResult* res in rs.allObjects) {
         CBLDictionary* dict = [res dictionaryAtIndex: 0];
         [result addObject: [NSURL URLWithString: [dict stringForKey: @"url"]]];
     }
     
-    AssertEqualObjects(result, urls);
+    AssertEqualObjects(result, notLinkLocal);
     
     // validate 0.0.0.0 meta-address should return same empty response.
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.networkInterface = @"0.0.0.0";
+    config.port = kWssPort;
     [self listen: config];
     AssertEqualObjects(urls, _listener.urls);
     
