@@ -686,6 +686,11 @@ typedef CBLURLEndpointListener Listener;
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
     }];
+    
+    config.networkInterface = @"blah";
+    [self ignoreException:^{
+        [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
+    }];
 }
 
 - (void) testNetworkInterfaceName {
