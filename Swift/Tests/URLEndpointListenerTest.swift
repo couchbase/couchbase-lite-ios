@@ -250,6 +250,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
+    @available(macOS 10.12, iOS 10.3, *)
     func testClientCertAuthenticatorWithClosure() throws {
         if !self.keyChainAccessAllowed {
             return
