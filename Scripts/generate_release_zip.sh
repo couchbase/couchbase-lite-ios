@@ -168,14 +168,15 @@ OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_
 
 if [[ -z $XCFRAMEWORK ]]
 then
-  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
-  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
-  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
-  sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
+exit 0
+  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 else
   # xcframework
-  sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
-  sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY && exit ${PIPESTATUS[0]}
+  set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 fi
 
 # Objective-C
