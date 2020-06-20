@@ -24,6 +24,7 @@
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
 #import "CBLReplicator+Internal.h"
+#import "CBLDatabase+Internal.h"
 #import "c4Socket.h"
 #import "MYURLUtils.h"
 #import "fleece/Fleece.hh"
@@ -32,6 +33,9 @@
 #import <memory>
 #import <netdb.h>
 #import <vector>
+#import "CollectionUtils.h"
+#import "CBLURLEndpoint.h"
+#import "Foundation+CBL.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
@@ -87,6 +91,8 @@ struct PendingWrite {
     BOOL _connectedThruProxy;
     
     NSArray* _clientIdentity;
+    C4Database* _c4db;
+    NSURL* _remoteURL;
     
 #ifdef COUCHBASE_ENTERPRISE
     BOOL _acceptOnlySelfSignedCert;
@@ -157,14 +163,14 @@ static void doDispose(C4Socket* s) {
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
-        
+        CBLReplicator* replicator = (__bridge CBLReplicator*)context;
+        _c4db = replicator.config.database.c4db;
+        _remoteURL = $castIf(CBLURLEndpoint, replicator.config.target).url;
 #ifdef COUCHBASE_ENTERPRISE
         // Workaround for CBL-1003:
-        CBLReplicator* replicator = (__bridge CBLReplicator*)context;
         if (replicator.config.serverCertificateVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
             _acceptOnlySelfSignedCert = YES;
 #endif
-        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
@@ -374,10 +380,23 @@ static void doDispose(C4Socket* s) {
     // Construct the HTTP request:
     for (Dict::iterator header(_options[kC4ReplicatorOptionExtraHeaders].asDict()); header; ++header)
         _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
-    slice cookies = _options[kC4ReplicatorOptionCookies].asString();
-    if (cookies)
-        [_logic addValue: cookies.asNSString() forHTTPHeaderField: @"Cookie"];
-
+    
+    slice sessionCookie = _options[kC4ReplicatorOptionCookies].asString();
+    if (sessionCookie.buf)
+        [_logic addValue: sessionCookie.asNSString()  forHTTPHeaderField: @"Cookie"];
+    
+    C4Error err = {};
+    C4Address addr = {};
+    [_remoteURL c4Address: &addr];
+    C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
+    if (!cookies.buf) {
+        CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
+        // TODO: any more handling?
+    }
+    NSString* cookieStr = sliceResult2string(cookies);
+    if (cookies.buf)
+        [_logic addValue:cookieStr  forHTTPHeaderField: @"Cookie"];
+    
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
     _logic[@"Sec-WebSocket-Version"] = @"13";
@@ -443,13 +462,36 @@ static void doDispose(C4Socket* s) {
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
+    
+    // save to lite core
     NSString* cookie = headers[@"Set-Cookie"];
-    if ([cookie containsString: @", "]) {
-        // CFHTTPMessage incorrectly merges multiple Set-Cookie headers. Undo that:
-        NSMutableDictionary* newHeaders = [headers mutableCopy];
-        newHeaders[@"Set-Cookie"] = [cookie componentsSeparatedByString: @", "];
-        headers = newHeaders;
+    if (cookie.length > 0) {
+        C4Error err = {};
+        if (!c4db_setCookie(_c4db, cookie.c4slice, _remoteURL.host.c4slice,
+                            _remoteURL.path.stringByDeletingLastPathComponent.c4slice, &err)) {
+            CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+            // TODO: any more handling?
+        }
+        
+        // update the response headers! do we really need this now? since we are already saving to c4db?
+        NSError* error = NULL;
+        NSRegularExpression* r = [NSRegularExpression regularExpressionWithPattern: @"\\,\\s*\\w+="
+                                                                           options: NSRegularExpressionCaseInsensitive
+                                                                             error: &error];
+        NSArray* matches = [r matchesInString: cookie options:0 range: NSMakeRange(0, [cookie length])];
+        NSMutableArray* cookies = [NSMutableArray arrayWithCapacity: matches.count];
+        for (NSTextCheckingResult* match in matches) {
+            if ([match range].length > 0) {
+                [cookies addObject: [cookie substringWithRange: [match range]]];
+            }
+        }
+        if (cookies.count > 0) {
+            NSMutableDictionary* newHeaders = [headers mutableCopy];
+            newHeaders[@"Set-Cookie"] = cookies;
+            headers = newHeaders;
+        }
     }
+    
     NSInteger httpStatus = _logic.httpStatus;
     Encoder enc;
     enc << headers;
