@@ -1484,37 +1484,6 @@
     Assert([pushDocIds containsObject: @"doc1"]);
 }
 
-#pragma mark Cookie
-- (void) testSessionCookieInReplicator {
-    CBLDatabase.log.console.level = kCBLLogLevelNone;
-    id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
-    if (!target)
-        return;
-    
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setValue: @"Tiger" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
-    
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    config.authenticator = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"password"];
-    
-    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
-        [r addChangeListener:^(CBLReplicatorChange * change) {
-            NSString* cookie = [CBLCookie getCookiesForReplicator: change.replicator];
-            NSLog(@">> Cookie; %@", cookie);
-        }];
-    }];
-    
-    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
-           [r addChangeListener:^(CBLReplicatorChange * change) {
-               NSString* cookie = [CBLCookie getCookiesForReplicator: change.replicator];
-               NSLog(@">> Cookie; %@", cookie);
-           }];
-       }];
-}
-
 #endif // COUCHBASE_ENTERPRISE
 
 #pragma mark - Sync Gateway Tests
