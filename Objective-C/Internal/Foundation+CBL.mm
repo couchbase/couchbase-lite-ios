@@ -1,5 +1,5 @@
 //
-//   Foundation+CBL.mm
+//  Foundation+CBL.mm
 //  CouchbaseLite
 //
 //  Copyright (c) 2020 Couchbase, Inc All rights reserved.
