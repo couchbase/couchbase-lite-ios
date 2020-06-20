@@ -474,6 +474,7 @@ static void doDispose(C4Socket* s) {
         }
         
         // update the response headers! do we really need this now? since we are already saving to c4db?
+        // https://issues.couchbase.com/browse/CBL-681
         NSError* error = NULL;
         NSRegularExpression* r = [NSRegularExpression regularExpressionWithPattern: @"\\,\\s*\\w+="
                                                                            options: NSRegularExpressionCaseInsensitive
