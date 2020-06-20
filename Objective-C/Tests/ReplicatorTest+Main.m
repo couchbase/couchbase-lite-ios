@@ -48,7 +48,8 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    [self run: target errorCode: 0 errorDomain: nil];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.otherDB.count, 2u);
     CBLDocument* savedDoc1 = [self.otherDB documentWithID: @"doc1"];
