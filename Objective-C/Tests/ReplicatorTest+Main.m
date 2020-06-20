@@ -22,7 +22,6 @@
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
-#import "CBLCookie.h"
 
 @interface ReplicatorTest_Main : ReplicatorTest
 @end
@@ -49,9 +48,7 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    config.authenticator = [[CBLSessionAuthenticator alloc] initWithSessionID: @"session" cookieName: @"cookie"];
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self run: target errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.otherDB.count, 2u);
     CBLDocument* savedDoc1 = [self.otherDB documentWithID: @"doc1"];
