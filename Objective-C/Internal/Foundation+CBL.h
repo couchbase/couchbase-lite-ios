@@ -19,14 +19,8 @@
 
 #import <Foundation/Foundation.h>
 #import "c4Base.h"
-#import "fleece/slice.hh"
 
 NS_ASSUME_NONNULL_BEGIN
-
-@interface NSString (CBL)
-- (C4Slice) c4slice;
-
-@end
 
 @interface NSURL (CBL)
 - (void) c4Address: (C4Address*)addr;

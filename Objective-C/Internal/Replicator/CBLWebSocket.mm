@@ -36,6 +36,7 @@
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
 #import "Foundation+CBL.h"
+#import "CBLStringBytes.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
@@ -391,7 +392,6 @@ static void doDispose(C4Socket* s) {
     C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
     if (!cookies.buf) {
         CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
-        // TODO: any more handling?
     }
     NSString* cookieStr = sliceResult2string(cookies);
     if (cookies.buf)
@@ -463,18 +463,9 @@ static void doDispose(C4Socket* s) {
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
     
-    // save to lite core
     NSString* cookie = headers[@"Set-Cookie"];
     if (cookie.length > 0) {
-        C4Error err = {};
-        if (!c4db_setCookie(_c4db, cookie.c4slice, _remoteURL.host.c4slice,
-                            _remoteURL.path.stringByDeletingLastPathComponent.c4slice, &err)) {
-            CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
-            // TODO: any more handling?
-        }
-        
-        // update the response headers! do we really need this now? since we are already saving to c4db?
-        // https://issues.couchbase.com/browse/CBL-681
+        // separated by comma will fail, hence regex: https://issues.couchbase.com/browse/CBL-681
         NSError* error = NULL;
         NSRegularExpression* r = [NSRegularExpression regularExpressionWithPattern: @"\\,\\s*\\w+="
                                                                            options: NSRegularExpressionCaseInsensitive
@@ -483,7 +474,17 @@ static void doDispose(C4Socket* s) {
         NSMutableArray* cookies = [NSMutableArray arrayWithCapacity: matches.count];
         for (NSTextCheckingResult* match in matches) {
             if ([match range].length > 0) {
-                [cookies addObject: [cookie substringWithRange: [match range]]];
+                NSString* cookieStr = [cookie substringWithRange: [match range]];
+                [cookies addObject: cookieStr];
+                
+                // save to lite core
+                C4Error err = {};
+                CBLStringBytes cookieSlice(cookieStr);
+                CBLStringBytes host(_remoteURL.host);
+                CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
+                if (!c4db_setCookie(_c4db, cookieSlice, host, path, &err)) {
+                    CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+                }
             }
         }
         if (cookies.count > 0) {

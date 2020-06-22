@@ -18,20 +18,18 @@
 //
 
 #import "Foundation+CBL.h"
-
-@implementation NSString (CBL)
-- (C4Slice) c4slice {
-    return {self.UTF8String, self.length};
-}
-
-@end
+#import "CBLStringBytes.h"
 
 @implementation NSURL (CBL)
 - (void) c4Address: (C4Address*)addr {
-    addr->scheme = self.scheme.c4slice;
-    addr->hostname = self.host.c4slice;
+    CBLStringBytes schemeSlice(self.scheme);
+    CBLStringBytes hostSlice(self.host);
+    CBLStringBytes pathSlice(self.path.stringByDeletingLastPathComponent);
+    
+    addr->scheme = schemeSlice;
+    addr->hostname = hostSlice;
     addr->port = self.port.unsignedShortValue;
-    addr->path = self.path.stringByDeletingLastPathComponent.c4slice;
+    addr->path = pathSlice;
 }
 
 @end
