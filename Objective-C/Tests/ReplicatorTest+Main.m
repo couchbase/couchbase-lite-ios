@@ -1568,7 +1568,7 @@
 }
 
 // https://issues.couchbase.com/browse/CBL-1054
-- (void) _testStopReplicatorAfterOffline_SG {
+- (void) testStopReplicatorAfterOffline_SG {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.couchbase.com/db"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
