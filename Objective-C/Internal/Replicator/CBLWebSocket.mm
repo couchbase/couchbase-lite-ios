@@ -92,7 +92,7 @@ struct PendingWrite {
     BOOL _connectedThruProxy;
     
     NSArray* _clientIdentity;
-    C4Database* _c4db;
+    CBLDatabase* _db;
     NSURL* _remoteURL;
     
 #ifdef COUCHBASE_ENTERPRISE
@@ -165,7 +165,7 @@ static void doDispose(C4Socket* s) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
         CBLReplicator* replicator = (__bridge CBLReplicator*)context;
-        _c4db = replicator.config.database.c4db;
+        _db = replicator.config.database;
         _remoteURL = $castIf(CBLURLEndpoint, replicator.config.target).url;
 #ifdef COUCHBASE_ENTERPRISE
         // Workaround for CBL-1003:
@@ -386,16 +386,18 @@ static void doDispose(C4Socket* s) {
     if (sessionCookie.buf)
         [_logic addValue: sessionCookie.asNSString()  forHTTPHeaderField: @"Cookie"];
     
-    C4Error err = {};
-    C4Address addr = {};
-    [_remoteURL c4Address: &addr];
-    C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
-    if (!cookies.buf) {
-        CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
+    CBL_LOCK(_db) {
+        C4Error err = {};
+        C4Address addr = {};
+        [_remoteURL c4Address: &addr];
+        C4SliceResult cookies = c4db_getCookies(_db.c4db, addr, &err);
+        if (!cookies.buf) {
+            CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
+        }
+        NSString* cookieStr = sliceResult2string(cookies);
+        if (cookies.buf)
+            [_logic addValue:cookieStr  forHTTPHeaderField: @"Cookie"];
     }
-    NSString* cookieStr = sliceResult2string(cookies);
-    if (cookies.buf)
-        [_logic addValue:cookieStr  forHTTPHeaderField: @"Cookie"];
     
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
@@ -478,12 +480,14 @@ static void doDispose(C4Socket* s) {
                 [cookies addObject: cookieStr];
                 
                 // save to lite core
-                C4Error err = {};
-                CBLStringBytes cookieSlice(cookieStr);
-                CBLStringBytes host(_remoteURL.host);
-                CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
-                if (!c4db_setCookie(_c4db, cookieSlice, host, path, &err)) {
-                    CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+                CBL_LOCK(_db) {
+                    C4Error err = {};
+                    CBLStringBytes cookieSlice(cookieStr);
+                    CBLStringBytes host(_remoteURL.host);
+                    CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
+                    if (!c4db_setCookie(_db.c4db, cookieSlice, host, path, &err)) {
+                        CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+                    }
                 }
             }
         }
