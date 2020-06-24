@@ -35,7 +35,6 @@
 #import <vector>
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
-#import "Foundation+CBL.h"
 #import "CBLStringBytes.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -386,18 +385,10 @@ static void doDispose(C4Socket* s) {
     if (sessionCookie.buf)
         [_logic addValue: sessionCookie.asNSString()  forHTTPHeaderField: @"Cookie"];
     
-    CBL_LOCK(_db) {
-        C4Error err = {};
-        C4Address addr = {};
-        [_remoteURL c4Address: &addr];
-        C4SliceResult cookies = c4db_getCookies(_db.c4db, addr, &err);
-        if (!cookies.buf) {
-            CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
-        }
-        NSString* cookieStr = sliceResult2string(cookies);
-        if (cookies.buf)
-            [_logic addValue:cookieStr  forHTTPHeaderField: @"Cookie"];
-    }
+    
+    NSString* cookie = [_db getCookies: _remoteURL];
+    if (cookie.length > 0)
+        [_logic addValue: cookie  forHTTPHeaderField: @"Cookie"];
     
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
@@ -480,15 +471,7 @@ static void doDispose(C4Socket* s) {
                 [cookies addObject: cookieStr];
                 
                 // save to lite core
-                CBL_LOCK(_db) {
-                    C4Error err = {};
-                    CBLStringBytes cookieSlice(cookieStr);
-                    CBLStringBytes host(_remoteURL.host);
-                    CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
-                    if (!c4db_setCookie(_db.c4db, cookieSlice, host, path, &err)) {
-                        CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
-                    }
-                }
+                [_db saveCookie: cookieStr url: _remoteURL];
             }
         }
         if (cookies.count > 0) {

@@ -38,6 +38,7 @@
 #import "CBLConflict+Internal.h"
 #import "CBLTimer.h"
 #import "CBLErrorMessage.h"
+#import "Foundation+CBL.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -740,6 +741,35 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (!blobStore)
             convertError(err, outError);
         return blobStore;
+    }
+}
+
+#pragma mark Cookie save
+
+- (NSString*) getCookies: (NSURL*)url {
+    CBL_LOCK(self) {
+        C4Error err = {};
+        C4Address addr = {};
+        [url c4Address: &addr];
+        C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
+        if (!cookies.buf) {
+            CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
+        }
+        return sliceResult2string(cookies);
+    }
+}
+
+- (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url {
+    CBL_LOCK(self) {
+        C4Error err = {};
+        CBLStringBytes header(cookie);
+        CBLStringBytes host(url.host);
+        CBLStringBytes path(url.path.stringByDeletingLastPathComponent);
+        if (!c4db_setCookie(_c4db, header, host, path, &err)) {
+            CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+            return NO;
+        }
+        return YES;
     }
 }
 
