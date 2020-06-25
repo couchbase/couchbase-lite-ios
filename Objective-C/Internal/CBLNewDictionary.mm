@@ -218,7 +218,10 @@ using namespace cbl;
 }
 
 - (void) setData: (nullable NSDictionary<NSString*,id>*)data {
-    _dict = [data mutableCopy];
+    _dict = [NSMutableDictionary dictionaryWithCapacity: data.count];
+    [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL* stop) {
+        [_dict setObject:  [value cbl_toCBLObject] forKey: key];
+    }];
     _changed = true;
 }
 

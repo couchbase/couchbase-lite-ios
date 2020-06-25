@@ -625,6 +625,38 @@
     }];
 }
 
+- (void) testSetDateInsideData {
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    NSDate* date = [NSDate date];
+    NSString* dateStr = [CBLJSON JSONObjectWithDate: date];
+    Assert(dateStr.length > 0);
+    
+    [doc setData: @{@"time": date}];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], dateStr);
+    }];
+    
+    // Update:
+    NSDate* nuDate = [NSDate dateWithTimeInterval: 60.0 sinceDate: date];
+    NSString* nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    
+    
+    [doc setData: @{@"time": nuDate}];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], nuDateStr);
+    }];
+    
+    // Get and update:
+    doc = [[self.db documentWithID: doc.id] toMutable];
+    nuDate = [NSDate dateWithTimeInterval: 120.0 sinceDate: date];
+    nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    
+    [doc setData: @{@"time": nuDate}];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], nuDateStr);
+    }];
+}
+
 - (void) testGetDate {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [self populateData: doc];
