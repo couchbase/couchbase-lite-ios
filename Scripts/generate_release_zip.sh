@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--xcframework] [--EE] [--notest] [--nocov] [--pretty]"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--xcframework] [--EE] [--notest] [--nocov] [--testonly] [--pretty]"
 }
 
 while [[ $# -gt 0 ]]
@@ -30,6 +30,9 @@ do
       ;;
       --nocov)
       NO_COV=YES
+      ;;
+      --testonly)
+      TEST_ONLY=YES
       ;;
       --pretty)
       PRETTY=YES
@@ -76,11 +79,6 @@ else
   XCPRETTY="xcpretty"
 fi
 
-# Clean DerivedData
-DERIVED_DATA_DIR=`xcodebuild -showBuildSettings|grep -w OBJROOT|head -n 1|awk '{ print $3 }'|grep -o '.*CouchbaseLite-[^\/]*'`
-echo "Clean DerivedData directory: $DERIVED_DATA_DIR"
-rm -rf "$DERIVED_DATA_DIR"
-
 # Clean output directory:
 echo "Clean output directory: $OUTPUT_DIR"
 rm -rf "$OUTPUT_DIR"
@@ -89,7 +87,7 @@ rm -rf "$OUTPUT_DIR"
 echo "Check xcodebuild version ..."
 xcodebuild -version
 
-if [ -z "$NO_TEST" ]
+if [ -z "$NO_TEST" ] || [ -n "$TEST_ONLY" ]
 then
   echo "Running unit tests ..."
 
@@ -129,6 +127,13 @@ then
     rm -rf "$OUTPUT_DIR/$COVERAGE_NAME"
   fi
 fi
+if [  -n "$TEST_ONLY" ]
+then
+    echo "--testonly is specified."
+    echo "skipping the rest of build."
+    exit
+fi
+
 
 VERSION_SUFFIX=""
 if [ ! -z "$VERSION" ]
