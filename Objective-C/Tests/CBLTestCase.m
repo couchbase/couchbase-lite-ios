@@ -338,6 +338,12 @@
     }
 }
 
+- (void) ignoreExceptionBreakPointOnly: (void (^) (void))block {
+    ++gC4ExpectExceptions;
+    block();
+    --gC4ExpectExceptions;
+}
+
 - (uint64_t) verifyQuery: (CBLQuery*)q
             randomAccess: (BOOL)randomAccess
                     test: (void (^)(uint64_t n, CBLQueryResult *result))block {
