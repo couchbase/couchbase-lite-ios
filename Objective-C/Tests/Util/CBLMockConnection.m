@@ -94,18 +94,21 @@
 }
 
 - (void) send: (CBLMessage*)message completion: (void (^)(BOOL success, CBLMessagingError* _Nullable))completion {
-    NSLog(@"%@: Sending message ...", self);
-    CBLMessagingError* error;
-    if(self.isClient && [self.errorLogic shouldCloseAtLocation: kCBLMockConnectionSend]) {
-        error = [self.errorLogic createError];
-        NSLog(@"%@: Send message failed with error : %@", self, error);
-        [self connectionBroken: error];
-    } else {
-        [self performWrite: [message toData]];
-        NSLog(@"%@: Send message completed", self);
+    // Synchronize to prevent message getting sent out-of-order:
+    @synchronized (self) {
+        NSLog(@"%@: Sending message ...", self);
+        CBLMessagingError* error;
+        if(self.isClient && [self.errorLogic shouldCloseAtLocation: kCBLMockConnectionSend]) {
+            error = [self.errorLogic createError];
+            NSLog(@"%@: Send message failed with error : %@", self, error);
+            [self connectionBroken: error];
+        } else {
+            [self performWrite: [message toData]];
+            NSLog(@"%@: Send message completed", self);
+        }
+        NSLog(@"%@: Complete send message with error: %@", self, error);
+        completion(!error, error);
     }
-    NSLog(@"%@: Complete send message with error: %@", self, error);
-    completion(!error, error);
 }
 
 - (void) close: (NSError*)error completion: (void (^)(void))completion {
