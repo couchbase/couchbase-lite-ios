@@ -160,6 +160,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) mayHaveException: (NSString*)name in: (void (^) (void))block;
 
 - (void) ignoreException: (void (^) (void))block;
+- (void) ignoreExceptionBreakPointOnly: (void (^) (void))block;
 
 - (uint64_t) verifyQuery: (CBLQuery*)query
             randomAccess: (BOOL)randomAccess
