@@ -94,6 +94,7 @@
 }
 
 - (void) send: (CBLMessage*)message completion: (void (^)(BOOL success, CBLMessagingError* _Nullable))completion {
+    // Synchronize to prevent message getting sent out-of-order:
     @synchronized (self) {
         NSLog(@"%@: Sending message ...", self);
         CBLMessagingError* error;
