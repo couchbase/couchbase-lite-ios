@@ -1564,13 +1564,6 @@
 			remoteGlobalIDString = 27DF7D631F4236500022F3DF;
 			remoteInfo = SQLite;
 		};
-		27F961951ED777EA0060F804 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 279691631ED4B29E0086565D;
-			remoteInfo = Support;
-		};
 		9308F40D1E64B24700F53EE4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -1851,6 +1844,7 @@
 		1A4191292475DB3B008122BE /* URLEndpointListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListener.swift; sourceTree = "<group>"; };
 		1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListenerConfiguration.swift; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
+		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
@@ -2199,9 +2193,6 @@
 		9386852821B09C5400BB1242 /* DocumentReplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentReplication.swift; sourceTree = "<group>"; };
 		9388CB7521BCDF8B005CA66D /* generate_api_docs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_api_docs.sh; sourceTree = "<group>"; };
 		9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = prepare_cocoapods.sh; sourceTree = "<group>"; };
-		9388CB7921BCDF8B005CA66D /* LICENSE_community.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE_community.txt; sourceTree = "<group>"; };
-		9388CB7A21BCDF8B005CA66D /* LICENSE_enterprise.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE_enterprise.txt; sourceTree = "<group>"; };
-		9388CB7C21BCDF8B005CA66D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		9388CB7F21BCDF8B005CA66D /* nav.mustache */ = {isa = PBXFileReference; lastKnownFileType = text; path = nav.mustache; sourceTree = "<group>"; };
 		9388CB8021BCDF8B005CA66D /* header.mustache */ = {isa = PBXFileReference; lastKnownFileType = text; path = header.mustache; sourceTree = "<group>"; };
 		9388CB8121BCDF8B005CA66D /* footer.mustache */ = {isa = PBXFileReference; lastKnownFileType = text; path = footer.mustache; sourceTree = "<group>"; };
@@ -2216,7 +2207,6 @@
 		9388CB8E21BCDF8B005CA66D /* carat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = carat.png; sourceTree = "<group>"; };
 		9388CB8F21BCDF8B005CA66D /* dash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dash.png; sourceTree = "<group>"; };
 		9388CB9021BCDF8B005CA66D /* gh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gh.png; sourceTree = "<group>"; };
-		9388CB9121BCDF8B005CA66D /* generate_coverage.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_coverage.sh; sourceTree = "<group>"; };
 		9388CB9221BCDF8B005CA66D /* remove_private_headers.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_headers.sh; sourceTree = "<group>"; };
 		9388CB9321BCDF8B005CA66D /* get_repo_version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = get_repo_version.sh; sourceTree = "<group>"; };
 		9388CB9421BCDF8B005CA66D /* build_framework.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_framework.sh; sourceTree = "<group>"; };
@@ -3142,11 +3132,11 @@
 				9388CB7721BCDF8B005CA66D /* Support */,
 				9388CB7521BCDF8B005CA66D /* generate_api_docs.sh */,
 				9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */,
-				9388CB9121BCDF8B005CA66D /* generate_coverage.sh */,
 				9388CB9221BCDF8B005CA66D /* remove_private_headers.sh */,
 				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
 				9388CB9421BCDF8B005CA66D /* build_framework.sh */,
 				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
+				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
 				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
@@ -3157,25 +3147,14 @@
 		9388CB7721BCDF8B005CA66D /* Support */ = {
 			isa = PBXGroup;
 			children = (
-				9388CB7821BCDF8B005CA66D /* License */,
 				9388CB7B21BCDF8B005CA66D /* Docs */,
 			);
 			path = Support;
 			sourceTree = "<group>";
 		};
-		9388CB7821BCDF8B005CA66D /* License */ = {
-			isa = PBXGroup;
-			children = (
-				9388CB7921BCDF8B005CA66D /* LICENSE_community.txt */,
-				9388CB7A21BCDF8B005CA66D /* LICENSE_enterprise.txt */,
-			);
-			path = License;
-			sourceTree = "<group>";
-		};
 		9388CB7B21BCDF8B005CA66D /* Docs */ = {
 			isa = PBXGroup;
 			children = (
-				9388CB7C21BCDF8B005CA66D /* README.md */,
 				9388CB7D21BCDF8B005CA66D /* Theme */,
 			);
 			path = Docs;
@@ -3448,7 +3427,6 @@
 				9369A36620775B2F009B5B83 /* LiteCore.framework */,
 				2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */,
 				1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */,
-				27F961961ED777EA0060F804 /* libSupport.a */,
 				9398D94A1E0347B600464432 /* LiteCoreCppTests */,
 				9398D94C1E0347B600464432 /* C4Tests */,
 				9398D9481E0347B600464432 /* LiteCoreTests.xctest */,
@@ -4908,13 +4886,6 @@
 			fileType = archive.ar;
 			path = libSQLite.a;
 			remoteRef = 27DF7D831F424C840022F3DF /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27F961961ED777EA0060F804 /* libSupport.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libSupport.a;
-			remoteRef = 27F961951ED777EA0060F804 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		9369A36620775B2F009B5B83 /* LiteCore.framework */ = {
