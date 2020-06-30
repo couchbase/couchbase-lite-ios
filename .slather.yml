@@ -2,7 +2,7 @@
 
 coverage_service: coveralls
 xcodeproj: CouchbaseLite.xcodeproj
-scheme: "CBL ObjC"
+scheme: "CBL_ObjC"
 ignore:
   - vendor/*
   - Swift/*

@@ -12,11 +12,16 @@ pipeline {
 		    mkdir tmp
                     mv !(tmp) tmp
 
-		    # clone and update submodules here
-                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
-		    # submodule update inside lite-ios
+		    # Sometimes the PR depends on a PR in the EE repo as well. This needs to be convention based, so if there is a branch with the name PR-###
+                    # (with the GH PR number) in the EE repo then use that, otherwise use the name of the target branch (master, release/XXX etc) 
+		    # clone the EE-repo
+                    git clone git@github.com:couchbaselabs/couchbase-lite-ios-ee.git --branch $BRANCH_NAME || \
+		      git clone git@github.com:couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
+
+		    # clone the core-EE
 		    pushd couchbase-lite-ios-ee
-                    git submodule update --init --recursive
+		    git clone git@github.com:couchbase/couchbase-lite-core-EE.git --branch $BRANCH_NAME || \
+		      git clone git@github.com:couchbase/couchbase-lite-core-EE.git --branch $CHANGE_TARGET
 		    popd
 
 		    # restructure folders

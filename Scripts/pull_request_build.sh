@@ -2,8 +2,8 @@
 
 cd couchbase-lite-ios
 
-SCHEMES=("CBL-EE ObjC" "CBL-EE Swift" "CBL ObjC" "CBL Swift")
+SCHEMES=("CBL_EE_ObjC" "CBL_EE_Swift" "CBL_ObjC" "CBL_Swift")
 for SCHEME in "${SCHEMES[@]}"
 do
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 11"
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)"
 done
