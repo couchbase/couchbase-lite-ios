@@ -19,7 +19,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import <CouchbaseLite/CouchbaseLite.h>
+#import "CBLReplicator.h"
 
 @interface CBLReplicator (Backgrounding)
 
