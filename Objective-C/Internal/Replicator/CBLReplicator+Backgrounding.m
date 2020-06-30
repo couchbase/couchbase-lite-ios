@@ -23,6 +23,7 @@
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
 #import "MYBackgroundMonitor.h"
+#import "CBLDatabase.h"
 
 @implementation CBLReplicator (Backgrounding)
 
