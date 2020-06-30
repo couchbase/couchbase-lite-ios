@@ -4,12 +4,12 @@ branches:
   only:
   - master
 env:
-  - SCHEME="CBL ObjC"
-  - SCHEME="CBL Swift"
+  - SCHEME="CBL_ObjC"
+  - SCHEME="CBL_Swift"
 before_install:
   - brew update
   - brew install doxygen
   - gem install slather
 script: set -o pipefail && xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 11" -enableCodeCoverage YES | xcpretty -c
 after_success:
-  - test "$SCHEME" = "CBL ObjC" && slather
+  - test "$SCHEME" = "CBL_ObjC" && slather
