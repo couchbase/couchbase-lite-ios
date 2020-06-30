@@ -13,7 +13,7 @@ pipeline {
                     mv !(tmp) tmp
 
 		    # clone and update submodules here
-                    git clone https://github.com/couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
+                    git clone git@github.com:couchbaselabs/couchbase-lite-ios-ee.git --branch $CHANGE_TARGET
 		    # submodule update inside lite-ios
 		    pushd couchbase-lite-ios-ee
                     git submodule update --init --recursive
