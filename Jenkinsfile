@@ -12,7 +12,7 @@ pipeline {
 		    mkdir tmp
                     mv !(tmp) tmp
 
-		    # Sometimes a PR depends on a PR in the EE repo as well. This needs to be convention based, so if there is a branch with the name PR-###
+		    # Sometimes the PR depends on a PR in the EE repo as well. This needs to be convention based, so if there is a branch with the name PR-###
                     # (with the GH PR number) in the EE repo then use that, otherwise use the name of the target branch (master, release/XXX etc) 
 		    # clone the EE-repo
                     git clone git@github.com:couchbaselabs/couchbase-lite-ios-ee.git --branch $BRANCH_NAME || \
