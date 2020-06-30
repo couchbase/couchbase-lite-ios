@@ -436,7 +436,7 @@ public final class Database {
     // MARK: Debug
     
     func printRevs(documentID: String) {
-        _impl.printRevs(forDocumentID: id)
+        _impl.printRevs(forDocumentID: documentID)
     }
 }
 
