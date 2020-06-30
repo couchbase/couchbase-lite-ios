@@ -433,6 +433,11 @@ public final class Database {
 
     let _impl: CBLDatabase
     
+    // MARK: Debug
+    
+    func printRevs(documentID: String) {
+        _impl.printRevs(forDocumentID: id)
+    }
 }
 
 extension CBLDatabase {
