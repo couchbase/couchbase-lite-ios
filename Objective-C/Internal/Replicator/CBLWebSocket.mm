@@ -90,9 +90,11 @@ struct PendingWrite {
     BOOL _connectingToProxy;
     BOOL _connectedThruProxy;
     
-    NSArray* _clientIdentity;
+    CBLReplicator* _replicator;
     CBLDatabase* _db;
     NSURL* _remoteURL;
+    
+    NSArray* _clientIdentity;
     
 #ifdef COUCHBASE_ENTERPRISE
     BOOL _acceptOnlySelfSignedCert;
@@ -163,12 +165,12 @@ static void doDispose(C4Socket* s) {
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
-        CBLReplicator* replicator = (__bridge CBLReplicator*)context;
-        _db = replicator.config.database;
-        _remoteURL = $castIf(CBLURLEndpoint, replicator.config.target).url;
+        _replicator = (__bridge CBLReplicator*)context;
+        _db = _replicator.config.database;
+        _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
 #ifdef COUCHBASE_ENTERPRISE
         // Workaround for CBL-1003:
-        if (replicator.config.serverCertificateVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
+        if (_replicator.config.serverCertificateVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
             _acceptOnlySelfSignedCert = YES;
 #endif
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
@@ -637,17 +639,24 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 #pragma mark - NSSTREAM SUPPORT:
 
+- (SecTrustRef) copyTrustFromReadStream {
+    return (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_in,
+                                                  kCFStreamPropertySSLPeerTrust);
+}
+
 - (BOOL) checkSSLCert {
-    SecTrustRef sslTrust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_in,
-                                                                  kCFStreamPropertySSLPeerTrust);
-    Assert(sslTrust);
     _checkSSLCert = false;
+    
+    SecTrustRef trust = [self copyTrustFromReadStream];
+    Assert(trust);
+    
+    [self updateServerCertificateFromTrust: trust];
 
     NSURL* url = _logic.URL;
-    auto check = [[CBLTrustCheck alloc] initWithTrust: sslTrust
+    auto check = [[CBLTrustCheck alloc] initWithTrust: trust
                                                  host: url.host
                                                  port: url.port.shortValue];
-    CFRelease(sslTrust);
+    CFRelease(trust);
     Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
     if (pin) {
         check.pinnedCertData = slice(pin.asData()).copiedNSData();
@@ -678,6 +687,15 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         CBLLogVerbose(WebSocket, @"TLS handshake succeeded");
     
     return true;
+}
+
+- (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
+    SecCertificateRef cert = NULL;
+    if (SecTrustGetCertificateCount(trust) > 0)
+        cert = SecTrustGetCertificateAtIndex(trust, 0);
+    else
+        CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
+    _replicator.serverCertificate = cert;
 }
 
 // Asynchronously sends data over the socket, and calls the completion handler block afterwards.
@@ -757,6 +775,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         case NSStreamEventErrorOccurred:
             CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
+            if (_checkSSLCert) {
+                SecTrustRef trust = [self copyTrustFromReadStream];
+                [self updateServerCertificateFromTrust: (SecTrustRef)CFAutorelease(trust)];
+            }
             [self closeWithError: stream.streamError];
             break;
         default:

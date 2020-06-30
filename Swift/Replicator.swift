@@ -91,6 +91,11 @@ public final class Replicator {
         return Status(withStatus: _impl.status)
     }
     
+    /// The SSL/TLS certificate received when connecting to the server.
+    public var serverCertificate: SecCertificate? {
+        return _impl.serverCertificate
+    }
+    
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress through the replicator change notification.
     public func start() {
