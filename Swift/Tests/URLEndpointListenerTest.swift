@@ -703,14 +703,16 @@ class URLEndpontListenerTest: ReplicatorTest {
         repl.start()
         
         wait(for: [x1], timeout: 5.0)
-        XCTAssertNotNil(repl.serverCertificate)
-        checkEqual(cert: serverCert, andCert: repl.serverCertificate!)
+        var receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
         repl.stop()
         
         wait(for: [x2], timeout: 5.0)
-        XCTAssertNotNil(repl.serverCertificate)
-        checkEqual(cert: serverCert, andCert: repl.serverCertificate!)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
         try stopListen()
     }
@@ -718,11 +720,12 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testReplicatorServerCertWithTLSError() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let x1 = expectation(description: "stopped")
+        var x1 = expectation(description: "stopped")
         
         let listener = try listen()
         
-        let repl = replicator(db: self.oDB,
+        var serverCert = listener.tlsIdentity!.certs[0]
+        var repl = replicator(db: self.oDB,
                               continuous: true,
                               target: listener.localURLEndpoint,
                               serverCert: nil)
@@ -737,10 +740,41 @@ class URLEndpontListenerTest: ReplicatorTest {
         repl.start()
         
         wait(for: [x1], timeout: 5.0)
-        XCTAssertNotNil(repl.serverCertificate)
+        var receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
-        let serverCert = listener.tlsIdentity!.certs[0]
-        checkEqual(cert: serverCert, andCert: repl.serverCertificate!)
+        // Use the receivedServerCert to pin:
+        x1 = expectation(description: "idle")
+        let x2 = expectation(description: "stopped")
+        serverCert = receivedServerCert!
+        repl = replicator(db: self.oDB,
+                          continuous: true,
+                          target: listener.localURLEndpoint,
+                          serverCert: serverCert)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .stopped && change.status.error == nil {
+                x2.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        repl.stop()
+        
+        wait(for: [x2], timeout: 5.0)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
         try stopListen()
     }
