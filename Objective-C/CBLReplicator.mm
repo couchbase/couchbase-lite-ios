@@ -334,6 +334,11 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 - (SecCertificateRef) serverCertificate {
     CBL_LOCK(self) {
+        if (_serverCertificate != NULL) {
+            CFDataRef data = SecCertificateCopyData(_serverCertificate);
+            CFAutorelease(data);
+            return SecCertificateCreateWithData(NULL, data);
+        }
         return _serverCertificate;
     }
 }
