@@ -644,6 +644,153 @@ class URLEndpontListenerTest: ReplicatorTest {
                  auth: nil, serverCert: self.listener!.tlsIdentity!.certs[0],
                  expectedError: CBLErrorHTTPForbidden)
     }
+    
+    func testReplicatorServerCertNoTLS() throws {
+        let x1 = expectation(description: "idle")
+        let x2 = expectation(description: "stopped")
+        
+        let listener = try listen(tls: false)
+        let repl = replicator(db: self.oDB,
+                              continuous: true,
+                              target: listener.localURLEndpoint,
+                              serverCert: nil)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .stopped && change.status.error == nil {
+                x2.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.stop()
+        
+        wait(for: [x2], timeout: 5.0)
+        XCTAssertNil(repl.serverCertificate)
+        
+        try stopListen()
+    }
+    
+    func testReplicatorServerCertWithTLS() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let x1 = expectation(description: "idle")
+        let x2 = expectation(description: "stopped")
+        
+        let listener = try listen()
+        
+        let serverCert = listener.tlsIdentity!.certs[0]
+        let repl = replicator(db: self.oDB,
+                              continuous: true,
+                              target: listener.localURLEndpoint,
+                              serverCert: serverCert)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .stopped && change.status.error == nil {
+                x2.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        var receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        repl.stop()
+        
+        wait(for: [x2], timeout: 5.0)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        try stopListen()
+    }
+    
+    func testReplicatorServerCertWithTLSError() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        var x1 = expectation(description: "stopped")
+        
+        let listener = try listen()
+        
+        var serverCert = listener.tlsIdentity!.certs[0]
+        var repl = replicator(db: self.oDB,
+                              continuous: true,
+                              target: listener.localURLEndpoint,
+                              serverCert: nil)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .stopped && change.status.error != nil {
+                x1.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        var receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        // Use the receivedServerCert to pin:
+        x1 = expectation(description: "idle")
+        let x2 = expectation(description: "stopped")
+        serverCert = receivedServerCert!
+        repl = replicator(db: self.oDB,
+                          continuous: true,
+                          target: listener.localURLEndpoint,
+                          serverCert: serverCert)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .stopped && change.status.error == nil {
+                x2.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        repl.stop()
+        
+        wait(for: [x2], timeout: 5.0)
+        receivedServerCert = repl.serverCertificate
+        XCTAssertNotNil(receivedServerCert)
+        checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        try stopListen()
+    }
+    
+    func checkEqual(cert cert1: SecCertificate, andCert cert2: SecCertificate) {
+        if #available(iOS 11, *) {
+            var cn1: CFString?
+            XCTAssertEqual(SecCertificateCopyCommonName(cert1, &cn1), errSecSuccess)
+            
+            var cn2: CFString?
+            XCTAssertEqual(SecCertificateCopyCommonName(cert2, &cn2), errSecSuccess)
+            
+            XCTAssertEqual(cn1! as String, cn2! as String)
+        } 
+    }
+    
 }
 
 @available(macOS 10.12, iOS 10.0, *)
