@@ -193,7 +193,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateGetDeleteServerIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -237,7 +239,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateDuplicateServerIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -272,7 +276,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateGetDeleteClientIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -316,7 +322,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateDuplicateClientIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -351,7 +359,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testGetIdentityWithIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     // Use SecPKCS12Import to import the PKCS12 data:
     __block CFArrayRef result = NULL;
@@ -404,7 +414,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testImportIdentity {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
     
@@ -442,7 +454,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCreateIdentityWithNoAttributes {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
     
     NSError* error;
     CBLTLSIdentity* identity;
@@ -469,7 +483,9 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 }
 
 - (void) testCertificateExpiration {
-    if (!self.keyChainAccessAllowed) return;
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
 
     NSError* error;
     CBLTLSIdentity* identity;
