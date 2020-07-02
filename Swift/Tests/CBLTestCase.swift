@@ -240,6 +240,10 @@ class CBLTestCase: XCTestCase {
         return n
     }
     
+    func skipIfKeychainNotAccessible() throws {
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
+    }
+    
 }
 
 /** Comparing JSON Dictionary */
