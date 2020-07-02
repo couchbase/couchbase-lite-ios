@@ -166,6 +166,9 @@ NS_ASSUME_NONNULL_BEGIN
             randomAccess: (BOOL)randomAccess
                     test: (void (^)(uint64_t n, CBLQueryResult *result))block;
 
+/** skips the test if the keychain access is not available for the config */
+- (void) skipIfKeychainNotAccessible;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -372,4 +372,10 @@
     return NSProcessInfo.processInfo.environment[@"PROFILING"] != nil;
 }
 
+- (void) skipIfKeychainNotAccessible {
+    [self ignoreExceptionBreakPointOnly: ^{
+        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
+    }];
+}
+
 @end

@@ -316,9 +316,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testTLSIdentity {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     // Disabled TLS:
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
@@ -366,9 +364,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testURLs {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     _listener = [[Listener alloc] initWithConfig: config];
@@ -462,9 +458,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testClientCertAuthenticatorWithBlock API_AVAILABLE(macos(10.12), ios(10.3)) {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     // Listener:
     CBLListenerCertificateAuthenticator* listenerAuth =
@@ -512,9 +506,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testClientCertAuthenticatorRootCerts {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     NSData* rootCertData = [self dataFromResource: @"identity/client-ca" ofType: @"der"];
     SecCertificateRef rootCertRef = SecCertificateCreateWithData(kCFAllocatorDefault, (CFDataRef)rootCertData);
@@ -559,9 +551,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testServerCertVerificationModeSelfSignedCert {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     // Listener:
     Listener* listener = [self listenWithTLS: YES];
@@ -598,9 +588,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testServerCertVerificationModeCACert {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     // Listener:
     Listener* listener = [self listenWithTLS: YES];
@@ -637,9 +625,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testEmptyNetworkInterface {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     [self listen];
     NSArray* urls = _listener.urls;
@@ -693,9 +679,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testUnavailableNetworkInterface {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.networkInterface = @"1.1.1.256";
@@ -710,9 +694,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testNetworkInterfaceName {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     NSArray* interfaces = [Listener allInterfaceNames];
     for (NSString* i in interfaces) {
@@ -728,9 +710,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testMultipleListenersOnSameDatabase {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     Listener* listener1 = [[Listener alloc] initWithConfig: config];
@@ -759,9 +739,7 @@ typedef CBLURLEndpointListener Listener;
 
 // TODO: https://issues.couchbase.com/browse/CBL-1033
 - (void) _testMultipleReplicatorsToListener {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     [self listen]; // writable listener
     
@@ -779,9 +757,7 @@ typedef CBLURLEndpointListener Listener;
 
 // TODO: https://issues.couchbase.com/browse/CBL-1033
 - (void) _testMultipleReplicatorsOnReadOnlyListener {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.readOnly = YES;
@@ -805,9 +781,7 @@ typedef CBLURLEndpointListener Listener;
  3. Replicator#2  (DB#2 -> otherDB)
  */
 - (void) testReplicatorAndListenerOnSameDatabase {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
@@ -877,9 +851,7 @@ typedef CBLURLEndpointListener Listener;
 
 // TODO: https://issues.couchbase.com/browse/CBL-954
 - (void) _testReadOnlyListener {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.readOnly = YES;
@@ -901,9 +873,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testCloseWithActiveListener {
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(self.keyChainAccessAllowed, @"Skipping, keychain not accessible in this config");
-    }];
+    [self skipIfKeychainNotAccessible];
     
     [self listen];
     
