@@ -149,7 +149,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateGetDeleteServerIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -183,7 +183,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateDuplicateServerIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Create:
         var identity: TLSIdentity?
@@ -211,7 +211,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateGetDeleteClientIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
@@ -245,7 +245,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateDuplicateClientIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Create:
         var identity: TLSIdentity?
@@ -273,7 +273,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testGetIdentityWithIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Use SecPKCS12Import to import the PKCS12 data:
         var result : CFArray?
@@ -318,7 +318,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testImportIdentity() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         
@@ -351,7 +351,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCreateIdentityWithNoAttributes() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -370,7 +370,7 @@ class TLSIdentityTest: CBLTestCase {
     }
     
     func testCertificateExpiration() throws {
-        if (!keyChainAccessAllowed) { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Delete:
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)

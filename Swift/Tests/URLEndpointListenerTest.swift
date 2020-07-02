@@ -179,9 +179,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testTLSIdentity() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Disabled TLS:
         var config = URLEndpointListenerConfiguration.init(database: self.oDB)
@@ -252,9 +250,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     @available(macOS 10.12, iOS 10.3, *)
     func testClientCertAuthenticatorWithClosure() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Listener:
         let listenerAuth = ListenerCertificateAuthenticator.init { (certs) -> Bool in
@@ -288,9 +284,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testClientCertAuthenticatorWithRootCerts() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Root Cert:
         let rootCertData = try dataFromResource(name: "identity/client-ca", ofType: "der")
@@ -321,9 +315,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testServerCertVerificationModeSelfSignedCert() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Listener:
         let listener = try listen(tls: true)
@@ -347,9 +339,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testServerCertVerificationModeCACert() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         // Listener:
         let listener = try listen(tls: true)
@@ -374,9 +364,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
@@ -392,9 +380,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testEmptyPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         self.listener = URLEndpointListener(config: config)
@@ -409,9 +395,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testBusyPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         try listen()
         
@@ -425,9 +409,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testURLs() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
@@ -443,9 +425,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testConnectionStatus() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
@@ -480,7 +460,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testMultipleListenersOnSameDatabase() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         let listener1 = URLEndpointListener(config: config)
@@ -503,7 +483,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testReplicatorAndListenerOnSameDatabase() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let exp1 = expectation(description: "replicator#1 stop")
         let exp2 = expectation(description: "replicator#2 stop")
@@ -565,7 +545,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testCloseWithActiveListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         try listen()
         
@@ -579,7 +559,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testEmptyNetworkInterface() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         try listen()
         let urls = self.listener!.urls!
@@ -619,7 +599,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testMultipleReplicatorsToListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         try listen()
         
@@ -634,7 +614,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     // TODO: https://issues.couchbase.com/browse/CBL-954
     func _testReadOnlyListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(keyChainAccessAllowed, "Skipping, keychain is not allowed in this config")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.readOnly = true
