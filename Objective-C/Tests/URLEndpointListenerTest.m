@@ -893,4 +893,158 @@ typedef CBLURLEndpointListener Listener;
     }
 }
 
+- (void) testReplicatorServerCertNoTLS {
+    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
+    
+    Listener* listener = [self listenWithTLS: NO];
+    
+    CBLReplicator* replicator = [self replicator: self.otherDB
+                                       continous: YES
+                                          target: listener.localEndpoint
+                                      serverCert: nil];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel level = change.status.activity;
+        if (level == kCBLReplicatorIdle)
+            [x1 fulfill];
+        else if (level == kCBLReplicatorStopped && !change.status.error)
+            [x2 fulfill];
+    }];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator start];
+    
+    [self waitForExpectations: @[x1] timeout: timeout];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator stop];
+    
+    [self waitForExpectations: @[x2] timeout: timeout];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [self stopListen];
+}
+
+- (void) testReplicatorServerCertWithTLS {
+    if (!self.keyChainAccessAllowed) return;
+    
+    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
+    
+    Listener* listener = [self listen];
+    
+    SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
+    CBLReplicator* replicator = [self replicator: self.otherDB
+                                       continous: YES
+                                          target: listener.localEndpoint
+                                      serverCert: serverCert];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel activity = change.status.activity;
+        if (activity == kCBLReplicatorIdle)
+            [x1 fulfill];
+        else if (activity == kCBLReplicatorStopped && !change.status.error)
+            [x2 fulfill];
+    }];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator start];
+    
+    [self waitForExpectations: @[x1] timeout: timeout];
+    
+    SecCertificateRef receivedServerCert = replicator.serverCertificate;
+    Assert(receivedServerCert != NULL);
+    [self checkEqualForCert: serverCert andCert: receivedServerCert];
+    [self releaseCF: receivedServerCert];
+    
+    [replicator stop];
+    
+    [self waitForExpectations: @[x2] timeout: timeout];
+    
+    receivedServerCert = replicator.serverCertificate;
+    Assert(receivedServerCert != NULL);
+    [self checkEqualForCert: serverCert andCert: receivedServerCert];
+    [self releaseCF: receivedServerCert];
+    
+    [self stopListen];
+}
+
+- (void) testReplicatorServerCertWithTLSError {
+    if (!self.keyChainAccessAllowed) return;
+    
+    XCTestExpectation* x1 = [self expectationWithDescription: @"stopped"];
+    
+    Listener* listener = [self listen];
+    
+    SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
+    CBLReplicator* replicator = [self replicator: self.otherDB
+                                       continous: YES
+                                          target: listener.localEndpoint
+                                      serverCert: nil];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel activity = change.status.activity;
+        if (activity == kCBLReplicatorStopped && change.status.error)
+            [x1 fulfill];
+    }];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator start];
+    
+    [self waitForExpectations: @[x1] timeout: timeout];
+    SecCertificateRef receivedServerCert = replicator.serverCertificate;
+    Assert(receivedServerCert != NULL);
+    [self checkEqualForCert: serverCert andCert: receivedServerCert];
+    
+    // Use the received certificate to pin:
+    serverCert = receivedServerCert;
+    x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
+    replicator = [self replicator: self.otherDB
+                        continous: YES
+                           target: listener.localEndpoint
+                       serverCert: serverCert];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel activity = change.status.activity;
+        if (activity == kCBLReplicatorIdle)
+            [x1 fulfill];
+        else if (activity == kCBLReplicatorStopped && !change.status.error)
+            [x2 fulfill];
+    }];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator start];
+    
+    [self waitForExpectations: @[x1] timeout: timeout];
+    receivedServerCert = replicator.serverCertificate;
+    Assert(receivedServerCert != NULL);
+    [self checkEqualForCert: serverCert andCert: receivedServerCert];
+    [self releaseCF: receivedServerCert];
+    
+    [replicator stop];
+    
+    [self waitForExpectations: @[x2] timeout: timeout];
+    receivedServerCert = replicator.serverCertificate;
+    Assert(receivedServerCert != NULL);
+    [self checkEqualForCert: serverCert andCert: receivedServerCert];
+    [self releaseCF: receivedServerCert];
+    [self releaseCF: serverCert];
+    
+    [self stopListen];
+}
+
+- (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {
+    if (@available(macOS 10.5, iOS 10.3, *)) {
+        CFStringRef cnRef1, cnRef2;
+        AssertEqual(SecCertificateCopyCommonName(cert1, &cnRef1), errSecSuccess);
+        AssertEqual(SecCertificateCopyCommonName(cert2, &cnRef2), errSecSuccess);
+        
+        NSString* cn1 = (NSString*)CFBridgingRelease(cnRef1);
+        NSString* cn2 = (NSString*)CFBridgingRelease(cnRef2);
+        AssertEqualObjects(cn1, cn2);
+    }
+}
+
+- (void) releaseCF: (CFTypeRef)ref {
+    if (ref != NULL) CFRelease(ref);
+}
+
 @end

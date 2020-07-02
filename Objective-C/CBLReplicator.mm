@@ -85,6 +85,7 @@ typedef enum {
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
     unsigned _conflictCount;        // Current number of conflict resolving tasks
     BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
+    SecCertificateRef _serverCertificate;
 }
 
 @synthesize config=_config;
@@ -115,7 +116,12 @@ typedef enum {
 
 - (void) dealloc {
     [self stopReachability];
+    
+    // Free C4Replicator:
     c4repl_free(_repl);
+    
+    // Release server cert if available:
+    self.serverCertificate = NULL;
 }
 
 - (NSString*) description {
@@ -146,6 +152,7 @@ typedef enum {
         C4Error err;
         if ([self _setupC4Replicator: &err]) {
             // Start the C4Replicator:
+            self.serverCertificate = NULL;
             _state = kCBLStateStarting;
             c4repl_start(_repl, reset);
             _resetCheckpoint = NO;
@@ -320,6 +327,31 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
                         format: @"%@", kCBLErrorMessageReplicatorNotStopped];
         }
         _resetCheckpoint = YES;
+    }
+}
+
+#pragma mark - Server Certificate
+
+- (SecCertificateRef) serverCertificate {
+    CBL_LOCK(self) {
+        if (_serverCertificate != NULL) {
+            CFDataRef data = SecCertificateCopyData(_serverCertificate);
+            CFAutorelease(data);
+            return SecCertificateCreateWithData(NULL, data);
+        }
+        return _serverCertificate;
+    }
+}
+
+- (void) setServerCertificate: (SecCertificateRef)serverCertificate {
+    CBL_LOCK(self) {
+        SecCertificateRef oldCert = _serverCertificate;
+        if (serverCertificate)
+            _serverCertificate = (SecCertificateRef) CFRetain(serverCertificate);
+        else
+            _serverCertificate = NULL;
+        if (oldCert)
+            CFAutorelease(oldCert);
     }
 }
 

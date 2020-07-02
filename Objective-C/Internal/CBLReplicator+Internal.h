@@ -59,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) MYBackgroundMonitor* bgMonitor;
 @property (readonly, atomic) dispatch_queue_t dispatchQueue;
 
+// For CBLWebSocket to set the current server certificate
+@property (copy, atomic, nullable) __attribute__((NSObject)) SecCertificateRef serverCertificate;
+
 - (void) setSuspended: (BOOL)suspended;
 
 @end

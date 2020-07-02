@@ -80,6 +80,10 @@ typedef struct {
 /** The replicator's current status: its activity level and progress. Observable. */
 @property (readonly, atomic) CBLReplicatorStatus* status;
 
+/** The SSL/TLS certificate received when connecting to the server. The application code takes responsibility
+    for releasing the certificate object when the application code finishes using the certificate. */
+@property (readonly, copy, atomic, nullable) __attribute__((NSObject)) SecCertificateRef serverCertificate;
+
 /** Initializes a replicator with the given configuration. */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
 
