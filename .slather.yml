@@ -1,4 +1,4 @@
-# .slather.yml
+# # .slather.yml
 
 coverage_service: coveralls
 xcodeproj: CouchbaseLite.xcodeproj
