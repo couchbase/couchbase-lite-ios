@@ -1488,12 +1488,18 @@
 
 - (void) testAuthenticationFailure_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
+    if (!target)
+        return;
+    
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
 }
 
 - (void) testAuthenticatedPull_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
+    if (!target)
+        return;
+    
     id auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO authenticator: auth];
     [self run: config errorCode: 0 errorDomain: nil];
@@ -1501,6 +1507,8 @@
 
 - (void) testPushBlob_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
     
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
@@ -1524,12 +1532,18 @@
     timeout = 200;
 
     id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
+    if (!target)
+        return;
+    
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 - (void) testSelfSignedSSLFailure_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
+        return;
+    
     self.disableDefaultServerCertPinning = YES;    // without this, SSL handshake will fail
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
@@ -1537,6 +1551,9 @@
 
 - (void) testSelfSignedSSLPinned_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
+        return;
+    
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
@@ -1545,6 +1562,8 @@
     // NOTE: This test never stops even after the replication goes idle.
     // It can be used to test the response to connectivity issues like killing the remote server.
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
     repl = [[CBLReplicator alloc] initWithConfig: config];
     [repl start];
@@ -1586,6 +1605,8 @@
 
 - (void) testPullConflictDeleteWins_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
     
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
@@ -1627,6 +1648,8 @@
 - (void) testPushAndPullBigBodyDocument_SG {
     timeout = 200;
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
     
     // Create a big document (~500KB)
     CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
@@ -1658,6 +1681,8 @@
 - (void) testPushAndPullExpiredDocument_SG {
     timeout = 200;
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
     
     NSError* error;
     NSString* propertyKey = @"expiredDocumentKey";

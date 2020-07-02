@@ -103,9 +103,10 @@
 
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
     NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
-    [self ignoreExceptionBreakPointOnly: ^{
-        XCTSkipUnless(host, @"NOTE: Skipping test: no CBL_TEST_HOST configured in environment");
-    }];
+    if (!host) {
+        Log(@"NOTE: Skipping test: no CBL_TEST_HOST configured in environment");
+        return nil;
+    }
     
     NSString* portKey = secure ? @"CBL_TEST_PORT_SSL" : @"CBL_TEST_PORT";
     NSInteger port = NSProcessInfo.processInfo.environment[portKey].integerValue;
