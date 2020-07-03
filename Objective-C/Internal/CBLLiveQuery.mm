@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLLiveQuery.h"
+#import "CBLLiveQuery+Internal.h"
 #import "CBLQuery.h"
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
@@ -68,7 +68,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
             CBLDatabase* db = _query.database;
             Assert(db);
             
-            [db addActiveLiveQuery: self];
+            [db addActiveStoppable: self];
             
             __weak CBLLiveQuery* wSelf = self;
             _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
@@ -84,6 +84,10 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 - (void) stop {
+    [self _stop];
+}
+
+- (void) _stop {
     CBL_LOCK(self) {
         if (!_observing)
             return;
@@ -111,7 +115,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 - (void) stopped {
     // Since we are accessing weak _query multiple times which can become nil.
     CBLQuery* strongQuery = _query;
-    [strongQuery.database removeActiveLiveQuery: self];
+    [strongQuery.database removeActiveStoppable: self];
     
     _stopping = NO;
 }

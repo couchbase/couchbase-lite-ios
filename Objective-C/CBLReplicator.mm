@@ -157,7 +157,7 @@ typedef enum {
             c4repl_start(_repl, reset);
             _resetCheckpoint = NO;
             status = c4repl_getStatus(_repl);
-            [_config.database addActiveReplicator: self];
+            [_config.database addActiveStoppable: self];
             
 #if TARGET_OS_IPHONE
             if (!_config.allowReplicatingInBackground)
@@ -292,6 +292,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) stop {
+    [self _stop];
+}
+
+- (void) _stop {
     CBL_LOCK(self) {
         if (_state <= kCBLStateStopping) {
             CBLWarn(Sync, @"%@: Replicator has been stopped or is stopping (state = %d, status = %d); ignore stop.",
@@ -315,7 +319,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     // Prevent self to get released when removing from the active replications:
     CBLReplicator* repl = self;
-    [_config.database removeActiveReplicator: repl];
+    [_config.database removeActiveStoppable: repl];
     
     CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
 }

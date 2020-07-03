@@ -64,11 +64,7 @@ using namespace fleece;
     BOOL _shellMode;
     dispatch_source_t _docExpiryTimer;
     
-    NSMutableSet<CBLReplicator*>* _activeReplicators;
-    NSMutableSet<CBLLiveQuery*>* _activeLiveQueries;
-#ifdef COUCHBASE_ENTERPRISE
-    NSMutableSet<CBLURLEndpointListener*>* _activeListeners API_AVAILABLE(macos(10.12), ios(10.0));
-#endif
+    NSMutableSet<id<CBLStoppable>>* _activeStoppables;
     
     BOOL _isClosing;
     NSCondition* _closeCondition;
@@ -364,10 +360,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - DATABASE MAINTENANCE
 
 - (BOOL) close: (NSError**)outError {
-    NSArray *activeReplicators, *activeLiveQueries = nil;
-#ifdef COUCHBASE_ENTERPRISE
-    NSArray* activeListeners = nil;
-#endif
+    NSArray *activeStoppables = nil;
     
     CBL_LOCK(self) {
         if ([self isClosed])
@@ -381,34 +374,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             if (!_closeCondition)
                 _closeCondition = [[NSCondition alloc] init];
             
-            activeReplicators = [_activeReplicators allObjects];
-            
-            activeLiveQueries = [_activeLiveQueries allObjects];
-#ifdef COUCHBASE_ENTERPRISE
-            activeListeners = [_activeListeners allObjects];
-#endif
+            activeStoppables = [_activeStoppables allObjects];
         }
     }
     
-    // Stop active replicators:
-    for (CBLReplicator* r in activeReplicators) {
-        [r stop];
+    // Stop all active stoppable connections:
+    for (id<CBLStoppable> instance in activeStoppables) {
+        [instance _stop];
     }
-    
-    // Stop active live queries:
-    for (CBLLiveQuery* q in activeLiveQueries) {
-        [q stop];
-    }
-    
-#ifdef COUCHBASE_ENTERPRISE
-    // Stop all active listeners
-    if (@available(macOS 10.12, ios 10.0, *)) {
-        for (CBLURLEndpointListener* listener in activeListeners) {
-            [listener stop];
-        }
-    } else
-        Assert(activeListeners.count == 0);
-#endif
     
     // Wait for all active replicators and live queries to stop:
     [_closeCondition lock];
@@ -446,7 +419,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (BOOL) isReadyToClose {
     CBL_LOCK(self) {
-        return _activeReplicators.count == 0 && _activeLiveQueries.count == 0;
+        return _activeStoppables.count == 0;
     }
 }
 
@@ -1087,89 +1060,32 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
     return YES;
 }
 
-#pragma mark - LIVE-QUERY
-
-- (void) addActiveLiveQuery: (CBLLiveQuery*)liveQuery {
+#pragma mark - Stoppable
+- (void) addActiveStoppable: (id<CBLStoppable>)stoppable {
     CBL_LOCK(self) {
         [self mustBeOpenAndNotClosing];
         
-        if (!_activeLiveQueries)
-            _activeLiveQueries = [NSMutableSet new];
+        if (!_activeStoppables)
+            _activeStoppables = [NSMutableSet new];
         
-        [_activeLiveQueries addObject: liveQuery];
+        [_activeStoppables addObject: stoppable];
     }
 }
 
-- (void) removeActiveLiveQuery: (CBLLiveQuery*)liveQuery {
+- (void) removeActiveStoppable: (id<CBLStoppable>)stoppable {
     CBL_LOCK(self) {
-        [_activeLiveQueries removeObject: liveQuery];
+        [_activeStoppables removeObject: stoppable];
         
-        if (_activeLiveQueries.count == 0)
+        if (_activeStoppables.count == 0)
             [_closeCondition broadcast];
     }
 }
 
-- (uint64_t) activeLiveQueryCount {
+- (uint64_t) activeStoppableCount {
     CBL_LOCK(self) {
-        return _activeLiveQueries.count;
+        return _activeStoppables.count;
     }
 }
-
-#pragma mark - REPLICATOR
-
-- (void) addActiveReplicator: (CBLReplicator*)replicator {
-    CBL_LOCK(self) {
-        [self mustBeOpenAndNotClosing];
-        
-        if (!_activeReplicators)
-            _activeReplicators = [NSMutableSet new];
-        
-        [_activeReplicators addObject: replicator];
-    }
-}
-
-- (void) removeActiveReplicator: (CBLReplicator*)replicator {
-    CBL_LOCK(self) {
-        [_activeReplicators removeObject: replicator];
-        
-        if (_activeReplicators.count == 0)
-            [_closeCondition broadcast];
-    }
-}
-
-- (uint64_t) activeReplicatorCount {
-    CBL_LOCK(self) {
-        return _activeReplicators.count;
-    }
-}
-
-#pragma mark - Listener
-#ifdef COUCHBASE_ENTERPRISE
-- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
-    CBL_LOCK(self) {
-        [self mustBeOpenAndNotClosing];
-        if (!_activeListeners)
-            _activeListeners = [NSMutableSet new];
-        
-        [_activeListeners addObject: listener];
-    }
-}
-
-- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0)) {
-    CBL_LOCK(self) {
-        [_activeListeners removeObject: listener];
-        
-        if (_activeListeners.count == 0)
-            [_closeCondition broadcast];
-    }
-}
-
-- (uint64_t) activeListenerCount {
-    CBL_LOCK(self) {
-        return _activeListeners.count;
-    }
-}
-#endif
 
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 

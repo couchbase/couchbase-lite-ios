@@ -1491,11 +1491,11 @@
     
     [self waitForExpectations: @[change1, change2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     [self closeDatabase: self.db];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
@@ -1521,13 +1521,13 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     [self closeDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
@@ -1547,7 +1547,7 @@
     
     [self waitForExpectations: @[change1, change2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     // Replicators:
     
@@ -1570,15 +1570,15 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)4); // total stoppables
     
     // Close database:
     [self closeDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
@@ -1709,11 +1709,11 @@
     
     [self waitForExpectations: @[change1, change2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     [self deleteDatabase: self.db];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
@@ -1739,13 +1739,13 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     [self deleteDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
@@ -1765,7 +1765,7 @@
     
     [self waitForExpectations: @[change1, change2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)2);
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     CBLReplicatorConfiguration* config =
@@ -1784,14 +1784,14 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
     
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)2);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)4); // total stoppables
     
     [self deleteDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
     
-    AssertEqual([self.db activeLiveQueryCount], (unsigned long)0);
-    AssertEqual([self.db activeReplicatorCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
+    AssertEqual([self.db activeStoppableCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
 }
 
