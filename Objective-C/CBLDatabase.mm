@@ -380,7 +380,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     // Stop all active stoppable connections:
     for (id<CBLStoppable> instance in activeStoppables) {
-        [instance _stop];
+        [instance stop];
     }
     
     // Wait for all active replicators and live queries to stop:
@@ -1061,6 +1061,7 @@ static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
 }
 
 #pragma mark - Stoppable
+
 - (void) addActiveStoppable: (id<CBLStoppable>)stoppable {
     CBL_LOCK(self) {
         [self mustBeOpenAndNotClosing];

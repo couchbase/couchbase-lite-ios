@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol CBLStoppable <NSObject>
 
-- (void) _stop;
+- (void) stop;
 
 @end
 

@@ -292,10 +292,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) stop {
-    [self _stop];
-}
-
-- (void) _stop {
     CBL_LOCK(self) {
         if (_state <= kCBLStateStopping) {
             CBLWarn(Sync, @"%@: Replicator has been stopped or is stopping (state = %d, status = %d); ignore stop.",

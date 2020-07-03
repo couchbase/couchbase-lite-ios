@@ -84,10 +84,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 - (void) stop {
-    [self _stop];
-}
-
-- (void) _stop {
     CBL_LOCK(self) {
         if (!_observing)
             return;
