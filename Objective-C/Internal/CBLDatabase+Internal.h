@@ -30,6 +30,7 @@
 #import "CBLReplicator.h"
 #import "CBLLiveQuery.h"
 #import "CBLConflictResolver.h"
+#import "CBLStoppable.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLEncryptionKey.h"
@@ -60,19 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 
-- (void) addActiveReplicator: (CBLReplicator*)replicator;
-- (void) removeActiveReplicator: (CBLReplicator*)replicator;
-- (uint64_t) activeReplicatorCount; // For testing only
-
-- (void) addActiveLiveQuery: (CBLLiveQuery*)liveQuery;
-- (void) removeActiveLiveQuery: (CBLLiveQuery*)liveQuery;
-- (uint64_t) activeLiveQueryCount; // For testing only
-
-#ifdef COUCHBASE_ENTERPRISE
-- (void) addActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0));
-- (void) removeActiveListener: (CBLURLEndpointListener*)listener API_AVAILABLE(macos(10.12), ios(10.0));
-- (uint64_t) activeListenerCount; // For testing only
-#endif
+- (void) addActiveStoppable: (id<CBLStoppable>)stoppable;
+- (void) removeActiveStoppable: (id<CBLStoppable>)stoppable;
+- (uint64_t) activeStoppableCount; // For testing only
 
 - (bool) resolveConflictInDocument: (NSString*)docID
               withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
