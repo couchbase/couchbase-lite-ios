@@ -50,13 +50,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithEndpoint: (CBLMessageEndpoint*)endpoint;
 
+- (void) serverConnected;
+
 - (void) serverDisconnected;
 
 @end
 
 @interface CBLMockServerConnection : CBLMockConnection
 
-- (void) clientOpened: (CBLMockClientConnection*)client;
+- (void) clientConnected: (CBLMockClientConnection*)client;
 
 - (void) clientDisconnected: (nullable CBLMessagingError*)error;
 

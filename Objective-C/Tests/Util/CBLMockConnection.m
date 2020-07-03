@@ -59,7 +59,7 @@
     return self;
 }
 
-- (void) acceptBytes: (NSData *)message {
+- (void) acceptBytes: (NSData*)message {
     NSLog(@"%@: Receiving message ...", self);
     if(self.isClient && [self.errorLogic shouldCloseAtLocation: kCBLMockConnectionReceive]) {
         CBLMessagingError* error = [self.errorLogic createError];
@@ -117,7 +117,10 @@
 
 @end
 
+typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
+
 @interface CBLMockClientConnection ()
+@property (atomic, nullable) OpenCompletion openCompletion;
 @property (atomic, nullable) CBLMockServerConnection* server;
 @property (atomic) BOOL isClosed;
 @property (atomic) BOOL isConnectionBroken;
@@ -125,7 +128,8 @@
 
 @implementation CBLMockClientConnection
 
-@synthesize server=_server, isClosed = _isClosed, isConnectionBroken=_isConnectionBroken;
+@synthesize openCompletion=_openCompletion, server=_server;
+@synthesize isClosed=_isClosed, isConnectionBroken=_isConnectionBroken;
 
 - (instancetype) initWithEndpoint: (CBLMessageEndpoint*)endpoint {
     self = [super initWithListener: nil protocol: endpoint.protocolType];
@@ -140,10 +144,20 @@
         if (success) {
             self.isClosed = NO;
             self.isConnectionBroken = NO;
-            [self.server clientOpened: self];
+            self.openCompletion = completion;
+            [self.server clientConnected: self];
+        } else {
+            completion(success, e);
         }
-        completion(success, e);
     }];
+}
+
+- (void) serverConnected {
+    NSLog(@"%@: Server connected", self);
+    if (self.openCompletion) {
+        self.openCompletion(YES, nil);
+        self.openCompletion = nil;
+    }
 }
 
 - (void) close: (NSError*)error completion: (void (^)(void))completion {
@@ -192,19 +206,28 @@
 
 @synthesize client=_client, isClosed=_isClosed;
 
-- (void) clientOpened: (CBLMockClientConnection*)client {
-    NSLog(@"%@: client opened connection: %@", self, client);
+- (void) clientConnected: (CBLMockClientConnection*)client {
+    NSLog(@"%@: Client connected: %@", self, client);
     self.client = client;
     self.isClosed = NO;
     [self.listener accept: self];
 }
 
 - (void) clientDisconnected: (CBLMessagingError*)error {
-    NSLog(@"%@: Client Disconnected with error: %@", self, error);
+    NSLog(@"%@: Client disconnected with error: %@", self, error);
     if (!self.isClosed) {
         NSLog(@"%@: Tell replicator to close connection with error: %@", self, error);
         [self.replicatorConnection close: error];
     }
+}
+
+- (void) open: (id<CBLReplicatorConnection>)connection completion: (void (^)(BOOL, CBLMessagingError * _Nullable))completion {
+    [super open: connection completion: ^(BOOL success, CBLMessagingError *_Nullable e) {
+        completion(success, e);
+        if (success) {
+            [self.client serverConnected];
+        }
+    }];
 }
 
 - (void) close: (NSError*)error completion: (void (^)(void))completion {
