@@ -17,12 +17,19 @@
 //  limitations under the License.
 //
 
-#import "CBLLiveQuery+Internal.h"
+#import "CBLLiveQuery.h"
 #import "CBLQuery.h"
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLChangeNotifier.h"
+#import "CBLStoppable.h"
+
+#pragma mark -
+@interface CBLLiveQuery () <CBLStoppable>
+@end
+
+#pragma mark -
 
 // Default value of CBLLiveQuery.updateInterval
 static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
