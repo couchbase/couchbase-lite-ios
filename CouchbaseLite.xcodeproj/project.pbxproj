@@ -1880,7 +1880,6 @@
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
 		1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStoppable.h; sourceTree = "<group>"; };
-		1AECFF8824AEA1FA0015C9F8 /* CBLLiveQuery+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLiveQuery+Internal.h"; sourceTree = "<group>"; };
 		1AF555C322946ED90077DF6D /* QueryTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Main.m"; sourceTree = "<group>"; };
 		270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLChangeNotifier.h; sourceTree = "<group>"; };
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
@@ -3517,7 +3516,6 @@
 				93690F6E1F4BA1F200DF4A91 /* Index */,
 				93EC42ED1FB39DAC00D54BB4 /* CBLLiveQuery.h */,
 				93EC42EE1FB39DAD00D54BB4 /* CBLLiveQuery.mm */,
-				1AECFF8824AEA1FA0015C9F8 /* CBLLiveQuery+Internal.h */,
 				937F026E1EFC694900060D64 /* CBLQueryChange+Internal.h */,
 				933208291E774171000D9993 /* CBLQuery+Internal.h */,
 				933BFE1521A3BE960094530D /* CBLQuery+JSON.h */,
