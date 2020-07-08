@@ -333,13 +333,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         // Replicator - TLS Error:
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     serverCertVerifyMode: .caCert, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
         }
         
         // Replicator - Success:
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     serverCertVerifyMode: .selfSignedCert, serverCert: nil)
+                     acceptSelfSignedOnly: true, serverCert: nil)
         }
         
         // Cleanup
@@ -359,14 +359,14 @@ class URLEndpontListenerTest: ReplicatorTest {
         // Replicator - TLS Error:
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     serverCertVerifyMode: .caCert, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
         }
         
         // Replicator - Success:
         self.ignoreException {
             let serverCert = listener.tlsIdentity!.certs[0]
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     serverCertVerifyMode: .caCert, serverCert: serverCert)
+                     acceptSelfSignedOnly: false, serverCert: serverCert)
         }
         
         // Cleanup
@@ -462,7 +462,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try generateDocument(withID: "doc-1")
         let rConfig = self.config(target: self.listener!.localURLEndpoint,
                                  type: .pushAndPull, continuous: false, auth: nil,
-                                 serverCertVerifyMode: .caCert, serverCert: nil)
+                                 acceptSelfSignedOnly: false, serverCert: nil)
         var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
         run(config: rConfig, reset: false, expectedError: nil) { (replicator) in
             replicator.addChangeListener { (change) in

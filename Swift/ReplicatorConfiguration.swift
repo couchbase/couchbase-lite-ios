@@ -30,15 +30,6 @@ public enum ReplicatorType: UInt8 {
     case pull
 }
 
-///  Server Certificate Verification Mode.
-///
-/// - caCert: Verify by using trusted anchor CA certs or by using the configured pinned server certs (Default Mode).
-/// - selfSignedCert: Verify by accepting any and only self-signed certs. Any non-self-signed certs will be rejected.
-public enum ServerCertificateVerificationMode: UInt8 {
-    case caCert = 0
-    case selfSignedCert
-}
-
 /// Document flags describing a replicated document.
 public struct DocumentFlags: OptionSet {
     
@@ -102,7 +93,7 @@ public class ReplicatorConfiguration {
     
     #if COUCHBASE_ENTERPRISE
     /// Specify how the replicator verifies TLS server certificates. The default mode is .caCert.
-    public var serverCertificateVerificationMode: ServerCertificateVerificationMode = .caCert {
+    public var acceptOnlySelfSignedServerCertificate: Bool = false {
         willSet(newValue) {
             checkReadOnly()
         }
@@ -229,7 +220,7 @@ public class ReplicatorConfiguration {
         #endif
         
         #if COUCHBASE_ENTERPRISE
-        self.serverCertificateVerificationMode = config.serverCertificateVerificationMode
+        self.acceptOnlySelfSignedServerCertificate = config.acceptOnlySelfSignedServerCertificate
         #endif
     }
     
@@ -263,8 +254,7 @@ public class ReplicatorConfiguration {
         #endif
         
         #if COUCHBASE_ENTERPRISE
-        c.serverCertificateVerificationMode = CBLServerCertificateVerificationMode(rawValue:
-            UInt(self.serverCertificateVerificationMode.rawValue))!
+        c.acceptOnlySelfSignedServerCertificate = self.acceptOnlySelfSignedServerCertificate
         #endif
         return c
     }

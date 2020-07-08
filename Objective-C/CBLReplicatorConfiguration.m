@@ -44,7 +44,7 @@
 @synthesize conflictResolver=_conflictResolver;
 
 #ifdef COUCHBASE_ENTERPRISE
-@synthesize serverCertificateVerificationMode=_serverCertificateVerificationMode;
+@synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
 #endif
 
 #if TARGET_OS_IPHONE
@@ -63,7 +63,7 @@
         _target = target;
         _replicatorType = kCBLReplicatorTypePushAndPull;
 #ifdef COUCHBASE_ENTERPRISE
-        _serverCertificateVerificationMode = kCBLServerCertVerificationModeCACert;
+        _acceptOnlySelfSignedServerCertificate = NO;
 #endif
     }
     return self;
@@ -91,9 +91,9 @@
 }
 
 #ifdef COUCHBASE_ENTERPRISE
-- (void) setServerCertificateVerificationMode: (CBLServerCertificateVerificationMode)serverCertificateVerificationMode {
+- (void) setAcceptOnlySelfSignedServerCertificate: (BOOL)acceptOnlySelfSignedServerCertificate {
     [self checkReadonly];
-    _serverCertificateVerificationMode = serverCertificateVerificationMode;
+    _acceptOnlySelfSignedServerCertificate = acceptOnlySelfSignedServerCertificate;
 }
 #endif
 
@@ -146,7 +146,7 @@
         _continuous = config.continuous;
         _authenticator = config.authenticator;
 #ifdef COUCHBASE_ENTERPRISE
-        _serverCertificateVerificationMode = config.serverCertificateVerificationMode;
+        _acceptOnlySelfSignedServerCertificate = config.acceptOnlySelfSignedServerCertificate;
 #endif
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);

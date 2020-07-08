@@ -170,7 +170,7 @@ static void doDispose(C4Socket* s) {
         _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
 #ifdef COUCHBASE_ENTERPRISE
         // Workaround for CBL-1003:
-        if (_replicator.config.serverCertificateVerificationMode == kCBLServerCertVerificationModeSelfSignedCert)
+        if (_replicator.config.acceptOnlySelfSignedServerCertificate)
             _acceptOnlySelfSignedCert = YES;
 #endif
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
