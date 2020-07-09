@@ -33,7 +33,9 @@ public enum LogDomain: UInt8 {
     case query          = 2
     case replicator     = 4
     case network        = 8
+#if COUCHBASE_ENTERPRISE
     case listener       = 16
+#endif
 }
 
 /// Log level.
