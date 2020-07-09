@@ -205,6 +205,8 @@
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;
     if (uniqueID)
         options[@kC4ReplicatorOptionRemoteDBUniqueID] = uniqueID;
+    
+    options[@kC4ReplicatorOptionOnlySelfSignedServerCert] = @(_acceptOnlySelfSignedServerCertificate);
 #endif
     
     return options;

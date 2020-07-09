@@ -672,7 +672,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     
     NSError* error;
 #ifdef COUCHBASE_ENTERPRISE
-    NSURLCredential* credentials = _acceptOnlySelfSignedCert ?
+    NSURLCredential* credentials = !pin && _acceptOnlySelfSignedCert ?
         [check acceptOnlySelfSignedCert: &error] :
         [check checkTrust: &error];
 #else
