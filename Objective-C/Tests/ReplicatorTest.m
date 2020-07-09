@@ -262,14 +262,14 @@
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
-                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+                            acceptSelfSignedOnly: (BOOL)acceptSelfSignedOnly
                                       serverCert: (nullable SecCertificateRef)serverCert {
     CBLReplicatorConfiguration* c = [self configWithTarget: target
                                                       type: type
                                                 continuous: continuous
                                              authenticator: authenticator
                                                 serverCert: serverCert];
-    c.serverCertificateVerificationMode = serverCertVerifyMode;
+    c.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly;
     return c;
 }
 #endif
@@ -333,7 +333,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
                   type: (CBLReplicatorType)type
             continuous: (BOOL)continuous
          authenticator: (nullable CBLAuthenticator*)authenticator
-  serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+  acceptSelfSignedOnly: (BOOL)acceptSelfSignedOnly
             serverCert: (nullable SecCertificateRef)serverCert
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain {
@@ -341,7 +341,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
                                   type: type
                             continuous: continuous
                          authenticator: authenticator
-                  serverCertVerifyMode: serverCertVerifyMode
+                  acceptSelfSignedOnly: acceptSelfSignedOnly
                             serverCert: serverCert];
     return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }

@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
                                             type: (CBLReplicatorType)type
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
-                            serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+                            acceptSelfSignedOnly: (BOOL)acceptSelfSignedOnly
                                       serverCert: (nullable SecCertificateRef)serverCert;
 #endif
 
@@ -117,7 +117,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
                   type: (CBLReplicatorType)type
             continuous: (BOOL)continuous
          authenticator: (nullable CBLAuthenticator*)authenticator
-  serverCertVerifyMode: (CBLServerCertificateVerificationMode)serverCertVerifyMode
+  acceptSelfSignedOnly: (BOOL)acceptSelfSignedOnly
             serverCert: (nullable SecCertificateRef)serverCert
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain;

@@ -726,7 +726,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [url c4Address: &addr];
         C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
         if (!cookies.buf) {
-            CBLWarnError(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
+            CBLWarn(WebSocket, @"Error getting cookies %d/%d", err.domain, err.code);
         }
         return sliceResult2string(cookies);
     }

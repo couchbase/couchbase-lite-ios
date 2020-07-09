@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSTimeInterval heartbeatInterval;
 
 #ifdef COUCHBASE_ENTERPRISE
-@property (nonatomic) CBLServerCertificateVerificationMode serverCertificateVerificationMode;
+@property (nonatomic) BOOL acceptOnlySelfSignedServerCertificate;
 #endif
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config

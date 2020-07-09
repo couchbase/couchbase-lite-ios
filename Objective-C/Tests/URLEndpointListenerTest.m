@@ -550,7 +550,38 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) testServerCertVerificationModeSelfSignedCert {
+- (void) testAcceptSelfSignedCertWithPinnedCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: YES
+             serverCert: self.defaultServerCert
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: NO
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    
+    [self stopListener: listener];
+}
+
+- (void) testAcceptOnlySelfSignedCertMode {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
@@ -566,7 +597,7 @@ typedef CBLURLEndpointListener Listener;
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil
-       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+       acceptSelfSignedOnly: NO
                  serverCert: nil
                   errorCode: CBLErrorTLSCertUnknownRoot
                 errorDomain: CBLErrorDomain];
@@ -578,7 +609,7 @@ typedef CBLURLEndpointListener Listener;
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil
-       serverCertVerifyMode: kCBLServerCertVerificationModeSelfSignedCert
+       acceptSelfSignedOnly: YES
                  serverCert: nil
                   errorCode: 0
                 errorDomain: nil];
@@ -587,7 +618,7 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) testServerCertVerificationModeCACert {
+- (void) testDoNotAcceptSelfSignedMode {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
@@ -603,7 +634,7 @@ typedef CBLURLEndpointListener Listener;
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil
-       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+       acceptSelfSignedOnly: NO
                  serverCert: nil
                   errorCode: CBLErrorTLSCertUnknownRoot
                 errorDomain: CBLErrorDomain];
@@ -615,7 +646,7 @@ typedef CBLURLEndpointListener Listener;
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil
-       serverCertVerifyMode: kCBLServerCertVerificationModeCACert
+       acceptSelfSignedOnly: NO
                  serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
                   errorCode: 0
                 errorDomain: nil];

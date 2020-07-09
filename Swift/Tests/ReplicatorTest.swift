@@ -50,11 +50,11 @@ class ReplicatorTest: CBLTestCase {
     #if COUCHBASE_ENTERPRISE
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false, auth: Authenticator? = nil,
-                serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
+                acceptSelfSignedOnly: Bool = false,
                 serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
         let config = self.config(target: target, type: type, continuous: continuous,
                                  auth: auth, serverCert: serverCert)
-        config.serverCertificateVerificationMode = serverCertVerifyMode
+        config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
         return config
     }
     #endif
@@ -86,11 +86,11 @@ class ReplicatorTest: CBLTestCase {
     #if COUCHBASE_ENTERPRISE
     func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
              continuous: Bool = false, auth: Authenticator? = nil,
-             serverCertVerifyMode: ServerCertificateVerificationMode = .caCert,
+             acceptSelfSignedOnly: Bool = false,
              serverCert: SecCertificate? = nil,
              expectedError: Int? = nil) {
         let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
-                                 serverCertVerifyMode: serverCertVerifyMode, serverCert: serverCert)
+                                 acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert)
         run(config: config, reset: false, expectedError: expectedError)
     }
     #endif

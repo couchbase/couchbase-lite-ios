@@ -30,7 +30,7 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-- (void)testEmptyPush {
+- (void) testEmptyPush {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
