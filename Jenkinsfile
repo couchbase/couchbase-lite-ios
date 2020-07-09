@@ -1,4 +1,7 @@
 pipeline {
+    options {
+        disableConcurrentBuilds() 
+    }
     agent { label 'mobile-builder-ios-pull-request'  }
     stages {
         stage('Checkout'){
