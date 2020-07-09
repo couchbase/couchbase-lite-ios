@@ -558,7 +558,7 @@ typedef CBLURLEndpointListener Listener;
     AssertNotNil(listener);
     AssertEqual(listener.tlsIdentity.certs.count, 1);
     
-    // should fail this scenario
+    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
     [self runWithTarget: listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
@@ -568,6 +568,7 @@ typedef CBLURLEndpointListener Listener;
               errorCode: CBLErrorTLSCertUnknownRoot
             errorDomain: CBLErrorDomain];
     
+    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
     [self runWithTarget: listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
