@@ -28,7 +28,9 @@ typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
     kCBLLogDomainQuery          = 1 << 1, ///< Query domain.
     kCBLLogDomainReplicator     = 1 << 2, ///< Replicator domain.
     kCBLLogDomainNetwork        = 1 << 3, ///< Network domain.
+#ifdef COUCHBASE_ENTERPRISE
     kCBLLogDomainListener       = 1 << 4  ///< Listener domain.
+#endif
 };
 
 /**

@@ -86,7 +86,10 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"SyncBusy": @(kCBLLogDomainReplicator),
                               @"BLIP": @(kCBLLogDomainNetwork),
                               @"WS": @(kCBLLogDomainNetwork),
-                              @"Listener": @(kCBLLogDomainListener) };
+#ifdef COUCHBASE_ENTERPRISE
+                              @"Listener": @(kCBLLogDomainListener)
+#endif
+        };
     }
     
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
@@ -237,9 +240,11 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         case kCBLLogDomainNetwork:
             c4Domain = kCBL_LogDomainWebSocket;
             break;
+#ifdef COUCHBASE_ENTERPRISE
         case kCBLLogDomainListener:
             c4Domain = kCBL_LogDomainListener;
             break;
+#endif
         default:
             c4Domain = kCBL_LogDomainDatabase;
     }
@@ -282,9 +287,11 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
         case kCBLLogDomainNetwork:
             return @"Network";
             break;
+#ifdef COUCHBASE_ENTERPRISE
         case kCBLLogDomainListener:
             return @"Listener";
             break;
+#endif
         default:
             return @"Database";
     }
