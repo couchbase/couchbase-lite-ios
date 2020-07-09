@@ -340,7 +340,7 @@ static void doDispose(C4Socket* s) {
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
       
 #ifdef COUCHBASE_ENTERPRISE
-        if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert])
+        if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool())
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
 #endif
