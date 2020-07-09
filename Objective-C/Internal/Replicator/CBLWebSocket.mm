@@ -95,10 +95,6 @@ struct PendingWrite {
     NSURL* _remoteURL;
     
     NSArray* _clientIdentity;
-    
-#ifdef COUCHBASE_ENTERPRISE
-    BOOL _acceptOnlySelfSignedCert;
-#endif
 }
 
 + (C4SocketFactory) socketFactory {
@@ -168,11 +164,6 @@ static void doDispose(C4Socket* s) {
         _replicator = (__bridge CBLReplicator*)context;
         _db = _replicator.config.database;
         _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
-#ifdef COUCHBASE_ENTERPRISE
-        // Workaround for CBL-1003:
-        if (_replicator.config.acceptOnlySelfSignedServerCertificate)
-            _acceptOnlySelfSignedCert = YES;
-#endif
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
@@ -349,7 +340,7 @@ static void doDispose(C4Socket* s) {
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
       
 #ifdef COUCHBASE_ENTERPRISE
-        if (_acceptOnlySelfSignedCert)
+        if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert])
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
 #endif
@@ -657,6 +648,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
                                                  host: url.host
                                                  port: url.port.shortValue];
     CFRelease(trust);
+
+#ifdef COUCHBASE_ENTERPRISE
+    BOOL acceptOnlySelfSignedCert = _options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool();
+#endif
     Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
     if (pin) {
         check.pinnedCertData = slice(pin.asData()).copiedNSData();
@@ -664,7 +659,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
                kC4ReplicatorOptionPinnedServerCert);
     }
 #ifdef COUCHBASE_ENTERPRISE
-    else if (!_acceptOnlySelfSignedCert)  {
+    else if (!acceptOnlySelfSignedCert)  {
         // CFStream validates the certs (kCFStreamSSLValidatesCertificateChain = true)
         return true;
     }
@@ -672,7 +667,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     
     NSError* error;
 #ifdef COUCHBASE_ENTERPRISE
-    NSURLCredential* credentials = !pin && _acceptOnlySelfSignedCert ?
+    NSURLCredential* credentials = !pin && acceptOnlySelfSignedCert ?
         [check acceptOnlySelfSignedCert: &error] :
         [check checkTrust: &error];
 #else
