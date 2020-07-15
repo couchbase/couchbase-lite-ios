@@ -52,9 +52,6 @@ do
   shift
 done
 
-# TODO: CBL-1078
-NO_COV=YES
-
 if [ -z "$OUTPUT_DIR" ]
 then
   usage
