@@ -655,7 +655,8 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) testEmptyNetworkInterface {
+// TODO: https://issues.couchbase.com/browse/CBL-1140
+- (void) _testEmptyNetworkInterface {
     if (!self.keyChainAccessAllowed) return;
     
     [self listen];
