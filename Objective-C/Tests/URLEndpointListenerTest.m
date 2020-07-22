@@ -399,7 +399,6 @@ typedef CBLURLEndpointListener Listener;
     [self generateDocumentWithID: @"doc-1"];
     
     id rConfig = [self configWithTarget: _listener.localEndpoint type: kCBLReplicatorTypePush continuous: NO];
-    [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.tlsIdentity.certs.firstObject)];
     __block Listener* weakListener = _listener;
     __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
     [self run: rConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
