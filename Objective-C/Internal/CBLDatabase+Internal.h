@@ -74,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 // method of the PredictiveModel.
 - (instancetype) initWithC4Database: (C4Database*)c4db;
 
-- (NSString*) getCookies: (NSURL*)url;
+- (nullable NSString*) getCookies: (NSURL*)url;
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url;
 
 @end
