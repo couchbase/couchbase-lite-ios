@@ -686,10 +686,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 - (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
     SecCertificateRef cert = NULL;
-    if (SecTrustGetCertificateCount(trust) > 0)
-        cert = SecTrustGetCertificateAtIndex(trust, 0);
-    else
-        CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
+    if (trust != NULL) {
+        if (SecTrustGetCertificateCount(trust) > 0)
+            cert = SecTrustGetCertificateAtIndex(trust, 0);
+        else
+            CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
+    }
     _replicator.serverCertificate = cert;
 }
 
@@ -772,7 +774,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
             if (_checkSSLCert) {
                 SecTrustRef trust = [self copyTrustFromReadStream];
-                [self updateServerCertificateFromTrust: (SecTrustRef)CFAutorelease(trust)];
+                [self updateServerCertificateFromTrust:
+                 (trust != NULL ? (SecTrustRef) CFAutorelease(trust) : NULL)];
             }
             [self closeWithError: stream.streamError];
             break;
