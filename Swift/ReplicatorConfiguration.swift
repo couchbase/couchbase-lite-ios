@@ -92,7 +92,8 @@ public class ReplicatorConfiguration {
     }
     
     #if COUCHBASE_ENTERPRISE
-    /// Specify how the replicator verifies TLS server certificates. The default mode is .caCert.
+    /// Specify the replicator to accept any and only self-signed certs. Any non-self-signed certs will be rejected
+    /// to avoid accidentally using this mode with the non-self-signed certs in production.
     public var acceptOnlySelfSignedServerCertificate: Bool = false {
         willSet(newValue) {
             checkReadOnly()
