@@ -607,7 +607,8 @@
     AssertEqual(count, 1u);
 }
 
-- (void) testConflictResolutionDefault {
+// TODO: https://issues.couchbase.com/browse/CBL-1174
+- (void) _testConflictResolutionDefault {
     NSError* error;
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -788,7 +789,8 @@
  6. document resolved successfully, with second attempt,
  7. once the first CCR tries again, conflict is already been resolved.
  */
-- (void) testDoubleConflictResolutionOnSameConflicts {
+// TODO: https://issues.couchbase.com/browse/CBL-1174
+- (void) _testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
