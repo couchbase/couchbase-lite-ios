@@ -315,54 +315,6 @@ typedef CBLURLEndpointListener Listener;
     [self stopListen];
 }
 
-- (void) testTLSIdentity {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Disabled TLS:
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    CBLURLEndpointListener* listener = [[Listener alloc] initWithConfig: config];
-    AssertNil(listener.tlsIdentity);
-    
-    NSError* error;
-    Assert([listener startWithError: &error]);
-    AssertNil(error);
-    AssertNil(listener.tlsIdentity);
-    [self stopListener: listener];
-    AssertNil(listener.tlsIdentity);
-    
-    // Anonymous Identity:
-    config = [[Config alloc] initWithDatabase: self.otherDB];
-    listener = [[Listener alloc] initWithConfig: config];
-    AssertNil(listener.tlsIdentity);
-    
-    Assert([listener startWithError: &error]);
-    AssertNil(error);
-    AssertNotNil(listener.tlsIdentity);
-    [self stopListener: listener];
-    AssertNil(listener.tlsIdentity);
-    
-    // User Identity:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
-    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: NO
-                                                            attributes: attrs
-                                                            expiration: nil
-                                                                 label: kServerCertLabel
-                                                                 error: &error];
-    config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.tlsIdentity = identity;
-    listener = [[Listener alloc] initWithConfig: config];
-    AssertNil(listener.tlsIdentity);
-    
-    Assert([listener startWithError: &error]);
-    AssertNil(error);
-    AssertNotNil(listener.tlsIdentity);
-    AssertEqual(listener.tlsIdentity, config.tlsIdentity);
-    [self stopListener: listener];
-    AssertNil(listener.tlsIdentity);
-}
-
 - (void) testURLs {
     if (!self.keyChainAccessAllowed) return;
     
@@ -416,6 +368,54 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: _listener];
     AssertEqual(_listener.status.connectionCount, 0);
     AssertEqual(_listener.status.activeConnectionCount, 0);
+}
+
+- (void) testTLSIdentity {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Disabled TLS:
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.disableTLS = YES;
+    CBLURLEndpointListener* listener = [[Listener alloc] initWithConfig: config];
+    AssertNil(listener.tlsIdentity);
+    
+    NSError* error;
+    Assert([listener startWithError: &error]);
+    AssertNil(error);
+    AssertNil(listener.tlsIdentity);
+    [self stopListener: listener];
+    AssertNil(listener.tlsIdentity);
+    
+    // Anonymous Identity:
+    config = [[Config alloc] initWithDatabase: self.otherDB];
+    listener = [[Listener alloc] initWithConfig: config];
+    AssertNil(listener.tlsIdentity);
+    
+    Assert([listener startWithError: &error]);
+    AssertNil(error);
+    AssertNotNil(listener.tlsIdentity);
+    [self stopListener: listener];
+    AssertNil(listener.tlsIdentity);
+    
+    // User Identity:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: NO
+                                                            attributes: attrs
+                                                            expiration: nil
+                                                                 label: kServerCertLabel
+                                                                 error: &error];
+    config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = identity;
+    listener = [[Listener alloc] initWithConfig: config];
+    AssertNil(listener.tlsIdentity);
+    
+    Assert([listener startWithError: &error]);
+    AssertNil(error);
+    AssertNotNil(listener.tlsIdentity);
+    AssertEqual(listener.tlsIdentity, config.tlsIdentity);
+    [self stopListener: listener];
+    AssertNil(listener.tlsIdentity);
 }
 
 - (void) testPaswordAuthenticator {
@@ -545,111 +545,6 @@ typedef CBLURLEndpointListener Listener;
 
     // Cleanup:
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
-    
-    [self stopListener: listener];
-}
-
-- (void) testAcceptSelfSignedCertWithPinnedCertificate {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Listener:
-    Listener* listener = [self listenWithTLS: YES];
-    AssertNotNil(listener);
-    AssertEqual(listener.tlsIdentity.certs.count, 1);
-    
-    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
-    [self runWithTarget: listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: nil
-   acceptSelfSignedOnly: YES
-             serverCert: self.defaultServerCert
-              errorCode: CBLErrorTLSCertUnknownRoot
-            errorDomain: CBLErrorDomain];
-    
-    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
-    [self runWithTarget: listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: nil
-   acceptSelfSignedOnly: NO
-             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
-              errorCode: 0
-            errorDomain: nil];
-    
-    [self stopListener: listener];
-}
-
-- (void) testAcceptOnlySelfSignedCertMode {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Listener:
-    Listener* listener = [self listenWithTLS: YES];
-    AssertNotNil(listener);
-    AssertEqual(listener.tlsIdentity.certs.count, 1);
-    
-    self.disableDefaultServerCertPinning = YES;
-    
-    // Replicator - TLS Error:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: NO
-                 serverCert: nil
-                  errorCode: CBLErrorTLSCertUnknownRoot
-                errorDomain: CBLErrorDomain];
-    }];
-    
-    // Replicator - Success:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: YES
-                 serverCert: nil
-                  errorCode: 0
-                errorDomain: nil];
-    }];
-    
-    [self stopListener: listener];
-}
-
-- (void) testDoNotAcceptSelfSignedMode {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Listener:
-    Listener* listener = [self listenWithTLS: YES];
-    AssertNotNil(listener);
-    AssertEqual(listener.tlsIdentity.certs.count, 1);
-    
-    self.disableDefaultServerCertPinning = YES;
-    
-    // Replicator - TLS Error:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: NO
-                 serverCert: nil
-                  errorCode: CBLErrorTLSCertUnknownRoot
-                errorDomain: CBLErrorDomain];
-    }];
-    
-    // Replicator - Success:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: NO
-                 serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
-                  errorCode: 0
-                errorDomain: nil];
-    }];
     
     [self stopListener: listener];
 }
@@ -924,39 +819,7 @@ typedef CBLURLEndpointListener Listener;
     }
 }
 
-- (void) testReplicatorServerCertNoTLS {
-    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
-    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
-    
-    Listener* listener = [self listenWithTLS: NO];
-    
-    CBLReplicator* replicator = [self replicator: self.otherDB
-                                       continous: YES
-                                          target: listener.localEndpoint
-                                      serverCert: nil];
-    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
-        CBLReplicatorActivityLevel level = change.status.activity;
-        if (level == kCBLReplicatorIdle)
-            [x1 fulfill];
-        else if (level == kCBLReplicatorStopped && !change.status.error)
-            [x2 fulfill];
-    }];
-    Assert(replicator.serverCertificate == NULL);
-    
-    [replicator start];
-    
-    [self waitForExpectations: @[x1] timeout: timeout];
-    Assert(replicator.serverCertificate == NULL);
-    
-    [replicator stop];
-    
-    [self waitForExpectations: @[x2] timeout: timeout];
-    Assert(replicator.serverCertificate == NULL);
-    
-    [self stopListen];
-}
-
-- (void) testReplicatorServerCertWithTLS {
+- (void) testReplicatorServerCertificate {
     if (!self.keyChainAccessAllowed) return;
     
     XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
@@ -999,7 +862,7 @@ typedef CBLURLEndpointListener Listener;
     [self stopListen];
 }
 
-- (void) testReplicatorServerCertWithTLSError {
+- (void) testReplicatorServerCertificateWithTLSError {
     if (!self.keyChainAccessAllowed) return;
     
     XCTestExpectation* x1 = [self expectationWithDescription: @"stopped"];
@@ -1060,6 +923,143 @@ typedef CBLURLEndpointListener Listener;
     [self releaseCF: serverCert];
     
     [self stopListen];
+}
+
+- (void) testReplicatorServerCertificateWithTLSDisabled {
+    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
+    
+    Listener* listener = [self listenWithTLS: NO];
+    
+    CBLReplicator* replicator = [self replicator: self.otherDB
+                                       continous: YES
+                                          target: listener.localEndpoint
+                                      serverCert: nil];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel level = change.status.activity;
+        if (level == kCBLReplicatorIdle)
+            [x1 fulfill];
+        else if (level == kCBLReplicatorStopped && !change.status.error)
+            [x2 fulfill];
+    }];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator start];
+    
+    [self waitForExpectations: @[x1] timeout: timeout];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [replicator stop];
+    
+    [self waitForExpectations: @[x2] timeout: timeout];
+    Assert(replicator.serverCertificate == NULL);
+    
+    [self stopListen];
+}
+
+- (void) testAcceptOnlySelfSignedCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Replicator - TLS Error:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: NO
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUnknownRoot
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // Replicator - Success:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: YES
+                 serverCert: nil
+                  errorCode: 0
+                errorDomain: nil];
+    }];
+    
+    [self stopListener: listener];
+}
+
+- (void) testPinnedServerCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Replicator - TLS Error:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: NO
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUnknownRoot
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // Replicator - Success:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: NO
+                 serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+                  errorCode: 0
+                errorDomain: nil];
+    }];
+    
+    [self stopListener: listener];
+}
+
+- (void) testAcceptOnlySelfSignedCertificateWithPinnedCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: YES
+             serverCert: self.defaultServerCert
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: NO
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    
+    [self stopListener: listener];
 }
 
 - (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {

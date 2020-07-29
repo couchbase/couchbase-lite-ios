@@ -178,10 +178,69 @@ class URLEndpontListenerTest: ReplicatorTest {
         super.tearDown()
     }
     
-    func testTLSIdentity() throws {
-        if !self.keyChainAccessAllowed {
-            return
+    func testPort() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = wsPort
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.port)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssertEqual(self.listener!.port, wsPort)
+
+        try stopListen()
+        XCTAssertNil(self.listener!.port)
+    }
+    
+    func testEmptyPort() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.port)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssertNotEqual(self.listener!.port, 0)
+
+        try stopListen()
+        XCTAssertNil(self.listener!.port)
+    }
+    
+    func testBusyPort() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        try listen()
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = self.listener!.port
+        let listener2 = URLEndpointListener(config: config)
+        
+        expectError(domain: NSPOSIXErrorDomain, code: Int(EADDRINUSE)) {
+            try listener2.start()
         }
+    }
+    
+    func testURLs() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.port = wsPort
+        self.listener = URLEndpointListener(config: config)
+        XCTAssertNil(self.listener!.urls)
+        
+        // Start:
+        try self.listener!.start()
+        XCTAssert(self.listener!.urls?.count != 0)
+
+        try stopListen()
+        XCTAssertNil(self.listener!.urls)
+    }
+    
+    func testTLSIdentity() throws {
+        if !self.keyChainAccessAllowed { return }
         
         // Disabled TLS:
         var config = URLEndpointListenerConfiguration.init(database: self.oDB)
@@ -222,13 +281,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListener(listener: listener)
         XCTAssertNil(listener.tlsIdentity)
     }
-    
+       
     func testPasswordAuthenticator() throws {
         // Listener:
         let listenerAuth = ListenerPasswordAuthenticator.init {
             (username, password) -> Bool in
             return (username as NSString).isEqual(to: "daniel") &&
-                   (password as NSString).isEqual(to: "123")
+                (password as NSString).isEqual(to: "123")
         }
         let listener = try listen(tls: false, auth: listenerAuth)
         
@@ -252,9 +311,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     @available(macOS 10.12, iOS 10.3, *)
     func testClientCertAuthenticatorWithClosure() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        if !self.keyChainAccessAllowed { return }
         
         // Listener:
         let listenerAuth = ListenerCertificateAuthenticator.init { (certs) -> Bool in
@@ -288,9 +345,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testClientCertAuthenticatorWithRootCerts() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        if !self.keyChainAccessAllowed { return }
         
         // Root Cert:
         let rootCertData = try dataFromResource(name: "identity/client-ca", ofType: "der")
@@ -320,132 +375,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    func testServerCertVerificationModeSelfSignedCert() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        // Listener:
-        let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.tlsIdentity)
-        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
-        
-        // Replicator - TLS Error:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
-        }
-        
-        // Replicator - Success:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: true, serverCert: nil)
-        }
-        
-        // Cleanup
-        try stopListen()
-    }
-    
-    func testServerCertVerificationModeCACert() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        // Listener:
-        let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.tlsIdentity)
-        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
-        
-        // Replicator - TLS Error:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
-        }
-        
-        // Replicator - Success:
-        self.ignoreException {
-            let serverCert = listener.tlsIdentity!.certs[0]
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: serverCert)
-        }
-        
-        // Cleanup
-        try stopListen()
-    }
-    
-    func testPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        config.port = wsPort
-        self.listener = URLEndpointListener(config: config)
-        XCTAssertNil(self.listener!.port)
-        
-        // Start:
-        try self.listener!.start()
-        XCTAssertEqual(self.listener!.port, wsPort)
-
-        try stopListen()
-        XCTAssertNil(self.listener!.port)
-    }
-    
-    func testEmptyPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        self.listener = URLEndpointListener(config: config)
-        XCTAssertNil(self.listener!.port)
-        
-        // Start:
-        try self.listener!.start()
-        XCTAssertNotEqual(self.listener!.port, 0)
-
-        try stopListen()
-        XCTAssertNil(self.listener!.port)
-    }
-    
-    func testBusyPort() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        try listen()
-        
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        config.port = self.listener!.port
-        let listener2 = URLEndpointListener(config: config)
-        
-        expectError(domain: NSPOSIXErrorDomain, code: Int(EADDRINUSE)) {
-            try listener2.start()
-        }
-    }
-    
-    func testURLs() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
-        
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        config.port = wsPort
-        self.listener = URLEndpointListener(config: config)
-        XCTAssertNil(self.listener!.urls)
-        
-        // Start:
-        try self.listener!.start()
-        XCTAssert(self.listener!.urls?.count != 0)
-
-        try stopListen()
-        XCTAssertNil(self.listener!.urls)
-    }
-    
     func testConnectionStatus() throws {
-        if !self.keyChainAccessAllowed {
-            return
-        }
+        if !self.keyChainAccessAllowed { return }
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
@@ -646,7 +577,7 @@ class URLEndpontListenerTest: ReplicatorTest {
                  expectedError: CBLErrorHTTPForbidden)
     }
     
-    func testReplicatorServerCertNoTLS() throws {
+    func testReplicatorServerCertificateNoTLS() throws {
         let x1 = expectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
@@ -678,7 +609,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    func testReplicatorServerCertWithTLS() throws {
+    func testReplicatorServerCertificate() throws {
         if !self.keyChainAccessAllowed { return }
         
         let x1 = expectation(description: "idle")
@@ -718,7 +649,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    func testReplicatorServerCertWithTLSError() throws {
+    func testReplicatorServerCertificateWithError() throws {
         if !self.keyChainAccessAllowed { return }
         
         var x1 = expectation(description: "stopped")
@@ -777,6 +708,55 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNotNil(receivedServerCert)
         checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
+        try stopListen()
+    }
+    
+    func testAcceptOnlySelfSignedServerCertificate() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
+        
+        // Replicator - TLS Error:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // Replicator - Success:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: true, serverCert: nil)
+        }
+        
+        // Cleanup
+        try stopListen()
+    }
+    
+    func testPinnedServerCertificate() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
+        
+        // Replicator - TLS Error:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // Replicator - Success:
+        self.ignoreException {
+            let serverCert = listener.tlsIdentity!.certs[0]
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: false, serverCert: serverCert)
+        }
+        
+        // Cleanup
         try stopListen()
     }
     
