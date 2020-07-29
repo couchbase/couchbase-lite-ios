@@ -577,38 +577,6 @@ class URLEndpontListenerTest: ReplicatorTest {
                  expectedError: CBLErrorHTTPForbidden)
     }
     
-    func testReplicatorServerCertificateNoTLS() throws {
-        let x1 = expectation(description: "idle")
-        let x2 = expectation(description: "stopped")
-        
-        let listener = try listen(tls: false)
-        let repl = replicator(db: self.oDB,
-                              continuous: true,
-                              target: listener.localURLEndpoint,
-                              serverCert: nil)
-        repl.addChangeListener { (change) in
-            let activity = change.status.activity
-            if activity == .idle {
-                x1.fulfill()
-            } else if activity == .stopped && change.status.error == nil {
-                x2.fulfill()
-            }
-        }
-        XCTAssertNil(repl.serverCertificate)
-        
-        repl.start()
-        
-        wait(for: [x1], timeout: 5.0)
-        XCTAssertNil(repl.serverCertificate)
-        
-        repl.stop()
-        
-        wait(for: [x2], timeout: 5.0)
-        XCTAssertNil(repl.serverCertificate)
-        
-        try stopListen()
-    }
-    
     func testReplicatorServerCertificate() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -707,6 +675,38 @@ class URLEndpontListenerTest: ReplicatorTest {
         receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkEqual(cert: serverCert, andCert: receivedServerCert!)
+        
+        try stopListen()
+    }
+    
+    func testReplicatorServerCertificateWithTLSDisabled() throws {
+        let x1 = expectation(description: "idle")
+        let x2 = expectation(description: "stopped")
+        
+        let listener = try listen(tls: false)
+        let repl = replicator(db: self.oDB,
+                              continuous: true,
+                              target: listener.localURLEndpoint,
+                              serverCert: nil)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .stopped && change.status.error == nil {
+                x2.fulfill()
+            }
+        }
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.start()
+        
+        wait(for: [x1], timeout: 5.0)
+        XCTAssertNil(repl.serverCertificate)
+        
+        repl.stop()
+        
+        wait(for: [x2], timeout: 5.0)
+        XCTAssertNil(repl.serverCertificate)
         
         try stopListen()
     }
