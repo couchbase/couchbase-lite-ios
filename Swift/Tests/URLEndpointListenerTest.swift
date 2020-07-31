@@ -564,9 +564,12 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-954
+    // TODO: https://issues.couchbase.com/browse/CBL-1178
     func _testReadOnlyListener() throws {
         if !self.keyChainAccessAllowed { return }
+        
+        let doc1 = createDocument()
+        try self.db.saveDocument(doc1)
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.readOnly = true
