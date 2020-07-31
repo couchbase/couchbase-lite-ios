@@ -509,8 +509,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1140
-    func _testEmptyNetworkInterface() throws {
+    func testEmptyNetworkInterface() throws {
         if !self.keyChainAccessAllowed { return }
         
         try listen()
