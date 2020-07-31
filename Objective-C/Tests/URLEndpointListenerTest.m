@@ -418,7 +418,7 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(listener.tlsIdentity);
 }
 
-- (void) testPaswordAuthenticator {
+- (void) testPaswordAuth {
     // Listener:
     CBLListenerPasswordAuthenticator* auth = [[CBLListenerPasswordAuthenticator alloc] initWithBlock:
         ^BOOL(NSString *username, NSString *password) {
@@ -456,7 +456,7 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) testClientCertAuthenticatorWithBlock API_AVAILABLE(macos(10.12), ios(10.3)) {
+- (void) testClientCertAuthWithCallback API_AVAILABLE(macos(10.12), ios(10.3)) {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
@@ -504,7 +504,50 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) testClientCertAuthenticatorRootCerts {
+- (void) testClientCertAuthWithCallbackError API_AVAILABLE(macos(10.12), ios(10.3)) {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    CBLListenerCertificateAuthenticator* listenerAuth =
+        [[CBLListenerCertificateAuthenticator alloc] initWithBlock: ^BOOL(NSArray *certs) {
+            AssertEqual(certs.count, 1);
+            return NO;
+        }];
+    
+    Listener* listener = [self listenWithTLS: YES auth: listenerAuth];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    // Cleanup:
+    NSError* error;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    
+    // Create client identity:
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"daniel" };
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: NO
+                                                            attributes: attrs
+                                                            expiration: nil
+                                                                 label: kClientCertLabel
+                                                                 error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    
+    // Replicator:
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity]
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: CBLErrorTLSClientCertRejected
+            errorDomain: CBLErrorDomain];
+    
+    // Cleanup:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    
+    [self stopListener: listener];
+}
+
+- (void) testClientCertAuthRootCerts {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* rootCertData = [self dataFromResource: @"identity/client-ca" ofType: @"der"];
@@ -541,6 +584,50 @@ typedef CBLURLEndpointListener Listener;
                  serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
                   errorCode: 0
                 errorDomain: nil];
+    }];
+
+    // Cleanup:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    
+    [self stopListener: listener];
+}
+
+- (void) testClientCertAuthRootCertsError {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSData* rootCertData = [self dataFromResource: @"identity/client-ca" ofType: @"der"];
+    SecCertificateRef rootCertRef = SecCertificateCreateWithData(kCFAllocatorDefault, (CFDataRef)rootCertData);
+    AssertNotNil((__bridge id)rootCertRef);
+    
+    CBLListenerCertificateAuthenticator* listenerAuth =
+        [[CBLListenerCertificateAuthenticator alloc] initWithRootCerts: @[(id)CFBridgingRelease(rootCertRef)]];
+    Listener* listener = [self listenWithTLS: YES auth: listenerAuth];
+    AssertNotNil(listener);
+    
+    // Cleanup:
+    __block NSError* error;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    
+    
+    // Create wrong client identity:
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"daniel" };
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: NO
+                                                            attributes: attrs
+                                                            expiration: nil
+                                                                 label: kClientCertLabel
+                                                                 error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    
+    // Start Replicator:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity]
+                 serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+                  errorCode: CBLErrorTLSClientCertRejected
+                errorDomain: CBLErrorDomain];
     }];
 
     // Cleanup:
