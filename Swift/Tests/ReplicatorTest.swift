@@ -113,7 +113,9 @@ class ReplicatorTest: CBLTestCase {
                 let error = status.error as NSError?
                 if let err = expectedError {
                     XCTAssertNotNil(error)
-                    XCTAssertEqual(error!.code, err)
+                    if let e = error {
+                        XCTAssertEqual(e.code, err)
+                    }
                 } else {
                     XCTAssertNil(error)
                 }

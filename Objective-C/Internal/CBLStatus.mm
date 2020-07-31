@@ -90,7 +90,9 @@ void convertError(NSError* error, C4Error *outError) {
         }
     } else if ([domain isEqualToString: NSOSStatusErrorDomain]) {
         if (!osStatusToC4Error(code, &c4err)) {
-            if (code >= -9899 && code <= -9800)
+            if (code == errSSLPeerAccessDenied || code == errSSLPeerUnknownCA)
+                c4err = {NetworkDomain, kC4NetErrTLSCertRejectedByPeer};// SecureTransport access denied
+            else if (code >= -9899 && code <= -9800)
                 c4err = {NetworkDomain, kC4NetErrTLSHandshakeFailed};   // SecureTransport errors
         }
     }

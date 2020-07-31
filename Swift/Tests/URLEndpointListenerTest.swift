@@ -282,7 +282,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener.tlsIdentity)
     }
        
-    func testPasswordAuthenticator() throws {
+    func testPasswordAuth() throws {
         // Listener:
         let listenerAuth = ListenerPasswordAuthenticator.init {
             (username, password) -> Bool in
@@ -310,7 +310,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     @available(macOS 10.12, iOS 10.3, *)
-    func testClientCertAuthenticatorWithClosure() throws {
+    func testClientCertAuthWithCallback() throws {
         if !self.keyChainAccessAllowed { return }
         
         // Listener:
@@ -344,7 +344,37 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    func testClientCertAuthenticatorWithRootCerts() throws {
+    @available(macOS 10.12, iOS 10.3, *)
+    func testClientCertAuthWithCallbackError() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Listener:
+        let listenerAuth = ListenerCertificateAuthenticator.init { (certs) -> Bool in
+            XCTAssertEqual(certs.count, 1)
+            return false
+        }
+        let listener = try listen(tls: true, auth: listenerAuth)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
+        
+        // Cleanup:
+        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        
+        // Create client identity:
+        let attrs = [certAttrCommonName: "daniel"]
+        let identity = try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil, label: clientCertLabel)
+        
+        // Replicator:
+        let auth = ClientCertificateAuthenticator.init(identity: identity)
+        let serverCert = listener.tlsIdentity!.certs[0]
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
+        
+        // Cleanup:
+        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try stopListen()
+    }
+    
+    func testClientCertAuthWithRootCerts() throws {
         if !self.keyChainAccessAllowed { return }
         
         // Root Cert:
@@ -368,6 +398,37 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert)
+        }
+        
+        // Cleanup:
+        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try stopListen()
+    }
+    
+    func testClientCertAuthWithRootCertsError() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Root Cert:
+        let rootCertData = try dataFromResource(name: "identity/client-ca", ofType: "der")
+        let rootCert = SecCertificateCreateWithData(kCFAllocatorDefault, rootCertData as CFData)!
+        
+        // Listener:
+        let listenerAuth = ListenerCertificateAuthenticator.init(rootCerts: [rootCert])
+        let listener = try listen(tls: true, auth: listenerAuth)
+        
+        // Cleanup:
+        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        
+        // Create client identity:
+        let attrs = [certAttrCommonName: "daniel"]
+        let identity = try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil, label: clientCertLabel)
+        
+        // Replicator:
+        let auth = ClientCertificateAuthenticator.init(identity: identity)
+        let serverCert = listener.tlsIdentity!.certs[0]
+        
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
         }
         
         // Cleanup:
