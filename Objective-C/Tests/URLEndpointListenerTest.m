@@ -636,8 +636,7 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1140
-- (void) _testEmptyNetworkInterface {
+- (void) testEmptyNetworkInterface {
     if (!self.keyChainAccessAllowed) return;
     
     [self listen];
@@ -862,9 +861,14 @@ typedef CBLURLEndpointListener Listener;
     [self stopListen];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-954
+// TODO: https://issues.couchbase.com/browse/CBL-1178
+// currently wrong error code returned
 - (void) _testReadOnlyListener {
     if (!self.keyChainAccessAllowed) return;
+    
+    NSError* err;
+    CBLMutableDocument* doc1 =  [self createDocument];
+    Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.readOnly = YES;
