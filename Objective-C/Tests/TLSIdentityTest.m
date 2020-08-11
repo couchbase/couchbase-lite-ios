@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLTLSIdentity+Internal.h"
+#import "TLSIdentityHelper.h"
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 @interface TLSIdentityTest : CBLTestCase
@@ -99,61 +100,6 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     Assert(errRef == nil);
     AssertNotNil(publicKeyData);
     Assert(publicKeyData.length > 0);
-}
-
-- (void) storePrivateKey: (SecKeyRef)privateKey certs: (NSArray*)certs label: (NSString*)label {
-    Assert(certs.count > 0);
-    
-    // Private Key:
-    [self storePrivateKey: privateKey];
-    
-    // Certificates:
-    int i = 0;
-    for (id cert in certs) {
-        [self storeCertificate: (SecCertificateRef) cert label: (i++) == 0 ? label : nil];
-    }
-}
-
-- (void) updateCert: (SecCertificateRef)cert withLabel: (NSString*)label {
-    NSDictionary* query = @{
-        (id)kSecClass:              (id)kSecClassCertificate,
-        (id)kSecValueRef:           (__bridge id)cert,
-    };
-    
-    NSDictionary* update = @{
-        (id)kSecClass:              (id)kSecClassCertificate,
-        (id)kSecValueRef:           (__bridge id)cert,
-        (id)kSecAttrLabel:          label
-    };
-    
-    OSStatus status = SecItemUpdate((CFDictionaryRef)query, (CFDictionaryRef)update);
-    Assert(status == errSecSuccess);
-}
-
-- (void) storePrivateKey: (SecKeyRef)key {
-    NSDictionary* params = @{
-        (id)kSecClass:              (id)kSecClassKey,
-        (id)kSecAttrKeyType:        (id)kSecAttrKeyTypeRSA,
-        (id)kSecAttrKeyClass:       (id)kSecAttrKeyClassPrivate,
-        (id)kSecReturnRef:          @NO,
-        (id)kSecValueRef:           (__bridge id)key
-    };
-    
-    OSStatus status = SecItemAdd((CFDictionaryRef)params, NULL);
-    Assert(status == errSecSuccess);
-}
-
-- (void) storeCertificate: (SecCertificateRef)cert label: (NSString*)label {
-    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithDictionary: @{
-        (id)kSecClass:              (id)kSecClassCertificate,
-        (id)kSecReturnRef:          @NO,
-        (id)kSecValueRef:           (__bridge id)cert
-    }];
-    if (label)
-        params[(id)kSecAttrLabel] = label;
-    
-    OSStatus status = SecItemAdd((CFDictionaryRef)params, NULL);
-    Assert(status == errSecSuccess);
 }
 
 /** For Debugging */
@@ -385,9 +331,11 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // CBLTLSIdentity's -deleteIdentityWithLabel method.
     NSError* error;
 #if TARGET_OS_IPHONE
-    [self storePrivateKey: privateKeyRef certs: certs label: kServerCertLabel];
+    Assert([TLSIdentityHelper storePrivateKey: privateKeyRef certs: certs label: kServerCertLabel]);
 #else
-    [self updateCert: (SecCertificateRef)certs[0] withLabel: kServerCertLabel];
+    OSStatus success = [TLSIdentityHelper updateCert: (SecCertificateRef)certs[0]
+                                           withLabel: kServerCertLabel];
+    Assert(success == errSecSuccess);
 #endif
     
     // Get identity:

@@ -22,6 +22,7 @@
 #import "CBLURLEndpointListener+Internal.h"
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
+#import "TLSIdentityHelper.h"
 
 #define kWsPort 4984
 #define kWssPort 4985
@@ -233,6 +234,22 @@ typedef CBLURLEndpointListener Listener;
     Assert([db2 close: &err], @"Failed to close db2 %@", err);
     db1 = nil;
     db2 = nil;
+}
+
+- (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {
+    if (@available(macOS 10.5, iOS 10.3, *)) {
+        CFStringRef cnRef1, cnRef2;
+        AssertEqual(SecCertificateCopyCommonName(cert1, &cnRef1), errSecSuccess);
+        AssertEqual(SecCertificateCopyCommonName(cert2, &cnRef2), errSecSuccess);
+        
+        NSString* cn1 = (NSString*)CFBridgingRelease(cnRef1);
+        NSString* cn2 = (NSString*)CFBridgingRelease(cnRef2);
+        AssertEqualObjects(cn1, cn2);
+    }
+}
+
+- (void) releaseCF: (CFTypeRef)ref {
+    if (ref != NULL) CFRelease(ref);
 }
 
 - (void) cleanUpIdentities {
@@ -1153,20 +1170,77 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-- (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {
-    if (@available(macOS 10.5, iOS 10.3, *)) {
-        CFStringRef cnRef1, cnRef2;
-        AssertEqual(SecCertificateCopyCommonName(cert1, &cnRef1), errSecSuccess);
-        AssertEqual(SecCertificateCopyCommonName(cert2, &cnRef2), errSecSuccess);
-        
-        NSString* cn1 = (NSString*)CFBridgingRelease(cnRef1);
-        NSString* cn2 = (NSString*)CFBridgingRelease(cnRef2);
-        AssertEqualObjects(cn1, cn2);
-    }
-}
-
-- (void) releaseCF: (CFTypeRef)ref {
-    if (ref != NULL) CFRelease(ref);
+- (void) testListenerWithImportIdentity {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Use SecPKCS12Import to import the PKCS12 data:
+    __block CFArrayRef result = NULL;
+    __block OSStatus status;
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    NSDictionary* options = @{ (id)kSecImportExportPassphrase: @"123" };
+    [self ignoreException:^{
+        status = SecPKCS12Import((__bridge CFDataRef)data, (__bridge CFDictionaryRef)options, &result);
+    }];
+    AssertEqual(status, errSecSuccess);
+    
+    // Identity:
+    NSArray* importedItems = (NSArray*)CFBridgingRelease(result);
+    Assert(importedItems.count > 0);
+    NSDictionary* item = importedItems[0];
+    SecIdentityRef identityRef = (__bridge SecIdentityRef) item[(id)kSecImportItemIdentity];
+    Assert(identityRef);
+    
+    // Private Key:
+    SecKeyRef privateKeyRef;
+    status = SecIdentityCopyPrivateKey(identityRef, &privateKeyRef);
+    AssertEqual(status, errSecSuccess);
+    CFAutorelease(privateKeyRef);
+    
+    // Certs:
+    NSArray* certs = item[(id)kSecImportItemCertChain];
+    Assert(certs.count == 2);
+    
+    // For iOS, need to store the identity into the KeyChain as SecPKCS12Import doesn't do it.
+    // Save or Update identity with a label so that it could be cleaned up easily using
+    // CBLTLSIdentity's -deleteIdentityWithLabel method.
+    NSError* error;
+#if TARGET_OS_IPHONE
+    Assert([TLSIdentityHelper storePrivateKey: privateKeyRef certs: certs label: kServerCertLabel]);
+#else
+    status = [TLSIdentityHelper updateCert: (SecCertificateRef)certs[0] withLabel: kServerCertLabel];
+    Assert(status == errSecSuccess);
+#endif
+    
+    // Get identity:
+    CBLTLSIdentity* identity = [CBLTLSIdentity identityWithIdentity: identityRef
+                                                              certs: @[certs[1]]
+                                                              error: &error];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = identity;
+    _listener = [[Listener alloc] initWithConfig: config];
+    AssertNil(_listener.tlsIdentity);
+    
+    Assert([_listener startWithError: &error]);
+    AssertNil(error);
+    AssertNotNil(_listener.tlsIdentity);
+    AssertEqual(_listener.tlsIdentity, config.tlsIdentity);
+    
+    // make sure, replication works
+    [self generateDocumentWithID: @"doc-1"];
+    AssertEqual(self.otherDB.count, 0);
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    AssertEqual(self.otherDB.count, 1u);
+    
+    // stop and cleanup
+    [self stopListener: _listener];
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
 }
 
 @end
