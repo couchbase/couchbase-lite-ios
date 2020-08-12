@@ -429,8 +429,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == remoteData)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1174
-    func _testConflictResolutionDefault() throws {
+    func testConflictResolutionDefault() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
         
