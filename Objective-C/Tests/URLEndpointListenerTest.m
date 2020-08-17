@@ -877,9 +877,7 @@ typedef CBLURLEndpointListener Listener;
     [self stopListen];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1178
-// currently wrong error code returned
-- (void) _testReadOnlyListener {
+- (void) testReadOnlyListener {
     if (!self.keyChainAccessAllowed) return;
     
     NSError* err;
