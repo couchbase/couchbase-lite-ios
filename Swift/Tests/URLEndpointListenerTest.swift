@@ -167,6 +167,18 @@ class URLEndpontListenerTest: ReplicatorTest {
         try db2.close()
     }
     
+    func checkEqual(cert cert1: SecCertificate, andCert cert2: SecCertificate) {
+        if #available(iOS 11, *) {
+            var cn1: CFString?
+            XCTAssertEqual(SecCertificateCopyCommonName(cert1, &cn1), errSecSuccess)
+            
+            var cn2: CFString?
+            XCTAssertEqual(SecCertificateCopyCommonName(cert2, &cn2), errSecSuccess)
+            
+            XCTAssertEqual(cn1! as String, cn2! as String)
+        }
+    }
+    
     override func setUp() {
         super.setUp()
         try! cleanUpIdentities()
@@ -823,18 +835,40 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListen()
     }
     
-    func checkEqual(cert cert1: SecCertificate, andCert cert2: SecCertificate) {
-        if #available(iOS 11, *) {
-            var cn1: CFString?
-            XCTAssertEqual(SecCertificateCopyCommonName(cert1, &cn1), errSecSuccess)
-            
-            var cn2: CFString?
-            XCTAssertEqual(SecCertificateCopyCommonName(cert2, &cn2), errSecSuccess)
-            
-            XCTAssertEqual(cn1! as String, cn2! as String)
-        } 
+    func testListenerWithImportIdentity() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        self.ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        
+        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        
+        //TODO: CBL-1214
+        self.ignoreException {
+            try self.listen(config: config)
+        }
+        
+        XCTAssertNotNil(listener!.tlsIdentity)
+        XCTAssert(identity === listener!.tlsIdentity!)
+        
+        try generateDocument(withID: "doc-1")
+        XCTAssertEqual(self.oDB.count, 0)
+        self.run(target: listener!.localURLEndpoint,
+                 type: .pushAndPull,
+                 continuous: false,
+                 auth: nil,
+                 serverCert: listener!.tlsIdentity!.certs[0])
+        XCTAssertEqual(self.oDB.count, 1)
+        
+        try stopListener(listener: listener!)
+        XCTAssertNil(listener!.tlsIdentity)
     }
-    
 }
 
 @available(macOS 10.12, iOS 10.0, *)
