@@ -103,18 +103,37 @@ then
 
   echo "Run ObjC macOS tests ..."
   sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk macosx || checkCrashLogs
+  xcodebuild test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_ObjC" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk macosx || checkCrashLogs
   
   echo "Run ObjC iOS tests ..."
+  # iOS-App target runs Keychain-Accessing tests
   sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_ObjC" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES || checkCrashLogs
+  xcodebuild test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk iphonesimulator \
+    -destination "$TEST_SIMULATOR" \
+    -enableCodeCoverage YES || checkCrashLogs
   
   
   if [ -z "$NO_COV" ]
   then
     # Objective-C:
     echo "Generate coverage report for ObjC ..."
-    slather coverage --html --scheme "${SCHEME_PREFIX}_ObjC" --configuration "$CONFIGURATION_TEST" --ignore "vendor/*" --ignore "Swift/*" --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html \
+        --scheme "${SCHEME_PREFIX}_ObjC" \
+        --configuration "$CONFIGURATION_TEST" \
+        --ignore "vendor/*" --ignore "Swift/*" \
+        --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
+        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" \
+        --binary-basename "CouchbaseLite.framework"  \
+        --binary-basename "CBL_EE_Tests" \
+        CouchbaseLite.xcodeproj > /dev/null
   fi
 
   echo "Run Swift macOS tests ..."
