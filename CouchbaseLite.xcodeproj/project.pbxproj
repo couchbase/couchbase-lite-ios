@@ -1522,6 +1522,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1A93FACE24F03E800015D54D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 278F476724C9131000E1CA7A;
+			remoteInfo = "iOS Perf Test";
+		};
 		1ACDD8D123FF5BB300AF5D56 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -1950,7 +1957,7 @@
 		930B367424AAAB3F000DF2B3 /* CBLDatabase+Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Debug.h"; sourceTree = "<group>"; };
 		930B367524AAAB3F000DF2B3 /* CBLDatabase+Debug.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBLDatabase+Debug.mm"; sourceTree = "<group>"; };
 		930B368D24AAFACB000DF2B3 /* CBLDocBranchIterator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDocBranchIterator.h; sourceTree = "<group>"; };
-		930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE Swift Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_EE_Swift_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		930B63D2246B9CD1006D94FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		930B63D4246B9CD1006D94FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		930B63D7246B9CD1006D94FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -2043,7 +2050,7 @@
 		9343F00F207D611600F19A89 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9343F16D207D62C900F19A89 /* CBL-EE Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_EE_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_EE_Objc_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1B7207D63BF00F19A89 /* CBLPerfTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2258,7 +2265,7 @@
 		938CDF241E807F86002EE790 /* FromRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FromRouter.swift; sourceTree = "<group>"; };
 		938CDF261E807F8F002EE790 /* WhereRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhereRouter.swift; sourceTree = "<group>"; };
 		938CDF281E807F9F002EE790 /* OrderByRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderByRouter.swift; sourceTree = "<group>"; };
-		938CF9EE1E442A3E00291631 /* CBL Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		938CF9EE1E442A3E00291631 /* CBL_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		938CFA061E442A3E00291631 /* CBL_Objc_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_Objc_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		938E387F1F3A5BB4006806C7 /* CBLQueryCollation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLQueryCollation.h; sourceTree = "<group>"; };
 		938E38801F3A5BB4006806C7 /* CBLQueryCollation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLQueryCollation.m; sourceTree = "<group>"; };
@@ -2317,7 +2324,7 @@
 		93BB1C7B246BB145004FFA00 /* CBL Swift Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		93BB1C7C246BB151004FFA00 /* CBL-EE Swift Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE Swift Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_Swift_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Swift Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_Swift_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93BD00F52474875B00BAD40B /* CBLListenerPasswordAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLListenerPasswordAuthenticator.h; sourceTree = "<group>"; };
 		93BD00F62474875B00BAD40B /* CBLListenerPasswordAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLListenerPasswordAuthenticator.m; sourceTree = "<group>"; };
 		93BD01062474882300BAD40B /* CBLListenerPasswordAuthenticator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLListenerPasswordAuthenticator+Internal.h"; sourceTree = "<group>"; };
@@ -3413,21 +3420,21 @@
 				9398D9121E03434200464432 /* CouchbaseLite.framework */,
 				9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */,
 				275FF6131E3FE9DB005F90DD /* CBLPerfTests */,
-				938CF9EE1E442A3E00291631 /* CBL Tests.app */,
+				938CF9EE1E442A3E00291631 /* CBL_Tests.app */,
 				938CFA061E442A3E00291631 /* CBL_Objc_Tests_iOS.xctest */,
 				275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */,
 				275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F00F207D611600F19A89 /* CouchbaseLite.framework */,
 				9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */,
 				9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */,
-				9343F16D207D62C900F19A89 /* CBL-EE Tests.app */,
+				9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */,
 				9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */,
 				9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F1B7207D63BF00F19A89 /* CBLPerfTests */,
-				930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */,
+				930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */,
 				930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */,
 				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
-				93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */,
+				93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3454,7 +3461,8 @@
 				9398D9481E0347B600464432 /* LiteCoreTests.xctest */,
 				27DF7D841F424C840022F3DF /* libSQLite.a */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
-				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
+				1A93FACF24F03E800015D54D /* iOS Perf Test.app */,
+				9398D95A1E0347B600464432 /* LiteCore-iOS shell.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
 			name = Products;
@@ -4498,7 +4506,7 @@
 			);
 			name = CBL_EE_Swift_Tests_iOS_App;
 			productName = "cbl-swift-ios-tests-app";
-			productReference = 930B63D0246B9CD1006D94FF /* CBL-EE Swift Tests.app */;
+			productReference = 930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		930B63E2246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS */ = {
@@ -4596,7 +4604,7 @@
 			);
 			name = CBL_EE_Objc_Tests_iOS_App;
 			productName = "ios-tests";
-			productReference = 9343F16D207D62C900F19A89 /* CBL-EE Tests.app */;
+			productReference = 9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		9343F16F207D633300F19A89 /* CBL_EE_Objc_Tests_iOS */ = {
@@ -4669,7 +4677,7 @@
 			);
 			name = CBL_Objc_Tests_iOS_App;
 			productName = "ios-tests";
-			productReference = 938CF9EE1E442A3E00291631 /* CBL Tests.app */;
+			productReference = 938CF9EE1E442A3E00291631 /* CBL_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		938CFA051E442A3E00291631 /* CBL_Objc_Tests_iOS */ = {
@@ -4761,7 +4769,7 @@
 			);
 			name = CBL_Swift_Tests_iOS_App;
 			productName = "cbl-swift-ios-tests-app";
-			productReference = 93BB1C98246BB1F1004FFA00 /* CBL Swift Tests.app */;
+			productReference = 93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -4816,6 +4824,9 @@
 					9343F153207D62C900F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
+					9343F16F207D633300F19A89 = {
+						TestTargetID = 9343F153207D62C900F19A89;
+					};
 					9343F18A207D636300F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
@@ -4848,6 +4859,7 @@
 					93BB1C7D246BB1DB004FFA00 = {
 						DevelopmentTeam = N2Q372V7W2;
 						ProvisioningStyle = Automatic;
+						TestTargetID = 93BB1C8A246BB1F1004FFA00;
 					};
 					93BB1C8A246BB1F1004FFA00 = {
 						DevelopmentTeam = N2Q372V7W2;
@@ -4899,6 +4911,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		1A93FACF24F03E800015D54D /* iOS Perf Test.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "iOS Perf Test.app";
+			remoteRef = 1A93FACE24F03E800015D54D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		1ACDD8D223FF5BB300AF5D56 /* libLiteCoreWebSocket.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -4969,10 +4988,10 @@
 			remoteRef = 9398D94F1E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D95A1E0347B600464432 /* LiteCore-iOS.app */ = {
+		9398D95A1E0347B600464432 /* LiteCore-iOS shell.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
-			path = "LiteCore-iOS.app";
+			path = "LiteCore-iOS shell.app";
 			remoteRef = 9398D9591E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -6568,6 +6587,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_Tests;
 			};
 			name = Debug_EE;
 		};
@@ -6575,6 +6595,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Debug_EE;
 		};
@@ -6741,6 +6763,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_Tests;
 			};
 			name = Release_EE;
 		};
@@ -6748,6 +6771,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Release_EE;
 		};
@@ -6923,6 +6948,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBL_EE_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -6989,6 +7015,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBL_EE_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -7048,6 +7075,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = CBL_EE_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
@@ -7107,6 +7135,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = CBL_EE_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
@@ -7120,6 +7149,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -7181,6 +7211,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Swift_Tests.app/CBL_EE_Swift_Tests";
 			};
 			name = Debug;
 		};
@@ -7190,6 +7221,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -7251,6 +7283,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Swift_Tests.app/CBL_EE_Swift_Tests";
 			};
 			name = Debug_EE;
 		};
@@ -7260,6 +7293,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -7313,6 +7347,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Swift_Tests.app/CBL_EE_Swift_Tests";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -7323,6 +7358,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -7376,6 +7412,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Swift_Tests.app/CBL_EE_Swift_Tests";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release_EE;
@@ -7504,6 +7541,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_EE_Tests;
 			};
 			name = Debug;
 		};
@@ -7521,6 +7559,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_EE_Tests;
 			};
 			name = Debug_EE;
 		};
@@ -7538,6 +7577,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_EE_Tests;
 			};
 			name = Release;
 		};
@@ -7555,6 +7595,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_EE_Tests;
 			};
 			name = Release_EE;
 		};
@@ -7562,6 +7603,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Debug;
 		};
@@ -7569,6 +7612,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Debug_EE;
 		};
@@ -7576,6 +7621,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Release;
 		};
@@ -7583,6 +7630,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Release_EE;
 		};
@@ -7995,6 +8044,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_Tests;
 			};
 			name = Debug;
 		};
@@ -8011,6 +8061,7 @@
 					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
 					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API",
 				);
+				PRODUCT_NAME = CBL_Tests;
 			};
 			name = Release;
 		};
@@ -8018,6 +8069,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Debug;
 		};
@@ -8025,6 +8078,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Release;
 		};
@@ -8096,6 +8151,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -8157,6 +8213,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Swift_Tests.app/CBL_Swift_Tests";
 			};
 			name = Debug;
 		};
@@ -8166,6 +8223,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -8227,6 +8285,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Swift_Tests.app/CBL_Swift_Tests";
 			};
 			name = Debug_EE;
 		};
@@ -8236,6 +8295,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -8289,6 +8349,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Swift_Tests.app/CBL_Swift_Tests";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -8299,6 +8360,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -8352,6 +8414,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Swift_Tests.app/CBL_Swift_Tests";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release_EE;
@@ -8415,6 +8478,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBL_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -8481,6 +8545,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBL_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -8540,6 +8605,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = CBL_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
@@ -8599,6 +8665,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = CBL_Swift_Tests;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.2;
