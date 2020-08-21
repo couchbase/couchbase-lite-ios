@@ -20,6 +20,8 @@
 import XCTest
 import CouchbaseLiteSwift
 
+// TODO: Add to iOS App Target after fixing https://issues.couchbase.com/browse/CBL-1224
+
 class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
     #if COUCHBASE_ENTERPRISE

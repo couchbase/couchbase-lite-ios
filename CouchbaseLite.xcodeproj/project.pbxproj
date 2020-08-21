@@ -84,9 +84,7 @@
 		1AC7EC3B249DA70F00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
-		1ACDD8D323FF5C4200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
-		1ACDD8D523FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
 		1AECFF7B24AE988F0015C9F8 /* CBLStoppable.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */; };
@@ -1350,10 +1348,8 @@
 		93BB1CB3246BB2EC004FFA00 /* ReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */; };
 		93BB1CB4246BB2ED004FFA00 /* ReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */; };
 		93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
-		93BB1CB6246BB2F3004FFA00 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
 		93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
-		93BB1CB9246BB2F4004FFA00 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
 		93BB1CBB246BB300004FFA00 /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
 		93BB1CBC246BB301004FFA00 /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
@@ -5439,7 +5435,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				93BB1CB4246BB2ED004FFA00 /* ReplicatorTest.swift in Sources */,
-				93BB1CB9246BB2F4004FFA00 /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				93BB1CB1246BB2E4004FFA00 /* PredictiveQueryTest.swift in Sources */,
 				93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
@@ -5871,7 +5866,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1ACDD8D523FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
@@ -5972,7 +5966,6 @@
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				1AA3D78622AB07D50098E16B /* CustomLogger.m in Sources */,
 				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
-				1ACDD8D323FF5C4200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
@@ -6138,7 +6131,6 @@
 				93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */,
 				93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */,
 				93BB1C99246BB2AB004FFA00 /* ArrayTest.swift in Sources */,
-				93BB1CB6246BB2F3004FFA00 /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				93BB1C9D246BB2BE004FFA00 /* DatabaseTest.swift in Sources */,
 				93BB1C9B246BB2BA004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CA3246BB2D3004FFA00 /* DocumentTest.swift in Sources */,

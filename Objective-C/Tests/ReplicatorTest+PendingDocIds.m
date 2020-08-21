@@ -26,6 +26,8 @@
 #define kCreateActionValue @"doc-create"
 #define kUpdateActionValue @"doc-update"
 
+// TODO: Add to iOS App Target after fixing https://issues.couchbase.com/browse/CBL-1224
+
 @interface ReplicatorTest_PendingDocIds : ReplicatorTest
 
 @end
