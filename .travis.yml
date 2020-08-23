@@ -6,8 +6,11 @@ branches:
 env:
   - SCHEME="CBL_ObjC"
   - SCHEME="CBL_Swift"
+addons:
+  homebrew:
+    packages:
+    - doxygen
 before_install:
-  - brew update
   - brew install doxygen
   - gem install slather
 # Keep the xcodebuild quiet or else the job will exceed the maximum log length, and will terminate
