@@ -64,8 +64,7 @@ else
 fi
 
 # clean the output directory
-OUTPUT_BASE_DIR=${OUTPUT_DIR}/${SCHEME}
-rm -rf "${OUTPUT_BASE_DIR}"
+OUTPUT_BASE_DIR=${OUTPUT_DIR}/xc/${SCHEME}
 
 # Get binary and framework name:
 BIN_NAME=`xcodebuild -scheme "${SCHEME}" -showBuildSettings|grep -w PRODUCT_NAME|head -n 1|awk '{ print $3 }'`
@@ -88,26 +87,43 @@ fi
 
 # archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
-DESTINATIONS=("iOS Simulator" "iOS" "macOS")
 FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 
 # this will be used to collect all destination framework path with `-framework`
 # to include them in `-create-xcframework`
 FRAMEWORK_PATH_ARGS=()
-for DESTINATION in "${DESTINATIONS[@]}"
-do
-  echo "Starting to archive ${DESTINATION}..."
+
+# arg1 = target destination for which the archive is built for. E.g., "generic/platform=iOS"
+function xcarchive
+{
+  DESTINATION=${1}
+  echo "Archiving for ${DESTINATION}..."
   ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')
-  xcodebuild archive -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -destination "generic/platform=${DESTINATION}" ${BUILD_VERSION} ${BUILD_NUMBER} -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" ${XCFRAMEWORK_FLAGS} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" "clean" "SKIP_INSTALL=NO" ${QUIET}
+  xcodebuild archive\
+    -scheme "${SCHEME}" \
+    -configuration "${CONFIGURATION}" \
+    -destination "${DESTINATION}" \
+    ${BUILD_VERSION} ${BUILD_NUMBER} \
+    -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
+    "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
+    "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
+    "SKIP_INSTALL=NO" ${QUIET}
+  
   FRAMEWORK_PATH_ARGS+=("-framework "${ARCHIVE_PATH}/${FRAMEWORK_LOC}"")
   echo "Finished archiving ${DESTINATION}."
-done
+}
+
+xcarchive "generic/platform=iOS Simulator"
+xcarchive "generic/platform=iOS"
+xcarchive "generic/platform=macOS"
 
 # create xcframework
-echo "Making XCFramework..."
-mkdir -p "${OUTPUT_DIR}/${SCHEME}"
-xcodebuild -create-xcframework -output "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework" ${FRAMEWORK_PATH_ARGS[*]}
+echo "Creating XCFramework...: ${FRAMEWORK_PATH_ARGS}"
+mkdir -p "${OUTPUT_BASE_DIR}"
+xcodebuild -create-xcframework \
+    -output "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework" \
+    ${FRAMEWORK_PATH_ARGS[*]}
 
 # remove build directory
 rm -rf ${BUILD_DIR}
-echo "Finished creating XCFramework. Output at "${OUTPUT_DIR}/${SCHEME}/${BIN_NAME}.xcframework""
+echo "Finished creating XCFramework. Output at "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework""
