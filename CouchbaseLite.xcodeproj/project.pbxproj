@@ -1865,6 +1865,11 @@
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
+		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
+		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
+		1A93FAE424F0E6E60015D54D /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = pull_request_build.sh; path = ../Scripts/pull_request_build.sh; sourceTree = "<group>"; };
+		1A93FAE524F0E6E60015D54D /* loc.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = loc.sh; path = ../Scripts/loc.sh; sourceTree = "<group>"; };
 		1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+CustomConflict.swift"; sourceTree = "<group>"; };
 		1AA3D77122AB06E10098E16B /* CustomLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomLogger.h; sourceTree = "<group>"; };
 		1AA3D77222AB06E10098E16B /* CustomLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomLogger.m; sourceTree = "<group>"; };
@@ -2581,6 +2586,18 @@
 			name = ConflictResolution;
 			sourceTree = "<group>";
 		};
+		1A93FAE024F0E6C50015D54D /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */,
+				1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */,
+				1A93FAE524F0E6E60015D54D /* loc.sh */,
+				1A93FAE124F0E6E60015D54D /* prepare_project.sh */,
+				1A93FAE424F0E6E60015D54D /* pull_request_build.sh */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
 		1AAB27262273739F0037A880 /* ConflictResolution */ = {
 			isa = PBXGroup;
 			children = (
@@ -3145,6 +3162,7 @@
 		9382354F207D9EA30022328B /* EE */ = {
 			isa = PBXGroup;
 			children = (
+				1A93FAE024F0E6C50015D54D /* Scripts */,
 				932CC551207D9ED2000B4B78 /* Objective-C */,
 				932CC555207D9ED2000B4B78 /* Swift */,
 			);
