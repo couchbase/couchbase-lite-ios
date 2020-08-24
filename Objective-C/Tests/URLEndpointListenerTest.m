@@ -1172,15 +1172,25 @@ typedef CBLURLEndpointListener Listener;
     
     NSError* err = nil;
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
-    CBLTLSIdentity* identity = [CBLTLSIdentity importIdentityWithData: data password: @"123"
-                                                                label:kServerCertLabel error:&err];
+    __block CBLTLSIdentity* identity;
+    [self ignoreException: ^{
+        NSError* error = nil;
+        identity = [CBLTLSIdentity importIdentityWithData: data password: @"123"
+                                                    label:kServerCertLabel error:&error];
+        AssertNil(error);
+    }];
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.tlsIdentity = identity;
     _listener = [[Listener alloc] initWithConfig: config];
     AssertNil(_listener.tlsIdentity);
     
-    Assert([_listener startWithError: &err]);
-    AssertNil(err);
+    [self ignoreException:^{
+        NSError* error = nil;
+        Assert([_listener startWithError: &error]);
+        AssertNil(error);
+    }];
+    
     AssertNotNil(_listener.tlsIdentity);
     AssertEqual(_listener.tlsIdentity, config.tlsIdentity);
     
