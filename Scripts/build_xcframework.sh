@@ -99,7 +99,7 @@ function xcarchive
   DESTINATION=${1}
   echo "Archiving for ${DESTINATION}..."
   ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')
-  xcodebuild archive\
+  xcodebuild archive \
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
     -destination "${DESTINATION}" \
