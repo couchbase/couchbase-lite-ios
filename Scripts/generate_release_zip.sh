@@ -260,14 +260,6 @@ then
   popd > /dev/null
 fi
 
-# Generate MD5 files:
-echo "Generate MD5 files ..."
-pushd "$OUTPUT_DIR" > /dev/null
-md5 couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip.md5
-md5 couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip.md5
-md5 couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip > couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip.md5
-popd > /dev/null
-
 # Generate swift checksum file:
 echo "Generate swift package checksum..."
 # TODO: uncomment after XCode 12 GA & Package.JSON available in repo
