@@ -67,6 +67,9 @@ then
   exit 4
 fi
 
+# As long as we support `.framework`, we will create .framework as well as .xcframework zips.
+COMBINED=YES
+
 if [ -z "$EE" ]
 then
   SCHEME_PREFIX="CBL"
@@ -243,15 +246,19 @@ pushd "$OUTPUT_SWIFT_DIR" > /dev/null
 zip -ry "$OUTPUT_SWIFT_ZIP" *
 popd > /dev/null
 
-echo "Make Swift xcframework zip file ..."
-mkdir -p "$OUTPUT_SWIFT_XC_DIR"
-cp -R "$BUILD_DIR/xc/${SCHEME_PREFIX}_Swift"/* "$OUTPUT_SWIFT_XC_DIR"
-if [[ -n $WORKSPACE ]]; then
-    cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_XC_DIR"/LICENSE.txt
+# xcframework
+if [[ ! -z $COMBINED ]] || [[ ! -z $XCFRAMEWORK ]]
+then
+  echo "Make Swift xcframework zip file ..."
+  mkdir -p "$OUTPUT_SWIFT_XC_DIR"
+  cp -R "$BUILD_DIR/xc/${SCHEME_PREFIX}_Swift"/* "$OUTPUT_SWIFT_XC_DIR"
+  if [[ -n $WORKSPACE ]]; then
+      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_XC_DIR"/LICENSE.txt
+  fi
+  pushd "$OUTPUT_SWIFT_XC_DIR" > /dev/null
+  zip -ry "$OUTPUT_SWIFT_XC_ZIP" *
+  popd > /dev/null
 fi
-pushd "$OUTPUT_SWIFT_XC_DIR" > /dev/null
-zip -ry "$OUTPUT_SWIFT_XC_ZIP" *
-popd > /dev/null
 
 # Generate MD5 files:
 echo "Generate MD5 files ..."
