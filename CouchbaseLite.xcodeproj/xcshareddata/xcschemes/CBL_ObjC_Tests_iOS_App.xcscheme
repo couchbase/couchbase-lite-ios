@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-               BuildableName = "CBL Tests.app"
+               BuildableName = "CBL_Tests.app"
                BlueprintName = "CBL_Objc_Tests_iOS_App"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
@@ -31,7 +31,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
+            BuildableName = "CBL_Tests.app"
             BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
+            BuildableName = "CBL_Tests.app"
             BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
@@ -81,7 +81,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
-            BuildableName = "CBL Tests.app"
+            BuildableName = "CBL_Tests.app"
             BlueprintName = "CBL_Objc_Tests_iOS_App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
