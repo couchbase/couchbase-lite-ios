@@ -20,8 +20,6 @@
 import XCTest
 import CouchbaseLiteSwift
 
-// TODO: Add to iOS App Target after fixing https://issues.couchbase.com/browse/CBL-1224
-
 class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
     #if COUCHBASE_ENTERPRISE
@@ -47,6 +45,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
     func validatePendingDocumentIDs(_ docIds: Set<String>,
                                     config rConfig: ReplicatorConfiguration? = nil) {
+        let x = self.expectation(description: "replicator stop")
         var replConfig: ReplicatorConfiguration!
         if rConfig != nil {
             replConfig = rConfig
@@ -54,34 +53,33 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
             replConfig = config(target: DatabaseEndpoint(database: oDB),
                                 type: .push, continuous: false)
         }
+        let replicator = Replicator(config: replConfig)
         
-        var replicator: Replicator!
-        var token: ListenerToken!
-        run(config: replConfig, reset: false, expectedError: nil) { (r) in
-            replicator = r
-            
-            // verify before starting the replicator
-            XCTAssertEqual(try! replicator.pendingDocumentIds(), docIds)
-            XCTAssertEqual(try! replicator.pendingDocumentIds().count, docIds.count)
-            
-            token = r.addChangeListener({ (change) in
-                let pDocIds = try! replicator.pendingDocumentIds()
-                
-                if change.status.activity == .connecting {
-                    XCTAssertEqual(pDocIds, docIds)
-                    XCTAssertEqual(pDocIds.count, docIds.count)
-                } else if change.status.activity == .stopped {
-                    XCTAssertEqual(pDocIds.count, 0)
-                }
-            })
-        }
+        // verify before starting the replicator
+        XCTAssertEqual(try! replicator.pendingDocumentIds(), docIds)
+        XCTAssertEqual(try! replicator.pendingDocumentIds().count, docIds.count)
         
+        let token = replicator.addChangeListener({ (change) in
+            let pDocIds = try! change.replicator.pendingDocumentIds()
+            
+            if change.status.activity == .connecting {
+                XCTAssertEqual(pDocIds, docIds)
+                XCTAssertEqual(pDocIds.count, docIds.count)
+            } else if change.status.activity == .stopped {
+                XCTAssertEqual(pDocIds.count, 0)
+                x.fulfill()
+            }
+        })
+        
+        replicator.start()
+        wait(for: [x], timeout: 5.0)
         replicator.removeChangeListener(withToken: token)
     }
     
     /// expected: [docId: isPresent] e.g., @{"doc-1": true, "doc-2": false, "doc-3": false}
     func validateIsDocumentPending(_ expected: [String: Bool],
                                    config rConfig: ReplicatorConfiguration? = nil) throws {
+        let x = self.expectation(description: "replicator stop")
         var replConfig: ReplicatorConfiguration!
         if rConfig != nil {
             replConfig = rConfig
@@ -89,56 +87,54 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
             replConfig = config(target: DatabaseEndpoint(database: oDB),
                                 type: .push, continuous: false)
         }
+        let replicator = Replicator(config: replConfig)
         
-        var replicator: Replicator!
-        var token: ListenerToken!
-        run(config: replConfig, reset: false, expectedError: nil) { (r) in
-            replicator = r
-            
-            // verify before starting the replicator
-            for (docId, present) in expected {
-                XCTAssertEqual(try! r.isDocumentPending(docId), present)
-            }
-            
-            token = r.addChangeListener({ (change) in
-                if change.status.activity == .connecting {
-                    for (docId, present) in expected {
-                        XCTAssertEqual(try! r.isDocumentPending(docId), present)
-                    }
-                } else if change.status.activity == .stopped {
-                    for (docId, _) in expected {
-                        XCTAssertEqual(try! r.isDocumentPending(docId), false)
-                    }
-                }
-            })
+        // verify before starting the replicator
+        for (docId, present) in expected {
+            XCTAssertEqual(try! replicator.isDocumentPending(docId), present)
         }
         
+        let token = replicator.addChangeListener({ (change) in
+            if change.status.activity == .connecting {
+                for (docId, present) in expected {
+                    XCTAssertEqual(try! replicator.isDocumentPending(docId), present)
+                }
+            } else if change.status.activity == .stopped {
+                for (docId, _) in expected {
+                    XCTAssertEqual(try! replicator.isDocumentPending(docId), false)
+                }
+                x.fulfill()
+            }
+        })
+        
+        replicator.start()
+        wait(for: [x], timeout: 5.0)
         replicator.removeChangeListener(withToken: token)
     }
     
     // MARK: Unit Tests
     func testPendingDocIDsPullOnlyException() throws {
+        let x = self.expectation(description: "replicator stop")
         let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .pull, continuous: false)
+        let replicator = Replicator(config: replConfig)
         
-        var replicator: Replicator!
-        var token: ListenerToken!
         var pullOnlyError: NSError!
-        run(config: replConfig, reset: false, expectedError: nil) { (r) in
-            replicator = r
-            
-            token = r.addChangeListener({ (change) in
-                if change.status.activity == .connecting {
-                    self.ignoreException {
-                        do {
-                            let _ = try replicator.pendingDocumentIds()
-                        } catch {
-                            pullOnlyError = error as NSError
-                        }
+        let token = replicator.addChangeListener({ (change) in
+            if change.status.activity == .connecting {
+                self.ignoreException {
+                    do {
+                        let _ = try replicator.pendingDocumentIds()
+                    } catch {
+                        pullOnlyError = error as NSError
                     }
                 }
-            })
-        }
+            } else if change.status.activity == .stopped {
+                x.fulfill()
+            }
+        })
+        replicator.start()
+        wait(for: [x], timeout: 5.0)
         
         XCTAssertEqual(pullOnlyError.code, CBLErrorUnsupported)
         replicator.removeChangeListener(withToken: token)
@@ -206,27 +202,28 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     // MARK: isDocumentPending
     
     func testIsDocumentPendingPullOnlyException() throws {
+        let x = expectation(description: "Replication stop")
         let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .pull, continuous: false)
+        let replicator = Replicator(config: replConfig)
         
-        var replicator: Replicator!
-        var token: ListenerToken!
         var pullOnlyError: NSError!
-        run(config: replConfig, reset: false, expectedError: nil) { (r) in
-            replicator = r
-            
-            token = r.addChangeListener({ (change) in
-                if change.status.activity == .connecting {
-                    self.ignoreException {
-                        do {
-                            let _ = try replicator.isDocumentPending("doc-1")
-                        } catch {
-                            pullOnlyError = error as NSError
-                        }
+        let token = replicator.addChangeListener({ (change) in
+            if change.status.activity == .connecting {
+                self.ignoreException {
+                    do {
+                        let _ = try replicator.isDocumentPending("doc-1")
+                    } catch {
+                        pullOnlyError = error as NSError
                     }
                 }
-            })
-        }
+            } else if change.status.activity == .stopped {
+                x.fulfill()
+            }
+        })
+        
+        replicator.start()
+        wait(for: [x], timeout: 5.0)
         
         XCTAssertEqual(pullOnlyError.code, CBLErrorUnsupported)
         replicator.removeChangeListener(withToken: token)
