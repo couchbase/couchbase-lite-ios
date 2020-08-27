@@ -868,6 +868,48 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListener(listener: listener!)
         XCTAssertNil(listener!.tlsIdentity)
     }
+    
+    // Disable until CBL-1243 is fixed
+    func _testStopListener() throws {
+        let x1 = expectation(description: "idle")
+        let x2 = expectation(description: "offline")
+        let x3 = expectation(description: "stopped")
+        
+        let listener = try listen(tls: false)
+        
+        let repl = replicator(db: self.oDB,
+                              continuous: true,
+                              target: listener.localURLEndpoint,
+                              serverCert: nil)
+        repl.addChangeListener { (change) in
+            let activity = change.status.activity
+            if activity == .idle {
+                x1.fulfill()
+            } else if activity == .offline {
+                x2.fulfill()
+            } else if activity == .stopped {
+                x3.fulfill()
+            }
+        }
+        repl.start()
+        
+        // Wait until idle then stop the listener:
+        wait(for: [x1], timeout: 5.0)
+        
+        try stopListen()
+        
+        // Wait until the replicator is offline then stop the replicator:
+        wait(for: [x2], timeout: 5.0)
+        
+        // Check error
+        XCTAssertEqual((repl.status.error! as NSError).code, CBLErrorWebSocketGoingAway)
+        
+        // Stop replicator:
+        repl.stop()
+        
+        // Wait for the replicator to be stopped:
+        wait(for: [x3], timeout: 5.0)
+    }
 }
 
 @available(macOS 10.12, iOS 10.0, *)
