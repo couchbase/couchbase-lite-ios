@@ -1212,7 +1212,7 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(err);
 }
 
-// Disable until CBL-1033 is fixed
+// Disable until CBL-1243 is fixed
 - (void) _testStopListener {
     XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"offline"];

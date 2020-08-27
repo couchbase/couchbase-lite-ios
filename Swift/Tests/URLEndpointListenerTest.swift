@@ -869,7 +869,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener!.tlsIdentity)
     }
     
-    // Disable until CBL-1033 is fixed
+    // Disable until CBL-1243 is fixed
     func _testStopListener() throws {
         let x1 = expectation(description: "idle")
         let x2 = expectation(description: "offline")
