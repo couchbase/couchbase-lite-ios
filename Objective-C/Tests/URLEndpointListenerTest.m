@@ -1212,4 +1212,45 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(err);
 }
 
+// Disable until CBL-1033 is fixed
+- (void) _testStopListener {
+    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"offline"];
+    XCTestExpectation* x3 = [self expectationWithDescription: @"stopped"];
+    
+    Listener* listener = [self listenWithTLS: NO];
+    
+    CBLReplicator* replicator = [self replicator: self.otherDB
+                                       continous: YES
+                                          target: listener.localEndpoint
+                                      serverCert: nil];
+    [replicator addChangeListener: ^(CBLReplicatorChange *change) {
+        CBLReplicatorActivityLevel level = change.status.activity;
+        if (level == kCBLReplicatorIdle)
+            [x1 fulfill];
+        else if (level == kCBLReplicatorOffline)
+            [x2 fulfill];
+        else if (level == kCBLReplicatorStopped)
+            [x3 fulfill];
+    }];
+    [replicator start];
+    
+    // Wait until idle then stop the listener:
+    [self waitForExpectations: @[x1] timeout: timeout];
+    
+    [self stopListen];
+    
+    // Wait until the replicator is offline then stop the replicator:
+    [self waitForExpectations: @[x2] timeout: timeout];
+    
+    // Check error
+    AssertEqual(replicator.status.error.code, CBLErrorWebSocketGoingAway);
+    
+    // Stop replicator:
+    [replicator stop];
+    
+    // Wait for the replicator to be stopped:
+    [self waitForExpectations: @[x3] timeout: timeout];
+}
+
 @end
