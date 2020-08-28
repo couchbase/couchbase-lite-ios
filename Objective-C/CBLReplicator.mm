@@ -258,9 +258,11 @@ typedef enum {
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB) {
-                [otherDB mustBeOpenLocked];
-                
-                _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
+                CBL_LOCK(otherDB) {
+                    [otherDB mustBeOpenLocked];
+                    
+                    _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
+                }
             }
 #else
             Assert(remoteURL, @"Endpoint has no URL");
