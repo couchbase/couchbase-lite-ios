@@ -251,12 +251,19 @@ typedef enum {
 
     // Create a C4Replicator:
     CBL_LOCK(_config.database) {
+        [_config.database mustBeOpenLocked];
+        
         if (remoteURL || !otherDB)
             _repl = c4repl_new(_config.database.c4db, addr, dbName, params, outErr);
         else  {
 #ifdef COUCHBASE_ENTERPRISE
-            if (otherDB)
-                _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
+            if (otherDB) {
+                CBL_LOCK(otherDB) {
+                    [otherDB mustBeOpenLocked];
+                    
+                    _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
+                }
+            }
 #else
             Assert(remoteURL, @"Endpoint has no URL");
 #endif

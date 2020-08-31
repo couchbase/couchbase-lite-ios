@@ -462,6 +462,27 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testDBCloseBeforeReplicationStart {
+    NSError* error = nil;
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+
+    [self.db close: &error];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [replicator pendingDocumentIDs: nil];
+    }];
+    
+    [self reopenDB];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    replicator = [[CBLReplicator alloc] initWithConfig: config];
+    
+    [self.otherDB close: &error];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [replicator pendingDocumentIDs: nil];
+    }];
+}
+
 #endif
 
 @end
