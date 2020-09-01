@@ -158,6 +158,10 @@ public final class Replicator {
     /// Adds a document replication event listener. The document replication events will be posted
     /// on the main queue.
     ///
+    /// According to performance optimization in the replicator, the document replication listeners need to be added
+    /// before starting the replicator. If the listeners are added after the replicator is started, the replicator needs to be
+    /// stopped and restarted again to ensure that the listeners will get the document replication events.
+    ///
     /// - Parameter listener: The listener to post document replication events.
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addDocumentReplicationListener(
@@ -168,6 +172,10 @@ public final class Replicator {
     /// Adds a document replication event listener with the dispatch queue on which events
     /// will be posted. If the dispatch queue is not specified, the document replication
     /// events will be posted on the main queue.
+    ///
+    /// According to performance optimization in the replicator, the document replication listeners need to be added
+    /// before starting the replicator. If the listeners are added after the replicator is started, the replicator needs to be
+    /// stopped and restarted again to ensure that the listeners will get the document replication events.
     ///
     /// - Parameters:
     ///   - queue: The dispatch queue.
