@@ -1212,45 +1212,48 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(err);
 }
 
-// Disable until CBL-1243 is fixed
-- (void) _testStopListener {
+- (void) testStopListener {
     XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
-    XCTestExpectation* x2 = [self expectationWithDescription: @"offline"];
-    XCTestExpectation* x3 = [self expectationWithDescription: @"stopped"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
+    // Listen:
     Listener* listener = [self listenWithTLS: NO];
     
+    // Replicator:
+    CBLURLEndpoint* target = listener.localEndpoint;
     CBLReplicator* replicator = [self replicator: self.otherDB
                                        continous: YES
-                                          target: listener.localEndpoint
+                                          target: target
                                       serverCert: nil];
     [replicator addChangeListener: ^(CBLReplicatorChange *change) {
         CBLReplicatorActivityLevel level = change.status.activity;
         if (level == kCBLReplicatorIdle)
             [x1 fulfill];
-        else if (level == kCBLReplicatorOffline)
-            [x2 fulfill];
         else if (level == kCBLReplicatorStopped)
-            [x3 fulfill];
+            [x2 fulfill];
     }];
     [replicator start];
     
     // Wait until idle then stop the listener:
     [self waitForExpectations: @[x1] timeout: timeout];
     
+    // Stop listen:
     [self stopListen];
     
-    // Wait until the replicator is offline then stop the replicator:
+    // Wait for the replicator to be stopped:
     [self waitForExpectations: @[x2] timeout: timeout];
     
     // Check error
     AssertEqual(replicator.status.error.code, CBLErrorWebSocketGoingAway);
     
-    // Stop replicator:
-    [replicator stop];
-    
-    // Wait for the replicator to be stopped:
-    [self waitForExpectations: @[x3] timeout: timeout];
+    // Check to ensure that the replicator is not accessible:
+    [self runWithTarget: target
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: nil
+              errorCode: ECONNREFUSED
+            errorDomain: NSPOSIXErrorDomain];
 }
 
 @end

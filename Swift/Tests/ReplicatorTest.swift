@@ -23,6 +23,7 @@ import CouchbaseLiteSwift
 class ReplicatorTest: CBLTestCase {
     var oDB: Database!
     var repl: Replicator!
+    var timeout: TimeInterval = 10  // At least 10 to cover single-shot replicator's retry logic
     
     override func setUp() {
         super.setUp()
@@ -129,7 +130,7 @@ class ReplicatorTest: CBLTestCase {
             replicator.start()
         }
         
-        wait(for: [x], timeout: 5.0)
+        wait(for: [x], timeout: timeout)
         
         if replicator.status.activity != .stopped {
             replicator.stop()
