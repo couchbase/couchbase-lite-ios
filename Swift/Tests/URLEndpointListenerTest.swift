@@ -869,26 +869,25 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener!.tlsIdentity)
     }
     
-    // Disable until CBL-1243 is fixed
-    func _testStopListener() throws {
+    func testStopListener() throws {
         let x1 = expectation(description: "idle")
-        let x2 = expectation(description: "offline")
-        let x3 = expectation(description: "stopped")
+        let x2 = expectation(description: "stopped")
         
+        // Listen:
         let listener = try listen(tls: false)
         
+        // Start replicator:
+        let target = listener.localURLEndpoint
         let repl = replicator(db: self.oDB,
                               continuous: true,
-                              target: listener.localURLEndpoint,
+                              target: target,
                               serverCert: nil)
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .idle {
                 x1.fulfill()
-            } else if activity == .offline {
-                x2.fulfill()
             } else if activity == .stopped {
-                x3.fulfill()
+                x2.fulfill()
             }
         }
         repl.start()
@@ -896,19 +895,18 @@ class URLEndpontListenerTest: ReplicatorTest {
         // Wait until idle then stop the listener:
         wait(for: [x1], timeout: 5.0)
         
+        // Stop listen:
         try stopListen()
         
-        // Wait until the replicator is offline then stop the replicator:
+        // Wait for the replicator to be stopped:
         wait(for: [x2], timeout: 5.0)
         
-        // Check error
+        // Check error:
         XCTAssertEqual((repl.status.error! as NSError).code, CBLErrorWebSocketGoingAway)
         
-        // Stop replicator:
-        repl.stop()
-        
-        // Wait for the replicator to be stopped:
-        wait(for: [x3], timeout: 5.0)
+        // Check to ensure that the replicator is not accessible:
+        run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
+            expectedError: Int(ECONNREFUSED))
     }
 }
 
