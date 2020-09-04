@@ -304,7 +304,7 @@ public final class Database {
         _impl.removeChangeListener(with: token._impl)
     }
     
-    /// Closes a database.
+    /// Close database synchronously. Before closing the database, the active replicators, listeners and live queries will be stopped.
     ///
     /// - Throws: An error on a failure.
     public func close() throws {
@@ -312,7 +312,8 @@ public final class Database {
         stopActiveQueries()
     }
     
-    /// Deletes a database.
+    /// Close and delete the database synchronously. Before closing the database, the active replicators, listeners and live queries
+    /// will be stopped.
     ///
     /// - Throws: An error on a failure.
     public func delete() throws {
