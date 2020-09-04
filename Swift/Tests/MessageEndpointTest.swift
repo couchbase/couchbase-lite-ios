@@ -237,9 +237,20 @@ MultipeerConnectionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         print("*** Received \(data.count) bytes from \(peerID.displayName) ")
         if session === serverSession {
-            serverConnection!.receive(data: data)
+            guard let serverConnection = serverConnection else {
+                print("*** [ERR] server connection lost from \(peerID.displayName) ")
+                return
+            }
+            
+            serverConnection.receive(data: data)
+            
         } else {
-            clientConnection!.receive(data: data)
+            guard let clientConnection = clientConnection else {
+                print("*** [ERR] client connection lost from \(peerID.displayName) ")
+                return
+            }
+            
+            clientConnection.receive(data: data)
         }
     }
     
