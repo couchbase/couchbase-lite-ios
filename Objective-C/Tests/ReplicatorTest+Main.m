@@ -22,6 +22,7 @@
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLWebSocket.h"
 
 @interface ReplicatorTest_Main : ReplicatorTest
 @end
@@ -1480,6 +1481,21 @@
     
     AssertEqual(pushDocIds.count, 1u);
     Assert([pushDocIds containsObject: @"doc1"]);
+}
+
+- (void) testWebSocketParseCookie {
+    NSArray* inputs = @[
+        @[@"a1=b1", @[@"a1=b1"]],
+        @[@"a1=b1;a2=b2", @[@"a1=b1;a2=b2"]],
+        @[@"a1=b1;expires=b2,3", @[@"a1=b1;expires=b2,3"]],
+        @[@"a1=b1;a2=b2,a3=b3;a4=b4", @[@"a1=b1;a2=b2", @"a3=b3;a4=b4"]],
+        @[@"a1=b1;Expires=Mon, 29 Feb 2021 20:21:12 GMT;Path=/", @[@"a1=b1;Expires=Mon, 29 Feb 2021 20:21:12 GMT;Path=/"]],
+        @[@"a1=b1;expires=b2,3,a2=b2", @[@"a1=b1;expires=b2,3", @"a2=b2"]],
+    ];
+    
+    for (NSArray* input in inputs) {
+        AssertEqualObjects([CBLWebSocket parseCookie: input[0]], input[1]);
+    }
 }
 
 #endif // COUCHBASE_ENTERPRISE

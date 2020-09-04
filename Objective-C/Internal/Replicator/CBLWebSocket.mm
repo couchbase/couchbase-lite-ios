@@ -448,25 +448,16 @@ static void doDispose(C4Socket* s) {
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
-    
+        
     NSString* cookie = headers[@"Set-Cookie"];
     if (cookie.length > 0) {
-        // separated by comma will fail, hence regex: https://issues.couchbase.com/browse/CBL-681
-        NSError* error = NULL;
-        NSRegularExpression* r = [NSRegularExpression regularExpressionWithPattern: @"\\,\\s*\\w+="
-                                                                           options: NSRegularExpressionCaseInsensitive
-                                                                             error: &error];
-        NSArray* matches = [r matchesInString: cookie options:0 range: NSMakeRange(0, [cookie length])];
-        NSMutableArray* cookies = [NSMutableArray arrayWithCapacity: matches.count];
-        for (NSTextCheckingResult* match in matches) {
-            if ([match range].length > 0) {
-                NSString* cookieStr = [cookie substringWithRange: [match range]];
-                [cookies addObject: cookieStr];
-                
-                // save to lite core
-                [_db saveCookie: cookieStr url: _remoteURL];
-            }
+        NSArray* cookies = [CBLWebSocket parseCookie: cookie];
+        
+        // Save to LiteCore 
+        for (NSString* cookieStr in cookies) {
+            [_db saveCookie: cookieStr url: _remoteURL];
         }
+        
         if (cookies.count > 0) {
             NSMutableDictionary* newHeaders = [headers mutableCopy];
             newHeaders[@"Set-Cookie"] = cookies;
@@ -791,6 +782,43 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     [_out close];
     _in = nil;
     _out = nil;
+}
+
++ (NSArray*) parseCookie: (NSString*) cookieStr {
+    Assert(cookieStr.length > 0, @"Trtying to parse empty cookie string");
+    
+    NSArray* rawAttrs = [cookieStr componentsSeparatedByString: @";"];
+    
+    NSMutableArray *attrs = [NSMutableArray arrayWithCapacity: [rawAttrs count]];
+    for (NSString* rawAttr in rawAttrs) {
+        // trims the attribute
+        NSString* attr = [rawAttr stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
+        // replace comma with ^G(bell) in Date
+        if ([attr hasPrefix: @"Expires"] || [attr hasPrefix: @"expires"]) {
+            NSRange range = [attr rangeOfString: @","];
+            if (range.location != NSNotFound)
+                attr = [attr stringByReplacingCharactersInRange: range withString: @"^G"];
+        }
+        [attrs addObject: attr];
+    }
+    
+    // separate out with cookie boundaries
+    NSArray* rawCookies = [[attrs componentsJoinedByString: @";"] componentsSeparatedByString: @","];
+    NSMutableArray *cookies = [NSMutableArray arrayWithCapacity: [rawCookies count]];
+    for (NSString* rawCookie in rawCookies) {
+        // trim the cookie
+        NSString* cookie = [rawCookie stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
+        // replace the previous ^G with comma
+        NSRange range = [cookie rangeOfString: @"^G"];
+        if (range.location != NSNotFound)
+            cookie = [cookie stringByReplacingCharactersInRange: range withString: @","];
+        
+        [cookies addObject: cookie];
+    }
+    
+    return [NSArray arrayWithArray: cookies];
 }
 
 @end
