@@ -451,7 +451,7 @@ static void doDispose(C4Socket* s) {
         
     NSString* cookie = headers[@"Set-Cookie"];
     if (cookie.length > 0) {
-        NSArray* cookies = [CBLWebSocket parseCookie: cookie];
+        NSArray* cookies = [CBLWebSocket parseCookies: cookie];
         
         // Save to LiteCore
         for (NSString* cookieStr in cookies) {
