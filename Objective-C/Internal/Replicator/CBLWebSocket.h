@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
 
 // for testing purpose only:
-+ (NSArray*) parseCookie: (NSString*) cookie;
++ (NSArray*) parseCookies: (NSString*) cookie;
 
 @end
 

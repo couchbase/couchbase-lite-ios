@@ -453,7 +453,7 @@ static void doDispose(C4Socket* s) {
     if (cookie.length > 0) {
         NSArray* cookies = [CBLWebSocket parseCookie: cookie];
         
-        // Save to LiteCore 
+        // Save to LiteCore
         for (NSString* cookieStr in cookies) {
             [_db saveCookie: cookieStr url: _remoteURL];
         }
@@ -784,7 +784,9 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     _out = nil;
 }
 
-+ (NSArray*) parseCookie: (NSString*) cookieStr {
+#pragma mark - Helper
+
++ (NSArray*) parseCookies: (NSString*) cookieStr {
     Assert(cookieStr.length > 0, @"Trtying to parse empty cookie string");
     
     NSArray* rawAttrs = [cookieStr componentsSeparatedByString: @";"];

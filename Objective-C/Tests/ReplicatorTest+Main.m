@@ -1491,10 +1491,11 @@
         @[@"a1=b1;a2=b2,a3=b3;a4=b4", @[@"a1=b1;a2=b2", @"a3=b3;a4=b4"]],
         @[@"a1=b1;Expires=Mon, 29 Feb 2021 20:21:12 GMT;Path=/", @[@"a1=b1;Expires=Mon, 29 Feb 2021 20:21:12 GMT;Path=/"]],
         @[@"a1=b1;expires=b2,3,a2=b2", @[@"a1=b1;expires=b2,3", @"a2=b2"]],
+        @[@"a1=b1;expires=b1,2,a3=b3;Expires=b3,4", @[@"a1=b1;expires=b1,2", @"a3=b3;Expires=b3,4"]],
     ];
     
     for (NSArray* input in inputs) {
-        AssertEqualObjects([CBLWebSocket parseCookie: input[0]], input[1]);
+        AssertEqualObjects([CBLWebSocket parseCookies: input[0]], input[1]);
     }
 }
 
