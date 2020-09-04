@@ -238,7 +238,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 
 
 /**
- Closes a database.
+ Close database synchronously. Before closing the database, the active replicators, listeners and live queries will be stopped.
 
  @param error On return, the error if any.
  @return True on success, false on failure.
@@ -246,7 +246,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 - (BOOL) close: (NSError**)error;
 
 /**
- Deletes a database.
+ Close and delete the database synchronously. Before closing the database, the active replicators, listeners and live queries will be stopped.
 
  @param error On return, the error if any.
  @return True on success, false on failure.
