@@ -383,7 +383,7 @@ public final class Database {
         Log.log(domain: .database, level: .warning, message:
             "This method has been deprecated. Please use Database.log.console instead of setLogLevel(_, domain:)")
         
-        Database.log.console.domains = LogDomains(rawValue: LogDomain.all.hashValue)
+        Database.log.console.domains = LogDomains(rawValue: Int(LogDomain.all.rawValue))
         Database.log.console.level = level
     }
     
