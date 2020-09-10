@@ -659,7 +659,7 @@ typedef CBLURLEndpointListener Listener;
     NSArray* urls = _listener.urls;
     
     /** Link local addresses cannot be assigned via network interface because they don't map to any given interface.  */
-    NSPredicate* p = [NSPredicate predicateWithFormat: @"NOT(SELF.host BEGINSWITH 'fe80::')"];
+    NSPredicate* p = [NSPredicate predicateWithFormat: @"NOT(SELF.host CONTAINS 'fe80::') AND NOT(SELF.host CONTAINS '.local')"];
     NSArray* notLinkLocal = [urls filteredArrayUsingPredicate: p];
     
     NSError* err = nil;
