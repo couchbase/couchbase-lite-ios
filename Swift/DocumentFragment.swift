@@ -43,7 +43,7 @@ public final class DocumentFragment: DictionaryFragment {
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment(_impl[key])
+        return Fragment((_impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Internal

@@ -194,14 +194,14 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
     ///
     /// - Parameter index: The index.
     public override subscript(index: Int) -> MutableFragment {
-        return MutableFragment(fragmentImpl[UInt(index)])
+        return MutableFragment((fragmentImpl as CBLMutableArrayFragment)[UInt(index)])
     }
     
     /// Subscript access to a MutableFragment object by key.
     ///
     /// - Parameter key: The key.
     public override subscript(key: String) -> MutableFragment {
-        return MutableFragment(fragmentImpl[key])
+        return MutableFragment((fragmentImpl as CBLMutableDictionaryFragment)[key])
     }
     
     // MARK: Internal

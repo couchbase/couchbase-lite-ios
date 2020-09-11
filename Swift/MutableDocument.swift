@@ -256,7 +256,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     ///
     /// - Parameter key: The key.
     public override subscript(key: String) -> MutableFragment {
-        return MutableFragment(docImpl[key])
+        return MutableFragment((docImpl as CBLMutableDictionaryFragment)[key])
     }
     
     // MARK: Internal
