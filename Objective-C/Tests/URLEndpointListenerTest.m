@@ -366,16 +366,24 @@ typedef CBLURLEndpointListener Listener;
     
     [self generateDocumentWithID: @"doc-1"];
     
+    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
     id rConfig = [self configWithTarget: _listener.localEndpoint type: kCBLReplicatorTypePush continuous: NO];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
+    
     __block Listener* weakListener = _listener;
     __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
-    [self run: rConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady:^(CBLReplicator * r) {
+    id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
         Listener* strongListener = weakListener;
-        [r addChangeListener:^(CBLReplicatorChange * change) {
-            maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
-            maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
-        }];
+        maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
+        maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
+        if (change.status.activity == kCBLReplicatorStopped)
+            [x fulfill];
     }];
+    
+    [replicator start];
+    [self waitForExpectations: @[x] timeout: timeout];
+    [replicator removeChangeListenerWithToken: token];
+    
     AssertEqual(maxActiveCount, 1);
     AssertEqual(maxConnectionCount, 1);
     AssertEqual(self.otherDB.count, 1);
