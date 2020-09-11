@@ -158,14 +158,14 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment {
     ///
     /// - Parameter index: The index
     public subscript(index: Int) -> Fragment {
-        return Fragment(_impl[UInt(index)])
+        return Fragment((_impl as CBLArrayFragment)[UInt(index)])
     }
     
     /// Subscript access to a Fragment object by key.
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment(_impl[key])
+        return Fragment((_impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Internal

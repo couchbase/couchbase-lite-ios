@@ -163,7 +163,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     ///
     /// - Parameter index: The select result index.
     public subscript(index: Int) -> Fragment {
-        return Fragment(impl[UInt(index)])
+        return Fragment((impl as CBLArrayFragment)[UInt(index)])
     }
     
     // MARK: ReadOnlyDictionaryProtocol
@@ -316,7 +316,7 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     ///
     /// - Parameter key: The select result key.
     public subscript(key: String) -> Fragment {
-        return Fragment(impl[key])
+        return Fragment((impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Internal

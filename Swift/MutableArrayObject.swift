@@ -532,7 +532,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     ///                    the MutableFragment object will represent a nil value.
     /// - Returns: The Fragment object.
     public override subscript(index: Int) -> MutableFragment {
-        return MutableFragment(arrayImpl[UInt(index)])
+        return MutableFragment((arrayImpl as CBLMutableArrayFragment)[UInt(index)])
     }
     
     // MARK: Internal
