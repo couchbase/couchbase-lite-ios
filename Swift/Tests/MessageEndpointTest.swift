@@ -160,6 +160,7 @@ MultipeerConnectionDelegate {
         listener!.accept(connection: MultipeerConnection(
             session: serverSession!, peerID: clientPeer!, delegate: self))
         self.wait(for: [x1], timeout: 10.0)
+        Thread.sleep(forTimeInterval: 0.5)
         
         let x3 = self.expectation(description: "Replicator Stopped")
         let repl = Replicator(config: config)
