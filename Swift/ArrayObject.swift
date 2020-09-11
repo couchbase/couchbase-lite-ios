@@ -232,7 +232,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Parameter index: The Index.
     public subscript(index: Int) -> Fragment {
-        return Fragment(_impl[UInt(index)])
+        return Fragment((_impl as CBLArrayFragment)[UInt(index)])
     }
     
     // MARK: Equality

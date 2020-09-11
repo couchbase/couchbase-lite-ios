@@ -266,7 +266,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     /// - Parameter key: The key.
     /// - Returns: The Fragment object.
     public override subscript(key: String) -> MutableFragment {
-        return MutableFragment(dictImpl[key])
+        return MutableFragment((dictImpl as CBLMutableDictionaryFragment)[key])
     }
     
     // MARK: Internal
