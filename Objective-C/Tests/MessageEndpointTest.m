@@ -202,7 +202,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
                                                              peerID: _clientPeer
                                                            delegate: self]];
     [self waitForExpectations: @[x1] timeout: 10.0];
-    [NSThread sleepForTimeInterval: 0.5];
+    [NSThread sleepForTimeInterval: 0.5]; // delay for making sure connection open before send message
     
     // Start replicator:
     XCTestExpectation* x3 = [self expectationWithDescription: @"Replicator Stopped"];
