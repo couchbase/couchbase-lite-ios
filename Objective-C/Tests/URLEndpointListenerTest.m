@@ -384,6 +384,8 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: _listener];
     AssertEqual(_listener.status.connectionCount, 0);
     AssertEqual(_listener.status.activeConnectionCount, 0);
+    repl = nil;
+    _listener = nil;
 }
 
 - (void) testTLSIdentity {
