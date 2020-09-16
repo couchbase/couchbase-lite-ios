@@ -109,7 +109,8 @@ function xcarchive
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
     "SKIP_INSTALL=NO" ${QUIET}
   
-  FRAMEWORK_PATH_ARGS+=("-framework "${ARCHIVE_PATH}/${FRAMEWORK_LOC}"")
+  FRAMEWORK_PATH_ARGS+=("-framework "${ARCHIVE_PATH}/${FRAMEWORK_LOC}" \
+    -debug-symbols "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive/dSYMs/${BIN_NAME}.framework.dSYM"")
   echo "Finished archiving ${DESTINATION}."
 }
 
