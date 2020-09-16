@@ -6,8 +6,8 @@ function usage
 {
   echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]"
   echo "\nOptions:"
-  echo "  --xcframework\t create a release package with .xcframework"
-  echo "  --combined\t\t create a release package with .xcframework and .framework"
+  echo "  --xcframework\t create a release package with .xcframework(only Swift)"
+  echo "  --combined\t\t create a release package with .xcframework(only Swift) and .framework"
   echo "  --notest\t create a release package but no tests needs to be run"
   echo "  --nocov\t create a release package, run tests but no code coverage zip"
   echo "  --testonly\t run tests but no release package"
