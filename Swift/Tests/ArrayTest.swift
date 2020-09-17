@@ -227,7 +227,6 @@ class ArrayTest: CBLTestCase {
                        MutableArrayObject(data: data[6] as! [String]))
         let b = obj.blob(at: 10)
         XCTAssertEqual(b?.content, (data[7] as! Blob).content)
-        XCTAssert(obj.value(at: 11) as! NSNull == (data[8] as? NSNull))
+        XCTAssert(obj.value(at: 11) as! NSNull == (data[8] as! NSNull))
     }
 }
-

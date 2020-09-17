@@ -220,17 +220,19 @@ MultipeerConnectionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         switch state {
-        case .connecting:
-            print("*** Connecting: \(peerID.displayName)")
-        case .connected:
-            print("*** Connected: \(peerID.displayName)")
-            if session === serverSession {
-                serverConnected!.fulfill()
-            } else {
-                clientConnected!.fulfill()
-            }
-        case .notConnected:
-            print("*** Not Connected: \(peerID.displayName)")
+            case .connecting:
+                print("*** Connecting: \(peerID.displayName)")
+            case .connected:
+                print("*** Connected: \(peerID.displayName)")
+                if session === serverSession {
+                    serverConnected!.fulfill()
+                } else {
+                    clientConnected!.fulfill()
+                }
+            case .notConnected:
+                print("*** Not Connected: \(peerID.displayName)")
+            default:
+                print("*** Unhandled State: \(state)")
         }
     }
     
