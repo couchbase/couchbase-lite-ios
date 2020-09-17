@@ -96,8 +96,8 @@ public final class Blob: Equatable, Hashable {
     
     // MARK: Hashable
     
-    public var hashValue: Int {
-        return _impl.hash;
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(_impl.hash)
     }
     
     // MARK: Internal
