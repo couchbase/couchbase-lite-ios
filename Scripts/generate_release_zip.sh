@@ -152,7 +152,7 @@ then
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
