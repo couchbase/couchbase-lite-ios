@@ -182,12 +182,16 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 
 - (void) setUp {
     [super setUp];
+    if (!self.keyChainAccessAllowed) return;
+    
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
 }
 
 - (void) tearDown {
     [super tearDown];
+    if (!self.keyChainAccessAllowed) return;
+    
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
 }
