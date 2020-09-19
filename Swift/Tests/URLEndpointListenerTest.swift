@@ -28,6 +28,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     var listener: URLEndpointListener?
     
+    // MARK: --  Helper methods
+    
     @discardableResult
     func listen() throws -> URLEndpointListener {
         return try listen(tls: true, auth: nil)
@@ -179,6 +181,91 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
     }
     
+    func validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: Bool) throws {
+        let idleExp1 = expectation(description: "replicator#1 idle")
+        let idleExp2 = expectation(description: "replicator#2 idle")
+        let stopExp1 = expectation(description: "replicator#1 stop")
+        let stopExp2 = expectation(description: "replicator#2 stop")
+        
+        let doc1 = createDocument("db-doc")
+        try self.db.saveDocument(doc1)
+        let doc2 = createDocument("other-db-doc")
+        try self.oDB.saveDocument(doc2)
+        
+        // start listener
+        try self.listen()
+        
+        // replicator#1
+        let repl1 = replicator(db: self.oDB,
+                               continuous: true,
+                               target: DatabaseEndpoint(database: self.db),
+                               serverCert: nil)
+        
+        // replicator#2
+        try deleteDB(name: "db2")
+        let db2 = try openDB(name: "db2")
+        let repl2 = replicator(db: db2,
+                               continuous: true,
+                               target: self.listener!.localURLEndpoint,
+                               serverCert: self.listener!.tlsIdentity!.certs[0])
+        
+        let changeListener = { (change: ReplicatorChange) in
+            if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
+                if change.replicator.config.database.name == "db1" {
+                    idleExp1.fulfill()
+                } else {
+                    idleExp2.fulfill()
+                }
+            } else if change.status.activity == .stopped {
+                if change.replicator.config.database.name == "db1" {
+                    stopExp1.fulfill()
+                } else {
+                    stopExp2.fulfill()
+                }
+            }
+        }
+        let token1 = repl1.addChangeListener(changeListener)
+        let token2 = repl2.addChangeListener(changeListener)
+        repl1.start()
+        repl2.start()
+        wait(for: [idleExp1, idleExp2], timeout: 5.0)
+        
+        if (isDeleteDBs) {
+            try db2.delete()
+            try self.oDB.delete()
+        } else {
+            try db2.close()
+            try self.oDB.close()
+        }
+        
+        wait(for: [stopExp1, stopExp2], timeout: 5.0)
+        repl1.removeChangeListener(withToken: token1)
+        repl2.removeChangeListener(withToken: token2)
+        try stopListen()
+    }
+    
+    func validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: Bool) throws {
+        let idleExp = expectation(description: "replicator idle")
+        let stopExp = expectation(description: "replicator stop")
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let listener1 = URLEndpointListener(config: config)
+        let listener2 = URLEndpointListener(config: config)
+        
+        try listener1.start()
+        try listener2.start()
+        
+        let doc1 = createDocument("db-doc")
+        try self.db.saveDocument(doc1)
+        let doc2 = createDocument("other-db-doc")
+        try self.oDB.saveDocument(doc2)
+        
+        let repl1 = replicator(db: self.oDB,
+                               continuous: true,
+                               target: DatabaseEndpoint(database: self.db),
+                               serverCert: nil)
+    }
+    
     override func setUp() {
         super.setUp()
         try! cleanUpIdentities()
@@ -189,6 +276,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         try! cleanUpIdentities()
         super.tearDown()
     }
+    
+    // MARK: -- Tests
     
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
@@ -848,7 +937,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         let config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.tlsIdentity = identity
         
-        //TODO: CBL-1214
         self.ignoreException {
             try self.listen(config: config)
         }
@@ -908,6 +996,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
             expectedError: Int(ECONNREFUSED))
     }
+    
+    // MARK: -- Close & Delete Replicators and Listeners
 }
 
 @available(macOS 10.12, iOS 10.0, *)

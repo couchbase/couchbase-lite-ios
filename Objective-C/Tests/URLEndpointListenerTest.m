@@ -66,6 +66,8 @@ typedef CBLURLEndpointListener Listener;
     CBLURLEndpointListener* _listener;
 }
 
+#pragma mark - Helper methods
+
 - (Listener*) listen {
     return [self listenWithTLS: YES];
 }
@@ -247,6 +249,128 @@ typedef CBLURLEndpointListener Listener;
     }
 }
 
+- (void) validateActiveReplicationsAndURLEndpointListener: (BOOL)isDeleteDBs {
+    XCTestExpectation* stopExp1 = [self expectationWithDescription: @"replicator#1 stopped"];
+    XCTestExpectation* stopExp2 = [self expectationWithDescription: @"replicator#2 stopped"];
+    XCTestExpectation* idleExp1 = [self expectationWithDescription: @"replicator#1 idle"];
+    XCTestExpectation* idleExp2 = [self expectationWithDescription: @"replicator#2 idle"];
+    
+    NSError* err;
+    CBLMutableDocument* doc =  [self createDocument: @"db-doc"];
+    Assert([self.db saveDocument: doc error: &err], @"Fail to save DB %@", err);
+    doc =  [self createDocument: @"other-db-doc"];
+    Assert([self.otherDB saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
+    
+    // start listener
+    [self listen];
+    
+    // replicator #1
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.otherDB
+                                                                                       target: target];
+    config.continuous = YES;
+    CBLReplicator* repl1 = [[CBLReplicator alloc] initWithConfig: config];
+
+    // replicator #2
+    [self deleteDBNamed: @"db2" error: &err];
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
+    AssertNil(err);
+    config = [[CBLReplicatorConfiguration alloc] initWithDatabase: db2
+                                                           target: _listener.localEndpoint];
+    config.continuous = YES;
+    config.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
+    CBLReplicator* repl2 = [[CBLReplicator alloc] initWithConfig: config];
+    
+    id changeListener = ^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            if (change.replicator == repl1)
+                [idleExp1 fulfill];
+            else
+                [idleExp2 fulfill];
+            
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            if (change.replicator == repl1)
+                [stopExp1 fulfill];
+            else
+                [stopExp2 fulfill];
+        }
+    };
+    id token1 = [repl1 addChangeListener: changeListener];
+    id token2 = [repl2 addChangeListener: changeListener];
+    
+    [repl1 start];
+    [repl2 start];
+    [self waitForExpectations: @[idleExp1, idleExp2] timeout: timeout];
+    
+    if (isDeleteDBs) {
+        [db2 delete: &err];
+        AssertNil(err);
+        [self.otherDB delete: &err];
+        AssertNil(err);
+    } else {
+        [db2 close: &err];
+        AssertNil(err);
+        [self.otherDB close: &err];
+        AssertNil(err);
+    }
+    
+    [self waitForExpectations: @[stopExp1, stopExp2] timeout: timeout];
+    [repl1 removeChangeListenerWithToken: token1];
+    [repl2 removeChangeListenerWithToken: token2];
+    [self stopListen];
+}
+
+- (void) validateActiveReplicatorAndURLEndpointListeners: (BOOL)isDeleteDB {
+    XCTestExpectation* idleExp = [self expectationWithDescription: @"replicator idle"];
+    XCTestExpectation* stopExp = [self expectationWithDescription: @"replicator stopped"];
+
+    // start listener#1 and listener#2
+    NSError* err;
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Listener* listener1 = [[Listener alloc] initWithConfig: config];
+    Listener* listener2 = [[Listener alloc] initWithConfig: config];
+    Assert([listener1 startWithError: &err]);
+    AssertNil(err);
+    Assert([listener2 startWithError: &err]);
+    AssertNil(err);
+    
+    CBLMutableDocument* doc =  [self createDocument: @"db-doc"];
+    Assert([self.db saveDocument: doc error: &err], @"Fail to save DB %@", err);
+    doc =  [self createDocument: @"other-db-doc"];
+    Assert([self.otherDB saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
+    
+    // start replicator
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
+    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.otherDB
+                                                                                        target: target];
+    rConfig.continuous = YES;
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
+    id token = [replicator addChangeListener: ^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            [idleExp fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopExp fulfill];
+        }
+    }];
+    [replicator start];
+    [self waitForExpectations: @[idleExp] timeout: timeout];
+    
+    // delete / close
+    if (isDeleteDB)
+        [self.otherDB delete: &err];
+    else
+        [self.otherDB close: &err];
+    
+    [self waitForExpectations: @[stopExp] timeout: timeout];
+    
+    // cleanup
+    [replicator removeChangeListenerWithToken: token];
+    [listener2 stop];
+    [self stopListener: listener1];
+}
+
 - (void) releaseCF: (CFTypeRef)ref {
     if (ref != NULL) CFRelease(ref);
 }
@@ -271,6 +395,8 @@ typedef CBLURLEndpointListener Listener;
     [self cleanUpIdentities];
     [super tearDown];
 }
+
+#pragma mark - Tests
 
 - (void) testPort {
     // initialize a listener
@@ -1260,6 +1386,24 @@ typedef CBLURLEndpointListener Listener;
              serverCert: nil
               errorCode: ECONNREFUSED
             errorDomain: NSPOSIXErrorDomain];
+}
+
+#pragma mark - Close & Delete Replicators and Listeners
+
+- (void) testCloseWithActiveReplicationsAndURLEndpointListener {
+    [self validateActiveReplicationsAndURLEndpointListener: NO];
+}
+
+- (void) testDeleteWithActiveReplicationsAndURLEndpointListener {
+    [self validateActiveReplicationsAndURLEndpointListener: YES];
+}
+
+- (void) testCloseWithActiveReplicatorAndURLEndpointListeners {
+    [self validateActiveReplicatorAndURLEndpointListeners: NO];
+}
+
+- (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
+    [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
 
 @end
