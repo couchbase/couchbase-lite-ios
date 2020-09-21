@@ -211,16 +211,16 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         let changeListener = { (change: ReplicatorChange) in
             if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
-                if change.replicator.config.database.name == "db1" {
-                    idleExp1.fulfill()
-                } else {
+                if change.replicator.config.database.name == "db2" {
                     idleExp2.fulfill()
+                } else {
+                    idleExp1.fulfill()
                 }
             } else if change.status.activity == .stopped {
-                if change.replicator.config.database.name == "db1" {
-                    stopExp1.fulfill()
-                } else {
+                if change.replicator.config.database.name == "db2" {
                     stopExp2.fulfill()
+                } else {
+                    stopExp1.fulfill()
                 }
             }
         }
@@ -252,6 +252,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         let listener1 = URLEndpointListener(config: config)
         let listener2 = URLEndpointListener(config: config)
         
+        // listener
         try listener1.start()
         try listener2.start()
         
@@ -260,10 +261,34 @@ class URLEndpontListenerTest: ReplicatorTest {
         let doc2 = createDocument("other-db-doc")
         try self.oDB.saveDocument(doc2)
         
+        // replicator
         let repl1 = replicator(db: self.oDB,
                                continuous: true,
                                target: DatabaseEndpoint(database: self.db),
                                serverCert: nil)
+        let token1 = repl1.addChangeListener({ (change: ReplicatorChange) in
+            if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
+                idleExp.fulfill()
+                
+            } else if change.status.activity == .stopped {
+                stopExp.fulfill()
+            }
+        })
+        repl1.start()
+        wait(for: [idleExp], timeout: 5.0)
+        
+        if (isDeleteDB) {
+            try self.oDB.delete()
+        } else {
+            try self.oDB.close()
+        }
+        
+        wait(for: [stopExp], timeout: 5.0)
+        
+        // cleanup
+        repl1.removeChangeListener(withToken: token1)
+        try stopListener(listener: listener1)
+        try stopListener(listener: listener2)
     }
     
     override func setUp() {
@@ -998,6 +1023,22 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     // MARK: -- Close & Delete Replicators and Listeners
+    
+    func testCloseWithActiveReplicationsAndURLEndpointListener() throws {
+        try validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: false)
+    }
+    
+    func testDeleteWithActiveReplicationsAndURLEndpointListener() throws {
+        try validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: true)
+    }
+    
+    func testCloseWithActiveReplicatorAndURLEndpointListeners() throws {
+        try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: false)
+    }
+    
+    func testDeleteWithActiveReplicatorAndURLEndpointListeners() throws {
+        try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: true)
+    }
 }
 
 @available(macOS 10.12, iOS 10.0, *)
