@@ -371,8 +371,8 @@ typedef CBLURLEndpointListener Listener;
     
     // cleanup
     [replicator removeChangeListenerWithToken: token];
-    [listener2 stop];
     [self stopListener: listener1];
+    [self stopListener: listener2];
 }
 
 - (void) releaseCF: (CFTypeRef)ref {
