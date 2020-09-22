@@ -182,6 +182,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: Bool) throws {
+        if !self.keyChainAccessAllowed { return }
+        
         let idleExp1 = expectation(description: "replicator#1 idle")
         let idleExp2 = expectation(description: "replicator#2 idle")
         let stopExp1 = expectation(description: "replicator#1 stop")
@@ -245,6 +247,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: Bool) throws {
+        if !self.keyChainAccessAllowed { return }
+        
         let idleExp = expectation(description: "replicator idle")
         let stopExp = expectation(description: "replicator stop")
         
@@ -264,8 +268,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         // replicator
         let repl1 = replicator(db: self.oDB,
                                continuous: true,
-                               target: DatabaseEndpoint(database: self.db),
-                               serverCert: nil)
+                               target: listener1.localURLEndpoint,
+                               serverCert: listener1.tlsIdentity!.certs[0])
         let token1 = repl1.addChangeListener({ (change: ReplicatorChange) in
             if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
                 idleExp.fulfill()

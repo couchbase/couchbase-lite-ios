@@ -345,10 +345,10 @@ typedef CBLURLEndpointListener Listener;
     Assert([self.otherDB saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
     
     // start replicator
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
-    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.otherDB
-                                                                                        target: target];
+    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
+                                                                                        target: listener1.localEndpoint];
     rConfig.continuous = YES;
+    rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) listener1.tlsIdentity.certs[0];
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
     id token = [replicator addChangeListener: ^(CBLReplicatorChange * change) {
         if (change.status.activity == kCBLReplicatorIdle &&
