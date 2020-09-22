@@ -250,6 +250,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) validateActiveReplicationsAndURLEndpointListener: (BOOL)isDeleteDBs {
+    if (!self.keyChainAccessAllowed) return;
+    
     XCTestExpectation* stopExp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* stopExp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     XCTestExpectation* idleExp1 = [self expectationWithDescription: @"replicator#1 idle"];
@@ -322,6 +324,8 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) validateActiveReplicatorAndURLEndpointListeners: (BOOL)isDeleteDB {
+    if (!self.keyChainAccessAllowed) return;
+    
     XCTestExpectation* idleExp = [self expectationWithDescription: @"replicator idle"];
     XCTestExpectation* stopExp = [self expectationWithDescription: @"replicator stopped"];
 
