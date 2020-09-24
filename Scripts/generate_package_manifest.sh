@@ -34,13 +34,7 @@ do
   shift
 done
 
-if [ -z "$EE" ]
-then
-  PRODUCT_NAME="CouchbaseLiteSwift"
-else
-  PRODUCT_NAME="CouchbaseLiteSwiftEE"
-fi
-
+PRODUCT_NAME="CouchbaseLiteSwift"
 SWIFT_VERSION=`swift -version |  awk '{ print $4 }'`
 CHECKSUM="dummy"
 
