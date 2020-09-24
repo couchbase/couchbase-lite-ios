@@ -1874,6 +1874,7 @@
 		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
 		1A93FAE424F0E6E60015D54D /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = pull_request_build.sh; path = ../Scripts/pull_request_build.sh; sourceTree = "<group>"; };
 		1A93FAE524F0E6E60015D54D /* loc.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = loc.sh; path = ../Scripts/loc.sh; sourceTree = "<group>"; };
+		1A967A5F251BF78400B70945 /* generate_package_manifest.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_package_manifest.sh; sourceTree = "<group>"; };
 		1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+CustomConflict.swift"; sourceTree = "<group>"; };
 		1AA3D77122AB06E10098E16B /* CustomLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomLogger.h; sourceTree = "<group>"; };
 		1AA3D77222AB06E10098E16B /* CustomLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomLogger.m; sourceTree = "<group>"; };
@@ -3187,6 +3188,7 @@
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
 				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
+				1A967A5F251BF78400B70945 /* generate_package_manifest.sh */,
 			);
 			path = Scripts;
 			sourceTree = "<group>";
@@ -3480,7 +3482,7 @@
 				27DF7D841F424C840022F3DF /* libSQLite.a */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
 				1A93FACF24F03E800015D54D /* iOS Perf Test.app */,
-				9398D95A1E0347B600464432 /* LiteCore-iOS shell.app */,
+				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
 			name = Products;
@@ -5006,10 +5008,10 @@
 			remoteRef = 9398D94F1E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D95A1E0347B600464432 /* LiteCore-iOS shell.app */ = {
+		9398D95A1E0347B600464432 /* LiteCore-iOS.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
-			path = "LiteCore-iOS shell.app";
+			path = "LiteCore-iOS.app";
 			remoteRef = 9398D9591E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
