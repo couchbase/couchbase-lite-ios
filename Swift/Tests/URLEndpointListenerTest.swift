@@ -94,6 +94,22 @@ class URLEndpontListenerTest: ReplicatorTest {
         return Replicator(config: config)
     }
     
+    func tlsIdentity(_ isServer: Bool) throws -> TLSIdentity? {
+        if !self.keyChainAccessAllowed { return nil }
+        
+        // Create client identity:
+        let attrs = [certAttrCommonName: isServer ? "CBL-Server" : "daniel"]
+        let label = isServer ? serverCertLabel : clientCertLabel
+        return try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil,
+                                              label: label)
+    }
+    
+    func cleanupTLSIdentity(_ isServer: Bool) throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        try TLSIdentity.deleteIdentity(withLabel: isServer ? serverCertLabel : clientCertLabel)
+    }
+    
     /// Two replicators, replicates docs to the self.listener; validates connection status
     func validateMultipleReplicationsTo() throws {
         let exp1 = expectation(description: "replicator#1 stop")
@@ -394,12 +410,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener.tlsIdentity)
         
         // User Identity:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel);
-        let attrs = [certAttrCommonName: "CBL-Server"]
-        let identity = try TLSIdentity.createIdentity(forServer: true,
-                                                      attributes: attrs,
-                                                      expiration: nil,
-                                                      label: serverCertLabel)
+        let identity = try tlsIdentity(true)
         config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.tlsIdentity = identity
         listener = URLEndpointListener.init(config: config)
@@ -410,9 +421,29 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssert(identity === listener.tlsIdentity!)
         try stopListener(listener: listener)
         XCTAssertNil(listener.tlsIdentity)
+        try cleanupTLSIdentity(true) // cleanup the server tlsIdentity
+    }
+    
+    func testNonTLSNullListenerAuthenticator() throws {
+        let listener = try listen(tls: false)
+        
+        // Replicator - No Authenticator:
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false)
+        
+        // Replicator - Basic Authenticator:
+        let auth = BasicAuthenticator.init(username: "daniel", password: "123")
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth)
+        
+        // Replicator - Client Cert Authenticator
+        let certAuth = ClientCertificateAuthenticator(identity: try tlsIdentity(false)!)
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: certAuth)
+        try cleanupTLSIdentity(false) // cleanup client cert auth identity
+        
+        // Cleanup:
+        try stopListen()
     }
        
-    func testPasswordAuth() throws {
+    func testNonTLSPasswordListenerAuthenticator() throws {
         // Listener:
         let listenerAuth = ListenerPasswordAuthenticator.init {
             (username, password) -> Bool in
@@ -425,10 +456,21 @@ class URLEndpontListenerTest: ReplicatorTest {
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
                  auth: nil, expectedError: CBLErrorHTTPAuthRequired)
         
-        // Replicator - Wrong Credentials:
-        var auth = BasicAuthenticator.init(username: "daniel", password: "456")
+        // Replicator - Wrong Username:
+        var auth = BasicAuthenticator.init(username: "daneil", password: "123")
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
                  auth: auth, expectedError: CBLErrorHTTPAuthRequired)
+        
+        // Replicator - Wrong Password:
+        auth = BasicAuthenticator.init(username: "daniel", password: "456")
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                 auth: auth, expectedError: CBLErrorHTTPAuthRequired)
+        
+        // Replicator - Client Cert Authenticator
+        let certAuth = ClientCertificateAuthenticator(identity: try tlsIdentity(false)!)
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                 auth: certAuth, expectedError: CBLErrorHTTPAuthRequired)
+        try cleanupTLSIdentity(false) // cleanup client cert auth identity
         
         // Replicator - Success:
         auth = BasicAuthenticator.init(username: "daniel", password: "123")
@@ -457,20 +499,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNotNil(listener.tlsIdentity)
         XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
         
-        // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
-        
-        // Create client identity:
-        let attrs = [certAttrCommonName: "daniel"]
-        let identity = try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil, label: clientCertLabel)
-        
         // Replicator:
-        let auth = ClientCertificateAuthenticator.init(identity: identity)
+        let auth = ClientCertificateAuthenticator(identity: try tlsIdentity(false)!)
         let serverCert = listener.tlsIdentity!.certs[0]
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert)
         
         // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try cleanupTLSIdentity(false)
         try stopListen()
     }
     
@@ -487,20 +522,13 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNotNil(listener.tlsIdentity)
         XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
         
-        // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
-        
-        // Create client identity:
-        let attrs = [certAttrCommonName: "daniel"]
-        let identity = try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil, label: clientCertLabel)
-        
         // Replicator:
-        let auth = ClientCertificateAuthenticator.init(identity: identity)
+        let auth = ClientCertificateAuthenticator(identity: try tlsIdentity(false)!)
         let serverCert = listener.tlsIdentity!.certs[0]
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
         
         // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try cleanupTLSIdentity(false)
         try stopListen()
     }
     
@@ -546,23 +574,17 @@ class URLEndpontListenerTest: ReplicatorTest {
         let listenerAuth = ListenerCertificateAuthenticator.init(rootCerts: [rootCert])
         let listener = try listen(tls: true, auth: listenerAuth)
         
-        // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
-        
-        // Create client identity:
-        let attrs = [certAttrCommonName: "daniel"]
-        let identity = try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil, label: clientCertLabel)
-        
         // Replicator:
-        let auth = ClientCertificateAuthenticator.init(identity: identity)
+        let auth = ClientCertificateAuthenticator.init(identity: try tlsIdentity(false)!)
         let serverCert = listener.tlsIdentity!.certs[0]
         
         self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
         }
         
         // Cleanup:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        try cleanupTLSIdentity(false)
         try stopListen()
     }
     
