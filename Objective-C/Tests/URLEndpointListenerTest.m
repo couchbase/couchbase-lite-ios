@@ -269,8 +269,8 @@ typedef CBLURLEndpointListener Listener;
     return identity;
 }
 
-- (BOOL) cleanupTLSIdentity: (BOOL)isServer {
-    if (!self.keyChainAccessAllowed) return nil;
+- (void) cleanupTLSIdentity: (BOOL)isServer {
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* err;
     NSString* label = isServer ? kServerCertLabel : kClientCertLabel;
