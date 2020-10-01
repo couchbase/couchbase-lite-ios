@@ -552,43 +552,97 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(_listener.status.activeConnectionCount, 0);
 }
 
-- (void) testTLSIdentity {
+- (void) testTLSListenerAnonymousIdentity {
     if (!self.keyChainAccessAllowed) return;
     
-    // Disabled TLS:
+    NSError* error;
+    CBLMutableDocument* doc = [self createDocument];
+    Assert([self.otherDB saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    CBLURLEndpointListener* listener = [[Listener alloc] initWithConfig: config];
+    Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertNil(listener.tlsIdentity);
+    
+    Assert([listener startWithError: &error]);
+    AssertNil(error);
+    AssertNotNil(listener.tlsIdentity);
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    
+    // different pinned cert
+    CBLTLSIdentity* identity = [self tlsIdentity: NO];
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef)identity.certs[0]
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    [self cleanupTLSIdentity: NO];
+    
+    // No pinned cert
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: nil
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    [self stopListener: listener];
+    AssertNil(listener.tlsIdentity);
+}
+
+- (void) testTLSListenerUserIdentity {
+    if (!self.keyChainAccessAllowed) return;
     
     NSError* error;
-    Assert([listener startWithError: &error]);
-    AssertNil(error);
-    AssertNil(listener.tlsIdentity);
-    [self stopListener: listener];
-    AssertNil(listener.tlsIdentity);
+    CBLMutableDocument* doc = [self createDocument];
+    Assert([self.otherDB saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
     
-    // Anonymous Identity:
-    config = [[Config alloc] initWithDatabase: self.otherDB];
-    listener = [[Listener alloc] initWithConfig: config];
+    CBLTLSIdentity* tlsIdentity = [self tlsIdentity: YES];
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = tlsIdentity;
+    Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertNil(listener.tlsIdentity);
     
     Assert([listener startWithError: &error]);
     AssertNil(error);
     AssertNotNil(listener.tlsIdentity);
-    [self stopListener: listener];
-    AssertNil(listener.tlsIdentity);
+    AssertEqual(listener.tlsIdentity, tlsIdentity);
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
     
-    // User Identity:
-    config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.tlsIdentity = [self tlsIdentity: YES];
-    listener = [[Listener alloc] initWithConfig: config];
-    AssertNil(listener.tlsIdentity);
+    // different pinned cert
+    CBLTLSIdentity* identity = [self tlsIdentity: NO];
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef)identity.certs[0]
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    [self cleanupTLSIdentity: NO];
     
-    Assert([listener startWithError: &error]);
-    AssertNil(error);
-    AssertNotNil(listener.tlsIdentity);
-    AssertEqual(listener.tlsIdentity, config.tlsIdentity);
+    // No pinned cert
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: nil
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
     [self stopListener: listener];
     AssertNil(listener.tlsIdentity);
 }
@@ -600,6 +654,7 @@ typedef CBLURLEndpointListener Listener;
     CBLMutableDocument* doc1 =  [self createDocument];
     Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
     Listener* listener = [self listenWithTLS: NO];
+    AssertNil(listener.tlsIdentity);
     
     // Replicator - No Authenticator:
     [self runWithTarget: listener.localEndpoint
