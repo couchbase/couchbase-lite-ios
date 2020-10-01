@@ -695,6 +695,72 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
+- (void) testTLSPasswordListenerAuthenticator {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSError* err;
+    CBLMutableDocument* doc1 =  [self createDocument];
+    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
+    
+    // Listener:
+    CBLListenerPasswordAuthenticator* auth = [[CBLListenerPasswordAuthenticator alloc] initWithBlock:
+        ^BOOL(NSString *username, NSString *password) {
+            return ([username isEqualToString: @"daniel"] && [password isEqualToString: @"123"]);
+        }];
+    Listener* listener = [self listenWithTLS: YES auth: auth];
+    
+    // Replicator - No Authenticator:
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: CBLErrorHTTPAuthRequired
+            errorDomain: CBLErrorDomain];
+    
+    // Replicator - Wrong Username:
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLBasicAuthenticator alloc] initWithUsername: @"daneil" password: @"456"]
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: CBLErrorHTTPAuthRequired
+            errorDomain: CBLErrorDomain];
+    
+    // Replicator - Wrong Password:
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLBasicAuthenticator alloc] initWithUsername: @"daniel" password: @"456"]
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: CBLErrorHTTPAuthRequired
+            errorDomain: CBLErrorDomain];
+    
+    // Replicator - Different ClientCertAuthenticator
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: [self tlsIdentity: NO]]
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: CBLErrorHTTPAuthRequired
+            errorDomain: CBLErrorDomain];
+    
+    // cleanup client cert authenticator identity
+    [self cleanupTLSIdentity: NO];
+    
+    // Replicator - Success:
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLBasicAuthenticator alloc] initWithUsername: @"daniel" password: @"123"]
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    
+    [self stopListener: listener];
+    
+}
+
 - (void) testClientCertAuthWithCallback API_AVAILABLE(macos(10.12), ios(10.3)) {
     if (!self.keyChainAccessAllowed) return;
     
