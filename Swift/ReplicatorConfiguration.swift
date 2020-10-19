@@ -84,13 +84,6 @@ public class ReplicatorConfiguration {
         }
     }
     
-    /// The remote target's SSL certificate.
-    public var s: SecCertificate? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
-    
     #if COUCHBASE_ENTERPRISE
     /// Specify the replicator to accept any and only self-signed certs. Any non-self-signed certs will be rejected
     /// to avoid accidentally using this mode with the non-self-signed certs in production.
