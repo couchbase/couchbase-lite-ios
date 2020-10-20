@@ -17,6 +17,9 @@ Couchbase Lite 2.x has a completely new set of APIs. The implementation is on to
 
 ### Swift Package 
 
+#### Requirements:
+- XCode 12+
+
 ##### Community Edition
 ```
 dependencies: [
