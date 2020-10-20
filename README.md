@@ -15,6 +15,29 @@ Couchbase Lite 2.x has a completely new set of APIs. The implementation is on to
 
 ## Installation
 
+### Swift Package 
+
+##### Community Edition
+```
+dependencies: [
+        .package(name: "CouchbaseLiteSwift",
+                 url: "https://github.com/couchbase/couchbase-lite-ios.git", 
+                 from: "2.8.0"),
+    ],
+```
+
+##### Enterprise Edition
+
+```
+dependencies: [
+        .package(name: "CouchbaseLiteSwift",
+                 url: "https://github.com/couchbase/couchbase-lite-swift-ee.git", 
+                 from: "2.8.0"),
+    ],
+```
+
+More detailed information on how to setup is available here: [swift package manager](https://docs.couchbase.com/couchbase-lite/current/swift/start/swift-gs-install.html)
+
 ### CocoaPods
 
 You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLiteSwift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
