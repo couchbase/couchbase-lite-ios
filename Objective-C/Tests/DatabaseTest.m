@@ -173,7 +173,8 @@
 }
 #endif
 
-- (void) testCreateWithSpecialCharacterDBNames {
+// TODO: https://issues.couchbase.com/browse/CBL-1392
+- (void) _testCreateWithSpecialCharacterDBNames {
     // create db with default configuration
     NSError* error;
     CBLDatabase* db = [self openDBNamed: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'" error: &error];
