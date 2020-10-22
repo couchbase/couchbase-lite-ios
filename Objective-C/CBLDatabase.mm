@@ -75,7 +75,7 @@ using namespace fleece;
 @synthesize queryQueue=_queryQueue;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
-static const C4DatabaseConfig2 kDBConfig2 = {
+static const C4DatabaseConfig2 kDBConfig = {
     .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_SharedKeys),
 };
 
@@ -811,7 +811,7 @@ static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
 }
 
 static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
-    C4DatabaseConfig2 c4config = kDBConfig2;
+    C4DatabaseConfig2 c4config = kDBConfig;
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
