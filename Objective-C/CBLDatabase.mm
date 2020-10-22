@@ -75,10 +75,8 @@ using namespace fleece;
 @synthesize queryQueue=_queryQueue;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
-static const C4DatabaseConfig kDBConfig = {
+static const C4DatabaseConfig2 kDBConfig = {
     .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_SharedKeys),
-    .storageEngine = kC4SQLiteStorageEngine,
-    .versioning = kC4RevisionTrees,
 };
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
@@ -464,10 +462,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 {
     CBLAssertNotNil(name);
     
-    NSString* path = databasePath(name, directory ?: defaultDirectory());
-    slice bPath(path.fileSystemRepresentation);
     C4Error err;
-    return c4db_deleteAtPath(bPath, &err) || err.code==0 || convertError(err, outError);
+    CBLStringBytes n(name);
+    CBLStringBytes dir(directory ?: defaultDirectory());
+    return c4db_deleteNamed(n, dir, &err) || err.code==0 || convertError(err, outError);
 }
 
 + (BOOL) databaseExists: (NSString*)name
@@ -491,13 +489,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (!setupDatabaseDirectory(dir, outError))
         return NO;
     
-    NSString* toPathStr = databasePath(name, dir);
-    slice toPath(toPathStr.fileSystemRepresentation);
-    slice fromPath(path.fileSystemRepresentation);
-    
     C4Error err;
-    C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
-    if (!(c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError))) {
+    slice fromPath(path.fileSystemRepresentation);
+    CBLStringBytes destinationName(name);
+    C4DatabaseConfig2 c4Config = c4DatabaseConfig2(config ?: [CBLDatabaseConfiguration new]);
+    if (!(c4db_copyNamed(fromPath, destinationName, &c4Config, &err) || err.code==0 || convertError(err, outError))) {
+        NSString* toPathStr = databasePath(name, dir);
         NSError* removeError;
         if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
             CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
@@ -577,14 +574,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBL_LOCK(self) {
         [self mustBeOpen];
         
-        FLSliceResult res = c4db_getIndexes(_c4db, nullptr);
+        FLSliceResult res = c4db_getIndexesInfo(_c4db, nullptr);
         FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
         FLSliceResult_Release(res);
         
-        id indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        NSArray* indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
         FLDoc_Release(doc);
         
-        return indexes;
+        // extract only names
+        NSMutableArray* ins = [NSMutableArray arrayWithCapacity: indexes.count];
+        for (NSDictionary* dict in indexes) {
+            [ins addObject: dict[@"name"]];
+        }
+        
+        return [NSArray arrayWithArray: ins];
     }
 }
 
@@ -764,13 +767,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
     if (_name.length == 0)
         return createError(CBLErrorInvalidParameter, outError);
+    
     NSString* path = databasePath(_name, dir);
-    slice bPath(path.fileSystemRepresentation);
-
-    C4DatabaseConfig c4config = c4DatabaseConfig(_config);
     CBLLogInfo(Database, @"Opening %@ at path %@", self, path);
+    
+    C4DatabaseConfig2 c4config = c4DatabaseConfig2(_config);
     C4Error err;
-    _c4db = c4db_open(bPath, &c4config, &err);
+    CBLStringBytes n(_name);
+    _c4db = c4db_openNamed(n, &c4config, &err);
     if (!_c4db)
         return convertError(err, outError);
     
@@ -806,12 +810,14 @@ static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
     return YES;
 }
 
-static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration *config) {
-    C4DatabaseConfig c4config = kDBConfig;
+static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
+    C4DatabaseConfig2 c4config = kDBConfig;
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
 #endif
+    CBLStringBytes dir(config.directory);
+    c4config.parentDirectory = dir;
     return c4config;
 }
 
