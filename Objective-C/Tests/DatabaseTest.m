@@ -173,14 +173,13 @@
 }
 #endif
 
-// TODO: https://issues.couchbase.com/browse/CBL-1392
-- (void) _testCreateWithSpecialCharacterDBNames {
+- (void) testCreateWithSpecialCharacterDBNames {
     // create db with default configuration
     NSError* error;
-    CBLDatabase* db = [self openDBNamed: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'" error: &error];
+    CBLDatabase* db = [self openDBNamed: @"`~@#$%^&*()_+{}|\\][=-.,<>?\":;'" error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", db.name);
-    AssertEqualObjects(db.name, @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'");
+    AssertEqualObjects(db.name, @"`~@#$%^&*()_+{}|\\][=-.,<>?\":;'");
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
     AssertEqual(0, (long)db.count);
     
