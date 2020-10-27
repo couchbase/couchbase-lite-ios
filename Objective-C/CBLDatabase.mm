@@ -493,8 +493,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     slice fromPath(path.fileSystemRepresentation);
     CBLStringBytes destinationName(name);
     C4DatabaseConfig2 c4Config = c4DatabaseConfig2(config ?: [CBLDatabaseConfiguration new]);
-    CBLStringBytes dir(config.directory);
-    c4config.parentDirectory = dir;
+    CBLStringBytes d(config.directory);
+    c4config.parentDirectory = d;
     
     if (!(c4db_copyNamed(fromPath, destinationName, &c4Config, &err) || err.code==0 || convertError(err, outError))) {
         NSString* toPathStr = databasePath(name, dir);
@@ -775,8 +775,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLLogInfo(Database, @"Opening %@ at path %@", self, path);
     
     C4DatabaseConfig2 c4config = c4DatabaseConfig2(_config);
-    CBLStringBytes dir(_config.directory);
-    c4config.parentDirectory = dir;
+    CBLStringBytes d(_config.directory);
+    c4config.parentDirectory = d;
     
     C4Error err;
     CBLStringBytes n(_name);
