@@ -230,7 +230,7 @@ then
   fi
   pushd "$OUTPUT_SWIFT_DIR" > /dev/null
   zip -ry "$OUTPUT_SWIFT_ZIP" *
-  popd > /dev/null# xcframework
+  popd > /dev/null
 
   # Generate API docs:
   echo "Generate API docs ..."
