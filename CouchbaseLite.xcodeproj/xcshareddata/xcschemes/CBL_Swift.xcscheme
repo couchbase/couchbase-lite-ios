@@ -28,8 +28,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       enableAddressSanitizer = "YES"
-      enableASanStackUseAfterReturn = "YES"
-      systemAttachmentLifetime = "keepNever">
+      enableASanStackUseAfterReturn = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"

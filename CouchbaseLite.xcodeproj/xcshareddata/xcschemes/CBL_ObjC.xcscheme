@@ -29,8 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "NO"
       enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
-      enableUBSanitizer = "YES"
-      systemAttachmentLifetime = "keepNever">
+      enableUBSanitizer = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
