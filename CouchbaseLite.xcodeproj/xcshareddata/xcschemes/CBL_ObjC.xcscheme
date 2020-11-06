@@ -30,7 +30,7 @@
       enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
       enableUBSanitizer = "YES"
-      codeCoverageEnabled = "YES">
+      systemAttachmentLifetime = "keepNever">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"

@@ -29,7 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
-      codeCoverageEnabled = "YES">
+      systemAttachmentLifetime = "keepNever">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
