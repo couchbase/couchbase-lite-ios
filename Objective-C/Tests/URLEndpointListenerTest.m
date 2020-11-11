@@ -191,16 +191,8 @@ typedef CBLURLEndpointListener Listener;
     config2.pinnedServerCertificate = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
     CBLReplicator* repl1 = [[CBLReplicator alloc] initWithConfig: config1];
     CBLReplicator* repl2 = [[CBLReplicator alloc] initWithConfig: config2];
-    
-    // get listener status
-    __block Listener* weakListener = _listener;
-    __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
     id changeListener = ^(CBLReplicatorChange * change) {
-        Listener* strongListener = weakListener;
-        if (change.status.activity == kCBLReplicatorBusy) {
-            maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
-            maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
-        } else if (change.status.activity == kCBLReplicatorStopped) {
+        if (change.status.activity == kCBLReplicatorStopped) {
             if (change.replicator == repl1)
                 [exp1 fulfill];
             else
@@ -214,10 +206,6 @@ typedef CBLURLEndpointListener Listener;
     [repl1 start];
     [repl2 start];
     [self waitForExpectations: @[exp1, exp2] timeout: timeout];
-    
-    // check replicators connected to listener
-    Assert(maxConnectionCount > 0);
-    Assert(maxActiveCount > 0);
     
     // all data are transferred to/from
     if (type < kCBLReplicatorTypePull)
