@@ -191,16 +191,8 @@ typedef CBLURLEndpointListener Listener;
     config2.pinnedServerCertificate = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
     CBLReplicator* repl1 = [[CBLReplicator alloc] initWithConfig: config1];
     CBLReplicator* repl2 = [[CBLReplicator alloc] initWithConfig: config2];
-    
-    // get listener status
-    __block Listener* weakListener = _listener;
-    __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
     id changeListener = ^(CBLReplicatorChange * change) {
-        Listener* strongListener = weakListener;
-        if (change.status.activity == kCBLReplicatorBusy) {
-            maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
-            maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
-        } else if (change.status.activity == kCBLReplicatorStopped) {
+        if (change.status.activity == kCBLReplicatorStopped) {
             if (change.replicator == repl1)
                 [exp1 fulfill];
             else
@@ -214,10 +206,6 @@ typedef CBLURLEndpointListener Listener;
     [repl1 start];
     [repl2 start];
     [self waitForExpectations: @[exp1, exp2] timeout: timeout];
-    
-    // check replicators connected to listener
-    Assert(maxConnectionCount > 0);
-    Assert(maxActiveCount > 0);
     
     // all data are transferred to/from
     if (type < kCBLReplicatorTypePull)
@@ -507,7 +495,10 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(_listener.urls.count, 0);
 }
 
-- (void) testStatus {
+- (void) testConnectionStatus {
+    XCTestExpectation* replicatorStop = [self expectationWithDescription: @"Replicator Stopped"];
+    XCTestExpectation* pullFilterBusy = [self expectationWithDescription: @"Pull filter busy"];
+    
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.port = kWsPort;
     config.disableTLS = YES;
@@ -522,24 +513,30 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(_listener.status.connectionCount, 0);
     AssertEqual(_listener.status.activeConnectionCount, 0);
     
-    [self generateDocumentWithID: @"doc-1"];
+    // save doc on remote end
+    CBLMutableDocument* doc = [self createDocument];
+    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save %@", err);
     
-    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
-    id rConfig = [self configWithTarget: _listener.localEndpoint type: kCBLReplicatorTypePush continuous: NO];
-    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
-    
+    CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
+                                                            type: kCBLReplicatorTypePull
+                                                      continuous: NO];
     __block Listener* weakListener = _listener;
     __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
-    id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+    [rConfig setPullFilter: ^BOOL(CBLDocument * _Nonnull document, CBLDocumentFlags flags) {
         Listener* strongListener = weakListener;
         maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
         maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
+        [pullFilterBusy fulfill];
+        return true;
+    }];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
+    id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
         if (change.status.activity == kCBLReplicatorStopped)
-            [x fulfill];
+            [replicatorStop fulfill];
     }];
     
     [replicator start];
-    [self waitForExpectations: @[x] timeout: timeout];
+    [self waitForExpectations: @[pullFilterBusy, replicatorStop] timeout: timeout];
     [replicator removeChangeListenerWithToken: token];
     
     AssertEqual(maxActiveCount, 1);
