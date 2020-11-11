@@ -569,6 +569,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testConnectionStatus() throws {
         if !self.keyChainAccessAllowed { return }
         
+        let replicatorStop = expectation(description: "replicator stop")
+        let pullFilterBusy = expectation(description: "pull filter busy")
         let config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         config.disableTLS = true
@@ -581,17 +583,32 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertEqual(self.listener!.status.connectionCount, 0)
         XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
         
-        try generateDocument(withID: "doc-1")
-        let rConfig = self.config(target: self.listener!.localURLEndpoint,
-                                 type: .pushAndPull, continuous: false, auth: nil,
-                                 acceptSelfSignedOnly: false, serverCert: nil)
+        let doc1 = createDocument()
+        try self.oDB.saveDocument(doc1)
+        
         var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
-        run(config: rConfig, reset: false, expectedError: nil) { (replicator) in
-            replicator.addChangeListener { (change) in
-                maxConnectionCount = max(self.listener!.status.connectionCount, maxConnectionCount)
-                maxActiveCount = max(self.listener!.status.activeConnectionCount, maxActiveCount)
+        let rConfig = ReplicatorConfiguration(database: self.db, target: self.listener!.localURLEndpoint)
+        rConfig.replicatorType = .pull
+        rConfig.continuous = false
+        rConfig.pullFilter = { (doc, flags) -> Bool in
+            let s = self.listener!.status
+            maxConnectionCount = max(s.connectionCount, maxConnectionCount)
+            maxActiveCount = max(s.activeConnectionCount, maxActiveCount)
+            pullFilterBusy.fulfill()
+            return true
+        }
+        
+        let repl: Replicator = Replicator(config: rConfig)
+        let token = repl.addChangeListener { (change) in
+            if change.status.activity == .stopped {
+                replicatorStop.fulfill()
             }
         }
+        
+        repl.start()
+        wait(for: [pullFilterBusy, replicatorStop], timeout: 5.0)
+        repl.removeChangeListener(withToken: token)
+        
         XCTAssertEqual(maxConnectionCount, 1)
         XCTAssertEqual(maxActiveCount, 1)
         XCTAssertEqual(self.oDB.count, 1)
