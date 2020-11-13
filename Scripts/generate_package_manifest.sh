@@ -63,9 +63,6 @@ CHECKSUM=`swift package compute-checksum ${ZIP_PATH}`
 rm "Package.swift"
 
 # generates the package manifest
-if [ -z "$EE" ]
-then
-  createManifest $OUTPUT_DIR/"Package_CE.swift"
-else
-  createManifest $OUTPUT_DIR/"Package_EE.swift"
-fi
+FILENAME="$(basename $ZIP_PATH)-Package.swift"
+createManifest $OUTPUT_DIR/$FILENAME
+  
