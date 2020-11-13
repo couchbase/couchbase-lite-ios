@@ -414,6 +414,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testNonTLSNullListenerAuthenticator() throws {
+        if !self.keyChainAccessAllowed { return }
+        
         let listener = try listen(tls: false)
         
         // Replicator - No Authenticator:
@@ -433,6 +435,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
        
     func testNonTLSPasswordListenerAuthenticator() throws {
+        if !self.keyChainAccessAllowed { return }
+        
         // Listener:
         let listenerAuth = ListenerPasswordAuthenticator.init {
             (username, password) -> Bool in
