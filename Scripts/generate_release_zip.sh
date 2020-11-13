@@ -68,7 +68,7 @@ then
 fi
 
 # As long as we support `.framework`, we will create .framework as well as .xcframework zips.
-# COMBINED=YES
+COMBINED=YES
 
 if [ -z "$EE" ]
 then
