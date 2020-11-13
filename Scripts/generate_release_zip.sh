@@ -124,7 +124,7 @@ then
   echo "Run ObjC iOS tests ..."
   # iOS-App target runs Keychain-Accessing tests
   sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild test \
+  xcodebuild clean test \
     -project CouchbaseLite.xcodeproj \
     -scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
     -configuration "$CONFIGURATION_TEST" \
@@ -138,7 +138,7 @@ then
     # Objective-C:
     echo "Generate coverage report for ObjC ..."
     slather coverage --html \
-        --scheme "${SCHEME_PREFIX}_ObjC" \
+        --scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
         --configuration "$CONFIGURATION_TEST" \
         --ignore "vendor/*" --ignore "Swift/*" \
         --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
@@ -149,17 +149,33 @@ then
   fi
 
   echo "Run Swift macOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_Swift" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild clean test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk iphonesimulator \
+    -destination "$TEST_SIMULATOR" \
+    -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
   then
     # Swift:
     echo "Generate coverage report for Swift ..."
-    slather coverage --html --scheme "${SCHEME_PREFIX}_Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html \
+        --scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
+        --configuration "$CONFIGURATION_TEST"  \
+        --ignore "vendor/*" --ignore "Objective-C/*" \
+        --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" \
+        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" \
+        CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
