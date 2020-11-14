@@ -138,12 +138,16 @@ class TLSIdentityTest: CBLTestCase {
     
     override func setUp() {
         super.setUp()
+        if (!keyChainAccessAllowed) { return }
+        
         try! TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         try! TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
     }
     
     override func tearDown() {
         super.tearDown()
+        if (!keyChainAccessAllowed) { return }
+        
         try! TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         try! TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
     }

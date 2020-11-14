@@ -6,8 +6,8 @@ function usage
 {
   echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]"
   echo "\nOptions:"
-  echo "  --xcframework\t create a release package with .xcframework(only Swift)"
-  echo "  --combined\t\t create a release package with .xcframework(only Swift) and .framework"
+  echo "  --xcframework\t create a release package with .xcframework"
+  echo "  --combined\t\t create a release package with .xcframework and .framework"
   echo "  --notest\t create a release package but no tests needs to be run"
   echo "  --nocov\t create a release package, run tests but no code coverage zip"
   echo "  --testonly\t run tests but no release package"
@@ -124,7 +124,7 @@ then
   echo "Run ObjC iOS tests ..."
   # iOS-App target runs Keychain-Accessing tests
   sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild test \
+  xcodebuild clean test \
     -project CouchbaseLite.xcodeproj \
     -scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
     -configuration "$CONFIGURATION_TEST" \
@@ -138,7 +138,7 @@ then
     # Objective-C:
     echo "Generate coverage report for ObjC ..."
     slather coverage --html \
-        --scheme "${SCHEME_PREFIX}_ObjC" \
+        --scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
         --configuration "$CONFIGURATION_TEST" \
         --ignore "vendor/*" --ignore "Swift/*" \
         --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
@@ -149,17 +149,33 @@ then
   fi
 
   echo "Run Swift macOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk macosx
+  xcodebuild test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_Swift" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk macosx
 
   echo "Run Swift iOS tests ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "${SCHEME_PREFIX}_Swift" -configuration "$CONFIGURATION_TEST" -sdk iphonesimulator -destination "$TEST_SIMULATOR" -enableCodeCoverage YES
+  xcodebuild clean test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
+    -configuration "$CONFIGURATION_TEST" \
+    -sdk iphonesimulator \
+    -destination "$TEST_SIMULATOR" \
+    -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
   if [ -z "$NO_COV" ]
   then
     # Swift:
     echo "Generate coverage report for Swift ..."
-    slather coverage --html --scheme "${SCHEME_PREFIX}_Swift" --configuration "$CONFIGURATION_TEST"  --ignore "vendor/*" --ignore "Objective-C/*" --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" CouchbaseLite.xcodeproj > /dev/null
+    slather coverage --html \
+        --scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
+        --configuration "$CONFIGURATION_TEST"  \
+        --ignore "vendor/*" --ignore "Objective-C/*" \
+        --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" \
+        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" \
+        CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
     pushd "$OUTPUT_DIR" > /dev/null
@@ -195,6 +211,8 @@ OUTPUT_SWIFT_ZIP=../couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip
 
 OUTPUT_SWIFT_XC_DIR=$OUTPUT_DIR/swift_xc_$EDITION
 OUTPUT_SWIFT_XC_ZIP=../couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip
+OUTPUT_OBJC_XC_DIR=$OUTPUT_DIR/objc_xc_$EDITION
+OUTPUT_OBJC_XC_ZIP=../couchbase-lite-objc_xc_$EDITION$VERSION_SUFFIX.zip
 
 OUTPUT_DOCS_DIR=$OUTPUT_DIR/docs
 OUTPUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
@@ -250,6 +268,7 @@ if [[ ! -z $COMBINED ]] || [[ ! -z $XCFRAMEWORK ]]
 then
   echo "Building xcframework..."
   set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+  set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
 
   echo "Make Swift xcframework zip file ..."
   mkdir -p "$OUTPUT_SWIFT_XC_DIR"
@@ -260,10 +279,21 @@ then
   pushd "$OUTPUT_SWIFT_XC_DIR" > /dev/null
   zip -ry "$OUTPUT_SWIFT_XC_ZIP" *
   popd > /dev/null
+  
+  echo "Make ObjC XCFramework zip file ..."
+  mkdir -p "$OUTPUT_OBJC_XC_DIR"
+  cp -R "$BUILD_DIR/xc/${SCHEME_PREFIX}_ObjC"/* "$OUTPUT_OBJC_XC_DIR"
+  if [[ -n $WORKSPACE ]]; then
+      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_XC_DIR"/LICENSE.txt
+  fi
+  pushd "$OUTPUT_OBJC_XC_DIR" > /dev/null
+  zip -ry "$OUTPUT_OBJC_XC_ZIP" *
+  popd > /dev/null
 
   # Generate swift checksum file:
   echo "Generate swift package checksum..."
   sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip" -o $OUTPUT_DIR $EXTRA_CMD_OPTIONS
+  sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-objc_xc_$EDITION$VERSION_SUFFIX.zip" -o $OUTPUT_DIR $EXTRA_CMD_OPTIONS
 fi
 
 # Cleanup

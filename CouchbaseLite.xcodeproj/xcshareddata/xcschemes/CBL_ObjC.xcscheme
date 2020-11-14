@@ -29,8 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "NO"
       enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
-      enableUBSanitizer = "YES"
-      codeCoverageEnabled = "YES">
+      enableUBSanitizer = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
