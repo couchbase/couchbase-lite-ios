@@ -235,7 +235,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         let token2 = repl2.addChangeListener(changeListener)
         repl1.start()
         repl2.start()
-        wait(for: [idleExp1, idleExp2], timeout: 5.0)
+        wait(for: [idleExp1, idleExp2], timeout: 10.0) // TODO: FIXME
         
         if (isDeleteDBs) {
             try db2.delete()
@@ -245,7 +245,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             try self.oDB.close()
         }
         
-        wait(for: [stopExp1, stopExp2], timeout: 5.0)
+        wait(for: [stopExp1, stopExp2], timeout: 10.0) // TODO: FIXME
         repl1.removeChangeListener(withToken: token1)
         repl2.removeChangeListener(withToken: token2)
         try stopListen()
@@ -705,7 +705,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         repl1.start()
         repl2.start()
-        wait(for: [exp1, exp2], timeout: 5.0)
+        wait(for: [exp1, exp2], timeout: 10.0) // TODO: FIXME
         
         XCTAssertEqual(self.oDB.count, 3)
         XCTAssertEqual(self.db.count, 3)
