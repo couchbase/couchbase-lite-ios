@@ -662,35 +662,25 @@ class URLEndpontListenerTest: ReplicatorTest {
         let exp1 = expectation(description: "replicator#1 stop")
         let exp2 = expectation(description: "replicator#2 stop")
         
-        // listener
-        let doc = createDocument()
-        try self.oDB.saveDocument(doc)
+        // listener)
         try listen()
         
-        // Replicator#1 (otherDB -> DB#1)
-        let doc1 = createDocument()
-        try self.db.saveDocument(doc1)
-        let target = DatabaseEndpoint(database: self.db)
-        let repl1 = replicator(db: self.oDB, continuous: true, target: target, serverCert: nil)
-        
-        // Replicator#2 (DB#2 -> Listener(otherDB))
+        // single doc created on db#1, db#2, oDB
+        let doc = createDocument()
+        try self.oDB.saveDocument(doc)
+                                  
         try deleteDB(name: "db2")
         let db2 = try openDB(name: "db2")
         let doc2 = createDocument()
         try db2.saveDocument(doc2)
-        let repl2 = replicator(db: db2,
-                               continuous: true,
-                               target: self.listener!.localURLEndpoint,
-                               serverCert: self.listener!.tlsIdentity!.certs[0])
         
+        let doc1 = createDocument()
+        try self.db.saveDocument(doc1)
+        
+        // Replicator#1 (otherDB <-> DB#1)
+        let target = DatabaseEndpoint(database: self.db)
+        let repl1 = replicator(db: self.oDB, continuous: false, target: target, serverCert: nil)
         let changeListener = { (change: ReplicatorChange) in
-            if change.status.activity == .idle &&
-                change.status.progress.completed == change.status.progress.total {
-                if self.oDB.count == 3 && self.db.count == 3 && db2.count == 3 {
-                    change.replicator.stop()
-                }
-            }
-            
             if change.status.activity == .stopped {
                 if change.replicator.config.database.name == "db2" {
                     exp2.fulfill()
@@ -701,14 +691,20 @@ class URLEndpontListenerTest: ReplicatorTest {
             
         }
         let token1 = repl1.addChangeListener(changeListener)
-        let token2 = repl2.addChangeListener(changeListener)
-        
         repl1.start()
-        repl2.start()
-        wait(for: [exp1, exp2], timeout: 5.0)
+        wait(for: [exp1], timeout: 5.0)
+        XCTAssertEqual(self.oDB.count, 2)
+        XCTAssertEqual(self.db.count, 2)
         
+        // Replicator#2 (otherDB <-> DB#2)
+        let repl2 = replicator(db: db2,
+                               continuous: false,
+                               target: self.listener!.localURLEndpoint,
+                               serverCert: self.listener!.tlsIdentity!.certs[0])
+        let token2 = repl2.addChangeListener(changeListener)
+        repl2.start()
+        wait(for: [exp2], timeout: 5.0)
         XCTAssertEqual(self.oDB.count, 3)
-        XCTAssertEqual(self.db.count, 3)
         XCTAssertEqual(db2.count, 3)
         
         repl1.removeChangeListener(withToken: token1)
