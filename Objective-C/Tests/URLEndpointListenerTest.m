@@ -1274,12 +1274,16 @@ typedef CBLURLEndpointListener Listener;
     SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
     CBLReplicator* replicator = [self replicator: self.otherDB
                                        continous: YES
+                                 
                                           target: listener.localEndpoint
                                       serverCert: nil];
     [replicator addChangeListener: ^(CBLReplicatorChange *change) {
         CBLReplicatorActivityLevel activity = change.status.activity;
-        if (activity == kCBLReplicatorStopped && change.status.error)
+        if (activity == kCBLReplicatorStopped && change.status.error) {
+            // TODO: https://issues.couchbase.com/browse/CBL-1471
+            AssertEqual(change.status.error.code, CBLErrorTLSCertUnknownRoot);
             [x1 fulfill];
+        }
     }];
     Assert(replicator.serverCertificate == NULL);
     
@@ -1476,6 +1480,7 @@ typedef CBLURLEndpointListener Listener;
                                                     label:kServerCertLabel error:&error];
         AssertNil(error);
     }];
+    AssertEqual(identity.certs.count, 2);
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.tlsIdentity = identity;
@@ -1551,6 +1556,93 @@ typedef CBLURLEndpointListener Listener;
              serverCert: nil
               errorCode: ECONNREFUSED
             errorDomain: NSPOSIXErrorDomain];
+}
+
+- (void) testTLSClientAuthenticatorWithChainedServerCredentials {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    
+    // Ignore the exception so that the exception breakpoint will not be triggered.
+    __block NSError* error;
+    __block CBLTLSIdentity* identity;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    [self ignoreException: ^{
+        identity = [CBLTLSIdentity importIdentityWithData: data
+        password: @"123"
+           label: kServerCertLabel
+           error: &error];
+    }];
+    AssertEqual(identity.certs.count, 2);
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = identity;
+    
+    // Ignore the exception from signing using the imported private key
+    [self ignoreException:^{
+        [self listen: config];
+    }];
+    
+    // A client with `a pinned certificate`
+    // should refuse a server that presents certificate chain (even if the root is the pinned cert)
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) identity.certs[1]
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    // A client with a `acceptSelfSignedOnly` should refuse a server that presents certificate chain
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: YES
+             serverCert: nil
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    // cleanup
+    [self stopListen];
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+}
+
+// TODO: https://issues.couchbase.com/browse/CBL-1470
+- (void) _testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    
+    // Ignore the exception so that the exception breakpoint will not be triggered.
+    __block NSError* error;
+    __block CBLTLSIdentity* identity;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    [self ignoreException: ^{
+        identity = [CBLTLSIdentity importIdentityWithData: data
+        password: @"123"
+           label: kServerCertLabel
+           error: &error];
+    }];
+    AssertEqual(identity.certs.count, 2);
+    
+    CBLListenerCertificateAuthenticator* listenerAuth =
+        [[CBLListenerCertificateAuthenticator alloc] initWithRootCerts: @[identity.certs[1]]];
+    [self listenWithTLS: YES auth: listenerAuth];
+    
+    [self generateDocumentWithID: @"doc-1"];
+    AssertEqual(self.otherDB.count, 0);
+    
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity]
+             serverCert: nil
+              errorCode: 0
+            errorDomain: nil];
+    
 }
 
 #pragma mark - Close & Delete Replicators and Listeners
