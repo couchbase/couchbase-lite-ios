@@ -1274,7 +1274,6 @@ typedef CBLURLEndpointListener Listener;
     SecCertificateRef serverCert = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
     CBLReplicator* replicator = [self replicator: self.otherDB
                                        continous: YES
-                                 
                                           target: listener.localEndpoint
                                       serverCert: nil];
     [replicator addChangeListener: ^(CBLReplicatorChange *change) {
