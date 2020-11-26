@@ -1629,7 +1629,6 @@ typedef CBLURLEndpointListener Listener;
              serverCert: nil
               errorCode: 0
             errorDomain: nil];
-    
 }
 
 #pragma mark - Close & Delete Replicators and Listeners
