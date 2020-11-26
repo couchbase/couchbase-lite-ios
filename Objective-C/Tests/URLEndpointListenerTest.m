@@ -1553,6 +1553,48 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: NSPOSIXErrorDomain];
 }
 
+- (void) testTLSSelfSignedOnlyClientAuthenticatorWithChainedServerCredentials {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    
+    // Ignore the exception so that the exception breakpoint will not be triggered.
+    __block NSError* error;
+    __block CBLTLSIdentity* identity;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    [self ignoreException: ^{
+        identity = [CBLTLSIdentity importIdentityWithData: data
+                                                 password: @"123"
+                                                    label: kServerCertLabel
+                                                    error: &error];
+    }];
+    AssertEqual(identity.certs.count, 2);
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = identity;
+    
+    // Ignore the exception from signing using the imported private key
+    [self ignoreException:^{
+        [self listen: config];
+    }];
+    
+    // A client with a `acceptSelfSignedOnly`, will force trust the server
+    self.disableDefaultServerCertPinning = YES;
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: YES
+             serverCert: nil
+              errorCode: 0
+            errorDomain: nil];
+    
+    // cleanup
+    [self stopListen];
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+}
+
 #pragma mark - Close & Delete Replicators and Listeners
 
 - (void) testCloseWithActiveReplicationsAndURLEndpointListener {
