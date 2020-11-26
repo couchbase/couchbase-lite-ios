@@ -1058,6 +1058,75 @@ class URLEndpontListenerTest: ReplicatorTest {
             expectedError: Int(ECONNREFUSED))
     }
     
+    /// A client with `a pinned certificate`
+    /// should refuse a server that presents certificate chain (even if the root is the pinned cert)
+    func testTLSPinnedCertClientAuthenticatorWithChainedServerCredentials() throws {
+        if !keyChainAccessAllowed { return }
+        
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        XCTAssertEqual(identity.certs.count, 2)
+        
+        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        
+        ignoreException {
+            try self.listen(config: config)
+        }
+        
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            serverCert: identity!.certs[1],
+            expectedError: CBLErrorTLSCertUnknownRoot)
+        
+        try stopListener(listener: listener!)
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
+    // TODO: https://issues.couchbase.com/browse/CBL-1470
+    func _testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials() throws {
+        if !keyChainAccessAllowed { return }
+        
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        
+        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        config.authenticator = ListenerCertificateAuthenticator.init(rootCerts: [identity.certs[1]])
+        ignoreException {
+            self.listener = URLEndpointListener(config: config)
+            try self.listener?.start()
+        }
+        
+        try generateDocument(withID: "doc-1")
+        XCTAssertEqual(oDB.count, 0)
+        
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: ClientCertificateAuthenticator(identity: identity),
+            acceptSelfSignedOnly: true,
+            serverCert: nil,
+            expectedError: 0)
+        
+        try stopListener(listener: listener!)
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
     // MARK: -- Close & Delete Replicators and Listeners
     
     func testCloseWithActiveReplicationsAndURLEndpointListener() throws {

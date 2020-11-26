@@ -1557,7 +1557,7 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: NSPOSIXErrorDomain];
 }
 
-- (void) testTLSClientAuthenticatorWithChainedServerCredentials {
+- (void) testTLSPinnedCertClientAuthenticatorWithChainedServerCredentials {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -1582,23 +1582,11 @@ typedef CBLURLEndpointListener Listener;
         [self listen: config];
     }];
     
-    // A client with `a pinned certificate`
-    // should refuse a server that presents certificate chain (even if the root is the pinned cert)
     [self runWithTarget: _listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
           authenticator: nil
              serverCert: (__bridge SecCertificateRef) identity.certs[1]
-              errorCode: CBLErrorTLSCertUnknownRoot
-            errorDomain: CBLErrorDomain];
-    
-    // A client with a `acceptSelfSignedOnly` should refuse a server that presents certificate chain
-    [self runWithTarget: _listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: nil
-   acceptSelfSignedOnly: YES
-             serverCert: nil
               errorCode: CBLErrorTLSCertUnknownRoot
             errorDomain: CBLErrorDomain];
     
