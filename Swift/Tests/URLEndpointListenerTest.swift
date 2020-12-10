@@ -856,6 +856,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .stopped && change.status.error != nil {
+                // TODO: https://issues.couchbase.com/browse/CBL-1471
+                XCTAssertEqual((change.status.error! as NSError).code, CBLErrorTLSCertUnknownRoot)
                 x1.fulfill()
             }
         }
