@@ -1128,6 +1128,41 @@ class URLEndpontListenerTest: ReplicatorTest {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
+    func testTLSSelfSignedClientAuthenticatorWithChainedCredentials() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        self.ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        XCTAssertEqual(identity.certs.count, 2)
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.tlsIdentity = identity
+        
+        self.ignoreException {
+            try self.listen(config: config)
+        }
+        
+        try generateDocument(withID: "doc-1")
+        XCTAssertEqual(self.oDB.count, 0)
+        
+        // Reject the server with non-self-signed cert
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            acceptSelfSignedOnly: true,
+            serverCert: nil,
+            expectedError: CBLErrorTLSCertUntrusted)
+        
+        try stopListen()
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
     // MARK: -- Close & Delete Replicators and Listeners
     
     func testCloseWithActiveReplicationsAndURLEndpointListener() throws {
