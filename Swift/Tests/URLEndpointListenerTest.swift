@@ -19,7 +19,7 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 class URLEndpontListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4984
     let wssPort: UInt16 = 4985
@@ -164,15 +164,13 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func checkEqual(cert cert1: SecCertificate, andCert cert2: SecCertificate) {
-        if #available(iOS 11, *) {
-            var cn1: CFString?
-            XCTAssertEqual(SecCertificateCopyCommonName(cert1, &cn1), errSecSuccess)
-            
-            var cn2: CFString?
-            XCTAssertEqual(SecCertificateCopyCommonName(cert2, &cn2), errSecSuccess)
-            
-            XCTAssertEqual(cn1! as String, cn2! as String)
-        }
+        var cn1: CFString?
+        XCTAssertEqual(SecCertificateCopyCommonName(cert1, &cn1), errSecSuccess)
+        
+        var cn2: CFString?
+        XCTAssertEqual(SecCertificateCopyCommonName(cert2, &cn2), errSecSuccess)
+        
+        XCTAssertEqual(cn1! as String, cn2! as String)
     }
     
     func validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: Bool) throws {
@@ -463,7 +461,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListener()
     }
     
-    @available(macOS 10.12, iOS 10.3, *)
     func testClientCertAuthWithCallback() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -491,7 +488,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         try stopListener()
     }
     
-    @available(macOS 10.12, iOS 10.3, *)
     func testClientCertAuthWithCallbackError() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -1067,7 +1063,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
 }
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 extension URLEndpointListener {
     var localURL: URL {
         assert(self.port != nil && self.port! > UInt16(0))
