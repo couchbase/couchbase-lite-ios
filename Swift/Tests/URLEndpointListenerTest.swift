@@ -845,8 +845,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .stopped && change.status.error != nil {
-                // TODO: https://issues.couchbase.com/browse/CBL-1471
-                XCTAssertEqual((change.status.error! as NSError).code, CBLErrorTLSCertUnknownRoot)
                 x1.fulfill()
             }
         }
@@ -1048,41 +1046,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         // Check to ensure that the replicator is not accessible:
         run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
             expectedError: Int(ECONNREFUSED))
-    }
-    
-    func testTLSSelfSignedClientAuthenticatorWithChainedCredentials() throws {
-        if !self.keyChainAccessAllowed { return }
-        
-        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
-        var identity: TLSIdentity!
-        self.ignoreException {
-            identity = try TLSIdentity.importIdentity(withData: data,
-                                                      password: "123",
-                                                      label: self.serverCertLabel)
-        }
-        XCTAssertEqual(identity.certs.count, 2)
-        
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
-        config.tlsIdentity = identity
-        
-        self.ignoreException {
-            try self.listen(config: config)
-        }
-        
-        try generateDocument(withID: "doc-1")
-        XCTAssertEqual(self.oDB.count, 0)
-        
-        // Reject the server with non-self-signed cert
-        run(target: listener!.localURLEndpoint,
-            type: .pushAndPull,
-            continuous: false,
-            auth: nil,
-            acceptSelfSignedOnly: true,
-            serverCert: nil,
-            expectedError: CBLErrorTLSCertUntrusted)
-        
-        try stopListener()
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
     // MARK: -- Close & Delete Replicators and Listeners
