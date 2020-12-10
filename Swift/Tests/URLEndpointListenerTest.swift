@@ -1091,10 +1091,11 @@ class URLEndpontListenerTest: ReplicatorTest {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1470
-    func _testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials() throws {
+    // A listener with TLS enabled and a client authenticator pinning certificates
+    // should accept a client that presents a cert chain whose root is pinned
+    func testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials() throws {
         if !keyChainAccessAllowed { return }
-        
+            
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         var identity: TLSIdentity!

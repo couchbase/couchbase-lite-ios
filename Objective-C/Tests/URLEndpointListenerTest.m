@@ -1596,8 +1596,9 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(error);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1470
-- (void) _testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials {
+// A listener with TLS enabled and a client authenticator pinning certificates
+// should accept a client that presents a cert chain whose root is pinned
+- (void) testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -1622,6 +1623,7 @@ typedef CBLURLEndpointListener Listener;
     [self generateDocumentWithID: @"doc-1"];
     AssertEqual(self.otherDB.count, 0);
     
+    self.disableDefaultServerCertPinning = YES;
     [self runWithTarget: _listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
