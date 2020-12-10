@@ -400,7 +400,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         try stopListener(listener: listener)
         XCTAssertNil(listener.tlsIdentity)
-        try cleanupTLSIdentity(true) // cleanup the server tlsIdentity
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
     func testTLSListenerUserIdentity() throws {
@@ -1135,7 +1135,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             expectedError: CBLErrorHTTPAuthRequired)
         
         // cleanup client cert authenticator identity
-        try cleanupTLSIdentity(false)
+        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Replicator - Success:
         run(target: self.listener!.localURLEndpoint,
