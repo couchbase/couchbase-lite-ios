@@ -201,7 +201,7 @@ static BOOL sOnlyTrustAnchorCerts;
     if (!isSelfSigned) {
         MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
             @"Server SSL certificate is not self-signed");
-        CBLLogVerbose(WebSocket, @"Server SSL certificate is not self-signed, force trusting...");
+        return nil;
     }
     
     [self forceTrusted];

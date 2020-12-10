@@ -1631,6 +1631,54 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: nil];
 }
 
+- (void) testTLSSelfSignedClientAuthenticatorWithChainedCredentials {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
+    
+    // Ignore the exception so that the exception breakpoint will not be triggered.
+    __block NSError* error;
+    __block CBLTLSIdentity* identity;
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    [self ignoreException: ^{
+        identity = [CBLTLSIdentity importIdentityWithData: data
+        password: @"123"
+           label: kServerCertLabel
+           error: &error];
+    }];
+    AssertEqual(identity.certs.count, 2);
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.tlsIdentity = identity;
+    
+    // Ignore the exception from signing using the imported private key
+    [self ignoreException:^{
+        [self listen: config];
+    }];
+    
+    [self generateDocumentWithID: @"doc-1"];
+    AssertEqual(self.otherDB.count, 0);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Reject the server with non-self-signed cert
+    [self ignoreException: ^{
+        [self runWithTarget: _listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: YES
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUntrusted
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // cleanup
+    [self stopListen];
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+}
+
 #pragma mark - Close & Delete Replicators and Listeners
 
 - (void) testCloseWithActiveReplicationsAndURLEndpointListener {
