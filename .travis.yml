@@ -14,6 +14,6 @@ before_install:
   - brew install doxygen
   - gem install slather
 # Keep the xcodebuild quiet or else the job will exceed the maximum log length, and will terminate
-script: travis_wait 20 xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 11" -enableCodeCoverage YES -quiet
+script: travis_wait 45 xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEME" -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 11" -enableCodeCoverage YES -quiet
 after_success:
   - test "$SCHEME" = "CBL_ObjC" && slather
