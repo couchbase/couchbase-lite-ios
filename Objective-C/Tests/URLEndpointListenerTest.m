@@ -1362,43 +1362,6 @@ typedef CBLURLEndpointListener Listener;
     [self stopListen];
 }
 
-- (void) testAcceptOnlySelfSignedCertificate {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Listener:
-    Listener* listener = [self listenWithTLS: YES];
-    AssertNotNil(listener);
-    AssertEqual(listener.tlsIdentity.certs.count, 1);
-    
-    self.disableDefaultServerCertPinning = YES;
-    
-    // Replicator - TLS Error:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: NO
-                 serverCert: nil
-                  errorCode: CBLErrorTLSCertUnknownRoot
-                errorDomain: CBLErrorDomain];
-    }];
-    
-    // Replicator - Success:
-    [self ignoreException: ^{
-        [self runWithTarget: listener.localEndpoint
-                       type: kCBLReplicatorTypePushAndPull
-                 continuous: NO
-              authenticator: nil
-       acceptSelfSignedOnly: YES
-                 serverCert: nil
-                  errorCode: 0
-                errorDomain: nil];
-    }];
-    
-    [self stopListener: listener];
-}
-
 - (void) testPinnedServerCertificate {
     if (!self.keyChainAccessAllowed) return;
     
@@ -1432,37 +1395,6 @@ typedef CBLURLEndpointListener Listener;
                   errorCode: 0
                 errorDomain: nil];
     }];
-    
-    [self stopListener: listener];
-}
-
-- (void) testAcceptOnlySelfSignedCertificateWithPinnedCertificate {
-    if (!self.keyChainAccessAllowed) return;
-    
-    // Listener:
-    Listener* listener = [self listenWithTLS: YES];
-    AssertNotNil(listener);
-    AssertEqual(listener.tlsIdentity.certs.count, 1);
-    
-    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
-    [self runWithTarget: listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: nil
-   acceptSelfSignedOnly: YES
-             serverCert: self.defaultServerCert
-              errorCode: CBLErrorTLSCertUnknownRoot
-            errorDomain: CBLErrorDomain];
-    
-    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
-    [self runWithTarget: listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: nil
-   acceptSelfSignedOnly: NO
-             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
-              errorCode: 0
-            errorDomain: nil];
     
     [self stopListener: listener];
 }
@@ -1557,7 +1489,8 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: NSPOSIXErrorDomain];
 }
 
-- (void) testTLSPinnedCertClientAuthenticatorWithChainedServerCredentials {
+// chained cert server + pin root cert instead of leaf cert
+- (void) testChainedCertServerAndCertPinning {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -1582,6 +1515,7 @@ typedef CBLURLEndpointListener Listener;
         [self listen: config];
     }];
     
+    // pinning root cert should fail
     [self runWithTarget: _listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
@@ -1589,6 +1523,15 @@ typedef CBLURLEndpointListener Listener;
              serverCert: (__bridge SecCertificateRef) identity.certs[1]
               errorCode: CBLErrorTLSCertUnknownRoot
             errorDomain: CBLErrorDomain];
+    
+    // pinning leaf cert shoud be successful
+    [self runWithTarget: _listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+             serverCert: (__bridge SecCertificateRef) identity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
     
     // cleanup
     [self stopListen];
@@ -1598,7 +1541,7 @@ typedef CBLURLEndpointListener Listener;
 
 // A listener with TLS enabled and a client authenticator pinning certificates
 // should accept a client that presents a cert chain whose root is pinned
-- (void) testTLSPinnedCertificateListenerAuthenticatorWithMatchingChainClientCredentials {
+- (void) testCertAuthWithRootCertAndChainedCertServer {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -1633,7 +1576,78 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: nil];
 }
 
-- (void) testTLSSelfSignedClientAuthenticatorWithChainedCredentials {
+#pragma mark - acceptSelfSignedOnly tests
+
+- (void) testAcceptOnlySelfSignedCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    self.disableDefaultServerCertPinning = YES;
+    
+    // Replicator - TLS Error:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: NO
+                 serverCert: nil
+                  errorCode: CBLErrorTLSCertUnknownRoot
+                errorDomain: CBLErrorDomain];
+    }];
+    
+    // Replicator - Success:
+    [self ignoreException: ^{
+        [self runWithTarget: listener.localEndpoint
+                       type: kCBLReplicatorTypePushAndPull
+                 continuous: NO
+              authenticator: nil
+       acceptSelfSignedOnly: YES
+                 serverCert: nil
+                  errorCode: 0
+                errorDomain: nil];
+    }];
+    
+    [self stopListener: listener];
+}
+
+
+- (void) testAcceptOnlySelfSignedCertificateWithPinnedCertificate {
+    if (!self.keyChainAccessAllowed) return;
+    
+    // Listener:
+    Listener* listener = [self listenWithTLS: YES];
+    AssertNotNil(listener);
+    AssertEqual(listener.tlsIdentity.certs.count, 1);
+    
+    // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: YES
+             serverCert: self.defaultServerCert
+              errorCode: CBLErrorTLSCertUnknownRoot
+            errorDomain: CBLErrorDomain];
+    
+    // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
+    [self runWithTarget: listener.localEndpoint
+                   type: kCBLReplicatorTypePushAndPull
+             continuous: NO
+          authenticator: nil
+   acceptSelfSignedOnly: NO
+             serverCert: (__bridge SecCertificateRef) listener.tlsIdentity.certs[0]
+              errorCode: 0
+            errorDomain: nil];
+    
+    [self stopListener: listener];
+}
+
+- (void) testAcceptSelfSignedWithNonSelfSignedCert {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
