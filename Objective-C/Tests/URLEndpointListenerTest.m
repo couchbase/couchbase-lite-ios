@@ -1615,7 +1615,6 @@ typedef CBLURLEndpointListener Listener;
     [self stopListener: listener];
 }
 
-
 - (void) testAcceptOnlySelfSignedCertificateWithPinnedCertificate {
     if (!self.keyChainAccessAllowed) return;
     
