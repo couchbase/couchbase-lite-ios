@@ -1489,7 +1489,6 @@ typedef CBLURLEndpointListener Listener;
             errorDomain: NSPOSIXErrorDomain];
 }
 
-// chained cert server + pin root cert instead of leaf cert
 - (void) testChainedCertServerAndCertPinning {
     if (!self.keyChainAccessAllowed) return;
     
