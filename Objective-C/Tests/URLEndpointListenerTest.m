@@ -1540,7 +1540,8 @@ typedef CBLURLEndpointListener Listener;
 
 // A listener with TLS enabled and a client authenticator pinning certificates
 // should accept a client that presents a cert chain whose root is pinned
-- (void) testCertAuthWithRootCertAndChainedCertServer {
+// TODO: https://issues.couchbase.com/browse/CBL-1510
+- (void) _testCertAuthWithRootCertAndChainedCertServer {
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];

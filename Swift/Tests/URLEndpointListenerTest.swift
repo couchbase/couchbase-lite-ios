@@ -1188,7 +1188,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     // A listener with TLS enabled and a client authenticator pinning certificates
     // should accept a client that presents a cert chain whose root is pinned
-    func testCertAuthWithRootCertAndChainedCertServer() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-1510
+    func _testCertAuthWithRootCertAndChainedCertServer() throws {
         if !keyChainAccessAllowed { return }
             
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -1216,8 +1217,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             continuous: false,
             auth: ClientCertificateAuthenticator(identity: identity),
             acceptSelfSignedOnly: true,
-            serverCert: nil,
-            expectedError: 0)
+            serverCert: nil)
         
         try stopListener(listener: listener!)
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
