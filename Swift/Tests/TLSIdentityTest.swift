@@ -19,7 +19,7 @@
 import XCTest
 import CouchbaseLiteSwift
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 class TLSIdentityTest: CBLTestCase {
     let serverCertLabel = "CBL-Swift-Server-Cert"
     let clientCertLabel = "CBL-Swift-Client-Cert"
