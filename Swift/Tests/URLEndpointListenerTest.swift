@@ -1256,32 +1256,8 @@ class URLEndpontListenerTest: ReplicatorTest {
             serverCert: nil,
             expectedError: CBLErrorTLSCertUntrusted)
         
-        try stopListen()
+        try stopListener()
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
-    }
-    
-    func testAcceptOnlySelfSignedServerCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
-        
-        // Listener:
-        let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.tlsIdentity)
-        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
-        
-        // Replicator - TLS Error:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
-        }
-        
-        // Replicator - Success:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: true, serverCert: nil)
-        }
-        
-        // Cleanup
-        try stopListen()
     }
     
     func testAcceptOnlySelfSignedCertificateWithPinnedCertificate() throws {
@@ -1314,7 +1290,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
         
         // Cleanup
-        try stopListen()
+        try stopListener()
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
