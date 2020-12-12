@@ -901,6 +901,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .stopped && change.status.error != nil {
+                // TODO: https://issues.couchbase.com/browse/CBL-1471
+                XCTAssertEqual((change.status.error! as NSError).code, CBLErrorTLSCertUnknownRoot)
                 x1.fulfill()
             }
         }
@@ -977,30 +979,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         wait(for: [x2], timeout: 5.0)
         XCTAssertNil(repl.serverCertificate)
         
-        try stopListen()
-    }
-    
-    func testAcceptOnlySelfSignedServerCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
-        
-        // Listener:
-        let listener = try listen(tls: true)
-        XCTAssertNotNil(listener.tlsIdentity)
-        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
-        
-        // Replicator - TLS Error:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
-        }
-        
-        // Replicator - Success:
-        self.ignoreException {
-            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: true, serverCert: nil)
-        }
-        
-        // Cleanup
         try stopListen()
     }
     
@@ -1156,6 +1134,177 @@ class URLEndpontListenerTest: ReplicatorTest {
             continuous: false,
             auth: BasicAuthenticator(username: "daniel", password: "123"),
             serverCert: self.listener!.tlsIdentity!.certs[0])
+    }
+    
+    func testChainedCertServerAndCertPinning() throws {
+        if !keyChainAccessAllowed { return }
+        
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        XCTAssertEqual(identity.certs.count, 2)
+        
+        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        
+        ignoreException {
+            try self.listen(config: config)
+        }
+        
+        // pinning root cert should fail
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            serverCert: identity!.certs[1],
+            expectedError: CBLErrorTLSCertUnknownRoot)
+        
+        // pinning leaf cert shoud be successful
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            serverCert: identity!.certs[0])
+        
+        try stopListener(listener: listener!)
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
+    // A listener with TLS enabled and a client authenticator pinning certificates
+    // should accept a client that presents a cert chain whose root is pinned
+    func testCertAuthWithRootCertAndChainedCertServer() throws {
+        if !keyChainAccessAllowed { return }
+            
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        
+        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        config.tlsIdentity = identity
+        config.authenticator = ListenerCertificateAuthenticator.init(rootCerts: [identity.certs[1]])
+        ignoreException {
+            self.listener = URLEndpointListener(config: config)
+            try self.listener?.start()
+        }
+        
+        try generateDocument(withID: "doc-1")
+        XCTAssertEqual(oDB.count, 0)
+        
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: ClientCertificateAuthenticator(identity: identity),
+            acceptSelfSignedOnly: true,
+            serverCert: nil,
+            expectedError: 0)
+        
+        try stopListener(listener: listener!)
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
+    // MARK: acceptSelfSignedOnly tests
+    
+    func testAcceptSelfSignedWithNonSelfSignedCert() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
+        var identity: TLSIdentity!
+        self.ignoreException {
+            identity = try TLSIdentity.importIdentity(withData: data,
+                                                      password: "123",
+                                                      label: self.serverCertLabel)
+        }
+        XCTAssertEqual(identity.certs.count, 2)
+        
+        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        config.tlsIdentity = identity
+        
+        self.ignoreException {
+            try self.listen(config: config)
+        }
+        
+        try generateDocument(withID: "doc-1")
+        XCTAssertEqual(self.oDB.count, 0)
+        
+        // Reject the server with non-self-signed cert
+        run(target: listener!.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            acceptSelfSignedOnly: true,
+            serverCert: nil,
+            expectedError: CBLErrorTLSCertUntrusted)
+        
+        try stopListen()
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+    
+    func testAcceptOnlySelfSignedServerCertificate() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
+        
+        // Replicator - TLS Error:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // Replicator - Success:
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
+                     acceptSelfSignedOnly: true, serverCert: nil)
+        }
+        
+        // Cleanup
+        try stopListen()
+    }
+    
+    func testAcceptOnlySelfSignedCertificateWithPinnedCertificate() throws {
+        if !self.keyChainAccessAllowed { return }
+        
+        // Listener:
+        let listener = try listen(tls: true)
+        XCTAssertNotNil(listener.tlsIdentity)
+        XCTAssertEqual(listener.tlsIdentity!.certs.count, 1)
+        
+        // listener = cert1; replicator.pin = cert2; acceptSelfSigned = true => fail
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        let dummyTLSIdentity = try tlsIdentity(true)
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint,
+                     type: .pushAndPull,
+                     continuous: false,
+                     acceptSelfSignedOnly: true,
+                     serverCert: dummyTLSIdentity!.certs[0],
+                     expectedError: CBLErrorTLSCertUnknownRoot)
+        }
+        
+        // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass
+        self.ignoreException {
+            self.run(target: listener.localURLEndpoint,
+                     type: .pushAndPull,
+                     continuous: false,
+                     acceptSelfSignedOnly: false,
+                     serverCert: listener.tlsIdentity!.certs[0])
+        }
+        
+        // Cleanup
+        try stopListen()
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
     // MARK: -- Close & Delete Replicators and Listeners
