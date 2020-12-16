@@ -912,6 +912,28 @@ class QueryTest: CBLTestCase {
         }
     }
     
+    func testDivisionFunctionPrecision() throws {
+        let doc = MutableDocument()
+            .setDouble(5.0, forKey: "key1")
+            .setDouble(15.0, forKey: "key2")
+            .setDouble(5.5, forKey: "key3")
+            .setDouble(16.5, forKey: "key4")
+        try saveDocument(doc)
+        
+        let withoutPrecision = Expression.property("key1").divide(Expression.property("key2"))
+        let withPrecision = Expression.property("key3").divide(Expression.property("key4"))
+        let q = QueryBuilder
+            .select(SelectResult.expression(withoutPrecision).as("withoutPrecision"),
+                    SelectResult.expression(withPrecision).as("withPrecision"))
+            .from(DataSource.database(db))
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssert(0.33333 - r.double(forKey: "withoutPrecision") < 0.0000)
+            XCTAssert(0.33333 - r.double(forKey: "withPrecision") < 0.0000)
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
     func testStringFunctions() throws {
         let str = "  See you 18r  "
         let doc = MutableDocument(id: "doc1")

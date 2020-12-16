@@ -984,6 +984,31 @@
     }
 }
 
+- (void) testDivisionFunctionPrecision {
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
+    [doc setValue: @(5.0) forKey: @"key1"];
+    [doc setValue: @(15.0) forKey: @"key2"];
+    [doc setValue: @(5.5) forKey: @"key3"];
+    [doc setValue: @(16.5) forKey: @"key4"];
+    [self saveDocument: doc];
+    
+    id withoutPrecision = [[CBLQueryExpression property: @"key1"]
+                           divide: [CBLQueryExpression property: @"key2"]];
+    id withPrecision = [[CBLQueryExpression property: @"key3"]
+                        divide: [CBLQueryExpression property: @"key4"]];
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: withoutPrecision
+                                                                           as: @"withoutPrecision"],
+                                             [CBLQuerySelectResult expression: withPrecision
+                                                                           as: @"withPrecision"]]
+                                     from: [CBLQueryDataSource database: self.db]];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+        Assert(0.33333 - [r doubleForKey: @"withoutPrecision"] < 0.0000);
+        Assert(0.33333 - [r doubleForKey: @"withPrecision"] < 0.0000);
+    }];
+    AssertEqual(numRows, 1u);
+}
+
 - (void) testStringFunctions {
     NSString* str = @"  See you 18r  ";
     CBLMutableDocument* doc = [self createDocument:@"doc1"];
