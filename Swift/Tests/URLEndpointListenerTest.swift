@@ -378,17 +378,20 @@ class URLEndpontListenerTest: ReplicatorTest {
             type: .pushAndPull,
             continuous: false,
             auth: nil,
-            serverCert: self.listener!.tlsIdentity!.certs[0],
-            expectedError: 0)
+            serverCert: listener.tlsIdentity!.certs[0])
         
         // Different pinned cert
-        let tlsID = try tlsIdentity(false)
+        try TLSIdentity.deleteIdentity(withLabel: "dummy")
+        let tlsID = try TLSIdentity.createIdentity(forServer: false,
+                                                   attributes: [certAttrCommonName: "client"],
+                                                   expiration: nil, label: "dummy")
         run(target: listener.localURLEndpoint,
             type: .pushAndPull,
             continuous: false,
             auth: nil,
-            serverCert: tlsID!.certs[0],
+            serverCert: tlsID.certs[0],
             expectedError: CBLErrorTLSCertUnknownRoot)
+        try TLSIdentity.deleteIdentity(withLabel: "dummy")
         
         // No pinned cert
         run(target: listener.localURLEndpoint,
@@ -417,20 +420,24 @@ class URLEndpontListenerTest: ReplicatorTest {
         try listener.start()
         XCTAssertNotNil(listener.tlsIdentity)
         
-        run(target: self.listener!.localURLEndpoint,
-            type: .pushAndPull,
-            continuous: false,
-            auth: nil,
-            serverCert: self.listener!.tlsIdentity!.certs[0])
-        
-        // Different pinned cert
-        let tlsID = try tlsIdentity(false)
         run(target: listener.localURLEndpoint,
             type: .pushAndPull,
             continuous: false,
             auth: nil,
-            serverCert: tlsID!.certs[0],
+            serverCert: listener.tlsIdentity!.certs[0])
+        
+        // Different pinned cert
+        try TLSIdentity.deleteIdentity(withLabel: "dummy")
+        let tlsID = try TLSIdentity.createIdentity(forServer: false,
+                                                   attributes: [certAttrCommonName: "client"],
+                                                   expiration: nil, label: "dummy")
+        run(target: listener.localURLEndpoint,
+            type: .pushAndPull,
+            continuous: false,
+            auth: nil,
+            serverCert: tlsID.certs[0],
             expectedError: CBLErrorTLSCertUnknownRoot)
+        try TLSIdentity.deleteIdentity(withLabel: "dummy")
         
         // No pinned cert
         run(target: listener.localURLEndpoint,
