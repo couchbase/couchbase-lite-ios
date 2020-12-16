@@ -324,6 +324,9 @@ class TLSIdentityTest: CBLTestCase {
     func testImportIdentity() throws {
         if (!keyChainAccessAllowed) { return }
         
+        // Delete:
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         
         var identity: TLSIdentity?
