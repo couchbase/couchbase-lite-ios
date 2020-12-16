@@ -57,7 +57,7 @@ using namespace fleece;
 typedef enum {
     kCBLDatabaseStateClosed = 0,
     kCBLDatabaseStateClosing,
-    kCBLDatabaseStateOpen,
+    kCBLDatabaseStateOpened,
 } CBLDatabaseState;
 
 @implementation CBLDatabase {
@@ -128,7 +128,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         qName = $sprintf(@"Database-Query <%@>", name);
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        _state = kCBLDatabaseStateOpen;
+        _state = kCBLDatabaseStateOpened;
     }
     return self;
 }
@@ -144,7 +144,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         _shellMode = YES;
         _c4db = c4db;
         
-        _state = kCBLDatabaseStateOpen;
+        _state = kCBLDatabaseStateOpened;
     }
     return self;
 }
@@ -692,7 +692,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 // Must be called inside self lock
 - (void) mustBeOpenAndNotClosing {
-    if (_state < kCBLDatabaseStateOpen)
+    if (_state < kCBLDatabaseStateOpened)
         [NSException raise: NSInternalInconsistencyException
                     format: @"%@", kCBLErrorMessageDBClosed];
 }
@@ -807,7 +807,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     [self scheduleDocumentExpiration: kHousekeepingDelayAfterOpening];
     
-    _state = kCBLDatabaseStateOpen;
+    _state = kCBLDatabaseStateOpened;
     
     return YES;
 }
