@@ -992,8 +992,10 @@
     [doc setValue: @(16.5) forKey: @"key4"];
     [self saveDocument: doc];
     
-    id withoutPrecision = [[CBLQueryExpression property: @"key1"] divide: [CBLQueryExpression property: @"key2"]];
-    id withPrecision = [[CBLQueryExpression property: @"key3"] divide: [CBLQueryExpression property: @"key4"]];
+    id withoutPrecision = [[CBLQueryExpression property: @"key1"]
+                           divide: [CBLQueryExpression property: @"key2"]];
+    id withPrecision = [[CBLQueryExpression property: @"key3"]
+                        divide: [CBLQueryExpression property: @"key4"]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: withoutPrecision
                                                                            as: @"withoutPrecision"],
                                              [CBLQuerySelectResult expression: withPrecision
