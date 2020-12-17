@@ -31,6 +31,18 @@
 
 #pragma mark -
 
+typedef enum {
+    kCBLLiveQueryStatusNoUpdate = 0,    // up to date, nothing to update
+    kCBLLiveQueryStatusUpdating,        // in the middle of an update
+    kCBLLiveQueryStatusWillUpdate,      // is waiting to be updated
+} CBLLiveQueryUpdateStatus;
+
+typedef enum {
+    kCBLLiveQueryStateStopped = 0,
+    kCBLLiveQueryStateStopping,
+    kCBLLiveQueryStateObserving,
+} CBLLiveQueryState;
+
 // Default value of CBLLiveQuery.updateInterval
 static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
@@ -39,12 +51,14 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     __weak CBLQuery* _query;
     NSTimeInterval _updateInterval;
     
-    BOOL _observing, _willUpdate, _updating, _stopping;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryResultSet* _rs;
     id _dbListenerToken;
     
     CBLChangeNotifier<CBLQueryChange*>* _changeNotifier;
+    
+    CBLLiveQueryUpdateStatus _updateStatus;
+    CBLLiveQueryState _state;
 }
 
 - (instancetype) initWithQuery: (CBLQuery*)query {
@@ -83,16 +97,17 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
             }];
         }
         
-        _observing = YES;
         _rs = nil;
-        _willUpdate = NO;
+        _updateStatus = kCBLLiveQueryStatusNoUpdate;
+        _state = kCBLLiveQueryStateObserving;
+        
         [self updateAfter:0.0];
     }
 }
 
 - (void) stop {
     CBL_LOCK(self) {
-        if (!_observing)
+        if (_state != kCBLLiveQueryStateObserving)
             return;
         
         // Since we are accessing weak _query multiple times which can become nil.
@@ -102,15 +117,14 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
             _dbListenerToken = nil;
         }
         
-        _observing = NO;
-        _willUpdate = NO; // cancels the delayed update started by -databaseChanged
         _changeNotifier = nil;
         _rs = nil;
         
-        if (!_updating)
+        // cancels the delayed update started by -databaseChanged as well.
+        if (_updateStatus != kCBLLiveQueryStatusUpdating)
             [self stopped];
         else
-            _stopping = YES;
+            _state = kCBLLiveQueryStateStopping;
     }
 }
 
@@ -120,7 +134,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     CBLQuery* strongQuery = _query;
     [strongQuery.database removeActiveStoppable: self];
     
-    _stopping = NO;
+    _state = kCBLLiveQueryStateStopped;
 }
 
 - (void) queryParametersChanged {
@@ -138,7 +152,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
                                            listener: (void (^)(CBLQueryChange*))listener
 {
     CBL_LOCK(self) {
-        if (!_observing)
+        if (_state != kCBLLiveQueryStateObserving)
             [self start];
         
         if (!_changeNotifier)
@@ -158,7 +172,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) databaseChanged: (CBLDatabaseChange*)change {
     CBL_LOCK(self) {
-        if (_willUpdate)
+        if (_updateStatus == kCBLLiveQueryStatusWillUpdate)
             return;  // Already a pending update scheduled
         
         // Use double the update interval if this is a remote change (coming from a pull replication):
@@ -174,9 +188,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 - (void) updateAfter: (NSTimeInterval)updateDelay {
-    if (_willUpdate)
+    if (_updateStatus == kCBLLiveQueryStatusWillUpdate)
         return;  // Already a pending update scheduled
-    _willUpdate = YES;
+    _updateStatus = kCBLLiveQueryStatusWillUpdate;
     
     __strong CBLQuery* query = _query;
     dispatch_queue_t queue = query.database.queryQueue;
@@ -191,9 +205,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) update {
     CBL_LOCK(self) {
-        if (!_willUpdate)
+        if (_updateStatus != kCBLLiveQueryStatusWillUpdate)
             return;
-        _updating = true;
+        _updateStatus = kCBLLiveQueryStatusUpdating;
     }
     
     CBLQuery* strongQuery = _query;
@@ -207,10 +221,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         newRs = [oldRs refresh: &error];
 
     CBL_LOCK(self) {
-        _updating = false;
-        _willUpdate = false;
+        _updateStatus = kCBLLiveQueryStatusNoUpdate;
         
-        if(_stopping) {
+        if(_state == kCBLLiveQueryStateStopping) {
             [self stopped];
             return;
         }
