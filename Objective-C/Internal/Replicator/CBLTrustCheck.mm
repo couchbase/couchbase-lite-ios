@@ -123,7 +123,6 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustResultType result;
     SecTrustEvaluate(_trust, &result);
 #endif
-    
     return YES;
 }
 
