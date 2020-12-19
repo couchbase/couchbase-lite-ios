@@ -110,10 +110,20 @@ static BOOL sOnlyTrustAnchorCerts;
     CFDataRef exception = SecTrustCopyExceptions(_trust);
     if (!exception)
         return NO;
-    SecTrustResultType result;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
+#if TARGET_OS_MACCATALYST
+    if (@available(iOS 12.0, macos 10.14, *)) {
+        CFErrorRef error;
+        Assert(SecTrustEvaluateWithError(_trust, &error));
+    } else {
+        CBLWarnError(Sync, @"Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
+    }
+#else
+    SecTrustResultType result;
     SecTrustEvaluate(_trust, &result);
+#endif
+    
     return YES;
 }
 
@@ -132,8 +142,22 @@ static BOOL sOnlyTrustAnchorCerts;
     
     // Evaluate trust:
     SecTrustResultType result;
-    OSStatus err = SecTrustEvaluate(_trust, &result);
-    if (err) {
+    OSStatus err;
+    BOOL trusted = NO;
+#if TARGET_OS_MACCATALYST
+    CFErrorRef cfError = nullptr;
+    if (@available(iOS 12.0, macos 10.14, *)) {
+        trusted = SecTrustEvaluateWithError(_trust, &cfError);
+        err = SecTrustGetTrustResult(_trust, &result);
+    } else {
+        CBLWarnError(Sync, @"SecTrustEvaluateWithError Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
+        return nil;
+    }
+#else
+    err = SecTrustEvaluate(_trust, &result);
+#endif
+    
+    if (err || !trusted) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
         MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
         return nil;
@@ -161,7 +185,7 @@ static BOOL sOnlyTrustAnchorCerts;
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
         return credential;          // explicitly trusted
     } else if ([self shouldAcceptProblems: outError]) {
-        [self forceTrusted];    // self-signed or host mismatch but we'll accept it anyway
+        [self forceTrusted];        // self-signed or host mismatch but we'll accept it anyway
         return credential;
     } else {
         return nil;
