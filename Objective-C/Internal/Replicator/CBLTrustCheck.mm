@@ -143,8 +143,8 @@ static BOOL sOnlyTrustAnchorCerts;
     // Evaluate trust:
     SecTrustResultType result;
     OSStatus err;
-    BOOL trusted = NO;
 #if TARGET_OS_MACCATALYST
+    BOOL trusted = NO;
     CFErrorRef cfError = nullptr;
     if (@available(iOS 12.0, macos 10.14, *)) {
         trusted = SecTrustEvaluateWithError(_trust, &cfError);
@@ -157,7 +157,11 @@ static BOOL sOnlyTrustAnchorCerts;
     err = SecTrustEvaluate(_trust, &result);
 #endif
     
-    if (err || !trusted) {
+    if (err
+#if TARGET_OS_MACCATALYST
+        || !trusted
+#endif
+        ) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
         MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
         return nil;
