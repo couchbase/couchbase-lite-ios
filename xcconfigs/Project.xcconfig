@@ -63,7 +63,6 @@ VERSIONING_SYSTEM                  = apple-generic
 
 // Catalyst
 SDKROOT                            = iphoneos
-OTHER_SWIFT_FLAGS                  = -DHAVE_GETHOSTUUID=0
 
 // Warn about using newer-than-deployment-target APIs without dynamic checks: (Xcode 9+)
 CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
