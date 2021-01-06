@@ -115,7 +115,11 @@ static BOOL sOnlyTrustAnchorCerts;
 #if TARGET_OS_MACCATALYST
     if (@available(iOS 12.0, macos 10.14, *)) {
         CFErrorRef error;
-        Assert(SecTrustEvaluateWithError(_trust, &error));
+        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+        if (!trusted)
+            CBLWarnError(Sync, @"Failed to force trust");
+        
+        return trusted;
     } else {
         CBLWarnError(Sync, @"Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
     }
@@ -156,11 +160,7 @@ static BOOL sOnlyTrustAnchorCerts;
     err = SecTrustEvaluate(_trust, &result);
 #endif
     
-    if (err
-#if TARGET_OS_MACCATALYST
-        || !trusted
-#endif
-        ) {
+    if (err) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
         MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
         return nil;
