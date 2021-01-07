@@ -10,7 +10,7 @@ Couchbase Lite 2.x has a completely new set of APIs. The implementation is on to
 
 ## Requirements
 - iOS 9.0+ | macOS 10.11+
-- Xcode 10.0
+- Xcode 10.3+
 
 
 ## Installation
@@ -118,12 +118,12 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 ## Documentation
 
-- [Swift](https://docs.couchbase.com/couchbase-lite/2.6/swift.html)
-- [Objective-C](https://docs.couchbase.com/couchbase-lite/2.6/objc.html)
+- [Swift](https://docs.couchbase.com/couchbase-lite/current/swift/quickstart.html)
+- [Objective-C](https://docs.couchbase.com/couchbase-lite/current/objc/quickstart.html)
 
 ## Sample Apps
 
-- [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.5) : Objective-C and Swift
+- [Todo](https://github.com/couchbaselabs/mobile-training-todo) : Objective-C and Swift
 
 
 ## License
