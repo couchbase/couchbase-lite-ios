@@ -147,10 +147,9 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustResultType result;
     OSStatus err;
 #if TARGET_OS_MACCATALYST
-    BOOL trusted = NO;
-    CFErrorRef cfError = nullptr;
     if (@available(iOS 12.0, macos 10.14, *)) {
-        trusted = SecTrustEvaluateWithError(_trust, &cfError);
+        if (!SecTrustEvaluateWithError(_trust, nullptr))
+            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
         err = SecTrustGetTrustResult(_trust, &result);
     } else {
         CBLWarnError(Sync, @"SecTrustEvaluateWithError Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
