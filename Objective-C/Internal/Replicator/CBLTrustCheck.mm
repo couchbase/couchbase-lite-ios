@@ -110,10 +110,23 @@ static BOOL sOnlyTrustAnchorCerts;
     CFDataRef exception = SecTrustCopyExceptions(_trust);
     if (!exception)
         return NO;
-    SecTrustResultType result;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
+#if TARGET_OS_MACCATALYST
+    if (@available(iOS 12.0, macos 10.14, *)) {
+        CFErrorRef error;
+        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+        if (!trusted)
+            CBLWarnError(Sync, @"Failed to force trust");
+        
+        return trusted;
+    } else {
+        CBLWarnError(Sync, @"Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
+    }
+#else
+    SecTrustResultType result;
     SecTrustEvaluate(_trust, &result);
+#endif
     return YES;
 }
 
@@ -132,7 +145,20 @@ static BOOL sOnlyTrustAnchorCerts;
     
     // Evaluate trust:
     SecTrustResultType result;
-    OSStatus err = SecTrustEvaluate(_trust, &result);
+    OSStatus err;
+#if TARGET_OS_MACCATALYST
+    if (@available(iOS 12.0, macos 10.14, *)) {
+        if (!SecTrustEvaluateWithError(_trust, nullptr))
+            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
+        err = SecTrustGetTrustResult(_trust, &result);
+    } else {
+        CBLWarnError(Sync, @"SecTrustEvaluateWithError Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
+        return nil;
+    }
+#else
+    err = SecTrustEvaluate(_trust, &result);
+#endif
+    
     if (err) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
         MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
@@ -161,7 +187,7 @@ static BOOL sOnlyTrustAnchorCerts;
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
         return credential;          // explicitly trusted
     } else if ([self shouldAcceptProblems: outError]) {
-        [self forceTrusted];    // self-signed or host mismatch but we'll accept it anyway
+        [self forceTrusted];        // self-signed or host mismatch but we'll accept it anyway
         return credential;
     } else {
         return nil;
