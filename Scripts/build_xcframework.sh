@@ -114,7 +114,8 @@ function xcarchive
   echo "Finished archiving ${DESTINATION}."
 }
 
-xcarchive "platform=macOS,arch=x86_64,variant=Mac Catalyst"
+# TODO: uncomment when catalyst is ready
+# xcarchive "platform=macOS,arch=x86_64,variant=Mac Catalyst"
 xcarchive "generic/platform=iOS Simulator"
 xcarchive "generic/platform=iOS"
 xcarchive "generic/platform=macOS"

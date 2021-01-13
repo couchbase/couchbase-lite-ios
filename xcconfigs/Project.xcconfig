@@ -61,9 +61,6 @@ SWIFT_VERSION                      = 5.0
 VERSION_INFO_PREFIX                = 
 VERSIONING_SYSTEM                  = apple-generic
 
-// Catalyst
-SDKROOT                            = iphoneos
-
 // Warn about using newer-than-deployment-target APIs without dynamic checks: (Xcode 9+)
 CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
 
