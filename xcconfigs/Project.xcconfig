@@ -61,6 +61,8 @@ SWIFT_VERSION                      = 5.0
 VERSION_INFO_PREFIX                = 
 VERSIONING_SYSTEM                  = apple-generic
 
+SUPPORTS_MACCATALYST               = YES
+
 // Warn about using newer-than-deployment-target APIs without dynamic checks: (Xcode 9+)
 CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
 
