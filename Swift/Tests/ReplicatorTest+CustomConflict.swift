@@ -632,10 +632,16 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let config = getConfig(.pull)
         var resolver: TestConflictResolver!
         var order = [String]()
+        let lock = NSLock()
         resolver = TestConflictResolver() { (conflict) -> Document? in
-            order.append(conflict.documentID)
             
-            if order.count == 1 {
+            // concurrent conflict resolver queue can cause race here
+            lock.lock()
+            order.append(conflict.documentID)
+            let count = order.count
+            lock.unlock()
+            
+            if count == 1 {
                 Thread.sleep(forTimeInterval: 0.5)
             }
             
