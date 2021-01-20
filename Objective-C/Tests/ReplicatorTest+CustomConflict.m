@@ -755,10 +755,12 @@
     
     NSMutableArray* order = [NSMutableArray array];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        int count;
         @synchronized (order) {
             [order addObject: con.localDocument.id];
+            count = order.count;
         }
-        if (order.count == 1) {
+        if (count == 1) {
             [NSThread sleepForTimeInterval: 0.5];
         }
         [order addObject: con.localDocument.id];
