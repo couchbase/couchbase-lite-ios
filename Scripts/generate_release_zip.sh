@@ -68,7 +68,7 @@ then
 fi
 
 # TODO: refactor for Lithium - only create xcframeworks binaries
-XCFRAMEWORK=YES
+COMBINED=YES
 
 if [ -z "$EE" ]
 then
@@ -301,4 +301,5 @@ rm -rf "$BUILD_DIR"
 rm -rf "$OUTPUT_OBJC_DIR"
 rm -rf "$OUTPUT_SWIFT_DIR"
 rm -rf "$OUTPUT_SWIFT_XC_DIR"
+rm -rf "$OUTPUT_OBJC_XC_DIR"
 rm -rf "$OUTPUT_DOCS_DIR"

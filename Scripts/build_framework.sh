@@ -120,8 +120,15 @@ for SDK in "${SDKS[@]}"
         BUILD_VERSION="CBL_VERSION_STRING=${VERSION}"
       fi
     fi
+    
+    # override and only x86 and i386 architecture, for .framework
+    ARCH=""
+    if [[ "${SDK}" == "iphonesimulator" ]]
+    then
+      ARCH="-arch x86_64 -arch i386"
+    fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${BUILD_VERSION} ${BUILD_NUMBER} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${ACTION} ${QUIET}
+    xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk ${SDK} ${ARCH} ${BUILD_VERSION} ${BUILD_NUMBER} "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${ACTION} ${QUIET}
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration "${CONFIGURATION}" -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`
