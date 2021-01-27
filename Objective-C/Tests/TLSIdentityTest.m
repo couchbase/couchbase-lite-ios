@@ -51,7 +51,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     } else {
     #if TARGET_OS_IOS
         if (@available(iOS 10.3, *))
-            publicKeyRef = SecCertificateCopyPublicKey(certRef);
+            publicKeyRef = SecCertificateCopyKey(certRef);
         else
             Assert(false, @"Not Supported by this OS version");
     #else
