@@ -113,13 +113,41 @@ then
   echo "Check devices ..."
   instruments -s devices
 
-  echo "Run ObjC macOS tests ..."
+  echo "Run ObjC macOS(x86_64) tests ..."
   sh Scripts/xctest_crash_log.sh --delete-all
   xcodebuild test \
     -project CouchbaseLite.xcodeproj \
     -scheme "${SCHEME_PREFIX}_ObjC" \
     -configuration "$CONFIGURATION_TEST" \
-    -sdk macosx || checkCrashLogs
+    -sdk macosx -arch x86_64 || checkCrashLogs
+    
+  echo "Run ObjC macOS-Catalyst(x86_64) tests ..."
+  sh Scripts/xctest_crash_log.sh --delete-all
+  xcodebuild clean test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_ObjC" \
+    -configuration "$CONFIGURATION_TEST" \
+    -destination "platform=macOS,arch=x86_64,variant=Mac Catalyst" || checkCrashLogs
+    
+  arch_name="$(uname -m)"
+  if [ "${arch_name}" = "arm64" ]
+  then
+    echo "Run ObjC macOS(arm64) tests ..."
+    sh Scripts/xctest_crash_log.sh --delete-all
+    xcodebuild clean test \
+      -project CouchbaseLite.xcodeproj \
+      -scheme "${SCHEME_PREFIX}_ObjC" \
+      -configuration "$CONFIGURATION_TEST" \
+      -sdk macosx -arch arm64 || checkCrashLogs
+      
+    echo "Run ObjC macOS-Catalyst(arm64) tests ..."
+    sh Scripts/xctest_crash_log.sh --delete-all
+    xcodebuild clean test \
+      -project CouchbaseLite.xcodeproj \
+      -scheme "${SCHEME_PREFIX}_ObjC" \
+      -configuration "$CONFIGURATION_TEST" \
+      -destination "platform=macOS,arch=arm64,variant=Mac Catalyst" || checkCrashLogs
+  fi
   
   echo "Run ObjC iOS tests ..."
   # iOS-App target runs Keychain-Accessing tests
@@ -148,12 +176,38 @@ then
         CouchbaseLite.xcodeproj > /dev/null
   fi
 
-  echo "Run Swift macOS tests ..."
+  echo "Run Swift macOS(x86_64) tests ..."
   xcodebuild test \
     -project CouchbaseLite.xcodeproj \
     -scheme "${SCHEME_PREFIX}_Swift" \
     -configuration "$CONFIGURATION_TEST" \
-    -sdk macosx
+    -sdk macosx -arch x86_64
+
+  echo "Run Swift macOS-Catalyst(x86_64) tests ..."
+  xcodebuild clean test \
+    -project CouchbaseLite.xcodeproj \
+    -scheme "${SCHEME_PREFIX}_Swift" \
+    -configuration "$CONFIGURATION_TEST" \
+    -destination "platform=macOS,arch=x86_64,variant=Mac Catalyst"
+    
+  if [ "${arch_name}" = "arm64" ]
+  then
+    echo "Run Swift macOS(arm64) tests ..."
+    sh Scripts/xctest_crash_log.sh --delete-all
+    xcodebuild clean test \
+      -project CouchbaseLite.xcodeproj \
+      -scheme "${SCHEME_PREFIX}_Swift" \
+      -configuration "$CONFIGURATION_TEST" \
+      -sdk macosx -arch arm64
+
+    echo "Run Swift macOS-Catalyst(arm64) tests ..."
+    sh Scripts/xctest_crash_log.sh --delete-all
+    xcodebuild clean test \
+      -project CouchbaseLite.xcodeproj \
+      -scheme "${SCHEME_PREFIX}_Swift" \
+      -configuration "$CONFIGURATION_TEST" \
+      -destination "platform=macOS,arch=arm64,variant=Mac Catalyst"
+  fi
 
   echo "Run Swift iOS tests ..."
   xcodebuild clean test \
