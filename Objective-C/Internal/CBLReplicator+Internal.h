@@ -34,7 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
 @property (nonatomic) NSTimeInterval checkpointInterval;
-@property (nonatomic) NSTimeInterval heartbeatInterval;
 
 #ifdef COUCHBASE_ENTERPRISE
 @property (nonatomic) BOOL acceptOnlySelfSignedServerCertificate;

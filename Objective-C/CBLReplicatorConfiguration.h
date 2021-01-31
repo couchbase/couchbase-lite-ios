@@ -121,6 +121,8 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
 @property (nonatomic) BOOL allowReplicatingInBackground;
 #endif
 
+@property (nonatomic) NSTimeInterval heartbeat;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
