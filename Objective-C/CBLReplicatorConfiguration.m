@@ -29,6 +29,8 @@
 #import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
+static int kDefaultHeartBeat = 300;
+
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
 }
@@ -40,7 +42,7 @@
 @synthesize headers=_headers;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
-@synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
+@synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize conflictResolver=_conflictResolver;
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -65,6 +67,7 @@
 #ifdef COUCHBASE_ENTERPRISE
         _acceptOnlySelfSignedServerCertificate = NO;
 #endif
+        _heartbeat = kDefaultHeartBeat;
     }
     return self;
 }
@@ -133,6 +136,16 @@
 }
 #endif
 
+- (void) setHeartbeat: (NSTimeInterval)heartbeat {
+    [self checkReadonly];
+    
+    if (heartbeat <= 0)
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Attempt to store zero or negative value in heartbeat"];
+    
+    _heartbeat = heartbeat;
+}
+
 #pragma mark - Internal
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
@@ -155,7 +168,7 @@
         _channels = config.channels;
         _pushFilter = config.pushFilter;
         _pullFilter = config.pullFilter;
-        _heartbeatInterval = config.heartbeatInterval;
+        _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _conflictResolver = config.conflictResolver;
 #if TARGET_OS_IPHONE
@@ -195,11 +208,12 @@
     options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
     options[@kC4ReplicatorOptionChannels] = _channels;
     
-    // Checkpoint & heartbeat intervals (no public api now):
+    // Checkpoint intervals (no public api now):
     if (_checkpointInterval > 0)
         options[@kC4ReplicatorCheckpointInterval] = @(_checkpointInterval);
-    if (_heartbeatInterval > 0)
-        options[@kC4ReplicatorHeartbeatInterval] = @(_heartbeatInterval);
+    
+    if (_heartbeat > 0)
+        options[@kC4ReplicatorHeartbeatInterval] = @(_heartbeat);
     
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;

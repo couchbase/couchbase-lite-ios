@@ -1799,6 +1799,8 @@
     CBLReplicatorConfiguration* temp = [self configWithTarget: target
                                                          type: kCBLReplicatorTypePush
                                                    continuous: YES];
+    AssertEqual(temp.heartbeat, 300);
+    
     [temp setContinuous: YES];
     [temp setAuthenticator: basic];
     
@@ -1824,6 +1826,25 @@
     AssertEqualObjects(headers, config.headers);
     AssertEqualObjects(docIds, config.documentIDs);
     AssertEqualObjects(channels, config.channels);
+    AssertEqual(config.heartbeat, 300);
+}
+
+- (void) testHeartbeatWithInvalidValue {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: YES];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        config.heartbeat = 0;
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        config.heartbeat = -1;
+    }];
+    
+    config.heartbeat = DBL_MAX;
+    AssertEqual(config.heartbeat, DBL_MAX);
 }
 
 # pragma mark - CBLDocumentReplication
