@@ -121,6 +121,14 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
 @property (nonatomic) BOOL allowReplicatingInBackground;
 #endif
 
+/**
+ The heartbeat interval in second.
+
+ The interval when the replicator sends the ping message to check whether the other peer is still alive.
+ Note: Setting the heartbeat to zero or negative value will result in InvalidArgumentException being thrown.
+ */
+@property (nonatomic) NSTimeInterval heartbeat;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
