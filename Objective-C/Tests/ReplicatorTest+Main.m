@@ -1843,9 +1843,6 @@
         config.heartbeat = -1;
     }];
     
-    // should be default 300secs
-    AssertEqual(config.heartbeat, 300);
-    
     config.heartbeat = DBL_MAX;
     AssertEqual(config.heartbeat, DBL_MAX);
 }

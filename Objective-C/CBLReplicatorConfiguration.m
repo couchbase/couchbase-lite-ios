@@ -29,6 +29,8 @@
 #import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
+static int kDefaultHeartBeat = 300;
+
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
 }
@@ -65,7 +67,7 @@
 #ifdef COUCHBASE_ENTERPRISE
         _acceptOnlySelfSignedServerCertificate = NO;
 #endif
-        _heartbeat = 300;
+        _heartbeat = kDefaultHeartBeat;
     }
     return self;
 }
