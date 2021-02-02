@@ -26,6 +26,6 @@ extern atomic_int gC4ExpectExceptions;
 
 + (void) allowExceptionIn: (void (^)(void))block;
 
-+ (BOOL) catchException: (void(^)(void))tryBlock error: (__autoreleasing NSError **)error;
++ (BOOL) catchException: (void(^)(void))tryBlock error: (NSError **)error;
 
 @end

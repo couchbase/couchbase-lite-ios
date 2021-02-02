@@ -27,7 +27,7 @@
     --gC4ExpectExceptions;
 }
 
-+ (BOOL) catchException: (void(^)(void))tryBlock error: (__autoreleasing NSError **)error {
++ (BOOL) catchException: (void(^)(void))tryBlock error: (NSError **)error {
     @try {
         ++gC4ExpectExceptions;
         tryBlock();
