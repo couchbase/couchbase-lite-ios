@@ -172,6 +172,25 @@ public class ReplicatorConfiguration {
     }
     #endif
     
+    /**
+      The heartbeat interval in second.
+
+      The interval when the replicator sends the ping message to check whether the other peer is still alive.
+      Note: Setting the heartbeat to zero or negative value will result in InvalidArgumentException being thrown.
+      */
+    public var heartbeat: TimeInterval = 300 {
+        willSet(newValue) {
+            checkReadOnly()
+            
+            guard newValue > 0 else {
+                NSException(name: .invalidArgumentException,
+                            reason: "Attempt to store zero or negative value in heartbeat",
+                            userInfo: nil).raise()
+                return
+            }
+        }
+    }
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
@@ -208,6 +227,7 @@ public class ReplicatorConfiguration {
         self.channels = config.channels
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
+        self.heartbeat = config.heartbeat
         
         #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground
@@ -236,6 +256,7 @@ public class ReplicatorConfiguration {
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
+        c.heartbeat = self.heartbeat
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in

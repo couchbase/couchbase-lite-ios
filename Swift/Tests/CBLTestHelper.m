@@ -27,4 +27,18 @@
     --gC4ExpectExceptions;
 }
 
++ (BOOL) catchException: (void(^)(void))tryBlock error: (__autoreleasing NSError **)error {
+    @try {
+        ++gC4ExpectExceptions;
+        tryBlock();
+        --gC4ExpectExceptions;
+        return YES;
+    }
+    @catch (NSException *exception) {
+        *error = [[NSError alloc] initWithDomain: exception.name code: 0
+                                        userInfo: exception.userInfo];
+        return NO;
+    }
+}
+
 @end
