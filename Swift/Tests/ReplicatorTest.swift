@@ -966,4 +966,42 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     #endif
     
+    func testReplicationConfigSetterMethods() {
+        let basic = BasicAuthenticator(username: "abcd", password: "1234")
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        let temp = self.config(target: target, type: .pushAndPull, continuous: true)
+        temp.authenticator = basic
+        temp.channels = ["c1", "c2"]
+        temp.documentIDs = ["d1", "d2"]
+        temp.headers = ["a": "aa", "b": "bb"]
+        
+        XCTAssertEqual(temp.heartbeat, 300)
+        let config = ReplicatorConfiguration(config: temp)
+        
+        XCTAssertEqual(config.heartbeat, 300)
+        XCTAssertEqual(config.continuous, true)
+        XCTAssertEqual(config.channels, ["c1", "c2"])
+        XCTAssertEqual(config.documentIDs, ["d1", "d2"])
+        XCTAssertEqual(config.headers, ["a": "aa", "b": "bb"])
+    }
+    
+    func testHeartbeatWithInvalidValue() {
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        let config = self.config(target: target, type: .pushAndPull, continuous: true)
+        
+        func expectExceptionFor(_ val: TimeInterval) throws {
+            do {
+                try CBLTestHelper.catchException {
+                    config.heartbeat = val
+                }
+            } catch {
+                XCTAssertEqual((error as NSError).domain,
+                               NSExceptionName.invalidArgumentException.rawValue)
+                throw error
+            }
+        }
+        
+        XCTAssertThrowsError(try expectExceptionFor(-1))
+        XCTAssertThrowsError(try expectExceptionFor(0))
+    }
 }
