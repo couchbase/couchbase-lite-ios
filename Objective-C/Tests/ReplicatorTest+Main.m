@@ -1847,6 +1847,22 @@
     AssertEqual(config.heartbeat, DBL_MAX);
 }
 
+- (void) testCustomHeartbeat {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: YES];
+    
+    config.heartbeat = 60;
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    
+    AssertEqual(config.heartbeat, 60);
+    AssertEqual(repl.config.heartbeat, 60);
+    
+    // Cleanup:
+    repl = nil;
+}
+
 # pragma mark - CBLDocumentReplication
 
 - (void) testCreateDocumentReplicator {
