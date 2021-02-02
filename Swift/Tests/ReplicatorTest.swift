@@ -1004,4 +1004,15 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertThrowsError(try expectExceptionFor(-1))
         XCTAssertThrowsError(try expectExceptionFor(0))
     }
+    
+    func testCustomHeartbeat() {
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        let config = self.config(target: target, type: .pushAndPull, continuous: true)
+        config.heartbeat = 60
+        repl = Replicator(config: config)
+        
+        XCTAssertEqual(repl.config.heartbeat, 60)
+        XCTAssertEqual(config.heartbeat, 60)
+        repl = nil
+    }
 }
