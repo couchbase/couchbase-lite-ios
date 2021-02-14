@@ -1863,6 +1863,44 @@
     repl = nil;
 }
 
+#pragma mark - Max Retry Count
+
+- (void) testMaxRetryCountForContinuous {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: YES];
+    AssertEqual(config.maxRetries, NSIntegerMax);
+}
+
+- (void) testCustomMaxRetryCountForContinuous {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: YES];
+    config.maxRetries = 22;
+    AssertEqual(config.maxRetries, 22);
+}
+
+- (void) testMaxRetryCountForSingleShot {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: NO];
+    AssertEqual(config.maxRetries, 9);
+}
+
+- (void) testCustomMaxRetryCountForSingleShot {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: NO];
+    config.maxRetries = 22;
+    AssertEqual(config.maxRetries, 22);
+}
+
+#pragma mark - Max Retry Wait Time
+
 # pragma mark - CBLDocumentReplication
 
 - (void) testCreateDocumentReplicator {
