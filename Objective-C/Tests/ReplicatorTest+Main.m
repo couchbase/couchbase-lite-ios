@@ -1901,6 +1901,25 @@
 
 #pragma mark - Max Retry Wait Time
 
+- (void) testMaxRetryWaitTime {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: NO];
+    AssertEqual(config.maxRetryWaitTime, 300);
+}
+
+- (void) testCustomMaxRetryWaitTime {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                         type: kCBLReplicatorTypePush
+                                                   continuous: NO];
+    config.maxRetryWaitTime = 444;
+    AssertEqual(config.maxRetryWaitTime, 444);
+}
+
+#pragma mark - Max Retry Wait Time
+
 # pragma mark - CBLDocumentReplication
 
 - (void) testCreateDocumentReplicator {
