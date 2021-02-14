@@ -250,7 +250,8 @@ static int kDefaultMaxRetryWaitTime = 300;
     if (_maxRetryWaitTime > 0)
         options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxRetryWaitTime);
     
-    options[@kC4ReplicatorOptionMaxRetries] = @(_maxRetries);
+    if (_maxRetries >= 0)
+        options[@kC4ReplicatorOptionMaxRetries] = @(_maxRetries);
     
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;
