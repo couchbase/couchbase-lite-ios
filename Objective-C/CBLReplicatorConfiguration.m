@@ -31,7 +31,7 @@
 
 static int kDefaultHeartBeat = 300;
 static int kDefaultSingleShotMaxRetries = 9;
-static NSUInteger kDefaultContinousMaxRetries = NSIntegerMax;
+static NSInteger kDefaultContinousMaxRetries = NSIntegerMax;
 static int kDefaultMaxRetryWaitTime = 300;
 
 @implementation CBLReplicatorConfiguration {
