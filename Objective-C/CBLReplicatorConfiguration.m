@@ -155,7 +155,7 @@ static int kDefaultMaxRetryWaitTime = 300;
 - (void) setMaxRetries: (NSInteger)maxRetries {
     [self checkReadonly];
     
-    if (maxRetries <= 0)
+    if (maxRetries < 0)
         [NSException raise: NSInvalidArgumentException
                     format: @"Attempt to store zero or negative value in maxRetries"];
     
