@@ -157,7 +157,7 @@ static int kDefaultMaxRetryWaitTime = 300;
     
     if (maxRetries < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store zero or negative value in maxRetries"];
+                    format: @"Attempt to store negative value in maxRetries"];
     
     _maxRetries = maxRetries;
 }
@@ -251,7 +251,7 @@ static int kDefaultMaxRetryWaitTime = 300;
         options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxRetryWaitTime);
     
     if (_maxRetries >= 0)
-        options[@kC4ReplicatorOptionMaxRetries] = @(_maxRetries);
+        options[@kC4ReplicatorOptionMaxRetries] = @([self maxRetries]);
     
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;
