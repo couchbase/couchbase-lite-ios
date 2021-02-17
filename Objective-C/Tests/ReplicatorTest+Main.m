@@ -1995,6 +1995,29 @@
     }];
 }
 
+- (void) testMaxRetryWaitTimeOfReplicator {
+    XCTestExpectation* exp = [self expectationWithDescription: @"replicator finish"];
+    CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.maxRetryWaitTime = 2;
+    config.maxRetries = 4;
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    __block NSDate* begin = [NSDate date];
+    __block NSTimeInterval diff;
+    [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        if (c.status.activity == kCBLReplicatorOffline) {
+            diff = [[NSDate date] timeIntervalSinceDate: begin];
+            begin = [NSDate date];
+        } else if (c.status.activity == kCBLReplicatorStopped) {
+            [exp fulfill];
+        }
+    }];
+    [repl start];
+    [self waitForExpectations: @[exp] timeout: timeout];
+    Assert(ABS(diff - config.maxRetryWaitTime) < 1.0);
+}
+
 #pragma mark - Max Retry Wait Time
 
 # pragma mark - CBLDocumentReplication
