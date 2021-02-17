@@ -1871,11 +1871,13 @@
 #pragma mark - Max Retry Count
 
 - (void) testMaxRetryCount {
+    // continuous
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     AssertEqual(config.maxRetries, NSIntegerMax);
     
+    // single shot
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: NO];
@@ -1883,12 +1885,14 @@
 }
 
 - (void) testCustomMaxRetryCount {
+    // continuous
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     config.maxRetries = 22;
     AssertEqual(config.maxRetries, 22);
     
+    // continous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: NO];
@@ -1947,9 +1951,18 @@
 #pragma mark - Max Retry Wait Time
 
 - (void) testMaxRetryWaitTime {
+    // single shot
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
+    AssertEqual(config.maxRetryWaitTime, 300);
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    AssertEqual(repl.config.maxRetryWaitTime, 300);
+    
+    // continuous
+    config = [self configWithTarget: kDummyTarget
+                               type: kCBLReplicatorTypePush
+                         continuous: YES];
     AssertEqual(config.maxRetryWaitTime, 300);
     repl = [[CBLReplicator alloc] initWithConfig: config];
     AssertEqual(repl.config.maxRetryWaitTime, 300);
@@ -1958,9 +1971,17 @@
 }
 
 - (void) testCustomMaxRetryWaitTime {
+    // single shot
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
+    config.maxRetryWaitTime = 444;
+    AssertEqual(config.maxRetryWaitTime, 444);
+    
+    // continuous
+    config = [self configWithTarget: kDummyTarget
+                               type: kCBLReplicatorTypePush
+                         continuous: YES];
     config.maxRetryWaitTime = 444;
     AssertEqual(config.maxRetryWaitTime, 444);
 }
