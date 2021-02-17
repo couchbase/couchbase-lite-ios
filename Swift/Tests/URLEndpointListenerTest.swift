@@ -1059,7 +1059,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener!.tlsIdentity)
     }
     
-    func testStopListener() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-1664
+    func _testStopListener() throws {
         let x1 = expectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
