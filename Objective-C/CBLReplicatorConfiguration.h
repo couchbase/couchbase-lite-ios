@@ -129,6 +129,25 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  */
 @property (nonatomic) NSTimeInterval heartbeat;
 
+/**
+ The maximum attempts to perform retry. The retry attempt will be reset when the replicator is able to connect and replicate with
+ the remote server again.
+ 
+ Without setting the maxRetries value, the default maxRetries of 9 times for single shot replicators and infinite times for
+ continuous replicators will be applied and present to users. Settings the value to 0 will result in no retry attempt.
+ 
+ Setting a negative number will result in InvalidArgumentException being thrown.
+ */
+@property (nonatomic) NSInteger maxRetries;
+
+/**
+ Max wait time for the next retry.
+ 
+ The exponential backoff for calculating the wait time will be used by default and cannot be customized. Set the maxRetryWaitTime to zero
+ or negative value will result in InvalidArgumentException being thrown.
+ */
+@property (nonatomic) NSTimeInterval maxRetryWaitTime;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 

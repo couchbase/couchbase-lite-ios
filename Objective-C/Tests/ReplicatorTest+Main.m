@@ -24,6 +24,8 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLWebSocket.h"
 
+#define kDummyTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]]
+
 @interface ReplicatorTest_Main : ReplicatorTest
 @end
 
@@ -1829,11 +1831,12 @@
     AssertEqual(config.heartbeat, 300);
 }
 
+#pragma mark - HeartBeat
+
 - (void) testHeartbeatWithInvalidValue {
-    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                         type: kCBLReplicatorTypePush
-                                                   continuous: YES];
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
         config.heartbeat = 0;
@@ -1848,10 +1851,9 @@
 }
 
 - (void) testCustomHeartbeat {
-    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                         type: kCBLReplicatorTypePush
-                                                   continuous: YES];
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
     
     config.heartbeat = 60;
     repl = [[CBLReplicator alloc] initWithConfig: config];
@@ -1862,6 +1864,57 @@
     // Cleanup:
     repl = nil;
 }
+
+#pragma mark - Max Retry Count
+
+- (void) testMaxRetryCountForContinuous {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    AssertEqual(config.maxRetries, NSIntegerMax);
+}
+
+- (void) testCustomMaxRetryCountForContinuous {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    config.maxRetries = 22;
+    AssertEqual(config.maxRetries, 22);
+}
+
+- (void) testMaxRetryCountForSingleShot {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    AssertEqual(config.maxRetries, 9);
+}
+
+- (void) testCustomMaxRetryCountForSingleShot {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.maxRetries = 22;
+    AssertEqual(config.maxRetries, 22);
+}
+
+#pragma mark - Max Retry Wait Time
+
+- (void) testMaxRetryWaitTime {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    AssertEqual(config.maxRetryWaitTime, 300);
+}
+
+- (void) testCustomMaxRetryWaitTime {
+    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.maxRetryWaitTime = 444;
+    AssertEqual(config.maxRetryWaitTime, 444);
+}
+
+#pragma mark - Max Retry Wait Time
 
 # pragma mark - CBLDocumentReplication
 

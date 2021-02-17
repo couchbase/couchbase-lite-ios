@@ -1445,7 +1445,8 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(err);
 }
 
-- (void) testStopListener {
+// TODO: https://issues.couchbase.com/browse/CBL-1664
+- (void) _testStopListener {
     XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
