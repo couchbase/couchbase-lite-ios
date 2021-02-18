@@ -191,6 +191,56 @@ public class ReplicatorConfiguration {
         }
     }
     
+    private var _maxRetries: Int = -1
+    /**
+     The maximum attempts to perform retry. The retry attempt will be reset when the replicator is able to connect and replicate with
+     the remote server again.
+     
+     Without setting the maxRetries value, the default maxRetries of 9 times for single shot replicators and infinite times for
+     continuous replicators will be applied and present to users. Settings the value to 0 will result in no retry attempt.
+     
+     Setting a negative number will result in InvalidArgumentException being thrown.
+     */
+    public var maxRetries: Int {
+        set(newValue) {
+            checkReadOnly()
+            
+            guard newValue >= 0 else {
+                NSException(name: .invalidArgumentException,
+                            reason: "Attempt to store negative value in maxRetries",
+                            userInfo: nil).raise()
+                return
+            }
+            
+            _maxRetries = newValue
+        }
+        
+        get {
+            return _maxRetries >= 0
+                ? _maxRetries : self.continuous
+                ? ReplicatorConfiguration.defaultContinousMaxRetries : ReplicatorConfiguration.defaultSingleShotMaxRetries
+        }
+    }
+    
+    /**
+     Max wait time for the next retry.
+     
+     The exponential backoff for calculating the wait time will be used by default and cannot be customized. Set the maxRetryWaitTime to zero
+     or negative value will result in InvalidArgumentException being thrown.
+     */
+    public var maxRetryWaitTime: TimeInterval = 300 {
+        willSet(newValue) {
+            checkReadOnly()
+            
+            guard newValue > 0 else {
+                NSException(name: .invalidArgumentException,
+                            reason: "Attempt to store zero or negative value in maxRetryWaitTime",
+                            userInfo: nil).raise()
+                return
+            }
+        }
+    }
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
@@ -213,10 +263,11 @@ public class ReplicatorConfiguration {
     
     // MARK: Internal
     
-    private let readonly: Bool
+    private var readonly = false
+    private static let defaultContinousMaxRetries = NSInteger.max
+    private static let defaultSingleShotMaxRetries = 9
     
     init(config: ReplicatorConfiguration, readonly: Bool) {
-        self.readonly = readonly
         self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
@@ -228,6 +279,8 @@ public class ReplicatorConfiguration {
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
         self.heartbeat = config.heartbeat
+        self.maxRetries = config.maxRetries
+        self.maxRetryWaitTime = config.maxRetryWaitTime
         
         #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground
@@ -236,6 +289,8 @@ public class ReplicatorConfiguration {
         #if COUCHBASE_ENTERPRISE
         self.acceptOnlySelfSignedServerCertificate = config.acceptOnlySelfSignedServerCertificate
         #endif
+        
+        self.readonly = readonly
     }
     
     func checkReadOnly() {
@@ -257,6 +312,8 @@ public class ReplicatorConfiguration {
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
         c.heartbeat = self.heartbeat
+        c.maxRetries = self.maxRetries
+        c.maxRetryWaitTime = self.maxRetryWaitTime
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in
