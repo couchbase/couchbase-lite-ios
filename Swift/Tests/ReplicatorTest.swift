@@ -25,6 +25,9 @@ class ReplicatorTest: CBLTestCase {
     var repl: Replicator!
     var timeout: TimeInterval = 10  // At least 10 to cover single-shot replicator's retry logic
     
+    // connect to an unknown-db on same machine, for the connection refused transient error.
+    let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4984/unknown-db-wXBl5n3fed")!)
+    
     override func setUp() {
         super.setUp()
         try! openOtherDB()
@@ -1014,5 +1017,154 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(repl.config.heartbeat, 60)
         XCTAssertEqual(config.heartbeat, 60)
         repl = nil
+    }
+    
+    // MARK: Retry Logic
+    
+    func testMaxRetryCount() {
+        // single shot
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        XCTAssertEqual(config.maxRetries, 9)
+        
+        // continous
+        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        XCTAssertEqual(config.maxRetries, NSInteger.max)
+    }
+    
+    func testCustomMaxRetryCount() {
+        // single shot
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        config.maxRetries = 22
+        XCTAssertEqual(config.maxRetries, 22)
+        
+        // continous
+        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config.maxRetries = 11
+        XCTAssertEqual(config.maxRetries, 11)
+    }
+    
+    func testInvalidMaxRetry() {
+        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        func expectException() throws {
+            do {
+                try CBLTestHelper.catchException {
+                    config.maxRetries = -1
+                }
+            } catch {
+                XCTAssertEqual((error as NSError).domain,
+                               NSExceptionName.invalidArgumentException.rawValue)
+                throw error
+            }
+        }
+        
+        XCTAssertThrowsError(try expectException())
+    }
+    
+    func testMaxRetry(retry: Int, count: Int, continuous: Bool) {
+        let x = self.expectation(description: "repl finish")
+        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+                                                          type: .pushAndPull,
+                                                          continuous: continuous)
+        
+        var offlineCount = 0
+        if retry >= 0 {
+            config.maxRetries = retry
+        }
+        
+        repl = Replicator(config: config)
+        repl.addChangeListener { (change) in
+            if change.status.activity == .offline {
+                offlineCount += 1
+            } else if change.status.activity == .stopped {
+                x.fulfill()
+            }
+        }
+        
+        repl.start()
+        wait(for: [x], timeout:  pow(2, Double(count + 1)) + 10.0)
+        XCTAssertEqual(count, offlineCount)
+    }
+    
+    func testMaxRetry() {
+        testMaxRetry(retry: 0, count: 0, continuous: false)
+        testMaxRetry(retry: 0, count: 0, continuous: true)
+        
+        testMaxRetry(retry: 1, count: 1, continuous: false)
+        testMaxRetry(retry: 1, count: 1, continuous: true)
+    }
+    
+    // disbale the test, since this might take ~13mints; when testing, change the timeout to 900secs
+    func _testMaxRetryForSingleShot() {
+        testMaxRetry(retry: -1, count: 9, continuous: false)
+    }
+    
+    // MARK: Max Retry Wait Time
+    
+    func testMaxRetryWaitTime() {
+        // single shot
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        
+        // continous
+        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        
+        repl = Replicator(config: config)
+        XCTAssertEqual(repl.config.maxRetryWaitTime, 300)
+    }
+    
+    func testCustomMaxRetryWaitTime() {
+        // single shot
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        config.maxRetryWaitTime = 444
+        XCTAssertEqual(config.maxRetryWaitTime, 444)
+        
+        // continous
+        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config.maxRetryWaitTime = 555
+        XCTAssertEqual(config.maxRetryWaitTime, 555)
+    }
+    
+    func testInvalidMaxRetryWaitTime() {
+        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        func expectException(_ val: TimeInterval) throws {
+            do {
+                try CBLTestHelper.catchException {
+                    config.maxRetryWaitTime = val
+                }
+            } catch {
+                XCTAssertEqual((error as NSError).domain,
+                               NSExceptionName.invalidArgumentException.rawValue)
+                throw error
+            }
+        }
+        
+        XCTAssertThrowsError(try expectException(0))
+        XCTAssertThrowsError(try expectException(-1))
+    }
+    
+    func testMaxRetryWaitTimeOfReplicator() {
+        let x = self.expectation(description: "repl finish")
+        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+                                                          type: .pushAndPull,
+                                                          continuous: false)
+        config.maxRetries = 4
+        config.maxRetryWaitTime = 2
+        
+        var diff: TimeInterval = 0
+        var time = Date()
+        repl = Replicator(config: config)
+        repl.addChangeListener { (change) in
+            if change.status.activity == .offline {
+                diff = Date().timeIntervalSince(time)
+                time = Date()
+            } else if change.status.activity == .stopped {
+                x.fulfill()
+            }
+        }
+        
+        repl.start()
+        wait(for: [x], timeout: timeout)
+        XCTAssert(abs(diff - config.maxRetryWaitTime) < 1.0)
     }
 }
