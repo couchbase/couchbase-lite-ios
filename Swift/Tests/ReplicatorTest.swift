@@ -25,7 +25,7 @@ class ReplicatorTest: CBLTestCase {
     var repl: Replicator!
     var timeout: TimeInterval = 10  // At least 10 to cover single-shot replicator's retry logic
     
-    // connect to an uknown-db on same machine, for the connection refused transient error.
+    // connect to an unknown-db on same machine, for the connection refused transient error.
     let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4984/unknown-db-wXBl5n3fed")!)
     
     override func setUp() {
@@ -1081,7 +1081,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout: 900)
+        wait(for: [x], timeout: timeout)
         XCTAssertEqual(count, offlineCount)
     }
     
@@ -1164,7 +1164,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout: 900)
+        wait(for: [x], timeout: timeout)
         XCTAssert(abs(diff - config.maxRetryWaitTime) < 1.0)
     }
 }
