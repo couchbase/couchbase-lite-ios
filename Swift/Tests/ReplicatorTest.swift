@@ -1081,7 +1081,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout: timeout)
+        wait(for: [x], timeout:  pow(2, Double(count + 1)) + 10.0)
         XCTAssertEqual(count, offlineCount)
     }
     
