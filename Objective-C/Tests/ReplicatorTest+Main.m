@@ -26,7 +26,7 @@
 
 #define kDummyTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]]
 
-// connect to an uknown-db on same machine, for the connection refused transient error.
+// connect to an unknown-db on same machine, for the connection refused transient error.
 #define kConnRefusedTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://localhost:4984/unknown-db-wXBl5n3fed"]]
 
 @interface ReplicatorTest_Main : ReplicatorTest
@@ -1928,7 +1928,7 @@
         }
     }];
     [repl start];
-    [self waitForExpectations: @[exp] timeout: 820];
+    [self waitForExpectations: @[exp] timeout: pow(2, count + 1) + 10.0];
     AssertEqual(offlineCount, count);
 }
 
