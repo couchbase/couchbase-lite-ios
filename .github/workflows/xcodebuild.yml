@@ -24,14 +24,14 @@ jobs:
 
       - name: "Build-for-testing"
         env:
-	  SCHEME: ${{ matrix.scheme }}
+          SCHEME: ${{ matrix.scheme }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
           xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
       - name: "Test"
         env:
-	  SCHEME: ${{ matrix.scheme }}
+          SCHEME: ${{ matrix.scheme }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
