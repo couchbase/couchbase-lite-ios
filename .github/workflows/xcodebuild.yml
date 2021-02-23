@@ -22,13 +22,13 @@ jobs:
         with: 
           submodules: recursive
 
-      - name: "Build-for-testing $scheme"
+      - name: "Build-for-testing"
         env:
            platform: ${{ 'iOS Simulator' }}
         run: |
            device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
            xcodebuild build-for-testing -scheme "$scheme" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
-      - name: "Test $scheme"
+      - name: "Test"
         env:
           platform: ${{ 'iOS Simulator' }}
         run: |
