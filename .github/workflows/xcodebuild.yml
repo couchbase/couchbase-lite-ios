@@ -12,37 +12,27 @@ jobs:
   build:
     runs-on: macOS-latest
 
+    strategy:
+      matrix:
+        scheme: ["CBL_ObjC", "CBL_Swift"]
+
     steps: 
       - name: Checkout
         uses: actions/checkout@v2
         with: 
           submodules: recursive
 
-      - name: "Build-for-testing ObjC"
+      - name: "Build-for-testing"
         env:
-           scheme: CBL_ObjC
-           platform: ${{ 'iOS Simulator' }}
-        run: |
-           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-           xcodebuild build-for-testing -scheme "$scheme" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
-      - name: "Test ObjC"
-        env:
-          scheme: CBL_ObjC
+          SCHEME: ${{ matrix.scheme }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-          xcodebuild test-without-building -scheme "$scheme" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
-      - name: "Build-for-testing Swift"
+          xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
+      - name: "Test"
         env:
-           scheme: CBL_Swift
-           platform: ${{ 'iOS Simulator' }}
-        run: |
-           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-           xcodebuild build-for-testing -scheme "$scheme" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
-      - name: "Test Swift"
-        env:
-          scheme: CBL_Swift
+          SCHEME: ${{ matrix.scheme }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-          xcodebuild test-without-building -scheme "$scheme" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
+          xcodebuild test-without-building -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=$platform,name=$device"
