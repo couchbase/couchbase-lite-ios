@@ -26,13 +26,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) C4Document* rawDoc;
 
+/** Revision flag of the selected revision. */
 @property (readonly, nonatomic) C4RevisionFlags revFlags;
 
+/** Sequence of the selected revision. */
 @property (readonly, nonatomic) C4SequenceNumber sequence;
 
+/** Revision ID of the selected revision. */
 @property (readonly, nonatomic) C4String revID;
 
-@property (readonly, nonatomic) C4Slice body;
+/** Body of the selected revision (Note this body ). */
+@property (readonly, nonatomic) FLDict body;
 
 + (instancetype) document: (C4Document*)document;
 

@@ -84,7 +84,7 @@ typedef enum {
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
 static const C4DatabaseConfig2 kDBConfig = {
-    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_SharedKeys),
+    .flags = (kC4DB_Create | kC4DB_AutoCompact),
 };
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
@@ -1008,7 +1008,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                 
                 C4Error err;
                 CBLStringBytes bDocID(document.id);
-                curDoc = c4doc_get(_c4db, bDocID, true, &err);
+                curDoc = c4db_getDoc(_c4db, bDocID, true, kDocGetCurrentRev, &err);
                 
                 // If deletion and the current doc has already been deleted
                 // or doesn't exist:
@@ -1134,8 +1134,11 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
             // Read local document:
-            localDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
-                                              includeDeleted: YES error: outError];
+            localDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                  documentID: docID
+                                              includeDeleted: YES
+                                                contentLevel: kDocGetCurrentRev
+                                                       error: outError];
             if (!localDoc) {
                 CBLWarn(Sync, @"Unable to find the document %@ during conflict resolution,\
                         skipping...", docID);
@@ -1143,8 +1146,11 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             }
             
             // Read the conflicting remote revision:
-            remoteDoc = [[CBLDocument alloc] initWithDatabase: self documentID: docID
-                                               includeDeleted: YES error: outError];
+            remoteDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                   documentID: docID
+                                               includeDeleted: YES
+                                                 contentLevel: kDocGetAll
+                                                        error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
                 CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may "
                         "have been resolved...", docID);

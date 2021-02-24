@@ -21,6 +21,7 @@
 
 @implementation CBLC4Document {
     C4Document* _rawDoc;
+    FLDict _body;
 }
 
 + (instancetype) document: (C4Document*)rawDoc {
@@ -31,6 +32,7 @@
     self = [super init];
     if (self) {
         _rawDoc = rawDoc;
+        _body = nullptr;
     }
     return self;
 }
@@ -51,11 +53,15 @@
     return _rawDoc->selectedRev.revID;
 }
 
-- (C4Slice) body {
-    return _rawDoc->selectedRev.body;
+- (FLDict) body {
+    FLDict oBody = _body;
+    _body = FLDict_Retain(c4doc_getProperties(_rawDoc));
+    FLDict_Release(oBody);
+    return _body;
 }
 
 - (void) dealloc {
+    FLDict_Release(_body);
     c4doc_release(_rawDoc);
 }
 

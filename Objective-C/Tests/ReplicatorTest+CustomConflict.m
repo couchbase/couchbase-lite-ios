@@ -790,7 +790,8 @@
  6. document resolved successfully, with second attempt,
  7. once the first CCR tries again, conflict is already been resolved.
  */
-- (void) testDoubleConflictResolutionOnSameConflicts {
+// CBL-1710: Update to use setProgressLevel API in Replicator
+- (void) _testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
@@ -921,7 +922,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testConflictResolverWhenDocumentIsPurged {
+// CBL-1709: c4doc_resolveConflict returns assertion failed instead of not-found error when resolving on a purge doc
+- (void) _testConflictResolverWhenDocumentIsPurged {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};

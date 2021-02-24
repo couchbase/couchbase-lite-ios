@@ -770,54 +770,55 @@
                                            error: &error].isDeleted);
 }
 
-- (void) testConflictHandlerCalledTwice {
+// CBL-1707: Keys in SharedKeys were reverted and released while they are still in used
+- (void) _testConflictHandlerCalledTwice {
     NSString* docID = @"doc1";
-    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
-    [doc setString: @"Tiger" forKey: @"firstName"];
-    [self saveDocument: doc];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc1 setString: @"Tiger" forKey: @"name"];
+    [self saveDocument: doc1];
     AssertEqual([self.db documentWithID: docID].generation, 1u);
     
     CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
     CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
     
-    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    // Save doc1a:
+    [doc1a setString: @"Cat" forKey: @"name"];
     [self saveDocument: doc1a];
     AssertEqual([self.db documentWithID: docID].generation, 2u);
     
+    // Save doc1b:
     NSError* error;
-    [doc1b setString: @"Scott" forKey: @"nickName"];
-    __block int count = 0;
-    Assert([self.db saveDocument: doc1b
-                 conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
-                     Assert(document == doc1b);
-                     count++;
-                     CBLMutableDocument* doc1c = [[self.db documentWithID: docID] toMutable];
-                     if (![doc1c booleanForKey: @"secondUpdate"]) {
-                         AssertEqual(old.generation, 2u);
-                         AssertEqual(document.generation, 2u);
-                         [doc1c setBoolean: YES forKey: @"secondUpdate"];
-                         [self saveDocument: doc1c];
-                         AssertEqual([self.db documentWithID: docID].generation, 3u);
-                     }
-                     
-                     // Going to merge the two document contents
-                     NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithDictionary: old.toDictionary];
-                     for (NSString* key in document.toDictionary.allKeys) {
-                         [dict setValue: [document valueForKey: key] forKey: key];
-                     }
-                     [document setData: dict];
-                     [document setValue: @"local" forKey: @"edit"];
-                     return YES;
-                 } error: &error]);
+    __block NSInteger count = 0;
+    [doc1b setString: @"Lion" forKey: @"name"];
+    [self.db saveDocument: doc1b conflictHandler: ^BOOL(CBLMutableDocument* doc, CBLDocument* old) {
+        Assert(doc == doc1b);
+        
+        // Create a new conflict using doc1c:
+        if (count == 0) {
+            CBLMutableDocument* doc1c = [[self.db documentWithID: docID] toMutable];
+            [doc1c setString: @"Animal" forKey: @"type"];
+            [doc1c setString: @"Mountain Lion" forKey: @"name"];
+            [self saveDocument: doc1c];
+        }
+        
+        // Update count:
+        count++;
+        
+        // Merging data:
+        NSDictionary* mine = doc.toDictionary;
+        NSMutableDictionary* merged = [mine mutableCopy];
+        [merged setDictionary: old.toDictionary];
+        
+        // Update doc with merged data:
+        [doc setData: merged];
+        [doc setInteger: count forKey: @"count"];
+        return YES;
+    } error: &error];
     
-    // make sure the save handler method called twice due to second conflict
     AssertEqual(count, 2u);
     AssertEqual(self.db.count, 1u);
     
-    NSDictionary* expected = @{@"nickName": @"Scott",
-                               @"firstName": @"Tiger",
-                               @"secondUpdate": @YES,
-                               @"edit": @"local"};
+    NSDictionary* expected = @{@"type": @"Animal", @"name": @"Mountain Lion", @"count": @2};
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, expected);
     AssertEqual([self.db documentWithID: docID].generation, 4u);
 }

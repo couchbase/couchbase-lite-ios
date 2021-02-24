@@ -29,9 +29,6 @@
 #import "CBLStatus.h"
 
 @implementation CBLMutableDocument
-{
-    NSError* _encodingError;
-}
 
 #pragma mark - Initializer
 
@@ -166,34 +163,6 @@
 // TODO: Need to be reset after the document is saved.
 - (BOOL) changed {
     return ((CBLMutableDictionary*)_dict).changed;
-}
-
-#pragma mark - Fleece Encodable
-
-- (C4SliceResult) encode: (NSError**)outError {
-    _encodingError = nil;
-    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
-    FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
-    [_dict fl_encodeToFLEncoder: encoder];
-    if (_encodingError != nil) {
-        FLEncoder_Reset(encoder);
-        if (outError)
-            *outError = _encodingError;
-        _encodingError = nil;
-        return {};
-    }
-    FLError flErr;
-    const char* errMessage = FLEncoder_GetErrorMessage(encoder);
-    FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
-    if (!body.buf)
-        createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
-    return body;
-}
-
-// Objects being encoded can call this
-- (void) setEncodingError: (NSError*)error {
-    if (!_encodingError)
-        _encodingError = error;
 }
 
 @end
