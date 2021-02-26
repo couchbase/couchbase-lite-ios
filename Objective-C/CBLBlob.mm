@@ -163,6 +163,28 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     return json;
 }
 
+- (NSString*) toJSON {
+    if (!_digest)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"toJSON() is not allowed as Blob has not been saved in the database"];
+    
+    NSMutableDictionary* json = [self.properties mutableCopy];
+    json[kTypeMetaProperty] = kBlobType;
+    json[kContentTypeMetaProperty] = _contentType;
+    json[kLengthMetaProperty] = _length ? @(_length) : nil;
+    json[kDigestMetaProperty] = _digest ?: nil;
+    
+    NSError* outError;
+    NSData* data = [NSJSONSerialization dataWithJSONObject: json
+                                                   options: 0
+                                                     error: &outError];
+    if (!data) {
+        CBLWarnError(Database, @"Failed to serialize the json into data %@", outError);
+        return nil;
+    }
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+}
+
 - (BOOL) getBlobStore: (C4BlobStore**)outBlobStore andKey: (C4BlobKey*)outBlobKey {
     *outBlobStore = [_db getBlobStore: nullptr];
     return *outBlobStore && _digest && c4blob_keyFromString(CBLStringBytes(_digest), outBlobKey);
