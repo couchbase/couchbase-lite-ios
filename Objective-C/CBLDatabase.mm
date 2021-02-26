@@ -84,7 +84,7 @@ typedef enum {
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
 static const C4DatabaseConfig2 kDBConfig = {
-    .flags = (kC4DB_Create | kC4DB_AutoCompact),
+    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_VersionVectors),
 };
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
@@ -1235,13 +1235,10 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         CBLStringBytes winningRevID = remoteDoc.revisionID;
         CBLStringBytes losingRevID = localDoc.revisionID;
         
+        // mergedBody:
         alloc_slice mergedBody;
-        C4RevisionFlags mergedFlags = 0;
         if (resolvedDoc != remoteDoc) {
-            BOOL isDeleted = YES;
             if (resolvedDoc) {
-                mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
-                
                 // Unless the remote revision is being used as-is, we need a new revision:
                 NSError* err = nil;
                 mergedBody = [resolvedDoc encode: &err];
@@ -1254,28 +1251,29 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                     createError(CBLErrorUnexpectedError, kCBLErrorMessageResolvedDocContainsNull, outError);
                     return false;
                 }
-                isDeleted = resolvedDoc.isDeleted;
             } else
                 mergedBody = [self emptyFLSliceResult];
-            
-            if (isDeleted)
-                mergedFlags |= kRevDeleted;
         }
         
+        // mergedFlags:
+        C4RevisionFlags mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
+        if (!resolvedDoc || resolvedDoc.isDeleted)
+            mergedFlags |= kRevDeleted;
+        
         // Tell LiteCore to do the resolution:
-        C4Document *rawDoc = localDoc.c4Doc.rawDoc;
+        C4Document *c4doc = localDoc.c4Doc.rawDoc;
         C4Error c4err;
-        if (!c4doc_resolveConflict(rawDoc,
+        if (!c4doc_resolveConflict(c4doc,
                                    winningRevID,
                                    losingRevID,
                                    mergedBody,
                                    mergedFlags,
                                    &c4err)
-            || !c4doc_save(rawDoc, 0, &c4err)) {
+            || !c4doc_save(c4doc, 0, &c4err)) {
             return convertError(c4err, outError);
         }
         CBLLogInfo(Sync, @"Conflict resolved as doc '%@' rev %.*s",
-                   localDoc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+                   localDoc.id, (int)c4doc->revID.size, c4doc->revID.buf);
         
         return t.commit() || convertError(t.error(), outError);
     }
