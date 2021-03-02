@@ -1588,6 +1588,27 @@
     AssertEqual(bytesRead, 8);
 }
 
+- (void) testGetBlobFromDB {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
+    Assert(data, @"Failed to create blob: %@", error);
+    
+    Assert([self.db saveBlob: data error: &error]);
+    AssertNil(error);
+    
+    NSDictionary* dict = @{@"digest": data.digest, @"content_type": data.contentType};
+    CBLBlob* b = [self.db getBlob: dict];
+    int keyCount = 0;
+    for (NSString* key in b.properties.allKeys) {
+        keyCount++;
+        if ([key isEqualToString: @"data"])
+            continue;
+        AssertEqualObjects(b.properties[key], data.properties[key]);
+    }
+    AssertEqual(keyCount, 4);
+}
+
 - (void)testEmptyBlob {
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;

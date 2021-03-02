@@ -24,6 +24,7 @@
 @class CBLDatabaseChange, CBLDocumentChange;
 @class CBLIndex;
 @class CBLLog;
+@class CBLBlob;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 
@@ -218,6 +219,28 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error;
 
+#pragma mark - Blob Save/Get
+
+/**
+ Save a blob object directly into the database without associating it with any documents.
+ 
+ Note: Blobs that are not associated with any documents will be removed from the database
+ when compacting the database.
+ 
+ @param blob The blob to save.
+ @param error On return, the error if any.
+ @return /True on success, false on failure.
+ */
+- (BOOL) saveBlob: (CBLBlob*)blob error: (NSError**)error;
+
+/**
+ Get a blob object using a blob’s digest.
+ If the blob of the specified digest doesn’t exist, the nil value will be returned.
+ 
+ @param dict The blob dictionary for getting the blob content.
+ @return Blob on success, otherwise nil.
+ */
+- (nullable CBLBlob*) getBlob: (NSDictionary*)dict;
 
 #pragma mark - Batch Operation
 

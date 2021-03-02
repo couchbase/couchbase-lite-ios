@@ -39,12 +39,14 @@
 #import "CBLTimer.h"
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
+#import "CBLData.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
 #endif
 
 using namespace fleece;
+using namespace cbl;
 
 #define kDBExtension @"cblite2"
 
@@ -52,6 +54,11 @@ using namespace fleece;
 
 // How long to wait after a database opens before expiring docs
 #define kHousekeepingDelayAfterOpening 3.0
+
+static NSString* kBlobContentTypeProperty = @"content_type";
+static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
+static NSString* kBlobDataProperty = @kC4BlobDataProperty;
+static NSString* kBlobLengthProperty = @"length";
 
 // this variable defines the state of database
 typedef enum {
@@ -325,6 +332,35 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         }
         return convertError(err, error);
     }
+}
+
+#pragma mark - Blob Save/Get
+
+- (BOOL) saveBlob: (CBLBlob*)blob error: (NSError**)error {
+    return [blob installInDatabase: self error: error];
+}
+
+- (CBLBlob*) getBlob: (NSDictionary*)dict {
+    if (!dict[kBlobDigestProperty] || !dict[kBlobContentTypeProperty])
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Property dictionary is missing the digest or content-type"];
+    
+    // Read blob from the BlobStore:
+    C4BlobStore* blobStore = [self getBlobStore: nullptr];
+    C4BlobKey key;
+    
+    if(!c4blob_keyFromString(CBLStringBytes(asString(dict[kBlobDigestProperty])), &key))
+        return nil;
+    
+    //TODO: If data is large, can get the file path & memory-map it
+    FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
+    NSData* content = sliceResult2data(res);
+    FLSliceResult_Release(res);
+    
+    NSMutableDictionary *tempProps = [dict mutableCopy];
+    tempProps[kBlobDataProperty] = content;
+    tempProps[kBlobLengthProperty] = @(content.length);
+    return [[CBLBlob alloc] initWithDatabase: self properties: tempProps];
 }
 
 #pragma mark - BATCH OPERATION
