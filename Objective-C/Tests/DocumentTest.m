@@ -1588,7 +1588,7 @@
     AssertEqual(bytesRead, 8);
 }
 
-- (void) testGetBlobFromDB {
+- (void) testSaveAndGetBlobFromDB {
     NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
