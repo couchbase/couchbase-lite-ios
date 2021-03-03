@@ -242,12 +242,12 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return Blob on success, otherwise nil.
  
  @Note
- /// Key                 | Value                              | Mandatory | Description
- /// ---------------------------------------------------------------------------------------------------
- /// @type            | constant string "blob"      | Yes       | Indicate Blob data type.
- /// content_type  | String                              | No        | Content type ex. text/plain.
- /// length             | Number                          | No        | Binary length of the Blob in bytes.
- /// digest             | String                              | Yes       | The cryptographic digest of the Blob's content.
+ Key            | Value                     | Mandatory | Description
+ ---------------------------------------------------------------------------------------------------
+ @type          | constant string "blob"    | Yes       | Indicate Blob data type.
+ content_type   | String                    | No        | Content type ex. text/plain.
+ length         | Number                    | No        | Binary length of the Blob in bytes.
+ digest         | String                    | Yes       | The cryptographic digest of the Blob's content.
  */
 - (nullable CBLBlob*) getBlob: (NSDictionary*)properties;
 
