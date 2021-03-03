@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_END
 - (void) printRevsForDocumentID: (NSString*)documentID {
     C4Error err;
     CBLStringBytes bDocID(documentID);
-    C4Document* doc = c4doc_get(self.c4db, bDocID, true, &err);
+    C4Document* doc = c4db_getDoc(self.c4db, bDocID, true, kDocGetCurrentRev, &err);
     if (!doc) {
         if (err.domain == LiteCoreDomain && err.code == kC4ErrorNotFound)
             NSLog(@"Error: Document \"%@\" not found", documentID);
@@ -130,8 +130,10 @@ static void writeRevInfo(C4Document *doc, CBLRevTree* tree, NSArray* remotes,
     [str appendString: ((rev.flags & kRevLeaf)           ? @"L" : @"-")];
     
     [str appendFormat: @" #%llu", rev.sequence];
-    if (rev.body.buf)
-        [str appendFormat: @", %zu bytes", rev.body.size];
+    
+    C4Slice body = c4doc_getRevisionBody(doc);
+    if (body.buf)
+        [str appendFormat: @", %zu bytes", body.size];
     
     NSString* revID = slice2string(doc->revID);
     if ([rootRevID isEqualToString: revID])

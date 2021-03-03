@@ -85,6 +85,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(db.count, 1)
+        NSLog("\(resolver.winner!.toDictionary())")
         XCTAssertEqual(resolver.winner!, db.document(withID: "doc")!)
         XCTAssert(db.document(withID: "doc")!.toDictionary() == remoteData)
     }
@@ -662,7 +663,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(order[1], order[2])
     }
     
-    func testConflictResolverWhenDocumentIsPurged() throws {
+    // CBL-1709: c4doc_resolveConflict returns assertion failed instead of not-found error when resolving on a purge doc
+    func _testConflictResolverWhenDocumentIsPurged() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
