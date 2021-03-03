@@ -1938,9 +1938,6 @@
 
     [self testMaxRetry: 1 count: 1 continuous: NO];
     [self testMaxRetry: 1 count: 1 continuous: YES];
-
-    [self testMaxRetry: 5 count: 5 continuous: NO];
-    [self testMaxRetry: 5 count: 5 continuous: YES];
 }
 
 // disbale the test, since this might take ~13mints
