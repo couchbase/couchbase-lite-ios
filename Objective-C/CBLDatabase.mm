@@ -59,6 +59,7 @@ static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
 static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
 static NSString* kBlobDataProperty = @kC4BlobDataProperty;
 static NSString* kBlobLengthProperty = @"length";
+static NSString* kBlobContentTypeProperty = @"content_type";
 
 // this variable defines the state of database
 typedef enum {
@@ -341,9 +342,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (CBLBlob*) getBlob: (NSDictionary*)properties {
-    if (!properties[kBlobDigestProperty] || !properties[kBlobTypeProperty])
+    if (!properties[kBlobDigestProperty] ||
+        ![properties[kBlobDigestProperty] isKindOfClass: [NSString class]] ||
+        !properties[kBlobTypeProperty] || ![properties[kBlobTypeProperty] isEqual: @"blob"] ||
+        (properties[kBlobContentTypeProperty] &&
+         ![properties[kBlobContentTypeProperty] isKindOfClass: [NSString class]]) ||
+        (properties[kBlobLengthProperty] &&
+         ![properties[kBlobLengthProperty] isKindOfClass: [NSNumber class]])) {
+        
         [NSException raise: NSInvalidArgumentException
                     format: @"Property dictionary is missing the digest or @type"];
+    }
     
     return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }

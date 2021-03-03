@@ -61,6 +61,16 @@
     [doc setValue: blob forKey: @"blob"];
 }
 
+- (CBLBlob*) generateBlob {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    Assert(blob, @"Failed to create blob: %@", error);
+    Assert([self.db saveBlob: blob error: &error]);
+    AssertNil(error);
+    return blob;
+}
+
 - (void) testCreateDoc {
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     AssertNotNil(doc);
@@ -1606,6 +1616,35 @@
     // access the content and see the content length gets populated
     AssertEqualObjects(retrivedBlob.content, content);
     AssertEqual([retrivedBlob.properties[@"length"] unsignedIntValue], content.length);
+}
+
+- (void) testGteBlobUsingInvalidJSON {
+    CBLBlob* blob = [self generateBlob];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{@"@type": @"blb"}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{@"@type": @"blob", @"digest": @12345}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest, @"content_type": @1234}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest,
+                            @"content_type": @"text/plain", @"length": @"25"}];
+    }];
+    
+    CBLBlob* retrivedBlob = [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest,
+                                                @"content_type": @"text/plain", @"length": @25,
+                                                @"dummy": @"no-op"}];
+    
+    // this doesn't seems right at first look. since retrived blob has length 25, whereas the original blob has length 8.
+    // it will be correct once we access the content of the blob.
+    AssertEqualObjects(retrivedBlob, blob);
 }
 
 - (void)testEmptyBlob {
