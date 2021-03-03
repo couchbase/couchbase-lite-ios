@@ -1589,24 +1589,23 @@
 }
 
 - (void) testSaveAndGetBlobFromDB {
+    // save blob
     NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
-    Assert(data, @"Failed to create blob: %@", error);
-    
-    Assert([self.db saveBlob: data error: &error]);
+    CBLBlob *blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    Assert(blob, @"Failed to create blob: %@", error);
+    Assert([self.db saveBlob: blob error: &error]);
     AssertNil(error);
     
-    NSDictionary* dict = @{@"digest": data.digest, @"content_type": data.contentType};
-    CBLBlob* b = [self.db getBlob: dict];
-    int keyCount = 0;
-    for (NSString* key in b.properties.allKeys) {
-        keyCount++;
-        if ([key isEqualToString: @"data"])
-            continue;
-        AssertEqualObjects(b.properties[key], data.properties[key]);
-    }
-    AssertEqual(keyCount, 4);
+    // get the saved blob
+    NSDictionary* dict = @{@"digest": blob.digest, @"@type": @"blob", @"content_type": blob.contentType};
+    CBLBlob* retrivedBlob = [self.db getBlob: dict];
+    AssertEqual(retrivedBlob.properties.count, dict.count);
+    AssertEqualObjects(retrivedBlob.properties, dict);
+    
+    // access the content and see the content length gets populated
+    AssertEqualObjects(retrivedBlob.content, content);
+    AssertEqual([retrivedBlob.properties[@"length"] unsignedIntValue], content.length);
 }
 
 - (void)testEmptyBlob {

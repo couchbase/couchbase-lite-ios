@@ -121,9 +121,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     self = [super init];
     if(self) {
         _db = db;
-        NSMutableDictionary *tempProps = [properties mutableCopy];
-        tempProps[kTypeMetaProperty] = nil;
-        _properties = tempProps;
+        _properties = properties;
 
         _length = asNumber(_properties[kLengthMetaProperty]).unsignedLongLongValue;
         _digest = asString(_properties[kDigestMetaProperty]);
@@ -133,6 +131,12 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
             C4Warn("Blob read from database has neither digest nor data.");
     }
     return self;
+}
+
+- (void) updateProperties: (NSString*) key value: (id)value {
+    NSMutableDictionary *tempProps = [_properties mutableCopy];
+    tempProps[key] = value;
+    _properties = tempProps;
 }
 
 - (void) dealloc {
@@ -147,9 +151,10 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         return _properties;
     } else {
         // New blob:
-        return $dict({@"digest", _digest},
-                     {@"length", (_length ? @(_length) : nil)},
-                     {@"content_type", _contentType});
+        return $dict({kTypeMetaProperty, kBlobType},
+                     {kDigestMetaProperty, _digest},
+                     {kLengthMetaProperty, (_length ? @(_length) : nil)},
+                     {kContentTypeMetaProperty, _contentType});
     }
 }
 
@@ -184,6 +189,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         FLSliceResult_Release(res);
         if (content && content.length <= kMaxCachedContentLength)
             _content = content;
+        
+        // update the content and length while loading it
+        [self updateProperties: kLengthMetaProperty value: @(_content.length)];
+        [self updateProperties: kDataMetaProperty value: _content];
+        
         return content;
     } else {
         // No recourse but to read the initial stream into memory:
@@ -206,6 +216,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         _initialContentStream = nil;
         _content = result;
         _length = _content.length;
+        
+        // update the content and length while loading it
+        [self updateProperties: kLengthMetaProperty value: @(_content.length)];
+        [self updateProperties: kDataMetaProperty value: _content];
+        
         return _content;
     }
 }
