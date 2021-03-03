@@ -344,4 +344,18 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     }
 }
 
+#pragma mark - toJSON
+
+- (NSString*) toJSON {
+    Encoder enc;
+    _dict.encodeTo(enc);
+    alloc_slice fleece = enc.finish();
+    
+    auto v = Value::fromData(fleece);
+    if (!v)
+        CBLWarn(Database, @"toJSON: Error invalid Fleece");
+    
+    return slice2string(v.toJSON());
+}
+
 @end

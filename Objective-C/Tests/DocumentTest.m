@@ -1920,4 +1920,21 @@
     AssertEqualObjects(revisionID, doc.revisionID);
 }
 
+#pragma mark - toJSON
+
+- (void) testDocumentToJSON {
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    [doc setValue: @1 forKey:@"intKey"];
+    [doc setString: @"stringVal" forKey: @"stringKey"];
+    [doc setFloat: (float)101.25 forKey: @"floatKey"];
+    [doc setBoolean: YES forKey: @"boolVal"];
+    [doc setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
+    [doc setValue: [NSNull null] forKey: @"nullKey"];
+    // TODO: update to inclde blob, array, dict
+    [self saveDocument: doc];
+    
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"intKey\":1,\"nullKey\":null,\"stringKey\":\"stringVal\"}");
+}
+
 @end

@@ -193,6 +193,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CBLMutableDictionary*) toMutable;
 
+/** Return dictionary data as JSON String */
+- (NSString*) toJSON;
+
 @end
 
 NS_ASSUME_NONNULL_END
