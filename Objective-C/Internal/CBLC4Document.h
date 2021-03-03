@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Revision ID of the selected revision. */
 @property (readonly, nonatomic) C4String revID;
 
-/** Body of the selected revision (Note this body ). */
+/** Body of the selected revision. */
 @property (readonly, nonatomic) FLDict body;
 
 + (instancetype) document: (C4Document*)document;

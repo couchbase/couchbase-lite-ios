@@ -85,7 +85,6 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(db.count, 1)
-        NSLog("\(resolver.winner!.toDictionary())")
         XCTAssertEqual(resolver.winner!, db.document(withID: "doc")!)
         XCTAssert(db.document(withID: "doc")!.toDictionary() == remoteData)
     }
