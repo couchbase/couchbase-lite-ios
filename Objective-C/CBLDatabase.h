@@ -237,10 +237,19 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  Get a blob object using a blob’s digest.
  If the blob of the specified digest doesn’t exist, the nil value will be returned.
  
- @param dict The blob dictionary for getting the blob content. It should have `digest` and `content_type` values. 
+ @param properties The properties for getting the blob object. If dictionary is not valid, it will
+ throw InvalidArgument exception. See the note section
  @return Blob on success, otherwise nil.
+ 
+ @Note
+ /// Key                 | Value                              | Mandatory | Description
+ /// ---------------------------------------------------------------------------------------------------
+ /// @type            | constant string "blob"      | Yes       | Indicate Blob data type.
+ /// content_type  | String                              | No        | Content type ex. text/plain.
+ /// length             | Number                          | No        | Binary length of the Blob in bytes.
+ /// digest             | String                              | Yes       | The cryptographic digest of the Blob's content.
  */
-- (nullable CBLBlob*) getBlob: (NSDictionary*)dict;
+- (nullable CBLBlob*) getBlob: (NSDictionary*)properties;
 
 #pragma mark - Batch Operation
 

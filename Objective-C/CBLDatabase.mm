@@ -340,12 +340,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [blob installInDatabase: self error: error];
 }
 
-- (CBLBlob*) getBlob: (NSDictionary*)dict {
-    if (!dict[kBlobDigestProperty] || !dict[kBlobTypeProperty])
+- (CBLBlob*) getBlob: (NSDictionary*)properties {
+    if (!properties[kBlobDigestProperty] || !properties[kBlobTypeProperty])
         [NSException raise: NSInvalidArgumentException
                     format: @"Property dictionary is missing the digest or @type"];
     
-    return [[CBLBlob alloc] initWithDatabase: self properties: dict];
+    return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }
 
 #pragma mark - BATCH OPERATION
