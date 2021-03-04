@@ -104,8 +104,7 @@
                        continuous: NO];
 }
 
-// CBL-1715 : With VV, Resolving Conflict with Remote-Win results in RevID different from RevID of Remote Doc
-- (void) _testConflictResolverRemoteWins {
+- (void) testConflictResolverRemoteWins {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -218,8 +217,7 @@
                                                                 error: &error].sequence);
 }
 
-// CBL-1715 : With VV, Resolving Conflict with Remote-Win results in RevID different from RevID of Remote Doc
-- (void) _testConflictResolverDeletedRemoteWins {
+- (void) testConflictResolverDeletedRemoteWins {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     [self makeConflictFor: docId withLocal: localData withRemote: nil];
