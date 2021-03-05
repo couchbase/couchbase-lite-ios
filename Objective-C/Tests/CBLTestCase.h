@@ -19,7 +19,12 @@
 
 #import <XCTest/XCTest.h>
 #import "CouchbaseLite.h"
+
+#ifdef __cplusplus
+#import <atomic>
+#else
 #import <stdatomic.h>
+#endif
 
 #define Assert             XCTAssert
 #define AssertNil          XCTAssertNil
@@ -57,7 +62,11 @@
 
 #endif
 
-extern atomic_int gC4ExpectExceptions;
+#ifdef __cplusplus
+    extern std::atomic_int gC4ExpectExceptions;
+#else
+    extern atomic_int gC4ExpectExceptions;
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 

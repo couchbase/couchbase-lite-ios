@@ -42,8 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                    dict: (nullable CBLDictionary*)dict;
 
-- (void) setEncodingError: (NSError*)error;
-
 @end
 
 //////////////////
@@ -88,11 +86,19 @@ NS_ASSUME_NONNULL_BEGIN
                             includeDeleted: (BOOL)includeDeleted
                                      error: (NSError**)outError;
 
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                                documentID: (NSString*)documentID
+                            includeDeleted: (BOOL)includeDeleted
+                              contentLevel: (C4DocContentLevel)contentLevel
+                                     error: (NSError**)outError;
+
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
 - (FLSliceResult) encode: (NSError**)outError;
+
+- (void) setEncodingError: (NSError*)error;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;

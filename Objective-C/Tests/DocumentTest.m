@@ -1787,6 +1787,31 @@
     AssertEqualObjects(data.content, content);
 }
 
+- (void) testBlobtoJSONWithoutSave {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* contentType = @"text/plain";
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: contentType data: content];
+    
+    [self expectException:@"NSInternalInconsistencyException" in:^{
+        [blob toJSON];
+    }];
+}
+
+- (void) testBlobToJSONWithDocumentSave {
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* contentType = @"text/plain";
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: contentType data: content];
+    
+    [doc setValue: blob forKey: @"blob"];
+    [self saveDocument: doc];
+    NSError* error;
+    NSDictionary* json = [NSJSONSerialization JSONObjectWithData: [[blob toJSON] dataUsingEncoding: NSUTF8StringEncoding]
+                                                         options: 0 error: &error];
+    AssertEqualObjects(json, (@{@"@type": @"blob", @"content_type": contentType, @"length": @(8),
+                                @"digest": blob.digest}));
+}
+
 - (void) testEnumeratingKeys {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     for (NSInteger i = 0; i < 20; i++) {

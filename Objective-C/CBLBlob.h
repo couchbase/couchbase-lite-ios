@@ -87,6 +87,15 @@ NS_ASSUME_NONNULL_BEGIN
 /** The metadata associated with this CBLBlob */
 @property (readonly, nonatomic) NSDictionary<NSString*,id>* properties;
 
+/**
+ Returns a dictionary representation of the blob object in JSON string format. The dictionary
+ will contain only metadata information without data.
+ 
+ If Blob is not saved in the database which means that it doesn’t have digest information,
+ calling toJSON() will not be allowed and it will throw an NSInternalInconsistencyException.
+ */
+- (NSString*) toJSON;
+
 @end
 
 NS_ASSUME_NONNULL_END

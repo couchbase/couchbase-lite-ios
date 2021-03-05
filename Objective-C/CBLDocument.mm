@@ -33,6 +33,7 @@ using namespace fleece;
 @implementation CBLDocument
 {
     std::unique_ptr<MRoot<id>> _root;
+    NSError* _encodingError;
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
@@ -89,13 +90,27 @@ using namespace fleece;
                    includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError
 {
+    return [self initWithDatabase: database
+                       documentID: documentID
+                   includeDeleted: includeDeleted
+                     contentLevel: kDocGetCurrentRev
+                            error: outError];
+}
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                   includeDeleted: (BOOL)includeDeleted
+                     contentLevel: (C4DocContentLevel)contentLevel
+                            error: (NSError**)outError
+{
     self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
     if (self) {
         _database = database;
         _revID = nil;
         CBLStringBytes docId(documentID);
         C4Error err;
-        auto doc = c4doc_get(database.c4db, docId, true, &err);
+        
+        auto doc = c4db_getDoc(database.c4db, docId, true, contentLevel, &err);
         if (!doc) {
             convertError(err, outError);
             return nil;
@@ -176,11 +191,9 @@ using namespace fleece;
         _c4Doc = c4doc;
         _fleeceData = nullptr;
         
-        if (c4doc) {
-            C4Slice body = c4doc.body;
-            if (body.size > 0)
-                _fleeceData = FLValue_AsDict(FLValue_FromData(body, kFLTrusted));
-        }
+        if (c4doc)
+            _fleeceData = c4doc.body;
+        
         [self updateDictionary];
     }
 }
@@ -191,10 +204,32 @@ using namespace fleece;
     }
 }
 
+#pragma mark - Fleece Encoding
+
 - (FLSliceResult) encode: (NSError**)outError {
-    // CBLMutableDocument overrides this
-    fleece::slice body = _c4Doc.body;
-    return FLSliceResult(body ? alloc_slice(body) : alloc_slice(size_t(0)));
+    _encodingError = nil;
+    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
+    FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
+    [_dict fl_encodeToFLEncoder: encoder];
+    if (_encodingError != nil) {
+        FLEncoder_Reset(encoder);
+        if (outError)
+            *outError = _encodingError;
+        _encodingError = nil;
+        return {};
+    }
+    FLError flErr;
+    const char* errMessage = FLEncoder_GetErrorMessage(encoder);
+    FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
+    if (!body.buf)
+        createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
+    return body;
+}
+
+// Objects being encoded can call this
+- (void) setEncodingError: (NSError*)error {
+    if (!_encodingError)
+        _encodingError = error;
 }
 
 #pragma mark - For Replication's conflict resolution

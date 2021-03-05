@@ -16,3 +16,6 @@ derived_src/
 # CBL files:
 vendor/couchbase-lite-core-EE
 *_EE*.xcscheme
+
+# spm 
+.swiftpm/*

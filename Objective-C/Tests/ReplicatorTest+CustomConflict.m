@@ -609,39 +609,38 @@
 
 - (void) testConflictResolutionDefault {
     NSError* error;
-    NSDictionary* localData = @{@"key1": @"value1"};
-    NSDictionary* remoteData = @{@"key2": @"value2"};
+    NSDictionary* localData = @{@"name": @"local"};
+    NSDictionary* remoteData = @{@"name": @"remote"};
     NSMutableArray* conflictedDocs = [NSMutableArray array];
     
-    // higher generation-id
+    // Higher generation-id
     NSString* docID = @"doc1";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
-    [doc setValue: @"value3" forKey: @"key3"];
+    [doc setValue: @"value1" forKey: @"key1"];
     [self saveDocument: doc];
     [conflictedDocs addObject: @[[self.db documentWithID: docID],
                                  [self.otherDB documentWithID: docID]]];
     
-    // delete local
+    // Delete local
     docID = @"doc2";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
     [conflictedDocs addObject: @[[NSNull null], [self.otherDB documentWithID: docID]]];
     
-    // delete remote
+    // Delete remote
     docID = @"doc3";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.otherDB deleteDocument: [self.otherDB documentWithID: docID] error: &error];
     [conflictedDocs addObject: @[[self.db documentWithID: docID], [NSNull null]]];
     
-    // delete local but higher remote generation.
+    // Delete local but higher remote generation.
     docID = @"doc4";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
     doc = [[self.otherDB documentWithID: docID] toMutable];
     [doc setValue: @"value3" forKey: @"key3"];
     [self.otherDB saveDocument: doc error: &error];
-    doc = [[self.otherDB documentWithID: docID] toMutable];
     [doc setValue: @"value4" forKey: @"key4"];
     [self.otherDB saveDocument: doc error: &error];
     [conflictedDocs addObject: @[[NSNull null], [self.otherDB documentWithID: docID]]];
@@ -649,25 +648,12 @@
     CBLReplicatorConfiguration* pullConfig = [self config:kCBLReplicatorTypePull];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    for (NSArray* docs in conflictedDocs) {
-        CBLDocument* doc1 = docs[0];
-        CBLDocument* doc2 = docs[1];
-        
-        // if any deleted, success revision should be deleted.
-        if ([doc1 isEqual: [NSNull null]] || [doc2 isEqual: [NSNull null]]) {
-            docID = [doc1 isKindOfClass: [NSNull class]] ? doc2.id : doc1.id;
-            CBLDocument* successDoc = [[CBLDocument alloc] initWithDatabase: self.db
-                                                                 documentID: docID
-                                                             includeDeleted: YES
-                                                                      error: &error];
-            AssertNil(error);
-            Assert(successDoc.isDeleted);
-        } else {
-            // if generations are different
-            AssertEqual(doc1.generation, [self.db documentWithID: doc1.id].generation);
-            Assert(doc1.generation > doc2.generation);
-        }
-    }
+    NSDictionary* expectedData = @{@"name": @"local", @"key1": @"value1"};
+    AssertEqualObjects([[self.db documentWithID: @"doc1"] toDictionary], expectedData);
+    
+    AssertNil([self.db documentWithID: @"doc2"]);
+    AssertNil([self.db documentWithID: @"doc3"]);
+    AssertNil([self.db documentWithID: @"doc4"]);
 }
 
 - (void) testConflictResolverReturningBlob {
@@ -790,7 +776,8 @@
  6. document resolved successfully, with second attempt,
  7. once the first CCR tries again, conflict is already been resolved.
  */
-- (void) testDoubleConflictResolutionOnSameConflicts {
+// CBL-1710: Update to use setProgressLevel API in Replicator
+- (void) _testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
@@ -921,7 +908,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testConflictResolverWhenDocumentIsPurged {
+// CBL-1709: c4doc_resolveConflict returns assertion failed instead of not-found error when resolving on a purge doc
+- (void) _testConflictResolverWhenDocumentIsPurged {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};

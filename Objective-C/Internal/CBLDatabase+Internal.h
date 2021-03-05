@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (C4SliceResult) getPublicUUID: (NSError**)outError;
 
-- (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
+- (nullable C4BlobStore*) getBlobStore: (NSError**)outError;
 
 - (void) addActiveStoppable: (id<CBLStoppable>)stoppable;
 - (void) removeActiveStoppable: (id<CBLStoppable>)stoppable;
