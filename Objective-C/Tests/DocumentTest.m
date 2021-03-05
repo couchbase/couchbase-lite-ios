@@ -1608,38 +1608,47 @@
     AssertNil(error);
     
     // get the saved blob
-    NSDictionary* dict = @{@"digest": blob.digest, @"@type": @"blob", @"content_type": blob.contentType};
+    NSDictionary* dict = @{kCBLBlobDigestMetaProperty: blob.digest,
+                           kCBLBlobTypeMetaProperty: kCBLBlobType,
+                           kCBLBlobContentTypeMetaProperty: blob.contentType};
     CBLBlob* retrivedBlob = [self.db getBlob: dict];
     AssertEqual(retrivedBlob.properties.count, dict.count);
     AssertEqualObjects(retrivedBlob.properties, dict);
     
     // access the content and see the content length gets populated
     AssertEqualObjects(retrivedBlob.content, content);
-    AssertEqual([retrivedBlob.properties[@"length"] unsignedIntValue], content.length);
+    AssertEqual([retrivedBlob.properties[kCBLBlobLengthMetaProperty] unsignedIntValue], content.length);
 }
 
 - (void) testGteBlobUsingInvalidJSON {
     CBLBlob* blob = [self generateBlob];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
-        [self.db getBlob: @{@"@type": @"blb"}];
+        [self.db getBlob: @{kCBLBlobTypeMetaProperty: @"blb"}];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
-        [self.db getBlob: @{@"@type": @"blob", @"digest": @12345}];
+        [self.db getBlob: @{kCBLBlobTypeMetaProperty: kCBLBlobType,
+                            kCBLBlobDigestMetaProperty: @12345}];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
-        [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest, @"content_type": @1234}];
+        [self.db getBlob: @{kCBLBlobTypeMetaProperty: kCBLBlobType,
+                            kCBLBlobDigestMetaProperty: blob.digest,
+                            kCBLBlobContentTypeMetaProperty: @1234}];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
-        [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest,
-                            @"content_type": @"text/plain", @"length": @"25"}];
+        [self.db getBlob: @{kCBLBlobTypeMetaProperty: kCBLBlobType,
+                            kCBLBlobDigestMetaProperty: blob.digest,
+                            kCBLBlobContentTypeMetaProperty: @"text/plain",
+                            kCBLBlobLengthMetaProperty: @"25"}];
     }];
     
-    CBLBlob* retrivedBlob = [self.db getBlob: @{@"@type": @"blob", @"digest": blob.digest,
-                                                @"content_type": @"text/plain", @"length": @25,
+    CBLBlob* retrivedBlob = [self.db getBlob: @{kCBLBlobTypeMetaProperty: kCBLBlobType,
+                                                kCBLBlobDigestMetaProperty: blob.digest,
+                                                kCBLBlobContentTypeMetaProperty: @"text/plain",
+                                                kCBLBlobLengthMetaProperty: @25,
                                                 @"dummy": @"no-op"}];
     
     // this doesn't seems right at first look. since retrived blob has length 25, whereas the original blob has length 8.

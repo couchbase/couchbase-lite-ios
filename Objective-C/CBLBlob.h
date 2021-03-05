@@ -21,6 +21,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString* const kCBLBlobType;
+extern NSString* const kCBLBlobTypeMetaProperty;
+extern NSString* const kCBLBlobDigestMetaProperty;
+extern NSString* const kCBLBlobLengthMetaProperty;
+extern NSString* const kCBLBlobContentTypeMetaProperty;
 
 /** 
  A CBLBlob contains arbitrary binary data, tagged with a MIME type.

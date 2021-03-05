@@ -42,12 +42,14 @@ static const size_t kMaxCachedContentLength = 8*1024;
 // Stack buffer size when reading NSInputStream
 static const size_t kReadBufferSize = 8*1024;
 
-static NSString* const kTypeMetaProperty = @kC4ObjectTypeProperty;
-static NSString* const kDigestMetaProperty = @kC4BlobDigestProperty;
-static NSString* const kDataMetaProperty = @kC4BlobDataProperty;
-static NSString* const kLengthMetaProperty = @"length";
-static NSString* const kContentTypeMetaProperty = @"content_type";
-static NSString* const kBlobType = @kC4ObjectType_Blob;
+NSString* const kCBLBlobType = @kC4ObjectType_Blob;
+NSString* const kCBLBlobTypeMetaProperty = @kC4ObjectTypeProperty;
+NSString* const kCBLBlobDigestMetaProperty = @kC4BlobDigestProperty;
+NSString* const kCBLBlobLengthMetaProperty = @"length";
+NSString* const kCBLBlobContentTypeMetaProperty = @"content_type";
+
+// internal
+static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 
 @implementation CBLBlob
 {
@@ -122,10 +124,10 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     if(self) {
         _db = db;
 
-        _length = asNumber(properties[kLengthMetaProperty]).unsignedLongLongValue;
-        _digest = asString(properties[kDigestMetaProperty]);
-        _contentType = asString(properties[kContentTypeMetaProperty]);
-        _content = asData(properties[kDataMetaProperty]);
+        _length = asNumber(properties[kCBLBlobLengthMetaProperty]).unsignedLongLongValue;
+        _digest = asString(properties[kCBLBlobDigestMetaProperty]);
+        _contentType = asString(properties[kCBLBlobContentTypeMetaProperty]);
+        _content = asData(properties[kCBLBlobDataMetaProperty]);
         if (!_digest && !_content)
             C4Warn("Blob read from database has neither digest nor data.");
     }
@@ -140,20 +142,20 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 - (NSDictionary*) properties {
     @synchronized (self) {
-        return $dict({kTypeMetaProperty, kBlobType},
-                     {kDigestMetaProperty, _digest},
-                     {kLengthMetaProperty, (_length ? @(_length) : nil)},
-                     {kContentTypeMetaProperty, _contentType});
+        return $dict({kCBLBlobTypeMetaProperty, kCBLBlobType},
+                     {kCBLBlobDigestMetaProperty, _digest},
+                     {kCBLBlobLengthMetaProperty, (_length ? @(_length) : nil)},
+                     {kCBLBlobContentTypeMetaProperty, _contentType});
     }
 }
 
 - (NSDictionary*) jsonRepresentation {
     NSMutableDictionary* json = [self.properties mutableCopy];
-    json[kTypeMetaProperty] = kBlobType;
+    json[kCBLBlobTypeMetaProperty] = kCBLBlobType;
     if (_digest)
-        json[kDigestMetaProperty] = _digest; // Ensure that digest will be there.
+        json[kCBLBlobDigestMetaProperty] = _digest; // Ensure that digest will be there.
     else
-        json[kDataMetaProperty] = self.content;
+        json[kCBLBlobDataMetaProperty] = self.content;
     return json;
 }
 
