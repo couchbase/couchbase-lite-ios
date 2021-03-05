@@ -54,7 +54,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     CBLDatabase* _db;                       // nil if blob is new and unsaved
     NSData* _content;                       // If new from data, or already loaded from db
     NSInputStream* _initialContentStream;   // If new from stream.
-    NSDictionary* _properties;              // Only in blob read from database
 
     // A newly created unsaved blob will have either _content or _initialContentStream.
     // A new blob saved to the database will have _db and _digest.
@@ -122,22 +121,15 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     self = [super init];
     if(self) {
         _db = db;
-        _properties = properties;
 
-        _length = asNumber(_properties[kLengthMetaProperty]).unsignedLongLongValue;
-        _digest = asString(_properties[kDigestMetaProperty]);
-        _contentType = asString(_properties[kContentTypeMetaProperty]);
-        _content = asData(_properties[kDataMetaProperty]);
+        _length = asNumber(properties[kLengthMetaProperty]).unsignedLongLongValue;
+        _digest = asString(properties[kDigestMetaProperty]);
+        _contentType = asString(properties[kContentTypeMetaProperty]);
+        _content = asData(properties[kDataMetaProperty]);
         if (!_digest && !_content)
             C4Warn("Blob read from database has neither digest nor data.");
     }
     return self;
-}
-
-- (void) updateProperties: (NSString*) key value: (id)value {
-    NSMutableDictionary *tempProps = [_properties mutableCopy];
-    tempProps[key] = value;
-    _properties = tempProps;
 }
 
 - (void) dealloc {
@@ -147,11 +139,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 - (NSDictionary*) properties {
-    if (_properties) {
-        // Blob read from database;
-        return _properties;
-    } else {
-        // New blob:
+    @synchronized (self) {
         return $dict({kTypeMetaProperty, kBlobType},
                      {kDigestMetaProperty, _digest},
                      {kLengthMetaProperty, (_length ? @(_length) : nil)},
@@ -189,9 +177,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 - (NSData*) content {
-    if(_content != nil) {
-        // Data is in memory:
-        return _content;
+    if([self isContentAvailable]) {
+        @synchronized (self) {
+            // Data is in memory:
+            return _content;
+        }
     } else if (_db) {
         // Read blob from the BlobStore:
         C4BlobStore* blobStore;
@@ -202,13 +192,14 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
         NSData* content = sliceResult2data(res);
         FLSliceResult_Release(res);
-        if (content && content.length <= kMaxCachedContentLength)
-            _content = content;
-        
-        // update the content and length while loading it
-        [self updateProperties: kLengthMetaProperty value: @(_content.length)];
-        [self updateProperties: kDataMetaProperty value: _content];
-        
+        if (content && content.length <= kMaxCachedContentLength) {
+            @synchronized (self) {
+                _content = content;
+                _length = _content.length;
+                
+                return _content;
+            }
+        }
         return content;
     } else {
         // No recourse but to read the initial stream into memory:
@@ -227,16 +218,14 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         [_initialContentStream close];
         if (bytesRead < 0)
             return nil;
-
+        
         _initialContentStream = nil;
-        _content = result;
-        _length = _content.length;
-        
-        // update the content and length while loading it
-        [self updateProperties: kLengthMetaProperty value: @(_content.length)];
-        [self updateProperties: kDataMetaProperty value: _content];
-        
-        return _content;
+        @synchronized (self) {
+            _content = result;
+            _length = _content.length;
+            
+            return _content;
+        }
     }
 }
 
@@ -248,7 +237,9 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
             return nil;
         return [[CBLBlobStream alloc] initWithStore: blobStore key: key];
     } else {
-        return _content ? [[NSInputStream alloc] initWithData: _content] : nil;
+        @synchronized (self) {
+            return _content ? [[NSInputStream alloc] initWithData: _content] : nil;
+        }
     }
 }
 
@@ -281,7 +272,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 #pragma mark - Internal
 
-
 - (BOOL) installInDatabase: (CBLDatabase*)db error:(NSError**)outError {
     Assert(db);
     if (_db) {
@@ -299,8 +289,11 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     C4Error err;
     C4BlobKey key;
     bool success = true;
-    if (_content) {
-        success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
+    
+    if ([self isContentAvailable]) {
+        @synchronized (self) {
+            success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
+        }
     } else {
         Assert(_initialContentStream, kCBLErrorMessageBlobContentNull);
         C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
@@ -372,6 +365,13 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         FLEncoder_WriteNSObject(encoder, value);
     }
     FLEncoder_EndDict(encoder);
+}
+
+// thread safe check for `_content`
+- (BOOL) isContentAvailable {
+    @synchronized (self) {
+        return _content != nil;
+    }
 }
 
 @end

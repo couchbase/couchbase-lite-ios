@@ -234,8 +234,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 - (BOOL) saveBlob: (CBLBlob*)blob error: (NSError**)error;
 
 /**
- Get a blob object using a blob’s digest.
- If the blob of the specified digest doesn’t exist, the nil value will be returned.
+ Get a blob object using a blob’s metadata.
+ If the blob of the specified metadata doesn’t exist, the nil value will be returned.
  
  @param properties The properties for getting the blob object. If dictionary is not valid, it will
  throw InvalidArgument exception. See the note section
