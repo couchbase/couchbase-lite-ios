@@ -28,6 +28,7 @@
 #import "c4BlobStore.h"
 #import "CBLData.h"
 #import "CBLErrorMessage.h"
+#import "CBLJSON.h"
 
 using namespace cbl;
 
@@ -161,6 +162,20 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     else
         json[kDataMetaProperty] = self.content;
     return json;
+}
+
+- (NSString*) toJSON {
+    if (!_digest)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"toJSON() is not allowed as Blob has not been saved in the database"];
+    
+    NSError* error;
+    NSString* s = [CBLJSON stringWithJSONObject: [self jsonRepresentation]
+                                        options: 0 error: &error];
+    if (!s)
+        CBLWarnError(Database, @"toJSON: Failed to serialize the json %@", error);
+    
+    return s;
 }
 
 - (BOOL) getBlobStore: (C4BlobStore**)outBlobStore andKey: (C4BlobKey*)outBlobKey {
