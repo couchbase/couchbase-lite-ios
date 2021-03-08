@@ -1949,7 +1949,8 @@
 
 - (void) testDocumentToJSON {
     CBLMutableDocument* doc = [self createDocument: @"doc"];
-    [doc setValue: @1 forKey:@"intKey"];
+    [doc setValue: @1 forKey:@"valueKey"];
+    [doc setInteger: 22 forKey: @"intKey"];
     [doc setString: @"stringVal" forKey: @"stringKey"];
     [doc setFloat: (float)101.25 forKey: @"floatKey"];
     [doc setBoolean: YES forKey: @"boolVal"];
@@ -1959,7 +1960,28 @@
     [self saveDocument: doc];
     
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"intKey\":1,\"nullKey\":null,\"stringKey\":\"stringVal\"}");
+    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"valueKey\":1,\"intKey\":22,\"nullKey\":null,\"stringKey\":\"stringVal\"}");
+}
+
+- (void) testArrayToJSON {
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addInteger: 22];
+    [array addString: @"stringKey"];
+    [array addFloat: (float)101.25];
+    [array addBoolean: YES];
+    [array addDate: [NSDate dateWithTimeIntervalSince1970: 10]];
+    [array addValue: [NSNull null]];
+    [doc setValue: array forKey: @"array"];
+    AssertEqual([doc valueForKey: @"array"], array);
+    AssertEqual([doc arrayForKey: @"array"], array);
+    [self saveDocument: doc];
+    
+    // Update:
+    CBLArray* a = [doc arrayForKey: @"array"];
+    AssertEqualObjects([a toJSON],
+                       @"[1,22,\"stringKey\",101.25,true,\"1970-01-01T00:00:10.000Z\",null]");
 }
 
 @end

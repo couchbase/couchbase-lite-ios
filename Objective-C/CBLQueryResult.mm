@@ -121,6 +121,10 @@ using namespace fleece;
     return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
+- (NSString*) toJSON {
+    return @"Not implemented!";
+}
+
 #pragma mark - CBLDictionary
 
 - (NSArray*) keys {

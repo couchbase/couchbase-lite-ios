@@ -25,6 +25,7 @@
 #import "CBLJSON.h"
 #import "CBLFleece.hh"
 #import "MArray.hh"
+#import "CBLCoreBridge.h"
 
 using namespace cbl;
 using namespace fleece;
@@ -97,6 +98,20 @@ using namespace fleece;
     [NSException raise: NSRangeException format: @"CBLMutableArray index %lu is out of range",
         (unsigned long)index];
     abort();
+}
+
+#pragma mark - toJSON
+
+- (NSString*) toJSON {
+    Encoder enc;
+    _array.encodeTo(enc);
+    alloc_slice fleece = enc.finish();
+    
+    auto v = Value::fromData(fleece);
+    if (!v)
+        CBLWarn(Database, @"toJSON: Error invalid Fleece");
+    
+    return slice2string(v.toJSON());
 }
 
 #pragma mark - GETTER
