@@ -1960,7 +1960,7 @@
     [self saveDocument: doc];
     
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"valueKey\":1,\"intKey\":22,\"nullKey\":null,\"stringKey\":\"stringVal\"}");
+    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"intKey\":22,\"nullKey\":null,\"stringKey\":\"stringVal\",\"valueKey\":1}");
 }
 
 - (void) testArrayToJSON {
