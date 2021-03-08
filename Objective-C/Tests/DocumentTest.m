@@ -1956,11 +1956,33 @@
     [doc setBoolean: YES forKey: @"boolVal"];
     [doc setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
     [doc setValue: [NSNull null] forKey: @"nullKey"];
-    // TODO: update to inclde blob, array, dict
+    
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [doc setBlob: blob forKey: @"blob"];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addValue: @2];
+    [doc setValue: array forKey: @"array"];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [doc setValue: dict forKey: @"dict"];
+    
+    // save document
     [self saveDocument: doc];
     
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects([retrivedDoc toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"intKey\":22,\"nullKey\":null,\"stringKey\":\"stringVal\",\"valueKey\":1}");
+    AssertEqualObjects([retrivedDoc toJSON], @"{\"array\":[1,2],"
+                       "\"blob\":{\"@type\":\"blob\",\"content_type\":\"text/plain\",\"digest\":\"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=\",\"length\":8},"
+                       "\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                       "\"dict\":{\"state\":\"CA\"},"
+                       "\"floatKey\":101.25,"
+                       "\"intKey\":22,"
+                       "\"nullKey\":null,"
+                       "\"stringKey\":\"stringVal\","
+                       "\"valueKey\":1}");
 }
 
 - (void) testArrayToJSON {
