@@ -1995,6 +1995,20 @@
     [array addBoolean: YES];
     [array addDate: [NSDate dateWithTimeIntervalSince1970: 10]];
     [array addValue: [NSNull null]];
+    
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [array addBlob: blob];
+    
+    CBLMutableArray* nestedArray = [[CBLMutableArray alloc] init];
+    [nestedArray addValue: @101];
+    [nestedArray addValue: @201];
+    [array addArray: nestedArray];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [array addValue: dict];
+    
     [doc setValue: array forKey: @"array"];
     AssertEqual([doc valueForKey: @"array"], array);
     AssertEqual([doc arrayForKey: @"array"], array);
@@ -2002,8 +2016,10 @@
     
     // Update:
     CBLArray* a = [doc arrayForKey: @"array"];
-    AssertEqualObjects([a toJSON],
-                       @"[1,22,\"stringKey\",101.25,true,\"1970-01-01T00:00:10.000Z\",null]");
+    AssertEqualObjects([a toJSON],@"[1,22,\"stringKey\",101.25,true,\"1970-01-01T00:00:10.000Z\",null,"
+                       "{\"length\":8,\"digest\":\"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
+                       "[101,201],"
+                       "{\"state\":\"CA\"}]");
 }
 
 @end

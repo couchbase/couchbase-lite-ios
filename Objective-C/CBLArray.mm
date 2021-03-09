@@ -103,15 +103,10 @@ using namespace fleece;
 #pragma mark - toJSON
 
 - (NSString*) toJSON {
-    Encoder enc;
+    JSONEncoder enc;
     _array.encodeTo(enc);
-    alloc_slice fleece = enc.finish();
-    
-    auto v = Value::fromData(fleece);
-    if (!v)
-        CBLWarn(Database, @"toJSON: Error invalid Fleece");
-    
-    return slice2string(v.toJSON());
+    auto data = enc.finish();
+    return slice2string(data);
 }
 
 #pragma mark - GETTER
