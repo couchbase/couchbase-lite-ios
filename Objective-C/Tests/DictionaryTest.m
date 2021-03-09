@@ -357,15 +357,41 @@
     [mDict1 setBoolean: YES forKey: @"boolVal"];
     [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
     [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
-    // TODO: update to inclde blob, array, dict
+    // TODO: update to inclde array, dict
     
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
     [mDoc setValue: mDict1 forKey: @"dict"];
-    [self saveDocument: mDoc];
     
+    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [mDict1 setBlob: blob forKey: @"blob"];
+
+    [self saveDocument: mDoc];
+
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
     CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
-    AssertEqualObjects([retrivedDict toJSON], @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\",\"floatKey\":101.25,\"intKey\":1,\"nullKey\":null,\"stringKey\":\"stringVal\"}");
+    AssertEqualObjects([retrivedDict toJSON], @"{"
+                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"content_type\":\"text/plain\",\"@type\":\"blob\"},"
+                       "\"nullKey\":null,"
+                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                       "\"stringKey\":\"stringVal\","
+                       "\"boolVal\":true,"
+                       "\"floatKey\":101.25,"
+                       "\"intKey\":1"
+                       "}");
+    
+    CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
+    [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
+    AssertEqualObjects([mDictRetrived toJSON], @"{"
+                       "\"newKeyAppended\":\"newValueAppended\","
+                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"content_type\":\"text/plain\",\"@type\":\"blob\"},"
+                       "\"nullKey\":null,"
+                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                       "\"stringKey\":\"stringVal\","
+                       "\"boolVal\":true,"
+                       "\"floatKey\":101.25,"
+                       "\"intKey\":1"
+                       "}");
 }
 
 @end
