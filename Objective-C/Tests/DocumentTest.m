@@ -1620,7 +1620,7 @@
     AssertEqual([retrivedBlob.properties[kCBLBlobLengthProperty] unsignedIntValue], content.length);
 }
 
-- (void) testGteBlobUsingInvalidJSON {
+- (void) testGetBlobUsingInvalidJSON {
     CBLBlob* blob = [self generateBlob];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
