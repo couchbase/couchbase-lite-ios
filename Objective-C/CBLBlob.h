@@ -101,6 +101,11 @@ extern NSString* const kCBLBlobContentTypeProperty;
  */
 - (NSString*) toJSON;
 
+/**
+ Return whether the given dictionary represents Blob or not
+*/
++ (BOOL) isBlob: (NSDictionary<NSString*, id>*)properties;
+
 @end
 
 NS_ASSUME_NONNULL_END

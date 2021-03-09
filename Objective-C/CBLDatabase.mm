@@ -342,17 +342,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (CBLBlob*) getBlob: (NSDictionary*)properties {
-    if (!properties[kBlobDigestProperty] ||
-        ![properties[kBlobDigestProperty] isKindOfClass: [NSString class]] ||
-        !properties[kBlobTypeProperty] || ![properties[kBlobTypeProperty] isEqual: @"blob"] ||
-        (properties[kBlobContentTypeProperty] &&
-         ![properties[kBlobContentTypeProperty] isKindOfClass: [NSString class]]) ||
-        (properties[kBlobLengthProperty] &&
-         ![properties[kBlobLengthProperty] isKindOfClass: [NSNumber class]])) {
-        
-        [NSException raise: NSInvalidArgumentException format: @"The given blob's metadata "
-         "might be missing the digest / @type key or containing invalid values"];
-    }
+    if (![CBLBlob isBlob: properties])
+        [NSException raise: NSInvalidArgumentException
+                    format: @"The given blob's metadata might be missing the digest / @type key "
+                                "or containing invalid values"];
     
     return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }

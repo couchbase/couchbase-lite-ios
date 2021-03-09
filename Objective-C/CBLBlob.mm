@@ -239,6 +239,19 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     }
 }
 
++ (BOOL) isBlob:(NSDictionary<NSString *,id> *)properties {
+    if (!properties[kCBLBlobDigestProperty] ||
+        ![properties[kCBLBlobDigestProperty] isKindOfClass: [NSString class]] ||
+        !properties[kCBLTypeProperty] || ![properties[kCBLTypeProperty] isEqual: @"blob"] ||
+        (properties[kCBLBlobContentTypeProperty] &&
+         ![properties[kCBLBlobContentTypeProperty] isKindOfClass: [NSString class]]) ||
+        (properties[kCBLBlobLengthProperty] &&
+         ![properties[kCBLBlobLengthProperty] isKindOfClass: [NSNumber class]])) {
+        return NO;
+    }
+    return YES;
+}
+
 #pragma mark - Equality
 
 - (BOOL) isEqual: (id)object {
