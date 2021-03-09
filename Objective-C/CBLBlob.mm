@@ -43,10 +43,10 @@ static const size_t kMaxCachedContentLength = 8*1024;
 static const size_t kReadBufferSize = 8*1024;
 
 NSString* const kCBLBlobType = @kC4ObjectType_Blob;
-NSString* const kCBLBlobTypeMetaProperty = @kC4ObjectTypeProperty;
-NSString* const kCBLBlobDigestMetaProperty = @kC4BlobDigestProperty;
-NSString* const kCBLBlobLengthMetaProperty = @"length";
-NSString* const kCBLBlobContentTypeMetaProperty = @"content_type";
+NSString* const kCBLTypeProperty = @kC4ObjectTypeProperty;
+NSString* const kCBLBlobDigestProperty = @kC4BlobDigestProperty;
+NSString* const kCBLBlobLengthProperty = @"length";
+NSString* const kCBLBlobContentTypeProperty = @"content_type";
 
 // internal
 static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
@@ -151,21 +151,21 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 
 - (NSDictionary*) jsonRepresentation {
     NSMutableDictionary* json = [self.properties mutableCopy];
-    json[kCBLBlobTypeMetaProperty] = kCBLBlobType;
-    if (_digest)
-        json[kCBLBlobDigestMetaProperty] = _digest; // Ensure that digest will be there.
-    else
+    if (!json[kCBLBlobDigestMetaProperty]) {
         json[kCBLBlobDataMetaProperty] = self.content;
+    }
     return json;
 }
 
 - (NSString*) toJSON {
-    if (!_digest)
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"toJSON() is not allowed as Blob has not been saved in the database"];
+    @synchronized (self) {
+        if (!_digest)
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"toJSON() is not allowed as Blob has not been saved in the database"];
+    }
     
     NSError* error;
-    NSString* s = [CBLJSON stringWithJSONObject: [self jsonRepresentation]
+    NSString* s = [CBLJSON stringWithJSONObject: self.properties
                                         options: 0 error: &error];
     if (!s)
         CBLWarnError(Database, @"toJSON: Failed to serialize the json %@", error);
@@ -179,50 +179,44 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 }
 
 - (NSData*) content {
-    if([self isContentAvailable]) {
-        @synchronized (self) {
+    @synchronized (self) {
+        if(_content) {
             // Data is in memory:
             return _content;
-        }
-    } else if (_db) {
-        // Read blob from the BlobStore:
-        C4BlobStore* blobStore;
-        C4BlobKey key;
-        if (![self getBlobStore: &blobStore andKey: &key])
-            return nil;
-        //TODO: If data is large, can get the file path & memory-map it
-        FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
-        NSData* content = sliceResult2data(res);
-        FLSliceResult_Release(res);
-        if (content && content.length <= kMaxCachedContentLength) {
-            @synchronized (self) {
+        } else if (_db) {
+            // Read blob from the BlobStore:
+            C4BlobStore* blobStore;
+            C4BlobKey key;
+            if (![self getBlobStore: &blobStore andKey: &key])
+                return nil;
+            //TODO: If data is large, can get the file path & memory-map it
+            FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
+            NSData* content = sliceResult2data(res);
+            FLSliceResult_Release(res);
+            if (content && content.length <= kMaxCachedContentLength) {
                 _content = content;
                 _length = _content.length;
-                
-                return _content;
             }
-        }
-        return content;
-    } else {
-        // No recourse but to read the initial stream into memory:
-        if (!_initialContentStream) {
-            [NSException raise: NSInternalInconsistencyException
-                        format: @"%@", kCBLErrorMessageBlobContainsNoData];
-        }
-        
-        NSMutableData *result = [NSMutableData new];
-        uint8_t buffer[kReadBufferSize];
-        NSInteger bytesRead;
-        [_initialContentStream open];
-        while((bytesRead = [_initialContentStream read:buffer maxLength:kReadBufferSize]) > 0) {
-            [result appendBytes:buffer length:bytesRead];
-        }
-        [_initialContentStream close];
-        if (bytesRead < 0)
-            return nil;
-        
-        _initialContentStream = nil;
-        @synchronized (self) {
+            return content;
+        } else {
+            // No recourse but to read the initial stream into memory:
+            if (!_initialContentStream) {
+                [NSException raise: NSInternalInconsistencyException
+                            format: @"%@", kCBLErrorMessageBlobContainsNoData];
+            }
+            
+            NSMutableData *result = [NSMutableData new];
+            uint8_t buffer[kReadBufferSize];
+            NSInteger bytesRead;
+            [_initialContentStream open];
+            while((bytesRead = [_initialContentStream read:buffer maxLength:kReadBufferSize]) > 0) {
+                [result appendBytes:buffer length:bytesRead];
+            }
+            [_initialContentStream close];
+            if (bytesRead < 0)
+                return nil;
+            
+            _initialContentStream = nil;
             _content = result;
             _length = _content.length;
             
@@ -232,14 +226,14 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 }
 
 - (NSInputStream*) contentStream {
-    if (_db) {
-        C4BlobStore* blobStore;
-        C4BlobKey key;
-        if (![self getBlobStore: &blobStore andKey: &key])
-            return nil;
-        return [[CBLBlobStream alloc] initWithStore: blobStore key: key];
-    } else {
-        @synchronized (self) {
+    @synchronized (self) {
+        if (_db) {
+            C4BlobStore* blobStore;
+            C4BlobKey key;
+            if (![self getBlobStore: &blobStore andKey: &key])
+                return nil;
+            return [[CBLBlobStream alloc] initWithStore: blobStore key: key];
+        } else {
             return _content ? [[NSInputStream alloc] initWithData: _content] : nil;
         }
     }
@@ -268,8 +262,10 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 #pragma mark - Description
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@; %llu KB]",
-            self.class, _contentType, (_length + 512)/1024];
+    @synchronized (self) {
+        return [NSString stringWithFormat: @"%@[%@; %llu KB]",
+                self.class, _contentType, (_length + 512)/1024];
+    }
 }
 
 #pragma mark - Internal
@@ -291,49 +287,49 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
     C4Error err;
     C4BlobKey key;
     bool success = true;
-    
-    if ([self isContentAvailable]) {
-        @synchronized (self) {
+    @synchronized (self) {
+        if (_content) {
             success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
+        } else {
+            Assert(_initialContentStream, kCBLErrorMessageBlobContentNull);
+            C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
+            if(!blobOut)
+                return convertError(err, outError);
+
+            uint8_t buffer[kReadBufferSize];
+            NSInteger bytesRead = 0;
+            _length = 0;
+            NSInputStream *contentStream = _initialContentStream;
+            [contentStream open];
+            success = true;
+            while(success && (bytesRead = [contentStream read:buffer maxLength: kReadBufferSize]) > 0) {
+                _length += bytesRead;
+                success = c4stream_write(blobOut, buffer, bytesRead, &err);
+            }
+            if (bytesRead < 0) {
+                // NSStream error. Set outError, but don't return until closing things down...
+                success = false;
+                if (outError)
+                    *outError = contentStream.streamError;
+            }
+
+            [contentStream close];
+            if (success) {
+                key = c4stream_computeBlobKey(blobOut);
+                success = c4stream_install(blobOut, nullptr, &err);
+            }
+            c4stream_closeWriter(blobOut);
+            if (bytesRead < 0)
+                return NO;  // NSStream error
         }
-    } else {
-        Assert(_initialContentStream, kCBLErrorMessageBlobContentNull);
-        C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
-        if(!blobOut)
+        
+        if (!success)
             return convertError(err, outError);
 
-        uint8_t buffer[kReadBufferSize];
-        NSInteger bytesRead = 0;
-        _length = 0;
-        NSInputStream *contentStream = _initialContentStream;
-        [contentStream open];
-        success = true;
-        while(success && (bytesRead = [contentStream read:buffer maxLength: kReadBufferSize]) > 0) {
-            _length += bytesRead;
-            success = c4stream_write(blobOut, buffer, bytesRead, &err);
-        }
-        if (bytesRead < 0) {
-            // NSStream error. Set outError, but don't return until closing things down...
-            success = false;
-            if (outError)
-                *outError = contentStream.streamError;
-        }
-
-        [contentStream close];
-        if (success) {
-            key = c4stream_computeBlobKey(blobOut);
-            success = c4stream_install(blobOut, nullptr, &err);
-        }
-        c4stream_closeWriter(blobOut);
-        if (bytesRead < 0)
-            return NO;  // NSStream error
+        _digest = sliceResult2string(c4blob_keyToString(key));
+        _db = db;
     }
 
-    if (!success)
-        return convertError(err, outError);
-
-    _digest = sliceResult2string(c4blob_keyToString(key));
-    _db = db;
     return YES;
 }
 
@@ -367,13 +363,6 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
         FLEncoder_WriteNSObject(encoder, value);
     }
     FLEncoder_EndDict(encoder);
-}
-
-// thread safe check for `_content`
-- (BOOL) isContentAvailable {
-    @synchronized (self) {
-        return _content != nil;
-    }
 }
 
 @end
