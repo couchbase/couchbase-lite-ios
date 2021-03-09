@@ -49,7 +49,7 @@ NSString* const kCBLBlobLengthProperty = @"length";
 NSString* const kCBLBlobContentTypeProperty = @"content_type";
 
 // internal
-static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
+static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 
 @implementation CBLBlob
 {
@@ -124,10 +124,10 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
     if(self) {
         _db = db;
 
-        _length = asNumber(properties[kCBLBlobLengthMetaProperty]).unsignedLongLongValue;
-        _digest = asString(properties[kCBLBlobDigestMetaProperty]);
-        _contentType = asString(properties[kCBLBlobContentTypeMetaProperty]);
-        _content = asData(properties[kCBLBlobDataMetaProperty]);
+        _length = asNumber(properties[kCBLBlobLengthProperty]).unsignedLongLongValue;
+        _digest = asString(properties[kCBLBlobDigestProperty]);
+        _contentType = asString(properties[kCBLBlobContentTypeProperty]);
+        _content = asData(properties[kCBLBlobDataProperty]);
         if (!_digest && !_content)
             C4Warn("Blob read from database has neither digest nor data.");
     }
@@ -142,17 +142,17 @@ static NSString* const kCBLBlobDataMetaProperty = @kC4BlobDataProperty;
 
 - (NSDictionary*) properties {
     @synchronized (self) {
-        return $dict({kCBLBlobTypeMetaProperty, kCBLBlobType},
-                     {kCBLBlobDigestMetaProperty, _digest},
-                     {kCBLBlobLengthMetaProperty, (_length ? @(_length) : nil)},
-                     {kCBLBlobContentTypeMetaProperty, _contentType});
+        return $dict({kCBLTypeProperty, kCBLBlobType},
+                     {kCBLBlobDigestProperty, _digest},
+                     {kCBLBlobLengthProperty, (_length ? @(_length) : nil)},
+                     {kCBLBlobContentTypeProperty, _contentType});
     }
 }
 
 - (NSDictionary*) jsonRepresentation {
     NSMutableDictionary* json = [self.properties mutableCopy];
-    if (!json[kCBLBlobDigestMetaProperty]) {
-        json[kCBLBlobDataMetaProperty] = self.content;
+    if (!json[kCBLBlobDigestProperty]) {
+        json[kCBLBlobDataProperty] = self.content;
     }
     return json;
 }
