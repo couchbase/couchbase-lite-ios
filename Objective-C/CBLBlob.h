@@ -21,6 +21,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString* const kCBLBlobType;
+extern NSString* const kCBLTypeProperty;
+extern NSString* const kCBLBlobDigestProperty;
+extern NSString* const kCBLBlobLengthProperty;
+extern NSString* const kCBLBlobContentTypeProperty;
 
 /** 
  A CBLBlob contains arbitrary binary data, tagged with a MIME type.
@@ -95,6 +100,11 @@ NS_ASSUME_NONNULL_BEGIN
  calling toJSON() will not be allowed and it will throw an NSInternalInconsistencyException.
  */
 - (NSString*) toJSON;
+
+/**
+ Return whether the given dictionary represents Blob or not
+*/
++ (BOOL) isBlob: (NSDictionary<NSString*, id>*)properties;
 
 @end
 
