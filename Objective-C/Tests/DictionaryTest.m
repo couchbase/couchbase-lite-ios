@@ -350,7 +350,9 @@
     AssertEqualObjects([mDict3 valueForKey: @"name"], @"Thomas");
 }
 
-- (void) testDictionaryToJSON {
+#pragma mark - toJSON
+
+- (CBLMutableDictionary*) populatedCBLDictionary {
     CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
     [mDict1 setValue: @1 forKey:@"intKey"];
     [mDict1 setString: @"stringVal" forKey: @"stringKey"];
@@ -372,104 +374,62 @@
     [dict setValue: @"CA" forKey: @"state"];
     [mDict1 setValue: dict forKey: @"dict"];
     
-    // saves the CBLMutableDictionary to a mutable doc
-    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
-    [mDoc setValue: mDict1 forKey: @"dict"];
-    
-    AssertEqualObjects([[mDict1 toJSON] toJSONObj], (@{
-        @"blob": @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"},
-        @"nullKey": [NSNull null],
-        @"dateKey": @"1970-01-01T00:00:10.000Z",
-        @"stringKey": @"stringVal",
-        @"boolVal": @YES,
-        @"floatKey": @101.25,
-        @"array": @[@1,@2],
-        @"dict": @{@"state": @"CA"},
-        @"intKey": @1}));
-
-    [self saveDocument: mDoc];
-
-    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
-    AssertEqualObjects([[retrivedDict toJSON] toJSONObj], (@{
-        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
-                   @"content_type": @"text/plain", @"@type": @"blob"},
-        @"nullKey": [NSNull null],
-        @"dateKey": @"1970-01-01T00:00:10.000Z",
-        @"stringKey": @"stringVal",
-        @"boolVal": @YES,
-        @"floatKey": @101.25,
-        @"array": @[@1,@2],
-        @"dict": @{@"state": @"CA"},
-        @"intKey": @1}));
-    
-    CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
-    [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
-    AssertEqualObjects([[mDictRetrived toJSON] toJSONObj], (@{
-        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
-                   @"content_type": @"text/plain", @"@type": @"blob"},
-        @"nullKey": [NSNull null],
-        @"dateKey": @"1970-01-01T00:00:10.000Z",
-        @"stringKey": @"stringVal",
-        @"boolVal": @YES,
-        @"floatKey": @101.25,
-        @"newKeyAppended": @"newValueAppended",
-        @"array": @[@1,@2],
-        @"dict": @{@"state": @"CA"},
-        @"intKey": @1}));
+    return mDict1;
 }
 
-- (void) testNewDictionaryToJSON {
-    CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
-    [mDict1 setValue: @1 forKey:@"intKey"];
-    [mDict1 setString: @"stringVal" forKey: @"stringKey"];
-    [mDict1 setFloat: (float)101.25 forKey: @"floatKey"];
-    [mDict1 setBoolean: YES forKey: @"boolVal"];
-    [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
-    [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
-    
-    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [mDict1 setBlob: blob forKey: @"blob"];
-    
-    CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addValue: @1];
-    [array addValue: @2];
-    [mDict1 setValue: array forKey: @"array"];
-    
-    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
-    [dict setValue: @"CA" forKey: @"state"];
-    [mDict1 setValue: dict forKey: @"dict"];
-    
+- (NSDictionary*) populatedCBLDictToJSONObj {
+    return @{
+        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
+                   @"content_type": @"text/plain", @"@type": @"blob"},
+        @"nullKey": [NSNull null],
+        @"dateKey": @"1970-01-01T00:00:10.000Z",
+        @"stringKey": @"stringVal",
+        @"boolVal": @YES,
+        @"floatKey": @101.25,
+        @"array": @[@1,@2],
+        @"dict": @{@"state": @"CA"},
+        @"intKey": @1};
+}
+
+- (void) testDictionaryToJSON {
+    CBLMutableDictionary* cblDict = [self populatedCBLDictionary];
+    NSDictionary* dict = [self populatedCBLDictToJSONObj];
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
-    [mDoc setValue: mDict1 forKey: @"dict"];
+    [mDoc setValue: cblDict forKey: @"dict"];
     
-    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{
-        @"dict": @{
-                @"blob": @{@"@type": @"blob", @"content_type": @"text/plain", @"length": @11},
-                @"nullKey": [NSNull null],
-                @"dateKey": @"1970-01-01T00:00:10.000Z",
-                @"stringKey": @"stringVal",
-                @"array": @[@1,@2],
-                @"dict": @{@"state": @"CA"},
-                @"floatKey": @101.25,
-                @"boolVal": @YES,
-                @"intKey": @1}}));
-    
+    // before save doc, blob without digest
+    NSMutableDictionary* temp = [dict mutableCopy];
+    temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
+    AssertEqualObjects([[cblDict toJSON] toJSONObj], temp);
+
+    // after save
     [self saveDocument: mDoc];
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
+    AssertEqualObjects([[retrivedDict toJSON] toJSONObj], dict);
     
-    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{
-        @"dict": @{
-                @"blob": @{@"@type": @"blob", @"content_type": @"text/plain",
-                           @"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY="},
-                @"nullKey": [NSNull null],
-                @"dateKey": @"1970-01-01T00:00:10.000Z",
-                @"stringKey": @"stringVal",
-                @"array": @[@1,@2],
-                @"dict": @{@"state": @"CA"},
-                @"floatKey": @101.25,
-                @"boolVal": @YES,
-                @"intKey": @1}}));
+    // update retrived mutable doc
+    CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
+    [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
+    temp = [dict mutableCopy];
+    temp[@"newKeyAppended"] = @"newValueAppended";
+    AssertEqualObjects([[mDictRetrived toJSON] toJSONObj], temp);
+}
+
+- (void) testNewDictionaryAndDocumentToJSON {
+    CBLMutableDictionary* cblDict = [self populatedCBLDictionary];
+    NSDictionary* dict = [self populatedCBLDictToJSONObj];
+    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
+    [mDoc setValue: cblDict forKey: @"dict"];
+    
+    // before save, without digest
+    NSMutableDictionary* temp = [dict mutableCopy];
+    temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
+    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{@"dict": temp}));
+    
+    // after save
+    [self saveDocument: mDoc];
+    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{@"dict": dict}));
 }
 
 @end
