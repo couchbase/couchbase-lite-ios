@@ -39,12 +39,14 @@
 #import "CBLTimer.h"
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
+#import "CBLData.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
 #endif
 
 using namespace fleece;
+using namespace cbl;
 
 #define kDBExtension @"cblite2"
 
@@ -52,6 +54,12 @@ using namespace fleece;
 
 // How long to wait after a database opens before expiring docs
 #define kHousekeepingDelayAfterOpening 3.0
+
+static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
+static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
+static NSString* kBlobDataProperty = @kC4BlobDataProperty;
+static NSString* kBlobLengthProperty = @"length";
+static NSString* kBlobContentTypeProperty = @"content_type";
 
 // this variable defines the state of database
 typedef enum {
@@ -84,7 +92,7 @@ typedef enum {
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
 static const C4DatabaseConfig2 kDBConfig = {
-    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_VersionVectors),
+    .flags = (kC4DB_Create | kC4DB_AutoCompact),
 };
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
@@ -325,6 +333,21 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         }
         return convertError(err, error);
     }
+}
+
+#pragma mark - Blob Save/Get
+
+- (BOOL) saveBlob: (CBLBlob*)blob error: (NSError**)error {
+    return [blob installInDatabase: self error: error];
+}
+
+- (CBLBlob*) getBlob: (NSDictionary*)properties {
+    if (![CBLBlob isBlob: properties])
+        [NSException raise: NSInvalidArgumentException
+                    format: @"The given blob's metadata might be missing the digest / @type key "
+                                "or containing invalid values"];
+    
+    return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }
 
 #pragma mark - BATCH OPERATION
@@ -839,6 +862,10 @@ static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
 
 static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     C4DatabaseConfig2 c4config = kDBConfig;
+    
+    if (config.enableVersionVector)
+        c4config.flags |= kC4DB_VersionVectors;
+    
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];

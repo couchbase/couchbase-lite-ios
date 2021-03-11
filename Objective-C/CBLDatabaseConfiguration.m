@@ -24,7 +24,7 @@
     BOOL _readonly;
 }
 
-@synthesize directory=_directory;
+@synthesize directory=_directory, enableVersionVector=enableVersionVector;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;

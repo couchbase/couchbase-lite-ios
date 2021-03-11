@@ -61,6 +61,16 @@
     [doc setValue: blob forKey: @"blob"];
 }
 
+- (CBLBlob*) generateBlob {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    Assert(blob, @"Failed to create blob: %@", error);
+    Assert([self.db saveBlob: blob error: &error]);
+    AssertNil(error);
+    return blob;
+}
+
 - (void) testCreateDoc {
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     AssertNotNil(doc);
@@ -1586,6 +1596,64 @@
     NSInteger bytesRead = [contentStream read:buffer maxLength:10];
     [contentStream close];
     AssertEqual(bytesRead, 8);
+}
+
+- (void) testSaveAndGetBlobFromDB {
+    // save blob
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    Assert(blob, @"Failed to create blob: %@", error);
+    Assert([self.db saveBlob: blob error: &error]);
+    AssertNil(error);
+    
+    // get the saved blob
+    NSDictionary* dict = @{kCBLBlobDigestProperty: blob.digest,
+                           kCBLTypeProperty: kCBLBlobType,
+                           kCBLBlobContentTypeProperty: blob.contentType};
+    CBLBlob* retrivedBlob = [self.db getBlob: dict];
+    AssertEqual(retrivedBlob.properties.count, dict.count);
+    AssertEqualObjects(retrivedBlob.properties, dict);
+    
+    // access the content and see the content length gets populated
+    AssertEqualObjects(retrivedBlob.content, content);
+    AssertEqual([retrivedBlob.properties[kCBLBlobLengthProperty] unsignedIntValue], content.length);
+}
+
+- (void) testGetBlobUsingInvalidJSON {
+    CBLBlob* blob = [self generateBlob];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{kCBLTypeProperty: @"blb"}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{kCBLTypeProperty: kCBLBlobType,
+                            kCBLBlobDigestProperty: @12345}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{kCBLTypeProperty: kCBLBlobType,
+                            kCBLBlobDigestProperty: blob.digest,
+                            kCBLBlobContentTypeProperty: @1234}];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        [self.db getBlob: @{kCBLTypeProperty: kCBLBlobType,
+                            kCBLBlobDigestProperty: blob.digest,
+                            kCBLBlobContentTypeProperty: @"text/plain",
+                            kCBLBlobLengthProperty: @"25"}];
+    }];
+    
+    CBLBlob* retrivedBlob = [self.db getBlob: @{kCBLTypeProperty: kCBLBlobType,
+                                                kCBLBlobDigestProperty: blob.digest,
+                                                kCBLBlobContentTypeProperty: @"text/plain",
+                                                kCBLBlobLengthProperty: @25,
+                                                @"dummy": @"no-op"}];
+    
+    // this doesn't seems right at first look. since retrived blob has length 25, whereas the original blob has length 8.
+    // it will be correct once we access the content of the blob.
+    AssertEqualObjects(retrivedBlob, blob);
 }
 
 - (void)testEmptyBlob {
