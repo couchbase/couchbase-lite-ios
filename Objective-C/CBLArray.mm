@@ -103,10 +103,12 @@ using namespace fleece;
 #pragma mark - toJSON
 
 - (NSString*) toJSON {
-    JSONEncoder enc;
-    _array.encodeTo(enc);
-    auto data = enc.finish();
-    return slice2string(data);
+    CBL_LOCK(_sharedLock) {
+        JSONEncoder enc;
+        _array.encodeTo(enc);
+        auto data = enc.finish();
+        return slice2string(data);
+    }
 }
 
 #pragma mark - GETTER
