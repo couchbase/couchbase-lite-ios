@@ -367,7 +367,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
         }
     }
     
-    NSDictionary* dict = self.jsonRepresentation;
+    NSDictionary* dict = FLEncoder_isFleece(encoder) ? self.jsonRepresentation : self.properties;
     FLEncoder_BeginDict(encoder, [dict count]);
     for (NSString *key in dict) {
         CBLStringBytes bKey(key);
