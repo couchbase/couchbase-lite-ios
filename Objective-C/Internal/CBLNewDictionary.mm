@@ -253,9 +253,6 @@ using namespace fleece;
 #pragma mark - toJSON
 
 - (NSString*) toJSON {
-    
-    // TODO: exclude the data here!!
-    
     JSONEncoder enc;
     FLEncoder_WriteNSObject(enc, _dict);
     auto data = enc.finish();

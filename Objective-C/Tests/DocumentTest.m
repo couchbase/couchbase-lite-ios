@@ -25,6 +25,20 @@
 #define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
 #define kDocumentTestBlob @"i'm blob"
 
+@implementation NSString (jsonEquality)
+
+- (BOOL) isJSONEqualTo: (id) obj {
+    NSData* d = [self dataUsingEncoding: NSUTF8StringEncoding];
+    
+    NSError* error;
+    id retrivedObj = [NSJSONSerialization JSONObjectWithData: d options: 0
+                                                                   error: &error];
+    AssertNil(error);
+    return [obj isEqual: retrivedObj];
+}
+
+@end
+
 @interface DocumentTest : CBLTestCase
 
 @end
@@ -2038,19 +2052,40 @@
     [dict setValue: @"CA" forKey: @"state"];
     [doc setValue: dict forKey: @"dict"];
     
+    // without digest, before save
+    Assert([[doc toJSON] isJSONEqualTo: (@{@"array": @[@1,@2],
+                                           @"boolVal": @YES,
+                                           @"dateKey": @"1970-01-01T00:00:10.000Z",
+                                           @"dict": @{@"state": @"CA"},
+                                           @"nullKey": [NSNull null],
+                                           @"intKey": @22,
+                                           @"floatKey": @101.25,
+                                           @"stringKey": @"stringVal",
+                                           @"valueKey": @1,
+                                           @"blob": @{@"@type": @"blob",
+                                                      @"content_type": @"text/plain",
+                                                      @"length": @8},
+                                         })]);
+    
     // save document
     [self saveDocument: doc];
     
+    // with digest, after save
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects([retrivedDoc toJSON], @"{\"array\":[1,2],"
-                       "\"blob\":{\"@type\":\"blob\",\"content_type\":\"text/plain\",\"digest\":\"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=\",\"length\":8},"
-                       "\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                       "\"dict\":{\"state\":\"CA\"},"
-                       "\"floatKey\":101.25,"
-                       "\"intKey\":22,"
-                       "\"nullKey\":null,"
-                       "\"stringKey\":\"stringVal\","
-                       "\"valueKey\":1}");
+    Assert([[retrivedDoc toJSON] isJSONEqualTo: (@{@"array": @[@1,@2],
+                                                   @"boolVal": @YES,
+                                                   @"dateKey": @"1970-01-01T00:00:10.000Z",
+                                                   @"dict": @{@"state": @"CA"},
+                                                   @"nullKey": [NSNull null],
+                                                   @"intKey": @22,
+                                                   @"floatKey": @101.25,
+                                                   @"stringKey": @"stringVal",
+                                                   @"valueKey": @1,
+                                                   @"blob": @{@"@type": @"blob",
+                                                              @"content_type": @"text/plain",
+                                                              @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
+                                                              @"length": @8},
+                                                 })]);
 }
 
 - (void) testArrayToJSON {
@@ -2082,12 +2117,15 @@
     AssertEqual([doc arrayForKey: @"array"], array);
     [self saveDocument: doc];
     
-    // Update:
     CBLArray* a = [doc arrayForKey: @"array"];
-    AssertEqualObjects([a toJSON],@"[1,22,\"stringKey\",101.25,true,\"1970-01-01T00:00:10.000Z\",null,"
-                       "{\"length\":8,\"digest\":\"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
-                       "[101,201],"
-                       "{\"state\":\"CA\"}]");
+    Assert([[a toJSON] isJSONEqualTo: (@[@1, @22, @"stringKey", @101.25, @YES,
+                                        @"1970-01-01T00:00:10.000Z", [NSNull null],
+                                        @{@"length": @8,
+                                          @"@type": @"blob",
+                                          @"content_type": @"text/plain",
+                                          @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A="},
+                                        @[@101, @201],
+                                        @{@"state": @"CA"}])]);
 }
 
 @end

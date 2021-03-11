@@ -412,7 +412,7 @@
     [mDoc setValue: mDict1 forKey: @"dict"];
     
     AssertEqualObjects([mDoc toJSON], @"{\"dict\":{"
-                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
+                       "\"blob\":{\"@type\":\"blob\",\"content_type\":\"text/plain\",\"length\":11},"
                        "\"nullKey\":null,"
                        "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
                        "\"stringKey\":\"stringVal\","
