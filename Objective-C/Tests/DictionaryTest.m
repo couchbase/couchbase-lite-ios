@@ -358,14 +358,23 @@
     [mDict1 setBoolean: YES forKey: @"boolVal"];
     [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
     [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
-    // TODO: update to inclde array, dict
-    
-    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
-    [mDoc setValue: mDict1 forKey: @"dict"];
     
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     [mDict1 setBlob: blob forKey: @"blob"];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addValue: @2];
+    [mDict1 setValue: array forKey: @"array"];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [mDict1 setValue: dict forKey: @"dict"];
+    
+    // saves the CBLMutableDictionary to a mutable doc
+    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
+    [mDoc setValue: mDict1 forKey: @"dict"];
     
     AssertEqualObjects([[mDict1 toJSON] toJSONObj], (@{
         @"blob": @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"},
@@ -374,6 +383,8 @@
         @"stringKey": @"stringVal",
         @"boolVal": @YES,
         @"floatKey": @101.25,
+        @"array": @[@1,@2],
+        @"dict": @{@"state": @"CA"},
         @"intKey": @1}));
 
     [self saveDocument: mDoc];
@@ -388,6 +399,8 @@
         @"stringKey": @"stringVal",
         @"boolVal": @YES,
         @"floatKey": @101.25,
+        @"array": @[@1,@2],
+        @"dict": @{@"state": @"CA"},
         @"intKey": @1}));
     
     CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
@@ -401,6 +414,8 @@
         @"boolVal": @YES,
         @"floatKey": @101.25,
         @"newKeyAppended": @"newValueAppended",
+        @"array": @[@1,@2],
+        @"dict": @{@"state": @"CA"},
         @"intKey": @1}));
 }
 
@@ -412,11 +427,19 @@
     [mDict1 setBoolean: YES forKey: @"boolVal"];
     [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
     [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
-    // TODO: update to inclde array, dict
     
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     [mDict1 setBlob: blob forKey: @"blob"];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addValue: @2];
+    [mDict1 setValue: array forKey: @"array"];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [mDict1 setValue: dict forKey: @"dict"];
     
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
     [mDoc setValue: mDict1 forKey: @"dict"];
@@ -427,6 +450,8 @@
                 @"nullKey": [NSNull null],
                 @"dateKey": @"1970-01-01T00:00:10.000Z",
                 @"stringKey": @"stringVal",
+                @"array": @[@1,@2],
+                @"dict": @{@"state": @"CA"},
                 @"floatKey": @101.25,
                 @"boolVal": @YES,
                 @"intKey": @1}}));
@@ -440,6 +465,8 @@
                 @"nullKey": [NSNull null],
                 @"dateKey": @"1970-01-01T00:00:10.000Z",
                 @"stringKey": @"stringVal",
+                @"array": @[@1,@2],
+                @"dict": @{@"state": @"CA"},
                 @"floatKey": @101.25,
                 @"boolVal": @YES,
                 @"intKey": @1}}));
