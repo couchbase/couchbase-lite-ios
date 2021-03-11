@@ -2016,6 +2016,21 @@
 
 #pragma mark - toJSON
 
+- (void) testDocumentToJSON {
+    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
+    NSDictionary* dict = [self populatedMDocToJSONObj];
+    
+    // without digest, before save
+    NSMutableDictionary* temp = [dict mutableCopy];
+    temp[@"blob"] = @{@"@type": @"blob", @"content_type": @"text/plain", @"length": @8};
+    AssertEqualObjects([[doc toJSON] toJSONObj], temp);
+    
+    // with digest, after save
+    [self saveDocument: doc];
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects([[retrivedDoc toJSON] toJSONObj], dict);
+}
+
 - (void) testArrayToJSON {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];

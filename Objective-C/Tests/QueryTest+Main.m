@@ -1663,29 +1663,10 @@
                 [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
 }
 
+#pragma mark - toJSON
+
 - (void) testQueryJSON {
-    CBLMutableDocument* doc = [self createDocument: @"doc"];
-    [doc setValue: @1 forKey:@"valueKey"];
-    [doc setInteger: 22 forKey: @"intKey"];
-    [doc setString: @"stringVal" forKey: @"stringKey"];
-    [doc setFloat: (float)101.25 forKey: @"floatKey"];
-    [doc setBoolean: YES forKey: @"boolVal"];
-    [doc setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
-    [doc setValue: [NSNull null] forKey: @"nullKey"];
-    
-    NSData* content = [@"i'm blob" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [doc setBlob: blob forKey: @"blob"];
-    
-    CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addValue: @1];
-    [array addValue: @2];
-    [doc setValue: array forKey: @"array"];
-    
-    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
-    [dict setValue: @"CA" forKey: @"state"];
-    [doc setValue: dict forKey: @"dict"];
-    
+    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
     [self saveDocument: doc];
     
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID,
@@ -1707,21 +1688,9 @@
     Assert(rs, @"Query failed: %@", error);
     
     CBLQueryResult* r = rs.allResults.firstObject;
-    AssertEqualObjects([[r toJSON] toJSONObj], (@{@"array": @[@1,@2],
-                                                  @"boolVal": @YES,
-                                                  @"dateKey": @"1970-01-01T00:00:10.000Z",
-                                                  @"dict": @{@"state": @"CA"},
-                                                  @"nullKey": [NSNull null],
-                                                  @"intKey": @22,
-                                                  @"floatKey": @101.25,
-                                                  @"stringKey": @"stringVal",
-                                                  @"valueKey": @1,
-                                                  @"blob": @{@"@type": @"blob",
-                                                             @"content_type": @"text/plain",
-                                                             @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
-                                                             @"length": @8},
-                                                  @"id": @"doc",
-                                                }));
+    NSMutableDictionary* temp = [[self populatedMDocToJSONObj] mutableCopy];
+    temp[@"id"] = @"doc";
+    AssertEqualObjects([[r toJSON] toJSONObj], temp);
 }
 
 #pragma mark - Value Expression
