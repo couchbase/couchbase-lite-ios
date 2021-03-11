@@ -150,12 +150,7 @@ using namespace fleece;
 }
 
 - (NSString*) toJSON {
-    C4Error err;
-    alloc_slice json = c4doc_bodyAsJSON(_c4Doc.rawDoc, true, &err);
-    if (!json.buf)
-        CBLWarn(Database, @"toJSON: error getting json doc body %d/%d", err.code, err.domain);
-    
-    return slice2string(json);
+    return [_dict toJSON];
 }
 
 #pragma mark - Internal

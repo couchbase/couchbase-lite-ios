@@ -394,4 +394,44 @@
                        "}");
 }
 
+- (void) testNewDictionaryToJSON {
+    CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
+    [mDict1 setValue: @1 forKey:@"intKey"];
+    [mDict1 setString: @"stringVal" forKey: @"stringKey"];
+    [mDict1 setFloat: (float)101.25 forKey: @"floatKey"];
+    [mDict1 setBoolean: YES forKey: @"boolVal"];
+    [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
+    [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
+    // TODO: update to inclde array, dict
+    
+    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [mDict1 setBlob: blob forKey: @"blob"];
+    
+    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
+    [mDoc setValue: mDict1 forKey: @"dict"];
+    
+    AssertEqualObjects([mDoc toJSON], @"{\"dict\":{"
+                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
+                       "\"nullKey\":null,"
+                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                       "\"stringKey\":\"stringVal\","
+                       "\"boolVal\":true,"
+                       "\"floatKey\":101.25,"
+                       "\"intKey\":1"
+                       "}}");
+    
+    [self saveDocument: mDoc];
+
+    AssertEqualObjects([mDoc toJSON], @"{\"dict\":{"
+                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
+                       "\"nullKey\":null,"
+                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                       "\"stringKey\":\"stringVal\","
+                       "\"boolVal\":true,"
+                       "\"floatKey\":101.25,"
+                       "\"intKey\":1"
+                       "}}");
+}
+
 @end

@@ -26,8 +26,11 @@
 #import "CBLMutableFragment.h"
 #import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
+#import "CBLFleece.hh"
+#import "CBLCoreBridge.h"
 
 using namespace cbl;
+using namespace fleece;
 
 @interface CBLNewDictionary()
 @end
@@ -245,6 +248,18 @@ using namespace cbl;
 
 - (CBLDictionary*) toCBLDictionary {
     return (id)self;
+}
+
+#pragma mark - toJSON
+
+- (NSString*) toJSON {
+    
+    // TODO: exclude the data here!!
+    
+    JSONEncoder enc;
+    FLEncoder_WriteNSObject(enc, _dict);
+    auto data = enc.finish();
+    return slice2string(data);
 }
 
 #pragma mark - NSFastEnumeration
