@@ -29,6 +29,7 @@
 #import "CBLValueExpression.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLUnaryExpression.h"
+#import "Foundation+CBL.h"
 
 @interface QueryTest_Main : QueryTest
 
@@ -1660,6 +1661,67 @@
                 [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
     AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
                 [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
+}
+
+- (void) testQueryJSON {
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    [doc setValue: @1 forKey:@"valueKey"];
+    [doc setInteger: 22 forKey: @"intKey"];
+    [doc setString: @"stringVal" forKey: @"stringKey"];
+    [doc setFloat: (float)101.25 forKey: @"floatKey"];
+    [doc setBoolean: YES forKey: @"boolVal"];
+    [doc setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
+    [doc setValue: [NSNull null] forKey: @"nullKey"];
+    
+    NSData* content = [@"i'm blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [doc setBlob: blob forKey: @"blob"];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addValue: @2];
+    [doc setValue: array forKey: @"array"];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [doc setValue: dict forKey: @"dict"];
+    
+    [self saveDocument: doc];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID,
+                                             [CBLQuerySelectResult property: @"valueKey"],
+                                             [CBLQuerySelectResult property: @"intKey"],
+                                             [CBLQuerySelectResult property: @"stringKey"],
+                                             [CBLQuerySelectResult property: @"floatKey"],
+                                             [CBLQuerySelectResult property: @"boolVal"],
+                                             [CBLQuerySelectResult property: @"dateKey"],
+                                             [CBLQuerySelectResult property: @"nullKey"],
+                                             [CBLQuerySelectResult property: @"blob"],
+                                             [CBLQuerySelectResult property: @"array"],
+                                             [CBLQuerySelectResult property: @"dict"]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: nil];
+    
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    CBLQueryResult* r = rs.allResults.firstObject;
+    AssertEqualObjects([[r toJSON] toJSONObj], (@{@"array": @[@1,@2],
+                                                  @"boolVal": @YES,
+                                                  @"dateKey": @"1970-01-01T00:00:10.000Z",
+                                                  @"dict": @{@"state": @"CA"},
+                                                  @"nullKey": [NSNull null],
+                                                  @"intKey": @22,
+                                                  @"floatKey": @101.25,
+                                                  @"stringKey": @"stringVal",
+                                                  @"valueKey": @1,
+                                                  @"blob": @{@"@type": @"blob",
+                                                             @"content_type": @"text/plain",
+                                                             @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
+                                                             @"length": @8},
+                                                  @"id": @"doc",
+                                                }));
 }
 
 #pragma mark - Value Expression
