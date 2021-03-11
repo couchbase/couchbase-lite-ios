@@ -18,6 +18,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "Foundation+CBL.h"
 
 @interface DictionaryTest : CBLTestCase
 
@@ -365,33 +366,42 @@
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     [mDict1 setBlob: blob forKey: @"blob"];
+    
+    AssertEqualObjects([[mDict1 toJSON] toJSONObj], (@{
+        @"blob": @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"},
+        @"nullKey": [NSNull null],
+        @"dateKey": @"1970-01-01T00:00:10.000Z",
+        @"stringKey": @"stringVal",
+        @"boolVal": @YES,
+        @"floatKey": @101.25,
+        @"intKey": @1}));
 
     [self saveDocument: mDoc];
 
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
     CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
-    AssertEqualObjects([retrivedDict toJSON], @"{"
-                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"content_type\":\"text/plain\",\"@type\":\"blob\"},"
-                       "\"nullKey\":null,"
-                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                       "\"stringKey\":\"stringVal\","
-                       "\"boolVal\":true,"
-                       "\"floatKey\":101.25,"
-                       "\"intKey\":1"
-                       "}");
+    AssertEqualObjects([[retrivedDict toJSON] toJSONObj], (@{
+        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
+                   @"content_type": @"text/plain", @"@type": @"blob"},
+        @"nullKey": [NSNull null],
+        @"dateKey": @"1970-01-01T00:00:10.000Z",
+        @"stringKey": @"stringVal",
+        @"boolVal": @YES,
+        @"floatKey": @101.25,
+        @"intKey": @1}));
     
     CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
     [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
-    AssertEqualObjects([mDictRetrived toJSON], @"{"
-                       "\"newKeyAppended\":\"newValueAppended\","
-                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"content_type\":\"text/plain\",\"@type\":\"blob\"},"
-                       "\"nullKey\":null,"
-                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                       "\"stringKey\":\"stringVal\","
-                       "\"boolVal\":true,"
-                       "\"floatKey\":101.25,"
-                       "\"intKey\":1"
-                       "}");
+    AssertEqualObjects([[mDictRetrived toJSON] toJSONObj], (@{
+        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
+                   @"content_type": @"text/plain", @"@type": @"blob"},
+        @"nullKey": [NSNull null],
+        @"dateKey": @"1970-01-01T00:00:10.000Z",
+        @"stringKey": @"stringVal",
+        @"boolVal": @YES,
+        @"floatKey": @101.25,
+        @"newKeyAppended": @"newValueAppended",
+        @"intKey": @1}));
 }
 
 - (void) testNewDictionaryToJSON {
@@ -411,27 +421,28 @@
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
     [mDoc setValue: mDict1 forKey: @"dict"];
     
-    AssertEqualObjects([mDoc toJSON], @"{\"dict\":{"
-                       "\"blob\":{\"@type\":\"blob\",\"content_type\":\"text/plain\",\"length\":11},"
-                       "\"nullKey\":null,"
-                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                       "\"stringKey\":\"stringVal\","
-                       "\"boolVal\":true,"
-                       "\"floatKey\":101.25,"
-                       "\"intKey\":1"
-                       "}}");
+    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{
+        @"dict": @{
+                @"blob": @{@"@type": @"blob", @"content_type": @"text/plain", @"length": @11},
+                @"nullKey": [NSNull null],
+                @"dateKey": @"1970-01-01T00:00:10.000Z",
+                @"stringKey": @"stringVal",
+                @"floatKey": @101.25,
+                @"boolVal": @YES,
+                @"intKey": @1}}));
     
     [self saveDocument: mDoc];
-
-    AssertEqualObjects([mDoc toJSON], @"{\"dict\":{"
-                       "\"blob\":{\"length\":11,\"digest\":\"sha1-61i/GpzLBNHUFf49MQZthYCMixY=\",\"@type\":\"blob\",\"content_type\":\"text/plain\"},"
-                       "\"nullKey\":null,"
-                       "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                       "\"stringKey\":\"stringVal\","
-                       "\"boolVal\":true,"
-                       "\"floatKey\":101.25,"
-                       "\"intKey\":1"
-                       "}}");
+    
+    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{
+        @"dict": @{
+                @"blob": @{@"@type": @"blob", @"content_type": @"text/plain",
+                           @"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY="},
+                @"nullKey": [NSNull null],
+                @"dateKey": @"1970-01-01T00:00:10.000Z",
+                @"stringKey": @"stringVal",
+                @"floatKey": @101.25,
+                @"boolVal": @YES,
+                @"intKey": @1}}));
 }
 
 @end

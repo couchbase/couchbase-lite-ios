@@ -21,23 +21,10 @@
 
 #import "CBLBlob.h"
 #import "CBLJSON.h"
+#import "Foundation+CBL.h"
 
 #define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
 #define kDocumentTestBlob @"i'm blob"
-
-@implementation NSString (jsonEquality)
-
-- (BOOL) isJSONEqualTo: (id) obj {
-    NSData* d = [self dataUsingEncoding: NSUTF8StringEncoding];
-    
-    NSError* error;
-    id retrivedObj = [NSJSONSerialization JSONObjectWithData: d options: 0
-                                                                   error: &error];
-    AssertNil(error);
-    return [obj isEqual: retrivedObj];
-}
-
-@end
 
 @interface DocumentTest : CBLTestCase
 
@@ -2053,7 +2040,7 @@
     [doc setValue: dict forKey: @"dict"];
     
     // without digest, before save
-    Assert([[doc toJSON] isJSONEqualTo: (@{@"array": @[@1,@2],
+    AssertEqualObjects([[doc toJSON] toJSONObj], (@{@"array": @[@1,@2],
                                            @"boolVal": @YES,
                                            @"dateKey": @"1970-01-01T00:00:10.000Z",
                                            @"dict": @{@"state": @"CA"},
@@ -2065,14 +2052,14 @@
                                            @"blob": @{@"@type": @"blob",
                                                       @"content_type": @"text/plain",
                                                       @"length": @8},
-                                         })]);
+                                         }));
     
     // save document
     [self saveDocument: doc];
     
     // with digest, after save
     CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    Assert([[retrivedDoc toJSON] isJSONEqualTo: (@{@"array": @[@1,@2],
+    AssertEqualObjects([[retrivedDoc toJSON] toJSONObj], (@{@"array": @[@1,@2],
                                                    @"boolVal": @YES,
                                                    @"dateKey": @"1970-01-01T00:00:10.000Z",
                                                    @"dict": @{@"state": @"CA"},
@@ -2085,7 +2072,7 @@
                                                               @"content_type": @"text/plain",
                                                               @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
                                                               @"length": @8},
-                                                 })]);
+                                                 }));
 }
 
 - (void) testArrayToJSON {
@@ -2118,14 +2105,14 @@
     [self saveDocument: doc];
     
     CBLArray* a = [doc arrayForKey: @"array"];
-    Assert([[a toJSON] isJSONEqualTo: (@[@1, @22, @"stringKey", @101.25, @YES,
+    AssertEqualObjects([[a toJSON] toJSONObj], (@[@1, @22, @"stringKey", @101.25, @YES,
                                         @"1970-01-01T00:00:10.000Z", [NSNull null],
                                         @{@"length": @8,
                                           @"@type": @"blob",
                                           @"content_type": @"text/plain",
                                           @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A="},
                                         @[@101, @201],
-                                        @{@"state": @"CA"}])]);
+                                        @{@"state": @"CA"}]));
 }
 
 @end
