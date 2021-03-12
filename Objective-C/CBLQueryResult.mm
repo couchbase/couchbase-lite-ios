@@ -26,6 +26,7 @@
 #import "CBLQueryResultSet+Internal.h"
 #import "MRoot.hh"
 #import "CBLCoreBridge.h"
+#import "CBLFleece.hh"
 
 using namespace cbl;
 using namespace fleece;
@@ -124,6 +125,9 @@ using namespace fleece;
 
 - (NSString*) toJSON {
     JSONEncoder enc;
+    FLEncoderContext ctx = { .encodeQueryParameter = false };
+    FLEncoder_SetExtraInfo(enc, &ctx);
+    
     enc.beginDict();
     for (NSString* name in _rs.columnNames) {
         NSInteger index = [self indexForColumnName: name];

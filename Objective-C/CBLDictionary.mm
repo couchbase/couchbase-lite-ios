@@ -349,6 +349,8 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 - (NSString*) toJSON {
     CBL_LOCK(_sharedLock) {
         JSONEncoder enc;
+        FLEncoderContext ctx = { .encodeQueryParameter = false };
+        FLEncoder_SetExtraInfo(enc, &ctx);
         _dict.encodeTo(enc);
         auto data = enc.finish();
         return slice2string(data);

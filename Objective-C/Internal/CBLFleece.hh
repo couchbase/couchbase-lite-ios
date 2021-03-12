@@ -23,10 +23,17 @@
 #import "fleece/Fleece.hh"
 #import "MArray.hh"
 #import "MDict.hh"
+#import "CBLDocument.h"
 
 @class CBLDatabase, CBLC4Document;
 
 NS_ASSUME_NONNULL_BEGIN
+
+/** Configuration struct for FLEncoder. */
+typedef struct {
+    CBLDocument* __nullable document = nullptr;
+    bool encodeQueryParameter = false;
+} FLEncoderContext;
 
 
 namespace cbl {

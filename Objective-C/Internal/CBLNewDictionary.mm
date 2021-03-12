@@ -254,6 +254,8 @@ using namespace fleece;
 
 - (NSString*) toJSON {
     JSONEncoder enc;
+    FLEncoderContext ctx = { .encodeQueryParameter = false };
+    FLEncoder_SetExtraInfo(enc, &ctx);
     FLEncoder_WriteNSObject(enc, _dict);
     auto data = enc.finish();
     return slice2string(data);

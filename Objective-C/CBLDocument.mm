@@ -213,7 +213,8 @@ using namespace fleece;
 - (FLSliceResult) encode: (NSError**)outError {
     _encodingError = nil;
     auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
-    FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
+    FLEncoderContext ctx = { .document = self, .encodeQueryParameter = true };
+    FLEncoder_SetExtraInfo(encoder, &ctx);
     [_dict fl_encodeToFLEncoder: encoder];
     if (_encodingError != nil) {
         FLEncoder_Reset(encoder);
