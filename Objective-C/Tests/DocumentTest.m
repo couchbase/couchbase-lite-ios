@@ -2023,6 +2023,13 @@
     // without digest, before save
     NSMutableDictionary* temp = [dict mutableCopy];
     temp[@"blob"] = @{@"@type": @"blob", @"content_type": @"text/plain", @"length": @8};
+    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
+                                @"content_type": @"text/plain",
+                                @"length": @10}];
+    temp[@"dict"] = @{@"state": @"CA",
+                      @"blob": @{ @"@type": @"blob",
+                                  @"content_type": @"text/plain",
+                                  @"length": @10}};
     AssertEqualObjects([[doc toJSON] toJSONObj], temp);
     
     // with digest, after save
@@ -2049,10 +2056,17 @@
     CBLMutableArray* nestedArray = [[CBLMutableArray alloc] init];
     [nestedArray addValue: @101];
     [nestedArray addValue: @201];
+    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [nestedArray addBlob: blob2];
     [array addArray: nestedArray];
     
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     [dict setValue: @"CA" forKey: @"state"];
+    
+    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [dict setBlob: blob3 forKey: @"blob"];
     [array addValue: dict];
     
     [doc setValue: array forKey: @"array"];
@@ -2067,8 +2081,14 @@
                                           @"@type": @"blob",
                                           @"content_type": @"text/plain",
                                           @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A="},
-                                        @[@101, @201],
-                                        @{@"state": @"CA"}]));
+                                        @[@101, @201, @{@"@type": @"blob",
+                                                        @"content_type": @"text/plain",
+                                                        @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
+                                                        @"length": @10}],
+                                        @{@"state": @"CA", @"blob": @{ @"@type": @"blob",
+                                                                       @"content_type": @"text/plain",
+                                                                       @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
+                                                                       @"length": @10}}]));
 }
 
 @end

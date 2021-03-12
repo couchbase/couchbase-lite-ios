@@ -388,20 +388,32 @@
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @1];
     [array addValue: @2];
+    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [array addBlob: blob2];
     [doc setValue: array forKey: @"array"];
     
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     [dict setValue: @"CA" forKey: @"state"];
+    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [dict setBlob: blob3 forKey: @"blob"];
     [doc setValue: dict forKey: @"dict"];
     
     return doc;
 }
 
 - (NSDictionary*) populatedMDocToJSONObj {
-    return @{@"array": @[@1,@2],
+    return @{@"array": @[@1,@2, @{@"@type": @"blob",
+                                  @"content_type": @"text/plain",
+                                  @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
+                                  @"length": @10}],
              @"boolVal": @YES,
              @"dateKey": @"1970-01-01T00:00:10.000Z",
-             @"dict": @{@"state": @"CA"},
+             @"dict": @{@"state": @"CA", @"blob": @{ @"@type": @"blob",
+                                                     @"content_type": @"text/plain",
+                                                     @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
+                                                     @"length": @10}},
              @"nullKey": [NSNull null],
              @"intKey": @22,
              @"floatKey": @101.25,

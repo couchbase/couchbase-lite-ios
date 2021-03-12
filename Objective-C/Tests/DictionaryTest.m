@@ -368,10 +368,18 @@
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @1];
     [array addValue: @2];
+    
+    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [array addBlob: blob2];
     [mDict1 setValue: array forKey: @"array"];
     
+    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     [dict setValue: @"CA" forKey: @"state"];
+    [dict setBlob: blob3 forKey: @"blob"];
+    
     [mDict1 setValue: dict forKey: @"dict"];
     
     return mDict1;
@@ -386,8 +394,15 @@
         @"stringKey": @"stringVal",
         @"boolVal": @YES,
         @"floatKey": @101.25,
-        @"array": @[@1,@2],
-        @"dict": @{@"state": @"CA"},
+        @"array": @[@1,@2, @{@"@type": @"blob",
+                             @"content_type": @"text/plain",
+                             @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
+                             @"length": @10}],
+        @"dict": @{@"state": @"CA",
+                   @"blob": @{ @"@type": @"blob",
+                               @"content_type": @"text/plain",
+                               @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
+                               @"length": @10}},
         @"intKey": @1};
 }
 
@@ -400,6 +415,13 @@
     // before save doc, blob without digest
     NSMutableDictionary* temp = [dict mutableCopy];
     temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
+    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
+                                @"content_type": @"text/plain",
+                                @"length": @10}];
+    temp[@"dict"] = @{@"state": @"CA",
+                      @"blob": @{ @"@type": @"blob",
+                                  @"content_type": @"text/plain",
+                                  @"length": @10}};
     AssertEqualObjects([[cblDict toJSON] toJSONObj], temp);
 
     // after save
@@ -425,6 +447,13 @@
     // before save, without digest
     NSMutableDictionary* temp = [dict mutableCopy];
     temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
+    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
+                                @"content_type": @"text/plain",
+                                @"length": @10}];
+    temp[@"dict"] = @{@"state": @"CA",
+                      @"blob": @{ @"@type": @"blob",
+                                  @"content_type": @"text/plain",
+                                  @"length": @10}};
     AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{@"dict": temp}));
     
     // after save
