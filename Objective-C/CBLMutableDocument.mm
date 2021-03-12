@@ -50,7 +50,7 @@
                             c4Doc: nil];
 }
 
-- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
+- (instancetype) initWithData: (NSDictionary<NSString*,id>*)data {
     self = [self initWithID: nil];
     if (self) {
         [self setData: data];
@@ -59,7 +59,7 @@
 }
 
 - (instancetype) initWithID: (nullable NSString*)documentID
-                 data: (nullable NSDictionary<NSString*,id>*)data
+                       data: (NSDictionary<NSString*,id>*)data
 {
     self = [self initWithID: documentID];
     if (self) {
@@ -140,7 +140,7 @@
     [((CBLMutableDictionary*)_dict) removeValueForKey: key];
 }
 
-- (void) setData: (nullable NSDictionary<NSString *,id>*)data {
+- (void) setData: (NSDictionary<NSString *,id>*)data {
     [((CBLMutableDictionary*)_dict) setData: data];
 }
 

@@ -69,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data;
+- (instancetype) initWithData: (NSDictionary<NSString*,id>*)data;
 
 /** 
  Initializes a new CBLMutableDocument object with the given ID and the data. If a
@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param data The data.
  */
 - (instancetype) initWithID: (nullable NSString*)documentID
-                       data: (nullable NSDictionary<NSString*,id>*)data;
+                       data: (NSDictionary<NSString*,id>*)data;
 
 @end
 

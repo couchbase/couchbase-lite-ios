@@ -136,7 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (void) setData: (nullable NSDictionary<NSString*,id>*)data;
+- (void) setData: (NSDictionary<NSString*,id>*)data;
 
 #pragma mark - Getting dictionary and array object
 
@@ -189,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data;
+- (instancetype) initWithData: (NSDictionary<NSString*,id>*)data;
 
 @end
 

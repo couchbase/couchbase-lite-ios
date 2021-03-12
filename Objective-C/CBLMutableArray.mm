@@ -36,7 +36,7 @@
     return [super initEmpty];
 }
 
-- (instancetype) initWithData: (nullable NSArray*)data {
+- (instancetype) initWithData: (NSArray*)data {
     self = [self init];
     if (self) {
         [self setData: data];
@@ -228,7 +228,7 @@
 
 #pragma mark - Set Content with an Array
 
-- (void) setData: (nullable NSArray*)data {
+- (void) setData: (NSArray*)data {
     CBL_LOCK(self.sharedLock) {
         _array.clear();
         for (id obj in data)

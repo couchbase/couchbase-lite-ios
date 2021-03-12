@@ -41,7 +41,7 @@ using namespace fleece;
     return [super initEmpty];
 }
 
-- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
+- (instancetype) initWithData: (NSDictionary<NSString*,id>*)data {
     self = [self init];
     if (self) {
         [self setData: data];
@@ -132,7 +132,7 @@ using namespace fleece;
     }
 }
 
-- (void) setData: (nullable NSDictionary<NSString*,id>*)data {
+- (void) setData: (NSDictionary<NSString*,id>*)data {
     CBL_LOCK(self.sharedLock) {
         _dict.clear();
         [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL* stop) {
