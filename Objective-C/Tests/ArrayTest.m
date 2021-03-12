@@ -1048,4 +1048,33 @@
     AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel", @"Thomas"]));
 }
 
+- (void) testCreateMutableArrayWithJSON {
+    NSData* content = [@"i'm blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    CBLMutableDocument* dummyDoc = [CBLMutableDocument document];
+    [dummyDoc setBlob: blob forKey: @"blobKey"];
+    [self saveDocument: dummyDoc];
+    
+    CBLMutableArray* a = [[CBLMutableArray alloc] initWithData: @[@"string", @22, @101.25,
+                                                                  @YES,
+                                                                  [NSDate dateWithTimeIntervalSince1970: 10],
+                                                                  [NSNull null],
+                                                                  blob.properties]];
+    CBLMutableDocument* doc = [CBLMutableDocument document];
+    [doc setArray: a forKey: @"arrayKey"];
+    [self saveDocument: doc];
+}
+
+- (void) testCreateMutableArrayWithJSON2 {
+    NSError* error;
+    CBLMutableArray* a = [[CBLMutableArray alloc] initWithJSON:
+                          @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+                          "\"floatKey\":101.25,\"intKey\":22,\"nullKey\":null,"
+                          "\"stringKey\":\"stringVal\",\"valueKey\":1}" error: &error];
+    
+    CBLMutableDocument* doc = [CBLMutableDocument document];
+    [doc setArray: a forKey: @"arrayKey"];
+    [self saveDocument: doc];
+}
+
 @end

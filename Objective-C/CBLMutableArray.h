@@ -383,6 +383,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype) initWithData: (NSArray*)data;
 
+/**
+ Initialize a new CBLMutableArray object with data as a JSON string.
+ 
+ If the specified JSON string cannot be parsed or is not a JSON Array, a CouchbaseLiteException
+ will be thrown as invalid JSON.
+ 
+ @param json The JSON string with data.
+ @param error On return, the error if any.
+ */
+- (instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
+
 @end
 
 NS_ASSUME_NONNULL_END

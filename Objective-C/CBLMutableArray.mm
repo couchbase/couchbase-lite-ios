@@ -23,6 +23,9 @@
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
 #import "CBLFleece.hh"
+#import "CBLStringBytes.h"
+
+using namespace fleece;
 
 @implementation CBLMutableArray
 
@@ -40,6 +43,21 @@
     self = [self init];
     if (self) {
         [self setData: data];
+    }
+    return self;
+}
+
+- (instancetype) initWithJSON:(NSString *)json error:(NSError **)error {
+    self = [self init];
+    if (self) {
+        Encoder enc;
+        CBLStringBytes jsonSlice(json);
+        if (!FLEncoder_ConvertJSON(enc, jsonSlice))
+            NSLog(@"Error occured converting the JSON");
+        auto fleeceData = enc.finish();
+        auto value = FLValue_FromData(fleeceData, kFLTrusted);
+        FLArray array = FLValue_AsArray(value);
+        fleece::MValue<id>
     }
     return self;
 }
