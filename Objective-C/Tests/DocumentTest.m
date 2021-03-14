@@ -2021,16 +2021,9 @@
     NSDictionary* dict = [self populatedMDocToJSONObj];
     
     // without digest, before save
-    NSMutableDictionary* temp = [dict mutableCopy];
-    temp[@"blob"] = @{@"@type": @"blob", @"content_type": @"text/plain", @"length": @8};
-    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
-                                @"content_type": @"text/plain",
-                                @"length": @10}];
-    temp[@"dict"] = @{@"state": @"CA",
-                      @"blob": @{ @"@type": @"blob",
-                                  @"content_type": @"text/plain",
-                                  @"length": @10}};
-    AssertEqualObjects([[doc toJSON] toJSONObj], temp);
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [doc toJSON];
+    }];
     
     // with digest, after save
     [self saveDocument: doc];
@@ -2039,7 +2032,7 @@
 }
 
 - (void) testArrayToJSON {
-    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addValue: @1];
     [array addInteger: 22];
@@ -2072,9 +2065,22 @@
     [doc setValue: array forKey: @"array"];
     AssertEqual([doc valueForKey: @"array"], array);
     AssertEqual([doc arrayForKey: @"array"], array);
+    
+    // before saving the array
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [array toJSON];
+    }];
+    
     [self saveDocument: doc];
     
-    CBLArray* a = [doc arrayForKey: @"array"];
+    // after save, get the mutableArray from mutableDocument
+    CBLMutableArray* mArray = [doc arrayForKey: @"array"];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [mArray toJSON];
+    }];
+    
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLArray* a = [retrivedDoc arrayForKey: @"array"];
     AssertEqualObjects([[a toJSON] toJSONObj], (@[@1, @22, @"stringKey", @101.25, @YES,
                                         @"1970-01-01T00:00:10.000Z", [NSNull null],
                                         @{@"length": @8,

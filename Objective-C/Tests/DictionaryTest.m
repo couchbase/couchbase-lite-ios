@@ -412,17 +412,10 @@
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
     [mDoc setValue: cblDict forKey: @"dict"];
     
-    // before save doc, blob without digest
-    NSMutableDictionary* temp = [dict mutableCopy];
-    temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
-    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
-                                @"content_type": @"text/plain",
-                                @"length": @10}];
-    temp[@"dict"] = @{@"state": @"CA",
-                      @"blob": @{ @"@type": @"blob",
-                                  @"content_type": @"text/plain",
-                                  @"length": @10}};
-    AssertEqualObjects([[cblDict toJSON] toJSONObj], temp);
+    // before saving the doc
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [cblDict toJSON];
+    }];
 
     // after save
     [self saveDocument: mDoc];
@@ -430,35 +423,11 @@
     CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
     AssertEqualObjects([[retrivedDict toJSON] toJSONObj], dict);
     
-    // update retrived mutable doc
     CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
     [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
-    temp = [dict mutableCopy];
-    temp[@"newKeyAppended"] = @"newValueAppended";
-    AssertEqualObjects([[mDictRetrived toJSON] toJSONObj], temp);
-}
-
-- (void) testNewDictionaryAndDocumentToJSON {
-    CBLMutableDictionary* cblDict = [self populatedCBLDictionary];
-    NSDictionary* dict = [self populatedCBLDictToJSONObj];
-    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
-    [mDoc setValue: cblDict forKey: @"dict"];
-    
-    // before save, without digest
-    NSMutableDictionary* temp = [dict mutableCopy];
-    temp[@"blob"] = @{@"length": @11, @"content_type": @"text/plain", @"@type": @"blob"};
-    temp[@"array"] = @[@1,@2, @{@"@type": @"blob",
-                                @"content_type": @"text/plain",
-                                @"length": @10}];
-    temp[@"dict"] = @{@"state": @"CA",
-                      @"blob": @{ @"@type": @"blob",
-                                  @"content_type": @"text/plain",
-                                  @"length": @10}};
-    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{@"dict": temp}));
-    
-    // after save
-    [self saveDocument: mDoc];
-    AssertEqualObjects([[mDoc toJSON] toJSONObj], (@{@"dict": dict}));
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [mDictRetrived toJSON];
+    }];
 }
 
 @end

@@ -250,17 +250,6 @@ using namespace fleece;
     return (id)self;
 }
 
-#pragma mark - toJSON
-
-- (NSString*) toJSON {
-    JSONEncoder enc;
-    FLEncoderContext ctx = { .encodeQueryParameter = false };
-    FLEncoder_SetExtraInfo(enc, &ctx);
-    FLEncoder_WriteNSObject(enc, _dict);
-    auto data = enc.finish();
-    return slice2string(data);
-}
-
 #pragma mark - NSFastEnumeration
 
 - (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState*)state
