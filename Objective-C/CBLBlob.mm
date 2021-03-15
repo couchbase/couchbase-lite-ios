@@ -357,7 +357,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     // so there could be no extra info:
     id extra = (__bridge id) FLEncoder_GetExtraInfo(encoder);
     CBLMutableDocument* document = $castIf(CBLMutableDocument, extra);
-    if (document) {
+    if (!self.digest && document) {
         CBLDatabase* database = document.database;
         NSError *error;
         // Note: Installing blob in the database also updates the digest property.
@@ -365,6 +365,10 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
             [document setEncodingError: error];
             return;
         }
+    }
+    
+    if (self.digest) {
+        // TODO: set database!
     }
     
     NSDictionary* dict = self.jsonRepresentation;

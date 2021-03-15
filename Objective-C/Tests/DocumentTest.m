@@ -2013,4 +2013,46 @@
     AssertEqualObjects(revisionID, doc.revisionID);
 }
 
+- (void) testGetBlobContentFromMutableObject {
+    CBLMutableArray* mArray = [[CBLMutableArray alloc] init];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [mArray addBlob: blob];
+    
+    CBLMutableDocument* mDoc = [self createDocument: @"mDoc"];
+    [mDoc setArray: mArray forKey: @"array"];
+    
+    [self saveDocument: mDoc];
+    NSLog(@"prints the digest: %@", blob.digest);
+    
+    // new array with blob in it
+    NSError* error;
+    mArray = [[CBLMutableArray alloc] initWithJSON: @"[\"boolVal\":true,"
+              "\"dateKey\":\"1970-01-01T00:00:10.000Z\","
+              "\"floatKey\":101.25,"
+              "\"intKey\":22,"
+              "\"nullKey\":null,"
+              "\"stringKey\":\"stringVal\","
+              "\"valueKey\":1,"
+              "\"blob\":{\"@type\":\"blob\",\"digest\":\"abcd\"}]" error: &error];
+    AssertNil(error);
+    
+    blob = [mArray blobAtIndex: 7];
+    
+    // empty content with a warning message!
+    AssertNil(blob.content);
+    
+    mDoc = [self createDocument: @"mDoc2"];
+    [mDoc setArray: mArray forKey: @"array2"];
+    [self saveDocument: mDoc];
+    
+    CBLDocument* doc = [self.db documentWithID: @"mDoc2"];
+    CBLArray* array = [doc arrayForKey: @"array2"];
+    blob = [array blobAtIndex: 7];
+    
+    // after the save, it should return the content
+    AssertNotNil(blob.content);
+    AssertEqualObjects(blob.content, content);
+}
+
 @end
