@@ -123,15 +123,29 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     self = [super init];
     if(self) {
         _db = db;
-
-        _length = asNumber(properties[kCBLBlobLengthProperty]).unsignedLongLongValue;
-        _digest = asString(properties[kCBLBlobDigestProperty]);
-        _contentType = asString(properties[kCBLBlobContentTypeProperty]);
-        _content = asData(properties[kCBLBlobDataProperty]);
-        if (!_digest && !_content)
-            C4Warn("Blob read from database has neither digest nor data.");
+        
+        [self setProperties: properties];
     }
     return self;
+}
+
+// Initializer for an existing blob without a DB
+- (instancetype) initWithProperties:(NSDictionary *)properties {
+    Assert(properties);
+    self = [super init];
+    if(self) {
+        [self setProperties: properties];
+    }
+    return self;
+}
+
+- (void) setProperties:(NSDictionary<NSString *,id>*)properties {
+    _length = asNumber(properties[kCBLBlobLengthProperty]).unsignedLongLongValue;
+    _digest = asString(properties[kCBLBlobDigestProperty]);
+    _contentType = asString(properties[kCBLBlobContentTypeProperty]);
+    _content = asData(properties[kCBLBlobDataProperty]);
+    if (!_digest && !_content)
+        C4Warn("Blob read from database has neither digest nor data.");
 }
 
 - (void) dealloc {
@@ -198,13 +212,8 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
                 _length = _content.length;
             }
             return content;
-        } else {
+        } else if (_initialContentStream) {
             // No recourse but to read the initial stream into memory:
-            if (!_initialContentStream) {
-                [NSException raise: NSInternalInconsistencyException
-                            format: @"%@", kCBLErrorMessageBlobContainsNoData];
-            }
-            
             NSMutableData *result = [NSMutableData new];
             uint8_t buffer[kReadBufferSize];
             NSInteger bytesRead;
@@ -221,7 +230,15 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
             _length = _content.length;
             
             return _content;
+        } else if ([CBLBlob isBlob: self.properties]) {
+            CBLWarn(Database, @"Cannot access content from the blob that contains only metadata "
+                    "and has no database associated with it. To access the content, "
+                    "save the document first.");
+            
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"%@", kCBLErrorMessageBlobContainsNoData];
         }
+        return nil;
     }
 }
 
@@ -242,7 +259,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 + (BOOL) isBlob:(NSDictionary<NSString *,id> *)properties {
     if (!properties[kCBLBlobDigestProperty] ||
         ![properties[kCBLBlobDigestProperty] isKindOfClass: [NSString class]] ||
-        !properties[kCBLTypeProperty] || ![properties[kCBLTypeProperty] isEqual: @"blob"] ||
+        !properties[kCBLTypeProperty] || ![properties[kCBLTypeProperty] isEqual: kCBLBlobType] ||
         (properties[kCBLBlobContentTypeProperty] &&
          ![properties[kCBLBlobContentTypeProperty] isKindOfClass: [NSString class]]) ||
         (properties[kCBLBlobLengthProperty] &&
@@ -357,18 +374,19 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     // so there could be no extra info:
     id extra = (__bridge id) FLEncoder_GetExtraInfo(encoder);
     CBLMutableDocument* document = $castIf(CBLMutableDocument, extra);
-    if (!self.digest && document) {
+    if (document) {
         CBLDatabase* database = document.database;
-        NSError *error;
-        // Note: Installing blob in the database also updates the digest property.
-        if (![self installInDatabase: database error: &error]) {
-            [document setEncodingError: error];
-            return;
+        if (self.digest) {
+            // if digest is already present, assign the database and skip install
+            _db = database;
+        } else {
+            NSError *error;
+            // Note: Installing blob in the database also updates the digest property.
+            if (![self installInDatabase: database error: &error]) {
+                [document setEncodingError: error];
+                return;
+            }
         }
-    }
-    
-    if (self.digest) {
-        // TODO: set database!
     }
     
     NSDictionary* dict = self.jsonRepresentation;

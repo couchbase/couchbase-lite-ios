@@ -24,6 +24,7 @@
 #import "CBLJSON.h"
 #import "CBLFleece.hh"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 
 using namespace fleece;
 
@@ -47,17 +48,12 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithJSON:(NSString *)json error:(NSError **)error {
+- (instancetype) initWithJSON:(NSString *)json error:(NSError **)outError {
     self = [self init];
     if (self) {
-        Encoder enc;
-        CBLStringBytes jsonSlice(json);
-        if (!FLEncoder_ConvertJSON(enc, jsonSlice))
-            NSLog(@"Error occured converting the JSON");
-        auto fleeceData = enc.finish();
-        auto value = FLValue_FromData(fleeceData, kFLTrusted);
-        FLArray array = FLValue_AsArray(value);
-        fleece::MValue<id>
+        
+        if (![self setJSON: json withError: outError])
+            return nil;
     }
     return self;
 }
@@ -252,6 +248,40 @@ using namespace fleece;
         for (id obj in data)
             _array.append([obj cbl_toCBLObject]);
     }
+}
+
+#pragma mark - SetJSON
+
+- (BOOL) setJSON: (NSString*)json error: (NSError**)outError {
+    CBLStringBytes jsonSlice(json);
+    FLError flEerror = {};
+    Encoder enc;
+    if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
+        flEerror = enc.error();
+        CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
+        convertError(flEerror, outError);
+        return NO;
+    }
+    
+    flEerror = {};
+    FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
+    if (!result.buf) {
+        CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
+        convertError(flEerror, outError);
+        return NO;
+    }
+    
+    FLArray array = FLValue_AsArray(FLValue_FromData(C4Slice(result), kFLTrusted));
+    CBL_LOCK(self.sharedLock) {
+        _array.clear();
+        uint count = FLArray_Count(array);
+        for (uint i = 0; i < count; i++) {
+            id value = FLValue_GetNSObject(FLArray_Get(array, (uint32_t)i), nil);
+            _array.append([value cbl_toCBLObject]);
+        }
+    }
+    
+    return YES;
 }
 
 #pragma mark - Remove value

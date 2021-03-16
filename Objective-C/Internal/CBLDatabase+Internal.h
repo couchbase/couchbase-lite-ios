@@ -101,6 +101,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLBlob () <CBLJSONCoding>
 
+- (instancetype) initWithProperties: (NSDictionary *)properties;
+
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        properties: (NSDictionary *)properties;
 

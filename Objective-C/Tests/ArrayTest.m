@@ -1048,33 +1048,56 @@
     AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel", @"Thomas"]));
 }
 
-- (void) testCreateMutableArrayWithJSON {
+- (void) testMutableArrayInitWithJSON {
+    NSError* error;
+    CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithJSON:
+                               @"[{\"boolVal\":true},"
+                               "{\"dateKey\":\"1970-01-01T00:00:10.000Z\"},"
+                               "{\"floatKey\":101.25},"
+                               "{\"intKey\":22},"
+                               "{\"nullKey\":null},"
+                               "{\"stringKey\":\"stringVal\"},"
+                               "{\"valueKey\":1}]" error: &error];
+    
+    CBLMutableDocument* mDoc = [CBLMutableDocument documentWithID: @"doc1"];
+    [mDoc setArray: mArray forKey: @"arrayKey"];
+    [self saveDocument: mDoc];
+    
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    CBLArray* array = [doc arrayForKey: @"arrayKey"];
+    AssertEqual(array.count, 7);
+}
+
+- (void) testMutableArrayInitWithBlobDictionary {
     NSData* content = [@"i'm blob" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     CBLMutableDocument* dummyDoc = [CBLMutableDocument document];
     [dummyDoc setBlob: blob forKey: @"blobKey"];
     [self saveDocument: dummyDoc];
     
-    CBLMutableArray* a = [[CBLMutableArray alloc] initWithData: @[@"string", @22, @101.25,
-                                                                  @YES,
-                                                                  [NSDate dateWithTimeIntervalSince1970: 10],
-                                                                  [NSNull null],
-                                                                  blob.properties]];
-    CBLMutableDocument* doc = [CBLMutableDocument document];
-    [doc setArray: a forKey: @"arrayKey"];
-    [self saveDocument: doc];
-}
-
-- (void) testCreateMutableArrayWithJSON2 {
-    NSError* error;
-    CBLMutableArray* a = [[CBLMutableArray alloc] initWithJSON:
-                          @"{\"boolVal\":true,\"dateKey\":\"1970-01-01T00:00:10.000Z\","
-                          "\"floatKey\":101.25,\"intKey\":22,\"nullKey\":null,"
-                          "\"stringKey\":\"stringVal\",\"valueKey\":1}" error: &error];
+    CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithData: @[@"string", @22, @101.25,
+                                                                       @YES,
+                                                                       [NSDate dateWithTimeIntervalSince1970: 10],
+                                                                       [NSNull null],
+                                                                       blob.properties]];
     
-    CBLMutableDocument* doc = [CBLMutableDocument document];
-    [doc setArray: a forKey: @"arrayKey"];
-    [self saveDocument: doc];
+    blob = [mArray blobAtIndex: 6];
+    AssertNotNil(blob.properties);
+    AssertEqual(blob.properties.count, 4);
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        NSLog(@"Blob content: %@", blob.content);
+    }];
+    
+    CBLMutableDocument* mDoc = [CBLMutableDocument documentWithID: @"doc"];
+    [mDoc setArray: mArray forKey: @"arrayKey"];
+    [self saveDocument: mDoc];
+    
+    CBLDocument* doc = [self.db documentWithID: @"doc"];
+    
+    CBLArray* array = [doc arrayForKey: @"arrayKey"];
+    AssertEqual(array.count, 7);
+    blob = [array blobAtIndex: 6];
+    AssertNotNil(blob);
 }
 
 @end

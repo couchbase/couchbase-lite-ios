@@ -53,13 +53,8 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation NSDictionary (CBLConversions)
 - (id) cbl_toCBLObject {
-    if ([CBLBlob isBlob: self]) {
-        
-        // FIXME: DO NOT COMMIT !!!!
-        CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"dummy-remove" error: nil];
-        
-        return [[CBLBlob alloc] initWithDatabase: db properties: self];
-    }
+    if ([CBLBlob isBlob: self])
+        return [[CBLBlob alloc] initWithProperties: self];
     else
         return [[CBLMutableDictionary alloc] initWithData: self];
 }

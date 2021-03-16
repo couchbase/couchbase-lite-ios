@@ -394,6 +394,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
 
+/**
+ Set data with JSON string.
+ 
+ If the specified JSON string cannot be parsed or is not a JSON Array,
+ a CouchbaseLiteException will be thrown as invalid JSON.
+ */
+- (BOOL) setJSON: (NSString*)json error: (NSError**)outError;
+
 @end
 
 NS_ASSUME_NONNULL_END
