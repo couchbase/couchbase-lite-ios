@@ -153,14 +153,14 @@ using namespace fleece;
     }
 }
 
-- (BOOL) setJSON: (NSString*)json error: (NSError**)outError {
+- (BOOL) setJSON: (NSString*)json error: (NSError**)error {
     CBLStringBytes jsonSlice(json);
     FLError flEerror = {};
     Encoder enc;
     if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
         flEerror = enc.error();
         CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
-        convertError(flEerror, outError);
+        convertError(flEerror, error);
         return NO;
     }
     
@@ -168,7 +168,7 @@ using namespace fleece;
     FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
     if (!result.buf) {
         CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
-        convertError(flEerror, outError);
+        convertError(flEerror, error);
         return NO;
     }
     
@@ -183,7 +183,6 @@ using namespace fleece;
         _dict.set(FLDictIterator_GetKeyString(&iter), [val cbl_toCBLObject]);
         FLDictIterator_Next(&iter);
     }
-    
     return YES;
 }
 

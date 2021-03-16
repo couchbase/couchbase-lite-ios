@@ -51,7 +51,6 @@ using namespace fleece;
 - (instancetype) initWithJSON: (NSString *)json error:(NSError **)outError {
     self = [self init];
     if (self) {
-        
         if (![self setJSON: json error: outError])
             return nil;
     }
@@ -252,14 +251,14 @@ using namespace fleece;
 
 #pragma mark - SetJSON
 
-- (BOOL) setJSON: (NSString*)json error: (NSError**)outError {
+- (BOOL) setJSON: (NSString*)json error: (NSError**)error {
     CBLStringBytes jsonSlice(json);
     FLError flEerror = {};
     Encoder enc;
     if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
         flEerror = enc.error();
         CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
-        convertError(flEerror, outError);
+        convertError(flEerror, error);
         return NO;
     }
     
@@ -267,7 +266,7 @@ using namespace fleece;
     FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
     if (!result.buf) {
         CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
-        convertError(flEerror, outError);
+        convertError(flEerror, error);
         return NO;
     }
     
@@ -280,7 +279,6 @@ using namespace fleece;
             _array.append([value cbl_toCBLObject]);
         }
     }
-    
     return YES;
 }
 

@@ -103,7 +103,7 @@ public protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
     
     // MARK: Data
     
-    @discardableResult func setData(_ data: Array<Any>?) -> Self
+    @discardableResult func setData(_ data: Array<Any>) -> Self
     
     // MARK: Removing Value
     
@@ -132,7 +132,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter array: The array object.
-    public init(data: Array<Any>?) {
+    public init(data: Array<Any>) {
         super.init(CBLMutableArray())
         setData(data)
     }
@@ -501,7 +501,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     ///
     /// - Parameter array: The array.
     /// - Returns: The self object.
-    @discardableResult public func setData(_ data: Array<Any>?) -> Self {
+    @discardableResult public func setData(_ data: Array<Any>) -> Self {
         arrayImpl.setData(DataConverter.convertSETArray(data))
         return self
     }

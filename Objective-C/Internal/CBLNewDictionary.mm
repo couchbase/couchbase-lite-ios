@@ -260,7 +260,6 @@ using namespace fleece;
         [_dict setValue: [val cbl_toPlainObject] forKey: key];
         FLDictIterator_Next(&iter);
     }
-    
     return YES;
 }
 

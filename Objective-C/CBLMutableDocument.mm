@@ -75,7 +75,6 @@ using namespace fleece;
                         error: (NSError**)error {
     self = [self initWithID: nil];
     if (self) {
-        
         if (![self setJSON: json error: error])
             return nil;
     }
@@ -169,8 +168,8 @@ using namespace fleece;
     [((CBLMutableDictionary*)_dict) setData: data];
 }
 
-- (BOOL) setJSON: (NSString*)json error: (NSError**)outError {
-    return [((CBLMutableDictionary*)_dict) setJSON: json error: outError];
+- (BOOL) setJSON: (NSString*)json error: (NSError**)error {
+    return [((CBLMutableDictionary*)_dict) setJSON: json error: error];
 }
 
 #pragma mark - Internal

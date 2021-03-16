@@ -73,6 +73,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Initializes a new CBLMutableDocument object with the JSON data.
+ 
+ @param json The JSON string with data.
+ @param error On return, the error if any.
  */
 - (instancetype) initWithJSON: (NSString*)json
                         error: (NSError**)error;
@@ -95,6 +98,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Initializes a new CBLMutableDocument object with the given ID and the JSON data.  If a
  nil ID value is given, the document will be created with a new random UUID.
+ 
+ @param documentID The document ID.
+ @param json The JSON string with data.
+ @param error On return, the error if any.
  */
 - (instancetype) initWithID: (nullable NSString*)documentID
                        json: (NSString*)json
