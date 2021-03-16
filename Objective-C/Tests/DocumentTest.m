@@ -2055,4 +2055,33 @@
     AssertEqualObjects(blob.content, content);
 }
 
+- (void) testMutableDocumentInitWithJSON {
+    NSError* error = nil;
+    NSDictionary* jsonDict = @{
+        @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
+                   @"content_type": @"text/plain", @"@type": @"blob"},
+        @"nullKey": [NSNull null],
+        @"dateKey": @"1970-01-01T00:00:10.000Z",
+        @"stringKey": @"stringVal",
+        @"boolVal": @YES,
+        @"floatKey": @101.25,
+        @"array": @[@1,@2, @{@"@type": @"blob",
+                             @"content_type": @"text/plain",
+                             @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
+                             @"length": @10}],
+        @"dict": @{@"state": @"CA",
+                   @"blob": @{ @"@type": @"blob",
+                               @"content_type": @"text/plain",
+                               @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
+                               @"length": @10}},
+        @"intKey": @1};
+    NSString* json = [CBLJSON stringWithJSONObject: jsonDict options: 0 error: &error];
+    AssertNil(error);
+    
+    CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithJSON: json
+                                                                  error: &error];
+    
+    AssertEqual(mDoc.count, 9);
+}
+
 @end

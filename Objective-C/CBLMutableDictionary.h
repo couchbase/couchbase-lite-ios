@@ -138,6 +138,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setData: (NSDictionary<NSString*,id>*)data;
 
+/**
+ Set data with JSON string.
+ 
+ If the specified JSON string cannot be parsed or is not a JSON Array, call returns false, with populated error object.
+ */
+- (BOOL) setJSON: (NSString*)json error: (NSError**)outError;
+
 #pragma mark - Getting dictionary and array object
 
 /** 
@@ -190,6 +197,13 @@ NS_ASSUME_NONNULL_BEGIN
  @param data The data.
  */
 - (instancetype) initWithData: (NSDictionary<NSString*,id>*)data;
+
+/**
+ Initialzes a new CBLMutableDictionary object from the JSON string.
+ 
+ If the specified JSON string cannot be parsed or is not a JSON Dictionary, error will be populated.
+ */
+- (instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
 
 @end
 

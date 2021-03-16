@@ -27,6 +27,9 @@
 #import "CBLMisc.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
+#import "CBLFleece.hh"
+
+using namespace fleece;
 
 @implementation CBLMutableDocument
 
@@ -64,6 +67,28 @@
     self = [self initWithID: documentID];
     if (self) {
         [self setData: data];
+    }
+    return self;
+}
+
+- (instancetype) initWithJSON: (NSString*)json
+                        error: (NSError**)error {
+    self = [self initWithID: nil];
+    if (self) {
+        
+        if (![self setJSON: json error: error])
+            return nil;
+    }
+    return self;
+}
+
+- (instancetype) initWithID: (nullable NSString*)documentID
+                       json: (NSString*)json
+                      error: (NSError**)error {
+    self = [self initWithID: documentID];
+    if (self) {
+        if (![self setJSON: json error: error])
+            return nil;
     }
     return self;
 }
@@ -142,6 +167,10 @@
 
 - (void) setData: (NSDictionary<NSString *,id>*)data {
     [((CBLMutableDictionary*)_dict) setData: data];
+}
+
+- (BOOL) setJSON: (NSString*)json error: (NSError**)outError {
+    return [((CBLMutableDictionary*)_dict) setJSON: json error: outError];
 }
 
 #pragma mark - Internal

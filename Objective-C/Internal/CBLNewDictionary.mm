@@ -26,8 +26,12 @@
 #import "CBLMutableFragment.h"
 #import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
+#import "CBLFleece.hh"
+#import "CBLStringBytes.h"
+#import "CBLCoreBridge.h"
 
 using namespace cbl;
+using namespace fleece;
 
 @interface CBLNewDictionary()
 @end
@@ -223,6 +227,41 @@ using namespace cbl;
         [_dict setObject:  [value cbl_toCBLObject] forKey: key];
     }];
     _changed = true;
+}
+
+- (BOOL) setJSON:(NSString *)json error:(NSError **)outError {
+    CBLStringBytes jsonSlice(json);
+    FLError flEerror = {};
+    Encoder enc;
+    if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
+        flEerror = enc.error();
+        CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
+        convertError(flEerror, outError);
+        return NO;
+    }
+    
+    flEerror = {};
+    FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
+    if (!result.buf) {
+        CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
+        convertError(flEerror, outError);
+        return NO;
+    }
+    
+    FLDict dict = FLValue_AsDict(FLValue_FromData(C4Slice(result), kFLTrusted));
+    _dict = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(dict)];
+    
+    FLDictIterator iter;
+    FLDictIterator_Begin(dict, &iter);
+    FLValue value;
+    while (NULL != (value = FLDictIterator_GetValue(&iter))) {
+        id val = FLValue_GetNSObject(value, nil);
+        NSString* key = slice2string(FLDictIterator_GetKeyString(&iter));
+        [_dict setValue: [val cbl_toPlainObject] forKey: key];
+        FLDictIterator_Next(&iter);
+    }
+    
+    return YES;
 }
 
 #pragma mark - Convert to NSDictionary

@@ -48,11 +48,11 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithJSON:(NSString *)json error:(NSError **)outError {
+- (instancetype) initWithJSON: (NSString *)json error:(NSError **)outError {
     self = [self init];
     if (self) {
         
-        if (![self setJSON: json withError: outError])
+        if (![self setJSON: json error: outError])
             return nil;
     }
     return self;
