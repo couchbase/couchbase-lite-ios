@@ -26,7 +26,6 @@
 #import "CBLDatabaseChange.h"
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
-#import "CBLJSONCoding.h"
 #import "CBLReplicator.h"
 #import "CBLLiveQuery.h"
 #import "CBLConflictResolver.h"
@@ -99,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 // CBLBlob:
 
 
-@interface CBLBlob () <CBLJSONCoding>
+@interface CBLBlob ()
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        properties: (NSDictionary *)properties;

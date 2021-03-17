@@ -29,6 +29,7 @@
 #import "CBLData.h"
 #import "CBLErrorMessage.h"
 #import "CBLJSON.h"
+#import "CBLFleece.hh"
 
 using namespace cbl;
 
@@ -149,9 +150,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     }
 }
 
-- (NSDictionary*) jsonRepresentation {
+- (NSDictionary*) blobProperties: (BOOL)mayIncludeContent {
     NSMutableDictionary* json = [self.properties mutableCopy];
-    if (!json[kCBLBlobDigestProperty]) {
+    if (mayIncludeContent && !json[kCBLBlobDigestProperty]) {
         json[kCBLBlobDataProperty] = self.content;
     }
     return json;
@@ -355,19 +356,18 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 - (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
     // Note: If CBLDictionary can be encoded independently of CBLDocument,
     // so there could be no extra info:
-    id extra = (__bridge id) FLEncoder_GetExtraInfo(encoder);
-    CBLMutableDocument* document = $castIf(CBLMutableDocument, extra);
-    if (document) {
-        CBLDatabase* database = document.database;
+    FLEncoderContext* encContext = (FLEncoderContext*)FLEncoder_GetExtraInfo(encoder);
+    if (encContext->document) {
+        CBLDatabase* database = encContext->document.database;
         NSError *error;
         // Note: Installing blob in the database also updates the digest property.
         if (![self installInDatabase: database error: &error]) {
-            [document setEncodingError: error];
+            [encContext->document setEncodingError: error];
             return;
         }
     }
     
-    NSDictionary* dict = self.jsonRepresentation;
+    NSDictionary* dict = [self blobProperties: encContext->encodeQueryParameter];
     FLEncoder_BeginDict(encoder, [dict count]);
     for (NSString *key in dict) {
         CBLStringBytes bKey(key);

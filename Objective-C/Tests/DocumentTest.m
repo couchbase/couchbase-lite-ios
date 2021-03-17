@@ -21,6 +21,7 @@
 
 #import "CBLBlob.h"
 #import "CBLJSON.h"
+#import "Foundation+CBL.h"
 
 #define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
 #define kDocumentTestBlob @"i'm blob"
@@ -2011,6 +2012,89 @@
     AssertNotNil(doc.revisionID);
     Assert(![mDoc.revisionID isEqual: revisionID]);
     AssertEqualObjects(revisionID, doc.revisionID);
+}
+
+#pragma mark - toJSON
+
+- (void) testDocumentToJSON {
+    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
+    NSDictionary* dict = [self populatedMDocToJSONObj];
+    
+    // without digest, before save
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [doc toJSON];
+    }];
+    
+    // with digest, after save
+    [self saveDocument: doc];
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects([[retrivedDoc toJSON] toJSONObj], dict);
+}
+
+- (void) testArrayToJSON {
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addInteger: 22];
+    [array addString: @"stringKey"];
+    [array addFloat: (float)101.25];
+    [array addBoolean: YES];
+    [array addDate: [NSDate dateWithTimeIntervalSince1970: 10]];
+    [array addValue: [NSNull null]];
+    
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [array addBlob: blob];
+    
+    CBLMutableArray* nestedArray = [[CBLMutableArray alloc] init];
+    [nestedArray addValue: @101];
+    [nestedArray addValue: @201];
+    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [nestedArray addBlob: blob2];
+    [array addArray: nestedArray];
+    
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    
+    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [dict setBlob: blob3 forKey: @"blob"];
+    [array addValue: dict];
+    
+    [doc setValue: array forKey: @"array"];
+    AssertEqual([doc valueForKey: @"array"], array);
+    AssertEqual([doc arrayForKey: @"array"], array);
+    
+    // before saving the array
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [array toJSON];
+    }];
+    
+    [self saveDocument: doc];
+    
+    // after save, get the mutableArray from mutableDocument
+    CBLMutableArray* mArray = [doc arrayForKey: @"array"];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [mArray toJSON];
+    }];
+    
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLArray* a = [retrivedDoc arrayForKey: @"array"];
+    AssertEqualObjects([[a toJSON] toJSONObj], (@[@1, @22, @"stringKey", @101.25, @YES,
+                                        @"1970-01-01T00:00:10.000Z", [NSNull null],
+                                        @{@"length": @8,
+                                          @"@type": @"blob",
+                                          @"content_type": @"text/plain",
+                                          @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A="},
+                                        @[@101, @201, @{@"@type": @"blob",
+                                                        @"content_type": @"text/plain",
+                                                        @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
+                                                        @"length": @10}],
+                                        @{@"state": @"CA", @"blob": @{ @"@type": @"blob",
+                                                                       @"content_type": @"text/plain",
+                                                                       @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
+                                                                       @"length": @10}}]));
 }
 
 @end

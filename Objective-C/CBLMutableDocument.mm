@@ -144,6 +144,13 @@
     [((CBLMutableDictionary*)_dict) setData: data];
 }
 
+- (NSString*) toJSON {
+    // Overrides CBLDocument
+    [NSException raise: NSInternalInconsistencyException
+                format: @"toJSON on Mutable objects are unsupported"];
+    return nil;
+}
+
 #pragma mark - Internal
 
 - (bool) isMutable {

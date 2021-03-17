@@ -42,6 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Not Available. */
 - (instancetype) init NS_UNAVAILABLE;
 
+/** Return query result data as JSON String */
+- (NSString*) toJSON;
+
 @end
 
 NS_ASSUME_NONNULL_END

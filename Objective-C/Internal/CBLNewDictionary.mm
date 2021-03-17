@@ -26,8 +26,11 @@
 #import "CBLMutableFragment.h"
 #import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
+#import "CBLFleece.hh"
+#import "CBLCoreBridge.h"
 
 using namespace cbl;
+using namespace fleece;
 
 @interface CBLNewDictionary()
 @end

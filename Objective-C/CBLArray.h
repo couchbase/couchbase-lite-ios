@@ -162,6 +162,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSArray*) toArray;
 
+/** Return array data as JSON String */
+- (NSString*) toJSON;
+
 @end
 
 /** CBLArray provides read access to array data. */
