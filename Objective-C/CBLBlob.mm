@@ -382,7 +382,6 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
         if (![self isBlobFromSameDatabase: database])
           return;
 
-        NSError *error;
         if (self.digest) {
             // if digest is already present, assign the database and skip install
             _db = database;
@@ -390,7 +389,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
             NSError *error;
             // Note: Installing blob in the database also updates the digest property.
             if (![self installInDatabase: database error: &error]) {
-                [document setEncodingError: error];
+                [encContext->document setEncodingError: error];
                 return;
             }
         }

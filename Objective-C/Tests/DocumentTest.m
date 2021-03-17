@@ -2163,5 +2163,6 @@
                                                                   error: &error];
     
     AssertEqual(mDoc.count, 9);
+}
 
 @end
