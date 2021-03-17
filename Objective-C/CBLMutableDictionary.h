@@ -143,6 +143,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param json The JSON string with data.
  @param error On return, the error if any.
+ @return True on success, false on failure.
  */
 - (BOOL) setJSON: (NSString*)json error: (NSError**)error;
 

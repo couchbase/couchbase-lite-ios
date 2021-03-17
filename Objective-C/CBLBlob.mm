@@ -302,13 +302,6 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 
 - (BOOL) installInDatabase: (CBLDatabase*)db error:(NSError**)outError {
     Assert(db);
-    if (_db) {
-        if (_db != db) {
-            [NSException raise: NSInternalInconsistencyException
-                        format: @"%@", kCBLErrorMessageBlobDifferentDatabase];
-        }
-        return YES;
-    }
 
     C4BlobStore *store = [db getBlobStore: outError];
     if (!store)
@@ -363,6 +356,16 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     return YES;
 }
 
+- (BOOL) isBlobFromSameDatabase: (CBLDatabase*)database {
+    if (_db && _db != database) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"%@", kCBLErrorMessageBlobDifferentDatabase];
+        return NO;
+    }
+    
+    return YES;
+}
+
 #pragma mark FLEECE ENCODABLE
 
 - (id) cbl_toCBLObject {
@@ -376,6 +379,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     CBLMutableDocument* document = $castIf(CBLMutableDocument, extra);
     if (document) {
         CBLDatabase* database = document.database;
+        if (![self isBlobFromSameDatabase: database])
+            return;
+        
         if (self.digest) {
             // if digest is already present, assign the database and skip install
             _db = database;
