@@ -24,6 +24,7 @@
 #import "CBLData.h"
 #import "CBLStatus.h"
 #import "fleece/Fleece.hh"
+#import "CBLFleece.hh"
 
 using namespace fleece;
 
@@ -137,6 +138,8 @@ using namespace fleece;
 - (nullable NSData*) encode: (NSError**)outError {
     Encoder enc;
     if (_data) {
+        FLEncoderContext ctx = { .encodeQueryParameter = true };
+        FLEncoder_SetExtraInfo(enc, &ctx);
         enc.writeNSObject(_data);
     } else {
         enc.beginDict();

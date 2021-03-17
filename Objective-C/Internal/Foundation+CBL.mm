@@ -33,3 +33,16 @@
 }
 
 @end
+
+@implementation NSString (CBL)
+- (id) toJSONObj {
+    NSData* d = [self dataUsingEncoding: NSUTF8StringEncoding];
+    
+    NSError* error;
+    id retrivedObj = [NSJSONSerialization JSONObjectWithData: d options: 0
+                                                       error: &error];
+    AssertNil(error);
+    return retrivedObj;
+}
+
+@end

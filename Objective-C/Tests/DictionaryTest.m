@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "Foundation+CBL.h"
 
 @interface DictionaryTest : CBLTestCase
 
@@ -350,9 +351,41 @@
     AssertEqualObjects([mDict3 valueForKey: @"name"], @"Thomas");
 }
 
-- (void) testDictionaryInitWithJSON {
-    NSError* error = nil;
-    NSDictionary* jsonDict = @{
+- (CBLMutableDictionary*) populatedCBLDictionary {
+    CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
+    [mDict1 setValue: @1 forKey:@"intKey"];
+    [mDict1 setString: @"stringVal" forKey: @"stringKey"];
+    [mDict1 setFloat: (float)101.25 forKey: @"floatKey"];
+    [mDict1 setBoolean: YES forKey: @"boolVal"];
+    [mDict1 setDate: [NSDate dateWithTimeIntervalSince1970: 10] forKey: @"dateKey"];
+    [mDict1 setValue: [NSNull null] forKey: @"nullKey"];
+    
+    NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [mDict1 setBlob: blob forKey: @"blob"];
+    
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
+    [array addValue: @1];
+    [array addValue: @2];
+    
+    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [array addBlob: blob2];
+    [mDict1 setValue: array forKey: @"array"];
+    
+    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
+    [dict setValue: @"CA" forKey: @"state"];
+    [dict setBlob: blob3 forKey: @"blob"];
+    
+    [mDict1 setValue: dict forKey: @"dict"];
+    
+    return mDict1;
+}
+
+- (NSDictionary*) populatedCBLDictToJSONObj {
+    return @{
         @"blob": @{@"length": @11, @"digest": @"sha1-61i/GpzLBNHUFf49MQZthYCMixY=",
                    @"content_type": @"text/plain", @"@type": @"blob"},
         @"nullKey": [NSNull null],
@@ -370,6 +403,11 @@
                                @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
                                @"length": @10}},
         @"intKey": @1};
+}
+
+- (void) testDictionaryInitWithJSON {
+    NSError* error = nil;
+    NSDictionary* jsonDict = [self populatedCBLDictToJSONObj];
     
     NSString* json = [CBLJSON stringWithJSONObject: jsonDict options: 0 error: &error];
     AssertNil(error);
@@ -379,6 +417,30 @@
     AssertNil(error);
     
     AssertEqual(mDict.count, 9);
+}
+
+- (void) testDictionaryToJSON {
+    CBLMutableDictionary* cblDict = [self populatedCBLDictionary];
+    NSDictionary* dict = [self populatedCBLDictToJSONObj];
+    CBLMutableDocument* mDoc = [self createDocument: @"doc"];
+    [mDoc setValue: cblDict forKey: @"dict"];
+    
+    // before saving the doc
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [cblDict toJSON];
+    }];
+
+    // after save
+    [self saveDocument: mDoc];
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLDictionary* retrivedDict = [retrivedDoc dictionaryForKey: @"dict"];
+    AssertEqualObjects([[retrivedDict toJSON] toJSONObj], dict);
+    
+    CBLMutableDictionary* mDictRetrived = [retrivedDict toMutable];
+    [mDictRetrived setValue: @"newValueAppended" forKey: @"newKeyAppended"];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [mDictRetrived toJSON];
+    }];
 }
 
 @end

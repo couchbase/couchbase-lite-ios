@@ -306,4 +306,11 @@ using namespace fleece;
     return self;
 }
 
+- (NSString*) toJSON {
+    // Overrides CBLArray
+    [NSException raise: NSInternalInconsistencyException
+                format: @"toJSON on Mutable objects are unsupported"];
+    return nil;
+}
+
 @end

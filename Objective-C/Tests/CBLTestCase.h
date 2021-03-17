@@ -175,6 +175,12 @@ NS_ASSUME_NONNULL_BEGIN
             randomAccess: (BOOL)randomAccess
                     test: (void (^)(uint64_t n, CBLQueryResult *result))block;
 
+/** create and then populate  a mutable dictionary with a kind of data*/
+- (CBLMutableDocument*) populatedMutableDocument: (NSString*)docID;
+
+/** validate the mutable dictionary created above with a jsonObj*/
+- (NSDictionary*) populatedMDocToJSONObj;
+
 @end
 
 NS_ASSUME_NONNULL_END

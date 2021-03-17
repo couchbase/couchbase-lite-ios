@@ -25,6 +25,8 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "MRoot.hh"
+#import "CBLCoreBridge.h"
+#import "CBLFleece.hh"
 
 using namespace cbl;
 using namespace fleece;
@@ -119,6 +121,24 @@ using namespace fleece;
     if (index >= self.count)
         return nil;
     return [[CBLFragment alloc] initWithParent: self index: index];
+}
+
+- (NSString*) toJSON {
+    JSONEncoder enc;
+    FLEncoderContext ctx = { .encodeQueryParameter = false };
+    FLEncoder_SetExtraInfo(enc, &ctx);
+    
+    enc.beginDict();
+    for (NSString* name in _rs.columnNames) {
+        NSInteger index = [self indexForColumnName: name];
+        if (index >= 0) {
+            enc.writeKey(c4str(name.UTF8String));
+            enc.writeValue([self fleeceValueAtIndex: index]);
+        }
+    }
+    enc.endDict();
+    auto r = enc.finish();
+    return slice2string(r);
 }
 
 #pragma mark - CBLDictionary

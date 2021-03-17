@@ -27,4 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface NSString (CBL)
+
+// for unit testing purpose only
+- (id) toJSONObj;
+@end
+
 NS_ASSUME_NONNULL_END

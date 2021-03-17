@@ -50,6 +50,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) init NS_UNAVAILABLE;
 
+/** Return document data as JSON String. */
+- (NSString*) toJSON;
+
 @end
 
 NS_ASSUME_NONNULL_END

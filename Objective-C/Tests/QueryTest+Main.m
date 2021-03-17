@@ -29,6 +29,7 @@
 #import "CBLValueExpression.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLUnaryExpression.h"
+#import "Foundation+CBL.h"
 
 @interface QueryTest_Main : QueryTest
 
@@ -1660,6 +1661,36 @@
                 [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
     AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
                 [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
+}
+
+#pragma mark - toJSON
+
+- (void) testQueryJSON {
+    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
+    [self saveDocument: doc];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID,
+                                             [CBLQuerySelectResult property: @"valueKey"],
+                                             [CBLQuerySelectResult property: @"intKey"],
+                                             [CBLQuerySelectResult property: @"stringKey"],
+                                             [CBLQuerySelectResult property: @"floatKey"],
+                                             [CBLQuerySelectResult property: @"boolVal"],
+                                             [CBLQuerySelectResult property: @"dateKey"],
+                                             [CBLQuerySelectResult property: @"nullKey"],
+                                             [CBLQuerySelectResult property: @"blob"],
+                                             [CBLQuerySelectResult property: @"array"],
+                                             [CBLQuerySelectResult property: @"dict"]]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: nil];
+    
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    CBLQueryResult* r = rs.allResults.firstObject;
+    NSMutableDictionary* temp = [[self populatedMDocToJSONObj] mutableCopy];
+    temp[@"id"] = @"doc";
+    AssertEqualObjects([[r toJSON] toJSONObj], temp);
 }
 
 #pragma mark - Value Expression
