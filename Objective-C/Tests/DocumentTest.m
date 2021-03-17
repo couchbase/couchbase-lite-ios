@@ -2162,7 +2162,7 @@
     CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithJSON: json
                                                                   error: &error];
     
-    AssertEqual(mDoc.count, 9);
+    AssertEqual(mDoc.count, 10);
 }
 
 @end
