@@ -303,6 +303,10 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 
 - (BOOL) installInDatabase: (CBLDatabase*)db error:(NSError**)outError {
     Assert(db);
+    
+    // if the blob already has a database, skip install
+    if (_db)
+        return YES;
 
     C4BlobStore *store = [db getBlobStore: outError];
     if (!store)
