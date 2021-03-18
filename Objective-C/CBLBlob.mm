@@ -156,7 +156,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 }
 
 - (NSDictionary*) properties {
-    @synchronized (self) {
+    CBL_LOCK(self) {
         return $dict({kCBLTypeProperty, kCBLBlobType},
                      {kCBLBlobDigestProperty, _digest},
                      {kCBLBlobLengthProperty, (_length ? @(_length) : nil)},
@@ -173,7 +173,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 }
 
 - (NSString*) toJSON {
-    @synchronized (self) {
+    CBL_LOCK(self) {
         if (!_digest)
             [NSException raise: NSInternalInconsistencyException
                         format: @"toJSON() is not allowed as Blob has not been saved in the database"];
@@ -194,7 +194,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 }
 
 - (NSData*) content {
-    @synchronized (self) {
+    CBL_LOCK(self) {
         if(_content) {
             // Data is in memory:
             return _content;
@@ -231,20 +231,21 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
             _length = _content.length;
             
             return _content;
-        } else if ([CBLBlob isBlob: self.properties]) {
-            CBLWarn(Database, @"Cannot access content from the blob that contains only metadata "
-                    "and has no database associated with it. To access the content, "
-                    "save the document first.");
-            
+        } else {
+            if (self.digest) {
+                CBLWarn(Database, @"Cannot access content from the blob that contains only metadata "
+                        "and has no database associated with it. To access the content, "
+                        "save the document first.");
+            }
             [NSException raise: NSInternalInconsistencyException
                         format: @"%@", kCBLErrorMessageBlobContainsNoData];
+            return nil;
         }
-        return nil;
     }
 }
 
 - (NSInputStream*) contentStream {
-    @synchronized (self) {
+    CBL_LOCK(self) {
         if (_db) {
             C4BlobStore* blobStore;
             C4BlobKey key;
@@ -293,7 +294,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 #pragma mark - Description
 
 - (NSString*) description {
-    @synchronized (self) {
+    CBL_LOCK(self) {
         return [NSString stringWithFormat: @"%@[%@; %llu KB]",
                 self.class, _contentType, (_length + 512)/1024];
     }
@@ -304,9 +305,11 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 - (BOOL) installInDatabase: (CBLDatabase*)db error:(NSError**)outError {
     Assert(db);
     
-    // if the blob already has a database, skip install
-    if (_db)
-        return YES;
+    CBL_LOCK(self) {
+        // if the blob already has a database, skip install
+        if (_db)
+            return YES;
+    }
 
     C4BlobStore *store = [db getBlobStore: outError];
     if (!store)
@@ -315,7 +318,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     C4Error err;
     C4BlobKey key;
     bool success = true;
-    @synchronized (self) {
+    CBL_LOCK(self) {
         if (_content) {
             success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
         } else {
@@ -361,14 +364,12 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     return YES;
 }
 
-- (BOOL) isBlobFromSameDatabase: (CBLDatabase*)database {
-    if (_db && _db != database) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageBlobDifferentDatabase];
-        return NO;
+- (void) checkBlobFromSameDatabase: (CBLDatabase*)database {
+    CBL_LOCK(self) {
+        if (_db && _db != database)
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"%@", kCBLErrorMessageBlobDifferentDatabase];
     }
-    
-    return YES;
 }
 
 #pragma mark FLEECE ENCODABLE
@@ -383,18 +384,19 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     FLEncoderContext* encContext = (FLEncoderContext*)FLEncoder_GetExtraInfo(encoder);
     if (encContext->document) {
         CBLDatabase* database = encContext->document.database;
-        if (![self isBlobFromSameDatabase: database])
-          return;
+        [self checkBlobFromSameDatabase: database];
 
-        if (self.digest) {
-            // if digest is already present, assign the database and skip install
-            _db = database;
-        } else {
-            NSError *error;
-            // Note: Installing blob in the database also updates the digest property.
-            if (![self installInDatabase: database error: &error]) {
-                [encContext->document setEncodingError: error];
-                return;
+        CBL_LOCK(self) {
+            if (self.digest) {
+                // if digest is already present, assign the database and skip install
+                _db = database;
+            } else {
+                NSError *error;
+                // Note: Installing blob in the database also updates the digest property.
+                if (![self installInDatabase: database error: &error]) {
+                    [encContext->document setEncodingError: error];
+                    return;
+                }
             }
         }
     }
