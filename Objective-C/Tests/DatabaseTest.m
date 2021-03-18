@@ -518,8 +518,7 @@
     [self cleanDB];
 }
 
-// CBL-1713 : Delete doc and Save the same doc again doesn't work in Version Vector
-- (void) _testSaveDocWithDeletedConflict {
+- (void) testSaveDocWithDeletedConflict {
     [self testSaveDocWithDeletedConflictUsingConcurrencyControl: -1];
     [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
     [self testSaveDocWithDeletedConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
@@ -730,8 +729,7 @@
     AssertEqual(error.code, CBLErrorConflict);
 }
 
-// CBL-1713 : Delete doc and Save the same doc again doesn't work in Version Vector
-- (void) _testConflictHandlerWithDeletedOldDoc {
+- (void) testConflictHandlerWithDeletedOldDoc {
     NSString* docID = @"doc1";
     [self generateDocumentWithID: docID];
     AssertEqual([self.db documentWithID: docID].generation, 1u);
@@ -934,8 +932,7 @@
     }];
 }
 
-// CBL-1713 : Delete doc and Save the same doc again doesn't work in Version Vector
-- (void) _testDeleteAndUpdateDoc {
+- (void) testDeleteAndUpdateDoc {
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc setString: @"Daniel" forKey: @"firstName"];
     [doc setString: @"Tiger" forKey: @"lastName"];
