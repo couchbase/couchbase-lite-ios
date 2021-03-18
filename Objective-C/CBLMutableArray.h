@@ -347,7 +347,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (void) setData: (nullable NSArray*)data;
+- (void) setData: (NSArray*)data;
 
 #pragma mark - Subscript
 
@@ -381,7 +381,24 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param data The data.
  */
-- (instancetype) initWithData: (nullable NSArray*)data;
+- (instancetype) initWithData: (NSArray*)data;
+
+/**
+ Initialize a new CBLMutableArray object with data as a JSON string.
+ 
+ @param json The JSON string with data.
+ @param error On return, the error if any.
+ */
+- (instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
+
+/**
+ Set data with JSON string.
+ 
+ @param json The JSON string with data.
+ @param error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) setJSON: (NSString*)json error: (NSError**)error;
 
 @end
 

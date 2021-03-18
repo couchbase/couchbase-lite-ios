@@ -51,7 +51,7 @@ public protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionary
     
     // MARK: Data
     
-    @discardableResult func setData(_ data: Dictionary<String, Any>?) -> Self
+    @discardableResult func setData(_ data: Dictionary<String, Any>) -> Self
     
     // MARK: Removing Entries
     
@@ -81,7 +81,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter dictionary: the dictionary object.
-    public init(data: Dictionary<String, Any>?) {
+    public init(data: Dictionary<String, Any>) {
         super.init(CBLMutableDictionary())
         setData(data)
     }
@@ -220,7 +220,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     ///
     /// - Parameter data: The data.
     /// - Returns: The self object.
-    @discardableResult public func setData(_ data: Dictionary<String, Any>?) -> Self {
+    @discardableResult public func setData(_ data: Dictionary<String, Any>) -> Self {
         dictImpl.setData(DataConverter.convertSETDictionary(data))
         return self
     }

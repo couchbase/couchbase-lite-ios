@@ -26,6 +26,7 @@
 #import "CBLJSON.h"
 #import "CBLStringBytes.h"
 #import "CBLFleece.hh"
+#import "CBLStatus.h"
 
 using namespace fleece;
 
@@ -41,10 +42,19 @@ using namespace fleece;
     return [super initEmpty];
 }
 
-- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
+- (instancetype) initWithData: (NSDictionary<NSString*,id>*)data {
     self = [self init];
     if (self) {
         [self setData: data];
+    }
+    return self;
+}
+
+- (instancetype) initWithJSON: (NSString*)json error: (NSError**)error {
+    self = [self init];
+    if (self) {
+        if (![self setJSON: json error: error])
+            return nil;
     }
     return self;
 }
@@ -132,7 +142,7 @@ using namespace fleece;
     }
 }
 
-- (void) setData: (nullable NSDictionary<NSString*,id>*)data {
+- (void) setData: (NSDictionary<NSString*,id>*)data {
     CBL_LOCK(self.sharedLock) {
         _dict.clear();
         [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL* stop) {
@@ -141,6 +151,39 @@ using namespace fleece;
         }];
         [self keysChanged];
     }
+}
+
+- (BOOL) setJSON: (NSString*)json error: (NSError**)error {
+    CBLStringBytes jsonSlice(json);
+    FLError flEerror = {};
+    Encoder enc;
+    if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
+        flEerror = enc.error();
+        CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
+        convertError(flEerror, error);
+        return NO;
+    }
+    
+    flEerror = {};
+    FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
+    if (!result.buf) {
+        CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
+        convertError(flEerror, error);
+        return NO;
+    }
+    
+    FLDict dict = FLValue_AsDict(FLValue_FromData(C4Slice(result), kFLTrusted));
+    _dict.clear();
+    
+    FLDictIterator iter;
+    FLDictIterator_Begin(dict, &iter);
+    FLValue value;
+    while (NULL != (value = FLDictIterator_GetValue(&iter))) {
+        id val = FLValue_GetNSObject(value, nil);
+        _dict.set(FLDictIterator_GetKeyString(&iter), [val cbl_toCBLObject]);
+        FLDictIterator_Next(&iter);
+    }
+    return YES;
 }
 
 #pragma mark - Subscript

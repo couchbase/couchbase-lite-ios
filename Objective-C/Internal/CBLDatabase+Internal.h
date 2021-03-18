@@ -100,6 +100,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLBlob ()
 
+- (instancetype) initWithProperties: (NSDictionary *)properties;
+
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        properties: (NSDictionary *)properties;
 

@@ -49,7 +49,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// Database's save() method with the document object given.
     ///
     /// - Parameter data: The data.
-    public convenience init(data: Dictionary<String, Any>?) {
+    public convenience init(data: Dictionary<String, Any>) {
         self.init(CBLMutableDocument())
         setData(data)
     }
@@ -65,7 +65,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - id: The document ID.
     ///   - data: The dictionary object.
-    public convenience init(id: String?, data: Dictionary<String, Any>?) {
+    public convenience init(id: String?, data: Dictionary<String, Any>) {
         self.init(CBLMutableDocument(id: id))
         setData(data)
     }
@@ -214,7 +214,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     ///
     /// - Parameter data: The data.
     /// - Returns: The self object.
-    @discardableResult public func setData(_ data: Dictionary<String, Any>?) -> Self {
+    @discardableResult public func setData(_ data: Dictionary<String, Any>) -> Self {
         docImpl.setData(DataConverter.convertSETDictionary(data))
         return self
     }

@@ -76,9 +76,9 @@ import Foundation
         }
     }
     
-    static func convertSETDictionary(_ dictionary: [String: Any]?) -> [String: Any]? {
+    static func convertSETDictionary(_ dictionary: [String: Any]?) -> [String: Any] {
         guard let dict = dictionary else {
-            return nil
+            return [:]
         }
         
         var result: [String: Any] = [:]
@@ -88,9 +88,9 @@ import Foundation
         return result
     }
     
-    static func convertSETArray(_ array: [Any]?) -> [Any]? {
+    static func convertSETArray(_ array: [Any]?) -> [Any] {
         guard let a = array else {
-            return nil
+            return []
         }
         
         var result: [Any] = [];

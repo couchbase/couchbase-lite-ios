@@ -53,7 +53,10 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation NSDictionary (CBLConversions)
 - (id) cbl_toCBLObject {
-    return [[CBLMutableDictionary alloc] initWithData: self];
+    if ([CBLBlob isBlob: self])
+        return [[CBLBlob alloc] initWithProperties: self];
+    else
+        return [[CBLMutableDictionary alloc] initWithData: self];
 }
 @end
 

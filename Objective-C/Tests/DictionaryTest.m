@@ -18,6 +18,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLJSON.h"
 #import "Foundation+CBL.h"
 
 @interface DictionaryTest : CBLTestCase
@@ -350,8 +351,6 @@
     AssertEqualObjects([mDict3 valueForKey: @"name"], @"Thomas");
 }
 
-#pragma mark - toJSON
-
 - (CBLMutableDictionary*) populatedCBLDictionary {
     CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
     [mDict1 setValue: @1 forKey:@"intKey"];
@@ -404,6 +403,20 @@
                                @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
                                @"length": @10}},
         @"intKey": @1};
+}
+
+- (void) testDictionaryInitWithJSON {
+    NSError* error = nil;
+    NSDictionary* jsonDict = [self populatedCBLDictToJSONObj];
+    
+    NSString* json = [CBLJSON stringWithJSONObject: jsonDict options: 0 error: &error];
+    AssertNil(error);
+    
+    CBLMutableDictionary* mDict = [[CBLMutableDictionary alloc] initWithJSON: json
+                                                                       error: &error];
+    AssertNil(error);
+    
+    AssertEqual(mDict.count, 9);
 }
 
 - (void) testDictionaryToJSON {
