@@ -250,6 +250,13 @@ using namespace fleece;
     return (id)self;
 }
 
+- (NSString*) toJSON {
+    // Overrides CBLDictionary
+    [NSException raise: NSInternalInconsistencyException
+                format: @"toJSON on Mutable objects are unsupported"];
+    return nil;
+}
+
 #pragma mark - NSFastEnumeration
 
 - (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState*)state
