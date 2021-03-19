@@ -225,6 +225,14 @@ public final class Database {
     /// - Parameter properties: The properties for getting the blob object. If dictionary is not valid, it will
     /// throw InvalidArgument exception. See the note section
     /// - Throws: An error on a failure.
+    ///
+    /// - Note:
+    /// Key            | Value                     | Mandatory | Description
+    /// ----------------------------------------------------------------------------------
+    /// @type          | constant string "blob"    | Yes       | Indicate Blob data type.
+    /// content_type   | String                    | No        | Content type ex. text/plain.
+    /// length         | Number                    | No        | Binary length of the Blob in bytes.
+    /// digest         | String                    | Yes       | The cryptographic digest of the Blob's content.
     public func getBlob(properties: [String: Any]) throws -> Blob? {
         guard let blobImp = _impl.getBlob(properties) else {
             return nil
