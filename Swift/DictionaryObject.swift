@@ -269,6 +269,13 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         hasher.combine(_impl.hash)
     }
     
+    // MARK: toJSON
+    
+    /// Return dictionary data as JSON String
+    public func toJSON() -> String {
+        return _impl.toJSON()
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLDictionaryProtocol) {

@@ -100,6 +100,22 @@ public final class Blob: Equatable, Hashable {
         hasher.combine(_impl.hash)
     }
     
+    // MARK: toJSON
+    
+    /// Returns a dictionary representation of the blob object in JSON string format. The dictionary
+    /// will contain only metadata information without data.
+    
+    /// If Blob is not saved in the database which means that it doesn’t have digest information,
+    /// calling toJSON() will not be allowed and it will throw an NSInternalInconsistencyException.
+    public func toJSON() -> String {
+        return _impl.toJSON()
+    }
+    
+    /// Return whether the given dictionary represents Blob or not
+    public static func isBlob(properties: [String: Any]) -> Bool {
+        return CBLBlob.isBlob(properties)
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLBlob) {
