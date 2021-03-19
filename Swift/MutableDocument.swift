@@ -54,6 +54,16 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         setData(data)
     }
     
+    /// Initializes a new CBLMutableDocument object with the JSON data.
+    /// 
+    /// - Parameters:
+    ///   - json: The JSON string with data.
+    /// - Throws: An error on a failure.
+    public convenience init(json: String) throws {
+        self.init(CBLMutableDocument())
+        try setJSON(json)
+    }
+    
     /// Initializes a new MutableDocument object with a given ID and the data.
     /// If a nil ID value is given, the document will be created with a new
     /// random UUID. Allowed data value types are Array, ArrayObject, Blob, Date,
@@ -68,6 +78,18 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     public convenience init(id: String?, data: Dictionary<String, Any>) {
         self.init(CBLMutableDocument(id: id))
         setData(data)
+    }
+    
+    /// Initializes a new CBLMutableDocument object with the given ID and the JSON data.  If a
+    /// nil ID value is given, the document will be created with a new random UUID.
+    /// 
+    /// - Parameters:
+    ///   - id: The document ID.
+    ///   - json: The JSON string with data.
+    /// - Throws: An error on a failure.
+    public convenience init(id: String?, json: String) throws {
+        self.init(CBLMutableDocument(id: id))
+        try setJSON(json)
     }
     
     // MARK: Edit
@@ -216,6 +238,15 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Returns: The self object.
     @discardableResult public func setData(_ data: Dictionary<String, Any>) -> Self {
         docImpl.setData(DataConverter.convertSETDictionary(data))
+        return self
+    }
+    
+    /// Set data with JSON string.
+    ///
+    /// - Parameter json: The JSON string with data.
+    /// - Returns: The self object.
+    @discardableResult public func setJSON(_ json: String) throws -> Self {
+        try docImpl.setJSON(json)
         return self
     }
     
