@@ -259,6 +259,11 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         return MutableFragment((docImpl as CBLMutableDictionaryFragment)[key])
     }
     
+    /// Mutable Objects will throw an exception, when called toJSON
+    public override func toJSON() -> String {
+        return _impl.toJSON()
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLMutableDocument) {

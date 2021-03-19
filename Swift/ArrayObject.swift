@@ -248,6 +248,11 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
         hasher.combine(_impl.hash)
     }
     
+    /// Return array data as JSON String
+    public func toJSON() -> String {
+        return _impl.toJSON()
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLArray) {

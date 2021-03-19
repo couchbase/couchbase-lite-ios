@@ -535,6 +535,11 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
         return MutableFragment((arrayImpl as CBLMutableArrayFragment)[UInt(index)])
     }
     
+    /// Mutable Objects will throw an exception, when called toJSON
+    public override func toJSON() -> String {
+        return _impl.toJSON()
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLMutableArray) {

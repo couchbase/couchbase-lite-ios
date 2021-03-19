@@ -184,6 +184,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSDictionary<NSString*,id>*) toDictionary;
 
+/** Return dictionary data as JSON String */
+- (NSString*) toJSON;
+
 @end
 
 /** CBLDictionary provides read access to dictionary data. */
@@ -192,9 +195,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) init NS_UNAVAILABLE;
 
 - (CBLMutableDictionary*) toMutable;
-
-/** Return dictionary data as JSON String */
-- (NSString*) toJSON;
 
 @end
 

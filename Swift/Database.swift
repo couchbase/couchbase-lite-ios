@@ -208,6 +208,39 @@ public final class Database {
         try _impl.purgeDocument(withID: documentID)
     }
     
+    ///  Save a blob object directly into the database without associating it with any documents.
+    ///
+    /// Note: Blobs that are not associated with any documents will be removed from the database
+    /// when compacting the database.
+    ///
+    /// - Parameter blob: The blob to save.
+    /// - Throws: An error on a failure.
+    public func saveBlob(blob: Blob) throws {
+        try _impl.save(blob._impl)
+    }
+    
+    /// Get a blob object using a blob’s metadata.
+    /// If the blob of the specified metadata doesn’t exist, the nil value will be returned.
+    ///
+    /// - Parameter properties: The properties for getting the blob object. If dictionary is not valid, it will
+    /// throw InvalidArgument exception. See the note section
+    /// - Throws: An error on a failure.
+    ///
+    /// - Note:
+    /// Key            | Value                     | Mandatory | Description
+    /// ----------------------------------------------------------------------------------
+    /// @type          | constant string "blob"    | Yes       | Indicate Blob data type.
+    /// content_type   | String                    | No        | Content type ex. text/plain.
+    /// length         | Number                    | No        | Binary length of the Blob in bytes.
+    /// digest         | String                    | Yes       | The cryptographic digest of the Blob's content.
+    public func getBlob(properties: [String: Any]) throws -> Blob? {
+        guard let blobImp = _impl.getBlob(properties) else {
+            return nil
+        }
+        
+        return Blob(blobImp)
+    }
+    
     /// Runs a group of database operations in a batch. Use this when performing bulk write 
     /// operations like multiple inserts/updates; it saves the overhead of multiple database 
     /// commits, greatly improving performance.

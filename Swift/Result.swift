@@ -309,6 +309,15 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return impl.keys.makeIterator();
     }
     
+    // MARK: toJSON
+    
+    /// Return query result data as JSON String.
+    ///
+    /// - Returns: The JSON string.
+    public func toJSON() -> String {
+        return impl.toJSON()
+    }
+    
     // MARK: DictionaryFragment
     
     /// Subscript access to a ReadOnlyFragment object of the projecting result
