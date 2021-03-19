@@ -104,6 +104,7 @@ public protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
     // MARK: Data
     
     @discardableResult func setData(_ data: Array<Any>) -> Self
+    @discardableResult func setJSON(_ json: String) throws -> Self
     
     // MARK: Removing Value
     
@@ -135,6 +136,15 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     public init(data: Array<Any>) {
         super.init(CBLMutableArray())
         setData(data)
+    }
+    
+    /// Initialize a new MutableArray object with data as a JSON string.
+    ///
+    /// - Parameter json: The JSON string with data.
+    /// - Throws: An error on a failure.
+    public init(json: String) throws {
+        super.init(CBLMutableArray())
+        try setJSON(json)
     }
     
     // MARK: Type Setters
@@ -503,6 +513,18 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Returns: The self object.
     @discardableResult public func setData(_ data: Array<Any>) -> Self {
         arrayImpl.setData(DataConverter.convertSETArray(data))
+        return self
+    }
+    
+    // MARK: Set JSON
+    
+    /// Set data with JSON string.
+    ///
+    /// - Parameter json: The JSON string with data.
+    /// - Returns: The self object.
+    /// - Throws: An error on a failure.
+    @discardableResult public func setJSON(_ json: String) throws -> Self {
+        try arrayImpl.setJSON(json)
         return self
     }
     

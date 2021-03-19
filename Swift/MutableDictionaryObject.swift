@@ -52,6 +52,7 @@ public protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionary
     // MARK: Data
     
     @discardableResult func setData(_ data: Dictionary<String, Any>) -> Self
+    @discardableResult func setJSON(_ json: String) throws -> Self
     
     // MARK: Removing Entries
     
@@ -84,6 +85,15 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     public init(data: Dictionary<String, Any>) {
         super.init(CBLMutableDictionary())
         setData(data)
+    }
+    
+    /// Initialzes a new MutableDictionary object from the JSON string.
+    ///
+    /// - Parameter json: The JSON string with data.
+    /// - Throws: An error on a failure.
+    public init(json: String) throws {
+        super.init(CBLMutableDictionary())
+        try setJSON(json)
     }
     
     // MARK: Type Setters
@@ -222,6 +232,18 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     /// - Returns: The self object.
     @discardableResult public func setData(_ data: Dictionary<String, Any>) -> Self {
         dictImpl.setData(DataConverter.convertSETDictionary(data))
+        return self
+    }
+    
+    // MARK: setJSON
+    
+    /// Set data with JSON string.
+    ///
+    /// - Parameter json: The JSON string with data.
+    /// - Returns: The self object.
+    /// - Throws: An error on a failure.
+    @discardableResult public func setJSON(_ json: String) throws -> Self {
+        try dictImpl.setJSON(json)
         return self
     }
     
