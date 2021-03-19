@@ -54,7 +54,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         setData(data)
     }
     
-    /// Initializes a new CBLMutableDocument object with the JSON data.
+    /// Initializes a new MutableDocument object with the JSON data.
     /// 
     /// - Parameters:
     ///   - json: The JSON string with data.
@@ -80,7 +80,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
         setData(data)
     }
     
-    /// Initializes a new CBLMutableDocument object with the given ID and the JSON data.  If a
+    /// Initializes a new MutableDocument object with the given ID and the JSON data.  If a
     /// nil ID value is given, the document will be created with a new random UUID.
     /// 
     /// - Parameters:
