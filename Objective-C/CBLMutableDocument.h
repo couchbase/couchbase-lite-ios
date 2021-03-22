@@ -76,9 +76,10 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param json The JSON string with data.
  @param error On return, the error if any.
+ @return The CBLMutableDocument object, nil in case of JSON Error .
  */
-- (instancetype) initWithJSON: (NSString*)json
-                        error: (NSError**)error;
+- (nullable instancetype) initWithJSON: (NSString*)json
+                                 error: (NSError**)error;
 
 /** 
  Initializes a new CBLMutableDocument object with the given ID and the data. If a
@@ -102,10 +103,11 @@ NS_ASSUME_NONNULL_BEGIN
  @param documentID The document ID.
  @param json The JSON string with data.
  @param error On return, the error if any.
+ @return The CBLMutableDocument object, nil in case of JSON Error .
  */
-- (instancetype) initWithID: (nullable NSString*)documentID
-                       json: (NSString*)json
-                      error: (NSError**)error;
+- (nullable instancetype) initWithID: (nullable NSString*)documentID
+                                json: (NSString*)json
+                               error: (NSError**)error;
 
 @end
 
