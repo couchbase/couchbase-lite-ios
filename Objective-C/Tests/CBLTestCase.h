@@ -181,6 +181,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** validate the mutable dictionary created above with a jsonObj*/
 - (NSDictionary*) populatedMDocToJSONObj;
 
+- (NSString*) getRickAndMortyJSON;
+
 @end
 
 NS_ASSUME_NONNULL_END

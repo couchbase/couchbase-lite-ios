@@ -253,24 +253,20 @@ using namespace fleece;
 
 - (BOOL) setJSON: (NSString*)json error: (NSError**)error {
     CBLStringBytes jsonSlice(json);
-    FLError flEerror = {};
-    Encoder enc;
-    if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
-        flEerror = enc.error();
-        CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
-        convertError(flEerror, error);
+    NSError* err;
+    FLValue result = cbl::parseJSON(jsonSlice, &err);
+    if (!result || err) {
+        if (error)
+            *error = err;
         return NO;
     }
     
-    flEerror = {};
-    FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
-    if (!result.buf) {
-        CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
-        convertError(flEerror, error);
-        return NO;
+    if (FLValue_GetType(result) != kFLArray) {
+        CBLWarnError(Database, @"%@: FLValue is not an Array", self);
+        return convertError((FLError)5, error);
     }
     
-    FLArray array = FLValue_AsArray(FLValue_FromData(C4Slice(result), kFLTrusted));
+    FLArray array = FLValue_AsArray(result);
     CBL_LOCK(self.sharedLock) {
         _array.clear();
         uint count = FLArray_Count(array);

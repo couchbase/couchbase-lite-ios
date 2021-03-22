@@ -1666,29 +1666,32 @@
 #pragma mark - toJSON
 
 - (void) testQueryJSON {
-    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
-    [self saveDocument: doc];
-    
+    NSError* error;
+    NSString* json = [self getRickAndMortyJSON];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc" json: json
+                                                               error: &error];
+    [self.db saveDocument: doc error: &error];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID,
-                                             [CBLQuerySelectResult property: @"valueKey"],
-                                             [CBLQuerySelectResult property: @"intKey"],
-                                             [CBLQuerySelectResult property: @"stringKey"],
-                                             [CBLQuerySelectResult property: @"floatKey"],
-                                             [CBLQuerySelectResult property: @"boolVal"],
-                                             [CBLQuerySelectResult property: @"dateKey"],
-                                             [CBLQuerySelectResult property: @"nullKey"],
-                                             [CBLQuerySelectResult property: @"blob"],
-                                             [CBLQuerySelectResult property: @"array"],
-                                             [CBLQuerySelectResult property: @"dict"]]
+                                             [CBLQuerySelectResult property: @"id #2"],
+                                             [CBLQuerySelectResult property: @"name"],
+                                             [CBLQuerySelectResult property: @"isAlive"],
+                                             [CBLQuerySelectResult property: @"species"],
+                                             [CBLQuerySelectResult property: @"picture"],
+                                             [CBLQuerySelectResult property: @"gender"],
+                                             [CBLQuerySelectResult property: @"registered"],
+                                             [CBLQuerySelectResult property: @"latitude"],
+                                             [CBLQuerySelectResult property: @"longitude"],
+                                             [CBLQuerySelectResult property: @"aka"],
+                                             [CBLQuerySelectResult property: @"family"],
+                                             [CBLQuerySelectResult property: @"origin"]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: nil];
     
-    NSError* error;
     CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     
     CBLQueryResult* r = rs.allResults.firstObject;
-    NSMutableDictionary* temp = [[self populatedMDocToJSONObj] mutableCopy];
+    NSMutableDictionary* temp = [[json toJSONObj] mutableCopy];
     temp[@"id"] = @"doc";
     AssertEqualObjects([[r toJSON] toJSONObj], temp);
 }

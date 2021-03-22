@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #include "c4.h"
+#import "CollectionUtils.h"
 
 #define kDatabaseName @"testdb"
 #define kOtherDatabaseName @"otherdb"
@@ -259,15 +260,10 @@
         NSError *batchError;
         BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
             [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
-                NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
-                NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];
-                CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
-                NSError* error;
-                NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: (NSData*)json
-                                                                     options: 0 error: &error];
-                Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
-                [doc setData: dict];
-                Assert([_db saveDocument: doc error: &error], @"Couldn't save document: %@", error);
+                NSError* err;
+                CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: $sprintf(@"doc-%03llu", ++n)
+                                                                            json: line error: &err];
+                Assert([_db saveDocument: doc error: &err], @"Couldn't save document: %@", err);
             }];
         }];
         Assert(ok, @"loadJSONString failed: %@", batchError);
@@ -369,6 +365,19 @@
 
 - (BOOL) isProfiling {
     return NSProcessInfo.processInfo.environment[@"PROFILING"] != nil;
+}
+
+- (NSString*) getRickAndMortyJSON {
+    NSError* err;
+    NSData* content = [@"Earth(C-137)" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [self.db saveBlob: blob error: &err];
+    
+    content = [@"Grandpa Rick" dataUsingEncoding: NSUTF8StringEncoding];
+    blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    [self.db saveBlob: blob error: &err];
+    
+    return [self stringFromResource: @"rick_morty" ofType: @"json"];
 }
 
 - (CBLMutableDocument*) populatedMutableDocument: (NSString*)docID {
