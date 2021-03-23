@@ -205,8 +205,9 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param json The JSON string with data.
  @param error On return, the error if any.
+ @return The CBLMutableDictionary object, nil in case of JSON Error .
  */
-- (instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
+- (nullable instancetype) initWithJSON: (NSString*)json error: (NSError**)error;
 
 @end
 

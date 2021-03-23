@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "Foundation+CBL.h"
 
 #define kArrayTestDate @"2017-01-01T00:00:00.000Z"
 #define kArrayTestBlob @"i'm blob"
@@ -1048,56 +1049,57 @@
     AssertEqualObjects([mArray3 toArray], (@[@"Scott", @"Daniel", @"Thomas"]));
 }
 
-- (void) testMutableArrayInitWithJSON {
-    NSError* error;
-    CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithJSON:
-                               @"[{\"boolVal\":true},"
-                               "{\"dateKey\":\"1970-01-01T00:00:10.000Z\"},"
-                               "{\"floatKey\":101.25},"
-                               "{\"intKey\":22},"
-                               "{\"nullKey\":null},"
-                               "{\"stringKey\":\"stringVal\"},"
-                               "{\"valueKey\":1}]" error: &error];
-    
-    CBLMutableDocument* mDoc = [CBLMutableDocument documentWithID: @"doc1"];
-    [mDoc setArray: mArray forKey: @"arrayKey"];
-    [self saveDocument: mDoc];
-    
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    CBLArray* array = [doc arrayForKey: @"arrayKey"];
-    AssertEqual(array.count, 7);
-}
+#pragma mark - toJSON
 
-- (void) testMutableArrayInitWithBlobDictionary {
-    NSData* content = [@"i'm blob" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    CBLMutableDocument* dummyDoc = [CBLMutableDocument document];
-    [dummyDoc setBlob: blob forKey: @"blobKey"];
-    [self saveDocument: dummyDoc];
-    
-    CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithData: @[@"string", @22, @101.25,
-                                                                       @YES,
-                                                                       [NSDate dateWithTimeIntervalSince1970: 10],
-                                                                       [NSNull null],
-                                                                       blob.properties]];
-    
-    blob = [mArray blobAtIndex: 6];
-    AssertNotNil(blob.properties);
-    AssertEqual(blob.properties.count, 4);
+- (void) testUnsavedMutableArrayToJSON {
+    NSError* err;
+    NSString* json = @"[{\"unsaved\":\"mutableDoc\"}]";
+    CBLMutableArray* mArray = [[CBLMutableArray alloc] initWithJSON: json error: &err];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
-        NSLog(@"Blob content: %@", blob.content);
+        [mArray toJSON];
     }];
     
-    CBLMutableDocument* mDoc = [CBLMutableDocument documentWithID: @"doc"];
-    [mDoc setArray: mArray forKey: @"arrayKey"];
-    [self saveDocument: mDoc];
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    [doc setArray: mArray forKey: @"array"];
+    [self saveDocument: doc];
     
+    mArray = [doc arrayForKey: @"array"];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [mArray toJSON];
+    }];
+}
+
+- (void) testArrayToJSON {
+    NSError* error;
+    NSString* json = [self getRickAndMortyJSON];
+    json = [NSString stringWithFormat: @"[%@,%@]", json, json];
+    CBLMutableArray* array = [[CBLMutableArray alloc] initWithJSON: json error: &error];
+    CBLMutableDocument* doc = [self createDocument: @"doc"];
+    [doc setValue: array forKey: @"array"];
+    [self saveDocument: doc];
+    
+    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLArray* a = [retrivedDoc arrayForKey: @"array"];
+    AssertEqual(a.count, 2);
+    AssertEqualObjects([[a toJSON] toJSONObj], [json toJSONObj]);
+}
+
+- (void) testGetBlobContentFromMutableObject {
+    NSError* err;
+    NSString* json = [self getRickAndMortyJSON];
+    CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithID: @"doc" json: json
+                                                                error: &err];
+    // empty content with a warning message!
+    CBLBlob* blob = [mDoc blobForKey: @"origin"];
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        NSLog(@">> to access the content %@", blob.content);
+    }];
+    [self.db saveDocument: mDoc error: &err];
+
+    // after the save, it should return the content
     CBLDocument* doc = [self.db documentWithID: @"doc"];
-    
-    CBLArray* array = [doc arrayForKey: @"arrayKey"];
-    AssertEqual(array.count, 7);
-    blob = [array blobAtIndex: 6];
-    AssertNotNil(blob);
+    blob = [doc blobForKey: @"origin"];
+    AssertNotNil(blob.content);
 }
 
 @end
