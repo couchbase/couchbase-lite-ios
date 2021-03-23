@@ -179,7 +179,7 @@ namespace cbl {
         if (!FLEncoder_ConvertJSON(enc, json)) {
             flEerror = enc.error();
             CBLWarnError(Database, @"Error converting JSON (code = %d)", flEerror);
-            convertError(flEerror, error);
+            createError(CBLErrorInvalidJSON, @"Error converting JSON", error);
             return nullptr;
         }
         
@@ -187,12 +187,12 @@ namespace cbl {
         FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
         if (flEerror != 0 || !result.buf) {
             CBLWarnError(Database, @"Error decoding JSON (code = %d) or empty result", flEerror);
-            convertError(flEerror != 0 ? flEerror : (FLError)5, error);
+            createError(CBLErrorInvalidJSON, @"Error decoding JSON", error);
             return nullptr;
         }
         
         if (!result.buf) {
-            convertError((FLError)5, error);
+            createError(CBLErrorInvalidJSON, @"Parse result is empty", error);
             return nullptr;
         }
         

@@ -263,7 +263,7 @@ using namespace fleece;
     
     if (FLValue_GetType(result) != kFLArray) {
         CBLWarnError(Database, @"%@: FLValue is not an Array", self);
-        return convertError((FLError)5, error);
+        return createError(CBLErrorInvalidJSON, @"Value is not an Array", error);
     }
     
     FLArray array = FLValue_AsArray(result);

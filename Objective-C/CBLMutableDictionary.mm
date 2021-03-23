@@ -163,8 +163,8 @@ using namespace fleece;
         return NO;
     }
     if (FLValue_GetType(result) != kFLDict) {
-        CBLWarnError(Database, @"%@: Expected JSON Dictionary. Failed to convert FLValue to FLDict", self);
-        return convertError((FLError)5, error);
+        CBLWarnError(Database, @"%@: Failed to convert FLValue to FLDict", self);
+        return createError(CBLErrorInvalidJSON, @"Value is not a Dictionary", error);
     }
     
     FLDict dict = FLValue_AsDict(result);
