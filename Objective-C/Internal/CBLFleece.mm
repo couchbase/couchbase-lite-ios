@@ -24,6 +24,7 @@
 #import "MCollection.hh"
 #import "MDictIterator.hh"
 #import "c4Document+Fleece.h"
+#import "CBLStatus.h"
 
 @implementation NSObject (CBLFleece)
 - (fleece::MCollection<id>*) fl_collection {
@@ -170,5 +171,31 @@ namespace cbl {
             return val.value().asDouble();
         else
             return asDouble(val.asNative(&container));
+    }
+
+    FLValue parseJSON(const FLSlice json, NSError** error) {
+        FLError flEerror = {};
+        Encoder enc;
+        if (!FLEncoder_ConvertJSON(enc, json)) {
+            flEerror = enc.error();
+            CBLWarnError(Database, @"Error converting JSON (code = %d)", flEerror);
+            createError(CBLErrorInvalidJSON, @"Error converting JSON", error);
+            return nullptr;
+        }
+        
+        flEerror = {};
+        FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
+        if (flEerror != 0 || !result.buf) {
+            CBLWarnError(Database, @"Error decoding JSON (code = %d) or empty result", flEerror);
+            createError(CBLErrorInvalidJSON, @"Error decoding JSON", error);
+            return nullptr;
+        }
+        
+        if (!result.buf) {
+            createError(CBLErrorInvalidJSON, @"Parse result is empty", error);
+            return nullptr;
+        }
+        
+        return FLValue_FromData(FLSlice(result), kFLTrusted);
     }
 }

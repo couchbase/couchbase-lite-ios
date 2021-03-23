@@ -155,24 +155,19 @@ using namespace fleece;
 
 - (BOOL) setJSON: (NSString*)json error: (NSError**)error {
     CBLStringBytes jsonSlice(json);
-    FLError flEerror = {};
-    Encoder enc;
-    if (!FLEncoder_ConvertJSON(enc, jsonSlice)) {
-        flEerror = enc.error();
-        CBLWarnError(Database, @"%@: Error converting JSON %d", self, flEerror);
-        convertError(flEerror, error);
+    NSError* err = nil;
+    FLValue result = cbl::parseJSON(jsonSlice, &err);
+    if (err || !result) {
+        if (error)
+            *error = err;
         return NO;
     }
-    
-    flEerror = {};
-    FLSliceResult result = FLEncoder_Finish(enc, &flEerror);
-    if (!result.buf) {
-        CBLWarnError(Database, @"%@: Error decoding JSON: %d", self, flEerror);
-        convertError(flEerror, error);
-        return NO;
+    if (FLValue_GetType(result) != kFLDict) {
+        CBLWarnError(Database, @"%@: Failed to convert FLValue to FLDict", self);
+        return createError(CBLErrorInvalidJSON, @"Value is not a Dictionary", error);
     }
     
-    FLDict dict = FLValue_AsDict(FLValue_FromData(C4Slice(result), kFLTrusted));
+    FLDict dict = FLValue_AsDict(result);
     _dict.clear();
     
     FLDictIterator iter;

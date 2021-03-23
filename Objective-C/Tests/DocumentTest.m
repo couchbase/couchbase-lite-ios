@@ -2014,155 +2014,208 @@
     AssertEqualObjects(revisionID, doc.revisionID);
 }
 
+#pragma mark - toJSON
+
 - (void) testDocumentToJSON {
-    CBLMutableDocument* doc = [self populatedMutableDocument: @"doc"];
-    NSDictionary* dict = [self populatedMDocToJSONObj];
+    NSError* err;
+    NSString* json = [self getRickAndMortyJSON];
+    CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithID: @"doc" json: json
+                                                                error: &err];
+    [self.db saveDocument: mDoc error: &err];
     
-    // without digest, before save
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [doc toJSON];
-    }];
+    CBLDocument* doc = [self.db documentWithID: @"doc"];
+    NSDictionary* jsonDict = [[doc toJSON] toJSONObj];
+    AssertEqualObjects(jsonDict, [json toJSONObj]);
+    AssertEqualObjects(jsonDict[@"name"], @"Rick Sanchez");
+    AssertEqualObjects(jsonDict[@"id"], @1);
+    AssertEqualObjects(jsonDict[@"isAlive"], @YES);
+    AssertEqualObjects(jsonDict[@"longitude"], @-21.152958);
+    AssertEqualObjects(jsonDict[@"aka"][2], @"Albert Ein-douche");
+    AssertEqualObjects(jsonDict[@"family"][0][@"name"], @"Morty Smith");
+    AssertEqualObjects(jsonDict[@"family"][3][@"name"], @"Summer Smith");
+    AssertEqualObjects(jsonDict[@"origin"][@"length"], @12);
+    AssertEqualObjects(jsonDict[@"origin"][@"digest"], @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
+    AssertEqualObjects(jsonDict[@"origin"][@"@type"], @"blob");
+    AssertEqualObjects(jsonDict[@"origin"][@"content_type"], @"text/plain");
     
-    // with digest, after save
-    [self saveDocument: doc];
-    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects([[retrivedDoc toJSON] toJSONObj], dict);
-}
-
-- (void) testArrayToJSON {
-    CBLMutableDocument* doc = [self createDocument: @"doc"];
-    CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addValue: @1];
-    [array addInteger: 22];
-    [array addString: @"stringKey"];
-    [array addFloat: (float)101.25];
-    [array addBoolean: YES];
-    [array addDate: [NSDate dateWithTimeIntervalSince1970: 10]];
-    [array addValue: [NSNull null]];
-    
-    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [array addBlob: blob];
-    
-    CBLMutableArray* nestedArray = [[CBLMutableArray alloc] init];
-    [nestedArray addValue: @101];
-    [nestedArray addValue: @201];
-    content = [@"i am blob2" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [nestedArray addBlob: blob2];
-    [array addArray: nestedArray];
-    
-    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
-    [dict setValue: @"CA" forKey: @"state"];
-    
-    content = [@"i am blob3" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob3 = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [dict setBlob: blob3 forKey: @"blob"];
-    [array addValue: dict];
-    
-    [doc setValue: array forKey: @"array"];
-    AssertEqual([doc valueForKey: @"array"], array);
-    AssertEqual([doc arrayForKey: @"array"], array);
-    
-    // before saving the array
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [array toJSON];
-    }];
-    
-    [self saveDocument: doc];
-    
-    // after save, get the mutableArray from mutableDocument
-    CBLMutableArray* mArray = [doc arrayForKey: @"array"];
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [mArray toJSON];
-    }];
-    
-    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
-    CBLArray* a = [retrivedDoc arrayForKey: @"array"];
-    AssertEqualObjects([[a toJSON] toJSONObj], (@[@1, @22, @"stringKey", @101.25, @YES,
-                                        @"1970-01-01T00:00:10.000Z", [NSNull null],
-                                        @{@"length": @8,
-                                          @"@type": @"blob",
-                                          @"content_type": @"text/plain",
-                                          @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A="},
-                                        @[@101, @201, @{@"@type": @"blob",
-                                                        @"content_type": @"text/plain",
-                                                        @"digest": @"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=",
-                                                        @"length": @10}],
-                                        @{@"state": @"CA", @"blob": @{ @"@type": @"blob",
-                                                                       @"content_type": @"text/plain",
-                                                                       @"digest": @"sha1-hly3rXf4mH4Y21wb7+/ead1TTrU=",
-                                                                       @"length": @10}}]));
-}
-
-- (void) testGetBlobContentFromMutableObject {
-    CBLMutableArray* mArray = [[CBLMutableArray alloc] init];
-    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [mArray addBlob: blob];
-    
-    CBLMutableDocument* mDoc = [self createDocument: @"mDoc"];
-    [mDoc setArray: mArray forKey: @"array"];
-    
+    // use same doc and mutate to include more key-values
+    mDoc = [doc toMutable];
+    [mDoc setValue: @"newValueAppended" forKey: @"newKeyAppended"];
     [self saveDocument: mDoc];
     
-    // new array with blob in it
-    NSError* error = nil;
-    NSArray* jsonArray = @[
-        @{@"length": @11, @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
-                    @"content_type": @"text/plain", @"@type": @"blob"},
-        [NSNull null],
-        @"1970-01-01T00:00:10.000Z",
-        @"stringVal",
-        @YES,
-        @101.25,
-        @[@1,@2, @{@"@type": @"blob",
-                             @"content_type": @"text/plain",
-                             @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
-                               @"length": @10}],
-        @{@"state": @"CA",
-                   @"blob": @{ @"@type": @"blob",
-                               @"content_type": @"text/plain",
-                               @"digest": @"sha1-YHGJqDiuFaOrqcyHy97ZLUfBl8A=",
-                               @"length": @10}},
-        @1];
-    NSString* json = [CBLJSON stringWithJSONObject: jsonArray options: 0 error: &error];
-    AssertNil(error);
-    
-    mArray = [[CBLMutableArray alloc] initWithJSON: json error: &error];
-    AssertNil(error);
-    AssertEqual(mArray.count, 9);
-    
-    // empty content with a warning message!
-    blob = [mArray blobAtIndex: 0];
+    doc = [self.db documentWithID: @"doc"];
+    jsonDict = [[doc toJSON] toJSONObj];
+    NSMutableDictionary* mDict = [NSMutableDictionary dictionaryWithDictionary: [json toJSONObj]];
+    mDict[@"newKeyAppended"] = @"newValueAppended";
+    AssertEqualObjects(jsonDict, mDict);
+}
+
+- (void) testUnsavedMutableDocumentToJSON {
+    NSError* err;
+    NSString* json = @"{\"unsaved\":\"mutableDoc\"}";
+    CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithJSON: json error: &err];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
-        NSLog(@">> to access the content %@", blob.content);
+        [mDoc toJSON];
     }];
+}
+
+- (void) testSpecialJSONStrings {
+    NSError* err;
+    CBLMutableDocument* doc;
+    CBLMutableDictionary* dict;
     
-    mDoc = [self createDocument: @"mDoc2"];
-    [mDoc setArray: mArray forKey: @"array2"];
-    [self saveDocument: mDoc];
+    // INVALID json
+    NSArray* jsons = @[@"Random:String",
+                       @"[\"item1\",\"item2\"]",
+                       @" ",
+                       @"",
+                       // TODO: TruncatedJSON
+//                       @"[", https://issues.couchbase.com/browse/CBL-1763
+//                       @"{", https://issues.couchbase.com/browse/CBL-1763
+                       @"{\"dictionary_without_value\"}",
+                       @"[]"];
     
-    CBLDocument* doc = [self.db documentWithID: @"mDoc2"];
-    CBLArray* array = [doc arrayForKey: @"array2"];
-    AssertEqual(array.count, 9);
+    for (NSUInteger i = 0; i < jsons.count; i++) {
+        err = nil;
+        doc = [[CBLMutableDocument alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
+        AssertNil(doc);
+        AssertEqualObjects(err.domain, CBLErrorDomain);
+        AssertEqual(err.code, CBLErrorInvalidJSON);
+        
+        dict = [[CBLMutableDictionary alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
+        AssertNil(dict);
+        AssertEqualObjects(err.domain, CBLErrorDomain);
+        AssertEqual(err.code, CBLErrorInvalidJSON);
+    }
     
-    // after the save, it should return the content
-    blob = [array blobAtIndex: 0];
-    AssertNotNil(blob.content);
+    // VALID json
+    jsons = @[@"{}"];
+    for (NSUInteger i = 0; i < jsons.count; i++) {
+        err = nil;
+        doc = [[CBLMutableDocument alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
+        AssertNotNil(doc);
+        AssertNil(err);
+        
+        dict = [[CBLMutableDictionary alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
+        AssertNotNil(dict);
+        AssertNil(err);
+    }
+}
+
+- (void) testBlobToJSON {
+    NSError* error;
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    
+    
+    [self.db saveBlob: data error: &error];
+    AssertEqualObjects([[data toJSON] toJSONObj], (@{@"@type": @"blob",
+                                                     @"content_type": @"text/plain",
+                                                     @"length": @(data.length),
+                                                     @"digest": data.digest}));
+    NSDictionary* dict = [[data toJSON] toJSONObj];
+    AssertEqualObjects(dict[@"@type"], @"blob");
+    AssertEqualObjects(dict[@"content_type"], @"text/plain");
+    AssertEqualObjects(dict[@"length"], @(data.length));
+    AssertEqualObjects(dict[@"digest"], data.digest);
+}
+
+- (void) testGetBlobFromProps {
+    NSError* error;
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    
+    
+    [self.db saveBlob: data error: &error];
+    
+    CBLBlob* blob = [self.db getBlob: (@{@"@type": @"blob",
+                         @"content_type": @"text/plain",
+                         @"length": @(data.length),
+                         @"digest": data.digest})];
+    AssertNotNil(blob);
+    AssertEqualObjects(blob.digest, data.digest);
     AssertEqualObjects(blob.content, content);
 }
 
-- (void) testMutableDocumentInitWithJSON {
-    NSError* error = nil;
-    NSDictionary* jsonDict = [self populatedMDocToJSONObj];
-    NSString* json = [CBLJSON stringWithJSONObject: jsonDict options: 0 error: &error];
+- (void) testUnsavedBlob {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [data toJSON];
+    }];
+}
+
+- (void) testUnknownDigest {
+    CBLBlob* b = [self.db getBlob: (@{@"@type": @"blob",
+                                      @"content_type": @"text/plain",
+                                      @"length": @12,
+                                      @"digest": @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI="})];
+    AssertNil(b);
+}
+
+- (void) testGetBlobWithInvalidProps {
+    NSError* error;
+    __block CBLBlob* b;
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    b = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    [self.db saveBlob: b error: &error];
+    
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        b = [self.db getBlob: (@{@"@type": @"bl0b",
+                                          @"content_type": @"text/plain",
+                                          @"length": @12,
+                                          @"digest": b.digest})];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        b = [self.db getBlob: (@{@"type": @"blob",
+                                          @"content_type": @"text/plain",
+                                          @"length": @12,
+                                          @"digest": b.digest})];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        b = [self.db getBlob: (@{@"@type": @"blob",
+                                          @"content_type": @1234,
+                                          @"length": @12,
+                                          @"digest": b.digest})];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        b = [self.db getBlob: (@{@"@type": @"blob",
+                                          @"content_type": @"text/plain",
+                                          @"length": @"12",
+                                          @"digest": b.digest})];
+    }];
+    
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        b = [self.db getBlob: (@{@"@type": @"blob",
+                                          @"content_type": @"text/plain",
+                                          @"length": @12,
+                                          @"digest": @12})];
+    }];
+}
+
+- (void) testSaveBlobAndCompactDB {
+    NSError* error;
+    CBLBlob* blob;
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
+    blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    [self.db saveBlob: blob error: &error];
     AssertNil(error);
     
-    CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithJSON: json
-                                                                  error: &error];
+    blob = [self.db getBlob: (@{@"@type": @"blob", @"digest": blob.digest})];
+    AssertNotNil(blob);
+    AssertEqualObjects(blob.content, content);
     
-    AssertEqual(mDoc.count, 10);
+    Assert([self.db performMaintenance: kCBLMaintenanceTypeCompact error: &error]);
+    AssertNil(error);
+    
+    blob = [self.db getBlob: (@{@"@type": @"blob", @"digest": blob.digest})];
+    AssertNil(blob);
+    AssertNil(blob.content);
+    AssertEqual(blob.length, 0);
 }
 
 @end

@@ -346,6 +346,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [NSException raise: NSInvalidArgumentException
                     format: @"The given blob's metadata might be missing the digest / @type key "
                                 "or containing invalid values"];
+    C4BlobKey expectedKey;
+    CBLStringBytes key(properties[kCBLBlobDigestProperty]);
+    if (!c4blob_keyFromString(key, &expectedKey))
+        return nil;
+    
+    C4Error err;
+    C4BlobStore* store = c4db_getBlobStore(_c4db, &err);
+    
+    int64_t size = c4blob_getSize(store, expectedKey);
+    if (size == -1)
+        return nil;
     
     return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }
