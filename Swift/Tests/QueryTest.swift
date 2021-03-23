@@ -1663,4 +1663,40 @@ class QueryTest: CBLTestCase {
         })
     }
     
+    // MARK: toJSON
+    
+    func testQueryJSON() throws {
+        let json = ""
+        let mDoc = try MutableDocument(id: "doc", json: json)
+        try self.db.saveDocument(mDoc)
+        
+        let q = QueryBuilder.select([kDOCID,
+                                     SelectResult.property("id #2"),
+                                     SelectResult.property("name"),
+                                     SelectResult.property("isAlive"),
+                                     SelectResult.property("species"),
+                                     SelectResult.property("picture"),
+                                     SelectResult.property("gender"),
+                                     SelectResult.property("registered"),
+                                     SelectResult.property("latitude"),
+                                     SelectResult.property("longitude"),
+                                     SelectResult.property("aka"),
+                                     SelectResult.property("family"),
+                                     SelectResult.property("origin")])
+            .from(DataSource.database(self.db))
+        
+        let rs = try q.execute()
+        let r = rs.allResults().first!
+        let jsonObj = r.toJSON().toJSONObj() as! [String: Any]
+        XCTAssertEqual(jsonObj["id"] as! String, "doc")
+        XCTAssertEqual(jsonObj["id #2"] as! Int, 1)
+        XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
+        XCTAssertEqual(jsonObj["isAlive"] as! Bool, true)
+        XCTAssertEqual(jsonObj["longitude"] as! Double, -21.152958)
+        XCTAssertEqual((jsonObj["aka"] as! Array<String>)[0], "Rick C-137")
+        XCTAssertEqual((jsonObj["aka"] as! Array<String>)[3], "Rick the Alien")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String:String]>)[0]["name"], "Morty Smith")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String:String]>)[3]["name"], "Summer Smith")
+    }
+    
 }

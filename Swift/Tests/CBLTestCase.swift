@@ -21,6 +21,12 @@ import XCTest
 import Foundation
 import CouchbaseLiteSwift
 
+extension String {
+    func toJSONObj() -> Any {
+        let d = self.data(using: .utf8)!
+        return try! JSONSerialization.jsonObject(with: d, options: [])
+    }
+}
 
 class CBLTestCase: XCTestCase {
 
@@ -222,6 +228,20 @@ class CBLTestCase: XCTestCase {
             XCTAssertEqual(error?.domain, domain)
             XCTAssertEqual(error?.code, code)
         }
+    }
+    
+    func expectExcepion(exception: NSExceptionName, block: @escaping () -> Void) {
+        var exceptionThrown = false
+        do {
+            try CBLTestHelper.catchException {
+                block()
+            }
+        } catch {
+            XCTAssertEqual((error as NSError).domain, exception.rawValue)
+            exceptionThrown = true
+        }
+        
+        XCTAssert(exceptionThrown, "No exception thrown")
     }
     
     func ignoreException(block: @escaping () throws -> Void) {
