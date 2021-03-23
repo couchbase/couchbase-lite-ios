@@ -95,7 +95,7 @@ NS_ERROR_ENUM(CBLErrorDomain) {
     
 #ifdef COUCHBASE_ENTERPRISE
     CBLErrorWebSocketCloseUserTransient = 14001,    // Recoverable messaging error
-    CBLErrorWebSocketCloseUserPermanent = 14002     // Non-recoverable messaging error
+    CBLErrorWebSocketCloseUserPermanent = 14002,    // Non-recoverable messaging error
 #endif
     
     CBLErrorInvalidJSON                 = 17001,    // Invalid JSON string error
