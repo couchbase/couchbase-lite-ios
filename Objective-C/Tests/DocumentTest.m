@@ -2079,13 +2079,13 @@
         err = nil;
         doc = [[CBLMutableDocument alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
         AssertNil(doc);
-        AssertEqualObjects(err.domain, @"CouchbaseLite.Fleece");
-        AssertEqual(err.code, 5);
+        AssertEqualObjects(err.domain, CBLErrorDomain);
+        AssertEqual(err.code, CBLErrorInvalidJSON);
         
         dict = [[CBLMutableDictionary alloc] initWithJSON: [jsons objectAtIndex: i] error: &err];
         AssertNil(dict);
-        AssertEqualObjects(err.domain, @"CouchbaseLite.Fleece");
-        AssertEqual(err.code, 5);
+        AssertEqualObjects(err.domain, CBLErrorDomain);
+        AssertEqual(err.code, CBLErrorInvalidJSON);
     }
     
     // VALID json
