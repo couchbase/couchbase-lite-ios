@@ -21,6 +21,12 @@ import XCTest
 import Foundation
 import CouchbaseLiteSwift
 
+extension String {
+    func toJSONObj() -> Any {
+        let d = self.data(using: .utf8)!
+        return try! JSONSerialization.jsonObject(with: d, options: [])
+    }
+}
 
 class CBLTestCase: XCTestCase {
 
@@ -224,6 +230,20 @@ class CBLTestCase: XCTestCase {
         }
     }
     
+    func expectExcepion(exception: NSExceptionName, block: @escaping () -> Void) {
+        var exceptionThrown = false
+        do {
+            try CBLTestHelper.catchException {
+                block()
+            }
+        } catch {
+            XCTAssertEqual((error as NSError).domain, exception.rawValue)
+            exceptionThrown = true
+        }
+        
+        XCTAssert(exceptionThrown, "No exception thrown")
+    }
+    
     func ignoreException(block: @escaping () throws -> Void) {
         CBLTestHelper.allowException {
             try? block()
@@ -238,6 +258,18 @@ class CBLTestCase: XCTestCase {
             try block(n, row)
         }
         return n
+    }
+    
+    func getRickAndMortyJSON() throws -> String {
+        var content = "Earth(C-137)".data(using: .utf8)!
+        var blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        content = "Grandpa Rick".data(using: .utf8)!
+        blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        return try stringFromResource(name: "rick_morty", ofType: "json")
     }
     
 }

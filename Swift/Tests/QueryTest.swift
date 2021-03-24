@@ -1663,4 +1663,38 @@ class QueryTest: CBLTestCase {
         })
     }
     
+    // MARK: toJSON
+    
+    func testQueryJSON() throws {
+        let json = try getRickAndMortyJSON()
+        let mDoc = try MutableDocument(id: "doc", json: json)
+        try self.db.saveDocument(mDoc)
+        
+        let q = QueryBuilder.select([kDOCID,
+                                     SelectResult.property("name"),
+                                     SelectResult.property("isAlive"),
+                                     SelectResult.property("species"),
+                                     SelectResult.property("picture"),
+                                     SelectResult.property("gender"),
+                                     SelectResult.property("registered"),
+                                     SelectResult.property("latitude"),
+                                     SelectResult.property("longitude"),
+                                     SelectResult.property("aka"),
+                                     SelectResult.property("family"),
+                                     SelectResult.property("origin")])
+            .from(DataSource.database(self.db))
+        
+        let rs = try q.execute()
+        let r = rs.allResults().first!
+        let jsonObj = r.toJSON().toJSONObj() as! [String: Any]
+        XCTAssertEqual(jsonObj["id"] as! String, "doc")
+        XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
+        XCTAssertEqual(jsonObj["isAlive"] as! Bool, true)
+        XCTAssertEqual(jsonObj["longitude"] as! Double, -21.152958)
+        XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[0] as! String, "Rick C-137")
+        XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[3] as! String, "Rick the Alien")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String:Any]>)[0]["name"] as! String, "Morty Smith")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String:Any]>)[3]["name"] as! String, "Summer Smith")
+    }
+    
 }

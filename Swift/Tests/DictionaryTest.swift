@@ -196,4 +196,46 @@ class DictionaryTest: CBLTestCase {
         XCTAssertEqual(mDict3.string(forKey: "name"), "Thomas")
     }
     
+    // MARK: toJSON
+    
+    func testDictionaryToJSON() throws {
+        let json = try getRickAndMortyJSON()
+        var mDict = try MutableDictionaryObject(json: json)
+        var mDoc = MutableDocument(id: "doc")
+        mDoc.setDictionary(mDict, forKey: "dict")
+        try self.db.saveDocument(mDoc)
+        
+        var doc = self.db.document(withID: "doc")
+        var dict = doc?.dictionary(forKey: "dict")
+        let jsonObj = dict!.toJSON().toJSONObj() as! [String: Any]
+        XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
+        XCTAssertEqual(jsonObj["id"] as! Int, 1)
+        XCTAssertEqual(jsonObj["isAlive"] as! Bool, true)
+        XCTAssertEqual(jsonObj["longitude"] as! Double, -21.152958)
+        XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[2] as! String, "Albert Ein-douche")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[0]["name"] as! String, "Morty Smith")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
+        XCTAssertEqual((dict!.toJSON().toJSONObj() as! [String: Any]).count, 12)
+        
+        mDoc = doc!.toMutable()
+        mDict = dict!.toMutable()
+        mDict.setValue("newValueAppended", forKey: "newKeyAppended")
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = mDict.toJSON()
+        }
+        mDoc.setValue(mDict, forKey: "dict")
+        try self.db.saveDocument(mDoc)
+        
+        doc = self.db.document(withID: "doc")
+        dict = doc!.dictionary(forKey: "dict")
+        XCTAssertEqual((dict!.toJSON().toJSONObj() as! [String: Any])["newKeyAppended"] as! String, "newValueAppended")
+        XCTAssertEqual((dict!.toJSON().toJSONObj() as! [String: Any]).count, 13)
+    }
+    
+    func testUnsavedMutableDictionaryToJSON() throws {
+        let mDict = try MutableDictionaryObject(json: "{\"unsaved\":\"dict\"}")
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = mDict.toJSON()
+        }
+    }
 }

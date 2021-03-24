@@ -1576,4 +1576,200 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(revisionID, doc?.revisionID)
     }
     
+    // MARK: toJSON
+    
+    func testDocumentToJSON() throws {
+        let json = try getRickAndMortyJSON()
+        var mDoc = try MutableDocument(id: "doc", json: json)
+        try self.db.saveDocument(mDoc)
+        
+        var doc = self.db.document(withID: "doc")
+        var jsonObj = doc?.toJSON().toJSONObj() as! [String: Any]
+        XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
+        XCTAssertEqual(jsonObj["id"] as! Int, 1)
+        XCTAssertEqual(jsonObj["isAlive"] as! Bool, true)
+        XCTAssertEqual(jsonObj["longitude"] as! Double, -21.152958)
+        XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[2] as! String, "Albert Ein-douche")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[0]["name"] as! String, "Morty Smith")
+        XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["length"] as! Int, 12);
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["digest"] as! String, "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["@type"] as! String, "blob");
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["content_type"] as! String, "text/plain");
+        XCTAssertEqual(jsonObj.count, 12)
+        
+        mDoc = doc!.toMutable()
+        mDoc.setValue("newValueAppended", forKey: "newKeyAppended")
+        try self.db.saveDocument(mDoc)
+        
+        doc = self.db.document(withID: "doc")
+        jsonObj = doc!.toJSON().toJSONObj() as! [String: Any]
+        XCTAssertEqual(jsonObj["newKeyAppended"] as! String, "newValueAppended")
+        XCTAssertEqual(jsonObj.count, 13)
+    }
+    
+    func testUnsavedMutableDocumentToJSON() throws {
+        let mDoc = try MutableDocument(id: "doc", json: "{\"unsaved\":\"doc\"}")
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = mDoc.toJSON()
+        }
+    }
+    
+    func testSpecialJSONStrings() throws {
+        var jsons = [
+            "Random:String",
+            "[\"item1\",\"item2\"]",
+            "",
+            " ",
+            // TODO: TruncatedJSON
+            // @"[", https://issues.couchbase.com/browse/CBL-1763
+            // @"{", https://issues.couchbase.com/browse/CBL-1763
+            "{\"dictionary_without_value\"}",
+            "[]"];
+        var exceptionThrown = false
+        for json in jsons {
+            exceptionThrown = false
+            do {
+                let _ = try MutableDocument(json: json)
+            } catch {
+                exceptionThrown = true
+                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
+                XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
+            }
+            XCTAssert(exceptionThrown)
+            
+            exceptionThrown = false
+            do {
+                let _ = try MutableDictionaryObject(json: json)
+            } catch {
+                exceptionThrown = true
+                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
+                XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
+            }
+            XCTAssert(exceptionThrown)
+        }
+        
+        jsons = ["{}"]
+        for json in jsons {
+            let mDoc = try MutableDocument(json: json)
+            XCTAssertNotNil(mDoc)
+            XCTAssertEqual(mDoc.count, 0)
+            
+            let mDict = try MutableDictionaryObject(json: json)
+            XCTAssertNotNil(mDict)
+            XCTAssertEqual(mDict.count, 0)
+        }
+    }
+    
+    func testBlobToJSON() throws {
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["@type"] as! String, "blob")
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["content_type"] as! String, "text/plain")
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["length"] as! UInt64, blob.length)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["digest"] as? String, blob.digest)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any]).count, 4)
+    }
+    
+    func testGetBlobFromProps() throws {
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        let retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
+                                                            "digest": blob.digest!,
+                                                            "content_type": "text/plain",
+                                                            "length": blob.length])
+        XCTAssertNotNil(retrivedBlob)
+        XCTAssertEqual(retrivedBlob!.digest, blob.digest)
+        XCTAssertEqual(retrivedBlob!.content, blob.content)
+    }
+    
+    func testUnsavedBlob() throws {
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = blob.toJSON()
+        }
+    }
+    
+    func testUnknownDigest() throws {
+        let blob = try self.db.getBlob(properties: ["@type":"blob",
+                                                    "digest": "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=",
+                                                    "content_type": "text/plain",
+                                                    "length": 12])
+        XCTAssertNil(blob)
+    }
+    
+    func testGetBlobWithInvalidProps() throws {
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        var b: Blob?
+        expectExcepion(exception: .invalidArgumentException) {
+            b = try! self.db.getBlob(properties: ["@type":"bl0b",
+                                                  "digest": blob.digest! as String,
+                                                  "content_type": "text/plain",
+                                                  "length": blob.length])
+        }
+        XCTAssertNil(b)
+        
+        expectExcepion(exception: .invalidArgumentException) {
+            b = try! self.db.getBlob(properties: ["type":"blob",
+                                                  "digest": blob.digest! as String,
+                                                  "content_type": "text/plain",
+                                                  "length": blob.length])
+        }
+        XCTAssertNil(b)
+        
+        expectExcepion(exception: .invalidArgumentException) {
+            b = try! self.db.getBlob(properties: ["@type":"blob",
+                                                  "digest": blob.digest! as String,
+                                                  "content_type": 1234,
+                                                  "length": blob.length])
+        }
+        XCTAssertNil(b)
+        
+        expectExcepion(exception: .invalidArgumentException) {
+            b = try! self.db.getBlob(properties: ["@type":"blob",
+                                                  "digest": blob.digest! as String,
+                                                  "content_type": "text/plain",
+                                                  "length": "12"])
+        }
+        XCTAssertNil(b)
+        
+        expectExcepion(exception: .invalidArgumentException) {
+            b = try! self.db.getBlob(properties: ["@type":"blob",
+                                                  "digest": 12,
+                                                  "content_type": "text/plain",
+                                                  "length": blob.length])
+        }
+        XCTAssertNil(b)
+    }
+    
+    func testSaveBlobAndCompactDB() throws {
+        let content = kTestBlob.data(using: .utf8)!
+        let blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        var retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
+                                                            "digest": blob.digest!,
+                                                            "content_type": "text/plain",
+                                                            "length": blob.length])
+        XCTAssertNotNil(retrivedBlob)
+        XCTAssertEqual(retrivedBlob!.digest, blob.digest)
+        XCTAssertEqual(retrivedBlob!.content, blob.content)
+        
+        try self.db.performMaintenance(type: .compact)
+        retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
+                                                            "digest": blob.digest!,
+                                                            "content_type": "text/plain",
+                                                            "length": blob.length])
+        XCTAssertNil(retrivedBlob)
+        XCTAssertEqual(retrivedBlob?.length ?? 0, 0)
+        
+    }
 }

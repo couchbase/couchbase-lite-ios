@@ -229,4 +229,63 @@ class ArrayTest: CBLTestCase {
         XCTAssertEqual(b?.content, (data[7] as! Blob).content)
         XCTAssert(obj.value(at: 11) as! NSNull == (data[8] as! NSNull))
     }
+    
+    // MARK: toJSON
+    
+    func testUnsavedMutableArrayToJSON() throws {
+        let json = "[{\"unsaved\":\"mutableDoc\"}]"
+        var mArray = try MutableArrayObject(json: json)
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = mArray.toJSON()
+        }
+        
+        let mDoc = MutableDocument(id: "doc")
+        mDoc.setArray(mArray, forKey: "array")
+        try saveDocument(mDoc)
+        
+        mArray = mDoc.array(forKey: "array")!
+        expectExcepion(exception: .internalInconsistencyException) {
+            let _ = mArray.toJSON()
+        }
+    }
+    
+    func testArrayToJSON() throws {
+        let json = "[\(try getRickAndMortyJSON()),\(try getRickAndMortyJSON())]"
+        let mArray = try MutableArrayObject(json: json)
+        let mDoc = MutableDocument(id: "doc")
+        mDoc.setArray(mArray, forKey: "array")
+        try self.db.saveDocument(mDoc)
+        
+        let doc = self.db.document(withID: "doc")
+        guard let array = doc?.array(forKey: "array") else {
+            XCTFail("Array not found in doc")
+            return
+        }
+        
+        let jsonArray = array.toJSON().toJSONObj() as! Array<[String: Any]>
+        XCTAssertEqual(jsonArray[0]["id"] as! Int, 1)
+        XCTAssertEqual(jsonArray[0]["name"] as! String, "Rick Sanchez")
+        XCTAssertEqual(jsonArray[0]["isAlive"] as! Bool, true)
+        XCTAssertEqual(jsonArray[0]["longitude"] as! Double, -21.152958)
+        XCTAssertEqual((jsonArray[0]["aka"] as! Array<Any>)[2] as! String, "Albert Ein-douche")
+        XCTAssertEqual((jsonArray[0]["family"] as! Array<[String: Any]>)[0]["name"] as! String, "Morty Smith")
+        XCTAssertEqual((jsonArray[0]["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
+    }
+    
+    func testGetBlobContentFromMutableObject() throws {
+        let json = try getRickAndMortyJSON()
+        let mDoc = try MutableDocument(id: "doc", json: json)
+        var blob = mDoc.blob(forKey: "origin")
+        
+        // before save it should throw the exception
+        expectExcepion(exception: .internalInconsistencyException) {
+            print("\(blob!.content?.count ?? 0)")
+        }
+        try self.db.saveDocument(mDoc)
+        
+        // after the save, it should return the content
+        let doc = self.db.document(withID: "doc")
+        blob = doc?.blob(forKey: "origin")
+        XCTAssertNotNil(blob?.content)
+    }
 }
