@@ -1579,7 +1579,7 @@ class DocumentTest: CBLTestCase {
     // MARK: toJSON
     
     func testDocumentToJSON() throws {
-        let json = ""
+        let json = try getRickAndMortyJSON()
         var mDoc = try MutableDocument(id: "doc", json: json)
         try self.db.saveDocument(mDoc)
         
@@ -1589,13 +1589,14 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(jsonObj["id"] as! Int, 1)
         XCTAssertEqual(jsonObj["isAlive"] as! Bool, true)
         XCTAssertEqual(jsonObj["longitude"] as! Double, -21.152958)
-        XCTAssertEqual((jsonObj["aka"] as! Array<String>)[2], "Albert Ein-douche")
+        XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[2] as! String, "Albert Ein-douche")
         XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[0]["name"] as! String, "Morty Smith")
         XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
         XCTAssertEqual((jsonObj["origin"] as! [String: Any])["length"] as! Int, 12);
         XCTAssertEqual((jsonObj["origin"] as! [String: Any])["digest"] as! String, "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
         XCTAssertEqual((jsonObj["origin"] as! [String: Any])["@type"] as! String, "blob");
         XCTAssertEqual((jsonObj["origin"] as! [String: Any])["content_type"] as! String, "text/plain");
+        XCTAssertEqual(jsonObj.count, 12)
         
         mDoc = doc!.toMutable()
         mDoc.setValue("newValueAppended", forKey: "newKeyAppended")
@@ -1604,7 +1605,7 @@ class DocumentTest: CBLTestCase {
         doc = self.db.document(withID: "doc")
         jsonObj = doc!.toJSON().toJSONObj() as! [String: Any]
         XCTAssertEqual(jsonObj["newKeyAppended"] as! String, "newValueAppended")
-        XCTAssertEqual(jsonObj.count, 12)
+        XCTAssertEqual(jsonObj.count, 13)
     }
     
     func testUnsavedMutableDocumentToJSON() throws {
@@ -1632,7 +1633,7 @@ class DocumentTest: CBLTestCase {
                 let _ = try MutableDocument(json: json)
             } catch {
                 exceptionThrown = true
-                // XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
+                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
                 XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
             }
             XCTAssert(exceptionThrown)
@@ -1642,7 +1643,7 @@ class DocumentTest: CBLTestCase {
                 let _ = try MutableDictionaryObject(json: json)
             } catch {
                 exceptionThrown = true
-                // XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
+                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
                 XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
             }
             XCTAssert(exceptionThrown)
@@ -1669,6 +1670,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["content_type"] as! String, "text/plain")
         XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["length"] as! UInt64, blob.length)
         XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["digest"] as? String, blob.digest)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any]).count, 4)
     }
     
     func testGetBlobFromProps() throws {
@@ -1748,7 +1750,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertNil(b)
     }
     
-    func _testSaveBlobAndCompactDB() throws {
+    func testSaveBlobAndCompactDB() throws {
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
         try self.db.saveBlob(blob: blob)

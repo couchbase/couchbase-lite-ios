@@ -232,10 +232,10 @@ class ArrayTest: CBLTestCase {
     
     // MARK: toJSON
     
-    func _testUnsavedMutableArrayToJSON() throws {
+    func testUnsavedMutableArrayToJSON() throws {
         let json = "[{\"unsaved\":\"mutableDoc\"}]"
         var mArray = try MutableArrayObject(json: json)
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectExcepion(exception: .internalInconsistencyException) {
             let _ = mArray.toJSON()
         }
         
@@ -244,13 +244,13 @@ class ArrayTest: CBLTestCase {
         try saveDocument(mDoc)
         
         mArray = mDoc.array(forKey: "array")!
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectExcepion(exception: .internalInconsistencyException) {
             let _ = mArray.toJSON()
         }
     }
     
-    func _testArrayToJSON() throws {
-        let json = ""
+    func testArrayToJSON() throws {
+        let json = "[\(try getRickAndMortyJSON()),\(try getRickAndMortyJSON())]"
         let mArray = try MutableArrayObject(json: json)
         let mDoc = MutableDocument(id: "doc")
         mDoc.setArray(mArray, forKey: "array")
@@ -272,8 +272,8 @@ class ArrayTest: CBLTestCase {
         XCTAssertEqual((jsonArray[0]["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
     }
     
-    func _testGetBlobContentFromMutableObject() throws {
-        let json = "{\"origin\":{\"@type\":\"blob\",\"digest\":\"sha1-HmQJbUVhlMRqE07BYmluq6hNScA=\"}}"
+    func testGetBlobContentFromMutableObject() throws {
+        let json = try getRickAndMortyJSON()
         let mDoc = try MutableDocument(id: "doc", json: json)
         var blob = mDoc.blob(forKey: "origin")
         
@@ -286,6 +286,6 @@ class ArrayTest: CBLTestCase {
         // after the save, it should return the content
         let doc = self.db.document(withID: "doc")
         blob = doc?.blob(forKey: "origin")
-        XCTAssertNotNil(blob!.content)
+        XCTAssertNotNil(blob?.content)
     }
 }

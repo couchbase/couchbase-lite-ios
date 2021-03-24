@@ -260,6 +260,18 @@ class CBLTestCase: XCTestCase {
         return n
     }
     
+    func getRickAndMortyJSON() throws -> String {
+        var content = "Earth(C-137)".data(using: .utf8)!
+        var blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        content = "Grandpa Rick".data(using: .utf8)!
+        blob = Blob(contentType: "text/plain", data: content)
+        try self.db.saveBlob(blob: blob)
+        
+        return try stringFromResource(name: "rick_morty", ofType: "json")
+    }
+    
 }
 
 /** Comparing JSON Dictionary */
