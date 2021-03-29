@@ -182,8 +182,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     NSError* error;
     NSString* s = [CBLJSON stringWithJSONObject: self.properties
                                         options: 0 error: &error];
-    if (!s)
-        CBLWarnError(Database, @"toJSON: Failed to serialize the json %@", error);
+    
+    // it should always return valid json string
+    assert(s);
     
     return s;
 }

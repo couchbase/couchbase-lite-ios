@@ -30,7 +30,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** Configuration struct for FLEncoder. */
-typedef struct {
+typedef struct FLEncoderContext {
     CBLDocument* __nullable document = nullptr;
     bool encodeQueryParameter = false;
 } FLEncoderContext;
