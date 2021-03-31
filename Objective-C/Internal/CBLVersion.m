@@ -51,7 +51,7 @@
         
         sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore/%.*s",
                       CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit,
-                      (int)liteCoreVers.size, liteCoreVers.buf];
+                      (int)liteCoreVers.size, (char*)liteCoreVers.buf];
         c4slice_free(liteCoreVers);
     });
     return sUserAgent;

@@ -1311,7 +1311,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             return convertError(c4err, outError);
         }
         CBLLogInfo(Sync, @"Conflict resolved as doc '%@' rev %.*s",
-                   localDoc.id, (int)c4doc->revID.size, c4doc->revID.buf);
+                   localDoc.id, (int)c4doc->revID.size, (char*)c4doc->revID.buf);
         
         return t.commit() || convertError(t.error(), outError);
     }
