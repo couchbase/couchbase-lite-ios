@@ -1446,7 +1446,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-1664
-- (void) _testStopListener {
+- (void) testStopListener {
     XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
@@ -1486,6 +1486,7 @@ typedef CBLURLEndpointListener Listener;
              continuous: NO
           authenticator: nil
              serverCert: nil
+             maxRetries: 2 // to make fail(stop) early
               errorCode: ECONNREFUSED
             errorDomain: NSPOSIXErrorDomain];
 }

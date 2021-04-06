@@ -36,7 +36,7 @@
 }
 
 - (id) asJSON {
-    return @[@"MATCH", _indexName, _query];
+    return @[@"MATCH()", _indexName, _query];
 }
 
 @end
