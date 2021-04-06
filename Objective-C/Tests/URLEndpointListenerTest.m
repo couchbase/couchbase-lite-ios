@@ -1108,6 +1108,7 @@ typedef CBLURLEndpointListener Listener;
 - (void) testReplicatorAndListenerOnSameDatabase {
     if (!self.keyChainAccessAllowed) return;
     
+    timeout = 5.0;
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     
@@ -1123,8 +1124,8 @@ typedef CBLURLEndpointListener Listener;
     Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
-    CBLReplicator* repl1 = [self replicator: self.otherDB continous: YES target: target
-                                 serverCert: nil];
+    __block CBLReplicator* repl1 = [self replicator: self.otherDB continous: YES target: target
+                                         serverCert: nil];
     
     // Replicator#2 (DB#2 -> Listener(otherDB))
     Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
@@ -1133,13 +1134,17 @@ typedef CBLURLEndpointListener Listener;
     
     CBLMutableDocument* doc2 =  [self createDocument];
     Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
-    CBLReplicator* repl2 = [self replicator: db2 continous: YES target: _listener.localEndpoint
-                                 serverCert: (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0]];
+    
+    __block CBLReplicator* repl2 = [self replicator: db2 continous: YES target: _listener.localEndpoint
+                                         serverCert: (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0]];
     
     id changeListener = ^(CBLReplicatorChange * change) {
         if (change.status.activity == kCBLReplicatorIdle &&
             change.status.progress.completed == change.status.progress.total) {
-            if (self.otherDB.count == 3u && self.db.count == 3u && db2.count == 3u)
+            if (change.replicator == repl1 && self.otherDB.count == 2u && self.db.count == 2u)
+                [change.replicator stop];
+            
+            if (change.replicator == repl2 && self.otherDB.count == 3u && db2.count == 3u)
                 [change.replicator stop];
         }
         
@@ -1155,12 +1160,13 @@ typedef CBLURLEndpointListener Listener;
     id token2 = [repl2 addChangeListener: changeListener];
     
     [repl1 start];
-    [repl2 start];
-    [self waitForExpectations: @[exp1, exp2] timeout: timeout];
+    [self waitForExpectations: @[exp1] timeout: timeout];
+    AssertEqual(self.db.count, 2u);
+    AssertEqual(self.otherDB.count, 2u);
     
-    // all data are transferred to/from
+    [repl2 start];
+    [self waitForExpectations: @[exp2] timeout: timeout];
     AssertEqual(self.otherDB.count, 3u);
-    AssertEqual(self.db.count, 3u);
     AssertEqual(db2.count, 3u);
 
     // cleanup
