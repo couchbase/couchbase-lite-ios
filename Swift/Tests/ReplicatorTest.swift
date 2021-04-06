@@ -1144,7 +1144,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testMaxRetryWaitTimeOfReplicator() {
-        timeout = 12
+        timeout = 12 // already it takes 8 secs of retry, hence 12secs timeout. 
         let x = self.expectation(description: "repl finish")
         let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
