@@ -4,6 +4,21 @@ pipeline {
     }
     agent { label 'mobile-builder-ios-pull-request'  }
     stages {
+        stage('Cleanup'){
+            steps {
+                sh """
+                    #clean up DerivedData and tmp directories
+                    #shutdown all simulators, in case if any device in "booted" state which doesn't allow data file to be deleted.
+                    xcrun simctl shutdown all
+                    xcrun simctl erase all
+                    rm -rf ~/Library/Developer/Xcode/DerivedData/*
+                    rm -rf /tmp/Developer/CoreSimulator
+                    rm -rf /tmp/com.apple.mobileassetd
+                    rm -rf /tmp/com.apple.launchd*
+                    rm -rf /tmp/com.apple.CoreSimulator*
+                """
+            }
+        }
         stage('Checkout'){
             steps {
                 sh """
