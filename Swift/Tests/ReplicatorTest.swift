@@ -23,7 +23,7 @@ import CouchbaseLiteSwift
 class ReplicatorTest: CBLTestCase {
     var oDB: Database!
     var repl: Replicator!
-    var timeout: TimeInterval = 10  // At least 10 to cover single-shot replicator's retry logic
+    var timeout: TimeInterval = 10
     
     // connect to an unknown-db on same machine, for the connection refused transient error.
     let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4984/unknown-db-wXBl5n3fed")!)
@@ -32,6 +32,7 @@ class ReplicatorTest: CBLTestCase {
         super.setUp()
         try! openOtherDB()
         oDB = otherDB!
+        timeout = 10 // At least 10 to cover single-shot replicator's retry logic
     }
     
     override func tearDown() {
