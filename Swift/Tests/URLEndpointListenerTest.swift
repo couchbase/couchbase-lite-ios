@@ -1059,8 +1059,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         XCTAssertNil(listener!.tlsIdentity)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1664
-    func _testStopListener() throws {
+    func testStopListener() throws {
         let x1 = expectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
@@ -1097,7 +1096,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Check to ensure that the replicator is not accessible:
         run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
-            expectedError: Int(ECONNREFUSED))
+            maxRetries: 2, expectedError: Int(ECONNREFUSED))
     }
     
     func testTLSPasswordListenerAuthenticator() throws {

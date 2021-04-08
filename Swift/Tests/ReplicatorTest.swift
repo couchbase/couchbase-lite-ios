@@ -42,12 +42,16 @@ class ReplicatorTest: CBLTestCase {
     }
     
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
-                auth: Authenticator? = nil, serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
+                auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
+                maxRetries: Int? = 9) -> ReplicatorConfiguration {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
         config.pinnedServerCertificate = serverCert
+        if let maxRetries = maxRetries {
+            config.maxRetries = maxRetries
+        }
         return config
     }
 
@@ -55,9 +59,9 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
-                serverCert: SecCertificate? = nil) -> ReplicatorConfiguration {
+                serverCert: SecCertificate? = nil, maxRetries: Int? = 9) -> ReplicatorConfiguration {
         let config = self.config(target: target, type: type, continuous: continuous,
-                                 auth: auth, serverCert: serverCert)
+                                 auth: auth, serverCert: serverCert, maxRetries: maxRetries)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
         return config
     }
@@ -92,9 +96,11 @@ class ReplicatorTest: CBLTestCase {
              continuous: Bool = false, auth: Authenticator? = nil,
              acceptSelfSignedOnly: Bool = false,
              serverCert: SecCertificate? = nil,
+             maxRetries: Int? = 9,
              expectedError: Int? = nil) {
         let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
-                                 acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert)
+                                 acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert,
+                                 maxRetries: maxRetries)
         run(config: config, reset: false, expectedError: expectedError)
     }
     #endif
@@ -1027,7 +1033,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.maxRetries, 9)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true, maxRetries: nil)
         XCTAssertEqual(config.maxRetries, NSInteger.max)
     }
     
