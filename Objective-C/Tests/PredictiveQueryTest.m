@@ -292,8 +292,7 @@
     [textModel unregisterModel];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1770
-- (void) _testPredictionWithNonSupportedInputTypes {
+- (void) testPredictionWithNonSupportedInputTypes {
     Assert([self.db saveDocument: [[CBLMutableDocument alloc] init] error: nil]);
     
     CBLEchoModel* echoModel = [[CBLEchoModel alloc] init];
