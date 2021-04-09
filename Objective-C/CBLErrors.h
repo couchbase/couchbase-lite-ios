@@ -24,36 +24,36 @@
 extern NSErrorDomain const CBLErrorDomain;
 
 NS_ERROR_ENUM(CBLErrorDomain) {
-    CBLErrorAssertionFailed = 1,    // Internal assertion failure
-    CBLErrorUnimplemented,          // Oops, an unimplemented API call
-    CBLErrorUnsupportedEncryption,  // Unsupported encryption algorithm
-    CBLErrorBadRevisionID,          // Invalid revision ID syntax
-    CBLErrorCorruptRevisionData,    // Document contains corrupted/unreadable data
-    CBLErrorNotOpen,                // Database/KeyStore/index is not open
-    CBLErrorNotFound,               // Document not found
-    CBLErrorConflict,               // Document update conflict
-    CBLErrorInvalidParameter,       // Invalid function parameter or struct value
-    CBLErrorUnexpectedError,        // Internal unexpected C++ exception
-    CBLErrorCantOpenFile,           // Database file can't be opened; may not exist
-    CBLErrorIOError,                // File I/O error
-    CBLErrorMemoryError,            // Memory allocation failed (out of memory?)
-    CBLErrorNotWriteable,           // File is not writeable
-    CBLErrorCorruptData,            // Data is corrupted
-    CBLErrorBusy,                   // Database is busy/locked
-    CBLErrorNotInTransaction,       // Function must be called while in a transaction
-    CBLErrorTransactionNotClosed,   // Database can't be closed while a transaction is open
-    CBLErrorUnsupported,            // Operation not supported in this database
-    CBLErrorUnreadableDatabase,     // File is not a database, or encryption key is wrong
-    CBLErrorWrongFormat,            // Database exists but not in the format/storage requested
-    CBLErrorCrypto,                 // Encryption/decryption error
-    CBLErrorInvalidQuery,           // Invalid query
-    CBLErrorMissingIndex,           // No such index, or query requires a nonexistent index
-    CBLErrorInvalidQueryParam,      // Unknown query param name, or param number out of range
-    CBLErrorRemoteError,            // Unknown error from remote server
-    CBLErrorDatabaseTooOld,         // Database file format is older than what I can open
-    CBLErrorDatabaseTooNew,         // Database file format is newer than what I can open
-    CBLErrorBadDocID,               // Invalid document ID
-    CBLErrorCantUpgradeDatabase,    // Database can't be upgraded (might be unsupported dev version)
+    CBLErrorAssertionFailed = 1,        // Internal assertion failure
+    CBLErrorUnimplemented,              // Oops, an unimplemented API call
+    CBLErrorUnsupportedEncryption,      // Unsupported encryption algorithm
+    CBLErrorBadRevisionID,              // Invalid revision ID syntax
+    CBLErrorCorruptRevisionData,        // Document contains corrupted/unreadable data
+    CBLErrorNotOpen,                    // Database/KeyStore/index is not open
+    CBLErrorNotFound,                   // Document not found
+    CBLErrorConflict,                   // Document update conflict
+    CBLErrorInvalidParameter,           // Invalid function parameter or struct value
+    CBLErrorUnexpectedError = 10,       // Internal unexpected C++ exception
+    CBLErrorCantOpenFile,               // Database file can't be opened; may not exist
+    CBLErrorIOError,                    // File I/O error
+    CBLErrorMemoryError,                // Memory allocation failed (out of memory?)
+    CBLErrorNotWriteable,               // File is not writeable
+    CBLErrorCorruptData,                // Data is corrupted
+    CBLErrorBusy,                       // Database is busy/locked
+    CBLErrorNotInTransaction,           // Function must be called while in a transaction
+    CBLErrorTransactionNotClosed,       // Database can't be closed while a transaction is open
+    CBLErrorUnsupported,                // Operation not supported in this database
+    CBLErrorUnreadableDatabase = 20,    // File is not a database, or encryption key is wrong
+    CBLErrorWrongFormat,                // Database exists but not in the format/storage requested
+    CBLErrorCrypto,                     // Encryption/decryption error
+    CBLErrorInvalidQuery,               // Invalid query
+    CBLErrorMissingIndex,               // No such index, or query requires a nonexistent index
+    CBLErrorInvalidQueryParam,          // Unknown query param name, or param number out of range
+    CBLErrorRemoteError,                // Unknown error from remote server
+    CBLErrorDatabaseTooOld,             // Database file format is older than what I can open
+    CBLErrorDatabaseTooNew,             // Database file format is newer than what I can open
+    CBLErrorBadDocID,                   // Invalid document ID
+    CBLErrorCantUpgradeDatabase = 30,   // Database can't be upgraded (might be unsupported dev version)
     // Note: These are equivalent to the C4Error codes declared in LiteCore's c4Base.h
 
     CBLErrorNetworkBase                 = 5000,     // ---- Network error codes start here
