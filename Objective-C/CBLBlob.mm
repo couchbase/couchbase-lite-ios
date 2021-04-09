@@ -157,8 +157,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 
 - (NSDictionary*) properties {
     CBL_LOCK(self) {
-        return $dict({kCBLTypeProperty, kCBLBlobType},
-                     {kCBLBlobDigestProperty, _digest},
+        return $dict({kCBLBlobDigestProperty, _digest},
                      {kCBLBlobLengthProperty, (_length ? @(_length) : nil)},
                      {kCBLBlobContentTypeProperty, _contentType});
     }
@@ -166,6 +165,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 
 - (NSDictionary*) blobProperties: (BOOL)mayIncludeContent {
     NSMutableDictionary* json = [self.properties mutableCopy];
+    json[kCBLTypeProperty] = kCBLBlobType;
     if (mayIncludeContent && !json[kCBLBlobDigestProperty]) {
         json[kCBLBlobDataProperty] = self.content;
     }
@@ -180,7 +180,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     }
     
     NSError* error;
-    NSString* s = [CBLJSON stringWithJSONObject: self.properties
+    NSString* s = [CBLJSON stringWithJSONObject: [self blobProperties: NO]
                                         options: 0 error: &error];
     
     // it should always return valid json string

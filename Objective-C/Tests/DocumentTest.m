@@ -1612,9 +1612,13 @@
     NSDictionary* dict = @{kCBLBlobDigestProperty: blob.digest,
                            kCBLTypeProperty: kCBLBlobType,
                            kCBLBlobContentTypeProperty: blob.contentType};
+    
+    // expected = without @type
+    NSDictionary* expectedDict = @{kCBLBlobDigestProperty: blob.digest,
+                                   kCBLBlobContentTypeProperty: blob.contentType};
     CBLBlob* retrivedBlob = [self.db getBlob: dict];
-    AssertEqual(retrivedBlob.properties.count, dict.count);
-    AssertEqualObjects(retrivedBlob.properties, dict);
+    AssertEqual(retrivedBlob.properties.count, expectedDict.count);
+    AssertEqualObjects(retrivedBlob.properties, expectedDict);
     
     // access the content and see the content length gets populated
     AssertEqualObjects(retrivedBlob.content, content);
