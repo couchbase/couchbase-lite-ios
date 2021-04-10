@@ -327,16 +327,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
 }
 
-- (void) resetCheckpoint {
-    CBL_LOCK(self) {
-        if (_state != kCBLStateStopped) {
-            [NSException raise: NSInternalInconsistencyException
-                        format: @"%@", kCBLErrorMessageReplicatorNotStopped];
-        }
-        _resetCheckpoint = YES;
-    }
-}
-
 #pragma mark - Server Certificate
 
 - (SecCertificateRef) serverCertificate {

@@ -122,14 +122,6 @@ public final class Replicator {
         _impl.stop()
     }
     
-    /// Resets the local checkpoint of the replicator, meaning that it will sync all
-    /// changes since the beginning of time from the remote database. This can only be
-    /// called when the replicator is in a stopped state.
-    @available(*, deprecated, message: "Use start(reset:) instead.")
-    public func resetCheckpoint() {
-        _impl.resetCheckpoint()
-    }
-    
     /// Adds a replicator change listener. Changes will be posted on the main queue.
     ///
     /// - Parameter listener: The listener to post changes.
