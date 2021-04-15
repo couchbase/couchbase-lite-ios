@@ -24,6 +24,8 @@
 #error Couchbase Lite EE Only
 #endif
 
+typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
+
 @protocol MultipeerConnectionDelegate
 - (void) connectionDidOpen: (id<CBLMessageEndpointConnection>)connection;
 - (void) connectionDidClose: (id<CBLMessageEndpointConnection>)connection;
@@ -34,10 +36,12 @@
 @property (nonatomic, readonly) MCSession* session;
 @property (nonatomic, readonly) MCPeerID* peerID;
 @property (nonatomic, readonly, weak) id<MultipeerConnectionDelegate> delegate;
+@property (nonatomic) OpenCompletion openCompletion;
 
 - (instancetype) initWithSession: (MCSession*)session
                           peerID: (MCPeerID*)peerID
-                        delegate: (id<MultipeerConnectionDelegate>)delegate;
+                        delegate: (id<MultipeerConnectionDelegate>)delegate
+                      completion: (nullable OpenCompletion)openCompletion;
 
 - (void) receiveData: (NSData*)data;
 
@@ -47,17 +51,19 @@
     id<CBLReplicatorConnection> _replConnection;
 }
 
-@synthesize session=_session, peerID=_peerID, delegate=_delegate;
+@synthesize session=_session, peerID=_peerID, delegate=_delegate, openCompletion=_openCompletion;
 
 - (instancetype) initWithSession: (MCSession*)session
                           peerID: (MCPeerID*)peerID
                         delegate: (id<MultipeerConnectionDelegate>)delegate
+                      completion: (OpenCompletion)openCompletion
 {
     self = [super init];
     if (self) {
         _session = session;
         _peerID = peerID;
         _delegate = delegate;
+        _openCompletion = openCompletion;
     }
     return self;
 }
@@ -72,6 +78,9 @@
   completion:(nonnull void (^)(BOOL, CBLMessagingError * _Nullable))completion {
     _replConnection = connection;
     [_delegate connectionDidOpen: self];
+    if (_openCompletion)
+        _openCompletion(YES, nil);
+    
     completion(YES, nil);
 }
 
@@ -193,14 +202,15 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
                                                          protocolType: kCBLProtocolTypeMessageStream];
     _listener = [[CBLMessageEndpointListener alloc] initWithConfig: listenerConfig];
     id token1 = [_listener addChangeListener: ^(CBLMessageEndpointListenerChange *change) {
-        if (change.status.activity == kCBLReplicatorConnecting)
-            [x1 fulfill];
-        else if (change.status.activity == kCBLReplicatorStopped)
+        if (change.status.activity == kCBLReplicatorStopped)
             [x2 fulfill];
     }];
     [_listener accept: [[MultipeerConnection alloc] initWithSession: _serverSession
                                                              peerID: _clientPeer
-                                                           delegate: self]];
+                                                           delegate: self
+                                                         completion: ^(BOOL s, CBLMessagingError * e) {
+        [x1 fulfill];
+    }]];
     [self waitForExpectations: @[x1] timeout: 10.0];
     
     // Start replicator:
@@ -357,7 +367,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 - (nonnull id<CBLMessageEndpointConnection>)createConnectionForEndpoint: (CBLMessageEndpoint*)endpoint {
     return [[MultipeerConnection alloc] initWithSession: _clientSession
                                                  peerID: _serverPeer
-                                               delegate: self];
+                                               delegate: self
+                                             completion: nil];
 }
 
 #pragma mark - Tests
