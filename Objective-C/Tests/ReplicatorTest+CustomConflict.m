@@ -908,8 +908,7 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-// CBL-1709: c4doc_resolveConflict returns assertion failed instead of not-found error when resolving on a purge doc
-- (void) _testConflictResolverWhenDocumentIsPurged {
+- (void) testConflictResolverWhenDocumentIsPurged {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};

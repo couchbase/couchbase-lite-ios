@@ -662,8 +662,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(order[1], order[2])
     }
     
-    // CBL-1709: c4doc_resolveConflict returns assertion failed instead of not-found error when resolving on a purge doc
-    func _testConflictResolverWhenDocumentIsPurged() throws {
+    func testConflictResolverWhenDocumentIsPurged() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
