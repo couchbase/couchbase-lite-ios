@@ -77,7 +77,7 @@ public final class Replicator {
     ///
     /// - Parameter config: The configuration.
     public init(config: ReplicatorConfiguration) {
-        _config = ReplicatorConfiguration(config: config, readonly: true)
+        _config = ReplicatorConfiguration(config: config)
         _impl = CBLReplicator(config: config.toImpl());
     }
     

@@ -191,7 +191,7 @@ MultipeerConnectionDelegate {
     }
     
     func config(target: Endpoint, type: ReplicatorType, continuous: Bool) -> ReplicatorConfiguration {
-        let config = ReplicatorConfiguration(database: self.db, target: target)
+        var config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
         return config

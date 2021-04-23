@@ -54,7 +54,7 @@ public struct DocumentFlags: OptionSet {
 public typealias ReplicationFilter = (Document, DocumentFlags) -> Bool
 
 /// Replicator configuration.
-public class ReplicatorConfiguration {
+public struct ReplicatorConfiguration {
     
     /// The local database to replicate with the replication target.
     public let database: Database
@@ -63,98 +63,54 @@ public class ReplicatorConfiguration {
     public let target: Endpoint
     
     /// Replicator type indicating the direction of the replicator.
-    public var replicatorType: ReplicatorType = .pushAndPull {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var replicatorType: ReplicatorType = .pushAndPull
     
     /// The continuous flag indicating whether the replicator should stay
     /// active indefinitely to replicate changed documents.
-    public var continuous: Bool = false {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var continuous: Bool = false
     
     /// The Authenticator to authenticate with a remote target.
-    public var authenticator: Authenticator? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var authenticator: Authenticator?
     
     #if COUCHBASE_ENTERPRISE
     /// Specify the replicator to accept any and only self-signed certs. Any non-self-signed certs will be rejected
     /// to avoid accidentally using this mode with the non-self-signed certs in production.
-    public var acceptOnlySelfSignedServerCertificate: Bool = false {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var acceptOnlySelfSignedServerCertificate: Bool = false
     #endif
     
     /// The remote target's SSL certificate.
-    public var pinnedServerCertificate: SecCertificate? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var pinnedServerCertificate: SecCertificate?
     
     /// Extra HTTP headers to send in all requests to the remote target.
-    public var headers: Dictionary<String, String>? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var headers: Dictionary<String, String>?
     
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
     /// Sync Gateway.
-    public var channels: [String]? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var channels: [String]?
     
     /// A set of document IDs to filter by: if given, only documents with
     /// these IDs will be pushed and/or pulled.
-    public var documentIDs: [String]? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var documentIDs: [String]?
     
     /**
      Filter closure for validating whether the documents can be pushed to the remote endpoint.
      Only documents for which the closure returns true are replicated.
      */
-    public var pushFilter: ReplicationFilter? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var pushFilter: ReplicationFilter?
     
     /**
      Filter closure for validating whether the documents can be pulled from the remote endpoint.
      Only documents for which the closure returns true are replicated.
      */
-    public var pullFilter: ReplicationFilter? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var pullFilter: ReplicationFilter?
     
     /**
      The custom conflict resolver object can be set here. If this value is not set, or set to nil,
      the default conflict resolver will be applied.
      */
-    public var conflictResolver: ConflictResolverProtocol? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var conflictResolver: ConflictResolverProtocol?
     
     #if os(iOS)
     /**
@@ -165,11 +121,7 @@ public class ReplicatorConfiguration {
      If setting the value to YES, please ensure that the application requests
      for extending the background task properly.
      */
-    public var allowReplicatingInBackground: Bool = false {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var allowReplicatingInBackground: Bool = false
     #endif
     
     /**
@@ -180,8 +132,6 @@ public class ReplicatorConfiguration {
       */
     public var heartbeat: TimeInterval = 300 {
         willSet(newValue) {
-            checkReadOnly()
-            
             guard newValue > 0 else {
                 NSException(name: .invalidArgumentException,
                             reason: "Attempt to store zero or negative value in heartbeat",
@@ -204,8 +154,6 @@ public class ReplicatorConfiguration {
      */
     public var maxRetries: Int {
         set(newValue) {
-            checkReadOnly()
-            
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
                             reason: "Attempt to store negative value in maxRetries",
@@ -232,7 +180,6 @@ public class ReplicatorConfiguration {
      */
     public var maxRetryWaitTime: TimeInterval = 300 {
         willSet(newValue) {
-            checkReadOnly()
             
             guard newValue > 0 else {
                 NSException(name: .invalidArgumentException,
@@ -252,24 +199,13 @@ public class ReplicatorConfiguration {
     public init(database: Database, target: Endpoint) {
         self.database = database
         self.target = target
-        self.readonly = false
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// configuration object.
     ///
     /// - Parameter config: The configuration object.
-    public convenience init(config: ReplicatorConfiguration) {
-        self.init(config: config, readonly: false)
-    }
-    
-    // MARK: Internal
-    
-    private var readonly = false
-    private static let defaultContinousMaxRetries = NSInteger.max
-    private static let defaultSingleShotMaxRetries = 9
-    
-    init(config: ReplicatorConfiguration, readonly: Bool) {
+    public init(config: ReplicatorConfiguration) {
         self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
@@ -291,15 +227,12 @@ public class ReplicatorConfiguration {
         #if COUCHBASE_ENTERPRISE
         self.acceptOnlySelfSignedServerCertificate = config.acceptOnlySelfSignedServerCertificate
         #endif
-        
-        self.readonly = readonly
     }
     
-    func checkReadOnly() {
-        if self.readonly {
-            fatalError("This configuration object is readonly.")
-        }
-    }
+    // MARK: Internal
+    
+    private static let defaultContinousMaxRetries = NSInteger.max
+    private static let defaultSingleShotMaxRetries = 9
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint

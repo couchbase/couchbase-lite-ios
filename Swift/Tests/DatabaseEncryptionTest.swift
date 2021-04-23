@@ -32,7 +32,7 @@ class DatabaseEncryptionTest: CBLTestCase {
     }
 
     func openSeekrit(password: String?) throws -> Database {
-        let config = DatabaseConfiguration()
+        var config = DatabaseConfiguration()
         config.encryptionKey = password != nil ? EncryptionKey.password(password!) : nil
         config.directory = self.directory
         return try Database(name: "seekrit", config: config)

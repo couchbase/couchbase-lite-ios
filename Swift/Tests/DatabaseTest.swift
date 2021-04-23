@@ -1293,7 +1293,7 @@ class DatabaseTest: CBLTestCase {
         try! openOtherDB()
         
         let target = DatabaseEndpoint(database: otherDB!)
-        let config = ReplicatorConfiguration(database: db, target: target)
+        var config = ReplicatorConfiguration(database: db, target: target)
         config.continuous = true
         
         let r1 = Replicator(config: config)
@@ -1325,7 +1325,7 @@ class DatabaseTest: CBLTestCase {
         try! openOtherDB()
               
         let target = DatabaseEndpoint(database: otherDB!)
-        let config = ReplicatorConfiguration(database: db, target: target)
+        var config = ReplicatorConfiguration(database: db, target: target)
         config.continuous = true
               
         let r1 = Replicator(config: config)
@@ -1347,4 +1347,34 @@ class DatabaseTest: CBLTestCase {
     
     #endif
     
+    func testDefaultDatabaseConfiguration() {
+        let config = DatabaseConfiguration()
+        XCTAssertEqual(config.directory, CBLDatabaseConfiguration().directory)
+        XCTAssertEqual(config.enableVersionVector, false)
+        
+#if COUCHBASE_ENTERPRISE
+        XCTAssertNil(config.encryptionKey)
+#endif
+    }
+    
+    func testCopyingDatabaseConfiguration() throws {
+        var config = DatabaseConfiguration()
+        config.directory = self.directory
+        config.enableVersionVector = true
+#if COUCHBASE_ENTERPRISE
+        config.encryptionKey  = EncryptionKey.password("somePassword")
+#endif
+        db = try Database(name: "someName", config: config)
+        
+        config.directory = "\(self.directory)/updatedURL"
+        config.enableVersionVector = false
+#if COUCHBASE_ENTERPRISE
+        config.encryptionKey = nil
+#endif
+        XCTAssertEqual(db.config.directory, self.directory)
+        XCTAssert(db.config.enableVersionVector)
+#if COUCHBASE_ENTERPRISE
+        XCTAssertNotNil(db.config.encryptionKey)
+#endif
+    }
 }

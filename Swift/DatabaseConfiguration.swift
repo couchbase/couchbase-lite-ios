@@ -21,14 +21,10 @@ import Foundation
 
 
 /// Configuration for opening a database.
-public class DatabaseConfiguration {
+public struct DatabaseConfiguration {
     
     /// Path to the directory to store the database in.
-    public var directory: String = CBLDatabaseConfiguration().directory {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var directory: String = CBLDatabaseConfiguration().directory
     
     ///  Experiment API. Enable version vector.
     
@@ -40,36 +36,20 @@ public class DatabaseConfiguration {
     /// 1. The database that uses version vector cannot be downgraded back to use revision tree.
     /// 2. The current version of Sync Gateway doesn't support version vector so the syncronization
     /// with Sync Gateway will not be working.
-    public var enableVersionVector: Bool = false {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var enableVersionVector: Bool = false
     
     #if COUCHBASE_ENTERPRISE
     /// The key to encrypt the database with.
-    public var encryptionKey: EncryptionKey? {
-        willSet(newValue) {
-            checkReadOnly()
-        }
-    }
+    public var encryptionKey: EncryptionKey?
     #endif
     
     /// Initializes a DatabaseConfiguration's builder with default values.
-    public convenience init() {
-        self.init(config: nil, readonly: false)
+    public init() {
+        self.init(config: nil)
     }
     
     /// Initializes a DatabaseConfiguration's builder with the configuration object.
-    public convenience init(config: DatabaseConfiguration?) {
-        self.init(config: config, readonly: false)
-    }
-    
-    // MARK: Internal
-    
-    private let readonly: Bool
-    
-    init(config: DatabaseConfiguration?, readonly: Bool) {
+    public init(config: DatabaseConfiguration?) {
         if let c = config {
             self.directory = c.directory
             self.enableVersionVector = c.enableVersionVector
@@ -77,14 +57,9 @@ public class DatabaseConfiguration {
             self.encryptionKey = c.encryptionKey
             #endif
         }
-        self.readonly = readonly
     }
     
-    func checkReadOnly() {
-        if self.readonly {
-            fatalError("This configuration object is readonly.")
-        }
-    }
+    // MARK: Internal
     
     func toImpl() -> CBLDatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
