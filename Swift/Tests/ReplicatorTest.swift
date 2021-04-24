@@ -1090,4 +1090,47 @@ class ReplicatorTest_Main: ReplicatorTest {
         wait(for: [x], timeout: timeout)
         XCTAssert(abs(diff - config.maxRetryWaitTime) < 1.0)
     }
+    
+    func testListenerAddRemoveAfterReplicatorStart() throws {
+        timeout = 15
+        let x1 = self.expectation(description: "#1 repl finish")
+        let x2 = self.expectation(description: "#2 repl finish")
+        
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("pass", forKey: "name")
+        try db.saveDocument(doc1)
+        
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+                                                          type: .pushAndPull,
+                                                          continuous: false)
+        config.maxRetries = 4
+        config.maxRetryWaitTime = 2
+        
+        repl = Replicator(config: config)
+        let token1 = repl.addChangeListener { (change) in
+            if change.status.activity == .stopped {
+                x1.fulfill()
+            }
+        }
+        
+        repl.start()
+        let token2 = repl.addChangeListener { (change) in
+            if change.status.activity == .stopped {
+                // validate the remove change listener after the replicator-start
+                XCTFail("shouldn't have called")
+            }
+        }
+        
+        let token3 = repl.addChangeListener { (change) in
+            if change.status.activity == .offline {
+                change.replicator.removeChangeListener(withToken: token2)
+            } else if change.status.activity == .stopped {
+                x2.fulfill()
+            }
+        }
+        
+        wait(for: [x1, x2], timeout: timeout)
+        repl.removeChangeListener(withToken: token1)
+        repl.removeChangeListener(withToken: token3)
+    }
 }
