@@ -48,7 +48,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
         
         // Listener:
-        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.port = tls ? wssPort : wsPort
         config.disableTLS = !tls
         config.authenticator = auth
@@ -303,7 +303,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.port)
@@ -336,7 +336,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         try listen()
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = self.listener!.port
         let listener2 = URLEndpointListener(config: config)
         
@@ -348,7 +348,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testURLs() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.urls)
@@ -413,7 +413,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.oDB.saveDocument(doc)
         
         let tls = try tlsIdentity(true)
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.tlsIdentity = tls
         let listener = URLEndpointListener(config: config)
         XCTAssertNil(listener.tlsIdentity)
@@ -624,7 +624,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         let replicatorStop = expectation(description: "replicator stop")
         let pullFilterBusy = expectation(description: "pull filter busy")
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.port = wsPort
         config.disableTLS = true
         self.listener = URLEndpointListener(config: config)
@@ -830,7 +830,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         let doc1 = createDocument()
         try self.db.saveDocument(doc1)
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.readOnly = true
         try listen(config: config)
         
@@ -1036,7 +1036,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.tlsIdentity = identity
         
         self.ignoreException {
@@ -1167,7 +1167,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.tlsIdentity = identity
         
         ignoreException {
@@ -1208,7 +1208,7 @@ class URLEndpontListenerTest: ReplicatorTest {
                                                       label: self.serverCertLabel)
         }
         
-        let config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
         config.tlsIdentity = identity
         config.authenticator = ListenerCertificateAuthenticator.init(rootCerts: [identity.certs[1]])
         ignoreException {
@@ -1244,7 +1244,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(database: self.oDB)
         config.tlsIdentity = identity
         
         self.ignoreException {
