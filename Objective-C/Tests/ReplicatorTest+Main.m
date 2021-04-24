@@ -1967,4 +1967,46 @@
     AssertNil(replicatedDoc.error);
 }
 
+- (void) testListenerAddRemoveAfterReplicatorStart {
+    NSError* error;
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc setString: @"Tiger" forKey: @"species"];
+    [doc setString: @"Hobbes" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc error: &error]);
+    
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"#1 replicator finish"];
+    XCTestExpectation* exp3 = [self expectationWithDescription: @"#3 replicator finish"];
+    CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.maxRetryWaitTime = 2;
+    config.maxRetries = 4;
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    id token1 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        if (c.status.activity == kCBLReplicatorStopped) {
+            [exp1 fulfill];
+        }
+    }];
+    [repl start];
+    id token2 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        if (c.status.activity == kCBLReplicatorStopped) {
+            // remove after the start should work
+            XCTFail("shouldn't have called");
+        }
+    }];
+    
+    id token3 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        if (c.status.activity == kCBLReplicatorOffline) {
+            [c.replicator removeChangeListenerWithToken: token2];
+        } else if (c.status.activity == kCBLReplicatorStopped) {
+            [exp3 fulfill];
+        }
+    }];
+    
+    
+    [self waitForExpectations: @[exp1, exp3] timeout: timeout];
+    [repl removeChangeListenerWithToken: token1];
+    [repl removeChangeListenerWithToken: token3];
+}
+
 @end
