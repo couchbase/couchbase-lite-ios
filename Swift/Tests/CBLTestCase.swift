@@ -87,7 +87,7 @@ class CBLTestCase: XCTestCase {
     }
     
     func openDB(name: String) throws -> Database {
-        let config = DatabaseConfiguration()
+        var config = DatabaseConfiguration()
         config.directory = self.directory
         return try Database(name: name, config: config)
     }

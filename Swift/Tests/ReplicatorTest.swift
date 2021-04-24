@@ -45,7 +45,7 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
                 auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
                 maxRetries: Int? = 9) -> ReplicatorConfiguration {
-        let config = ReplicatorConfiguration(database: self.db, target: target)
+        var config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
@@ -61,7 +61,7 @@ class ReplicatorTest: CBLTestCase {
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
                 serverCert: SecCertificate? = nil, maxRetries: Int? = 9) -> ReplicatorConfiguration {
-        let config = self.config(target: target, type: type, continuous: continuous,
+        var config = self.config(target: target, type: type, continuous: continuous,
                                  auth: auth, serverCert: serverCert, maxRetries: maxRetries)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
         return config
@@ -462,7 +462,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: isContinuous)
+        var config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
@@ -534,7 +534,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .pull, continuous: false)
+        var config = self.config(target: target, type: .pull, continuous: false)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
@@ -637,7 +637,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .pull, continuous: isContinuous)
+        var config = self.config(target: target, type: .pull, continuous: isContinuous)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -710,7 +710,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: isContinuous)
+        var config = self.config(target: target, type: .push, continuous: isContinuous)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -756,7 +756,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .pull, continuous: isContinuous)
+        var config = self.config(target: target, type: .pull, continuous: isContinuous)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -801,7 +801,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: true)
+        var config = self.config(target: target, type: .push, continuous: true)
         config.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
@@ -850,7 +850,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .pull, continuous: true)
+        var config = self.config(target: target, type: .pull, continuous: true)
         config.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
@@ -895,7 +895,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testReplicationConfigSetterMethods() {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        let temp = self.config(target: target, type: .pushAndPull, continuous: true)
+        var temp = self.config(target: target, type: .pushAndPull, continuous: true)
         temp.authenticator = basic
         temp.channels = ["c1", "c2"]
         temp.documentIDs = ["d1", "d2"]
@@ -913,11 +913,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testHeartbeatWithInvalidValue() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        let config = self.config(target: target, type: .pushAndPull, continuous: true)
-        
         func expectExceptionFor(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
+                    var config = self.config(target: target, type: .pushAndPull, continuous: true)
                     config.heartbeat = val
                 }
             } catch {
@@ -933,7 +932,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testCustomHeartbeat() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        let config = self.config(target: target, type: .pushAndPull, continuous: true)
+        var config = self.config(target: target, type: .pushAndPull, continuous: true)
         config.heartbeat = 60
         repl = Replicator(config: config)
         
@@ -967,10 +966,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testInvalidMaxRetry() {
-        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
         func expectException() throws {
             do {
                 try CBLTestHelper.catchException {
+                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
                     config.maxRetries = -1
                 }
             } catch {
@@ -985,7 +984,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxRetry(retry: Int, count: Int, continuous: Bool) {
         let x = self.expectation(description: "repl finish")
-        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: continuous)
         
@@ -1038,7 +1037,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testCustomMaxRetryWaitTime() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
         config.maxRetryWaitTime = 444
         XCTAssertEqual(config.maxRetryWaitTime, 444)
         
@@ -1049,10 +1048,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testInvalidMaxRetryWaitTime() {
-        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
         func expectException(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
+                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
                     config.maxRetryWaitTime = val
                 }
             } catch {
@@ -1069,7 +1068,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testMaxRetryWaitTimeOfReplicator() {
         timeout = 12 // already it takes 8 secs of retry, hence 12secs timeout. 
         let x = self.expectation(description: "repl finish")
-        let config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: false)
         config.maxRetries = 4

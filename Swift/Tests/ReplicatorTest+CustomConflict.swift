@@ -24,7 +24,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     
     func testConflictResolverConfigProperty() {
         let target = URLEndpoint(url: URL(string: "wss://foo")!)
-        let pullConfig = config(target: target, type: .pull, continuous: false)
+        var pullConfig = config(target: target, type: .pull, continuous: false)
         
         let conflictResolver = TestConflictResolver { (con) -> Document? in
             return con.remoteDocument
@@ -77,7 +77,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.remoteDocument
         }
@@ -94,7 +94,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.localDocument
         }
@@ -111,7 +111,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return nil
         }
@@ -127,7 +127,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["key2": "value2"]
         try makeConflict(forID: "doc", withLocal: nil, withRemote: remoteData)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             XCTAssertNil(conflict.localDocument)
             XCTAssertNotNil(conflict.remoteDocument)
@@ -145,7 +145,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let localData = ["key1": "value1"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: nil)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             XCTAssertNotNil(conflict.localDocument)
             XCTAssertNil(conflict.remoteDocument)
@@ -163,7 +163,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
         var count = 0;
@@ -197,7 +197,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
         var resolver: TestConflictResolver!
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         
         // EDIT LOCAL DOCUMENT
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
@@ -268,7 +268,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         
         config.conflictResolver = resolver
         
@@ -306,7 +306,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let wrongDocID = "wrong-doc-id"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
@@ -350,7 +350,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
@@ -391,7 +391,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
@@ -467,7 +467,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         doc.setString("value4", forKey: "key4")
         try oDB.saveDocument(doc)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         config.conflictResolver = ConflictResolver.default
         run(config: config, expectedError: nil)
         
@@ -487,7 +487,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let content = "I am a blob".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         // RESOLVE WITH REMOTE and BLOB data in LOCAL
@@ -546,7 +546,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let blob = Blob(contentType: "text/plain", data: content)
         let localData: [String: Any] = ["key1": "value1"]
         let remoteData: [String: Any] = ["key2": "value2", "blob": blob]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         // using remote document blob is okay to use!
@@ -598,7 +598,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     func testNonBlockingDatabaseOperationConflictResolver() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
         
@@ -629,7 +629,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
         try makeConflict(forID: "doc2", withLocal: localData, withRemote: remoteData)
         
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         var order = [String]()
         let lock = NSLock()
@@ -666,7 +666,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        let config = getConfig(.pull)
+        var config = getConfig(.pull)
         var resolver: TestConflictResolver!
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)

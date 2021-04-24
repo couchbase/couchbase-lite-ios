@@ -191,7 +191,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
+        var replConfig = config(target: target, type: .push, continuous: false)
         replConfig.pushFilter = { (doc, flags) -> Bool in
             return doc.id == "doc-3"
         }
@@ -282,7 +282,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
+        var replConfig = config(target: target, type: .push, continuous: false)
         replConfig.pushFilter = { (doc, flags) -> Bool in
             return doc.id == "doc-3"
         }

@@ -82,7 +82,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func replicator(db: Database, continuous: Bool, target: Endpoint, serverCert: SecCertificate?) -> Replicator {
-        let config = ReplicatorConfiguration(database: db, target: target)
+        var config = ReplicatorConfiguration(database: db, target: target)
         config.replicatorType = .pushAndPull
         config.continuous = continuous
         config.pinnedServerCertificate = serverCert
@@ -640,7 +640,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         try self.oDB.saveDocument(doc1)
         
         var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
-        let rConfig = ReplicatorConfiguration(database: self.db, target: self.listener!.localURLEndpoint)
+        var rConfig = ReplicatorConfiguration(database: self.db, target: self.listener!.localURLEndpoint)
         rConfig.replicatorType = .pull
         rConfig.continuous = false
         rConfig.pullFilter = { (doc, flags) -> Bool in
@@ -788,7 +788,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             
             // separate replicator instance
             let target = URLEndpoint(url: url)
-            let rConfig = ReplicatorConfiguration(database: db, target: target)
+            var rConfig = ReplicatorConfiguration(database: db, target: target)
             rConfig.pinnedServerCertificate = self.listener?.tlsIdentity!.certs[0]
             run(config: rConfig, expectedError: nil)
             
