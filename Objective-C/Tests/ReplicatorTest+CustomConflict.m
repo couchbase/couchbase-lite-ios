@@ -441,7 +441,7 @@
     // Enable Logging to check whether the logs are printing
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLCouchbaseLite.log.custom = custom;
     
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
@@ -489,7 +489,7 @@
     AssertEqualObjects(custom.lines.lastObject, warning);
     
     [replicator removeChangeListenerWithToken: token];
-    CBLDatabase.log.custom = nil;
+    CBLCouchbaseLite.log.custom = nil;
 }
 
 - (void) testConflictResolverDifferentDBDoc {
@@ -781,7 +781,7 @@
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLCouchbaseLite.log.custom = custom;
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
     XCTestExpectation* expFirstDocResolve = [self expectationWithDescription:@"wait for first conflict to resolve"];
@@ -846,7 +846,7 @@
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
     
-    CBLDatabase.log.custom = nil;
+    CBLCouchbaseLite.log.custom = nil;
     
     // Workaround:
     // https://issues.couchbase.com/browse/CBL-1061

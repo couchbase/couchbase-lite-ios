@@ -34,13 +34,13 @@ public class Log {
         didSet {
             if let logger = custom {
                 let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
-                CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
+                CBLCouchbaseLite.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
                     let l = LogLevel(rawValue: UInt8(level.rawValue))!
                     let d = LogDomain(rawValue: UInt8(domain.rawValue))!
                     logger.log(level: l, domain: d, message: message)
                 }
             } else {
-                CBLDatabase.log().custom = nil
+                CBLCouchbaseLite.log().custom = nil
             }
         }
     }
@@ -54,7 +54,7 @@ public class Log {
     static func log(domain: LogDomain, level: LogLevel, message: String) {
         let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
-        CBLDatabase.log().log(to: cDomain, level: cLevel, message: message)
+        CBLCouchbaseLite.log().log(to: cDomain, level: cLevel, message: message)
     }
     
 }

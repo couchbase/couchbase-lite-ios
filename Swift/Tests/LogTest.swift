@@ -48,28 +48,28 @@ class LogTest: CBLTestCase {
     }
     
     func backupLoggerConfig() {
-        backup = FileLoggerBackup(config: Database.log.file.config,
-                                  level: Database.log.file.level)
-        backupConsoleLevel = Database.log.console.level
-        backupConsoleDomains = Database.log.console.domains
+        backup = FileLoggerBackup(config: CouchbaseLite.log.file.config,
+                                  level: CouchbaseLite.log.file.level)
+        backupConsoleLevel = CouchbaseLite.log.console.level
+        backupConsoleDomains = CouchbaseLite.log.console.domains
     }
     
     func restoreLoggerConfig() {
         if let backup = self.backup {
-            Database.log.file.config = backup.config
-            Database.log.file.level = backup.level
+            CouchbaseLite.log.file.config = backup.config
+            CouchbaseLite.log.file.level = backup.level
             self.backup = nil
         }
         
         if let consoleLevel = self.backupConsoleLevel {
-            Database.log.console.level = consoleLevel
+            CouchbaseLite.log.console.level = consoleLevel
         }
         
         if let consoleDomains = self.backupConsoleDomains {
-            Database.log.console.domains = consoleDomains
+            CouchbaseLite.log.console.domains = consoleDomains
         }
         
-        Database.log.custom = nil
+        CouchbaseLite.log.custom = nil
     }
     
     func getLogsInDirectory(_ directory: String,
@@ -117,12 +117,12 @@ class LogTest: CBLTestCase {
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = CustomLogger()
-        Database.log.custom = customLogger
+        CouchbaseLite.log.custom = customLogger
         
         for i in (1...5).reversed() {
             customLogger.reset()
             customLogger.level = LogLevel(rawValue: UInt8(i))!
-            Database.log.custom = customLogger
+            CouchbaseLite.log.custom = customLogger
             Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
             Log.log(domain: .database, level: .info, message: "TEST INFO")
             Log.log(domain: .database, level: .warning, message: "TEST WARNING")
@@ -130,16 +130,16 @@ class LogTest: CBLTestCase {
             XCTAssertEqual(customLogger.lines.count, 5 - i)
         }
         
-        Database.log.custom = nil
+        CouchbaseLite.log.custom = nil
     }
     
     func testFileLoggingLevels() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
-        Database.log.file.config = config
+        CouchbaseLite.log.file.config = config
         
         for i in (1...5).reversed() {
-            Database.log.file.level = LogLevel(rawValue: UInt8(i))!
+            CouchbaseLite.log.file.level = LogLevel(rawValue: UInt8(i))!
             Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
             Log.log(domain: .database, level: .info, message: "TEST INFO")
             Log.log(domain: .database, level: .warning, message: "TEST WARNING")
@@ -171,8 +171,8 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingDefaultBinaryFormat() throws {
         let config = self.logFileConfig()
-        Database.log.file.config = config
-        Database.log.file.level = .info
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .info
         Log.log(domain: .database, level: .info, message: "TEST INFO")
         
         let files = try getLogsInDirectory(config.directory,
@@ -207,8 +207,8 @@ class LogTest: CBLTestCase {
     func testFileLoggingUsePlainText() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
-        Database.log.file.config = config
-        Database.log.file.level = .info
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .info
         
         let inputString = "SOME TEST INFO"
         Log.log(domain: .database, level: .info, message: inputString)
@@ -242,8 +242,8 @@ class LogTest: CBLTestCase {
 
     func testFileLoggingLogFilename() throws {
         let config = self.logFileConfig()
-        Database.log.file.config = config
-        Database.log.file.level = .debug
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .debug
         let regex = "cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog"
         let predicate = NSPredicate(format: "SELF MATCHES %@", regex)
         for file in try getLogsInDirectory(config.directory) {
@@ -254,10 +254,10 @@ class LogTest: CBLTestCase {
     func testEnableAndDisableCustomLogging() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = CustomLogger()
-        Database.log.custom = customLogger
+        CouchbaseLite.log.custom = customLogger
         
         customLogger.level = .none
-        Database.log.custom = customLogger
+        CouchbaseLite.log.custom = customLogger
         Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
         Log.log(domain: .database, level: .info, message: "TEST INFO")
         Log.log(domain: .database, level: .warning, message: "TEST WARNING")
@@ -265,7 +265,7 @@ class LogTest: CBLTestCase {
         XCTAssertEqual(customLogger.lines.count, 0)
         
         customLogger.level = .verbose
-        Database.log.custom = customLogger
+        CouchbaseLite.log.custom = customLogger
         Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
         Log.log(domain: .database, level: .info, message: "TEST INFO")
         Log.log(domain: .database, level: .warning, message: "TEST WARNING")
@@ -277,13 +277,13 @@ class LogTest: CBLTestCase {
         let config = self.logFileConfig()
         config.usePlainText = true
         config.maxSize = 1024
-        Database.log.file.config = config
-        Database.log.file.level = .debug
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .debug
         
         // this should create two files, as the 1KB logs + extra ~400Bytes
         writeOneKiloByteOfLog()
         
-        guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
+        guard let maxRotateCount = CouchbaseLite.log.file.config?.maxRotateCount else {
             fatalError("Config should be present!!")
         }
         var totalFilesShouldBeInDirectory = (maxRotateCount + 1) * 5
@@ -299,8 +299,8 @@ class LogTest: CBLTestCase {
     func testFileLoggingDisableLogging() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
-        Database.log.file.config = config
-        Database.log.file.level = .none
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .none
         
         let message = UUID().uuidString
         writeAllLogs(message)
@@ -311,17 +311,17 @@ class LogTest: CBLTestCase {
     func testFileLoggingReEnableLogging() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
-        Database.log.file.config = config
+        CouchbaseLite.log.file.config = config
         
         // DISABLE LOGGING
-        Database.log.file.level = .none
+        CouchbaseLite.log.file.level = .none
         let message = UUID().uuidString
         writeAllLogs(message)
         
         XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: config.directory))
         
         // ENABLE LOGGING
-        Database.log.file.level = .verbose
+        CouchbaseLite.log.file.level = .verbose
         writeAllLogs(message)
         
         for file in try getLogsInDirectory(config.directory) {
@@ -336,8 +336,8 @@ class LogTest: CBLTestCase {
     func testFileLoggingHeader() throws {
         let config = self.logFileConfig()
         config.usePlainText = true
-        Database.log.file.config = config
-        Database.log.file.level = .verbose
+        CouchbaseLite.log.file.config = config
+        CouchbaseLite.log.file.level = .verbose
         
         writeOneKiloByteOfLog()
         for file in try getLogsInDirectory(config.directory) {
@@ -354,9 +354,9 @@ class LogTest: CBLTestCase {
     func testNonASCII() throws {
         let customLogger = CustomLogger()
         customLogger.level = .verbose
-        Database.log.custom = customLogger
-        Database.log.console.domains = .all
-        Database.log.console.level = .verbose
+        CouchbaseLite.log.custom = customLogger
+        CouchbaseLite.log.console.domains = .all
+        CouchbaseLite.log.console.level = .verbose
         let hebrew = "מזג האוויר נחמד היום" // The weather is nice today.
         let doc = MutableDocument()
         doc.setString(hebrew, forKey: "hebrew")
@@ -382,9 +382,9 @@ class LogTest: CBLTestCase {
     func testPercentEscape() throws {
         let customLogger = CustomLogger()
         customLogger.level = .info
-        Database.log.custom = customLogger
-        Database.log.console.domains = .all
-        Database.log.console.level = .info
+        CouchbaseLite.log.custom = customLogger
+        CouchbaseLite.log.console.domains = .all
+        CouchbaseLite.log.console.level = .info
         Log.log(domain: .database, level: .info, message: "Hello %s there")
         var found: Bool = false
         for line in customLogger.lines {

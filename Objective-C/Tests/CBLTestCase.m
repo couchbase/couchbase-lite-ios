@@ -40,7 +40,7 @@
 - (void) setUp {
     [super setUp];
     
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    CBLCouchbaseLite.log.console.level = kCBLLogLevelInfo;
     
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];

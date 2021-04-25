@@ -55,7 +55,7 @@ public class ConsoleLogger {
     /// console logger is warning.
     public var level: LogLevel = .warning {
         didSet {
-            CBLDatabase.log().console.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
+            CBLCouchbaseLite.log().console.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
         }
     }
     
@@ -63,7 +63,7 @@ public class ConsoleLogger {
     /// messages of all domains will be logged.
     public var domains: LogDomains = .all {
         didSet {
-            CBLDatabase.log().console.domains = CBLLogDomain(rawValue: UInt(domains.rawValue))
+            CBLCouchbaseLite.log().console.domains = CBLLogDomain(rawValue: UInt(domains.rawValue))
         }
     }
     

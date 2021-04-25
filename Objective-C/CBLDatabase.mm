@@ -40,6 +40,7 @@
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
+#import "CBLCouchbaseLite.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -547,20 +548,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return NO;
     }
     return YES;
-}
-
-#pragma mark - Logging
-
-+ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
-    CBLWarn(Database, @"This method has been deprecated. "
-            "Please use CBLDatabase.log.console instead of -setLogLevel:domain:.");
-    
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = level;
-}
-
-+ (CBLLog*) log {
-    return [CBLLog sharedInstance];
 }
 
 #pragma mark - DOCUMENT CHANGES
@@ -1362,7 +1349,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 + (void) checkFileLogging: (BOOL)swift {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (!CBLDatabase.log.file.config) {
+        if (!CBLCouchbaseLite.log.file.config) {
             NSString* clazz = swift ? @"Database" : @"CBLDatabase";
             CBLWarn(Database, @"%@.log.file.config is nil, meaning file logging is disabled. "
                     "Log files required for product support are not being generated.", clazz);
