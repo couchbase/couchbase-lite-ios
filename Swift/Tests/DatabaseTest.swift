@@ -1347,34 +1347,58 @@ class DatabaseTest: CBLTestCase {
     
     #endif
     
+    // MARK: DatabaseConfig
+    
+    func testSetDatabaseConfigurationProperties() throws {
+        var config = DatabaseConfiguration()
+        config.directory = NSTemporaryDirectory().appending("/temp")
+        config.enableVersionVector = true
+        #if COUCHBASE_ENTERPRISE
+        config.encryptionKey = EncryptionKey.password("somePassword")
+        #endif
+        
+        let db = try Database(name: "dbName", config: config)
+        XCTAssertEqual(db.config.directory, NSTemporaryDirectory().appending("/temp"))
+        XCTAssert(db.config.enableVersionVector)
+        
+        #if COUCHBASE_ENTERPRISE
+        XCTAssertNotNil(db.config.encryptionKey)
+        #endif
+    }
+    
     func testDefaultDatabaseConfiguration() {
         let config = DatabaseConfiguration()
         XCTAssertEqual(config.directory, CBLDatabaseConfiguration().directory)
         XCTAssertEqual(config.enableVersionVector, false)
         
-#if COUCHBASE_ENTERPRISE
+        #if COUCHBASE_ENTERPRISE
         XCTAssertNil(config.encryptionKey)
-#endif
+        #endif
     }
     
     func testCopyingDatabaseConfiguration() throws {
         var config = DatabaseConfiguration()
         config.directory = self.directory
         config.enableVersionVector = true
-#if COUCHBASE_ENTERPRISE
+        #if COUCHBASE_ENTERPRISE
         config.encryptionKey  = EncryptionKey.password("somePassword")
-#endif
+        #endif
         db = try Database(name: "someName", config: config)
+        let copiedConfig = DatabaseConfiguration(config: config)
         
         config.directory = "\(self.directory)/updatedURL"
         config.enableVersionVector = false
-#if COUCHBASE_ENTERPRISE
+        #if COUCHBASE_ENTERPRISE
         config.encryptionKey = nil
-#endif
+        #endif
+        
         XCTAssertEqual(db.config.directory, self.directory)
+        XCTAssertEqual(copiedConfig.directory, self.directory)
         XCTAssert(db.config.enableVersionVector)
-#if COUCHBASE_ENTERPRISE
+        XCTAssert(copiedConfig.enableVersionVector)
+        #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
-#endif
+        XCTAssertNotNil(copiedConfig.encryptionKey)
+        #endif
     }
 }
