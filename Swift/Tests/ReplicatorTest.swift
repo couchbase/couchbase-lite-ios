@@ -892,25 +892,6 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     #endif
     
-    func testReplicationConfigSetterMethods() {
-        let basic = BasicAuthenticator(username: "abcd", password: "1234")
-        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var temp = self.config(target: target, type: .pushAndPull, continuous: true)
-        temp.authenticator = basic
-        temp.channels = ["c1", "c2"]
-        temp.documentIDs = ["d1", "d2"]
-        temp.headers = ["a": "aa", "b": "bb"]
-        
-        XCTAssertEqual(temp.heartbeat, 300)
-        let config = ReplicatorConfiguration(config: temp)
-        
-        XCTAssertEqual(config.heartbeat, 300)
-        XCTAssertEqual(config.continuous, true)
-        XCTAssertEqual(config.channels, ["c1", "c2"])
-        XCTAssertEqual(config.documentIDs, ["d1", "d2"])
-        XCTAssertEqual(config.headers, ["a": "aa", "b": "bb"])
-    }
-    
     func testHeartbeatWithInvalidValue() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         func expectExceptionFor(_ val: TimeInterval) throws {
@@ -1132,5 +1113,153 @@ class ReplicatorTest_Main: ReplicatorTest {
         wait(for: [x1, x2], timeout: timeout)
         repl.removeChangeListener(withToken: token1)
         repl.removeChangeListener(withToken: token3)
+    }
+    
+    // MARK: ReplicatorConfig
+    
+    func testReplicationConfigCopying() throws {
+        let basic = BasicAuthenticator(username: "abcd", password: "1234")
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        var temp = ReplicatorConfiguration(database: oDB, target: target)
+        temp.acceptOnlySelfSignedServerCertificate = true
+        temp.continuous = true
+        temp.authenticator = basic
+        temp.channels = ["c1", "c2"]
+        temp.documentIDs = ["d1", "d2"]
+        temp.headers = ["a": "aa", "b": "bb"]
+        temp.replicatorType = .pull
+        temp.heartbeat = 211
+        temp.maxRetries = 223
+        temp.maxRetryWaitTime = 227
+        
+        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
+        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
+        temp.pinnedServerCertificate = cert
+        
+        let filter = { (doc: Document, flags: DocumentFlags) -> Bool in
+            guard doc.boolean(forKey: "sync") else {
+                return false
+            }
+            
+            return !flags.contains(.deleted)
+        }
+        temp.pullFilter = filter
+        temp.pushFilter = filter
+        
+        // copying
+        let config = ReplicatorConfiguration(config: temp)
+        
+        // update temp after passing to configuration’s constructor
+        temp.acceptOnlySelfSignedServerCertificate = false
+        temp.continuous = false
+        temp.authenticator = nil
+        temp.channels = nil
+        temp.documentIDs = nil
+        temp.headers = nil
+        temp.replicatorType = .push
+        temp.heartbeat = 11
+        temp.maxRetries = 13
+        temp.maxRetryWaitTime = 17
+        temp.pinnedServerCertificate = nil
+        temp.pullFilter = nil
+        temp.pushFilter = nil
+        
+        XCTAssert(config.acceptOnlySelfSignedServerCertificate)
+        XCTAssert(config.continuous)
+        XCTAssertEqual((config.authenticator as! BasicAuthenticator).username, basic.username)
+        XCTAssertEqual((config.authenticator as! BasicAuthenticator).password, basic.password)
+        XCTAssertEqual(config.channels, ["c1", "c2"])
+        XCTAssertEqual(config.documentIDs, ["d1", "d2"])
+        XCTAssertEqual(config.headers, ["a": "aa", "b": "bb"])
+        XCTAssertEqual(config.replicatorType, .pull)
+        XCTAssertEqual(config.heartbeat, 211)
+        XCTAssertEqual(config.maxRetries, 223)
+        XCTAssertEqual(config.maxRetryWaitTime, 227)
+        XCTAssertEqual(config.pinnedServerCertificate, cert)
+        XCTAssertNotNil(config.pushFilter)
+        XCTAssertNotNil(config.pullFilter)
+    }
+    
+    func testReplicationConfigSetterMethods() throws {
+        let basic = BasicAuthenticator(username: "abcd", password: "1234")
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        var config = ReplicatorConfiguration(database: oDB, target: target)
+        config.acceptOnlySelfSignedServerCertificate = true
+        config.continuous = true
+        config.authenticator = basic
+        config.channels = ["c1", "c2"]
+        config.documentIDs = ["d1", "d2"]
+        config.headers = ["a": "aa", "b": "bb"]
+        config.replicatorType = .pull
+        config.heartbeat = 211
+        config.maxRetries = 223
+        config.maxRetryWaitTime = 227
+        
+        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
+        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
+        config.pinnedServerCertificate = cert
+        
+        let filter = { (doc: Document, flags: DocumentFlags) -> Bool in
+            guard doc.boolean(forKey: "sync") else {
+                return false
+            }
+            
+            return !flags.contains(.deleted)
+        }
+        config.pullFilter = filter
+        config.pushFilter = filter
+        
+        // set correctly on replicator
+        repl = Replicator(config:  config)
+        
+        // update after passed to the target's constructor
+        config.acceptOnlySelfSignedServerCertificate = false
+        config.continuous = false
+        config.authenticator = nil
+        config.channels = nil
+        config.documentIDs = nil
+        config.headers = nil
+        config.replicatorType = .push
+        config.heartbeat = 11
+        config.maxRetries = 13
+        config.maxRetryWaitTime = 17
+        config.pinnedServerCertificate = nil
+        config.pullFilter = nil
+        config.pushFilter = nil
+        
+        XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
+        XCTAssert(repl.config.continuous)
+        XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).username, basic.username)
+        XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).password, basic.password)
+        XCTAssertEqual(repl.config.channels, ["c1", "c2"])
+        XCTAssertEqual(repl.config.documentIDs, ["d1", "d2"])
+        XCTAssertEqual(repl.config.headers, ["a": "aa", "b": "bb"])
+        XCTAssertEqual(repl.config.replicatorType, .pull)
+        XCTAssertEqual(repl.config.heartbeat, 211)
+        XCTAssertEqual(repl.config.maxRetries, 223)
+        XCTAssertEqual(repl.config.maxRetryWaitTime, 227)
+        XCTAssertEqual(repl.config.pinnedServerCertificate, cert)
+        XCTAssertNotNil(repl.config.pushFilter)
+        XCTAssertNotNil(repl.config.pullFilter)
+    }
+    
+    func testDefaultReplicatorConfiguration() throws {
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        let config = ReplicatorConfiguration(database: oDB, target: target)
+        
+        XCTAssertFalse(config.acceptOnlySelfSignedServerCertificate)
+        XCTAssertNil(config.authenticator)
+        XCTAssertNil(config.channels)
+        XCTAssertNil(config.conflictResolver)
+        XCTAssertFalse(config.continuous)
+        XCTAssertNil(config.documentIDs)
+        XCTAssertNil(config.headers)
+        XCTAssertEqual(config.heartbeat, 300)
+        XCTAssertEqual(config.maxRetries, 9)
+        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        XCTAssertNil(config.pinnedServerCertificate)
+        XCTAssertNil(config.pullFilter)
+        XCTAssertNil(config.pushFilter)
+        XCTAssertEqual(config.replicatorType, .pushAndPull)
     }
 }
