@@ -1121,7 +1121,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         var temp = ReplicatorConfiguration(database: oDB, target: target)
+        #if COUCHBASE_ENTERPRISE
         temp.acceptOnlySelfSignedServerCertificate = true
+        #endif
         temp.continuous = true
         temp.authenticator = basic
         temp.channels = ["c1", "c2"]
@@ -1150,7 +1152,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         let config = ReplicatorConfiguration(config: temp)
         
         // update temp after passing to configuration’s constructor
+        #if COUCHBASE_ENTERPRISE
         temp.acceptOnlySelfSignedServerCertificate = false
+        #endif
         temp.continuous = false
         temp.authenticator = nil
         temp.channels = nil
@@ -1164,7 +1168,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         temp.pullFilter = nil
         temp.pushFilter = nil
         
+        #if COUCHBASE_ENTERPRISE
         XCTAssert(config.acceptOnlySelfSignedServerCertificate)
+        #endif
         XCTAssert(config.continuous)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).password, basic.password)
@@ -1184,7 +1190,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         var config = ReplicatorConfiguration(database: oDB, target: target)
+        #if COUCHBASE_ENTERPRISE
         config.acceptOnlySelfSignedServerCertificate = true
+        #endif
         config.continuous = true
         config.authenticator = basic
         config.channels = ["c1", "c2"]
@@ -1213,7 +1221,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         repl = Replicator(config:  config)
         
         // update after passed to the target's constructor
+        #if COUCHBASE_ENTERPRISE
         config.acceptOnlySelfSignedServerCertificate = false
+        #endif
         config.continuous = false
         config.authenticator = nil
         config.channels = nil
@@ -1227,7 +1237,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         config.pullFilter = nil
         config.pushFilter = nil
         
+        #if COUCHBASE_ENTERPRISE
         XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
+        #endif
         XCTAssert(repl.config.continuous)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).password, basic.password)
@@ -1247,7 +1259,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         let config = ReplicatorConfiguration(database: oDB, target: target)
         
+        #if COUCHBASE_ENTERPRISE
         XCTAssertFalse(config.acceptOnlySelfSignedServerCertificate)
+        #endif
         XCTAssertNil(config.authenticator)
         XCTAssertNil(config.channels)
         XCTAssertNil(config.conflictResolver)
