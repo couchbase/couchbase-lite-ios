@@ -1318,6 +1318,108 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testDeleteWithActiveReplicatorAndURLEndpointListeners() throws {
         try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: true)
     }
+    
+    // MARK: ListenerConfig
+    
+    func testSetListenerConfigurationProperties() throws {
+        var config = URLEndpointListenerConfiguration(database: oDB)
+    
+        let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
+            return uname == "username" && pswd == "secret"
+        }
+        config.authenticator = basic
+        config.disableTLS = true
+        config.enableDeltaSync = true
+        config.networkInterface = "awesomeinterface.com"
+        config.port = 3121
+        config.readOnly = true
+        
+        if self.keyChainAccessAllowed {
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+            let tls = try tlsIdentity(true)
+            config.tlsIdentity = tls
+        }
+        
+        let listener = URLEndpointListener(config: config)
+        
+        // update config after passing to configuration’s constructor
+        config.authenticator = nil
+        config.disableTLS = false
+        config.enableDeltaSync = false
+        config.networkInterface = "0.0.0.0"
+        config.port = 3123
+        config.readOnly = false
+        
+        XCTAssertNotNil(listener.config.authenticator)
+        XCTAssert(listener.config.disableTLS)
+        XCTAssert(listener.config.enableDeltaSync)
+        XCTAssertEqual(listener.config.networkInterface, "awesomeinterface.com")
+        XCTAssertEqual(listener.config.port, 3121)
+        XCTAssert(listener.config.readOnly)
+        
+        if self.keyChainAccessAllowed {
+            XCTAssertNotNil(listener.config.tlsIdentity)
+            XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+            
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        }
+    }
+    
+    func testDefaultListenerConfiguration() throws {
+        let config = URLEndpointListenerConfiguration(database: oDB)
+        
+        XCTAssertFalse(config.disableTLS)
+        XCTAssertFalse(config.enableDeltaSync)
+        XCTAssertFalse(config.readOnly)
+        XCTAssertNil(config.authenticator)
+        XCTAssertNil(config.networkInterface)
+        XCTAssertNil(config.port)
+        XCTAssertNil(config.tlsIdentity)
+    }
+    
+    func testCopyingListenerConfiguration() throws {
+        var temp = URLEndpointListenerConfiguration(database: oDB)
+    
+        let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
+            return uname == "username" && pswd == "secret"
+        }
+        temp.authenticator = basic
+        temp.disableTLS = true
+        temp.enableDeltaSync = true
+        temp.networkInterface = "awesomeinterface.com"
+        temp.port = 3121
+        temp.readOnly = true
+        
+        if self.keyChainAccessAllowed {
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+            let tls = try tlsIdentity(true)
+            temp.tlsIdentity = tls
+        }
+        
+        let config = URLEndpointListenerConfiguration(config: temp)
+        
+        // update config after passing to configuration’s constructor
+        temp.authenticator = nil
+        temp.disableTLS = false
+        temp.enableDeltaSync = false
+        temp.networkInterface = "0.0.0.0"
+        temp.port = 3123
+        temp.readOnly = false
+        
+        XCTAssertNotNil(config.authenticator)
+        XCTAssert(config.disableTLS)
+        XCTAssert(config.enableDeltaSync)
+        XCTAssertEqual(config.networkInterface, "awesomeinterface.com")
+        XCTAssertEqual(config.port, 3121)
+        XCTAssert(config.readOnly)
+        
+        if self.keyChainAccessAllowed {
+            XCTAssertNotNil(config.tlsIdentity)
+            XCTAssertEqual(config.tlsIdentity!.certs.count, 1)
+            
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        }
+    }
 }
 
 @available(macOS 10.12, iOS 10.3, *)
