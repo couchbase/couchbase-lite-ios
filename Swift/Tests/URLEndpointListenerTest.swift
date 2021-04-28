@@ -1323,7 +1323,6 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     func testSetListenerConfigurationProperties() throws {
         var config = URLEndpointListenerConfiguration(database: oDB)
-    
         let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
             return uname == "username" && pswd == "secret"
         }
@@ -1333,15 +1332,14 @@ class URLEndpontListenerTest: ReplicatorTest {
         config.networkInterface = "awesomeinterface.com"
         config.port = 3121
         config.readOnly = true
-        
         if self.keyChainAccessAllowed {
             try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
             let tls = try tlsIdentity(true)
             config.tlsIdentity = tls
         }
-        
         let listener = URLEndpointListener(config: config)
         
+        // ----------
         // update config after passing to configuration’s constructor
         config.authenticator = nil
         config.disableTLS = false
@@ -1350,6 +1348,16 @@ class URLEndpontListenerTest: ReplicatorTest {
         config.port = 3123
         config.readOnly = false
         
+        // update the returned config from listener
+        var config2 = listener.config
+        config2.authenticator = nil
+        config2.disableTLS = false
+        config2.enableDeltaSync = false
+        config2.networkInterface = "0.0.0.0"
+        config2.port = 3123
+        config2.readOnly = false
+        
+        // validate no impact with above updates to configs
         XCTAssertNotNil(listener.config.authenticator)
         XCTAssert(listener.config.disableTLS)
         XCTAssert(listener.config.enableDeltaSync)
@@ -1378,33 +1386,33 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testCopyingListenerConfiguration() throws {
-        var temp = URLEndpointListenerConfiguration(database: oDB)
+        var config1 = URLEndpointListenerConfiguration(database: oDB)
     
         let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
             return uname == "username" && pswd == "secret"
         }
-        temp.authenticator = basic
-        temp.disableTLS = true
-        temp.enableDeltaSync = true
-        temp.networkInterface = "awesomeinterface.com"
-        temp.port = 3121
-        temp.readOnly = true
+        config1.authenticator = basic
+        config1.disableTLS = true
+        config1.enableDeltaSync = true
+        config1.networkInterface = "awesomeinterface.com"
+        config1.port = 3121
+        config1.readOnly = true
         
         if self.keyChainAccessAllowed {
             try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
             let tls = try tlsIdentity(true)
-            temp.tlsIdentity = tls
+            config1.tlsIdentity = tls
         }
+        let config = URLEndpointListenerConfiguration(config: config1)
         
-        let config = URLEndpointListenerConfiguration(config: temp)
-        
-        // update config after passing to configuration’s constructor
-        temp.authenticator = nil
-        temp.disableTLS = false
-        temp.enableDeltaSync = false
-        temp.networkInterface = "0.0.0.0"
-        temp.port = 3123
-        temp.readOnly = false
+        // ------
+        // update config1 after passing to configuration’s constructor
+        config1.authenticator = nil
+        config1.disableTLS = false
+        config1.enableDeltaSync = false
+        config1.networkInterface = "0.0.0.0"
+        config1.port = 3123
+        config1.readOnly = false
         
         XCTAssertNotNil(config.authenticator)
         XCTAssert(config.disableTLS)

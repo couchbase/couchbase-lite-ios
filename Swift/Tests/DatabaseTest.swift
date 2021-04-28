@@ -1383,22 +1383,38 @@ class DatabaseTest: CBLTestCase {
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey  = EncryptionKey.password("somePassword")
         #endif
-        db = try Database(name: "someName", config: config)
-        let copiedConfig = DatabaseConfiguration(config: config)
         
+        db = try Database(name: "someName", config: config)
+        let config1 = DatabaseConfiguration(config: config)
+        
+        // update the config, after passing to constructor;
         config.directory = "\(self.directory)/updatedURL"
         config.enableVersionVector = false
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = nil
         #endif
-        
+        // validate no impact on original passed in config.
         XCTAssertEqual(db.config.directory, self.directory)
-        XCTAssertEqual(copiedConfig.directory, self.directory)
+        XCTAssertEqual(config1.directory, self.directory)
         XCTAssert(db.config.enableVersionVector)
-        XCTAssert(copiedConfig.enableVersionVector)
+        XCTAssert(config1.enableVersionVector)
         #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
-        XCTAssertNotNil(copiedConfig.encryptionKey)
+        XCTAssertNotNil(config1.encryptionKey)
+        #endif
+        
+        // update the copied config.
+        var config2 = db.config
+        config2.directory = "\(self.directory)/updatedURL"
+        config2.enableVersionVector = false
+        #if COUCHBASE_ENTERPRISE
+        config2.encryptionKey = nil
+        #endif
+        // validate no impact on original passed in config.
+        XCTAssertEqual(db.config.directory, self.directory)
+        XCTAssert(db.config.enableVersionVector)
+        #if COUCHBASE_ENTERPRISE
+        XCTAssertNotNil(db.config.encryptionKey)
         #endif
     }
 }

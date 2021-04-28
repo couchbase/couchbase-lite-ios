@@ -1117,26 +1117,26 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: ReplicatorConfig
     
-    func testReplicationConfigCopying() throws {
+    func testCopyingReplicatorConfiguration() throws {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var temp = ReplicatorConfiguration(database: oDB, target: target)
+        var config1 = ReplicatorConfiguration(database: oDB, target: target)
         #if COUCHBASE_ENTERPRISE
-        temp.acceptOnlySelfSignedServerCertificate = true
+        config1.acceptOnlySelfSignedServerCertificate = true
         #endif
-        temp.continuous = true
-        temp.authenticator = basic
-        temp.channels = ["c1", "c2"]
-        temp.documentIDs = ["d1", "d2"]
-        temp.headers = ["a": "aa", "b": "bb"]
-        temp.replicatorType = .pull
-        temp.heartbeat = 211
-        temp.maxRetries = 223
-        temp.maxRetryWaitTime = 227
+        config1.continuous = true
+        config1.authenticator = basic
+        config1.channels = ["c1", "c2"]
+        config1.documentIDs = ["d1", "d2"]
+        config1.headers = ["a": "aa", "b": "bb"]
+        config1.replicatorType = .pull
+        config1.heartbeat = 211
+        config1.maxRetries = 223
+        config1.maxRetryWaitTime = 227
         
         let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
         let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
-        temp.pinnedServerCertificate = cert
+        config1.pinnedServerCertificate = cert
         
         let filter = { (doc: Document, flags: DocumentFlags) -> Bool in
             guard doc.boolean(forKey: "sync") else {
@@ -1145,28 +1145,28 @@ class ReplicatorTest_Main: ReplicatorTest {
             
             return !flags.contains(.deleted)
         }
-        temp.pullFilter = filter
-        temp.pushFilter = filter
+        config1.pullFilter = filter
+        config1.pushFilter = filter
         
         // copying
-        let config = ReplicatorConfiguration(config: temp)
+        let config = ReplicatorConfiguration(config: config1)
         
-        // update temp after passing to configuration’s constructor
+        // update config1 after passing to configuration’s constructor
         #if COUCHBASE_ENTERPRISE
-        temp.acceptOnlySelfSignedServerCertificate = false
+        config1.acceptOnlySelfSignedServerCertificate = false
         #endif
-        temp.continuous = false
-        temp.authenticator = nil
-        temp.channels = nil
-        temp.documentIDs = nil
-        temp.headers = nil
-        temp.replicatorType = .push
-        temp.heartbeat = 11
-        temp.maxRetries = 13
-        temp.maxRetryWaitTime = 17
-        temp.pinnedServerCertificate = nil
-        temp.pullFilter = nil
-        temp.pushFilter = nil
+        config1.continuous = false
+        config1.authenticator = nil
+        config1.channels = nil
+        config1.documentIDs = nil
+        config1.headers = nil
+        config1.replicatorType = .push
+        config1.heartbeat = 11
+        config1.maxRetries = 13
+        config1.maxRetryWaitTime = 17
+        config1.pinnedServerCertificate = nil
+        config1.pullFilter = nil
+        config1.pushFilter = nil
         
         #if COUCHBASE_ENTERPRISE
         XCTAssert(config.acceptOnlySelfSignedServerCertificate)
@@ -1220,7 +1220,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         // set correctly on replicator
         repl = Replicator(config:  config)
         
-        // update after passed to the target's constructor
+        // -------------
+        // update config, after passed to the target's constructor
         #if COUCHBASE_ENTERPRISE
         config.acceptOnlySelfSignedServerCertificate = false
         #endif
@@ -1237,6 +1238,25 @@ class ReplicatorTest_Main: ReplicatorTest {
         config.pullFilter = nil
         config.pushFilter = nil
         
+        // update returned configuration.
+        var config2 = repl.config
+        #if COUCHBASE_ENTERPRISE
+        config2.acceptOnlySelfSignedServerCertificate = false
+        #endif
+        config2.continuous = false
+        config2.authenticator = nil
+        config2.channels = nil
+        config2.documentIDs = nil
+        config2.headers = nil
+        config2.replicatorType = .push
+        config2.heartbeat = 11
+        config2.maxRetries = 13
+        config2.maxRetryWaitTime = 17
+        config2.pinnedServerCertificate = nil
+        config2.pullFilter = nil
+        config2.pushFilter = nil
+        
+        // validate no impact on above updates.
         #if COUCHBASE_ENTERPRISE
         XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
         #endif
