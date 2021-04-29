@@ -333,7 +333,8 @@
     AssertEqual(numRows, 2u);
 }
 
-- (void) testSelectAll {
+// TODO: https://issues.couchbase.com/browse/CBL-1888
+- (void) _testSelectAll {
     [self loadNumbers: 100];
     
     CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
@@ -718,9 +719,9 @@
     q.parameters = params;
     
     NSError* error;
-    NSArray* allObjects = [[q execute: &error] allObjects];
+    NSArray<CBLQueryResult*>* allObjects = [[q execute: &error] allObjects];
     AssertEqual(allObjects.count, 1u);
-    AssertEqualObjects([[allObjects.firstObject valueForKey: @"testdb"] stringForKey: @"name"],
+    AssertEqualObjects([[allObjects.firstObject valueAtIndex: 0] stringForKey: @"name"],
                        @"Casper");
 }
 
@@ -765,9 +766,9 @@
     
     q.parameters = [[CBLQueryParameters alloc] initWithParameters: params];
     
-    NSArray* allObjects = [[q execute: &error] allObjects];
+    NSArray<CBLQueryResult*>* allObjects = [[q execute: &error] allObjects];
     AssertEqual(allObjects.count, 1u);
-    AssertEqualObjects([[allObjects.firstObject valueForKey: @"testdb"] stringForKey: @"name"],
+    AssertEqualObjects([[allObjects.firstObject valueAtIndex: 0] stringForKey: @"name"],
                        @"Alice");
 }
 

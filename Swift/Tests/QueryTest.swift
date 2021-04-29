@@ -1035,7 +1035,8 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 0)
     }
     
-    func testSelectAll() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-1888
+    func _testSelectAll() throws {
         try loadNumbers(100)
         
         let NUMBER1 = Expression.property("number1")
