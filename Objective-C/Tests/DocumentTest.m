@@ -2073,9 +2073,8 @@
                        @"[\"item1\",\"item2\"]",
                        @" ",
                        @"",
-                       // TODO: TruncatedJSON
-//                       @"[", https://issues.couchbase.com/browse/CBL-1763
-//                       @"{", https://issues.couchbase.com/browse/CBL-1763
+                       @"[",
+                       @"{",
                        @"{\"dictionary_without_value\"}",
                        @"[]"];
     
