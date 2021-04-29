@@ -219,6 +219,8 @@ public struct ReplicatorConfiguration {
         self.heartbeat = config.heartbeat
         self.maxRetries = config.maxRetries
         self.maxRetryWaitTime = config.maxRetryWaitTime
+        self.pullFilter = config.pullFilter
+        self.pushFilter = config.pushFilter
         
         #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground

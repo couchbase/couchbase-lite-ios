@@ -1318,6 +1318,116 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testDeleteWithActiveReplicatorAndURLEndpointListeners() throws {
         try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: true)
     }
+    
+    // MARK: ListenerConfig
+    
+    func testSetListenerConfigurationProperties() throws {
+        var config = URLEndpointListenerConfiguration(database: oDB)
+        let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
+            return uname == "username" && pswd == "secret"
+        }
+        config.authenticator = basic
+        config.disableTLS = true
+        config.enableDeltaSync = true
+        config.networkInterface = "awesomeinterface.com"
+        config.port = 3121
+        config.readOnly = true
+        if self.keyChainAccessAllowed {
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+            let tls = try tlsIdentity(true)
+            config.tlsIdentity = tls
+        }
+        let listener = URLEndpointListener(config: config)
+        
+        // ----------
+        // update config after passing to configuration’s constructor
+        config.authenticator = nil
+        config.disableTLS = false
+        config.enableDeltaSync = false
+        config.networkInterface = "0.0.0.0"
+        config.port = 3123
+        config.readOnly = false
+        
+        // update the returned config from listener
+        var config2 = listener.config
+        config2.authenticator = nil
+        config2.disableTLS = false
+        config2.enableDeltaSync = false
+        config2.networkInterface = "0.0.0.0"
+        config2.port = 3123
+        config2.readOnly = false
+        
+        // validate no impact with above updates to configs
+        XCTAssertNotNil(listener.config.authenticator)
+        XCTAssert(listener.config.disableTLS)
+        XCTAssert(listener.config.enableDeltaSync)
+        XCTAssertEqual(listener.config.networkInterface, "awesomeinterface.com")
+        XCTAssertEqual(listener.config.port, 3121)
+        XCTAssert(listener.config.readOnly)
+        
+        if self.keyChainAccessAllowed {
+            XCTAssertNotNil(listener.config.tlsIdentity)
+            XCTAssertEqual(listener.config.tlsIdentity!.certs.count, 1)
+            
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        }
+    }
+    
+    func testDefaultListenerConfiguration() throws {
+        let config = URLEndpointListenerConfiguration(database: oDB)
+        
+        XCTAssertFalse(config.disableTLS)
+        XCTAssertFalse(config.enableDeltaSync)
+        XCTAssertFalse(config.readOnly)
+        XCTAssertNil(config.authenticator)
+        XCTAssertNil(config.networkInterface)
+        XCTAssertNil(config.port)
+        XCTAssertNil(config.tlsIdentity)
+    }
+    
+    func testCopyingListenerConfiguration() throws {
+        var config1 = URLEndpointListenerConfiguration(database: oDB)
+    
+        let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
+            return uname == "username" && pswd == "secret"
+        }
+        config1.authenticator = basic
+        config1.disableTLS = true
+        config1.enableDeltaSync = true
+        config1.networkInterface = "awesomeinterface.com"
+        config1.port = 3121
+        config1.readOnly = true
+        
+        if self.keyChainAccessAllowed {
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+            let tls = try tlsIdentity(true)
+            config1.tlsIdentity = tls
+        }
+        let config = URLEndpointListenerConfiguration(config: config1)
+        
+        // ------
+        // update config1 after passing to configuration’s constructor
+        config1.authenticator = nil
+        config1.disableTLS = false
+        config1.enableDeltaSync = false
+        config1.networkInterface = "0.0.0.0"
+        config1.port = 3123
+        config1.readOnly = false
+        
+        XCTAssertNotNil(config.authenticator)
+        XCTAssert(config.disableTLS)
+        XCTAssert(config.enableDeltaSync)
+        XCTAssertEqual(config.networkInterface, "awesomeinterface.com")
+        XCTAssertEqual(config.port, 3121)
+        XCTAssert(config.readOnly)
+        
+        if self.keyChainAccessAllowed {
+            XCTAssertNotNil(config.tlsIdentity)
+            XCTAssertEqual(config.tlsIdentity!.certs.count, 1)
+            
+            try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        }
+    }
 }
 
 @available(macOS 10.12, iOS 10.3, *)
