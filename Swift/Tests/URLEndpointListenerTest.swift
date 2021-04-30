@@ -92,9 +92,13 @@ class URLEndpontListenerTest: ReplicatorTest {
     func tlsIdentity(_ isServer: Bool) throws -> TLSIdentity? {
         if !self.keyChainAccessAllowed { return nil }
         
+        let label = isServer ? serverCertLabel : clientCertLabel
+        
+        // cleanup client cert authenticator identity
+        try TLSIdentity.deleteIdentity(withLabel: label)
+        
         // Create client identity:
         let attrs = [certAttrCommonName: isServer ? "CBL-Server" : "daniel"]
-        let label = isServer ? serverCertLabel : clientCertLabel
         return try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil,
                                               label: label)
     }
