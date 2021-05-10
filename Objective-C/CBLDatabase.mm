@@ -551,14 +551,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark - Logging
 
-+ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
-    CBLWarn(Database, @"This method has been deprecated. "
-            "Please use CBLDatabase.log.console instead of -setLogLevel:domain:.");
-    
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = level;
-}
-
 + (CBLLog*) log {
     return [CBLLog sharedInstance];
 }

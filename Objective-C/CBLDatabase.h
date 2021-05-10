@@ -295,15 +295,6 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 - (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)error;
 
 /**
- This method is deprecated. Compacts the database file by deleting unused attachment files and vacuuming 
- the SQLite database
-
- @param error On return, the error if any.
- @return True on success, false on failure.
- */
-- (BOOL) compact: (NSError**)error __attribute__((deprecated("Use -performMaintenance: instead.")));
-
-/**
  Deletes a database of the given name in the given directory.
 
  @param name The database name.
@@ -344,16 +335,6 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
                 error: (NSError**)error;
 
 #pragma mark - Logging
-
-/**
- This function is deprecated. Use CBLDatabase.log.console to set log level and domains instead.
- 
- @param level The log level.
- @param domain The log domain.
- */
-+ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain
-  __attribute__((deprecated("Use CBLDatabase.log.console instead.")));
-
 
 /**
  Log object used for configuring console, file, and custom logger.
