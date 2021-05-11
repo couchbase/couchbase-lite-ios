@@ -36,7 +36,6 @@
 #import "CBLVersion.h"
 #import "fleece/Fleece.hh"
 #import "CBLConflict+Internal.h"
-#import "CBLTimer.h"
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
