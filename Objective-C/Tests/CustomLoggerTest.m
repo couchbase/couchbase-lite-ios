@@ -1,5 +1,5 @@
 //
-//  CustomLogger.h
+//  CustomLogger.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,19 +17,30 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "CouchbaseLite.h"
+#import "CustomLoggerTest.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation CustomLoggerTest {
+    NSMutableArray* _lines;
+}
 
-@interface CustomLogger : NSObject <CBLLogger>
+- (instancetype) initWithLevel:(CBLLogLevel)level {
+    self = [super initWithLevel: level];
+    if (self) {
+        _lines = [NSMutableArray new];
+    }
+    return self;
+}
 
-@property (nonatomic) CBLLogLevel level;
+- (NSArray*) lines {
+    return _lines;
+}
 
-@property (nonatomic, readonly) NSArray* lines;
+- (void) reset {
+    [_lines removeAllObjects];
+}
 
-- (void) reset;
+- (void) writeLog: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString *)message {
+    [_lines addObject: message];
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

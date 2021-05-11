@@ -23,6 +23,7 @@
 #import "CBLLog+Logging.h"
 #import "CBLLog+Swift.h"
 #import "CBLStringBytes.h"
+#import "CBLCustomLogger.h"
 
 extern "C" {
 #import "ExceptionUtils.h"
@@ -35,12 +36,6 @@ C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainListener;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
-
-// For bridging custom logger between Swift and Objective-C
-// without making CBLLogger protocol public
-@interface CBLCustomLogger : NSObject <CBLLogger>
-- (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger;
-@end
 
 @implementation CBLLog {
     CBLLogLevel _callbackLogLevel;
@@ -185,7 +180,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         _callbackLogLevel = (CBLLogLevel)callbackLogLevel;
         
         // Create console logger:
-        _console = [[CBLConsoleLogger alloc] initWithLogLevel: _callbackLogLevel];
+        _console = [[CBLConsoleLogger alloc] initWithLevel: _callbackLogLevel];
         
         // Create file logger which will enable file logging immediately with default log rotation:
         _file = [[CBLFileLogger alloc] initWithDefault];
@@ -195,7 +190,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
 
 #pragma mark - Public
 
-- (void) setCustom: (id<CBLLogger>)custom {
+- (void) setCustom: (CBLCustomLogger*)custom {
     _custom = custom;
     [self synchronizeCallbackLogLevel];
 }
@@ -296,27 +291,3 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
             return @"Database";
     }
 }
-
-@implementation CBLCustomLogger {
-    CBLLogLevel _level;
-    CBLCustomLoggerBlock _logger;
-}
-
-- (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger {
-    self = [super init];
-    if (self) {
-        _level = level;
-        _logger = logger;
-    }
-    return self;
-}
-
-- (CBLLogLevel) level {
-    return _level;
-}
-
-- (void) logWithLevel:(CBLLogLevel)level domain:(CBLLogDomain)domain message:(NSString *)message {
-    _logger(level, domain, message);
-}
-
-@end

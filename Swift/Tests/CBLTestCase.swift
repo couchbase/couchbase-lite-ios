@@ -66,7 +66,7 @@ class CBLTestCase: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        CouchbaseLite.log.console.level = .info
+        CouchbaseLite.log.console = ConsoleLogger(level: .info)
         
         try? deleteDB(name: databaseName);
         

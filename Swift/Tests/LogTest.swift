@@ -26,9 +26,7 @@ class LogTest: CBLTestCase {
     
     var backup: FileLoggerBackup?
     
-    var backupConsoleLevel: LogLevel?
-    
-    var backupConsoleDomains: LogDomains?
+    var backupConsoleLogger: ConsoleLogger?
     
     override func setUp() {
         super.setUp()
@@ -48,25 +46,21 @@ class LogTest: CBLTestCase {
     }
     
     func backupLoggerConfig() {
-        backup = FileLoggerBackup(config: CouchbaseLite.log.file.config,
-                                  level: CouchbaseLite.log.file.level)
-        backupConsoleLevel = CouchbaseLite.log.console.level
-        backupConsoleDomains = CouchbaseLite.log.console.domains
+        backup = FileLoggerBackup(config: CouchbaseLite.log.file?.config,
+                                  level: CouchbaseLite.log.file?.level)
+        
+        backupConsoleLogger = CouchbaseLite.log.console
     }
     
     func restoreLoggerConfig() {
         if let backup = self.backup {
-            CouchbaseLite.log.file.config = backup.config
-            CouchbaseLite.log.file.level = backup.level
+            CouchbaseLite.log.file?.config = backup.config
+            CouchbaseLite.log.file?.level = backup.level
             self.backup = nil
         }
         
-        if let consoleLevel = self.backupConsoleLevel {
-            CouchbaseLite.log.console.level = consoleLevel
-        }
-        
-        if let consoleDomains = self.backupConsoleDomains {
-            CouchbaseLite.log.console.domains = consoleDomains
+        if let console = self.backupConsoleLogger {
+            CouchbaseLite.log.console = console
         }
         
         CouchbaseLite.log.custom = nil
@@ -116,7 +110,7 @@ class LogTest: CBLTestCase {
     
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerTest()
         CouchbaseLite.log.custom = customLogger
         
         for i in (1...5).reversed() {

@@ -53,22 +53,28 @@ public class ConsoleLogger {
     
     /// The minimum log level of the log messages to be logged. The default log level for
     /// console logger is warning.
-    public var level: LogLevel = .warning {
-        didSet {
-            CBLCouchbaseLite.log().console.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
-        }
-    }
+    private(set) var level: LogLevel = .warning
     
     /// The set of log domains of the log messages to be logged. By default, the log
     /// messages of all domains will be logged.
-    public var domains: LogDomains = .all {
-        didSet {
-            CBLCouchbaseLite.log().console.domains = CBLLogDomain(rawValue: UInt(domains.rawValue))
-        }
+    private(set) var domains: LogDomains = .all
+    
+    public init(level: LogLevel, domains: LogDomains) {
+        self.level = level
+        self.domains = domains
+    }
+    
+    public convenience init(level: LogLevel) {
+        self.init(level: level, domains: .all)
     }
     
     // MARK: Internal
     
     init() { }
+    
+    func toImpl() -> CBLConsoleLogger {
+        return CBLConsoleLogger(level: CBLLogLevel(rawValue: UInt(level.rawValue))!,
+                                domains: CBLLogDomain(rawValue: UInt(domains.rawValue)))
+    }
     
 }

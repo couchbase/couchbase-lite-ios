@@ -23,27 +23,14 @@ import Foundation
 public class Log {
     
     /// Console logger writing log messages to the system console.
-    public let console = ConsoleLogger()
+    public var console: ConsoleLogger? = ConsoleLogger()
     
     /// File logger writing log messages to files.
-    public let file = FileLogger()
+    public var file: FileLogger? = FileLogger()
     
     /// For setting a custom logger. Changing the log level of the assigned custom logger will
     /// require the custom logger to be reassigned so that the change can be affected.
-    public var custom: Logger? {
-        didSet {
-            if let logger = custom {
-                let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
-                CBLCouchbaseLite.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
-                    let l = LogLevel(rawValue: UInt8(level.rawValue))!
-                    let d = LogDomain(rawValue: UInt8(domain.rawValue))!
-                    logger.log(level: l, domain: d, message: message)
-                }
-            } else {
-                CBLCouchbaseLite.log().custom = nil
-            }
-        }
-    }
+    public var custom: CustomLogger?
     
     // MARK: Internal
     

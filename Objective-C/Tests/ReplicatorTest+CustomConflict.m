@@ -19,7 +19,7 @@
 
 #import "ReplicatorTest.h"
 #import "CBLDocument+Internal.h"
-#import "CustomLogger.h"
+#import "CustomLoggerTest.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLErrorMessage.h"
 
@@ -439,8 +439,7 @@
 
 -  (void) testConflictResolverWrongDocID {
     // Enable Logging to check whether the logs are printing
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
+    CustomLoggerTest* custom = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelWarning];
     CBLCouchbaseLite.log.custom = custom;
     
     NSString* docId = @"doc";
@@ -779,8 +778,7 @@
 // CBL-1710: Update to use setProgressLevel API in Replicator
 - (void) _testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
+    CustomLoggerTest* custom = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelWarning];
     CBLCouchbaseLite.log.custom = custom;
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];

@@ -33,7 +33,7 @@ public class FileLogger {
     /// disable the file logging.
     public var config: LogFileConfiguration? {
         didSet {
-            CBLCouchbaseLite.log().file.config = config?.toImpl()
+            CBLCouchbaseLite.log().file?.config = config?.toImpl()
         }
     }
     
@@ -41,7 +41,7 @@ public class FileLogger {
     /// file logger is none which means no logging.
     public var level: LogLevel = .none {
         didSet {
-            CBLCouchbaseLite.log().file.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
+            CBLCouchbaseLite.log().file?.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
         }
     }
     

@@ -20,6 +20,8 @@
 #import "CBLLog.h"
 #import "CBLConsoleLogger.h"
 #import "CBLFileLogger.h"
+#import "CBLCustomLogger.h"
+#import "CBLLog+Swift.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,15 +33,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface CBLConsoleLogger ()
-
-- (instancetype) initWithLogLevel: (CBLLogLevel)level;
-
-@end
-
 @interface CBLFileLogger ()
 
 - (instancetype) initWithDefault;
+
+@end
+
+@interface CBLCustomLogger ()
+
+- (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger;
 
 @end
 
