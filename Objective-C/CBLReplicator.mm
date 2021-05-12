@@ -52,7 +52,6 @@ using namespace fleece;
 typedef enum {
     kCBLProgressLevelOverall = 0,
     kCBLProgressLevelPerDocument,
-    kCBLProgressLevelPerAttachment
 } CBLReplicatorProgressLevel;
 
 // For controlling async start, stop, and suspend:
@@ -750,4 +749,3 @@ static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
 }
 
 @end
-
