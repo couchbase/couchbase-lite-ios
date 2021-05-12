@@ -36,7 +36,6 @@
 #import "CBLVersion.h"
 #import "fleece/Fleece.hh"
 #import "CBLConflict+Internal.h"
-#import "CBLTimer.h"
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
@@ -51,9 +50,6 @@ using namespace cbl;
 #define kDBExtension @"cblite2"
 
 #define msec 1000.0
-
-// How long to wait after a database opens before expiring docs
-#define kHousekeepingDelayAfterOpening 3.0
 
 static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
 static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
@@ -438,9 +434,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if ([self isClosed])
             return YES;
         
-        // Cancel doc expiry timer:
-        [self cancelDocExpiryTimer];
-        
         // Free C4Observer:
         [self freeC4Observer];
         
@@ -684,11 +677,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
         C4Error err;
         CBLStringBytes docID(documentID);
-        if (c4doc_setExpiration(_c4db, docID, timestamp, &err)) {
-            [self scheduleDocumentExpiration: 0.0];
-            return TRUE;
-        }
-        return convertError(err, error);
+        return c4doc_setExpiration(_c4db, docID, timestamp, &err) || convertError(err, error);
     }
 }
 
@@ -839,7 +828,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
     
-    [self scheduleDocumentExpiration: kHousekeepingDelayAfterOpening];
+    c4db_startHousekeeping(_c4db);
     
     _state = kCBLDatabaseStateOpened;
     
@@ -1324,38 +1313,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     auto result = FLEncoder_Finish(enc, nullptr);
     FLEncoder_Reset(enc);
     return result;
-}
-
-# pragma mark DOCUMENT EXPIRATION
-
-- (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
-    [self cancelDocExpiryTimer];
-    
-    UInt64 nextExpiration = c4db_nextDocExpiration(_c4db);
-    if (nextExpiration > 0) {
-        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: (nextExpiration/msec)];
-        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow, minimumDelay);
-        CBLLogInfo(Database, @"Scheduling next doc expiration in %.3g sec", delay);
-        _docExpiryTimer = [CBLTimer scheduleIn: _dispatchQueue after: delay block: ^{
-            CBL_LOCK(self) {
-                if ([self isClosed])
-                    return;
-                
-                CBLLogInfo(Database, @"Purging expired documents...");
-                C4Error c4err;
-                UInt64 nPurged = c4db_purgeExpiredDocs(_c4db, &c4err);
-                CBLLogInfo(Database, @"Purged %lld expired documents", nPurged);
-                [self scheduleDocumentExpiration: 1.0];
-            }
-        }];
-    } else {
-        CBLLogInfo(Database, @"No pending doc expirations");
-    }
-}
-
-- (void) cancelDocExpiryTimer {
-    [CBLTimer cancel: _docExpiryTimer];
-    _docExpiryTimer = nil;
 }
 
 /** Check and show warning if file logging is not configured. */
