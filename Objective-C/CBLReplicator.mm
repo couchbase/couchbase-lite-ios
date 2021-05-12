@@ -50,8 +50,8 @@ using namespace fleece;
 
 // Replicator progress level types:
 typedef enum {
-    kCBLProgressLevelBasic = 0,
-    kCBLProgressLevelDocument
+    kCBLProgressLevelOverall = 0,
+    kCBLProgressLevelPerDocument,
 } CBLReplicatorProgressLevel;
 
 // For controlling async start, stop, and suspend:
@@ -100,7 +100,7 @@ typedef enum {
     if (self) {
         NSParameterAssert(config.database != nil && config.target != nil);
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
-        _progressLevel = kCBLProgressLevelBasic;
+        _progressLevel = kCBLProgressLevelOverall;
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
         _status = [[CBLReplicatorStatus alloc] initWithStatus: {kC4Stopped, {}, {}}];
@@ -136,7 +136,7 @@ typedef enum {
 }
 
 - (void) start {
-    [self startWithReset: _resetCheckpoint];
+    [self startWithReset: NO];
 }
 
 - (void) startWithReset: (BOOL)reset {
@@ -155,7 +155,6 @@ typedef enum {
             self.serverCertificate = NULL;
             _state = kCBLStateStarting;
             c4repl_start(_repl, reset);
-            _resetCheckpoint = NO;
             status = c4repl_getStatus(_repl);
             [_config.database addActiveStoppable: self];
             
@@ -171,6 +170,7 @@ typedef enum {
                          self, error.localizedDescription);
             status = {kC4Stopped, {}, err};
         }
+        [self setProgressLevel: _progressLevel];
         
         // Post an initial notification:
         statusChanged(_repl, status, (__bridge void*)self);
@@ -275,7 +275,6 @@ typedef enum {
 
 - (alloc_slice) _encodedOptions {
     NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-    options[@kC4ReplicatorOptionProgressLevel] = @(_progressLevel);
     Encoder enc;
     enc << options;
     return enc.finish();
@@ -372,7 +371,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
                                                         listener: (void (^)(CBLDocumentReplication*))listener
 {
     CBL_LOCK(self) {
-        _progressLevel = kCBLProgressLevelDocument;
+        [self setProgressLevel: kCBLProgressLevelPerDocument];
         return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener];
     }
 }
@@ -382,7 +381,16 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     CBL_LOCK(self) {
         if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
-            _progressLevel = kCBLProgressLevelBasic;
+            [self setProgressLevel: kCBLProgressLevelOverall];
+    }
+}
+
+- (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
+    if (_repl) {
+        C4Error err = {};
+        assert(c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, &err));
+    } else {
+        _progressLevel = level;
     }
 }
 
@@ -741,4 +749,3 @@ static bool pullFilter(C4String docID, C4String revID, C4RevisionFlags flags,
 }
 
 @end
-
