@@ -23,7 +23,6 @@
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
 @class CBLIndex;
-@class CBLLog;
 @class CBLBlob;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
@@ -342,25 +341,6 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
            toDatabase: (NSString*)name
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)error;
-
-#pragma mark - Logging
-
-/**
- This function is deprecated. Use CBLDatabase.log.console to set log level and domains instead.
- 
- @param level The log level.
- @param domain The log domain.
- */
-+ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain
-  __attribute__((deprecated("Use CBLDatabase.log.console instead.")));
-
-
-/**
- Log object used for configuring console, file, and custom logger.
-
- @return log object
- */
-+ (CBLLog*) log;
 
 #pragma mark - Change Listener
 

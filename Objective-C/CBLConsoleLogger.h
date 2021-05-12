@@ -18,20 +18,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLLogger.h"
+#import "CBLBaseLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** Console logger for writing log messages to the system console. */
-@interface CBLConsoleLogger : NSObject <CBLLogger>
-
-/** The minimum log level of the log messages to be logged. The default log level for
-    console logger is warning. */
-@property (nonatomic) CBLLogLevel level;
-
-/** The set of log domains of the log messages to be logged. By default, the log
-    messages of all domains will be logged. */
-@property (nonatomic) CBLLogDomain domains;
+@interface CBLConsoleLogger : CBLBaseLogger
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

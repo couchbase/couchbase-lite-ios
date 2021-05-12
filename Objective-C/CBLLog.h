@@ -21,6 +21,7 @@
 @protocol CBLLogger;
 @class CBLConsoleLogger;
 @class CBLFileLogger;
+@class CBLCustomLogger;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,14 +31,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLLog : NSObject
 
 /** Console logger writing log messages to the system console. */
-@property (readonly, nonatomic) CBLConsoleLogger* console;
+@property (nonatomic, nullable) CBLConsoleLogger* console;
 
 /** File logger writing log messages to files. */
-@property (readonly, nonatomic) CBLFileLogger* file;
+@property (nonatomic, nullable) CBLFileLogger* file;
 
 /** For setting a custom logger. Changing the log level of the assigned custom logger will require
  the custom logger to be reassigned so that the change can be affected. */
-@property (nonatomic, nullable) id<CBLLogger> custom;
+@property (nonatomic, nullable) CBLCustomLogger* custom;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

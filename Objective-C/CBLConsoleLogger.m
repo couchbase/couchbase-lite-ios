@@ -23,26 +23,7 @@
 
 @implementation CBLConsoleLogger
 
-@synthesize level=_level, domains=_domains;
-
-- (instancetype) initWithLogLevel: (CBLLogLevel)level {
-    self = [super init];
-    if (self) {
-        _level = level;
-        _domains = kCBLLogDomainAll;
-    }
-    return self;
-}
-
-- (void) setLevel: (CBLLogLevel)level {
-    _level = level;
-    [[CBLLog sharedInstance] synchronizeCallbackLogLevel];
-}
-
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    if (self.level > level || (self.domains & domain) == 0)
-        return;
-    
+- (void) writeLog:(CBLLogLevel)level domain:(CBLLogDomain)domain message:(NSString *)message {
     NSString* levelName = CBLLog_GetLevelName(level);
     NSString* domainName = CBLLog_GetDomainName(domain);
     NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);

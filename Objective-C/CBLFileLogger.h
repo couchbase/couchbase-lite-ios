@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
  to configure the logger. Once configured, the logger object ignores any changes you make to the
  CBLLogFileConfiguration object.
  */
-@interface CBLFileLogger : NSObject <CBLLogger>
+@interface CBLFileLogger : NSObject
 
 /**
  The log file configuration for configuring the log directory, file format, and rotation policy.

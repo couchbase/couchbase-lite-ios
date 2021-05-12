@@ -19,7 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
-#import "CustomLogger.h"
+#import "CustomLoggerTest.h"
 
 @interface FileLoggerBackup: NSObject
 
@@ -59,21 +59,20 @@
 
 - (void) backupLoggerConfig {
     _backup = [[FileLoggerBackup alloc] init];
-    _backup.level = CBLDatabase.log.file.level;
-    _backup.config = CBLDatabase.log.file.config;
-    _backupConsoleLevel = CBLDatabase.log.console.level;
-    _backupConsoleDomain = CBLDatabase.log.console.domains;
+    _backup.level = CBLCouchbaseLite.log.file.level;
+    _backup.config = CBLCouchbaseLite.log.file.config;
+    _backupConsoleLevel = CBLCouchbaseLite.log.console.level;
+    _backupConsoleDomain = CBLCouchbaseLite.log.console.domains;
 }
 
 - (void) restoreLoggerConfig {
     if (_backup) {
-        CBLDatabase.log.file.level = _backup.level;
-        CBLDatabase.log.file.config = _backup.config;
+        CBLCouchbaseLite.log.file.level = _backup.level;
+        CBLCouchbaseLite.log.file.config = _backup.config;
         _backup = nil;
     }
-    CBLDatabase.log.custom = nil;
-    CBLDatabase.log.console.level = _backupConsoleLevel;
-    CBLDatabase.log.console.domains = _backupConsoleDomain;
+    CBLCouchbaseLite.log.custom = nil;
+    CBLCouchbaseLite.log.console = [[CBLConsoleLogger alloc] initWithLevel: _backupConsoleLevel domains: _backupConsoleDomain];
     
 }
 
@@ -134,13 +133,11 @@
 
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLDatabase.log.custom = customLogger;
+    
     
     for (NSUInteger i = 5; i >= 1; i--) {
-        [customLogger reset];
-        customLogger.level = (CBLLogLevel)i;
-        CBLDatabase.log.custom = customLogger;
+        CustomLoggerTest* customLogger = [[CustomLoggerTest alloc] initWithLevel: (CBLLogLevel)i];
+        CBLCouchbaseLite.log.custom = customLogger;
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -152,10 +149,10 @@
 - (void) testFileLoggingLevels {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
+    CBLCouchbaseLite.log.file.config = config;
     
     for (NSUInteger i = 5; i >= 1; i--) {
-        CBLDatabase.log.file.level = (CBLLogLevel)i;
+        CBLCouchbaseLite.log.file.level = (CBLLogLevel)i;
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -188,8 +185,8 @@
 
 - (void) testFileLoggingDefaultBinaryFormat {
     CBLLogFileConfiguration* config = [self logFileConfig];
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelInfo;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelInfo;
     
     CBLLogInfo(Database, @"TEST INFO");
     NSArray* files = [self getLogsInDirectory: config.directory
@@ -225,8 +222,8 @@
 - (void) testFileLoggingUsePlainText {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelInfo;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelInfo;
     
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
@@ -262,8 +259,8 @@
 
 - (void) testFileLoggingLogFilename {
     CBLLogFileConfiguration* config = [self logFileConfig];
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelDebug;
     
     NSString* regex = @"cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog";
     NSPredicate* predicate = [NSPredicate predicateWithFormat: @"SELF MATCHES %@", regex];
@@ -275,17 +272,16 @@
 
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelNone;
-    CBLDatabase.log.custom = customLogger;
+    CustomLoggerTest* customLogger = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelNone];
+    CBLCouchbaseLite.log.custom = customLogger;
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
     CBLWarnError(Database, @"TEST ERROR");
     AssertEqual(customLogger.lines.count, 0);
     
-    customLogger.level = kCBLLogLevelVerbose;
-    CBLDatabase.log.custom = customLogger;
+    customLogger = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelVerbose];
+    CBLCouchbaseLite.log.custom = customLogger;
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
@@ -298,14 +294,14 @@
     config.usePlainText = YES;
     config.maxSize = 1024;
     config.maxRotateCount = 2;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelDebug;
     
     // this should create three files, as the 1KB + 1KB + extra ~400-500Bytes.
     [self writeOneKiloByteOfLog];
     [self writeOneKiloByteOfLog];
     
-    NSUInteger totalFilesShouldBeInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
+    NSUInteger totalFilesShouldBeInDirectory = (CBLCouchbaseLite.log.file.config.maxRotateCount + 1) * 5;
 #if !DEBUG
     totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1;
 #endif
@@ -316,8 +312,8 @@
 - (void) testFileLoggingDisableLogging {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelNone;
     
     NSString* inputString = [[NSUUID UUID] UUIDString];
     [self writeAllLogs: inputString];
@@ -328,15 +324,15 @@
 - (void) testFileLoggingReEnableLogging {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelNone;
     
     NSString* inputString = [[NSUUID UUID] UUIDString];
     [self writeAllLogs: inputString];
     
     AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
     
-    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelVerbose;
     [self writeAllLogs: inputString];
     
     NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
@@ -356,8 +352,8 @@
 - (void) testFileLoggingHeader {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    CBLCouchbaseLite.log.file.config = config;
+    CBLCouchbaseLite.log.file.level = kCBLLogLevelVerbose;
     
     [self writeOneKiloByteOfLog];
     NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
@@ -375,11 +371,9 @@
 }
 
 - (void) testNonASCII {
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelVerbose;
-    CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    CustomLoggerTest* customLogger = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelVerbose];
+    CBLCouchbaseLite.log.custom = customLogger;
+    CBLCouchbaseLite.log.console = [[CBLConsoleLogger alloc] initWithLevel: kCBLLogLevelVerbose domains: kCBLLogDomainAll];
     NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
@@ -404,12 +398,9 @@
 }
 
 - (void) testPercentEscape {
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelInfo;
-    CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    CustomLoggerTest* customLogger = [[CustomLoggerTest alloc] initWithLevel: kCBLLogLevelInfo];
+    CBLCouchbaseLite.log.custom = customLogger;
+    CBLCouchbaseLite.log.console = [[CBLConsoleLogger alloc] initWithLevel: kCBLLogLevelInfo domains: kCBLLogDomainAll];
     CBLLogInfo(Database, @"Hello %%s there");
     
     BOOL found = NO;

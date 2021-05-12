@@ -20,7 +20,7 @@
 import Foundation
 import CouchbaseLiteSwift
 
-class CustomLogger: Logger {
+class CustomLoggerTest: CustomLogger {
     
     var lines: [String] = []
     
@@ -33,5 +33,4 @@ class CustomLogger: Logger {
     func log(level: LogLevel, domain: LogDomain, message: String) {
         lines.append(message)
     }
-    
 }
