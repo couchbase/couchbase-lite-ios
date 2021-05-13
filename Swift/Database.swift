@@ -360,15 +360,6 @@ public final class Database {
     public func performMaintenance(type: MaintenanceType) throws {
         try _impl.perform(CBLMaintenanceType(rawValue: UInt32(type.rawValue))!)
     }
-    
-    /// This function is deprecated. Compacts the database file by deleting unused attachment files and
-    /// vacuuming the SQLite database.
-    ///
-    /// - Throws: An error on a failure
-    @available(*, deprecated, message: "Use performMaintenance(type:) instead.")
-    public func compact() throws {
-        try _impl.compact()
-    }
 
     /// Deletes a database of the given name in the given directory.
     ///
@@ -404,20 +395,6 @@ public final class Database {
                            withConfig config: DatabaseConfiguration?) throws
     {
         try CBLDatabase.copy(fromPath: path, toDatabase: name, withConfig: config?.toImpl())
-    }
-    
-    /// This function is deprecated. Use Database.log.console to set log level and domains instead.
-    ///
-    /// - Parameters:
-    ///   - level: The log level.
-    ///   - domain: The log domain.
-    @available(*, deprecated, message: "Use Database.log.console instead.")
-    public class func setLogLevel(_ level: LogLevel, domain: LogDomain) {
-        Log.log(domain: .database, level: .warning, message:
-            "This method has been deprecated. Please use Database.log.console instead of setLogLevel(_, domain:)")
-        
-        Database.log.console.domains = LogDomains(rawValue: Int(LogDomain.all.rawValue))
-        Database.log.console.level = level
     }
     
     /// Log object used for configuring console, file, and custom logger.
