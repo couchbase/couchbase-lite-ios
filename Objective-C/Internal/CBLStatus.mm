@@ -51,7 +51,7 @@ BOOL convertError(const C4Error &c4err, NSError** outError) {
         }
 
         *outError = [NSError errorWithDomain: domain code: code
-                                    userInfo: @{NSLocalizedDescriptionKey: msgStr}];
+                                    userInfo: msgStr != nil ? @{NSLocalizedDescriptionKey: msgStr} : nil];
     }
     return NO;
 }
