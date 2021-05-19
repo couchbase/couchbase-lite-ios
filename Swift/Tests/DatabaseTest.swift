@@ -1300,15 +1300,21 @@ class DatabaseTest: CBLTestCase {
     // MARK: DatabaseConfig
     
     func testSetDatabaseConfigurationProperties() throws {
+        let dir = NSTemporaryDirectory().appending("/cbl_temp")
+        if FileManager.default.fileExists(atPath: dir) {
+            try! FileManager.default.removeItem(atPath: dir)
+        }
+        XCTAssertTrue(!FileManager.default.fileExists(atPath: dir))
+        
         var config = DatabaseConfiguration()
-        config.directory = NSTemporaryDirectory().appending("/temp")
+        config.directory = dir
         config.enableVersionVector = true
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = EncryptionKey.password("somePassword")
         #endif
         
         let db = try Database(name: "dbName", config: config)
-        XCTAssertEqual(db.config.directory, NSTemporaryDirectory().appending("/temp"))
+        XCTAssertEqual(db.config.directory, dir)
         XCTAssert(db.config.enableVersionVector)
         
         #if COUCHBASE_ENTERPRISE
