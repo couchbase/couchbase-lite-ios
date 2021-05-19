@@ -1300,6 +1300,7 @@ class DatabaseTest: CBLTestCase {
     // MARK: DatabaseConfig
     
     func testSetDatabaseConfigurationProperties() throws {
+        // remove temp folder
         let dir = NSTemporaryDirectory().appending("/cbl_temp")
         if FileManager.default.fileExists(atPath: dir) {
             try! FileManager.default.removeItem(atPath: dir)
