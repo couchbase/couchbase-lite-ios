@@ -104,56 +104,6 @@ class DatabaseTest: CBLTestCase {
         try db.saveDocument(doc)
     }
     
-    func testCompact() throws {
-        // Create docs:
-        let docs = try createDocs(20)
-        
-        // Update each doc 25 times:
-        try db.inBatch {
-            for doc in docs {
-                for i in 0...25{
-                    let mdoc = doc.toMutable()
-                    mdoc.setValue(i, forKey: "number")
-                    try db.saveDocument(mdoc)
-                }
-            }
-        }
-        
-        // Add each doc with a blob object:
-        for doc in docs {
-            let mdoc = db.document(withID: doc.id)!.toMutable()
-            let data = doc.id.data(using: .utf8)
-            let blob = Blob.init(contentType: "text/plain", data: data!)
-            mdoc.setValue(blob, forKey: "blob")
-            try db.saveDocument(mdoc)
-        }
-        
-        XCTAssertEqual(db.count, 20)
-        
-        let attachmentDir = (db.path! as NSString).appendingPathComponent("Attachments")
-        var attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
-        XCTAssertEqual(attachments.count, 20)
-        
-        // Compact:
-        try db.compact()
-        
-        // Delete all docs:
-        for doc in docs {
-            let doc = db.document(withID: doc.id)!
-            try db.deleteDocument(doc)
-            XCTAssertNil(db.document(withID: doc.id))
-        }
-        XCTAssertEqual(db.count, 0)
-        
-        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
-        XCTAssertEqual(attachments.count, 20)
-        
-        // Compact:
-        try db.compact()
-        
-        attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
-        XCTAssertEqual(attachments.count, 0)
-    }
     
     func testPerformMaintenanceCompact() throws {
         // Create docs:

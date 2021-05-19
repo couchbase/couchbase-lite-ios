@@ -104,29 +104,6 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
     }
     
-    func testCompactEncryptedDatabase() throws {
-        // Create encrypted database:
-        seekrit = try openSeekrit(password: "letmein")
-        
-        // Create a doc and then update it:
-        let doc = createDocument(nil, data: ["answer": 42])
-        try seekrit!.saveDocument(doc)
-        doc.setValue(84, forKey: "answer")
-        try seekrit!.saveDocument(doc)
-        
-        // Compact:
-        try seekrit!.compact()
-        
-        // Update the document again:
-        doc.setValue(85, forKey: "answer")
-        try seekrit!.saveDocument(doc)
-        
-        // Close and re-open:
-        try seekrit!.close()
-        seekrit = try openSeekrit(password: "letmein")
-        XCTAssertEqual(seekrit!.count, 1)
-    }
-    
     func testEncryptedBlobs() throws {
         try _testEncryptedBlobsWithPassword(password: "letmein")
     }
