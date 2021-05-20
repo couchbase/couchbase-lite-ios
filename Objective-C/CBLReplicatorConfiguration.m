@@ -30,8 +30,8 @@
 #endif
 
 static int kDefaultHeartBeat = 300;
-static int kDefaultSingleShotMaxRetries = 9;
-static NSInteger kDefaultContinousMaxRetries = NSIntegerMax;
+static int kDefaultSingleShotMaxAttempts = 10;
+static NSInteger kDefaultContinousMaxAttempts = NSIntegerMax;
 static int kDefaultMaxRetryWaitTime = 300;
 
 @implementation CBLReplicatorConfiguration {
@@ -47,7 +47,7 @@ static int kDefaultMaxRetryWaitTime = 300;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize conflictResolver=_conflictResolver;
-@synthesize maxRetries=_maxRetries, maxRetryWaitTime=_maxRetryWaitTime;
+@synthesize maxAttempts=_maxAttempts, maxRetryWaitTime=_maxRetryWaitTime;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -72,7 +72,7 @@ static int kDefaultMaxRetryWaitTime = 300;
         _acceptOnlySelfSignedServerCertificate = NO;
 #endif
         _heartbeat = kDefaultHeartBeat;
-        _maxRetries = -1;
+        _maxAttempts = 0;
         _maxRetryWaitTime = kDefaultMaxRetryWaitTime;
     }
     return self;
@@ -152,18 +152,18 @@ static int kDefaultMaxRetryWaitTime = 300;
     _heartbeat = heartbeat;
 }
 
-- (void) setMaxRetries: (NSInteger)maxRetries {
+- (void) setMaxAttempts: (NSInteger)maxAttempts {
     [self checkReadonly];
     
-    if (maxRetries < 0)
+    if (maxAttempts < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store negative value in maxRetries"];
+                    format: @"Attempt to store negative value in maxAttempts"];
     
-    _maxRetries = maxRetries;
+    _maxAttempts = maxAttempts;
 }
 
-- (NSInteger) maxRetries {
-    return _maxRetries >= 0 ? _maxRetries : _continuous ? kDefaultContinousMaxRetries : kDefaultSingleShotMaxRetries;
+- (NSInteger) maxAttempts {
+    return _maxAttempts > 0 ? _maxAttempts : _continuous ? kDefaultContinousMaxAttempts : kDefaultSingleShotMaxAttempts;
 }
 
 - (void) setMaxRetryWaitTime: (NSTimeInterval)maxRetryWaitTime {
@@ -201,7 +201,7 @@ static int kDefaultMaxRetryWaitTime = 300;
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _conflictResolver = config.conflictResolver;
-        _maxRetries = config.maxRetries;
+        _maxAttempts = config.maxAttempts;
         _maxRetryWaitTime = config.maxRetryWaitTime;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
@@ -250,7 +250,8 @@ static int kDefaultMaxRetryWaitTime = 300;
     if (_maxRetryWaitTime > 0)
         options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxRetryWaitTime);
     
-    options[@kC4ReplicatorOptionMaxRetries] = @([self maxRetries]);
+    if (_maxAttempts > 0)
+        options[@kC4ReplicatorOptionMaxRetries] = @(_maxAttempts - 1);
     
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;

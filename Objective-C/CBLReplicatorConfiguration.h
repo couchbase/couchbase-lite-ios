@@ -133,12 +133,13 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  The maximum attempts to perform retry. The retry attempt will be reset when the replicator is able to connect and replicate with
  the remote server again.
  
- Without setting the maxRetries value, the default maxRetries of 9 times for single shot replicators and infinite times for
- continuous replicators will be applied and present to users. Settings the value to 0 will result in no retry attempt.
+ Setting the maxAttempts to zero(by default), the default maxAttempts of 10 times for single shot replicators and max-int times for
+ continuous replicators will be applied and present to users. Settings the value to 1, will perform an initial request and
+ if there is a transient error occurs, will stop will retrying
  
  Setting a negative number will result in InvalidArgumentException being thrown.
  */
-@property (nonatomic) NSInteger maxRetries;
+@property (nonatomic) NSInteger maxAttempts;
 
 /**
  Max wait time for the next retry.

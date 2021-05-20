@@ -141,33 +141,34 @@ public struct ReplicatorConfiguration {
         }
     }
     
-    private var _maxRetries: Int = -1
+    private var _maxAttempts: Int = -1
     /**
      The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
      able to connect and replicate with the remote server again.
      
-     Without setting the maxRetries value, the default maxRetries of 9 times for single shot
+     When setting the  _maxAttempts to zero(default), the default maxAttempts of 10 times for single shot
      replicators and infinite times for continuous replicators will be applied and present to users.
-     Settings the value to 0 will result in no retry attempt.
+     Settings the value to 1 will result in, will perform an initial request and if there is a transient error
+     occurs, will stop will retrying
      
      Setting a negative number will result in InvalidArgumentException being thrown.
      */
-    public var maxRetries: Int {
+    public var maxAttempts: Int {
         set(newValue) {
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
-                            reason: "Attempt to store negative value in maxRetries",
+                            reason: "Attempt to store negative value in maxAttempts",
                             userInfo: nil).raise()
                 return
             }
             
-            _maxRetries = newValue
+            _maxAttempts = newValue
         }
         
         get {
-            return _maxRetries >= 0
-                ? _maxRetries : self.continuous
-                ? ReplicatorConfiguration.defaultContinousMaxRetries : ReplicatorConfiguration.defaultSingleShotMaxRetries
+            return _maxAttempts > 0
+                ? _maxAttempts : self.continuous
+                ? ReplicatorConfiguration.defaultContinousMaxAttempts : ReplicatorConfiguration.defaultSingleShotMaxAttempts
         }
     }
     
@@ -217,7 +218,7 @@ public struct ReplicatorConfiguration {
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
         self.heartbeat = config.heartbeat
-        self.maxRetries = config.maxRetries
+        self.maxAttempts = config.maxAttempts
         self.maxRetryWaitTime = config.maxRetryWaitTime
         self.pullFilter = config.pullFilter
         self.pushFilter = config.pushFilter
@@ -233,8 +234,8 @@ public struct ReplicatorConfiguration {
     
     // MARK: Internal
     
-    private static let defaultContinousMaxRetries = NSInteger.max
-    private static let defaultSingleShotMaxRetries = 9
+    private static let defaultContinousMaxAttempts = NSInteger.max
+    private static let defaultSingleShotMaxAttempts = 10
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
@@ -249,7 +250,7 @@ public struct ReplicatorConfiguration {
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
         c.heartbeat = self.heartbeat
-        c.maxRetries = self.maxRetries
+        c.maxAttempts = self.maxAttempts
         c.maxRetryWaitTime = self.maxRetryWaitTime
         
         if let resolver = self.conflictResolver {
