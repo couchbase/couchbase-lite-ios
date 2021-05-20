@@ -387,10 +387,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
     if (_repl) {
-        C4Error err = {};
-        assert(c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, &err));
-        if (err.code > 0)
-            CBLWarn(Sync, @"Failed set progress level to %d - (%d/%d)", level, err.domain, err.code);
+        assert(c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, nullptr));
     } else {
         _progressLevel = level;
     }
