@@ -151,19 +151,8 @@ public struct ReplicatorConfiguration {
      replicators and infinite times for continuous replicators will be applied and present to users.
      Settings the value to 1 will result in, will perform an initial request and if there is a transient error
      occurs, will stop will retrying
-     
-     Setting a negative number will result in InvalidArgumentException being thrown.
      */
-    public var maxAttempts: Int = 0 {
-        willSet(newValue) {
-            guard newValue >= 0 else {
-                NSException(name: .invalidArgumentException,
-                            reason: "Attempt to store negative value in maxAttempts",
-                            userInfo: nil).raise()
-                return
-            }
-        }
-    }
+    public var maxAttempts: UInt = 0
     
     /**
      Max wait time for the next attempt(retry).

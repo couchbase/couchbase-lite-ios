@@ -138,10 +138,8 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  Setting the maxAttempts to zero(by default), the default maxAttempts of 10 times for single shot replicators and max-int times for
  continuous replicators will be applied and present to users. Settings the value to 1, will perform an initial request and
  if there is a transient error occurs, will stop will retrying.
- 
- Setting a negative number will result in InvalidArgumentException being thrown.
  */
-@property (nonatomic) NSInteger maxAttempts;
+@property (nonatomic) NSUInteger maxAttempts;
 
 /**
  Max wait time for the next attempt(retry).

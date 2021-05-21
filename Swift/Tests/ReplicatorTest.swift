@@ -44,7 +44,7 @@ class ReplicatorTest: CBLTestCase {
     
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
                 auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
-                maxAttempts: Int? = 0) -> ReplicatorConfiguration {
+                maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
         var config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
@@ -60,9 +60,9 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
-                serverCert: SecCertificate? = nil, maxAttempts: Int? = 0) -> ReplicatorConfiguration {
-        var config = self.config(target: target, type: type, continuous: continuous,
-                                 auth: auth, serverCert: serverCert, maxAttempts: maxAttempts)
+                serverCert: SecCertificate? = nil, maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
+        var config = config(target: target, type: type, continuous: continuous, auth: auth,
+                            serverCert: serverCert, maxAttempts: maxAttempts)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
         return config
     }
@@ -97,7 +97,7 @@ class ReplicatorTest: CBLTestCase {
              continuous: Bool = false, auth: Authenticator? = nil,
              acceptSelfSignedOnly: Bool = false,
              serverCert: SecCertificate? = nil,
-             maxAttempts: Int? = 0,
+             maxAttempts: UInt? = 0,
              expectedError: Int? = nil) {
         let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
                                  acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert,
@@ -945,31 +945,14 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.maxAttempts, 11)
     }
     
-    func testInvalidMaxAttempt() {
-        func expectException() throws {
-            do {
-                try CBLTestHelper.catchException {
-                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
-                    config.maxAttempts = -1
-                }
-            } catch {
-                XCTAssertEqual((error as NSError).domain,
-                               NSExceptionName.invalidArgumentException.rawValue)
-                throw error
-            }
-        }
-        
-        XCTAssertThrowsError(try expectException())
-    }
-    
-    func testMaxAttempt(attempt: Int, count: Int, continuous: Bool) {
+    func testMaxAttempt(attempt: UInt?, count: Int, continuous: Bool) {
         let x = self.expectation(description: "repl finish")
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: continuous)
         
         var offlineCount = 0
-        if attempt >= 0 {
+        if let attempt = attempt {
             config.maxAttempts = attempt
         }
         
@@ -999,7 +982,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // disbale the test, since this might take ~13mints; when testing, change the timeout to 900secs
     func _testMaxAttemptForSingleShot() {
-        testMaxAttempt(attempt: -1, count: 9, continuous: false)
+        testMaxAttempt(attempt: nil, count: 9, continuous: false)
     }
     
     // MARK: Max Retry Wait Time

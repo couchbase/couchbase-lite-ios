@@ -147,12 +147,8 @@
     _heartbeat = heartbeat;
 }
 
-- (void) setMaxAttempts: (NSInteger)maxAttempts {
+- (void) setMaxAttempts: (NSUInteger)maxAttempts {
     [self checkReadonly];
-    
-    if (maxAttempts < 0)
-        [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store negative value in maxAttempts"];
     
     _maxAttempts = maxAttempts;
 }
