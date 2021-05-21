@@ -1752,10 +1752,6 @@
                                                      continuous: YES];
     
     [self expectException: @"NSInvalidArgumentException" in:^{
-        config.heartbeat = 0;
-    }];
-    
-    [self expectException: @"NSInvalidArgumentException" in:^{
         config.heartbeat = -1;
     }];
     
