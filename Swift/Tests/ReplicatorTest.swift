@@ -908,7 +908,6 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         XCTAssertThrowsError(try expectExceptionFor(-1))
-        XCTAssertThrowsError(try expectExceptionFor(0))
     }
     
     func testCustomHeartbeat() {
@@ -1005,37 +1004,37 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: Max Retry Wait Time
     
-    func testMaxRetryWaitTime() {
+    func testMaxAttemptWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        XCTAssertEqual(config.maxAttemptWaitTime, 300)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
-        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        XCTAssertEqual(config.maxAttemptWaitTime, 300)
         
         repl = Replicator(config: config)
-        XCTAssertEqual(repl.config.maxRetryWaitTime, 300)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, 300)
     }
     
     func testCustomMaxRetryWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        config.maxRetryWaitTime = 444
-        XCTAssertEqual(config.maxRetryWaitTime, 444)
+        config.maxAttemptWaitTime = 444
+        XCTAssertEqual(config.maxAttemptWaitTime, 444)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
-        config.maxRetryWaitTime = 555
-        XCTAssertEqual(config.maxRetryWaitTime, 555)
+        config.maxAttemptWaitTime = 555
+        XCTAssertEqual(config.maxAttemptWaitTime, 555)
     }
     
-    func testInvalidMaxRetryWaitTime() {
+    func testInvalidMaxAttemptWaitTime() {
         func expectException(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
                     var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
-                    config.maxRetryWaitTime = val
+                    config.maxAttemptWaitTime = val
                 }
             } catch {
                 XCTAssertEqual((error as NSError).domain,
@@ -1044,18 +1043,17 @@ class ReplicatorTest_Main: ReplicatorTest {
             }
         }
         
-        XCTAssertThrowsError(try expectException(0))
         XCTAssertThrowsError(try expectException(-1))
     }
     
-    func testMaxRetryWaitTimeOfReplicator() {
+    func testMaxAttemptWaitTimeOfReplicator() {
         timeout = 12 // already it takes 8 secs of retry, hence 12secs timeout. 
         let x = self.expectation(description: "repl finish")
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: false)
         config.maxAttempts = 4
-        config.maxRetryWaitTime = 2
+        config.maxAttemptWaitTime = 2
         
         var diff: TimeInterval = 0
         var time = Date()
@@ -1071,7 +1069,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         repl.start()
         wait(for: [x], timeout: timeout)
-        XCTAssert(abs(diff - config.maxRetryWaitTime) < 1.0)
+        XCTAssert(abs(diff - config.maxAttemptWaitTime) < 1.0)
     }
     
     func testListenerAddRemoveAfterReplicatorStart() throws {
@@ -1087,7 +1085,7 @@ class ReplicatorTest_Main: ReplicatorTest {
                                                           type: .pushAndPull,
                                                           continuous: false)
         config.maxAttempts = 4
-        config.maxRetryWaitTime = 2
+        config.maxAttemptWaitTime = 2
         
         repl = Replicator(config: config)
         let token1 = repl.addChangeListener { (change) in
@@ -1134,7 +1132,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config1.replicatorType = .pull
         config1.heartbeat = 211
         config1.maxAttempts = 223
-        config1.maxRetryWaitTime = 227
+        config1.maxAttemptWaitTime = 227
         
         let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
         let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
@@ -1165,7 +1163,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config1.replicatorType = .push
         config1.heartbeat = 11
         config1.maxAttempts = 13
-        config1.maxRetryWaitTime = 17
+        config1.maxAttemptWaitTime = 17
         config1.pinnedServerCertificate = nil
         config1.pullFilter = nil
         config1.pushFilter = nil
@@ -1182,7 +1180,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.replicatorType, .pull)
         XCTAssertEqual(config.heartbeat, 211)
         XCTAssertEqual(config.maxAttempts, 223)
-        XCTAssertEqual(config.maxRetryWaitTime, 227)
+        XCTAssertEqual(config.maxAttemptWaitTime, 227)
         XCTAssertEqual(config.pinnedServerCertificate, cert)
         XCTAssertNotNil(config.pushFilter)
         XCTAssertNotNil(config.pullFilter)
@@ -1203,7 +1201,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config.replicatorType = .pull
         config.heartbeat = 211
         config.maxAttempts = 223
-        config.maxRetryWaitTime = 227
+        config.maxAttemptWaitTime = 227
         
         let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
         let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
@@ -1235,7 +1233,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config.replicatorType = .push
         config.heartbeat = 11
         config.maxAttempts = 13
-        config.maxRetryWaitTime = 17
+        config.maxAttemptWaitTime = 17
         config.pinnedServerCertificate = nil
         config.pullFilter = nil
         config.pushFilter = nil
@@ -1253,7 +1251,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config2.replicatorType = .push
         config2.heartbeat = 11
         config2.maxAttempts = 13
-        config2.maxRetryWaitTime = 17
+        config2.maxAttemptWaitTime = 17
         config2.pinnedServerCertificate = nil
         config2.pullFilter = nil
         config2.pushFilter = nil
@@ -1271,7 +1269,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(repl.config.replicatorType, .pull)
         XCTAssertEqual(repl.config.heartbeat, 211)
         XCTAssertEqual(repl.config.maxAttempts, 223)
-        XCTAssertEqual(repl.config.maxRetryWaitTime, 227)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, 227)
         XCTAssertEqual(repl.config.pinnedServerCertificate, cert)
         XCTAssertNotNil(repl.config.pushFilter)
         XCTAssertNotNil(repl.config.pullFilter)
@@ -1292,7 +1290,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNil(config.headers)
         XCTAssertEqual(config.heartbeat, 300)
         XCTAssertEqual(config.maxAttempts, 10)
-        XCTAssertEqual(config.maxRetryWaitTime, 300)
+        XCTAssertEqual(config.maxAttemptWaitTime, 300)
         XCTAssertNil(config.pinnedServerCertificate)
         XCTAssertNil(config.pullFilter)
         XCTAssertNil(config.pushFilter)

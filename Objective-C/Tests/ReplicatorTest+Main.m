@@ -1857,59 +1857,59 @@
     [self testMaxAttempt: -1 count: 9 continuous: NO];
 }
 
-#pragma mark - Max Retry Wait Time
+#pragma mark - Max Attempt Wait Time
 
-- (void) testMaxRetryWaitTime {
+- (void) testMaxAttemptWaitTime {
     // single shot
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    AssertEqual(config.maxRetryWaitTime, 300);
+    AssertEqual(config.maxAttemptWaitTime, 300);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxRetryWaitTime, 300);
+    AssertEqual(repl.config.maxAttemptWaitTime, 300);
     
     // continuous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: YES];
-    AssertEqual(config.maxRetryWaitTime, 300);
+    AssertEqual(config.maxAttemptWaitTime, 300);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxRetryWaitTime, 300);
+    AssertEqual(repl.config.maxAttemptWaitTime, 300);
     
     repl = nil;
 }
 
-- (void) testCustomMaxRetryWaitTime {
+- (void) testCustomMaxAttemptWaitTime {
     // single shot
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.maxRetryWaitTime = 444;
-    AssertEqual(config.maxRetryWaitTime, 444);
+    config.maxAttemptWaitTime = 444;
+    AssertEqual(config.maxAttemptWaitTime, 444);
     
     // continuous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: YES];
-    config.maxRetryWaitTime = 444;
-    AssertEqual(config.maxRetryWaitTime, 444);
+    config.maxAttemptWaitTime = 444;
+    AssertEqual(config.maxAttemptWaitTime, 444);
 }
 
-- (void) testInvalidMaxRetryWaitTime {
+- (void) testInvalidMaxAttemptWaitTime {
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
     [self expectException: @"NSInvalidArgumentException" in:^{
-        config.maxRetryWaitTime = -1;
+        config.maxAttemptWaitTime = -1;
     }];
 }
 
-- (void) testMaxRetryWaitTimeOfReplicator {
+- (void) testMaxAttemptWaitTimeOfReplicator {
     XCTestExpectation* exp = [self expectationWithDescription: @"replicator finish"];
     CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.maxRetryWaitTime = 2;
+    config.maxAttemptWaitTime = 2;
     config.maxAttempts = 3; // (initial) + 2 + 2
     repl = [[CBLReplicator alloc] initWithConfig: config];
     __block NSDate* begin = [NSDate date];
@@ -1924,10 +1924,8 @@
     }];
     [repl start];
     [self waitForExpectations: @[exp] timeout: timeout];
-    Assert(ABS(diff - config.maxRetryWaitTime) < 1.0);
+    Assert(ABS(diff - config.maxAttemptWaitTime) < 1.0);
 }
-
-#pragma mark - Max Retry Wait Time
 
 # pragma mark - CBLDocumentReplication
 
@@ -1981,7 +1979,7 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.maxRetryWaitTime = 2;
+    config.maxAttemptWaitTime = 2;
     config.maxAttempts = 4;
     repl = [[CBLReplicator alloc] initWithConfig: config];
     id token1 = [repl addChangeListener: ^(CBLReplicatorChange * c) {

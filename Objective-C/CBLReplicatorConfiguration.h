@@ -124,8 +124,10 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
 /**
  The heartbeat interval in second.
 
- The interval when the replicator sends the ping message to check whether the other peer is still alive.
- Note: Setting the heartbeat to zero or negative value will result in InvalidArgumentException being thrown.
+ The interval when the replicator sends the ping message to check whether the other peer is still alive. Set the value to zero(by default)
+ means using the default heartbeat of 300 seconds.
+ 
+ Note: Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
  */
 @property (nonatomic) NSTimeInterval heartbeat;
 
@@ -135,19 +137,21 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  
  Setting the maxAttempts to zero(by default), the default maxAttempts of 10 times for single shot replicators and max-int times for
  continuous replicators will be applied and present to users. Settings the value to 1, will perform an initial request and
- if there is a transient error occurs, will stop will retrying
+ if there is a transient error occurs, will stop will retrying.
  
  Setting a negative number will result in InvalidArgumentException being thrown.
  */
 @property (nonatomic) NSInteger maxAttempts;
 
 /**
- Max wait time for the next retry.
+ Max wait time for the next attempt(retry).
  
- The exponential backoff for calculating the wait time will be used by default and cannot be customized. Set the maxRetryWaitTime to zero
- or negative value will result in InvalidArgumentException being thrown.
+ The exponential backoff for calculating the wait time will be used by default and cannot be customized. Set the value to zero(by default)
+ means using the default max attempts of 300 seconds.
+ 
+ Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException being thrown.
  */
-@property (nonatomic) NSTimeInterval maxRetryWaitTime;
+@property (nonatomic) NSTimeInterval maxAttemptWaitTime;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
