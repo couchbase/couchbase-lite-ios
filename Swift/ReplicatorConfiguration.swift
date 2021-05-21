@@ -124,7 +124,6 @@ public struct ReplicatorConfiguration {
     public var allowReplicatingInBackground: Bool = false
     #endif
     
-    private var _heartbeat: TimeInterval = 0
     /**
     The heartbeat interval in second.
     
@@ -133,24 +132,17 @@ public struct ReplicatorConfiguration {
       
     Note: Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
      */
-    public var heartbeat: TimeInterval {
-        set(newValue) {
+    public var heartbeat: TimeInterval = 0 {
+        willSet(newValue) {
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
                             reason: "Attempt to store negative value in heartbeat",
                             userInfo: nil).raise()
                 return
             }
-            
-            _heartbeat = newValue
-        }
-        
-        get {
-            return _heartbeat > 0 ? _heartbeat : ReplicatorConfiguration.defaultHeartbeat
         }
     }
     
-    private var _maxAttempts: Int = 0
     /**
      The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
      able to connect and replicate with the remote server again.
@@ -162,26 +154,17 @@ public struct ReplicatorConfiguration {
      
      Setting a negative number will result in InvalidArgumentException being thrown.
      */
-    public var maxAttempts: Int {
-        set(newValue) {
+    public var maxAttempts: Int = 0 {
+        willSet(newValue) {
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
                             reason: "Attempt to store negative value in maxAttempts",
                             userInfo: nil).raise()
                 return
             }
-            
-            _maxAttempts = newValue
-        }
-        
-        get {
-            return _maxAttempts > 0
-                ? _maxAttempts : self.continuous
-                ? ReplicatorConfiguration.defaultContinousMaxAttempts : ReplicatorConfiguration.defaultSingleShotMaxAttempts
         }
     }
     
-    private var _maxAttemptWaitTime: TimeInterval = 0
     /**
      Max wait time for the next attempt(retry).
      
@@ -192,8 +175,8 @@ public struct ReplicatorConfiguration {
      Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
      being thrown.
      */
-    public var maxAttemptWaitTime: TimeInterval {
-        set(newValue) {
+    public var maxAttemptWaitTime: TimeInterval = 0 {
+        willSet(newValue) {
             
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
@@ -201,12 +184,6 @@ public struct ReplicatorConfiguration {
                             userInfo: nil).raise()
                 return
             }
-            
-            _maxAttemptWaitTime = newValue
-        }
-        
-        get {
-            return _maxAttemptWaitTime > 0 ? _maxAttemptWaitTime : ReplicatorConfiguration.defaultMaxAttemptWaitTime
         }
     }
     

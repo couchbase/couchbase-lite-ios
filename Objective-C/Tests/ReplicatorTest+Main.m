@@ -1714,7 +1714,7 @@
     CBLReplicatorConfiguration* temp = [self configWithTarget: target
                                                          type: kCBLReplicatorTypePush
                                                    continuous: YES];
-    AssertEqual(temp.heartbeat, 300);
+    AssertEqual(temp.heartbeat, 0);
     
     [temp setContinuous: YES];
     [temp setAuthenticator: basic];
@@ -1741,7 +1741,7 @@
     AssertEqualObjects(headers, config.headers);
     AssertEqualObjects(docIds, config.documentIDs);
     AssertEqualObjects(channels, config.channels);
-    AssertEqual(config.heartbeat, 300);
+    AssertEqual(config.heartbeat, 0);
 }
 
 #pragma mark - HeartBeat
@@ -1781,13 +1781,13 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
-    AssertEqual(config.maxAttempts, NSIntegerMax);
+    AssertEqual(config.maxAttempts, 0);
     
     // single shot
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: NO];
-    AssertEqual(config.maxAttempts, 10);
+    AssertEqual(config.maxAttempts, 0);
 }
 
 - (void) testCustomMaxAttemptCount {
@@ -1860,17 +1860,17 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    AssertEqual(config.maxAttemptWaitTime, 300);
+    AssertEqual(config.maxAttemptWaitTime, 0);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, 300);
+    AssertEqual(repl.config.maxAttemptWaitTime, 0);
     
     // continuous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: YES];
-    AssertEqual(config.maxAttemptWaitTime, 300);
+    AssertEqual(config.maxAttemptWaitTime, 0);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, 300);
+    AssertEqual(repl.config.maxAttemptWaitTime, 0);
     
     repl = nil;
 }

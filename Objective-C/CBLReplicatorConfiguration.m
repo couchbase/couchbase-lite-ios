@@ -29,11 +29,6 @@
 #import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
-static int kDefaultHeartBeat = 300;
-static int kDefaultSingleShotMaxAttempts = 10;
-static NSInteger kDefaultContinousMaxAttempts = NSIntegerMax;
-static int kDefaultMaxAttemptWaitTime = 300;
-
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
 }
@@ -152,10 +147,6 @@ static int kDefaultMaxAttemptWaitTime = 300;
     _heartbeat = heartbeat;
 }
 
-- (NSTimeInterval) heartbeat {
-    return _heartbeat > 0 ? _heartbeat : kDefaultHeartBeat;
-}
-
 - (void) setMaxAttempts: (NSInteger)maxAttempts {
     [self checkReadonly];
     
@@ -166,10 +157,6 @@ static int kDefaultMaxAttemptWaitTime = 300;
     _maxAttempts = maxAttempts;
 }
 
-- (NSInteger) maxAttempts {
-    return _maxAttempts > 0 ? _maxAttempts : _continuous ? kDefaultContinousMaxAttempts : kDefaultSingleShotMaxAttempts;
-}
-
 - (void) setMaxAttemptWaitTime: (NSTimeInterval)maxAttemptWaitTime {
     [self checkReadonly];
     
@@ -178,10 +165,6 @@ static int kDefaultMaxAttemptWaitTime = 300;
                     format: @"Attempt to store negative value in maxAttemptWaitTime"];
     
     _maxAttemptWaitTime = maxAttemptWaitTime;
-}
-
-- (NSTimeInterval) maxAttemptWaitTime {
-    return _maxAttemptWaitTime > 0 ? _maxAttemptWaitTime : kDefaultMaxAttemptWaitTime;
 }
 
 #pragma mark - Internal

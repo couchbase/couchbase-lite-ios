@@ -44,7 +44,7 @@ class ReplicatorTest: CBLTestCase {
     
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
                 auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
-                maxAttempts: Int? = 10) -> ReplicatorConfiguration {
+                maxAttempts: Int? = 0) -> ReplicatorConfiguration {
         var config = ReplicatorConfiguration(database: self.db, target: target)
         config.replicatorType = type
         config.continuous = continuous
@@ -60,7 +60,7 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
-                serverCert: SecCertificate? = nil, maxAttempts: Int? = 10) -> ReplicatorConfiguration {
+                serverCert: SecCertificate? = nil, maxAttempts: Int? = 0) -> ReplicatorConfiguration {
         var config = self.config(target: target, type: type, continuous: continuous,
                                  auth: auth, serverCert: serverCert, maxAttempts: maxAttempts)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
@@ -97,7 +97,7 @@ class ReplicatorTest: CBLTestCase {
              continuous: Bool = false, auth: Authenticator? = nil,
              acceptSelfSignedOnly: Bool = false,
              serverCert: SecCertificate? = nil,
-             maxAttempts: Int? = 10,
+             maxAttempts: Int? = 0,
              expectedError: Int? = nil) {
         let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
                                  acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert,
@@ -926,11 +926,11 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testMaxAttemptCount() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxAttempts, 10)
+        XCTAssertEqual(config.maxAttempts, 0)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true, maxAttempts: nil)
-        XCTAssertEqual(config.maxAttempts, NSInteger.max)
+        XCTAssertEqual(config.maxAttempts, 0)
     }
     
     func testCustomMaxAttemptCount() {
@@ -1007,17 +1007,17 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testMaxAttemptWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxAttemptWaitTime, 300)
+        XCTAssertEqual(config.maxAttemptWaitTime, 0)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
-        XCTAssertEqual(config.maxAttemptWaitTime, 300)
+        XCTAssertEqual(config.maxAttemptWaitTime, 0)
         
         repl = Replicator(config: config)
-        XCTAssertEqual(repl.config.maxAttemptWaitTime, 300)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, 0)
     }
     
-    func testCustomMaxRetryWaitTime() {
+    func testCustomMaxAttemptWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
         config.maxAttemptWaitTime = 444
@@ -1288,9 +1288,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertFalse(config.continuous)
         XCTAssertNil(config.documentIDs)
         XCTAssertNil(config.headers)
-        XCTAssertEqual(config.heartbeat, 300)
-        XCTAssertEqual(config.maxAttempts, 10)
-        XCTAssertEqual(config.maxAttemptWaitTime, 300)
+        XCTAssertEqual(config.heartbeat, 0)
+        XCTAssertEqual(config.maxAttempts, 0)
+        XCTAssertEqual(config.maxAttemptWaitTime, 0)
         XCTAssertNil(config.pinnedServerCertificate)
         XCTAssertNil(config.pullFilter)
         XCTAssertNil(config.pushFilter)
