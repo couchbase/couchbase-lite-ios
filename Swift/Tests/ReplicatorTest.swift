@@ -989,11 +989,13 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testMaxAttempt() {
-        testMaxAttempt(attempt: 0, count: 0, continuous: false)
-        testMaxAttempt(attempt: 0, count: 0, continuous: true)
+        // replicator with no retry; only initial request
+        testMaxAttempt(attempt: 1, count: 0, continuous: false)
+        testMaxAttempt(attempt: 1, count: 0, continuous: true)
         
-        testMaxAttempt(attempt: 1, count: 1, continuous: false)
-        testMaxAttempt(attempt: 1, count: 1, continuous: true)
+        // replicator with one retry; initial + one retry(offline)
+        testMaxAttempt(attempt: 2, count: 1, continuous: false)
+        testMaxAttempt(attempt: 2, count: 1, continuous: true)
     }
     
     // disbale the test, since this might take ~13mints; when testing, change the timeout to 900secs
