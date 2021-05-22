@@ -1108,7 +1108,6 @@ typedef CBLURLEndpointListener Listener;
 - (void) testReplicatorAndListenerOnSameDatabase {
     if (!self.keyChainAccessAllowed) return;
     
-    timeout = 5.0;
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
     
