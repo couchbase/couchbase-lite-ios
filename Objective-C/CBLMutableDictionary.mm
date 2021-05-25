@@ -167,18 +167,27 @@ using namespace fleece;
         return createError(CBLErrorInvalidJSON, @"Value is not a Dictionary", error);
     }
     
-    FLDict dict = FLValue_AsDict(result);
-    _dict.clear();
+    _root.reset(new MRoot<id>(new cbl::DocContext(), result, true));
     
-    FLDictIterator iter;
-    FLDictIterator_Begin(dict, &iter);
-    FLValue value;
-    while (NULL != (value = FLDictIterator_GetValue(&iter))) {
-        id val = FLValue_GetNSObject(value, nil);
-        _dict.set(FLDictIterator_GetKeyString(&iter), [val cbl_toCBLObject]);
-        FLDictIterator_Next(&iter);
-    }
+    CBLMutableDictionary* tempDict = _root->asNative();
+    _dict.initAsCopyOf(*[tempDict mDict], true);
+    
+//    FLDict dict = FLValue_AsDict(result);
+//    _dict.clear();
+//
+//    FLDictIterator iter;
+//    FLDictIterator_Begin(dict, &iter);
+//    FLValue value;
+//    while (NULL != (value = FLDictIterator_GetValue(&iter))) {
+//        id val = FLValue_GetNSObject(value, nil);
+//        _dict.set(FLDictIterator_GetKeyString(&iter), [val cbl_toCBLObject]);
+//        FLDictIterator_Next(&iter);
+//    }
     return YES;
+}
+
+- (fleece::MDict<id>*) mDict {
+    return &_dict;
 }
 
 #pragma mark - Subscript

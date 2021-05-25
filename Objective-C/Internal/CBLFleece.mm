@@ -39,6 +39,8 @@ namespace cbl {
     ,_doc(doc)
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
+
+    DocContext::DocContext():fleece::MContext(fleece::alloc_slice()) {}
     
     
     id DocContext::toObject(fleece::Value value) {
@@ -63,8 +65,11 @@ namespace fleece {
     static id createSpecialObjectOfType(Dict properties, DocContext *context) {
         slice type = properties.get(C4STR(kC4ObjectTypeProperty)).asString();
         if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties)) {
-            return [[CBLBlob alloc] initWithDatabase: context->database()
-                                          properties: context->toObject(properties)];
+            if (context->database())
+                return [[CBLBlob alloc] initWithDatabase: context->database()
+                                              properties: context->toObject(properties)];
+            else
+                return [[CBLBlob alloc] initWithProperties: context->toObject(properties)];
         }
         return nil;
     }

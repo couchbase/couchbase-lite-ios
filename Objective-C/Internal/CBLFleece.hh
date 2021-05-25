@@ -23,6 +23,7 @@
 #import "fleece/Fleece.hh"
 #import "MArray.hh"
 #import "MDict.hh"
+#import "MRoot.hh"
 #import "CBLDocument.h"
 
 @class CBLDatabase, CBLC4Document;
@@ -56,6 +57,7 @@ namespace cbl {
     class DocContext : public fleece::MContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
+        DocContext();
         
         CBLDatabase* database() const   {return _db;}
         CBLC4Document* __nullable document() const {return _doc;}
@@ -80,6 +82,7 @@ namespace cbl {
 {
     @protected
     fleece::MArray<id> _array;
+    std::unique_ptr<fleece::MRoot<id>> _root;
 }
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
@@ -93,6 +96,7 @@ namespace cbl {
 {
     @protected
     fleece::MDict<id> _dict;
+    std::unique_ptr<fleece::MRoot<id>> _root;
 }
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
