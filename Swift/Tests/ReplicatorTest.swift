@@ -61,7 +61,7 @@ class ReplicatorTest: CBLTestCase {
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
                 serverCert: SecCertificate? = nil, maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
-        var config = config(target: target, type: type, continuous: continuous, auth: auth,
+        var config = self.config(target: target, type: type, continuous: continuous, auth: auth,
                             serverCert: serverCert, maxAttempts: maxAttempts)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
         return config
