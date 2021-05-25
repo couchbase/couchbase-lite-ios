@@ -23,7 +23,7 @@ CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
 
 IPHONEOS_DEPLOYMENT_TARGET         = 9.0
-MACOSX_DEPLOYMENT_TARGET           = 10.11
+MACOSX_DEPLOYMENT_TARGET           = 10.12
 TVOS_DEPLOYMENT_TARGET             = 9.0
 
 CODE_SIGN_IDENTITY                 =
