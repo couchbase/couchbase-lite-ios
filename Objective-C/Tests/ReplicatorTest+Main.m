@@ -1806,15 +1806,6 @@
     AssertEqual(config.maxAttempts, 11);
 }
 
-- (void) testInvalidMaxAttempt {
-    CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
-    [self expectException: @"NSInvalidArgumentException" in:^{
-        config.maxAttempts = -1;
-    }];
-}
-
 // set retry negative value for testing the default values
 - (void) testMaxAttempt: (int) attempt count: (int)count continuous: (BOOL)continuous {
     XCTestExpectation* exp = [self expectationWithDescription: @"replicator finish"];
