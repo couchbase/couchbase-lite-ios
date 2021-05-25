@@ -1906,7 +1906,7 @@
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
     config.maxAttemptWaitTime = 2;
-    config.maxAttempts = 3; // (initial) + 2 + 2
+    config.maxAttempts = 3;
     repl = [[CBLReplicator alloc] initWithConfig: config];
     __block NSDate* begin = [NSDate date];
     __block NSTimeInterval diff;

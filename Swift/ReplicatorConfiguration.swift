@@ -219,11 +219,6 @@ public struct ReplicatorConfiguration {
     
     // MARK: Internal
     
-    private static let defaultContinousMaxAttempts = NSInteger.max
-    private static let defaultSingleShotMaxAttempts = 10
-    private static let defaultMaxAttemptWaitTime: TimeInterval = 300
-    private static let defaultHeartbeat: TimeInterval = 300
-    
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         let c = CBLReplicatorConfiguration(database: self.database._impl, target: target.toImpl())
