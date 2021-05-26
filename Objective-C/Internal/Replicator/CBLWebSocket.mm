@@ -375,13 +375,16 @@ static void doDispose(C4Socket* s) {
         _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
     
     slice sessionCookie = _options[kC4ReplicatorOptionCookies].asString();
+    NSMutableString* cookies = [NSMutableString string];
     if (sessionCookie.buf)
-        [_logic addValue: sessionCookie.asNSString()  forHTTPHeaderField: @"Cookie"];
-    
+        [cookies appendFormat: @"%@;", sessionCookie.asNSString()];
     
     NSString* cookie = [_db getCookies: _remoteURL];
     if (cookie.length > 0)
-        [_logic addValue: cookie  forHTTPHeaderField: @"Cookie"];
+        [cookies appendString: cookie];
+    
+    if (cookies.length > 0)
+        [_logic setValue: cookies forHTTPHeaderField: @"Cookie"];
     
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
