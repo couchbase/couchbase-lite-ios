@@ -23,7 +23,6 @@
 #import "fleece/Fleece.hh"
 #import "MArray.hh"
 #import "MDict.hh"
-#import "MRoot.hh"
 #import "CBLDocument.h"
 
 @class CBLDatabase, CBLC4Document;

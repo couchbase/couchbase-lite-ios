@@ -25,7 +25,6 @@
 #import "CBLFleece.hh"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
-#import "MRoot.hh"
 
 using namespace fleece;
 
