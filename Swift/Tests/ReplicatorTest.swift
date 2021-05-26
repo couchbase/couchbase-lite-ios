@@ -945,16 +945,13 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.maxAttempts, 11)
     }
     
-    func testMaxAttempt(attempt: UInt?, count: Int, continuous: Bool) {
+    func testMaxAttempt(attempt: UInt, count: Int, continuous: Bool) {
         let x = self.expectation(description: "repl finish")
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: continuous)
-        
         var offlineCount = 0
-        if let attempt = attempt {
-            config.maxAttempts = attempt
-        }
+        config.maxAttempts = attempt
         
         repl = Replicator(config: config)
         repl.addChangeListener { (change) in
@@ -980,9 +977,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         testMaxAttempt(attempt: 2, count: 1, continuous: true)
     }
     
-    // disbale the test, since this might take ~13mints; when testing, change the timeout to 900secs
+    // disbale the test, since this test will take 13mints
     func _testMaxAttemptForSingleShot() {
-        testMaxAttempt(attempt: nil, count: 9, continuous: false)
+        testMaxAttempt(attempt: 0, count: 9, continuous: false)
     }
     
     // MARK: Max Retry Wait Time

@@ -1806,15 +1806,13 @@
     AssertEqual(config.maxAttempts, 11);
 }
 
-// set retry negative value for testing the default values
 - (void) testMaxAttempt: (int) attempt count: (int)count continuous: (BOOL)continuous {
     XCTestExpectation* exp = [self expectationWithDescription: @"replicator finish"];
     CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: continuous];
     __block int offlineCount = 0;
-    if (attempt >= 0)
-        config.maxAttempts = attempt;
+    config.maxAttempts = attempt;
     
     repl = [[CBLReplicator alloc] initWithConfig: config];
     [repl addChangeListener: ^(CBLReplicatorChange * c) {
@@ -1839,9 +1837,9 @@
     [self testMaxAttempt: 2 count: 1 continuous: YES];
 }
 
-// disbale the test, since this might take ~13mints
+// disbale the test, since this test will take 13mints to finish
 - (void) _testMaxAttemptForSingleShot {
-    [self testMaxAttempt: -1 count: 9 continuous: NO];
+    [self testMaxAttempt: 0 count: 9 continuous: NO];
 }
 
 #pragma mark - Max Attempt Wait Time
