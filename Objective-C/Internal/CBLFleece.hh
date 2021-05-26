@@ -57,16 +57,16 @@ namespace cbl {
     class DocContext : public fleece::MContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
-        DocContext();
+        DocContext(); // setJSON uses this context, without db or c4doc
         
-        CBLDatabase* database() const   {return _db;}
+        CBLDatabase* __nullable database() const   {return _db;}
         CBLC4Document* __nullable document() const {return _doc;}
         NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
         
         id toObject(fleece::Value);
         
         private:
-        CBLDatabase *_db;
+        CBLDatabase* __nullable _db;
         CBLC4Document* __nullable _doc;
         NSMapTable* _fleeceToNSStrings;
     };
@@ -82,7 +82,6 @@ namespace cbl {
 {
     @protected
     fleece::MArray<id> _array;
-    std::unique_ptr<fleece::MRoot<id>> _root;
 }
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
@@ -96,7 +95,6 @@ namespace cbl {
 {
     @protected
     fleece::MDict<id> _dict;
-    std::unique_ptr<fleece::MRoot<id>> _root;
 }
 
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv

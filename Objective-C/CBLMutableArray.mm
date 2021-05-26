@@ -267,25 +267,11 @@ using namespace fleece;
         return createError(CBLErrorInvalidJSON, @"Value is not an Array", error);
     }
     
-    _root.reset(new MRoot<id>(new cbl::DocContext(), result, true));
-    
-    CBLMutableArray* tempArray = _root->asNative();
-    _array.initAsCopyOf(*[tempArray mArray], true);
-    
-//    FLArray array = FLValue_AsArray(result);
-//    CBL_LOCK(self.sharedLock) {
-//        _array.clear();
-//        uint count = FLArray_Count(array);
-//        for (uint i = 0; i < count; i++) {
-//            id value = FLValue_GetNSObject(FLArray_Get(array, (uint32_t)i), nil);
-//            _array.append([value cbl_toCBLObject]);
-//        }
-//    }
+    CBL_LOCK(self.sharedLock) {
+        MArray<id> mArray(new cbl::DocContext(), result, true);
+        _array.initAsCopyOf(mArray, true);
+    }
     return YES;
-}
-
-- (fleece::MArray<id>*) mArray {
-    return &_array;
 }
 
 #pragma mark - Remove value

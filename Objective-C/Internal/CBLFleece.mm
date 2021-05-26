@@ -40,8 +40,10 @@ namespace cbl {
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
 
-    DocContext::DocContext():fleece::MContext(fleece::alloc_slice()) {}
-    
+    DocContext::DocContext()
+    :fleece::MContext(fleece::alloc_slice())
+    ,_fleeceToNSStrings(FLCreateSharedStringsTable())
+    { }
     
     id DocContext::toObject(fleece::Value value) {
         return value.asNSObject(_fleeceToNSStrings);
@@ -69,6 +71,7 @@ namespace fleece {
                 return [[CBLBlob alloc] initWithDatabase: context->database()
                                               properties: context->toObject(properties)];
             else
+                // when setJSON has a blob, which lacks database. 
                 return [[CBLBlob alloc] initWithProperties: context->toObject(properties)];
         }
         return nil;
