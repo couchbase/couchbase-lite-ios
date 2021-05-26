@@ -243,7 +243,7 @@
                        continuous: continuous
                     authenticator: authenticator
                        serverCert: serverCert
-                       maxRetries: -1];
+                      maxAttempts: -1];
 }
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
@@ -251,15 +251,15 @@
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert
-                                      maxRetries: (NSInteger)maxRetries /* for default, set -1 */ {
+                                     maxAttempts: (NSInteger)maxAttempts /* for default, set -1 */ {
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                   target: target];
     c.replicatorType = type;
     c.continuous = continuous;
     c.authenticator = authenticator;
     
-    if (maxRetries >= 0)
-        c.maxRetries = maxRetries;
+    if (maxAttempts >= 0)
+        c.maxAttempts = maxAttempts;
     
     if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"]) {
         if (serverCert)
@@ -342,7 +342,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
                     continuous: continuous
                  authenticator: authenticator
                     serverCert: serverCert
-                    maxRetries: -1
+                   maxAttempts: -1
                      errorCode: errorCode
                    errorDomain: errorDomain];
 }
@@ -352,7 +352,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
             continuous: (BOOL)continuous
          authenticator: (nullable CBLAuthenticator*)authenticator
             serverCert: (nullable SecCertificateRef)serverCert
-            maxRetries: (NSInteger)maxRetries // set to -1 for default maxRetry
+           maxAttempts: (NSInteger)maxAttempts // set to -1 for default maxRetry
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain {
     id config = [self configWithTarget: target
@@ -360,7 +360,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
                             continuous: continuous
                          authenticator: authenticator
                             serverCert: serverCert
-                            maxRetries: maxRetries];
+                           maxAttempts: maxAttempts];
     return [self run: config errorCode: errorCode errorDomain: errorDomain];
 }
 

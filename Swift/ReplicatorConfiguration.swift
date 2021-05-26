@@ -125,65 +125,51 @@ public struct ReplicatorConfiguration {
     #endif
     
     /**
-      The heartbeat interval in second.
-
-      The interval when the replicator sends the ping message to check whether the other peer is still alive.
-      Note: Setting the heartbeat to zero or negative value will result in InvalidArgumentException being thrown.
-      */
-    public var heartbeat: TimeInterval = 300 {
+    The heartbeat interval in second.
+    
+    The interval when the replicator sends the ping message to check whether the other peer is still alive. Set the value to
+    zero(by default) means using the default heartbeat of 300 seconds.
+      
+    Note: Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
+     */
+    public var heartbeat: TimeInterval = 0 {
         willSet(newValue) {
-            guard newValue > 0 else {
+            guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
-                            reason: "Attempt to store zero or negative value in heartbeat",
+                            reason: "Attempt to store negative value in heartbeat",
                             userInfo: nil).raise()
                 return
             }
         }
     }
     
-    private var _maxRetries: Int = -1
     /**
      The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
      able to connect and replicate with the remote server again.
      
-     Without setting the maxRetries value, the default maxRetries of 9 times for single shot
+     When setting the  _maxAttempts to zero(default), the default maxAttempts of 10 times for single shot
      replicators and infinite times for continuous replicators will be applied and present to users.
-     Settings the value to 0 will result in no retry attempt.
-     
-     Setting a negative number will result in InvalidArgumentException being thrown.
+     Settings the value to 1 will result in, will perform an initial request and if there is a transient error
+     occurs, will stop will retrying
      */
-    public var maxRetries: Int {
-        set(newValue) {
-            guard newValue >= 0 else {
-                NSException(name: .invalidArgumentException,
-                            reason: "Attempt to store negative value in maxRetries",
-                            userInfo: nil).raise()
-                return
-            }
-            
-            _maxRetries = newValue
-        }
-        
-        get {
-            return _maxRetries >= 0
-                ? _maxRetries : self.continuous
-                ? ReplicatorConfiguration.defaultContinousMaxRetries : ReplicatorConfiguration.defaultSingleShotMaxRetries
-        }
-    }
+    public var maxAttempts: UInt = 0
     
-    /*
-     Max wait time for the next retry.
+    /**
+     Max wait time for the next attempt(retry).
      
      The exponential backoff for calculating the wait time will be used by default and cannot be
-     customized. Set the maxRetryWaitTime to zero or negative value will result in
-     InvalidArgumentException being thrown.
+     customized. Set the value to zero(by default) means using the default max attempts of
+     300 seconds.
+     
+     Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
+     being thrown.
      */
-    public var maxRetryWaitTime: TimeInterval = 300 {
+    public var maxAttemptWaitTime: TimeInterval = 0 {
         willSet(newValue) {
             
-            guard newValue > 0 else {
+            guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
-                            reason: "Attempt to store zero or negative value in maxRetryWaitTime",
+                            reason: "Attempt to store negative value in maxAttemptWaitTime",
                             userInfo: nil).raise()
                 return
             }
@@ -217,8 +203,8 @@ public struct ReplicatorConfiguration {
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
         self.heartbeat = config.heartbeat
-        self.maxRetries = config.maxRetries
-        self.maxRetryWaitTime = config.maxRetryWaitTime
+        self.maxAttempts = config.maxAttempts
+        self.maxAttemptWaitTime = config.maxAttemptWaitTime
         self.pullFilter = config.pullFilter
         self.pushFilter = config.pushFilter
         
@@ -233,9 +219,6 @@ public struct ReplicatorConfiguration {
     
     // MARK: Internal
     
-    private static let defaultContinousMaxRetries = NSInteger.max
-    private static let defaultSingleShotMaxRetries = 9
-    
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         let c = CBLReplicatorConfiguration(database: self.database._impl, target: target.toImpl())
@@ -249,8 +232,8 @@ public struct ReplicatorConfiguration {
         c.pushFilter = self.filter(push: true)
         c.pullFilter = self.filter(push: false)
         c.heartbeat = self.heartbeat
-        c.maxRetries = self.maxRetries
-        c.maxRetryWaitTime = self.maxRetryWaitTime
+        c.maxAttempts = self.maxAttempts
+        c.maxAttemptWaitTime = self.maxAttemptWaitTime
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in

@@ -29,11 +29,6 @@
 #import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
-static int kDefaultHeartBeat = 300;
-static int kDefaultSingleShotMaxRetries = 9;
-static NSInteger kDefaultContinousMaxRetries = NSIntegerMax;
-static int kDefaultMaxRetryWaitTime = 300;
-
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
 }
@@ -47,7 +42,7 @@ static int kDefaultMaxRetryWaitTime = 300;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize conflictResolver=_conflictResolver;
-@synthesize maxRetries=_maxRetries, maxRetryWaitTime=_maxRetryWaitTime;
+@synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -71,9 +66,9 @@ static int kDefaultMaxRetryWaitTime = 300;
 #ifdef COUCHBASE_ENTERPRISE
         _acceptOnlySelfSignedServerCertificate = NO;
 #endif
-        _heartbeat = kDefaultHeartBeat;
-        _maxRetries = -1;
-        _maxRetryWaitTime = kDefaultMaxRetryWaitTime;
+        _heartbeat = 0;
+        _maxAttempts = 0;
+        _maxAttemptWaitTime = 0;
     }
     return self;
 }
@@ -145,35 +140,27 @@ static int kDefaultMaxRetryWaitTime = 300;
 - (void) setHeartbeat: (NSTimeInterval)heartbeat {
     [self checkReadonly];
     
-    if (heartbeat <= 0)
+    if (heartbeat < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store zero or negative value in heartbeat"];
+                    format: @"Attempt to store negative value in heartbeat"];
     
     _heartbeat = heartbeat;
 }
 
-- (void) setMaxRetries: (NSInteger)maxRetries {
+- (void) setMaxAttempts: (NSUInteger)maxAttempts {
     [self checkReadonly];
     
-    if (maxRetries < 0)
-        [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store negative value in maxRetries"];
-    
-    _maxRetries = maxRetries;
+    _maxAttempts = maxAttempts;
 }
 
-- (NSInteger) maxRetries {
-    return _maxRetries >= 0 ? _maxRetries : _continuous ? kDefaultContinousMaxRetries : kDefaultSingleShotMaxRetries;
-}
-
-- (void) setMaxRetryWaitTime: (NSTimeInterval)maxRetryWaitTime {
+- (void) setMaxAttemptWaitTime: (NSTimeInterval)maxAttemptWaitTime {
     [self checkReadonly];
     
-    if (maxRetryWaitTime <= 0)
+    if (maxAttemptWaitTime < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store zero or negative value in maxRetryWaitTime"];
+                    format: @"Attempt to store negative value in maxAttemptWaitTime"];
     
-    _maxRetryWaitTime = maxRetryWaitTime;
+    _maxAttemptWaitTime = maxAttemptWaitTime;
 }
 
 #pragma mark - Internal
@@ -201,8 +188,8 @@ static int kDefaultMaxRetryWaitTime = 300;
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _conflictResolver = config.conflictResolver;
-        _maxRetries = config.maxRetries;
-        _maxRetryWaitTime = config.maxRetryWaitTime;
+        _maxAttempts = config.maxAttempts;
+        _maxAttemptWaitTime = config.maxAttemptWaitTime;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif
@@ -247,10 +234,11 @@ static int kDefaultMaxRetryWaitTime = 300;
     if (_heartbeat > 0)
         options[@kC4ReplicatorHeartbeatInterval] = @(_heartbeat);
     
-    if (_maxRetryWaitTime > 0)
-        options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxRetryWaitTime);
+    if (_maxAttemptWaitTime > 0)
+        options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxAttemptWaitTime);
     
-    options[@kC4ReplicatorOptionMaxRetries] = @([self maxRetries]);
+    if (_maxAttempts > 0)
+        options[@kC4ReplicatorOptionMaxRetries] = @(_maxAttempts - 1);
     
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;

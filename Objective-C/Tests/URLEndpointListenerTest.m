@@ -1490,7 +1490,7 @@ typedef CBLURLEndpointListener Listener;
              continuous: NO
           authenticator: nil
              serverCert: nil
-             maxRetries: 2 // to make fail(stop) early
+            maxAttempts: 2 // to make fail(stop) early
               errorCode: ECONNREFUSED
             errorDomain: NSPOSIXErrorDomain];
 }

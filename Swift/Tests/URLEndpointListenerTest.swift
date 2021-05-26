@@ -1100,7 +1100,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         
         // Check to ensure that the replicator is not accessible:
         run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
-            maxRetries: 2, expectedError: Int(ECONNREFUSED))
+            maxAttempts: 2, expectedError: Int(ECONNREFUSED))
     }
     
     func testTLSPasswordListenerAuthenticator() throws {

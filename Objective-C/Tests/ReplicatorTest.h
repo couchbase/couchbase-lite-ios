@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
                                       continuous: (BOOL)continuous
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert
-                                      maxRetries: (NSInteger)maxRetries;
+                                     maxAttempts: (NSInteger)maxAttempts;
 
 #ifdef COUCHBASE_ENTERPRISE
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
@@ -124,7 +124,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady;
             continuous: (BOOL)continuous
          authenticator: (nullable CBLAuthenticator*)authenticator
             serverCert: (nullable SecCertificateRef)serverCert
-            maxRetries: (NSInteger)maxRetries
+           maxAttempts: (NSInteger)maxAttempts
              errorCode: (NSInteger)errorCode
            errorDomain: (nullable NSString*)errorDomain;
 
