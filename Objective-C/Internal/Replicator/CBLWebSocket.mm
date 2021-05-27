@@ -131,26 +131,30 @@ static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, vo
                                                c4socket: s
                                                 options: optionsFleece
                                                 context: context];
-        s->nativeHandle = (__bridge void*)socket;
+        c4Socket_setNativeHandle(s, (__bridge void*)socket);
         socket->_keepMeAlive = socket;          // Prevents dealloc until doDispose is called
         [socket start];
     }
 }
 
+static CBLWebSocket* getWebSocket(C4Socket *s) {
+    return (__bridge CBLWebSocket*)c4Socket_getNativeHandle(s);
+}
+
 static void doClose(C4Socket* s) {
-    [(__bridge CBLWebSocket*)s->nativeHandle closeSocket];
+    [getWebSocket(s) closeSocket];
 }
 
 static void doWrite(C4Socket* s, C4SliceResult allocatedData) {
-    [(__bridge CBLWebSocket*)s->nativeHandle writeAndFree: allocatedData];
+    [getWebSocket(s) writeAndFree: allocatedData];
 }
 
 static void doCompletedReceive(C4Socket* s, size_t byteCount) {
-    [(__bridge CBLWebSocket*)s->nativeHandle completedReceive: byteCount];
+    [getWebSocket(s) completedReceive: byteCount];
 }
 
 static void doDispose(C4Socket* s) {
-    [(__bridge CBLWebSocket*)s->nativeHandle dispose];
+    [getWebSocket(s) dispose];
 }
 
 - (instancetype) initWithURL: (NSURL*)url
@@ -203,7 +207,7 @@ static void doDispose(C4Socket* s) {
     // This has to be done synchronously, because _c4socket will be freed when this method returns
     auto socket = _c4socket.exchange(nullptr);
     if (socket)
-        socket->nativeHandle = nullptr;
+        c4Socket_setNativeHandle(socket, nullptr);
     // Remove the self-reference, so this object will be dealloced:
     _keepMeAlive = nil;
 }

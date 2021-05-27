@@ -486,7 +486,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [self mustBeOpen];
         
         C4Error err;
-        if (!c4db_compact(_c4db, &err))
+        if (!c4db_maintenance(_c4db, kC4Compact, &err))
             return convertError(err, outError);
         return YES;
     }
@@ -819,9 +819,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(err, outError);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
-    
-    c4db_startHousekeeping(_c4db);
-    
+        
     _state = kCBLDatabaseStateOpened;
     
     return YES;
