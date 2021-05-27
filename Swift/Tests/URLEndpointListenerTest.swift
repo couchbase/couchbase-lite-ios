@@ -1197,43 +1197,6 @@ class URLEndpontListenerTest: ReplicatorTest {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
-    // A listener with TLS enabled and a client authenticator pinning certificates
-    // should accept a client that presents a cert chain whose root is pinned
-    // TODO: https://issues.couchbase.com/browse/CBL-1510
-    func _testCertAuthWithRootCertAndChainedCertServer() throws {
-        if !keyChainAccessAllowed { return }
-            
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
-        let data = try dataFromResource(name: "identity/certs", ofType: "p12")
-        var identity: TLSIdentity!
-        ignoreException {
-            identity = try TLSIdentity.importIdentity(withData: data,
-                                                      password: "123",
-                                                      label: self.serverCertLabel)
-        }
-        
-        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
-        config.tlsIdentity = identity
-        config.authenticator = ListenerCertificateAuthenticator.init(rootCerts: [identity.certs[1]])
-        ignoreException {
-            self.listener = URLEndpointListener(config: config)
-            try self.listener?.start()
-        }
-        
-        try generateDocument(withID: "doc-1")
-        XCTAssertEqual(oDB.count, 0)
-        
-        run(target: listener!.localURLEndpoint,
-            type: .pushAndPull,
-            continuous: false,
-            auth: ClientCertificateAuthenticator(identity: identity),
-            acceptSelfSignedOnly: true,
-            serverCert: nil)
-        
-        try stopListener(listener: listener!)
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
-    }
-    
     // MARK: acceptSelfSignedOnly tests
     
     func testAcceptSelfSignedWithNonSelfSignedCert() throws {

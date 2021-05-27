@@ -1544,44 +1544,6 @@ typedef CBLURLEndpointListener Listener;
     AssertNil(error);
 }
 
-// A listener with TLS enabled and a client authenticator pinning certificates
-// should accept a client that presents a cert chain whose root is pinned
-// TODO: https://issues.couchbase.com/browse/CBL-1510
-- (void) _testCertAuthWithRootCertAndChainedCertServer {
-    if (!self.keyChainAccessAllowed) return;
-    
-    NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
-    
-    // Ignore the exception so that the exception breakpoint will not be triggered.
-    __block NSError* error;
-    __block CBLTLSIdentity* identity;
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    AssertNil(error);
-    [self ignoreException: ^{
-        identity = [CBLTLSIdentity importIdentityWithData: data
-        password: @"123"
-           label: kServerCertLabel
-           error: &error];
-    }];
-    AssertEqual(identity.certs.count, 2);
-    
-    CBLListenerCertificateAuthenticator* listenerAuth =
-        [[CBLListenerCertificateAuthenticator alloc] initWithRootCerts: @[identity.certs[1]]];
-    [self listenWithTLS: YES auth: listenerAuth];
-    
-    [self generateDocumentWithID: @"doc-1"];
-    AssertEqual(self.otherDB.count, 0);
-    
-    self.disableDefaultServerCertPinning = YES;
-    [self runWithTarget: _listener.localEndpoint
-                   type: kCBLReplicatorTypePushAndPull
-             continuous: NO
-          authenticator: [[CBLClientCertificateAuthenticator alloc] initWithIdentity: identity]
-             serverCert: nil
-              errorCode: 0
-            errorDomain: nil];
-}
-
 #pragma mark - acceptSelfSignedOnly tests
 
 - (void) testAcceptOnlySelfSignedCertificate {
