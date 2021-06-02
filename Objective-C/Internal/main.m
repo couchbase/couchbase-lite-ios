@@ -17,7 +17,6 @@ static void initialize()
     {
         initialized = 1;
         
-        NSLog(@">>>>>>>>>>>>>>>>>>>>>>>>>>> main initializer!!");
         c4log_enableFatalExceptionBacktrace();
     }
 }
