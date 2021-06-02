@@ -151,6 +151,17 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  */
 @property (nonatomic) NSTimeInterval maxAttemptWaitTime;
 
+/**
+ To enable/disable the auto purge feature
+ 
+ The default value is true which means that the document will be automatically purged by the
+ pull replicator when the user loses access to the document from both removed and revoked scenarios.
+ 
+ When the property is set to false, the document will not be purged when the user
+ loses access to the document.
+ */
+@property (nonatomic) BOOL enableAutoPurge;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
