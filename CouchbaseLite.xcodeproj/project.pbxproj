@@ -87,6 +87,10 @@
 		1AC7EC3A249DA70E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
 		1AC7EC3B249DA70F00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		1ACAB8C7266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
+		1ACAB8C8266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
+		1ACAB8C9266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
+		1ACAB8CA266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
 		1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
@@ -1877,6 +1881,7 @@
 		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
 		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
+		1ACAB8C6266723AE00B4F8E5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+PendingDocIds.m"; sourceTree = "<group>"; };
 		1ACEB9662256B74A00DED54C /* TrustCheckTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TrustCheckTest.m; sourceTree = "<group>"; };
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
@@ -3082,6 +3087,7 @@
 				932EA5582061FF7D00EDB667 /* CBLVersion.m */,
 				1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */,
 				1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */,
+				1ACAB8C6266723AE00B4F8E5 /* main.m */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -5250,6 +5256,7 @@
 				9380D26A1F0D832C007DD84A /* Function.swift in Sources */,
 				9322DCAB1F0F0E0200C4ACF7 /* Ordering.swift in Sources */,
 				27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */,
+				1ACAB8C8266723AE00B4F8E5 /* main.m in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
 				9384D8431FC405D200FE89D8 /* CBLQueryFullTextFunction.m in Sources */,
 				93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */,
@@ -5557,6 +5564,7 @@
 				9343EF75207D611600F19A89 /* CBLQuantifiedExpression.m in Sources */,
 				9343EF76207D611600F19A89 /* CBLCoreBridge.mm in Sources */,
 				9343EF77207D611600F19A89 /* CBLQueryLimit.m in Sources */,
+				1ACAB8C9266723AE00B4F8E5 /* main.m in Sources */,
 				939260A120A0CBAC00E5748C /* CBLMessageEndpoint.mm in Sources */,
 				9369A68C207DB3D4009B5B83 /* CBLEncryptionKey.m in Sources */,
 				9343EF78207D611600F19A89 /* MYErrorUtils.m in Sources */,
@@ -5744,6 +5752,7 @@
 				1A416033227D0AD50061A567 /* Conflict.swift in Sources */,
 				9343F083207D61AB00F19A89 /* LimitRouter.swift in Sources */,
 				9343F084207D61AB00F19A89 /* CBLQuery.mm in Sources */,
+				1ACAB8CA266723AE00B4F8E5 /* main.m in Sources */,
 				9343F085207D61AB00F19A89 /* ValueExpression.swift in Sources */,
 				9343F086207D61AB00F19A89 /* CBLMutableDocument.mm in Sources */,
 				9343F087207D61AB00F19A89 /* CBLFunctionExpression.m in Sources */,
@@ -6079,6 +6088,7 @@
 				93CD02DF1EA037B200AFB3FA /* CBLDictionary.mm in Sources */,
 				9383A58C1F1EE8EF0083053D /* CBLQueryResult.mm in Sources */,
 				939B1B2E200990FB00FAA3CB /* CBLValueExpression.m in Sources */,
+				1ACAB8C7266723AE00B4F8E5 /* main.m in Sources */,
 				9388CBE921BF7195005CA66D /* CBLLog.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
