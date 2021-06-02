@@ -43,6 +43,7 @@
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize conflictResolver=_conflictResolver;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
+@synthesize enableAutoPurge=_enableAutoPurge;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -69,6 +70,7 @@
         _heartbeat = 0;
         _maxAttempts = 0;
         _maxAttemptWaitTime = 0;
+        _enableAutoPurge = YES;
     }
     return self;
 }
@@ -163,6 +165,11 @@
     _maxAttemptWaitTime = maxAttemptWaitTime;
 }
 
+- (void) setEnableAutoPurge: (BOOL)enableAutoPurge {
+    [self checkReadonly];
+    _enableAutoPurge = enableAutoPurge;
+}
+
 #pragma mark - Internal
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
@@ -190,6 +197,7 @@
         _conflictResolver = config.conflictResolver;
         _maxAttempts = config.maxAttempts;
         _maxAttemptWaitTime = config.maxAttemptWaitTime;
+        _enableAutoPurge = config.enableAutoPurge;
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif
