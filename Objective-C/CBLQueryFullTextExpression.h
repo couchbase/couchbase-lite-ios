@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Full-text expression.
  */
+__deprecated_msg("Use [CBLQueryFullTextFunction matchWithIndexName:query] instead.")
 @interface CBLQueryFullTextExpression : NSObject
 
 /**

@@ -263,10 +263,14 @@
     AssertEqual(firstNames.count, 5u);
 }
 
+// remove this when deprecated
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression indexWithName: @"sentence"];
+#pragma clang diagnostic pop
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
@@ -281,6 +285,30 @@
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: where
+                                  orderBy: @[order]];
+    uint64_t numRows = [self verifyQuery: q  randomAccess: YES
+                                    test:^(uint64_t n, CBLQueryResult* r) { }];
+    AssertEqual(numRows, 2u);
+}
+
+- (void) testWhereFullTextFunctionMatch {
+    [self loadJSONResource: @"sentences"];
+    
+    CBLQueryExpression* exp = [CBLQueryFullTextFunction matchWithIndexName: @"sentence"
+                                                                     query: @"'Dummie woman'"];
+    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
+    
+    NSError* error;
+    CBLFullTextIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]];
+    Assert([self.db createIndex: index withName: @"sentence" error: &error],
+           @"Error when creating the index: %@", error);
+    
+    
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rank: @"sentence"]]
+                               descending];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: exp
                                   orderBy: @[order]];
     uint64_t numRows = [self verifyQuery: q  randomAccess: YES
                                     test:^(uint64_t n, CBLQueryResult* r) { }];

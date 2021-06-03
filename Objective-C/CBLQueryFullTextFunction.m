@@ -30,4 +30,14 @@
                                                     params: @[indexNameExpr]];
 }
 
++ (CBLQueryExpression*) matchWithIndexName:(NSString *)indexName query:(NSString *)query {
+    CBLAssertNotNil(indexName);
+    CBLAssertNotNil(query);
+    
+    CBLQueryExpression* indexNameExpr = [CBLQueryExpression string: indexName];
+    CBLQueryExpression* queryExpr = [CBLQueryExpression string: query];
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MATCH()"
+                                                    params: @[indexNameExpr, queryExpr]];
+}
+
 @end
