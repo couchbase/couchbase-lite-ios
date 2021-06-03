@@ -124,6 +124,8 @@
     CBLQueryExpression* work = [CBLQueryExpression property: @"work"];
     
     NSArray* tests = @[
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                        @[[name isNullOrMissing],     @[]],
                        @[[name notNullOrMissing],    @[doc1, doc2]],
                        @[[address isNullOrMissing],  @[doc1]],
@@ -132,6 +134,16 @@
                        @[[age notNullOrMissing],     @[doc2]],
                        @[[work isNullOrMissing],     @[doc1, doc2]],
                        @[[work notNullOrMissing],    @[]],
+#pragma clang diagnostic pop
+                       
+                       @[[name isNotValued],         @[]],
+                       @[[name isValued],            @[doc1, doc2]],
+                       @[[address isNotValued],      @[doc1]],
+                       @[[address isValued],         @[doc2]],
+                       @[[age isNotValued],          @[doc1]],
+                       @[[age isValued],             @[doc2]],
+                       @[[work isNotValued],         @[doc1, doc2]],
+                       @[[work isValued],            @[]],
                        ];
     
     for (NSArray* test in tests) {
@@ -1754,9 +1766,22 @@
     AssertEqual(rows, 1u);
     
     // check same result is produced with notNullOrMissing.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                            from: [CBLQueryDataSource database: self.db]
                           where: [propNow notNullOrMissing]];
+#pragma clang diagnostic pop
+    rows = [self verifyQuery: q randomAccess: YES
+                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
+                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                        }];
+    AssertEqual(rows, 1u);
+    
+    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [propNow isValued]];
     rows = [self verifyQuery: q randomAccess: YES
                         test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
                             NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];

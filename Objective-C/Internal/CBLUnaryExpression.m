@@ -48,6 +48,10 @@
             return @[@"IS", operand, [NSNull null]];
         case CBLUnaryTypeNotNull:
             return @[@"IS NOT", operand, [NSNull null]];
+        case CBLUnaryTypeValued:
+            return @[@"IS", operand, @[@"VALUED"]];
+        case CBLUnaryTypeNotValued:
+            return @[@"IS NOT", operand, @[@"VALUED"]];
         default:
             break;
     }
