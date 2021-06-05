@@ -770,8 +770,7 @@
                                            error: &error].isDeleted);
 }
 
-// CBL-1707: Keys in SharedKeys were reverted and released while they are still in used
-- (void) _testConflictHandlerCalledTwice {
+- (void) testConflictHandlerCalledTwice {
     NSString* docID = @"doc1";
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: docID];
     [doc1 setString: @"Tiger" forKey: @"name"];
