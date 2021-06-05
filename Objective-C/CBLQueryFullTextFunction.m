@@ -30,7 +30,7 @@
                                                     params: @[indexNameExpr]];
 }
 
-+ (CBLQueryExpression*) matchWithIndexName:(NSString *)indexName query:(NSString *)query {
++ (CBLQueryExpression*) matchWithIndexName: (NSString *)indexName query: (NSString *)query {
     CBLAssertNotNil(indexName);
     CBLAssertNotNil(query);
     

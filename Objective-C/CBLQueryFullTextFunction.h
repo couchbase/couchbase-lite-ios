@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) rank: (NSString*)indexName;
 
 /**
- Creates a full-text match expression with the given search text and index
+ Creates a full-text match expression with the given full-text index name and the query text
 
  @param indexName The full-text index name.
  @param query The query string.

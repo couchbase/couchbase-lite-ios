@@ -32,7 +32,7 @@ public final class FullTextFunction {
         return QueryExpression(CBLQueryFullTextFunction.rank(indexName))
     }
     
-    /// Creates a full-text match expression with the given search text and index.
+    /// Creates a full-text match expression with the given full-text index name and the query text
     ///
     /// - Parameter indexName: The index name.
     /// - Parameter query: The query string.
