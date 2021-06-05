@@ -32,7 +32,8 @@
 }
 
 - (id) asJSON {
-    return _alias ?  @{@"AS": _alias} : @{ };
+    NSString* columnName = [self columnName];
+    return columnName ? @{ @"AS" : columnName } : @{ };
 }
 
 - (nullable NSString*) columnName {

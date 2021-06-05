@@ -333,8 +333,7 @@
     AssertEqual(numRows, 2u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1888
-- (void) _testSelectAll {
+- (void) testSelectAll {
     [self loadNumbers: 100];
     
     CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
