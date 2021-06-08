@@ -274,19 +274,41 @@ class QueryTest: CBLTestCase {
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
 
+        // deprecated API
         try checkMatchedQuery([kDOCID, SelectResult.property("sentence")],
                               ds: DataSource.database(db))
         
-        let s = Expression.property("sentence").from("db")
+        var s = Expression.property("sentence").from("db")
         try checkMatchedQuery([kDOCID, SelectResult.expression(s)],
+                              ds: DataSource.database(db).as("db"))
+        
+        // new API
+        try checkFullTextMatchQuery([kDOCID, SelectResult.property("sentence")],
+                              ds: DataSource.database(db))
+        
+        s = Expression.property("sentence").from("db")
+        try checkFullTextMatchQuery([kDOCID, SelectResult.expression(s)],
                               ds: DataSource.database(db).as("db"))
         
     }
     
+    // 'FullTextExpression' is deprecated: Use FullTextFunction(match:query:) instead.
     func checkMatchedQuery(_ select: [SelectResultProtocol],
                            ds: DataSourceProtocol) throws {
         let sentence = FullTextExpression.index("sentence")
         let w = sentence.match("'Dummie woman'")
+        let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
+        let q = QueryBuilder.select()
+            .from(ds)
+            .where(w)
+            .orderBy(o)
+        let numRows = try verifyQuery(q) { (n, r) in }
+        XCTAssertEqual(numRows, 2)
+    }
+    
+    func checkFullTextMatchQuery(_ select: [SelectResultProtocol],
+                           ds: DataSourceProtocol) throws {
+        let w = FullTextFunction.match(indexName: "sentence", query: "'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
         let q = QueryBuilder.select()
             .from(ds)

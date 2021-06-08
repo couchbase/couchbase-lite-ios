@@ -32,4 +32,13 @@ public final class FullTextFunction {
         return QueryExpression(CBLQueryFullTextFunction.rank(indexName))
     }
     
+    /// Creates a full-text match expression with the given full-text index name and the query text
+    ///
+    /// - Parameter indexName: The index name.
+    /// - Parameter query: The query string.
+    /// - Returns: The full-text match function expression.
+    public static func match(indexName: String, query: String) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFullTextFunction.match(withIndexName: indexName,
+                                                              query: query))
+    }
 }

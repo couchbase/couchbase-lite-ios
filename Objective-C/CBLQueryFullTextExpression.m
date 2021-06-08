@@ -18,14 +18,15 @@
 //
 
 #import "CBLQueryFullTextExpression.h"
-#import "CBLFullTextMatchExpression.h"
+#import "CBLQueryFullTextFunction.h"
 
 @interface CBLQueryFullTextExpression ()
 
 - (instancetype) initWithIndexName: (NSString*)name;
 
 @end
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 @implementation CBLQueryFullTextExpression {
     NSString* _name;
 }
@@ -47,7 +48,9 @@
 - (CBLQueryExpression*) match: (NSString*)query {
     CBLAssertNotNil(query);
     
-    return [[CBLFullTextMatchExpression alloc] initWithIndexName: _name query: query];
+    return [CBLQueryFullTextFunction matchWithIndexName: _name
+                                                  query: query];
 }
 
 @end
+#pragma clang diagnostic pop
