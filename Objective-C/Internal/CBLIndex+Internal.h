@@ -28,13 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLIndex ()
 
-- (instancetype) initWithNone;
+- (instancetype) initWithIndexType: (C4IndexType)indexType;
 
-@property (readonly) C4IndexType indexType;
-
-@property (readonly) C4IndexOptions indexOptions;
-
-@property (readonly, nullable) id indexItems;
+@property (readonly, nullable) id getJSON;
 
 @end
 

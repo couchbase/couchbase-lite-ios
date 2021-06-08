@@ -27,7 +27,7 @@
 @class CBLBlob;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
-
+@class CBLIndexConfiguration;
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -417,6 +417,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error;
 
+- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
+                      withName: (NSString*)name error: (NSError**)error;
 
 /**
  Deletes the index of the given index name.

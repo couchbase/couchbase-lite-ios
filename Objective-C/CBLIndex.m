@@ -21,23 +21,19 @@
 
 @implementation CBLIndex
 
-- (instancetype) initWithNone {
-    return [super init];
+- (instancetype) initWithIndexType: (C4IndexType)indexType {
+    return [super initWithIndexType: indexType queryLanguage: kC4JSONQuery];
 }
 
-- (C4IndexType) indexType {
+- (id) getJSON {
     // Implement by subclass
-    return kC4ValueIndex;
-}
-
-- (C4IndexOptions) indexOptions {
-    // Implement by subclass
-    return (C4IndexOptions){ };
-}
-
-- (id) indexItems {
-    // Implement by subclass
+    [NSException raise: NSInternalInconsistencyException
+                format: @"You must override %@ in a subclass", NSStringFromSelector(_cmd)];
     return nil;
+}
+
+- (NSString*) getIndexSpecs {
+    return self.getJSON;
 }
 
 @end
