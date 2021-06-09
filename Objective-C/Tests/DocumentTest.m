@@ -104,8 +104,11 @@
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @""];
     AssertNotNil(doc);
     
-    NSError *error;
-    AssertFalse([_db saveDocument: doc error: &error]);
+    __block NSError *error = nil;
+    // to skip test exception breakpoint  
+    [self ignoreException:^{
+        AssertFalse([_db saveDocument: doc error: &error]);
+    }];
     AssertEqual(error.code, CBLErrorBadDocID);
     AssertEqualObjects(error.domain, CBLErrorDomain);
 }
