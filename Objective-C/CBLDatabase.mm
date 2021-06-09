@@ -40,6 +40,7 @@
 #import "Foundation+CBL.h"
 #import "CBLData.h"
 #import "CBLIndexConfiguration.h"
+#import "CBLBaseIndex+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"

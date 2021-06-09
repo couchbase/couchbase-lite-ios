@@ -7,10 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLBaseIndex.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLIndexConfiguration : NSObject
+@interface CBLIndexConfiguration : CBLBaseIndex
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

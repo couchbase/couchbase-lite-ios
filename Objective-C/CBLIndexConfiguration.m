@@ -7,6 +7,7 @@
 //
 
 #import "CBLIndexConfiguration.h"
+#import "CBLBaseIndex+Internal.h"
 
 @implementation CBLIndexConfiguration {
     NSString* _expressions;

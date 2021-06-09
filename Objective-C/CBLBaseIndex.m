@@ -2,15 +2,16 @@
 //  CBLBaseIndex.m
 //  CouchbaseLite
 //
-//  Created by Jayahari Vavachan on 6/7/21.
+//  Created by Jayahari Vavachan on 6/8/21.
 //  Copyright © 2021 Couchbase. All rights reserved.
 //
 
 #import "CBLBaseIndex.h"
+#import "CBLBaseIndex+Internal.h"
 
 @implementation CBLBaseIndex
 
-@synthesize indexType=_indexType, queryLanguage=_queryLanguage;
+@synthesize indexType=_indexType,queryLanguage=_queryLanguage;
 
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language {
@@ -35,4 +36,3 @@
 }
 
 @end
-

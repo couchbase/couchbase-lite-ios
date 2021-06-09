@@ -18,6 +18,8 @@
 //
 
 #import "CBLIndex+Internal.h"
+#import "CBLBaseIndex+Internal.h"
+#import "CBLJSON.h"
 
 @implementation CBLIndex
 
@@ -33,7 +35,11 @@
 }
 
 - (NSString*) getIndexSpecs {
-    return self.getJSON;
+    NSError* error = nil;
+    NSString* json = [CBLJSON stringWithJSONObject: self.getJSON options: 0 error: &error];
+    Assert(json, @"Error failed to decode JSON string %@", error);
+    return json;
 }
 
 @end
+

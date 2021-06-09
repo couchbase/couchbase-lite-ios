@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLBaseIndex : NSObject
+@protocol CBLBaseIndexProtocol <NSObject>
 
 @property (nonatomic, readonly) C4QueryLanguage queryLanguage;
 @property (nonatomic, readonly) C4IndexType indexType;
@@ -21,6 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language;
 
+@end
+
+@interface CBLBaseIndex () <CBLBaseIndexProtocol>
 @end
 
 NS_ASSUME_NONNULL_END

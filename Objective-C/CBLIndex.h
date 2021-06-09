@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLBaseIndex.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  CBLIndex represents an index which could be a value index for regular queries or
  full-text index for full-text queries (using the match operator).
  */
-@interface CBLIndex : NSObject
+@interface CBLIndex : CBLBaseIndex
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
