@@ -4868,7 +4868,7 @@
 					};
 					9343EF2A207D611600F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 1140;
+						LastSwiftMigration = 1250;
 					};
 					9343F135207D61EC00F19A89 = {
 						DevelopmentTeam = N2Q372V7W2;
@@ -4899,7 +4899,7 @@
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 1150;
+						LastSwiftMigration = 1250;
 						ProvisioningStyle = Automatic;
 					};
 					9398D91A1E03434200464432 = {
