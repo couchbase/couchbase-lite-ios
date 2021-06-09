@@ -399,7 +399,8 @@
     [self run: [self config: kCBLReplicatorTypePull] errorCode: 0 errorDomain: nil];
 }
 
-- (void) testConflictResolverCalledTwice {
+// TODO: https://issues.couchbase.com/browse/CBL-1986
+- (void) _testConflictResolverCalledTwice {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -908,7 +909,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testConflictResolverWhenDocumentIsPurged {
+// TODO: https://issues.couchbase.com/browse/CBL-1986
+- (void) _testConflictResolverWhenDocumentIsPurged {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
