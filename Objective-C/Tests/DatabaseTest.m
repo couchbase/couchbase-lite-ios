@@ -2255,21 +2255,21 @@
     NSError* error = nil;
     
     // index1
-    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @"firstName" @"lastName"];
+    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName", @"lastName"]];
     Assert([self.db createIndexWithConfig: config name: @"index1" error: &error], @"Failed to create index %@", error);
     
     // index2
-    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @"detail"
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
                                                                                          ignoreAccents: NO language: nil];
     Assert([self.db createIndexWithConfig: config2 name: @"index2" error: &error], @"Failed to create index %@", error);
     
     // index3
-    CBLFullTextIndexConfiguration* config3 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @"es_detail"
+    CBLFullTextIndexConfiguration* config3 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"es_detail"]
                                                                                          ignoreAccents: YES language: @"es"];
     Assert([self.db createIndexWithConfig: config3 name: @"index3" error: &error], @"Failed to create index %@", error);
     
     // same index twice!
-    CBLFullTextIndexConfiguration* config4 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @"detail"
+    CBLFullTextIndexConfiguration* config4 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
                                                                                          ignoreAccents: NO language: nil];
     Assert([self.db createIndexWithConfig: config4 name: @"index2" error: &error], @"Failed to create index %@", error);
     

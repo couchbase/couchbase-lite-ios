@@ -21,7 +21,7 @@
 #import "CBLIndexSpec.h"
 
 @implementation CBLIndexConfiguration {
-    NSString* _expressions;
+    NSArray<NSString*>* _expressions;
 }
 
 @synthesize indexType=_indexType, queryLanguage=_queryLanguage;
@@ -36,16 +36,16 @@
     return self;
 }
 
-- (instancetype) initWithIndexType: (C4IndexType)type expression: (NSString*)expression {
+- (instancetype) initWithIndexType: (C4IndexType)type expressions: (NSArray<NSString*>*)expressions {
     self = [self initWithIndexType: type queryLanguage: kC4N1QLQuery];
     if (self) {
-        _expressions = expression;
+        _expressions = expressions;
     }
     return self;
 }
 
 - (NSString*) getIndexSpecs {
-    return _expressions;
+    return [_expressions componentsJoinedByString: @","];
 }
 
 - (C4IndexOptions) indexOptions {

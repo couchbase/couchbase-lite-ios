@@ -22,7 +22,7 @@
 
 @interface CBLIndexConfiguration () <CBLIndexSpec>
 
-- (instancetype) initWithIndexType: (C4IndexType)type expression: (NSString*)expression;
+- (instancetype) initWithIndexType: (C4IndexType)type expressions: (NSArray<NSString*>*)expressions;
 
 @end
 
