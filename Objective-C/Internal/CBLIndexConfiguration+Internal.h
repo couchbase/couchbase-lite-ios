@@ -18,14 +18,11 @@
 //
 
 #import "CBLIndexConfiguration.h"
+#import "CBLIndexSpec.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface CBLIndexConfiguration ()
+@interface CBLIndexConfiguration () <CBLIndexSpec>
 
 - (instancetype) initWithIndexType: (C4IndexType)type expression: (NSString*)expression;
 
 @end
-
-NS_ASSUME_NONNULL_BEGIN
 

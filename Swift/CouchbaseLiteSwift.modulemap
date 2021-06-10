@@ -88,7 +88,6 @@ framework module CouchbaseLiteSwift {
         header "CBLSessionAuthenticator.h"
         header "CBLURLEndpoint.h"
         header "CBLValueIndex.h"
-        header "CBLBaseIndex.h"
         
         // Swift Extensions:
         header "CBLArray+Swift.h"

@@ -17,15 +17,27 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
-#import "CBLBaseIndex+Internal.h"
+#import "CBLIndexConfiguration+Internal.h"
+#import "CBLIndexSpec.h"
 
 @implementation CBLIndexConfiguration {
     NSString* _expressions;
 }
 
+@synthesize indexType=_indexType, queryLanguage=_queryLanguage;
+
+- (instancetype) initWithIndexType: (C4IndexType)indexType
+                     queryLanguage: (C4QueryLanguage)language {
+    self = [super init];
+    if (self) {
+        _indexType = indexType;
+        _queryLanguage = language;
+    }
+    return self;
+}
+
 - (instancetype) initWithIndexType: (C4IndexType)type expression: (NSString*)expression {
-    self = [super initWithIndexType: type queryLanguage: kC4N1QLQuery];
+    self = [self initWithIndexType: type queryLanguage: kC4N1QLQuery];
     if (self) {
         _expressions = expression;
     }
@@ -34,6 +46,11 @@
 
 - (NSString*) getIndexSpecs {
     return _expressions;
+}
+
+- (C4IndexOptions) indexOptions {
+    // default empty options
+    return (C4IndexOptions){ };
 }
 
 @end

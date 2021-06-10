@@ -18,13 +18,24 @@
 //
 
 #import "CBLIndex+Internal.h"
-#import "CBLBaseIndex+Internal.h"
 #import "CBLJSON.h"
 
 @implementation CBLIndex
 
+@synthesize indexType=_indexType, queryLanguage=_queryLanguage;
+
+- (instancetype) initWithIndexType: (C4IndexType)indexType
+                     queryLanguage: (C4QueryLanguage)language {
+    self = [super init];
+    if (self) {
+        _indexType = indexType;
+        _queryLanguage = language;
+    }
+    return self;
+}
+
 - (instancetype) initWithIndexType: (C4IndexType)indexType {
-    return [super initWithIndexType: indexType queryLanguage: kC4JSONQuery];
+    return [self initWithIndexType: indexType queryLanguage: kC4JSONQuery];
 }
 
 - (id) getJSON {
@@ -39,6 +50,11 @@
     NSString* json = [CBLJSON stringWithJSONObject: self.getJSON options: 0 error: &error];
     Assert(json, @"Error failed to decode JSON string %@", error);
     return json;
+}
+
+- (C4IndexOptions) indexOptions {
+    // default empty options
+    return (C4IndexOptions){ };
 }
 
 @end

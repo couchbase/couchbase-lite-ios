@@ -39,8 +39,8 @@
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
-#import "CBLIndexConfiguration.h"
-#import "CBLBaseIndex+Internal.h"
+#import "CBLIndexConfiguration+Internal.h"
+#import "CBLIndexSpec.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -633,7 +633,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [self createIndex: name withConfig: config error: error];
 }
 
-- (BOOL) createIndex: (NSString*)name withConfig: (CBLBaseIndex*)config error: (NSError**)error {
+- (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
     CBLAssertNotNil(config);
     CBLAssertNotNil(name);
     

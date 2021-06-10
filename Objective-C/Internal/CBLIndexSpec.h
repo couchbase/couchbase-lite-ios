@@ -1,5 +1,5 @@
 //
-//  CBLBaseIndex+Internal.h
+//  CBLIndexSpec.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2021 Couchbase, Inc All rights reserved.
@@ -22,7 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLBaseIndexProtocol <NSObject>
+@protocol CBLIndexSpec <NSObject>
 
 @property (nonatomic, readonly) C4QueryLanguage queryLanguage;
 @property (nonatomic, readonly) C4IndexType indexType;
@@ -32,9 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language;
 
-@end
-
-@interface CBLBaseIndex () <CBLBaseIndexProtocol>
 @end
 
 NS_ASSUME_NONNULL_END
