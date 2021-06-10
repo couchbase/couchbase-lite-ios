@@ -54,20 +54,3 @@
 }
 
 @end
-
-@implementation CBLFullTextIndexConfiguration
-
-- (instancetype) initWithExpression: (NSString*)expression {
-    return [super initWithIndexType: kC4FullTextIndex expression: expression];
-}
-
-@end
-
-@implementation CBLValueIndexConfiguration
-
-- (instancetype) initWithExpression: (NSString*)expression {
-    return [super initWithIndexType: kC4ValueIndex expression: expression];
-}
-
-@end
-

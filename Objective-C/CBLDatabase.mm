@@ -629,7 +629,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
-                      withName: (NSString*)name error: (NSError**)error {
+                          name: (NSString*)name error: (NSError**)error {
     return [self createIndex: name withConfig: config error: error];
 }
 

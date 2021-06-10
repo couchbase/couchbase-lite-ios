@@ -428,7 +428,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return True on success, false on failure.
  */
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
-                      withName: (NSString*)name error: (NSError**)error;
+                          name: (NSString*)name error: (NSError**)error;
 
 /**
  Deletes the index of the given index name.
