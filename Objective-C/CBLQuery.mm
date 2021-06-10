@@ -24,17 +24,21 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
+#import "CBLQuery+N.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
 #import "fleece/slice.hh"
+#import "CBLStringBytes.h"
 
 using namespace fleece;
 
 @implementation CBLQuery
 {
     NSData* _json;
+    NSString* _expressions;
+    C4QueryLanguage _language;
     C4Query* _c4Query;
     NSDictionary* _columnNames;
     CBLLiveQuery* _liveQuery;
@@ -45,6 +49,9 @@ using namespace fleece;
 @synthesize database=_database;
 @synthesize JSONRepresentation=_json;
 @synthesize parameters=_parameters;
+@synthesize expressions=_expressions;
+
+#pragma mark - JSON representation
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                JSONRepresentation: (NSData*)json
@@ -55,6 +62,20 @@ using namespace fleece;
     if (self) {
         _database = database;
         _json = json;
+        _language = kC4JSONQuery;
+    }
+    return self;
+}
+
+- (instancetype) initWithDatabase:(CBLDatabase *)database
+                      expressions:(NSString *)expressions {
+    Assert(database);
+    Assert(expressions);
+    self = [super init];
+    if (self) {
+        _database = database;
+        _expressions = expressions;
+        _language = kC4N1QLQuery;
     }
     return self;
 }
@@ -263,7 +284,15 @@ using namespace fleece;
         C4Error c4Err;
         C4Query* query;
         CBL_LOCK(self.database) {
-            query = c4query_new(self.database.c4db, {_json.bytes, _json.length}, &c4Err);
+            if (_language == kC4JSONQuery) {
+                assert(_json);
+                query = c4query_new2(self.database.c4db,
+                                     kC4JSONQuery, {_json.bytes, _json.length}, nullptr, &c4Err);
+            } else {
+                assert(_expressions);
+                CBLStringBytes exp(_expressions);
+                query = c4query_new2(self.database.c4db, kC4N1QLQuery, exp, nullptr, &c4Err);
+            }
         }
         
         if (!query) {

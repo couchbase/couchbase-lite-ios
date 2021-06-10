@@ -1841,6 +1841,7 @@
 
 /* Begin PBXFileReference section */
 		1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
+		1A347189267256290042C6BA /* CBLQuery+N.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+N.h"; sourceTree = "<group>"; };
 		1A41602A227D08580061A567 /* Conflict.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conflict.swift; sourceTree = "<group>"; };
 		1A41602B227D08580061A567 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
 		1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+CustomConflict.m"; sourceTree = "<group>"; };
@@ -3523,6 +3524,7 @@
 				937F026E1EFC694900060D64 /* CBLQueryChange+Internal.h */,
 				933208291E774171000D9993 /* CBLQuery+Internal.h */,
 				933BFE1521A3BE960094530D /* CBLQuery+JSON.h */,
+				1A347189267256290042C6BA /* CBLQuery+N.h */,
 				93EC42E11FB387AB00D54BB4 /* CBLQueryJSONEncoding.h */,
 				938B3690200745FE004485D8 /* CBLQueryResultArray.h */,
 				938B36A3200745FE004485D8 /* CBLQueryResultArray.m */,
