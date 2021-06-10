@@ -481,17 +481,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-- (BOOL) compact: (NSError**)outError {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        C4Error err;
-        if (!c4db_maintenance(_c4db, kC4Compact, &err))
-            return convertError(err, outError);
-        return YES;
-    }
-}
-
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError
