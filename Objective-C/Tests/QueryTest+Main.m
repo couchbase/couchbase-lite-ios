@@ -30,6 +30,7 @@
 #import "CBLQueryExpression+Internal.h"
 #import "CBLUnaryExpression.h"
 #import "Foundation+CBL.h"
+#import "CollectionUtils.h"
 
 @interface QueryTest_Main : QueryTest
 
@@ -1831,5 +1832,31 @@
         AssertNil(set);
     }];
 }
+
+#pragma mark - N1QL
+
+- (void) testN1QLQuerySanity {
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
+    [doc setValue: @"Jerry" forKey: @"firstName"];
+    [doc setValue: @"Ice Cream" forKey: @"lastName"];
+    [self saveDocument: doc];
+    
+    doc = [self createDocument:@"doc2"];
+    [doc setValue: @"Ben" forKey: @"firstName"];
+    [doc setValue: @"Ice Cream" forKey: @"lastName"];
+    [self saveDocument: doc];
+    
+    NSString* str = $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name);
+    CBLQuery* q = [self.db createQuery: str];
+    NSError* error = nil;
+    NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
+    
+    AssertEqual(result.count, 2);
+    AssertEqualObjects([result[0] stringForKey: @"firstName"], @"Jerry");
+    AssertEqualObjects([result[0] stringForKey: @"lastName"], @"Ice Cream");
+    AssertEqualObjects([result[1] stringForKey: @"firstName"], @"Ben");
+    AssertEqualObjects([result[1] stringForKey: @"lastName"], @"Ice Cream");
+}
+
 
 @end

@@ -39,6 +39,7 @@
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
+#import "CBLQuery+N.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -673,6 +674,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         }
         return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
     }
+}
+
+#pragma mark - Query
+
+- (CBLQuery*) createQuery: (NSString*)query {
+    return [[CBLQuery alloc] initWithDatabase: self expressions: query];
 }
 
 #pragma mark - INTERNAL
