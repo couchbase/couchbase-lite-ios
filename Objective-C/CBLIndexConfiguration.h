@@ -23,6 +23,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLIndexConfiguration : NSObject
 
+/**
+ Gets the expressions to use to create the index.
+ */
+@property (nonatomic, readonly) NSArray<NSString*>* expressions;
+
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

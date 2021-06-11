@@ -30,15 +30,18 @@
     self = [super initWithIndexType: kC4FullTextIndex expressions: expressions];
     if (self) {
         _ignoreAccents = ignoreAccents;
-        _language = language ?: [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
+        _language = language;
     }
     return self;
 }
 
 - (C4IndexOptions) indexOptions {
     C4IndexOptions c4options = { };
-    if (_language)
-        c4options.language = _language.UTF8String;
+    
+    if (!_language)
+        _language = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
+    c4options.language = _language.UTF8String;
+    
     c4options.ignoreDiacritics = _ignoreAccents;
     return c4options;
 }

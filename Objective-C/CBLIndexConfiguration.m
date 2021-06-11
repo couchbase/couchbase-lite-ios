@@ -20,11 +20,9 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 
-@implementation CBLIndexConfiguration {
-    NSArray<NSString*>* _expressions;
-}
+@implementation CBLIndexConfiguration
 
-@synthesize indexType=_indexType, queryLanguage=_queryLanguage;
+@synthesize indexType=_indexType, queryLanguage=_queryLanguage, expressions=_expressions;
 
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language {

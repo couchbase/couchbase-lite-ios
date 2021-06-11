@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Set the true value to ignore accents/diacritical marks. The default value is false.
  */
-@property (nonatomic) BOOL ignoreAccents;
+@property (nonatomic, readonly) BOOL ignoreAccents;
 
 /**
  The language code which is an ISO-639 language such as "en", "fr", etc.
@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  Without setting the value, the current locale's language will be used. Setting
  a nil or "" value to disable the language features.
  */
-@property (nonatomic, copy, nullable) NSString* language;
+@property (nonatomic, readonly, nullable) NSString* language;
 
 /**
  Constructor for creating a full-text index by using an array of N1QL expression strings
