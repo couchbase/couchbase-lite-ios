@@ -25,6 +25,7 @@
 @class CBLIndex;
 @class CBLLog;
 @class CBLBlob;
+@class CBLQuery;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 @class CBLIndexConfiguration;
@@ -462,6 +463,17 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return the expiration time of a document, if one has been set, else nil.
  */
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+
+
+#pragma mark - Query
+
+/**
+ Creates a Query object from the given N1QL query string.
+ 
+ @param query Query expression
+ @return query created using the given expression string.
+ */
+- (CBLQuery*) createQuery: (NSString*)query;
 
 @end
 

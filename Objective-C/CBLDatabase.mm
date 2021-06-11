@@ -41,6 +41,7 @@
 #import "CBLData.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
+#import "CBLQuery+N.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -483,17 +484,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-- (BOOL) compact: (NSError**)outError {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        C4Error err;
-        if (!c4db_compact(_c4db, &err))
-            return convertError(err, outError);
-        return YES;
-    }
-}
-
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError
@@ -693,6 +683,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         }
         return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
     }
+}
+
+#pragma mark - Query
+
+- (CBLQuery*) createQuery: (NSString*)query {
+    return [[CBLQuery alloc] initWithDatabase: self expressions: query];
 }
 
 #pragma mark - INTERNAL

@@ -26,7 +26,9 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
     CBLUnaryTypeMissing,
     CBLUnaryTypeNotMissing,
     CBLUnaryTypeNull,
-    CBLUnaryTypeNotNull
+    CBLUnaryTypeNotNull,
+    CBLUnaryTypeValued,
+    CBLUnaryTypeNotValued
 };
 
 @interface CBLUnaryExpression : CBLQueryExpression

@@ -259,6 +259,14 @@
     return [[self class] negated: [self isNullOrMissing]];
 }
 
+- (CBLQueryExpression*) isValued {
+    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeValued];
+}
+
+- (CBLQueryExpression*) isNotValued {
+    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNotValued];
+}
+
 #pragma mark - Bitwise operators:
 
 - (CBLQueryExpression*) andExpression: (CBLQueryExpression*)expression {
