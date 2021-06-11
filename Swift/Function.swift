@@ -107,12 +107,12 @@ public final class Function {
         return QueryExpression(CBLQueryFunction.atan(expression.toImpl()))
     }
     
-    /// Creates an ATAN2(Y, X) function that returns the arctangent of y/x.
+    /// Creates an ATAN2(X, Y) function that returns the arctangent of y/x.
     ///
     /// - Parameters:
     ///   - x: The expression to evaluate as the X coordinate.
     ///   - y: The expression to evaluate as the Y coordinate.
-    /// - Returns: The ATAN2(Y, X) function.
+    /// - Returns: The ATAN2(X, Y) function.
     public static func atan2(x: ExpressionProtocol, y: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.atan2(x.toImpl(), y: y.toImpl()))
     }
