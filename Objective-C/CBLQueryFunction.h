@@ -113,11 +113,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) atan: (CBLQueryExpression*)expression;
 
 /** 
- Creates an ATAN2(X, Y) function that returns the arctangent of y/x.
+ Creates an ATAN2(Y, X) function that returns the arctangent of y/x.
  
  @param x The expression to evaluate as the X coordinate.
  @param y The expression to evaluate as the Y coordinate.
- @return The ATAN2(X, Y) function.
+ @return The ATAN2(Y, X) function.
  */
 + (CBLQueryExpression*) atan2: (CBLQueryExpression*)x y: (CBLQueryExpression*)y;
 

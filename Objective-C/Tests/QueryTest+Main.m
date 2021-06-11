@@ -992,7 +992,7 @@
                            [CBLQueryFunction acos: p],
                            [CBLQueryFunction asin: p],
                            [CBLQueryFunction atan: p],
-                           [CBLQueryFunction atan2: p y: [CBLQueryExpression integer: 90]],
+                           [CBLQueryFunction atan2: [CBLQueryExpression integer: 90] y: p],
                            [CBLQueryFunction ceil: p],
                            [CBLQueryFunction cos: p],
                            [CBLQueryFunction degrees: p],
