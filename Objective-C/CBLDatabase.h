@@ -468,7 +468,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 #pragma mark - Query
 
 /**
- Creates a Query object from the given N1QL query string.
+ Creates a Query object from the given query string.
  
  @param query Query expression
  @return query created using the given expression string.

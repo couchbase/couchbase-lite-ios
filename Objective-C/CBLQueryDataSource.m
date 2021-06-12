@@ -32,7 +32,9 @@
 }
 
 - (id) asJSON {
-    return _alias ?  @{@"AS": _alias} : @{ };
+    NSString* columnName = [self columnName];
+    assert(columnName);
+    return @{ @"AS" : columnName };
 }
 
 - (nullable NSString*) columnName {

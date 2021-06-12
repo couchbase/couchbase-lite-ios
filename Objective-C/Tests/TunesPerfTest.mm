@@ -279,7 +279,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         auto cd = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: YES];
         CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: artist]]
                                              from: [CBLQueryDataSource database: self.db]
-                                            where: [[artist notNullOrMissing] andExpression: [compilation isNullOrMissing]]
+                                            where: [[artist isValued] andExpression: [compilation isNotValued]]
                                           groupBy: @[[artist collate: cd]] having: nil
                                           orderBy: @[[CBLQueryOrdering expression: [artist collate: cd]]]
                                             limit: nil];
@@ -325,7 +325,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: album]]
                                              from: [CBLQueryDataSource database: self.db]
                                             where: [[[artist collate: cd] equalTo: [CBLQueryExpression parameterNamed: @"ARTIST"]]
-                                                    andExpression: [compilation isNullOrMissing]]
+                                                    andExpression: [compilation isNotValued]]
                                           groupBy: @[[album collate: cd]]
                                            having: nil
                                           orderBy: @[[CBLQueryOrdering expression: [album collate: cd]]]
@@ -375,7 +375,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                                                      [CBLQuerySelectResult expression: artist],
                                                      [CBLQuerySelectResult expression: album]]
                                              from: [CBLQueryDataSource database: self.db]
-                                            where: [[CBLQueryFullTextExpression indexWithName: @"name"] match: @"'Rock'"]
+                                            where: [CBLQueryFullTextFunction matchWithIndexName: @"name" query: @"'Rock'"]
                                           orderBy: @[[CBLQueryOrdering expression: [artist collate: cd]],
                                                      [CBLQueryOrdering expression: [album collate: cd]]]];
         VerboseLog(2, @"%@", [query explain: NULL]);
