@@ -1,8 +1,8 @@
 //
-//  CBLIndex.m
+//  CBLIndexConfiguration.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 //  limitations under the License.
 //
 
-#import "CBLIndex+Internal.h"
-#import "CBLJSON.h"
+#import "CBLIndexConfiguration+Internal.h"
+#import "CBLIndexSpec.h"
 
-@implementation CBLIndex
+@implementation CBLIndexConfiguration
 
-@synthesize indexType=_indexType, queryLanguage=_queryLanguage;
+@synthesize indexType=_indexType, queryLanguage=_queryLanguage, expressions=_expressions;
 
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language {
@@ -34,22 +34,16 @@
     return self;
 }
 
-- (instancetype) initWithIndexType: (C4IndexType)indexType {
-    return [self initWithIndexType: indexType queryLanguage: kC4JSONQuery];
-}
-
-- (id) getJSON {
-    // Implement by subclass
-    [NSException raise: NSInternalInconsistencyException
-                format: @"You must override %@ in a subclass", NSStringFromSelector(_cmd)];
-    return nil;
+- (instancetype) initWithIndexType: (C4IndexType)type expressions: (NSArray<NSString*>*)expressions {
+    self = [self initWithIndexType: type queryLanguage: kC4N1QLQuery];
+    if (self) {
+        _expressions = expressions;
+    }
+    return self;
 }
 
 - (NSString*) getIndexSpecs {
-    NSError* error = nil;
-    NSString* json = [CBLJSON stringWithJSONObject: self.getJSON options: 0 error: &error];
-    Assert(json, @"Error failed to decode JSON string %@", error);
-    return json;
+    return [_expressions componentsJoinedByString: @","];
 }
 
 - (C4IndexOptions) indexOptions {
@@ -58,4 +52,3 @@
 }
 
 @end
-

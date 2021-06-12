@@ -86,3 +86,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLSessionAuthenticator.h"
 #import "CBLURLEndpoint.h"
 #import "CBLValueIndex.h"
+#import "CBLIndexConfiguration.h"
+#import "CBLFullTextIndexConfiguration.h"
+#import "CBLValueIndexConfiguration.h"
