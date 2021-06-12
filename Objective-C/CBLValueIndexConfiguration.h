@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLValueIndexConfiguration : CBLIndexConfiguration
 
 /**
- Constructor for creating a value index by using an array of N1QL expression strings.
+ Constructor for creating a value index by using an array of expression strings.
  */
 - (instancetype) initWithExpression: (NSArray<NSString*>*)expressions;
 
