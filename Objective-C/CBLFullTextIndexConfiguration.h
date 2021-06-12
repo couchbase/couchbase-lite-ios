@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) NSString* language;
 
 /**
- Constructor for creating a full-text index by using an array of N1QL expression strings
+ Constructor for creating a full-text index by using an array of expression strings
  */
 - (instancetype) initWithExpression: (NSArray<NSString*>*)expressions
                       ignoreAccents: (BOOL)ignoreAccents
