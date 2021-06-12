@@ -400,7 +400,7 @@ public final class Database {
     /// Log object used for configuring console, file, and custom logger.
     public static let log = Log()
     
-    /// Creates a Query object from the given N1QL query string.
+    /// Creates a Query object from the given query string.
     ///
     /// - Parameters:
     ///     - query Query expression

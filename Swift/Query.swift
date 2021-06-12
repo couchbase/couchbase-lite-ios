@@ -151,7 +151,7 @@ public class Query {
         queryImpl = CBLQuery(database: database._impl, jsonRepresentation: json)
     }
     
-    /// Creates a query, given the N1QL string, as from the expression property.
+    /// Creates a query, given the query string, as from the expression property.
     /// - Parameters:
     ///     - database  The database to query.
     ///     - expressions  String representing the query expression.
