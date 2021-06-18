@@ -265,7 +265,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1986
+    // TODO: https://issues.couchbase.com/browse/CBL-2030
     func _testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
@@ -299,7 +299,7 @@ class QueryTest: CBLTestCase {
         let sentence = FullTextExpression.index("sentence")
         let w = sentence.match("'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)
@@ -311,7 +311,7 @@ class QueryTest: CBLTestCase {
                            ds: DataSourceProtocol) throws {
         let w = FullTextFunction.match(indexName: "sentence", query: "'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)
