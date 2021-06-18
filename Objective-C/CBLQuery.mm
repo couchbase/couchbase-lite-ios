@@ -263,7 +263,7 @@ using namespace fleece;
         C4Error c4Err;
         C4Query* query;
         CBL_LOCK(self.database) {
-            query = c4query_new(self.database.c4db, {_json.bytes, _json.length}, &c4Err);
+            query = c4query_new2(self.database.c4db, kC4JSONQuery, {_json.bytes, _json.length}, nullptr, &c4Err);
         }
         
         if (!query) {

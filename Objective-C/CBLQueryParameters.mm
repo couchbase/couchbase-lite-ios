@@ -149,8 +149,7 @@ using namespace fleece;
         convertError(enc.error(), outError);
         return nil;
     }
-    alloc_slice res = enc.finish();
-    return [[NSData alloc] initWithBytes: res.buf length: res.size];
+    return enc.finish().uncopiedNSData();
 }
 
 @end

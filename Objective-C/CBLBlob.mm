@@ -207,7 +207,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
                 return nil;
             //TODO: If data is large, can get the file path & memory-map it
             FLSliceResult res = c4blob_getContents(blobStore, key, nullptr);
-            NSData* content = [[NSData alloc] initWithBytes: res.buf length: res.size];
+            NSData* content = sliceResult2data(res);
             FLSliceResult_Release(res);
             if (content && content.length <= kMaxCachedContentLength) {
                 _content = content;
