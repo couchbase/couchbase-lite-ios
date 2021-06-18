@@ -176,6 +176,15 @@ public struct ReplicatorConfiguration {
         }
     }
     
+    /// To enable/disable the auto purge feature
+    
+    /// The default value is true which means that the document will be automatically purged by the
+    /// pull replicator when the user loses access to the document from both removed and revoked scenarios.
+    
+    /// When the property is set to false, the document will not be purged when the user
+    /// loses access to the document.
+    public var enableAutoPurge: Bool = true
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
@@ -207,6 +216,7 @@ public struct ReplicatorConfiguration {
         self.maxAttemptWaitTime = config.maxAttemptWaitTime
         self.pullFilter = config.pullFilter
         self.pushFilter = config.pushFilter
+        self.enableAutoPurge = config.enableAutoPurge
         
         #if os(iOS)
         self.allowReplicatingInBackground = config.allowReplicatingInBackground
@@ -234,6 +244,7 @@ public struct ReplicatorConfiguration {
         c.heartbeat = self.heartbeat
         c.maxAttempts = self.maxAttempts
         c.maxAttemptWaitTime = self.maxAttemptWaitTime
+        c.enableAutoPurge = self.enableAutoPurge
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in

@@ -20,6 +20,7 @@
 import Foundation
 
 /// Full-text expression.
+@available(*, deprecated, message: "Use FullTextFunction.match(indexName: String, query: String) instead.")
 public protocol FullTextExpressionProtocol {
     
     /// Creates a Full-text match expression with the given search text.
@@ -31,6 +32,7 @@ public protocol FullTextExpressionProtocol {
 }
 
 /// Full-text expression factory.
+@available(*, deprecated, message: "Use FullTextFunction.match(indexName: String, query: String) instead.")
 public final class FullTextExpression {
     
     /// Creates a Full-text expression with the given full-text index name.
@@ -43,10 +45,11 @@ public final class FullTextExpression {
     
 }
 
+@available(*, deprecated, message: "Use FullTextFunction.match(indexName: String, query: String) instead.")
 /* Internal */ class FullTextQueryExpression: FullTextExpressionProtocol {
     
     public func match(_ query: String) -> ExpressionProtocol {
-        return QueryExpression(CBLQueryFullTextExpression.index(withName: self.name).match(query))
+        return QueryExpression(CBLQueryFullTextFunction.match(withIndexName: self.name, query: query))
     }
     
     // MARK: Internal

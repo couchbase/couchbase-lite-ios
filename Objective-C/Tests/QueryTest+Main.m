@@ -30,6 +30,7 @@
 #import "CBLQueryExpression+Internal.h"
 #import "CBLUnaryExpression.h"
 #import "Foundation+CBL.h"
+#import "CollectionUtils.h"
 
 @interface QueryTest_Main : QueryTest
 
@@ -124,6 +125,8 @@
     CBLQueryExpression* work = [CBLQueryExpression property: @"work"];
     
     NSArray* tests = @[
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                        @[[name isNullOrMissing],     @[]],
                        @[[name notNullOrMissing],    @[doc1, doc2]],
                        @[[address isNullOrMissing],  @[doc1]],
@@ -132,6 +135,16 @@
                        @[[age notNullOrMissing],     @[doc2]],
                        @[[work isNullOrMissing],     @[doc1, doc2]],
                        @[[work notNullOrMissing],    @[]],
+#pragma clang diagnostic pop
+                       
+                       @[[name isNotValued],         @[]],
+                       @[[name isValued],            @[doc1, doc2]],
+                       @[[address isNotValued],      @[doc1]],
+                       @[[address isValued],         @[doc2]],
+                       @[[age isNotValued],          @[doc1]],
+                       @[[age isValued],             @[doc2]],
+                       @[[work isNotValued],         @[doc1, doc2]],
+                       @[[work isValued],            @[]],
                        ];
     
     for (NSArray* test in tests) {
@@ -263,10 +276,14 @@
     AssertEqual(firstNames.count, 5u);
 }
 
+// remove this when deprecated
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression indexWithName: @"sentence"];
+#pragma clang diagnostic pop
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
@@ -281,6 +298,30 @@
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: where
+                                  orderBy: @[order]];
+    uint64_t numRows = [self verifyQuery: q  randomAccess: YES
+                                    test:^(uint64_t n, CBLQueryResult* r) { }];
+    AssertEqual(numRows, 2u);
+}
+
+- (void) testWhereFullTextFunctionMatch {
+    [self loadJSONResource: @"sentences"];
+    
+    CBLQueryExpression* exp = [CBLQueryFullTextFunction matchWithIndexName: @"sentence"
+                                                                     query: @"'Dummie woman'"];
+    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
+    
+    NSError* error;
+    CBLFullTextIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]];
+    Assert([self.db createIndex: index withName: @"sentence" error: &error],
+           @"Error when creating the index: %@", error);
+    
+    
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rank: @"sentence"]]
+                               descending];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: exp
                                   orderBy: @[order]];
     uint64_t numRows = [self verifyQuery: q  randomAccess: YES
                                     test:^(uint64_t n, CBLQueryResult* r) { }];
@@ -333,8 +374,7 @@
     AssertEqual(numRows, 2u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1888
-- (void) _testSelectAll {
+- (void) testSelectAll {
     [self loadNumbers: 100];
     
     CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
@@ -1754,9 +1794,22 @@
     AssertEqual(rows, 1u);
     
     // check same result is produced with notNullOrMissing.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                            from: [CBLQueryDataSource database: self.db]
                           where: [propNow notNullOrMissing]];
+#pragma clang diagnostic pop
+    rows = [self verifyQuery: q randomAccess: YES
+                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
+                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                        }];
+    AssertEqual(rows, 1u);
+    
+    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [propNow isValued]];
     rows = [self verifyQuery: q randomAccess: YES
                         test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
                             NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
@@ -1778,5 +1831,31 @@
         AssertNil(set);
     }];
 }
+
+#pragma mark - N1QL
+
+- (void) testN1QLQuerySanity {
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
+    [doc setValue: @"Jerry" forKey: @"firstName"];
+    [doc setValue: @"Ice Cream" forKey: @"lastName"];
+    [self saveDocument: doc];
+    
+    doc = [self createDocument:@"doc2"];
+    [doc setValue: @"Ben" forKey: @"firstName"];
+    [doc setValue: @"Ice Cream" forKey: @"lastName"];
+    [self saveDocument: doc];
+    
+    NSString* str = $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name);
+    CBLQuery* q = [self.db createQuery: str];
+    NSError* error = nil;
+    NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
+    
+    AssertEqual(result.count, 2);
+    AssertEqualObjects([result[0] stringForKey: @"firstName"], @"Jerry");
+    AssertEqualObjects([result[0] stringForKey: @"lastName"], @"Ice Cream");
+    AssertEqualObjects([result[1] stringForKey: @"firstName"], @"Ben");
+    AssertEqualObjects([result[1] stringForKey: @"lastName"], @"Ice Cream");
+}
+
 
 @end

@@ -1,8 +1,8 @@
 //
-//  CBLFullTextMatchExpression.m
+//  main.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,26 +17,17 @@
 //  limitations under the License.
 //
 
-#import "CBLFullTextMatchExpression.h"
-#import "CBLQueryExpression+Internal.h"
+#import <Foundation/Foundation.h>
+#import "c4.h"
 
-@implementation CBLFullTextMatchExpression {
-    NSString* _indexName;
-    NSString* _query;
-}
-
-- (instancetype) initWithIndexName: (NSString*)indexName query: (NSString*)query
+__attribute__((constructor))
+static void initialize()
 {
-    self = [super initWithNone];
-    if (self) {
-        _indexName = indexName;
-        _query = query;
+    static int initialized = 0;
+    if (!initialized)
+    {
+        initialized = 1;
+        
+        c4log_enableFatalExceptionBacktrace();
     }
-    return self;
 }
-
-- (id) asJSON {
-    return @[@"MATCH()", _indexName, _query];
-}
-
-@end

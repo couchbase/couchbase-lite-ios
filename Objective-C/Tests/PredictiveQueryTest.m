@@ -498,7 +498,7 @@
     q = [CBLQueryBuilder select: @[SEL_EXPR(PREDICTION(model, input)),
                                    SEL_EXPR_AS(PREDICTION_VALUE(model, input, @"sum"), @"sum")]
                            from: kDATA_SRC_DB
-                          where: [PREDICTION(model, input) notNullOrMissing]];
+                          where: [PREDICTION(model, input) isValued]];
     
     numRows = [self verifyQuery: q randomAccess: NO
                                     test: ^(uint64_t n, CBLQueryResult *r)

@@ -22,19 +22,16 @@
 #import "CBLIndex.h"
 #import "CBLFullTextIndex.h"
 #import "CBLValueIndex.h"
+#import "CBLIndexSpec.h"
 @class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLIndex ()
+@interface CBLIndex () <CBLIndexSpec>
 
-- (instancetype) initWithNone;
+- (instancetype) initWithIndexType: (C4IndexType)indexType;
 
-@property (readonly) C4IndexType indexType;
-
-@property (readonly) C4IndexOptions indexOptions;
-
-@property (readonly, nullable) id indexItems;
+@property (readonly, nullable) id getJSON;
 
 @end
 

@@ -335,7 +335,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @return The IS NULL OR MISSING expression.
  */
-- (CBLQueryExpression*) isNullOrMissing;
+- (CBLQueryExpression*) isNullOrMissing __deprecated_msg("Use isNotValued() instead.");
 
 /** 
  Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current expression
@@ -343,7 +343,23 @@ NS_ASSUME_NONNULL_BEGIN
  
  @return The IS NOT NULL OR MISSING expression.
  */
-- (CBLQueryExpression*) notNullOrMissing;
+- (CBLQueryExpression*) notNullOrMissing __deprecated_msg("Use isValued() instead.");
+
+/**
+ Creates an IS VALUED expression that evaluates whether or not the current expression
+ is NOT null or missing.
+ 
+ @return The IS VALUED expression.
+ */
+- (CBLQueryExpression*) isValued;
+
+/**
+ Creates an IS NOT VALUED expression that evaluates whether or not the current expression
+ is null or missing.
+ 
+ @return The IS NOT VALUED expression.
+ */
+- (CBLQueryExpression*) isNotValued;
 
 #pragma mark - Bitwise operators:
 

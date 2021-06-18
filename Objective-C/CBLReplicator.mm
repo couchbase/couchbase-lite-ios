@@ -233,6 +233,7 @@ typedef enum {
     }
     socketFactory.context = (__bridge void*)self;
 
+    // FIXME: Set-AutoPurge: https://issues.couchbase.com/browse/CBL-1976
     // Parameters:
     alloc_slice optionsFleece = self._encodedOptions;
     C4ReplicatorParameters params = {

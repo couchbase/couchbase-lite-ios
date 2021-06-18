@@ -25,9 +25,10 @@
 @class CBLIndex;
 @class CBLLog;
 @class CBLBlob;
+@class CBLQuery;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
-
+@class CBLIndexConfiguration;
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -417,6 +418,18 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error;
 
+/**
+ Creates an index using IndexConfiguration, which could be a value index or a full-text search index with the given name.
+ Creating a new different index with an existing index name will replace the old index;
+ creating the same index with the same name will be no-ops.
+ 
+ @param config The index configuration
+ @param name The index name.
+ @param error error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
+                          name: (NSString*)name error: (NSError**)error;
 
 /**
  Deletes the index of the given index name.
@@ -450,6 +463,17 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return the expiration time of a document, if one has been set, else nil.
  */
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+
+
+#pragma mark - Query
+
+/**
+ Creates a Query object from the given query string.
+ 
+ @param query Query expression
+ @return query created using the given expression string.
+ */
+- (CBLQuery*) createQuery: (NSString*)query;
 
 @end
 

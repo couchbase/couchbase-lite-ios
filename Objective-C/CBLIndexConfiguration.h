@@ -1,8 +1,8 @@
 //
-//  CBLUnaryExpression.h
+//  CBLIndexConfiguration.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,23 +18,17 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLQueryExpression.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
-    CBLUnaryTypeMissing,
-    CBLUnaryTypeNotMissing,
-    CBLUnaryTypeNull,
-    CBLUnaryTypeNotNull,
-    CBLUnaryTypeValued,
-    CBLUnaryTypeNotValued
-};
+@interface CBLIndexConfiguration : NSObject
 
-@interface CBLUnaryExpression : CBLQueryExpression
+/**
+ Gets the expressions to use to create the index.
+ */
+@property (nonatomic, readonly) NSArray<NSString*>* expressions;
 
-- (instancetype) initWithExpression: (CBLQueryExpression*)operand
-                               type: (CBLUnaryExpType)type;
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

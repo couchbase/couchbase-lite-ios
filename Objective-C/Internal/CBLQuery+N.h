@@ -1,8 +1,8 @@
 //
-//  CBLUnaryExpression.h
+//  CBLQuery+N.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -15,26 +15,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
 
-#import <Foundation/Foundation.h>
-#import "CBLQueryExpression.h"
+#import "CBLQuery.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
-    CBLUnaryTypeMissing,
-    CBLUnaryTypeNotMissing,
-    CBLUnaryTypeNull,
-    CBLUnaryTypeNotNull,
-    CBLUnaryTypeValued,
-    CBLUnaryTypeNotValued
-};
+@interface CBLQuery ()
 
-@interface CBLUnaryExpression : CBLQueryExpression
+/**
+ Encoded representation of the query. Can be used to re-create the query by calling
+ -initWithDatabase:expressions:.
+ */
+@property (nonatomic, readonly) NSString* expressions;
 
-- (instancetype) initWithExpression: (CBLQueryExpression*)operand
-                               type: (CBLUnaryExpType)type;
+
+/**
+ Creates a query, given the N1QL string, as from the
+ expression property.
+ @param database  The database to query.
+ @param expressions  String representing the query expression.
+ */
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                      expressions: (NSString*)expressions NS_DESIGNATED_INITIALIZER;
 
 @end
 

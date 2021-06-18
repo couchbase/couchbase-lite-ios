@@ -1,8 +1,8 @@
 //
-//  CBLFullTextMatchExpression.h
+//  CBLIndexSpec.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,13 +18,19 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLQueryExpression.h"
+#import "c4.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLFullTextMatchExpression : CBLQueryExpression
+@protocol CBLIndexSpec <NSObject>
 
-- (instancetype) initWithIndexName: (NSString*)indexName query: (NSString*)query;
+@property (nonatomic, readonly) C4QueryLanguage queryLanguage;
+@property (nonatomic, readonly) C4IndexType indexType;
+@property (readonly) NSString* getIndexSpecs;
+@property (readonly) C4IndexOptions indexOptions;
+
+- (instancetype) initWithIndexType: (C4IndexType)indexType
+                     queryLanguage: (C4QueryLanguage)language;
 
 @end
 

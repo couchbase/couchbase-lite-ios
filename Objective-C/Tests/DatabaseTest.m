@@ -770,8 +770,7 @@
                                            error: &error].isDeleted);
 }
 
-// CBL-1707: Keys in SharedKeys were reverted and released while they are still in used
-- (void) _testConflictHandlerCalledTwice {
+- (void) testConflictHandlerCalledTwice {
     NSString* docID = @"doc1";
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: docID];
     [doc1 setString: @"Tiger" forKey: @"name"];
@@ -2247,6 +2246,37 @@
     
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
+    
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 3u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+}
+
+- (void) testN1QLCreateIndexSanity {
+    // Precheck:
+    Assert(self.db.indexes);
+    AssertEqual(self.db.indexes.count, 0u);
+    NSError* error = nil;
+    
+    // index1
+    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName", @"lastName"]];
+    Assert([self.db createIndexWithConfig: config name: @"index1" error: &error], @"Failed to create index %@", error);
+    
+    // index2
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO language: nil];
+    Assert([self.db createIndexWithConfig: config2 name: @"index2" error: &error], @"Failed to create index %@", error);
+    
+    // index3
+    CBLFullTextIndexConfiguration* config3 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"es_detail"]
+                                                                                         ignoreAccents: YES language: @"es"];
+    Assert([self.db createIndexWithConfig: config3 name: @"index3" error: &error], @"Failed to create index %@", error);
+    
+    // same index twice!
+    CBLFullTextIndexConfiguration* config4 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO language: nil];
+    Assert([self.db createIndexWithConfig: config4 name: @"index2" error: &error], @"Failed to create index %@", error);
+    
     
     NSArray* names = self.db.indexes;
     AssertEqual(names.count, 3u);

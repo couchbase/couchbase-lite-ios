@@ -242,7 +242,7 @@
     CBLQueryExpression* SEQ = [CBLQueryExpression property: @"seq"];
     CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: SEQ]]
                                          from: [CBLQueryDataSource database: _seekrit]
-                                        where: [SEQ notNullOrMissing]
+                                        where: [SEQ isValued]
                                       orderBy: @[[CBLQueryOrdering expression: SEQ]]];
     CBLQueryResultSet* rs = [query execute: &error];
     Assert(rs, @"Error when running the query: %@", error);
