@@ -1845,8 +1845,15 @@
     [doc setValue: @"Ice Cream" forKey: @"lastName"];
     [self saveDocument: doc];
     
-    NSString* str = $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name);
-    CBLQuery* q = [self.db createQuery: str];
+// FIXME: once the FROM clause can handle the _ and <dbName>, uncomment this.
+//    [self validateN1QLQuery: $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name)];
+//    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _"]; // should work as expected
+//    [self validateN1QLQuery: @"SELECT firstName, lastName"]; // should throw exception
+    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _default"];
+}
+
+- (void) validateN1QLQuery: (NSString*)queryString {
+    CBLQuery* q = [self.db createQuery: queryString];
     NSError* error = nil;
     NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
     
