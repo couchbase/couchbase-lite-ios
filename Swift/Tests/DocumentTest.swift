@@ -1554,8 +1554,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertNotNil(doc.revisionID)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1986
-    func _testRevisionIDExistingDoc() throws {
+    func testRevisionIDExistingDoc() throws {
         let _ = try generateDocument(withID: "doc")
         
         // doc from database should always have a revision-id

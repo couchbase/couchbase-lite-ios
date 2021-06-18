@@ -1533,8 +1533,7 @@
     Assert([self.db isClosedLocked]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1986
-- (void) _testCloseWithActiveLiveQueriesAndReplicators {
+- (void) testCloseWithActiveLiveQueriesAndReplicators {
     // Live Queries:
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
@@ -1752,8 +1751,7 @@
     Assert([self.db isClosedLocked]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1986
-- (void) _testDeleteWithActiveLiveQueriesAndReplicators {
+- (void) testDeleteWithActiveLiveQueriesAndReplicators {
     [self openOtherDB];
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];

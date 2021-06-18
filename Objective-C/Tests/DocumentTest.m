@@ -1999,8 +1999,7 @@
     AssertNotNil(doc.revisionID);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-1986
-- (void) _testRevisionIDExistingDoc {
+- (void) testRevisionIDExistingDoc {
     [self generateDocumentWithID: @"doc"];
     
     // fetching a doc has a valid revision-id
