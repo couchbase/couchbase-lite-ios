@@ -265,8 +265,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2030
-    func _testWhereMatch() throws {
+    func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
         let fts_s = FullTextIndexItem.property("sentence")

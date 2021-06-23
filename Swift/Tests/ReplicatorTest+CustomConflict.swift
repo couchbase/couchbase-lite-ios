@@ -159,8 +159,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertNil(db.document(withID: "doc"))
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1986
-    func _testConflictResolverCalledTwice() throws {
+    func testConflictResolverCalledTwice() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
@@ -663,8 +662,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(order[1], order[2])
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-1986
-    func _testConflictResolverWhenDocumentIsPurged() throws {
+    func testConflictResolverWhenDocumentIsPurged() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
