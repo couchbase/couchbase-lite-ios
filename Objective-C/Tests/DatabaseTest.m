@@ -879,7 +879,7 @@
         return [self.db deleteDocument: doc1a error: err];
     }];
     
-    // Delete doc1b, no-ops:
+    // Delete doc1b, 404 NotFound:
     [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [self.db deleteDocument: doc1b error: err];
     }];
@@ -1346,7 +1346,7 @@
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
     
-    // Delete doc no-ops:
+    // Delete doc, 404 NotFound:
     [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [self.db deleteDocument: document error: err];
     }];
