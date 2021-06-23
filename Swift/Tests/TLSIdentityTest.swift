@@ -159,8 +159,10 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        var identity = try TLSIdentity.identity(withLabel: serverCertLabel)
-        XCTAssertNil(identity)
+        var identity: TLSIdentity?
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        }
         
         // Create:
         let attrs = [certAttrCommonName: "CBL-Server"]
@@ -182,8 +184,9 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        identity = try TLSIdentity.identity(withLabel: serverCertLabel)
-        XCTAssertNil(identity)
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        }
     }
     
     func testCreateDuplicateServerIdentity() throws {
@@ -221,8 +224,10 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Get:
-        var identity = try TLSIdentity.identity(withLabel: clientCertLabel)
-        XCTAssertNil(identity)
+        var identity: TLSIdentity?
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
+        }
         
         // Create:
         let attrs = [certAttrCommonName: "CBL-Client"]
@@ -244,8 +249,9 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Get:
-        identity = try TLSIdentity.identity(withLabel: clientCertLabel)
-        XCTAssertNil(identity)
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
+        }
     }
     
     func testCreateDuplicateClientIdentity() throws {
@@ -353,8 +359,9 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        identity = try TLSIdentity.identity(withLabel: serverCertLabel)
-        XCTAssertNil(identity)
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        }
     }
     
     func testCreateIdentityWithNoAttributes() throws {
@@ -364,7 +371,11 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        var identity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        var identity: TLSIdentity?
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        }
+        
         XCTAssertNil(identity)
         
         // Create:
@@ -383,8 +394,10 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        var identity = try TLSIdentity.identity(withLabel: serverCertLabel)
-        XCTAssertNil(identity)
+        var identity: TLSIdentity?
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        }
         
         let attrs = [certAttrCommonName: "CBL-Server"]
         let expiration = Date(timeIntervalSinceNow: 300)

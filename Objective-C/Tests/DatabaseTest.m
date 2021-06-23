@@ -1351,7 +1351,7 @@
         return [self.db deleteDocument: document error: err];
     }];
     
-    // Delete another DB returned document, no-ops:
+    // Delete another DB returned document, 404 NotFound:
     [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
         return [self.db deleteDocument: anotherDBReturnedDocument error: err];
     }];
