@@ -46,7 +46,9 @@ Maintenance Type used when performing database maintenance .
 typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
     kCBLMaintenanceTypeCompact,             ///< Compact the database file and delete unused attachments.
     kCBLMaintenanceTypeReindex,             ///< (Volatile API) Rebuild the entire database's indexes.
-    kCBLMaintenanceTypeIntegrityCheck       ///< (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+    kCBLMaintenanceTypeIntegrityCheck,      ///< (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+    kCBLMaintenanceTypeOptimize,            ///< Quickly updates database statistics that may help optimize queries that have been run by this Database since it was opened
+    kCBLMaintenanceTypeFullOptimize         ///< Fully scans all indexes to gather database statistics that help optimize queries.
 };
 
 /** A Couchbase Lite database. */
