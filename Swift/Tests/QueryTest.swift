@@ -298,7 +298,7 @@ class QueryTest: CBLTestCase {
         let sentence = FullTextExpression.index("sentence")
         let w = sentence.match("'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)
@@ -310,7 +310,7 @@ class QueryTest: CBLTestCase {
                            ds: DataSourceProtocol) throws {
         let w = FullTextFunction.match(indexName: "sentence", query: "'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)
@@ -899,7 +899,7 @@ class QueryTest: CBLTestCase {
                          Function.acos(p),
                          Function.asin(p),
                          Function.atan(p),
-                         Function.atan2(x: p, y: Expression.int(90)),
+                         Function.atan2(x: Expression.int(90), y: p),
                          Function.ceil(p),
                          Function.cos(p),
                          Function.degrees(p),
@@ -927,7 +927,7 @@ class QueryTest: CBLTestCase {
                 .from(DataSource.database(db))
             let numRow = try verifyQuery(q, block: { (n, r) in
                 let expected = expectedValues[index]
-                XCTAssertEqual(r.double(at: 0), expected)
+                XCTAssertEqual(r.double(at: 0), expected, "Failure with \(f)")
             })
             XCTAssertEqual(numRow, 1)
             index = index + 1
@@ -1719,4 +1719,24 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual((jsonObj["family"] as! Array<[String:Any]>)[3]["name"] as! String, "Summer Smith")
     }
     
+    // MARK: N1QL
+    
+    func testN1QLQuerySanity() throws {
+        let doc1 = MutableDocument()
+        doc1.setValue("Jerry", forKey: "firstName")
+        doc1.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument()
+        doc2.setValue("Ben", forKey: "firstName")
+        doc2.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc2)
+        
+        let q = self.db.createQuery(query: "SELECT firstName, lastName FROM \(self.db.name)")
+        let results = try q.execute().allResults()
+        XCTAssertEqual(results[0].string(forKey: "firstName"), "Jerry")
+        XCTAssertEqual(results[0].string(forKey: "lastName"), "Ice Cream")
+        XCTAssertEqual(results[1].string(forKey: "firstName"), "Ben")
+        XCTAssertEqual(results[1].string(forKey: "lastName"), "Ice Cream")
+    }
 }

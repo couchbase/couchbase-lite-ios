@@ -27,22 +27,14 @@
 }
 
 - (instancetype) initWithItems: (NSArray<CBLValueIndexItem*>*)items {
-    self = [super initWithNone];
+    self = [super initWithIndexType: kC4ValueIndex];
     if (self) {
         _items = items;
     }
     return self;
 }
 
-- (C4IndexType) indexType {
-    return kC4ValueIndex;
-}
-
-- (C4IndexOptions) indexOptions {
-    return (C4IndexOptions){ };
-}
-
-- (id) indexItems {
+- (id) getJSON {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _items.count];
     for (CBLValueIndexItem* item in _items) {
         [json addObject: [item.expression asJSON]];

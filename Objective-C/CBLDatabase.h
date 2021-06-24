@@ -28,7 +28,7 @@
 @class CBLQuery;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
-
+@class CBLIndexConfiguration;
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -46,7 +46,9 @@ Maintenance Type used when performing database maintenance .
 typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
     kCBLMaintenanceTypeCompact,             ///< Compact the database file and delete unused attachments.
     kCBLMaintenanceTypeReindex,             ///< (Volatile API) Rebuild the entire database's indexes.
-    kCBLMaintenanceTypeIntegrityCheck       ///< (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+    kCBLMaintenanceTypeIntegrityCheck,      ///< (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+    kCBLMaintenanceTypeOptimize,            ///< Quickly updates database statistics that may help optimize queries that have been run by this Database since it was opened
+    kCBLMaintenanceTypeFullOptimize         ///< Fully scans all indexes to gather database statistics that help optimize queries.
 };
 
 /** A Couchbase Lite database. */
@@ -418,6 +420,18 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error;
 
+/**
+ Creates an index using IndexConfiguration, which could be a value index or a full-text search index with the given name.
+ Creating a new different index with an existing index name will replace the old index;
+ creating the same index with the same name will be no-ops.
+ 
+ @param config The index configuration
+ @param name The index name.
+ @param error error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
+                          name: (NSString*)name error: (NSError**)error;
 
 /**
  Deletes the index of the given index name.
@@ -456,7 +470,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 #pragma mark - Query
 
 /**
- Creates a Query object from the given N1QL query string.
+ Creates a Query object from the given query string.
  
  @param query Query expression
  @return query created using the given expression string.

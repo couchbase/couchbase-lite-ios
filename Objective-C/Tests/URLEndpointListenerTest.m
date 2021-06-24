@@ -121,6 +121,7 @@ typedef CBLURLEndpointListener Listener;
     if (_listener) {
         [self stopListener: _listener];
     }
+    _listener = nil;
 }
 
 - (void) stopListener: (CBLURLEndpointListener*)listener {
@@ -1445,7 +1446,7 @@ typedef CBLURLEndpointListener Listener;
     AssertEqual(self.otherDB.count, 1u);
     
     // stop and cleanup
-    [self stopListener: _listener];
+    [self stopListen];
     Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &err]);
     AssertNil(err);
 }

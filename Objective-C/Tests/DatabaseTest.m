@@ -879,9 +879,10 @@
         return [self.db deleteDocument: doc1a error: err];
     }];
     
-    // Delete doc1b, no-ops:
-    Assert([self.db deleteDocument: doc1b error: &error]);
-    AssertNil(error);
+    // Delete doc1b, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: doc1b error: err];
+    }];
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: doc1b.id]);
 }
@@ -1345,14 +1346,15 @@
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
     
-    // Delete doc no-ops:
-    NSError* errorWhileDeletion;
-    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
+    // Delete doc, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: document error: err];
+    }];
     
-    // Delete another DB returned document, no-ops:
-    Assert([self.db deleteDocument: anotherDBReturnedDocument error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
+    // Delete another DB returned document, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: anotherDBReturnedDocument error: err];
+    }];
     AssertEqual(self.db.count, 0u);
     
     anotherDBReturnedDocument = nil;
@@ -2242,6 +2244,37 @@
     
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
+    
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 3u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+}
+
+- (void) testN1QLCreateIndexSanity {
+    // Precheck:
+    Assert(self.db.indexes);
+    AssertEqual(self.db.indexes.count, 0u);
+    NSError* error = nil;
+    
+    // index1
+    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName", @"lastName"]];
+    Assert([self.db createIndexWithConfig: config name: @"index1" error: &error], @"Failed to create index %@", error);
+    
+    // index2
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO language: nil];
+    Assert([self.db createIndexWithConfig: config2 name: @"index2" error: &error], @"Failed to create index %@", error);
+    
+    // index3
+    CBLFullTextIndexConfiguration* config3 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"es_detail"]
+                                                                                         ignoreAccents: YES language: @"es"];
+    Assert([self.db createIndexWithConfig: config3 name: @"index3" error: &error], @"Failed to create index %@", error);
+    
+    // same index twice!
+    CBLFullTextIndexConfiguration* config4 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO language: nil];
+    Assert([self.db createIndexWithConfig: config4 name: @"index2" error: &error], @"Failed to create index %@", error);
+    
     
     NSArray* names = self.db.indexes;
     AssertEqual(names.count, 3u);

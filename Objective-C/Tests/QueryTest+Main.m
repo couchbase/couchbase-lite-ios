@@ -992,7 +992,7 @@
                            [CBLQueryFunction acos: p],
                            [CBLQueryFunction asin: p],
                            [CBLQueryFunction atan: p],
-                           [CBLQueryFunction atan2: p y: [CBLQueryExpression integer: 90]],
+                           [CBLQueryFunction atan2: [CBLQueryExpression integer: 90] y: p],
                            [CBLQueryFunction ceil: p],
                            [CBLQueryFunction cos: p],
                            [CBLQueryFunction degrees: p],
@@ -1845,8 +1845,16 @@
     [doc setValue: @"Ice Cream" forKey: @"lastName"];
     [self saveDocument: doc];
     
-    NSString* str = $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name);
-    CBLQuery* q = [self.db createQuery: str];
+    [self validateN1QLQuery: $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name)];
+    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _"];
+    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _default"];
+    
+    // FIXME: Should throw error!
+    // [self validateN1QLQuery: @"SELECT firstName, lastName"];
+}
+
+- (void) validateN1QLQuery: (NSString*)queryString {
+    CBLQuery* q = [self.db createQuery: queryString];
     NSError* error = nil;
     NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
     

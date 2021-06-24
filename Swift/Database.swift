@@ -33,10 +33,14 @@ public enum ConcurrencyControl: UInt8 {
 /// - compact: Compact the database file and delete unused attachments.
 /// - reindex: (Volatile API) Rebuild the entire database's indexes.
 /// - integrityCheck: (Volatile API) Check for the database’s corruption. If found, an error will be returned.
+/// - optimize: Quickly updates database statistics that may help optimize queries that have been run by this Database since it was opened
+/// - fullOptimize: Fully scans all indexes to gather database statistics that help optimize queries.
 public enum MaintenanceType: UInt8 {
     case compact = 0
     case reindex
     case integrityCheck
+    case optimize
+    case fullOptimize
 }
 
 /// A Couchbase Lite database.
@@ -399,6 +403,15 @@ public final class Database {
     
     /// Log object used for configuring console, file, and custom logger.
     public static let log = Log()
+    
+    /// Creates a Query object from the given query string.
+    ///
+    /// - Parameters:
+    ///     - query Query expression
+    /// - Returns: Query created using the given expression string.
+    public func createQuery(query: String) -> Query {
+        return Query(database: self, expressions: query)
+    }
     
     // MARK: Internal
     
