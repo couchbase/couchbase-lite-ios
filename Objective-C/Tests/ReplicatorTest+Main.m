@@ -714,13 +714,15 @@
 
 - (void) testDocumentReplicationEventAfterReplicatorStops {
     // --- 1. Create a continuous push-pull (or push only) replicator
-    XCTestExpectation* xc1 = [self expectationWithDescription: @"idle1"];
+    XCTestExpectation* xc1 = [self expectationWithDescription: @"stop1"];
     id t = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id c = [self configWithTarget: t type: kCBLReplicatorTypePush continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: c];
     id token1 = [r addChangeListener:^(CBLReplicatorChange * change) {
         if (change.status.activity == kCBLReplicatorIdle &&
             change.status.progress.completed == change.status.progress.total) {
+            [change.replicator stop];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
             [xc1 fulfill];
         }
     }];
@@ -728,7 +730,6 @@
     // --- 2. Start then stop after IDLE
     [r start];
     [self waitForExpectations: @[xc1] timeout: 5.0];
-    [r stop];
     [r removeChangeListenerWithToken: token1];
     
     // --- 3. Add some documents to the database
@@ -752,16 +753,17 @@
     }];
     
     // --- 5. Start the replicator again.
-    XCTestExpectation* xc2 = [self expectationWithDescription: @"idle2"];
+    XCTestExpectation* xc2 = [self expectationWithDescription: @"stop2"];
     id token2 = [r addChangeListener:^(CBLReplicatorChange * change) {
         if (change.status.activity == kCBLReplicatorIdle &&
             change.status.progress.completed == change.status.progress.total) {
+            [change.replicator stop];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
             [xc2 fulfill];
         }
     }];
     [r start];
-    [self waitForExpectations: @[xc2] timeout: 5.0];
-    [r stop];
+    [self waitForExpectations: @[xc2] timeout: timeout];
     [r removeChangeListenerWithToken: token2];
     
     // --- 6. There should be some document replication events notified
