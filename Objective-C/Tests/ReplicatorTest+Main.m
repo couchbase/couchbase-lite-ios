@@ -712,6 +712,63 @@
     AssertEqual(docs.count, 3u);
 }
 
+- (void) testDocumentReplicationEventAfterReplicatorStops {
+    // --- 1. Create a continuous push-pull (or push only) replicator
+    XCTestExpectation* xc1 = [self expectationWithDescription: @"idle1"];
+    id t = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    id c = [self configWithTarget: t type: kCBLReplicatorTypePush continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: c];
+    id token1 = [r addChangeListener:^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            [xc1 fulfill];
+        }
+    }];
+    
+    // --- 2. Start then stop after IDLE
+    [r start];
+    [self waitForExpectations: @[xc1] timeout: 5.0];
+    [r stop];
+    [r removeChangeListenerWithToken: token1];
+    
+    // --- 3. Add some documents to the database
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Hobbes" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
+    [doc2 setString: @"Tiger" forKey: @"species"];
+    [doc2 setString: @"Striped" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc2 error: &error]);
+    
+    // --- 4. Add document replication listener to the replicator
+    NSMutableArray* array = [NSMutableArray array];
+    __block BOOL eventNotified = NO;
+    [r addDocumentReplicationListener:^(CBLDocumentReplication * docReplication) {
+        [array addObjectsFromArray: docReplication.documents];
+        eventNotified = YES;
+    }];
+    
+    // --- 5. Start the replicator again.
+    XCTestExpectation* xc2 = [self expectationWithDescription: @"idle2"];
+    id token2 = [r addChangeListener:^(CBLReplicatorChange * change) {
+        if (change.status.activity == kCBLReplicatorIdle &&
+            change.status.progress.completed == change.status.progress.total) {
+            [xc2 fulfill];
+        }
+    }];
+    [r start];
+    [self waitForExpectations: @[xc2] timeout: 5.0];
+    [r stop];
+    [r removeChangeListenerWithToken: token2];
+    
+    // --- 6. There should be some document replication events notified
+    AssertEqual(array.count, 2u);
+    Assert(eventNotified);
+}
+
 - (void) testDocumentReplicationEventWithPushConflict {
     NSError* error;
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
