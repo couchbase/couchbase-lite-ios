@@ -28,16 +28,12 @@
 @synthesize language=_language, ignoreAccents=_ignoreAccents;
 
 - (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items {
-    self = [super initWithNone];
+    self = [super initWithIndexType: kC4FullTextIndex];
     if (self) {
         _items = items;
         _language = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
     }
     return self;
-}
-
-- (C4IndexType) indexType {
-    return kC4FullTextIndex;
 }
 
 - (C4IndexOptions) indexOptions {
@@ -48,7 +44,7 @@
     return c4options;
 }
 
-- (id) indexItems {
+- (id) getJSON {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _items.count];
     for (CBLFullTextIndexItem* item in _items) {
         [json addObject: [item.expression asJSON]];

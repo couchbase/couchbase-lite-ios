@@ -39,6 +39,8 @@
 #import "CBLErrorMessage.h"
 #import "Foundation+CBL.h"
 #import "CBLData.h"
+#import "CBLIndexConfiguration+Internal.h"
+#import "CBLIndexSpec.h"
 #import "CBLQuery+N.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -612,26 +614,33 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)outError {
-    CBLAssertNotNil(index);
+- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
+    return [self createIndex: name withConfig: index error: error];
+}
+
+- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
+                          name: (NSString*)name error: (NSError**)error {
+    return [self createIndex: name withConfig: config error: error];
+}
+
+- (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
+    CBLAssertNotNil(config);
     CBLAssertNotNil(name);
     
     CBL_LOCK(self) {
         [self mustBeOpen];
         
-        NSData* json = [NSJSONSerialization dataWithJSONObject: index.indexItems
-                                                       options: 0
-                                                         error: outError];
-        if (!json)
-            return NO;
-        
         CBLStringBytes bName(name);
-        C4IndexType type = index.indexType;
-        C4IndexOptions options = index.indexOptions;
-        
+        CBLStringBytes c4IndexSpec(config.getIndexSpecs);
+        C4IndexOptions options = config.indexOptions;
         C4Error c4err;
-        return c4db_createIndex(_c4db, bName, {json.bytes, json.length}, type, &options, &c4err) ||
-        convertError(c4err, outError);
+        
+        return c4db_createIndex2(_c4db,
+                                 bName,
+                                 c4IndexSpec,
+                                 config.queryLanguage,
+                                 config.indexType,
+                                 &options, &c4err) || convertError(c4err, error);
     }
 }
 
@@ -815,9 +824,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(err, outError);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
-    
-    c4db_startHousekeeping(_c4db);
-    
+        
     _state = kCBLDatabaseStateOpened;
     
     return YES;
