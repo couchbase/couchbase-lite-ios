@@ -899,7 +899,7 @@ class QueryTest: CBLTestCase {
                          Function.acos(p),
                          Function.asin(p),
                          Function.atan(p),
-                         Function.atan2(x: Expression.int(90), y: p),
+                         Function.atan2(y: Expression.int(90), x: p),
                          Function.ceil(p),
                          Function.cos(p),
                          Function.degrees(p),

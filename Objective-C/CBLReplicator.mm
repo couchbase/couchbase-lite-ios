@@ -387,11 +387,9 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
-    if (_repl) {
+    _progressLevel = level;
+    if (_repl)
         assert(c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, nullptr));
-    } else {
-        _progressLevel = level;
-    }
 }
 
 - (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {

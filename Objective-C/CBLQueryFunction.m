@@ -90,12 +90,12 @@
                                                     params: @[expression]];
 }
 
-+ (CBLQueryExpression*) atan2: (CBLQueryExpression*)x y: (CBLQueryExpression*)y {
++ (CBLQueryExpression*) atan2: (CBLQueryExpression*)y x: (CBLQueryExpression*)x {
     CBLAssertNotNil(x);
     CBLAssertNotNil(y);
     
     return [[CBLFunctionExpression alloc] initWithFunction: @"ATAN2()"
-                                                    params: @[x, y]];
+                                                    params: @[y, x]];
 }
 
 + (CBLQueryExpression*) ceil: (CBLQueryExpression*)expression {

@@ -115,11 +115,11 @@ NS_ASSUME_NONNULL_BEGIN
 /** 
  Creates an ATAN2(Y, X) function that returns the arctangent of y/x.
  
- @param x The expression to evaluate as the X coordinate.
  @param y The expression to evaluate as the Y coordinate.
+ @param x The expression to evaluate as the X coordinate.
  @return The ATAN2(Y, X) function.
  */
-+ (CBLQueryExpression*) atan2: (CBLQueryExpression*)x y: (CBLQueryExpression*)y;
++ (CBLQueryExpression*) atan2: (CBLQueryExpression*)y x: (CBLQueryExpression*)x;
 
 /** 
  Creates a CEIL(expr) function that returns the ceiling value of the given numeric
