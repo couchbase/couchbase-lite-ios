@@ -110,11 +110,11 @@ public final class Function {
     /// Creates an ATAN2(Y, X) function that returns the arctangent of y/x.
     ///
     /// - Parameters:
-    ///   - x: The expression to evaluate as the X coordinate.
     ///   - y: The expression to evaluate as the Y coordinate.
+    ///   - x: The expression to evaluate as the X coordinate.
     /// - Returns: The ATAN2(Y, X) function.
-    public static func atan2(x: ExpressionProtocol, y: ExpressionProtocol) -> ExpressionProtocol {
-        return QueryExpression(CBLQueryFunction.atan2(x.toImpl(), y: y.toImpl()))
+    public static func atan2(y: ExpressionProtocol, x: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.atan2(y.toImpl(), x: x.toImpl()))
     }
     
     /// Creates a CEIL(expr) function that returns the ceiling value of the given numeric
