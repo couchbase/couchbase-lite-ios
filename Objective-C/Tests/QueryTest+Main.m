@@ -1845,11 +1845,12 @@
     [doc setValue: @"Ice Cream" forKey: @"lastName"];
     [self saveDocument: doc];
     
-// FIXME: once the FROM clause can handle the _ and <dbName>, uncomment this.
-//    [self validateN1QLQuery: $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name)];
-//    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _"]; // should work as expected
-//    [self validateN1QLQuery: @"SELECT firstName, lastName"]; // should throw exception
+    [self validateN1QLQuery: $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name)];
+    [self validateN1QLQuery: @"SELECT firstName, lastName FROM _"];
     [self validateN1QLQuery: @"SELECT firstName, lastName FROM _default"];
+    
+    // FIXME: Should throw error!
+    // [self validateN1QLQuery: @"SELECT firstName, lastName"];
 }
 
 - (void) validateN1QLQuery: (NSString*)queryString {
