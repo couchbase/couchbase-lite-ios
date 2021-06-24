@@ -248,6 +248,9 @@
     if (_maxAttempts > 0)
         options[@kC4ReplicatorOptionMaxRetries] = @(_maxAttempts - 1);
     
+    if (!_enableAutoPurge)
+        options[@kC4ReplicatorOptionAutoPurge] = @(NO);
+    
 #ifdef COUCHBASE_ENTERPRISE
     NSString* uniqueID = $castIf(CBLMessageEndpoint, _target).uid;
     if (uniqueID)
