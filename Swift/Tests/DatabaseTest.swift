@@ -749,8 +749,11 @@ class DatabaseTest: CBLTestCase {
             try self.db.deleteDocument(doc1a)
         }
         
-        // Delete doc, no-ops:
-        try db.deleteDocument(doc1b)
+        // Delete doc, 404 error:
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            try self.db.deleteDocument(doc1b)
+        }
+        
         XCTAssertEqual(db.count, 0)
         XCTAssertNil(db.document(withID: doc1b.id))
     }
@@ -1066,9 +1069,13 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(db.count, 0)
         XCTAssertNil(db.document(withID: documentID))
         
-        // Delete document & anotherDocumentReference -> no-ops
-        try self.db.deleteDocument(document)
-        try db.deleteDocument(anotherDocumentReference)
+        // Delete document & anotherDocumentReference -> 404 NotFound
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            try self.db.deleteDocument(document)
+        }
+        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+            try self.db.deleteDocument(anotherDocumentReference)
+        }
         
         XCTAssertEqual(db.count, 0)
         XCTAssertNil(db.document(withID: documentID))
