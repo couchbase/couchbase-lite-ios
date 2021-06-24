@@ -879,9 +879,10 @@
         return [self.db deleteDocument: doc1a error: err];
     }];
     
-    // Delete doc1b, no-ops:
-    Assert([self.db deleteDocument: doc1b error: &error]);
-    AssertNil(error);
+    // Delete doc1b, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: doc1b error: err];
+    }];
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: doc1b.id]);
 }
@@ -1345,14 +1346,15 @@
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
     
-    // Delete doc no-ops:
-    NSError* errorWhileDeletion;
-    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
+    // Delete doc, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: document error: err];
+    }];
     
-    // Delete another DB returned document, no-ops:
-    Assert([self.db deleteDocument: anotherDBReturnedDocument error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
+    // Delete another DB returned document, 404 NotFound:
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: anotherDBReturnedDocument error: err];
+    }];
     AssertEqual(self.db.count, 0u);
     
     anotherDBReturnedDocument = nil;

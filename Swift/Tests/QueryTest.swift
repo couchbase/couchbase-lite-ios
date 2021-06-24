@@ -298,7 +298,7 @@ class QueryTest: CBLTestCase {
         let sentence = FullTextExpression.index("sentence")
         let w = sentence.match("'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)
@@ -310,7 +310,7 @@ class QueryTest: CBLTestCase {
                            ds: DataSourceProtocol) throws {
         let w = FullTextFunction.match(indexName: "sentence", query: "'Dummie woman'")
         let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
-        let q = QueryBuilder.select()
+        let q = QueryBuilder.select(select)
             .from(ds)
             .where(w)
             .orderBy(o)

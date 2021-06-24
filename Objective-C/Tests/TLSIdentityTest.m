@@ -209,9 +209,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
     // Create:
+    error = nil;
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
     identity = [CBLTLSIdentity createIdentityForServer: YES
                                             attributes: attrs
@@ -237,7 +238,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testCreateDuplicateServerIdentity {
@@ -258,6 +259,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     [self checkIdentityInKeyChain: identity];
     
     // Get:
+    error = nil;
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNotNil(identity);
     AssertNil(error);
@@ -288,9 +290,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
     // Create:
+    error = nil;
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Client" };
     identity = [CBLTLSIdentity createIdentityForServer: NO
                                             attributes: attrs
@@ -316,7 +319,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testCreateDuplicateClientIdentity {
@@ -442,7 +445,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testCreateIdentityWithNoAttributes {
@@ -458,9 +461,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
     // Create:
+    error = nil; // reset the error
     identity = [CBLTLSIdentity createIdentityForServer: YES
                                             attributes: @{ }
                                             expiration: nil
@@ -485,9 +489,10 @@ API_AVAILABLE(macos(10.12), ios(10.0))
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
     // Create:
+    error = nil; // reset the error
     NSDate* expiration = [NSDate dateWithTimeIntervalSinceNow: 300];
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
     identity = [CBLTLSIdentity createIdentityForServer: YES

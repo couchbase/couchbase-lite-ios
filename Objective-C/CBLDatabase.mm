@@ -824,9 +824,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(err, outError);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
-    
-    c4db_startHousekeeping(_c4db);
-    
+        
     _state = kCBLDatabaseStateOpened;
     
     return YES;
