@@ -2275,10 +2275,15 @@
                                                                                          ignoreAccents: NO language: nil];
     Assert([self.db createIndexWithConfig: config4 name: @"index2" error: &error], @"Failed to create index %@", error);
     
+    // index4: use backtick in case of property with hyphen
+    CBLFullTextIndexConfiguration* config5 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"`es-detail`"]
+                                                                                         ignoreAccents: YES language: @"es"];
+    Assert([self.db createIndexWithConfig: config5 name: @"index4" error: &error], @"Failed to create index %@", error);
+    
     
     NSArray* names = self.db.indexes;
-    AssertEqual(names.count, 3u);
-    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+    AssertEqual(names.count, 4u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3", @"index4"]));
 }
 
 - (void) testCreateSameIndexTwice {

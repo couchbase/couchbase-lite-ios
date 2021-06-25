@@ -37,6 +37,19 @@ extension Database {
         try _impl.createIndex(index.toImpl(), withName: name)
     }
     
+    /// Creates an index using IndexConfiguration, which could be a value index or a full-text
+    /// search index with the given name. Creating a new different index with an existing
+    /// index name will replace the old index;
+    /// creating the same index with the same name will be no-ops.
+    ///
+    /// - Parameters:
+    ///     - config: The index configuration
+    ///     - name: The index name.
+    /// - Throws: An error on a failure.
+    public func createIndex(_ config: IndexConfiguration, name: String) throws {
+        try _impl.createIndex(withConfig: config.toImpl(), name: name)
+    }
+    
     /// Deletes the index of the given index name.
     ///
     /// - Parameter name: The index name.
