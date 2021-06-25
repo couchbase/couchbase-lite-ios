@@ -42,12 +42,12 @@ extension Database {
     /// index name will replace the old index;
     /// creating the same index with the same name will be no-ops.
     ///
-    /// - Parameter
-    ///     - config The index configuration
-    ///     - name The index name.
+    /// - Parameters:
+    ///     - config: The index configuration
+    ///     - name: The index name.
     /// - Throws: An error on a failure.
-    public func createIndex(_ indexConfiguration: IndexConfiguration, name: String) throws {
-        try _impl.createIndex(withConfig: indexConfiguration.toImpl(), name: name)
+    public func createIndex(_ config: IndexConfiguration, name: String) throws {
+        try _impl.createIndex(withConfig: config.toImpl(), name: name)
     }
     
     /// Deletes the index of the given index name.
