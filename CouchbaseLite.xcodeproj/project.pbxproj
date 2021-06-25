@@ -82,6 +82,8 @@
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
 		1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
+		1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
+		1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
 		1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
@@ -1897,6 +1899,7 @@
 		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
+		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
 		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
@@ -3799,6 +3802,7 @@
 		93EB261921DDC32F0006FB88 /* Index */ = {
 			isa = PBXGroup;
 			children = (
+				1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */,
 				931DE0661F4E3EC2003EF76F /* Index.swift */,
 				93EB261A21DDC34C0006FB88 /* IndexBuilder.swift */,
 			);
@@ -5346,6 +5350,7 @@
 				9380D2681F0D7C04007DD84A /* HavingRouter.swift in Sources */,
 				938196181EC113730032CC51 /* CBLMutableFragment.m in Sources */,
 				9388CC3C21C18787005CA66D /* CBLLog.mm in Sources */,
+				1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */,
 				9381960E1EC112170032CC51 /* CBLArray.mm in Sources */,
 				938CDF271E807F8F002EE790 /* WhereRouter.swift in Sources */,
 				939B1B2F200990FB00FAA3CB /* CBLValueExpression.m in Sources */,
@@ -5814,6 +5819,7 @@
 				9343F07F207D61AB00F19A89 /* Index.swift in Sources */,
 				93D7FA9F20A4D8BF00EC54A4 /* MessageEndpointBridge.swift in Sources */,
 				9343F080207D61AB00F19A89 /* Blob.swift in Sources */,
+				1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */,
 				9343F081207D61AB00F19A89 /* CBLQueryResultArray.m in Sources */,
 				9343F082207D61AB00F19A89 /* FullTextFunction.swift in Sources */,
 				1A416033227D0AD50061A567 /* Conflict.swift in Sources */,

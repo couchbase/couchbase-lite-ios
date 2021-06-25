@@ -1127,6 +1127,33 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(db.indexes, ["index1", "index2", "index3", "index4", "index5"])
     }
     
+    func testN1QLCreateIndexSanity() throws {
+        XCTAssertEqual(db.indexes.count, 0)
+        
+        let config1 = ValueIndexConfiguration(["firstName", "lastName"])
+        try db.createIndex(config1, name: "index1")
+        
+        let config2 = FullTextIndexConfiguration(["detail"])
+        try db.createIndex(config2, name: "index2")
+        
+        let config3 = FullTextIndexConfiguration(["es_detail"], ignoreAccents: true, language: "es")
+        try db.createIndex(config3, name: "index3")
+        
+        let config4 = FullTextIndexConfiguration(["name"], ignoreAccents: false, language: "en")
+        try db.createIndex(config4, name: "index4")
+        
+        // use backtick in case of property name with hyphen
+        let config5 = FullTextIndexConfiguration(["`es-detail`"], ignoreAccents: true, language: "es")
+        try db.createIndex(config5, name: "index5")
+        
+        // same index twice: no-op
+        let config6 = FullTextIndexConfiguration(["detail"])
+        try db.createIndex(config6, name: "index2")
+        
+        XCTAssertEqual(db.indexes.count, 5)
+        XCTAssertEqual(db.indexes, ["index1", "index2", "index3", "index4", "index5"])
+    }
+    
     func testCreateSameIndexTwice() throws {
         let item = ValueIndexItem.expression(Expression.property("firstName"))
         
