@@ -148,6 +148,7 @@ public class Query {
     ///   - json: JSON data encoding the query. This can be obtained from a Query object's
     //            JSONRepresentation property.
     init(database: Database, JSONRepresentation json: Data) {
+        self.database = database
         queryImpl = CBLQuery(database: database._impl, jsonRepresentation: json)
     }
     
@@ -156,6 +157,7 @@ public class Query {
     ///     - database  The database to query.
     ///     - expressions  String representing the query expression.
     init(database: Database, expressions: String) {
+        self.database = database
         queryImpl = CBLQuery(database: database._impl, expressions: expressions)
     }
 
