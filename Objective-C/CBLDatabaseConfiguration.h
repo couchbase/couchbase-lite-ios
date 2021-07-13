@@ -31,20 +31,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString* directory;
 
 /**
- Experiment API. Enable version vector.
- 
- If the enableVersionVector is set to true, the database will use version vector instead of
- using revision tree. When enabling version vector on an existing database, the database
- will be upgraded to use the revision tree while the database is opened.
- 
- NOTE:
- 1. The database that uses version vector cannot be downgraded back to use revision tree.
- 2. The current version of Sync Gateway doesn't support version vector so the syncronization
- with Sync Gateway will not be working.
- */
-@property (nonatomic) BOOL enableVersionVector;
-
-/**
  Initializes the CBLDatabaseConfiguration object.
  */
 - (instancetype) init;

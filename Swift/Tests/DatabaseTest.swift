@@ -1343,14 +1343,12 @@ class DatabaseTest: CBLTestCase {
         
         var config = DatabaseConfiguration()
         config.directory = dir
-        config.enableVersionVector = true
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = EncryptionKey.password("somePassword")
         #endif
         
         let db = try Database(name: "dbName", config: config)
         XCTAssertEqual(db.config.directory, dir)
-        XCTAssert(db.config.enableVersionVector)
         
         #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
@@ -1360,7 +1358,6 @@ class DatabaseTest: CBLTestCase {
     func testDefaultDatabaseConfiguration() {
         let config = DatabaseConfiguration()
         XCTAssertEqual(config.directory, CBLDatabaseConfiguration().directory)
-        XCTAssertEqual(config.enableVersionVector, false)
         
         #if COUCHBASE_ENTERPRISE
         XCTAssertNil(config.encryptionKey)
@@ -1370,7 +1367,6 @@ class DatabaseTest: CBLTestCase {
     func testCopyingDatabaseConfiguration() throws {
         var config = DatabaseConfiguration()
         config.directory = self.directory
-        config.enableVersionVector = true
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey  = EncryptionKey.password("somePassword")
         #endif
@@ -1380,15 +1376,12 @@ class DatabaseTest: CBLTestCase {
         
         // update the config, after passing to constructor;
         config.directory = "\(self.directory)/updatedURL"
-        config.enableVersionVector = false
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = nil
         #endif
         // validate no impact on original passed in config.
         XCTAssertEqual(db.config.directory, self.directory)
         XCTAssertEqual(config1.directory, self.directory)
-        XCTAssert(db.config.enableVersionVector)
-        XCTAssert(config1.enableVersionVector)
         #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
         XCTAssertNotNil(config1.encryptionKey)
@@ -1397,13 +1390,11 @@ class DatabaseTest: CBLTestCase {
         // update the copied config.
         var config2 = db.config
         config2.directory = "\(self.directory)/updatedURL"
-        config2.enableVersionVector = false
         #if COUCHBASE_ENTERPRISE
         config2.encryptionKey = nil
         #endif
         // validate no impact on original passed in config.
         XCTAssertEqual(db.config.directory, self.directory)
-        XCTAssert(db.config.enableVersionVector)
         #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
         #endif
