@@ -176,8 +176,12 @@ using namespace fleece;
 }
 
 - (NSString*) description {
-    NSString* desc = [[NSString alloc] initWithData: _json encoding: NSUTF8StringEncoding];
-    return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
+    if (_language == kC4JSONQuery) {
+        NSString* desc = [[NSString alloc] initWithData: _json encoding: NSUTF8StringEncoding];
+        return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
+    } else {
+        return [NSString stringWithFormat: @"%@[n1ql=%@]", self.class, _expressions];
+    }
 }
 
 #pragma mark - Parameters

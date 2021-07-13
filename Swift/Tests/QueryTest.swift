@@ -1286,18 +1286,26 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    func testLiveQuery() throws {
-        try loadNumbers(100)
-        var count = 0;
+    func testJSONLiveQuery() throws {
         let q = QueryBuilder
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(Expression.int(10)))
             .orderBy(Ordering.property("number1"))
-        
+        try testLiveQuery(query: q)
+    }
+    
+    func testN1QLLiveQuery() throws {
+        let q = db.createQuery(query: "SELECT * FROM testdb WHERE number1 < 10")
+        try testLiveQuery(query: q)
+    }
+    
+    func testLiveQuery(query: Query) throws {
+        try loadNumbers(100)
+        var count = 0;
         let x = expectation(description: "changes")
         
-        let token = q.addChangeListener { (change) in
+        let token = query.addChangeListener { (change) in
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
@@ -1316,7 +1324,7 @@ class QueryTest: CBLTestCase {
         
         waitForExpectations(timeout: 2.0) { (error) in }
         
-        q.removeChangeListener(withToken: token)
+        query.removeChangeListener(withToken: token)
     }
     
     func testLiveQueryNoUpdate() throws {
