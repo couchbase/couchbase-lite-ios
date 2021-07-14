@@ -24,7 +24,7 @@
     BOOL _readonly;
 }
 
-@synthesize directory=_directory, enableVersionVector=_enableVersionVector;
+@synthesize directory=_directory;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
@@ -47,7 +47,6 @@
         
         if (config) {
             _directory = config.directory;
-            _enableVersionVector = config.enableVersionVector;
 #ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
 #endif

@@ -857,10 +857,7 @@ static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
 
 static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     C4DatabaseConfig2 c4config = kDBConfig;
-    
-    if (config.enableVersionVector)
-        c4config.flags |= kC4DB_VersionVectors;
-    
+
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
