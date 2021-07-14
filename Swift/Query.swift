@@ -112,7 +112,7 @@ public class Query {
         })
         
         if tokens.count == 0 {
-            database!.addQuery(self)
+            database.addQuery(self)
         }
         
         let listenerToken = ListenerToken(token)
@@ -130,7 +130,7 @@ public class Query {
         tokens.remove(token)
         
         if tokens.count == 0 {
-            database!.removeQuery(self)
+            database.removeQuery(self)
         }
         lock.unlock()
     }
@@ -173,7 +173,7 @@ public class Query {
     
     var joinsImpl: [CBLQueryJoin]?
     
-    var database: Database?
+    var database: Database!
     
     var whereImpl: CBLQueryExpression?
     
@@ -204,7 +204,7 @@ public class Query {
         }
         
         precondition(fromImpl != nil, "From statement is required.")
-        assert(selectImpl != nil && database != nil)
+        assert(selectImpl != nil)
         if self.distinct {
             queryImpl = CBLQueryBuilder.selectDistinct(
                 selectImpl!,
@@ -237,7 +237,7 @@ public class Query {
     
     func stop() {
         lock.lock()
-        database!.removeQuery(self)
+        database.removeQuery(self)
         tokens.removeAllObjects()
         lock.unlock()
     }
