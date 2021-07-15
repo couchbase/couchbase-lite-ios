@@ -265,6 +265,32 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
+    // https://issues.couchbase.com/browse/CBL-2036
+    func testFTSQueryOnDBNameWithHyphen() throws {
+        try Database.delete(withName: "cbl-test")
+        let db2 = try Database(name: "cbl-test")
+        
+        let doc = MutableDocument()
+        doc.setValue("Dummie woman", forKey: "sentence")
+        try db2.saveDocument(doc)
+        
+        let doc2 = MutableDocument()
+        doc2.setValue("Dummie man", forKey: "sentence")
+        try db2.saveDocument(doc2)
+        
+        let fts_s = FullTextIndexItem.property("sentence")
+        let index = IndexBuilder.fullTextIndex(items: fts_s)
+            .language(nil)
+            .ignoreAccents(false)
+        try db2.createIndex(index, withName: "sentence")
+        
+        let q = QueryBuilder.select([SelectResult.expression(Meta.id)])
+            .from(DataSource.database(db2))
+            .where(FullTextFunction.match(indexName: "sentence", query: "'woman'"))
+        let numRows = try verifyQuery(q) { (n, r) in }
+        XCTAssertEqual(numRows, 1)
+    }
+    
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
