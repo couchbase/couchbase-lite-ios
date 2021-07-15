@@ -112,7 +112,7 @@ public class Query {
         })
         
         if tokens.count == 0 {
-            database!.addQuery(self)
+            database.addQuery(self)
         }
         
         let listenerToken = ListenerToken(token)
@@ -130,7 +130,7 @@ public class Query {
         tokens.remove(token)
         
         if tokens.count == 0 {
-            database!.removeQuery(self)
+            database.removeQuery(self)
         }
         lock.unlock()
     }
@@ -148,6 +148,7 @@ public class Query {
     ///   - json: JSON data encoding the query. This can be obtained from a Query object's
     //            JSONRepresentation property.
     init(database: Database, JSONRepresentation json: Data) {
+        self.database = database
         queryImpl = CBLQuery(database: database._impl, jsonRepresentation: json)
     }
     
@@ -156,6 +157,7 @@ public class Query {
     ///     - database  The database to query.
     ///     - expressions  String representing the query expression.
     init(database: Database, expressions: String) {
+        self.database = database
         queryImpl = CBLQuery(database: database._impl, expressions: expressions)
     }
 
@@ -171,7 +173,7 @@ public class Query {
     
     var joinsImpl: [CBLQueryJoin]?
     
-    var database: Database?
+    var database: Database!
     
     var whereImpl: CBLQueryExpression?
     
@@ -202,7 +204,7 @@ public class Query {
         }
         
         precondition(fromImpl != nil, "From statement is required.")
-        assert(selectImpl != nil && database != nil)
+        assert(selectImpl != nil)
         if self.distinct {
             queryImpl = CBLQueryBuilder.selectDistinct(
                 selectImpl!,
@@ -235,7 +237,7 @@ public class Query {
     
     func stop() {
         lock.lock()
-        database!.removeQuery(self)
+        database.removeQuery(self)
         tokens.removeAllObjects()
         lock.unlock()
     }
