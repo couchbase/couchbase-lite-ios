@@ -565,9 +565,15 @@
     
     // try saving the purged doc instance: Should return NotFound!!
     [doc1b setString: @"Peter" forKey: @"firstName"];
-    AssertFalse([self.db saveDocument: doc1b error: &error]);
-    AssertEqual(error.code, CBLErrorNotFound);
-    AssertEqual(error.domain, CBLErrorDomain);
+    __block NSError* err;
+    
+    // Skip exception breakpoint thrown from c4doc_update
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        AssertFalse([self.db saveDocument: doc1b error: &err]);
+    }];
+    AssertEqual(err.code, CBLErrorNotFound);
+    AssertEqual(err.domain, CBLErrorDomain);
     
     // try saving the doc with same name, which should be saved without any issue.
     CBLMutableDocument* doc1c = [[CBLMutableDocument alloc] initWithID: docID];
@@ -688,14 +694,19 @@
     
     CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
     
-    NSError* error;
+    __block NSError* error;
     [self.db purgeDocumentWithID: docID error: &error];
     
     [doc1b setString: @"Scott" forKey: @"nickName"];
-    AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
-                          return YES;
-                      } error: &error]);
+    
+    // Skip exception breakpoint thrown from c4doc_update
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        AssertFalse([self.db saveDocument: doc1b
+                          conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                              return YES;
+                          } error: &error]);
+    }];
     AssertEqual(error.code, CBLErrorNotFound);
 }
 
