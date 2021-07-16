@@ -270,7 +270,11 @@
     }];
     pullConfig.conflictResolver = resolver;
     
-    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    // Skip exception breakpoint thrown from c4doc_resolve
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        [self run: pullConfig errorCode: 0 errorDomain: nil];
+    }];
     
     // it should only call resolver once. 
     // since second time, both revisions are deleted, and automatically resolve
@@ -425,7 +429,12 @@
         return mDoc;
     }];
     pullConfig.conflictResolver = resolver;
-    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Skip exception breakpoint thrown from c4doc_resolve
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        [self run: pullConfig errorCode: 0 errorDomain: nil];
+    }];
     
     // make sure the resolver method called twice due to second conflict
     AssertEqual(count, 2u);
@@ -777,7 +786,7 @@
  7. once the first CCR tries again, conflict is already been resolved.
  */
 // CBL-1710: Update to use setProgressLevel API in Replicator
-- (void) _testDoubleConflictResolutionOnSameConflicts {
+- (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
@@ -832,7 +841,12 @@
     // 3
     // in between the conflict, we wil suspend replicator.
     [replicator setSuspended: YES];
-    [self waitForExpectations: @[expSTOP] timeout: 15.0];
+    
+    // Skip exception breakpoint thrown from c4doc_resolve
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        [self waitForExpectations: @[expSTOP] timeout: 15.0];
+    }];
     
     AssertEqual(ccrCount, 2u);
     AssertEqual(noOfNotificationReceived, 2u);
@@ -925,12 +939,17 @@
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
     __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
-    [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
-        replicator = r;
-        token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
-            NSError* err = docRepl.documents.firstObject.error;
-            if (err)
-                [errors addObject: err];
+    
+    // Skip exception breakpoint thrown from c4doc_resolve
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+            replicator = r;
+            token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docRepl) {
+                NSError* err = docRepl.documents.firstObject.error;
+                if (err)
+                    [errors addObject: err];
+            }];
         }];
     }];
     
