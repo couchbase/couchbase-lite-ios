@@ -33,7 +33,7 @@
 
 - (id) asJSON {
     NSString* columnName = [self columnName];
-    Assert(columnName);
+    assert(columnName);
     return @{ @"AS" : columnName };
 }
 

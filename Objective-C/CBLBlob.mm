@@ -184,7 +184,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
                                         options: 0 error: &error];
     
     // it should always return valid json string
-    Assert(s);
+    assert(s);
     
     return s;
 }

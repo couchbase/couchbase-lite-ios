@@ -720,10 +720,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 // Must be called inside self lock
 - (BOOL) isClosed {
     if (_state == kCBLDatabaseStateClosed) {
-        assert(_c4db == nullptr);
+        Assert(_c4db == nullptr);
         return YES;
     } else {
-        assert(_c4db != nullptr);
+        Assert(_c4db != nullptr);
         return NO;
     }
 }
