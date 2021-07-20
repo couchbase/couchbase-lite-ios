@@ -387,8 +387,11 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
     _progressLevel = level;
-    if (_repl)
-        assert(c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, nullptr));
+    if (_repl) {
+        BOOL success = c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, nullptr);
+        assert(success);
+        CBLLogVerbose(Sync, @"%@: setProgressLevel to LiteCore; level = %d, status = %d", self, level, success);
+    }
 }
 
 - (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
