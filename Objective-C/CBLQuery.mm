@@ -289,11 +289,11 @@ using namespace fleece;
         C4Query* query;
         CBL_LOCK(self.database) {
             if (_language == kC4JSONQuery) {
-                assert(_json);
+                Assert(_json);
                 query = c4query_new2(self.database.c4db,
                                      kC4JSONQuery, {_json.bytes, _json.length}, nullptr, &c4Err);
             } else {
-                assert(_expressions);
+                Assert(_expressions);
                 CBLStringBytes exp(_expressions);
                 query = c4query_new2(self.database.c4db, kC4N1QLQuery, exp, nullptr, &c4Err);
             }
