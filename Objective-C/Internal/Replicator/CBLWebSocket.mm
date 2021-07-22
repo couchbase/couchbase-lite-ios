@@ -175,7 +175,7 @@ static void doDispose(C4Socket* s) {
                                                  relativeToURL: nil];
             if (![_logic setProxyURL: proxyURL]) {
                 CBLWarn(Sync, @"Invalid replicator HTTPProxy setting <%.*s>",
-                        (int)proxy.size, proxy.buf);
+                        (int)proxy.size, (char*)proxy.buf);
             }
         }
 
