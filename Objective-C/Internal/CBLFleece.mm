@@ -132,7 +132,7 @@ namespace cbl {
         if (oldType == kFLUndefined || oldType == kFLDict || oldType == kFLArray)
             return true;
         else if ([newValue isKindOfClass: [CBLArray class]]
-                || [newValue isKindOfClass: [CBLArray class]])
+                || [newValue isKindOfClass: [CBLDictionary class]])
             return true;
         else
             return ![newValue isEqual: oldValue.asNative(&container)];
