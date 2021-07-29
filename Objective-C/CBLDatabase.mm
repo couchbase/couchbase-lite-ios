@@ -1279,6 +1279,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         if (!resolvedDoc || resolvedDoc.isDeleted)
             mergedFlags |= kRevDeleted;
         
+        mergedFlags |= [resolvedDoc hasBlob] ? kRevHasAttachments : 0;
+        
         // Tell LiteCore to do the resolution:
         C4Document *c4doc = localDoc.c4Doc.rawDoc;
         C4Error c4err;

@@ -208,6 +208,10 @@ using namespace fleece;
     }
 }
 
+- (BOOL) hasBlob {
+    return [_dict hasBlob];
+}
+
 #pragma mark - Fleece Encoding
 
 - (FLSliceResult) encode: (NSError**)outError {

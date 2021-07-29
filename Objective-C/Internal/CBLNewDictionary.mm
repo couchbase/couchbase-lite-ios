@@ -346,4 +346,14 @@ using namespace fleece;
     return self;
 }
 
+- (BOOL) hasBlob {
+    for (NSString* key in _dict) {
+        id value = _dict[key];
+        if ([value isKindOfClass: [CBLBlob class]])
+            return YES;
+    }
+    
+    return NO;
+}
+
 @end

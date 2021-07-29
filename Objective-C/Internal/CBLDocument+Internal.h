@@ -103,6 +103,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;
 
+- (BOOL) hasBlob;
+
 @end
 
 //////////////////
@@ -131,6 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initEmpty;
 - (void) keysChanged;
+- (BOOL) hasBlob;
 
 @end
 
