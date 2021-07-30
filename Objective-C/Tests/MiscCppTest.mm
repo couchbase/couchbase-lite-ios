@@ -41,8 +41,8 @@
                                 code: kCFErrorHTTPConnectionLost
                             userInfo: nil];
     convertError(error, &c4err);
-    AssertEqual(c4err.domain, POSIXDomain);
-    AssertEqual(c4err.code, ECONNRESET);
+    AssertEqual(c4err.domain, NetworkDomain);
+    AssertEqual(c4err.code, kC4NetErrConnectionReset);
 }
 
 - (void) testConvertErrorNSErrorToC4ErrorOSStatusError {
