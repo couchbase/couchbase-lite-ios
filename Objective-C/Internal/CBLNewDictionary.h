@@ -34,8 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CBLDictionary*) toCBLDictionary;
 
-- (BOOL) hasBlob;
-
 @end
 
 NS_ASSUME_NONNULL_END

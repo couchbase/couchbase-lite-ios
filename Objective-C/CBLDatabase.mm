@@ -1079,17 +1079,11 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     FLSliceResult body;
     if (!deletion && !document.isEmpty) {
         // Encode properties to Fleece data:
-        body = [document encode: outError];
+        body = [document encode: &revFlags error: outError];
         if (!body.buf) {
             *outDoc = nullptr;
             return NO;
         }
-        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.sharedKeys,
-                                         nullslice);
-        if (c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc)))
-            revFlags |= kRevHasAttachments;
-        
-        FLDoc_Release(doc);
     } else {
         body = [self emptyFLSliceResult];
     }
@@ -1254,13 +1248,16 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         CBLStringBytes winningRevID = remoteDoc.revisionID;
         CBLStringBytes losingRevID = localDoc.revisionID;
         
+        // mergedRevFlags:
+        C4RevisionFlags mergedFlags = 0;
+        
         // mergedBody:
         alloc_slice mergedBody;
         if (resolvedDoc != remoteDoc) {
             if (resolvedDoc) {
                 // Unless the remote revision is being used as-is, we need a new revision:
                 NSError* err = nil;
-                mergedBody = [resolvedDoc encode: &err];
+                mergedBody = [resolvedDoc encode: &mergedFlags error: &err];
                 if (err) {
                     createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
                     return false;
@@ -1274,12 +1271,9 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                 mergedBody = [self emptyFLSliceResult];
         }
         
-        // mergedFlags:
-        C4RevisionFlags mergedFlags = resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
+        mergedFlags |= resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
         if (!resolvedDoc || resolvedDoc.isDeleted)
             mergedFlags |= kRevDeleted;
-        
-        mergedFlags |= [resolvedDoc hasBlob] ? kRevHasAttachments : 0;
         
         // Tell LiteCore to do the resolution:
         C4Document *c4doc = localDoc.c4Doc.rawDoc;

@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef struct FLEncoderContext {
     CBLDocument* __nullable document = nullptr;
     bool encodeQueryParameter = false;
+    bool hasAttachment = false;
 } FLEncoderContext;
 
 
