@@ -31,9 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Configuration struct for FLEncoder. */
 typedef struct FLEncoderContext {
-    CBLDocument* __nullable document = nullptr; // Set when encoding a document, used by Blob to extract the database.
-    bool encodeQueryParameter = false;          // Set this in case of encoding query params(this includes blob content).
-    bool *outHasAttachment;                     // This will be set in case of encoding document with attachment.
+    CBLDocument* __nullable document = nullptr; /// Set when encoding a document, used by Blob to extract the database.
+    bool encodeQueryParameter = false;          /// Set this in case of encoding query params(this includes blob content).
+    bool *outHasAttachment;                     /// This will be set in case of encoding document with attachment.
 } FLEncoderContext;
 
 
