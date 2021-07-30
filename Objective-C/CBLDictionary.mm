@@ -125,18 +125,6 @@ using namespace fleece;
     }
 }
 
-- (BOOL) hasBlob {
-    CBL_LOCK(_sharedLock) {
-        for (MDict<id>::iterator i(_dict); i; ++i) {
-            id obj = i.nativeValue();
-            if ([obj isKindOfClass: [CBLBlob class]]) {
-                return YES;
-            }
-        }
-    }
-    return NO;
-}
-
 #pragma mark - Type Getters
 
 static const MValue<id>& _get(MDict<id> &dict, NSString* key) {
