@@ -382,8 +382,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 - (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
     // Note: If CBLDictionary can be encoded independently of CBLDocument,
     // so there could be no extra info:
+    bool hasAttachment = true;
     FLEncoderContext* encContext = (FLEncoderContext*)FLEncoder_GetExtraInfo(encoder);
-    encContext->hasAttachment = true;
+    encContext->outHasAttachment = &hasAttachment;
     if (encContext->document) {
         CBLDatabase* database = encContext->document.database;
         [self checkBlobFromSameDatabase: database];
