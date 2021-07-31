@@ -151,9 +151,9 @@ static bool mapToC4Error(int code, const ErrorMapping map[], C4Error *outError) 
 static bool cfNetworkToC4Error(int code, C4Error *outError) {
     // Maps CFNetworkErrors <-> C4Errors ... see <CFNetwork/CFNetworkErrors.h>
     static const ErrorMapping kCFNetworkErrorMap[] = {
-        {kCFErrorHTTPConnectionLost,                {POSIXDomain, ECONNRESET}},
-        {kCFURLErrorCannotConnectToHost,            {POSIXDomain, ECONNREFUSED}},
-        {kCFURLErrorNetworkConnectionLost,          {POSIXDomain, ECONNRESET}},
+        {kCFErrorHTTPConnectionLost,                {NetworkDomain, kC4NetErrConnectionReset}},
+        {kCFURLErrorCannotConnectToHost,            {NetworkDomain, kC4NetErrConnectionRefused}},
+        {kCFURLErrorNetworkConnectionLost,          {NetworkDomain, kC4NetErrConnectionReset}},
         {kCFURLErrorDNSLookupFailed,                {NetworkDomain, kC4NetErrDNSFailure}},
         {kCFHostErrorHostNotFound,                  {NetworkDomain, kC4NetErrUnknownHost}},
         {kCFURLErrorTimedOut,                       {NetworkDomain, kC4NetErrTimeout}},
