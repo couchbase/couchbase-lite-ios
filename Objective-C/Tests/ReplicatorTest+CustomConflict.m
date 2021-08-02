@@ -667,7 +667,6 @@
 }
 
 - (void) testNewDocWithBlob {
-    CBLDatabase.log.console.level = kCBLLogLevelNone;
     NSString* docID = @"doc";
     NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
@@ -680,6 +679,7 @@
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithID: con.documentID];
+        [mDoc setString: @"newString" forKey: @"newKey"];
         [mDoc setBlob: blob forKey: @"blob"];
         return mDoc;
     }];
@@ -697,8 +697,11 @@
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     d = [self.otherDB documentWithID: docID];
     Assert(d.c4Doc.revFlags & kRevHasAttachments);
+    AssertEqualObjects([d stringForKey: @"newKey"], @"newString");
     d = [self.db documentWithID: docID];
     Assert(d.c4Doc.revFlags & kRevHasAttachments);
+    AssertEqualObjects([d stringForKey: @"newKey"], @"newString");
+    
 }
 
 - (void) testConflictResolverReturningBlob {
