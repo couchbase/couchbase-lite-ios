@@ -96,7 +96,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
-- (FLSliceResult) encode: (NSError**)outError;
+// Encodes the document and returns the corresponding slice
+//
+//  - outRevFlags: Attachment flag will be set, if any present.
+//  - error: On return, the error if any.
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
+                               error: (NSError**)outError;
 
 - (void) setEncodingError: (NSError*)error;
 

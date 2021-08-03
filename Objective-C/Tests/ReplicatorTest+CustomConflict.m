@@ -22,6 +22,7 @@
 #import "CustomLogger.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLErrorMessage.h"
+#import "CBLDocument+Internal.h"
 
 @interface TestConflictResolver: NSObject<CBLConflictResolver>
 
@@ -663,6 +664,44 @@
     AssertNil([self.db documentWithID: @"doc2"]);
     AssertNil([self.db documentWithID: @"doc3"]);
     AssertNil([self.db documentWithID: @"doc4"]);
+}
+
+- (void) testNewDocWithBlob {
+    NSString* docID = @"doc";
+    NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+    TestConflictResolver* resolver;
+    CBLReplicatorConfiguration* pullConfig = [self config: kCBLReplicatorTypePull];
+    
+    // RESOLVE WITH REMOTE & BLOB data in LOCAL
+    NSDictionary* localData = @{@"key1": @"value1"};
+    NSDictionary* remoteData = @{@"key2": @"value2"};
+    [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        CBLMutableDocument* mDoc = [[CBLMutableDocument alloc] initWithID: con.documentID];
+        [mDoc setString: @"newString" forKey: @"newKey"];
+        [mDoc setBlob: blob forKey: @"blob"];
+        return mDoc;
+    }];
+    pullConfig.conflictResolver = resolver;
+    
+    
+    CBLDocument* d = [self.otherDB documentWithID: docID];
+    Assert((d.c4Doc.revFlags & kRevHasAttachments) == 0);
+    d = [self.db documentWithID: docID];
+    Assert((d.c4Doc.revFlags & kRevHasAttachments) == 0);
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    CBLReplicatorConfiguration* pushConfig = [self config: kCBLReplicatorTypePush];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    d = [self.otherDB documentWithID: docID];
+    Assert(d.c4Doc.revFlags & kRevHasAttachments);
+    AssertEqualObjects([d stringForKey: @"newKey"], @"newString");
+    d = [self.db documentWithID: docID];
+    Assert(d.c4Doc.revFlags & kRevHasAttachments);
+    AssertEqualObjects([d stringForKey: @"newKey"], @"newString");
+    
 }
 
 - (void) testConflictResolverReturningBlob {

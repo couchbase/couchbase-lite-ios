@@ -210,10 +210,11 @@ using namespace fleece;
 
 #pragma mark - Fleece Encoding
 
-- (FLSliceResult) encode: (NSError**)outError {
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
     _encodingError = nil;
     auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
-    FLEncoderContext ctx = { .document = self, .encodeQueryParameter = true };
+    bool hasAttachment = false;
+    FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
     [_dict fl_encodeToFLEncoder: encoder];
     if (_encodingError != nil) {
@@ -228,6 +229,11 @@ using namespace fleece;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
     if (!body.buf)
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
+    
+    // adds the attachment flag to `outRevFlags`
+    if (outRevFlags)
+        *outRevFlags |= hasAttachment ? kRevHasAttachments : 0;
+    
     return body;
 }
 
