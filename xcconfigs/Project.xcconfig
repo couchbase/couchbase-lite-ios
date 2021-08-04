@@ -63,6 +63,9 @@ VERSIONING_SYSTEM                  = apple-generic
 
 SUPPORTS_MACCATALYST               = YES
 
+// background monitor feature will be disabled if its extension project.
+APPLICATION_EXTENSION_API_ONLY     = YES
+
 // Warn about using newer-than-deployment-target APIs without dynamic checks: (Xcode 9+)
 CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
 
