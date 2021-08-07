@@ -43,7 +43,9 @@ namespace cbl {
         { }
 
         virtual ~QueryResultContext() {
-            c4queryenum_release(_enumerator);
+            CBL_LOCK(database()) {
+                c4queryenum_release(_enumerator);
+            }
         }
 
         C4QueryEnumerator* enumerator() const   {return _enumerator;}
