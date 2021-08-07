@@ -128,6 +128,10 @@ namespace cbl {
     return _query.database;
 }
 
+- (CBLQuery*) query {
+    return  _query;
+}
+
 - (id) currentObject {
     return [[CBLQueryResult alloc] initWithResultSet: self
                                         c4Enumerator: _c4enum

@@ -55,7 +55,7 @@ using namespace fleece;
 #pragma mark - CBLArray
 
 - (NSUInteger) count {
-    CBL_LOCK(_rs.database) {
+    CBL_LOCK(_rs.query) {
         return c4query_columnCount(_rs.c4Query);
     }
 }
