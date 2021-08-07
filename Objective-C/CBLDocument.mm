@@ -27,6 +27,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
+#import "Foundation+CBL.h"
 
 using namespace fleece;
 
@@ -173,9 +174,9 @@ using namespace fleece;
 - (void) updateDictionary {
     if (_fleeceData) {
         _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_fleeceData), self.isMutable));
-        CBL_LOCK(_database) {
+        [_database useLock: ^{
             _dict = _root->asNative();
-        }
+        }];
     } else {
         // New document:
         _root.reset();

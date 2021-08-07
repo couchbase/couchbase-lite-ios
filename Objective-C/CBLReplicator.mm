@@ -37,6 +37,7 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLErrorMessage.h"
+#import "Foundation+CBL.h"
 
 #import "c4Replicator.h"
 #import "c4Socket.h"
@@ -250,7 +251,7 @@ typedef enum {
     [self initReachability: _reachabilityURL];
 
     // Create a C4Replicator:
-    CBL_LOCK(_config.database) {
+    [_config.database useLock: ^{
         [_config.database mustBeOpenLocked];
         
         if (remoteURL || !otherDB)
@@ -258,18 +259,18 @@ typedef enum {
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB) {
-                CBL_LOCK(otherDB) {
+                [otherDB useLock: ^{
                     [otherDB mustBeOpenLocked];
                     
                     _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
-                }
+                }];
             }
 #else
             Assert(remoteURL, @"Endpoint has no URL");
 #endif
         }
-    }
-
+    }];
+    
     return (_repl != nullptr);
 }
 
@@ -605,11 +606,11 @@ static void onDocsEnded(C4Replicator* repl,
     }
    
     dispatch_async(replicator->_dispatchQueue, ^{
-        CBL_LOCK(replicator) {
+        [replicator useLock: ^{
             if (repl == replicator->_repl) {
                 [replicator onDocsEnded: docs pushing: pushing];
             }
-        }
+        }];
     });
 }
 

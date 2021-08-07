@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
                    columnNames: (NSDictionary*)columnNames;
 
 @property (nonatomic, readonly) CBLDatabase* database;
+@property (nonatomic, readonly) CBLQuery* query;
 @property (nonatomic, readonly) C4Query* c4Query;
 @property (nonatomic, readonly) NSDictionary* columnNames;
 

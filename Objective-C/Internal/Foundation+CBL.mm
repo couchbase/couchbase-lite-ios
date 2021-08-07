@@ -46,3 +46,11 @@
 }
 
 @end
+
+@implementation NSObject (CBL)
+- (void) useLock: (void (^)(void))block {
+    CBL_LOCK(self) {
+        block();
+    }
+}
+@end

@@ -27,6 +27,8 @@
 #import "MRoot.hh"
 #import "CBLCoreBridge.h"
 #import "CBLFleece.hh"
+#import "Foundation+CBL.h"
+#import "CBLQuery.h"
 
 using namespace cbl;
 using namespace fleece;
@@ -55,9 +57,11 @@ using namespace fleece;
 #pragma mark - CBLArray
 
 - (NSUInteger) count {
-    CBL_LOCK(_rs.database) {
-        return c4query_columnCount(_rs.c4Query);
-    }
+    __block NSUInteger value;
+    [_rs.query useLock: ^{
+        value = c4query_columnCount(_rs.c4Query);
+    }];
+    return value;
 }
 
 - (nullable id) valueAtIndex: (NSUInteger)index {
@@ -291,10 +295,12 @@ using namespace fleece;
     if (value == nullptr || FLValue_GetType(value) == kFLNull)
         return nil;
     
-    CBL_LOCK(_rs.database) {
+    __block id result;
+    [_rs.database useLock: ^{
         MRoot<id> root(_context, value, false);
-        return root.asNative();
-    }
+        result = root.asNative();
+    }];
+    return result;
 }
 
 - (FLValue) fleeceValueAtIndex: (NSUInteger)index {

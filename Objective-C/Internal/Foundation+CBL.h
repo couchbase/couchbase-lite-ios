@@ -33,4 +33,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (id) toJSONObj;
 @end
 
+@interface NSObject (CBL)
+
+// locks the call using instance of this class
+- (void) useLock: (void (^)(void))block;
+@end
+
 NS_ASSUME_NONNULL_END
