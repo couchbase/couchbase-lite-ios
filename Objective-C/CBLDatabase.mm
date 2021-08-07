@@ -823,7 +823,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (!_c4db)
         return convertError(err, outError);
     
-    _sharedKeys = c4db_getFLSharedKeys(_c4db);
+    CBL_LOCK(self) {
+        _sharedKeys = c4db_getFLSharedKeys(_c4db);
+    }
         
     _state = kCBLDatabaseStateOpened;
     
@@ -890,6 +892,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     return YES;
 }
 
+// call from a db-lock(c4dbobs_create)
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
@@ -945,6 +948,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     }
 }
 
+// call from a db-lock(c4docobs_create)
 - (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue
@@ -1067,6 +1071,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
+// call on db-lock(c4doc_create/update)
 - (BOOL) saveDocument: (CBLDocument*)document
                  into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
