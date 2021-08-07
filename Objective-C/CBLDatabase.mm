@@ -823,9 +823,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (!_c4db)
         return convertError(err, outError);
     
-    CBL_LOCK(self) {
-        _sharedKeys = c4db_getFLSharedKeys(_c4db);
-    }
+    _sharedKeys = c4db_getFLSharedKeys(_c4db);
         
     _state = kCBLDatabaseStateOpened;
     
