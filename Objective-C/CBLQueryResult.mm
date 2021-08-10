@@ -27,6 +27,7 @@
 #import "MRoot.hh"
 #import "CBLCoreBridge.h"
 #import "CBLFleece.hh"
+#import "CBLQuery+Internal.h"
 
 using namespace cbl;
 using namespace fleece;
@@ -55,9 +56,7 @@ using namespace fleece;
 #pragma mark - CBLArray
 
 - (NSUInteger) count {
-    CBL_LOCK(_rs.query) {
-        return c4query_columnCount(_rs.c4Query);
-    }
+    return _rs.query.count;
 }
 
 - (nullable id) valueAtIndex: (NSUInteger)index {

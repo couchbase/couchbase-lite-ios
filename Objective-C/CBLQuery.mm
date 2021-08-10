@@ -275,6 +275,12 @@ using namespace fleece;
     }
 }
 
+- (NSUInteger) count {
+    CBL_LOCK(self) {
+        return c4query_columnCount(_c4Query);
+    }
+}
+
 #pragma mark - Private
 
 - (BOOL) check: (NSError**)outError {
