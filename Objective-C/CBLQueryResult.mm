@@ -56,7 +56,7 @@ using namespace fleece;
 #pragma mark - CBLArray
 
 - (NSUInteger) count {
-    return _rs.query.count;
+    return _rs.query.columnCount;
 }
 
 - (nullable id) valueAtIndex: (NSUInteger)index {
