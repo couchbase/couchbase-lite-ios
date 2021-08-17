@@ -26,12 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryResultSet ()
 
 - (instancetype) initWithQuery: (CBLQuery*)query
-                       c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
                    columnNames: (NSDictionary*)columnNames;
 
 @property (nonatomic, readonly) CBLDatabase* database;
-@property (nonatomic, readonly) C4Query* c4Query;
+@property (nonatomic, readonly) CBLQuery* query;
 @property (nonatomic, readonly) NSDictionary* columnNames;
 
 - (id) objectAtIndex: (NSUInteger)index;

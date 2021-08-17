@@ -236,7 +236,6 @@ using namespace fleece;
     }
     
     return [[CBLQueryResultSet alloc] initWithQuery: self
-                                            c4Query: _c4Query
                                          enumerator: e
                                         columnNames: _columnNames];
 }
@@ -272,6 +271,12 @@ using namespace fleece;
         CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
         q.parameters = _parameters;
         return q;
+    }
+}
+
+- (NSUInteger) columnCount {
+    CBL_LOCK(self) {
+        return c4query_columnCount(_c4Query);
     }
 }
 

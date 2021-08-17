@@ -67,11 +67,10 @@ namespace cbl {
     BOOL _isAllEnumerated;
 }
 
-@synthesize c4Query=_c4Query, columnNames=_columnNames;
+@synthesize columnNames=_columnNames;
 @synthesize isAllEnumerated=_isAllEnumerated;
 
 - (instancetype) initWithQuery: (CBLQuery*)query
-                       c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
                    columnNames: (NSDictionary*)columnNames
 {
@@ -80,7 +79,6 @@ namespace cbl {
         if (!e)
             return nil;
         _query = query;
-        _c4Query = c4Query; // freed when query is dealloc
         _c4enum = e;
         _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(query.database, e))->retain();
         _columnNames = columnNames;
@@ -126,6 +124,10 @@ namespace cbl {
 
 - (CBLDatabase*) database {
     return _query.database;
+}
+
+- (CBLQuery*) query {
+    return  _query;
 }
 
 - (id) currentObject {
@@ -175,7 +177,6 @@ namespace cbl {
         return nil;
     }
     return [[CBLQueryResultSet alloc] initWithQuery: _query
-                                            c4Query: _c4Query
                                          enumerator: newEnum
                                         columnNames: _columnNames];
 }
