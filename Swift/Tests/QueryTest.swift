@@ -291,6 +291,46 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 1)
     }
     
+    func testFTSMatch() throws {
+        let doc = MutableDocument()
+        doc.setValue("Dummie woman", forKey: "sentence")
+        try db.saveDocument(doc)
+        
+        let doc2 = MutableDocument()
+        doc2.setValue("Dummie man", forKey: "sentence")
+        try db.saveDocument(doc2)
+        
+        let fts_s = FullTextIndexItem.property("sentence")
+        let index = IndexBuilder.fullTextIndex(items: fts_s)
+            .language(nil)
+            .ignoreAccents(false)
+        try db.createIndex(index, withName: "sentence")
+        
+        // JSON Query
+        var q = QueryBuilder.select([SelectResult.expression(Meta.id)])
+            .from(DataSource.database(db))
+            .where(FullTextFunction.match(indexName: "sentence", query: "'woman'"))
+        var numRows = try verifyQuery(q) { (n, r) in }
+        XCTAssertEqual(numRows, 1)
+        
+        q = QueryBuilder.select([SelectResult.expression(Meta.id)])
+            .from(DataSource.database(db))
+            .where(FullTextFunction.match(indexName: "sentence", query: "\"woman\""))
+        numRows = try verifyQuery(q) { (n, r) in }
+        XCTAssertEqual(numRows, 1)
+        
+        // N1QL Query
+        var q2 = db.createQuery(query:
+                                    "SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, 'woman')")
+        numRows = try verifyQuery(q2) { (n, r) in }
+        XCTAssertEqual(numRows, 1)
+        
+        q2 = db.createQuery(query:
+                                    "SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, \"woman\")")
+        numRows = try verifyQuery(q2) { (n, r) in }
+        XCTAssertEqual(numRows, 1)
+    }
+    
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
