@@ -428,6 +428,7 @@
     replConfig.continuous = YES;
     
     XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
+    XCTestExpectation* listenerIdle = [self waitForListenerIdle: listener];
     NSMutableArray* listenerErrors = [NSMutableArray array];
     __block id listenerToken = nil;
     listenerToken = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
@@ -437,14 +438,14 @@
     }];
     
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
-    XCTestExpectation* x = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
+    XCTestExpectation* replicatorIdle = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
     [replicator start];
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[replicatorIdle, listenerIdle] timeout: 10.0];
     errorLogic.isErrorActive = true;
-    x = [self waitForReplicatorStopped: replicator];
+    XCTestExpectation* replicatorStop = [self waitForReplicatorStopped: replicator];
     
     [listener close: server];
-    [self waitForExpectations:@[x, listenerStop] timeout:10.0];
+    [self waitForExpectations:@[replicatorStop, listenerStop] timeout:10.0];
     AssertEqual(listenerErrors.count, 0UL);
     AssertNotNil(replicator.status.error);
 }
