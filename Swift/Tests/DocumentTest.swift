@@ -86,6 +86,11 @@ class DocumentTest: CBLTestCase {
         XCTAssertNotNil(error)
         XCTAssertEqual(error!.code, CBLErrorBadDocID)
         XCTAssertEqual(error!.domain, CBLErrorDomain)
+        
+        // get document with empty doc-id string; skip test exception breakpoint
+        ignoreException {
+            XCTAssertNil(self.db.document(withID: ""))
+        }
     }
     
     func testCreateDocWithNilID() throws {
