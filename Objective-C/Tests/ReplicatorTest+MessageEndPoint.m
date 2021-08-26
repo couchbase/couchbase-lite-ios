@@ -427,14 +427,19 @@
     CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
     replConfig.continuous = YES;
     
-    XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
-    XCTestExpectation* listenerIdle = [self waitForListenerIdle: listener];
+    XCTestExpectation* listenerStop = [self expectationWithDescription:@"Listener stop"];
+    XCTestExpectation* listenerIdle = [self expectationWithDescription:@"Listener idle"];
     NSMutableArray* listenerErrors = [NSMutableArray array];
     __block id listenerToken = nil;
     listenerToken = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
         if(change.status.error) {
             [listenerErrors addObject: change.status.error];
         }
+        if (change.status.activity == kCBLReplicatorIdle)
+            [listenerIdle fulfill];
+        
+        if (change.status.activity == kCBLReplicatorStopped)
+            [listenerStop fulfill];
     }];
     
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
@@ -531,9 +536,12 @@
     
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
     config.continuous = YES;
-    XCTestExpectation *x = [self waitForListenerStopped:listener];
+    XCTestExpectation *x = [self expectationWithDescription:@"Listener stop"];
     [listener addChangeListener: ^(CBLMessageEndpointListenerChange * _Nonnull change) {
         [statuses addObject: @(change.status.activity)];
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [x fulfill];
+        }
     }];
     
     [self run: config errorCode: 0 errorDomain: nil];
