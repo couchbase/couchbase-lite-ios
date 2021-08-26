@@ -111,6 +111,11 @@
     }];
     AssertEqual(error.code, CBLErrorBadDocID);
     AssertEqualObjects(error.domain, CBLErrorDomain);
+    
+    // get document with empty doc-id string; skip test exception breakpoint
+    [self ignoreException:^{
+        AssertNil([self.db documentWithID: @""]);
+    }];
 }
 
 - (void) testCreateDocWithNilID {
