@@ -427,24 +427,30 @@
     CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
     replConfig.continuous = YES;
     
-    XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
+    XCTestExpectation* listenerStop = [self expectationWithDescription:@"Listener stop"];
+    XCTestExpectation* listenerIdle = [self expectationWithDescription:@"Listener idle"];
     NSMutableArray* listenerErrors = [NSMutableArray array];
     __block id listenerToken = nil;
     listenerToken = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
         if(change.status.error) {
             [listenerErrors addObject: change.status.error];
         }
+        if (change.status.activity == kCBLReplicatorIdle)
+            [listenerIdle fulfill];
+        
+        if (change.status.activity == kCBLReplicatorStopped)
+            [listenerStop fulfill];
     }];
     
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
-    XCTestExpectation* x = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
+    XCTestExpectation* replicatorIdle = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
     [replicator start];
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[replicatorIdle, listenerIdle] timeout: 10.0];
     errorLogic.isErrorActive = true;
-    x = [self waitForReplicatorStopped: replicator];
+    XCTestExpectation* replicatorStop = [self waitForReplicatorStopped: replicator];
     
     [listener close: server];
-    [self waitForExpectations:@[x, listenerStop] timeout:10.0];
+    [self waitForExpectations:@[replicatorStop, listenerStop] timeout:10.0];
     AssertEqual(listenerErrors.count, 0UL);
     AssertNotNil(replicator.status.error);
 }
@@ -530,9 +536,12 @@
     
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
     config.continuous = YES;
-    XCTestExpectation *x = [self waitForListenerStopped:listener];
+    XCTestExpectation *x = [self expectationWithDescription:@"Listener stop"];
     [listener addChangeListener: ^(CBLMessageEndpointListenerChange * _Nonnull change) {
         [statuses addObject: @(change.status.activity)];
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [x fulfill];
+        }
     }];
     
     [self run: config errorCode: 0 errorDomain: nil];
