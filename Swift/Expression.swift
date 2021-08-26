@@ -138,12 +138,14 @@ public protocol ExpressionProtocol {
     /// expression is null or missing.
     ///
     /// - Returns: An IS NULL expression.
+    @available(*, deprecated, message: "Use isNotValued() instead.")
     func isNullOrMissing() -> ExpressionProtocol
     
     /// Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current
     /// expression is NOT null or missing.
     ///
     /// - Returns: An IS NOT NULL expression.
+    @available(*, deprecated, message: "Use isValued() instead.")
     func notNullOrMissing() -> ExpressionProtocol
     
     // MARK: Bitwise operators
