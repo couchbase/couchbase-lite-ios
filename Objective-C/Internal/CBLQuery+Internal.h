@@ -58,8 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) NSString* alias;
 
-@property (nonatomic, readonly, nullable) NSString* columnName;
-
 - (instancetype) initWithDataSource: (id)source as: (nullable NSString*)alias;
 
 @end
