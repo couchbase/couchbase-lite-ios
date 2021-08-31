@@ -318,9 +318,6 @@ using namespace fleece;
         for (unsigned i = 0; i < n; ++i) {
             slice title = c4query_columnTitle(_c4Query, i);
             NSString* titleString = slice2string(title);
-            if ([titleString hasPrefix: @"*"]) {
-                titleString = _from.columnName;
-            }
             cols[titleString] = @(i);
         }
         _columnNames = [cols copy];
