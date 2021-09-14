@@ -1806,8 +1806,13 @@ class QueryTest: CBLTestCase {
         doc2.setValue("Ice Cream", forKey: "lastName")
         try self.db.saveDocument(doc2)
         
-        let q = self.db.createQuery(query: "SELECT firstName, lastName FROM \(self.db.name)")
-        let results = try q.execute().allResults()
+        var q = self.db.createQuery(query: "SELECT firstName, lastName FROM \(self.db.name) offset 1")
+        var results = try q.execute().allResults()
+        XCTAssertEqual(results.count, 1)
+        
+        q = self.db.createQuery(query: "SELECT firstName, lastName FROM \(self.db.name)")
+        results = try q.execute().allResults()
+        XCTAssertEqual(results.count, 2)
         XCTAssertEqual(results[0].string(forKey: "firstName"), "Jerry")
         XCTAssertEqual(results[0].string(forKey: "lastName"), "Ice Cream")
         XCTAssertEqual(results[1].string(forKey: "firstName"), "Ben")
