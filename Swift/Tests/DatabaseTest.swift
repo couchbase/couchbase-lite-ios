@@ -1299,12 +1299,13 @@ class DatabaseTest: CBLTestCase {
         wait(for: [stopped1, stopped2], timeout: 5.0)
     }
     
-    func startReplicator(_ replicator: Replicator, idleExpectation: XCTestExpectation, stoppedExpectation: XCTestExpectation) {
-        replicator.addChangeListener { (change) in
+    func startReplicator(_ replicator: Replicator, idleExpectation: XCTestExpectation, stoppedExpectation: XCTestExpectation) -> ListenerToken {
+        let token = replicator.addChangeListener { (change) in
             if change.status.activity == .idle { idleExpectation.fulfill() }
             else if change.status.activity == .stopped { stoppedExpectation.fulfill() }
         }
         replicator.start()
+        return token
     }
     
     func testCloseWithActiveLiveQueriesAndReplicators() throws {
@@ -1318,19 +1319,21 @@ class DatabaseTest: CBLTestCase {
         let r1 = Replicator(config: config)
         let idle1 = expectation(description: "Idle 1")
         let stopped1 = expectation(description: "Stopped 1")
-        startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
+        let token1 = startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
            
         config.replicatorType = .pull
         let r2 = Replicator(config: config)
         let idle2 = expectation(description: "Idle 2")
         let stopped2 = expectation(description: "Stopped 2")
-        startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
+        let token2 = startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
               
         wait(for: [idle1, idle2], timeout: 5.0)
               
         try! db.close()
               
         wait(for: [stopped1, stopped2], timeout: 5.0)
+        r1.removeChangeListener(withToken: token1)
+        r2.removeChangeListener(withToken: token2)
     }
     
     #endif
