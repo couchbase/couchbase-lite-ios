@@ -381,9 +381,14 @@
     Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
     AssertNil(err);
     
+    // Adding a small delay, so that db could save expiration time, before fetching;
+    // https://issues.couchbase.com/browse/CBL-2392
+    [NSThread sleepForTimeInterval: 0.1];
+    
     // Override
     Assert([self.db setDocumentExpirationWithID: doc.id
-                                     expiration: [expiryDate dateByAddingTimeInterval: -9.0] error: &err]);
+                                     expiration: [expiryDate dateByAddingTimeInterval: -8.0]
+                                          error: &err]);
     AssertNil(err);
     
     // Wait for result
