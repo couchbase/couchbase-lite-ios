@@ -180,8 +180,8 @@ class URLEndpontListenerTest: ReplicatorTest {
     func validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: Bool) throws {
         if !self.keyChainAccessAllowed { return }
         
-        let idleExp1 = expectation(description: "replicator#1 idle")
-        let idleExp2 = expectation(description: "replicator#2 idle")
+        let idleExp1 = noAssertExpectation(description: "replicator#1 idle")
+        let idleExp2 = noAssertExpectation(description: "replicator#2 idle")
         let stopExp1 = expectation(description: "replicator#1 stop")
         let stopExp2 = expectation(description: "replicator#2 stop")
         
@@ -245,7 +245,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     func validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: Bool) throws {
         if !self.keyChainAccessAllowed { return }
         
-        let idleExp = expectation(description: "replicator idle")
+        let idleExp = noAssertExpectation(description: "replicator idle")
         let stopExp = expectation(description: "replicator stop")
         
         let config = URLEndpointListenerConfiguration(database: self.oDB)
@@ -846,7 +846,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     func testReplicatorServerCertificate() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let x1 = expectation(description: "idle")
+        let x1 = noAssertExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
         let listener = try listen()
@@ -913,7 +913,7 @@ class URLEndpontListenerTest: ReplicatorTest {
         checkEqual(cert: serverCert, andCert: receivedServerCert!)
         
         // Use the receivedServerCert to pin:
-        x1 = expectation(description: "idle")
+        x1 = noAssertExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
         serverCert = receivedServerCert!
         repl = replicator(db: self.oDB,
@@ -948,7 +948,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testReplicatorServerCertificateWithTLSDisabled() throws {
-        let x1 = expectation(description: "idle")
+        let x1 = noAssertExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
         let listener = try listen(tls: false)
@@ -1064,7 +1064,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func testStopListener() throws {
-        let x1 = expectation(description: "idle")
+        let x1 = noAssertExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
         
         // Listen:

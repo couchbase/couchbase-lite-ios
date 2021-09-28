@@ -1524,13 +1524,13 @@
     
     config.replicatorType = kCBLReplicatorTypePush;
     CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *idle1 = [self noAssertExpectationWithDescription: @"Idle 1"];
     XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stopped 1"];
     [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
     
     config.replicatorType = kCBLReplicatorTypePull;
     CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *idle2 = [self noAssertExpectationWithDescription: @"Idle 2"];
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
@@ -1575,13 +1575,13 @@
     
     config.replicatorType = kCBLReplicatorTypePush;
     CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *idle1 = [self noAssertExpectationWithDescription: @"Idle 1"];
     XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stop 1"];
     [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
     
     config.replicatorType = kCBLReplicatorTypePull;
     CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *idle2 = [self noAssertExpectationWithDescription: @"Idle 2"];
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
@@ -1746,13 +1746,13 @@
     
     config.replicatorType = kCBLReplicatorTypePush;
     CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *idle1 = [self noAssertExpectationWithDescription: @"Idle 1"];
     XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stopped 1"];
     [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
     
     config.replicatorType = kCBLReplicatorTypePull;
     CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *idle2 = [self noAssertExpectationWithDescription: @"Idle 2"];
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
@@ -1793,13 +1793,13 @@
     
     config.replicatorType = kCBLReplicatorTypePush;
     CBLReplicator* r1 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle1 = [self expectationWithDescription: @"Idle 1"];
+    XCTestExpectation *idle1 = [self noAssertExpectationWithDescription: @"Idle 1"];
     XCTestExpectation *stopped1 = [self expectationWithDescription: @"Stop 1"];
     [self startReplicator: r1 idleExpectation: idle1 stoppedExpectation: stopped1];
     
     config.replicatorType = kCBLReplicatorTypePull;
     CBLReplicator* r2 = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *idle2 = [self expectationWithDescription: @"Idle 2"];
+    XCTestExpectation *idle2 = [self noAssertExpectationWithDescription: @"Idle 2"];
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     

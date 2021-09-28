@@ -62,11 +62,16 @@ class CBLTestCase: XCTestCase {
         return true
     #endif
     }
+    /// CBL-2363: Replicator might send extra idle status when its being stopped, which is not a bug
+    /// Hence no need for assertion for overfilling the expectation.
+    func noAssertExpectation(description: String) -> XCTestExpectation {
+        var e = super.expectation(description: description)
+        e.assertForOverFulfill = false
+        return e
+    }
     
     override func setUp() {
         super.setUp()
-        
-        Database.log.console.level = .info
         
         try? deleteDB(name: databaseName);
         

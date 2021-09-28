@@ -161,7 +161,7 @@ MultipeerConnectionDelegate {
             session: serverSession!, peerID: clientPeer!, delegate: self))
         self.wait(for: [x1], timeout: 10.0)
         
-        let x3 = self.expectation(description: "Replicator Stopped")
+        let x3 = self.noAssertExpectation(description: "Replicator Stopped")
         let repl = Replicator(config: config)
         let token2 = repl.addChangeListener { (change) in
             let status = change.status

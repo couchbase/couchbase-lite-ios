@@ -472,7 +472,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
 #pragma mark - Wait
 
 - (XCTestExpectation *) waitForReplicatorIdle:(CBLReplicator*)replicator withProgressAtLeast:(uint64_t)progress {
-    XCTestExpectation* x = [self expectationWithDescription:@"Replicator idle"];
+    XCTestExpectation* x = [self noAssertExpectationWithDescription:@"Replicator idle"];
     __block id token = nil;
     __weak CBLReplicator* wReplicator = replicator;
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {

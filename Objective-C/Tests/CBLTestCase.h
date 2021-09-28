@@ -177,6 +177,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString*) getRickAndMortyJSON;
 
+/**
+ CBL-2363: Replicator might send extra idle status when its being stopped, which is not a bug
+ Hence no need for assertion for overfilling the expectation.
+ */
+- (XCTestExpectation*) noAssertExpectationWithDescription:(NSString *)description;
+
 @end
 
 NS_ASSUME_NONNULL_END
