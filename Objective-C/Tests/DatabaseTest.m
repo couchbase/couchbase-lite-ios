@@ -1736,7 +1736,8 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-- (void) testDeleteWithActiveReplicators {
+// TODO: https://issues.couchbase.com/browse/CBL-2364
+- (void) _testDeleteWithActiveReplicators {
     [self openOtherDB];
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
