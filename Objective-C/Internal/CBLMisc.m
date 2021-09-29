@@ -18,24 +18,6 @@
 //
 
 #import "CBLMisc.h"
-#import "CBLBase64.h"
-
-NSString* CBLCreateUUID() {
-    // Generate 136 bits of entropy in base64:
-    uint8_t random[17];
-    if (SecRandomCopyBytes(kSecRandomDefault, sizeof(random), random) != 0)
-        return nil;
-    NSMutableString* uuid = [[CBLBase64 encode: random length: sizeof(random)] mutableCopy];
-    // Trim the two trailing '=' padding characters:
-    [uuid deleteCharactersInRange: NSMakeRange(22, 2)];
-    // URL-safe character set per RFC 4648 sec. 5:
-    [uuid replaceOccurrencesOfString: @"/" withString: @"_" options: 0 range: NSMakeRange(0, 22)];
-    [uuid replaceOccurrencesOfString: @"+" withString: @"-" options: 0 range: NSMakeRange(0, 22)];
-    // prefix a '!' to make it more clear where this string came from and prevent having a leading
-    // '_' character:
-    [uuid insertString: @"-" atIndex: 0];
-    return uuid;
-}
 
 BOOL CBLIsFileExistsError(NSError* error) {
     NSString* domain = error.domain;

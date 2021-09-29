@@ -49,7 +49,7 @@ using namespace fleece;
 
 - (instancetype) initWithID: (nullable NSString*)documentID {
     return [self initWithDatabase: nil
-                       documentID: (documentID ?: CBLCreateUUID())
+                       documentID: (documentID ?: [self generateID])
                             c4Doc: nil];
 }
 
@@ -191,6 +191,12 @@ using namespace fleece;
 // conflict resolution so the generation value is correct in that circumstance.
 - (NSUInteger) generation {
     return super.generation + !!self.changed;
+}
+
+- (NSString*) generateID {
+    char docID[kC4GeneratedIDLength + 1];
+    c4doc_generateID(docID, sizeof(docID));
+    return slice(docID).asNSString();
 }
 
 #pragma mark - Private
