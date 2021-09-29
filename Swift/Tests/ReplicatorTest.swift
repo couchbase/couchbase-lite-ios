@@ -1054,8 +1054,8 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testListenerAddRemoveAfterReplicatorStart() throws {
         timeout = 15
-        let x1 = self.noAssertExpectation(description: "#1 repl finish")
-        let x2 = self.noAssertExpectation(description: "#2 repl finish")
+        let x1 = self.expectation(description: "#1 repl finish")
+        let x2 = self.expectation(description: "#2 repl finish")
         
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")

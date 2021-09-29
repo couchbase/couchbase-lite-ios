@@ -37,7 +37,7 @@
 
 @synthesize db=_db, otherDB=_otherDB;
 
-- (XCTestExpectation*) noAssertExpectationWithDescription:(NSString *)description {
+- (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description {
     XCTestExpectation* e = [super expectationWithDescription: description];
     e.assertForOverFulfill = false;
     return e;
