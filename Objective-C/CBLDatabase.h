@@ -329,7 +329,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @Note This method will copy the database without changing the encryption key of the original
  database. The encryption key specified in the given config is the encryption key used for both
  the original and copied database. To change or add the encryption key for the copied database,
- call Database.changeEncryptionKey(key) for the copy.
+ call [Database changeEncryptionKey:error:] for the copy.
  
  @param path The source database path.
  @param name The name of the new database to be created.
