@@ -390,6 +390,11 @@ public final class Database {
     /// configuration. Without given the database configuration, the default configuration that
     /// is equivalent to setting all properties in the configuration to nil will be used.
     ///
+    /// - Note: This method will copy the database without changing the encryption key of the
+    /// original database. The encryption key specified in the given config is the encryption key
+    /// used for both the original and copied database. To change or add the encryption key for
+    /// the copied database, call Database.changeEncryptionKey(key) for the copy.
+    ///
     /// - Parameters:
     ///   - path: The source database path.
     ///   - name: The name of the new database to be created.
