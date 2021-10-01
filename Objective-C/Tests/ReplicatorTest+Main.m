@@ -348,8 +348,7 @@
     id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
         AssertNil(change.status.error);
         if (change.status.activity == kCBLReplicatorIdle) {
-            if (foregroundCount <= numRounds) // handle even if extra idle status returned
-                [foregroundExps[foregroundCount++] fulfill];
+            [foregroundExps[foregroundCount++] fulfill];
         } else if (change.status.activity == kCBLReplicatorOffline) {
             [backgroundExps[backgroundCount++] fulfill];
         } else if (change.status.activity == kCBLReplicatorStopped) {
