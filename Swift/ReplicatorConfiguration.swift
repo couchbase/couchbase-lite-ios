@@ -177,12 +177,14 @@ public struct ReplicatorConfiguration {
     }
     
     /// To enable/disable the auto purge feature
-    
+    ///
     /// The default value is true which means that the document will be automatically purged by the
     /// pull replicator when the user loses access to the document from both removed and revoked scenarios.
-    
-    /// When the property is set to false, the document will not be purged when the user
-    /// loses access to the document.
+    ///
+    /// When the property is set to false, this behavior is disabled and an access removed event
+    /// will be sent to any document listeners that are active on the replicator. For performance
+    /// reasons, the document listeners must be added **before** the replicator is started or
+    /// they will not receive the events.
     public var enableAutoPurge: Bool = true
     
     /// Initializes a ReplicatorConfiguration's builder with the given
