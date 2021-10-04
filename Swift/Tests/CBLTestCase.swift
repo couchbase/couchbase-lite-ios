@@ -63,10 +63,16 @@ class CBLTestCase: XCTestCase {
     #endif
     }
     
+    /// This expectation will allow overfill expectation.
+    /// CBL-2363: Replicator might send extra idle status when its being stopped, which is not a bug
+    func allowOverfillExpectation(description: String) -> XCTestExpectation {
+        let e = super.expectation(description: description)
+        e.assertForOverFulfill = false
+        return e
+    }
+    
     override func setUp() {
         super.setUp()
-        
-        Database.log.console.level = .info
         
         try? deleteDB(name: databaseName);
         

@@ -37,11 +37,15 @@
 
 @synthesize db=_db, otherDB=_otherDB;
 
+- (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description {
+    XCTestExpectation* e = [super expectationWithDescription: description];
+    e.assertForOverFulfill = false;
+    return e;
+}
+
 - (void) setUp {
     [super setUp];
-    
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
-    
+        
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];
     
