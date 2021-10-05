@@ -1282,13 +1282,13 @@ class DatabaseTest: CBLTestCase {
         
         config.replicatorType = .push
         let r1 = Replicator(config: config)
-        let idle1 = expectation(description: "Idle 1")
+        let idle1 = allowOverfillExpectation(description: "Idle 1")
         let stopped1 = expectation(description: "Stopped 1")
         startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
      
         config.replicatorType = .pull
         let r2 = Replicator(config: config)
-        let idle2 = expectation(description: "Idle 2")
+        let idle2 = allowOverfillExpectation(description: "Idle 2")
         let stopped2 = expectation(description: "Stopped 2")
         startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
         
@@ -1316,13 +1316,13 @@ class DatabaseTest: CBLTestCase {
               
         config.replicatorType = .push
         let r1 = Replicator(config: config)
-        let idle1 = expectation(description: "Idle 1")
+        let idle1 = allowOverfillExpectation(description: "Idle 1")
         let stopped1 = expectation(description: "Stopped 1")
         startReplicator(r1, idleExpectation: idle1, stoppedExpectation: stopped1)
            
         config.replicatorType = .pull
         let r2 = Replicator(config: config)
-        let idle2 = expectation(description: "Idle 2")
+        let idle2 = allowOverfillExpectation(description: "Idle 2")
         let stopped2 = expectation(description: "Stopped 2")
         startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
               

@@ -271,8 +271,8 @@ typedef CBLURLEndpointListener Listener;
     
     XCTestExpectation* stopExp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* stopExp2 = [self expectationWithDescription: @"replicator#2 stopped"];
-    XCTestExpectation* idleExp1 = [self expectationWithDescription: @"replicator#1 idle"];
-    XCTestExpectation* idleExp2 = [self expectationWithDescription: @"replicator#2 idle"];
+    XCTestExpectation* idleExp1 = [self allowOverfillExpectationWithDescription: @"replicator#1 idle"];
+    XCTestExpectation* idleExp2 = [self allowOverfillExpectationWithDescription: @"replicator#2 idle"];
     
     NSError* err;
     CBLMutableDocument* doc =  [self createDocument: @"db-doc"];
@@ -343,7 +343,7 @@ typedef CBLURLEndpointListener Listener;
 - (void) validateActiveReplicatorAndURLEndpointListeners: (BOOL)isDeleteDB {
     if (!self.keyChainAccessAllowed) return;
     
-    XCTestExpectation* idleExp = [self expectationWithDescription: @"replicator idle"];
+    XCTestExpectation* idleExp = [self allowOverfillExpectationWithDescription: @"replicator idle"];
     XCTestExpectation* stopExp = [self expectationWithDescription: @"replicator stopped"];
 
     // start listener#1 and listener#2
@@ -1230,7 +1230,7 @@ typedef CBLURLEndpointListener Listener;
 - (void) testReplicatorServerCertificate {
     if (!self.keyChainAccessAllowed) return;
     
-    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x1 = [self allowOverfillExpectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
     Listener* listener = [self listen];
@@ -1301,7 +1301,7 @@ typedef CBLURLEndpointListener Listener;
     
     // Use the received certificate to pin:
     serverCert = receivedServerCert;
-    x1 = [self expectationWithDescription: @"idle"];
+    x1 = [self allowOverfillExpectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     replicator = [self replicator: self.otherDB
                         continous: YES
@@ -1337,7 +1337,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testReplicatorServerCertificateWithTLSDisabled {
-    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x1 = [self allowOverfillExpectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
     Listener* listener = [self listenWithTLS: NO];
@@ -1452,7 +1452,7 @@ typedef CBLURLEndpointListener Listener;
 }
 
 - (void) testStopListener {
-    XCTestExpectation* x1 = [self expectationWithDescription: @"idle"];
+    XCTestExpectation* x1 = [self allowOverfillExpectationWithDescription: @"idle"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"stopped"];
     
     // Listen:
