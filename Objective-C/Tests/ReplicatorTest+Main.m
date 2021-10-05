@@ -335,10 +335,10 @@
     NSMutableArray* foregroundExps = [NSMutableArray arrayWithCapacity: numRounds + 1];
     NSMutableArray* backgroundExps = [NSMutableArray arrayWithCapacity: numRounds];
     for (NSInteger i = 0; i < numRounds; i++) {
-        [foregroundExps addObject: [self noAssertExpectationWithDescription: @"Foregrounding"]];
+        [foregroundExps addObject: [self allowOverfillExpectationWithDescription: @"Foregrounding"]];
         [backgroundExps addObject: [self expectationWithDescription: @"Backgrounding"]];
     }
-    [foregroundExps addObject: [self noAssertExpectationWithDescription: @"Foregrounding"]];
+    [foregroundExps addObject: [self allowOverfillExpectationWithDescription: @"Foregrounding"]];
     
     __block NSInteger backgroundCount = 0;
     __block NSInteger foregroundCount = 0;
@@ -383,8 +383,8 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
 
-    XCTestExpectation* idle = [self noAssertExpectationWithDescription: @"idle"];
-    XCTestExpectation* foregroundExp = [self noAssertExpectationWithDescription: @"Foregrounding"];
+    XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle"];
+    XCTestExpectation* foregroundExp = [self allowOverfillExpectationWithDescription: @"Foregrounding"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
 
     __block int idleCount = 0;
@@ -423,7 +423,7 @@
     
     __block BOOL foregrounding = NO;
     
-    XCTestExpectation* idle = [self noAssertExpectationWithDescription: @"Idle after starting"];
+    XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"Idle after starting"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
     XCTestExpectation* done = [self expectationWithDescription: @"Done"];
     
