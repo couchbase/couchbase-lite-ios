@@ -357,7 +357,8 @@
     [self.db removeChangeListenerWithToken: token];
 }
 
-- (void) testOverrideExpirationWithCloserDate {
+// TODO: https://issues.couchbase.com/browse/CBL-2392
+- (void) _testOverrideExpirationWithCloserDate {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
