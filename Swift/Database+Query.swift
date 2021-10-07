@@ -21,6 +21,15 @@ import Foundation
 
 extension Database {
     
+    /// Creates a Query object from the given query string.
+    ///
+    /// - Parameters:
+    ///     - query Query string
+    /// - Returns: A query created by the given query string.
+    public func createQuery(_ query: String) -> Query {
+        return Query(database: self, expressions: query)
+    }
+    
     /// All index names.
     public var indexes: Array<String> { return _impl.indexes }
     
