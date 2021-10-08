@@ -145,7 +145,8 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         validatePendingDocumentIDs(docIds)
     }
     
-    func testPendingDocIDsWithUpdate() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2448
+    func _testPendingDocIDsWithUpdate() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
