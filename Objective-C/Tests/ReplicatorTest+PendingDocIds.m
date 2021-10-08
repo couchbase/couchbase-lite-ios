@@ -155,7 +155,8 @@
     [self validatePendingDocumentIDs: docIds];
 }
 
-- (void) testPendingDocIDsWithUpdate {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIDsWithUpdate {
     [self createDocs];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
