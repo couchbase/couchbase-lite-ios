@@ -33,17 +33,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLLiveQuery : NSObject
 
 /** Initialize with a Query. */
-- (instancetype) initWithQuery: (CBLQuery*)query;
+- (instancetype) initWithQuery: (CBLQuery*)query columnNames: (NSDictionary*)columnNames;
 
 /** Starts observing database changes and reports changes in the query result. */
 - (void) start;
 
 /** Stops observing database changes. */
 - (void) stop;
-
-/** Call this method to notify that the query parameters have been changed,
-    the CBLLiveQuery object will re-run the query if it's already started. */
-- (void) queryParametersChanged;
 
 /** 
  Adds a query change listener with the given dispatch queue on which the changes

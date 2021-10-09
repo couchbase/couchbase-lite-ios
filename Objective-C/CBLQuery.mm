@@ -50,6 +50,7 @@ using namespace fleece;
 @synthesize JSONRepresentation=_json;
 @synthesize parameters=_parameters;
 @synthesize expressions=_expressions;
+@synthesize c4query=_c4Query;
 
 #pragma mark - JSON representation
 
@@ -198,7 +199,6 @@ using namespace fleece;
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
         else
             _parameters = nil;
-        [_liveQuery queryParametersChanged];
     }
 }
 
@@ -227,7 +227,8 @@ using namespace fleece;
     C4Error c4Err;
     C4QueryEnumerator* e;
     CBL_LOCK(self.database) {
-        e = c4query_run(_c4Query, &options, {params.bytes, params.length}, &c4Err);
+        c4query_setParameters(_c4Query, {params.bytes, params.length});
+        e = c4query_run(_c4Query, &options, kC4SliceNull, &c4Err);
     }
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
@@ -250,8 +251,16 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-        if (!_liveQuery)
-            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
+        if (!_liveQuery) {
+            // make sure the _columnNames & c4Query are populated
+            NSError* error = nil;
+            if (![self check: &error]) {
+                CBLWarnError(Query, @"Query check fail - %@", error.description);
+                return nil;
+            }
+            
+            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self columnNames: _columnNames];
+        }
         return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
     }
 }
@@ -278,6 +287,10 @@ using namespace fleece;
     CBL_LOCK(self) {
         return c4query_columnCount(_c4Query);
     }
+}
+
+- (C4Query*) c4Query {
+    return _c4Query;
 }
 
 #pragma mark - Private

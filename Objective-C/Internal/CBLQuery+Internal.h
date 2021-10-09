@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQuery () <NSCopying>
 
 @property (nonatomic, readonly) CBLDatabase* database;
+@property (nonatomic, readonly) C4Query* c4query;
 @property (nonatomic, readonly) NSUInteger columnCount;
 
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
