@@ -191,8 +191,7 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2392
-- (void) _testExpiryLessThanDate {
+- (void) testExpiryLessThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -243,8 +242,7 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2392
-- (void) _testExpiryGreaterThanDate {
+- (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -257,7 +255,7 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
+    NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
