@@ -296,7 +296,9 @@ using namespace fleece;
 }
 
 - (C4Query*) c4Query {
-    return _c4Query;
+    CBL_LOCK(self) {
+        return _c4Query;
+    }
 }
 
 #pragma mark - Private
