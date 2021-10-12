@@ -64,6 +64,13 @@ using namespace fleece;
         _database = database;
         _json = json;
         _language = kC4JSONQuery;
+        
+        // make sure the _columnNames & c4Query are populated
+        NSError* error = nil;
+        if (![self check: &error]) {
+            CBLWarnError(Query, @"Query check fail - %@", error.description);
+            return nil;
+        }
     }
     return self;
 }
@@ -77,6 +84,13 @@ using namespace fleece;
         _database = database;
         _expressions = expressions;
         _language = kC4N1QLQuery;
+        
+        // make sure the _columnNames & c4Query are populated
+        NSError* error = nil;
+        if (![self check: &error]) {
+            CBLWarnError(Query, @"Query check fail - %@", error.description);
+            return nil;
+        }
     }
     return self;
 }
@@ -251,16 +265,8 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-        if (!_liveQuery) {
-            // make sure the _columnNames & c4Query are populated
-            NSError* error = nil;
-            if (![self check: &error]) {
-                CBLWarnError(Query, @"Query check fail - %@", error.description);
-                return nil;
-            }
-            
+        if (!_liveQuery)
             _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self columnNames: _columnNames];
-        }
         return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
     }
 }
