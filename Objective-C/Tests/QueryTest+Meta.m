@@ -243,7 +243,6 @@
 }
 
 - (void) testExpiryGreaterThanDate {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
