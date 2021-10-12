@@ -85,16 +85,18 @@ static void liveQueryCallback(C4QueryObserver *obs, C4Query *query, void *contex
     CBL_LOCK(self) {
         C4Error c4error = {};
         CBLQuery* strongQuery = _query;
+        
+        // Note: enumerator('e') will be released in ~QueryResultContext; no need to release it
         C4QueryEnumerator* e = c4queryobs_getEnumerator(obs, true, &c4error);
         if (!e) {
             CBLLogInfo(Query, @"%@: C4QueryEnumerator returns empty (%d/%d)",
                        self, c4error.domain, c4error.code);
             return;
         }
+        
         _rs = [[CBLQueryResultSet alloc] initWithQuery: strongQuery
                                             enumerator: e
                                            columnNames: _columnNames];
-        c4queryenum_release(e);
         
         if (!_rs) {
             CBLLogInfo(Query, @"%@: Result set returns empty", self);
