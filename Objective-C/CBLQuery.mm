@@ -65,7 +65,7 @@ using namespace fleece;
         _json = json;
         _language = kC4JSONQuery;
         
-        // make sure the _columnNames & c4Query are populated
+        // make sure _columnNames & c4Query are populated
         NSError* error = nil;
         if (![self check: &error]) {
             CBLWarnError(Query, @"Query check fail - %@", error.description);
