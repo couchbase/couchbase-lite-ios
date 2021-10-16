@@ -24,7 +24,7 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
-#import "CBLQuery+N.h"
+#import "CBLQuery+N1QL.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
@@ -67,8 +67,10 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithDatabase:(CBLDatabase *)database
-                      expressions:(NSString *)expressions {
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                               expressions: (NSString*)expressions
+                                     error: (NSError**)error
+{
     Assert(database);
     Assert(expressions);
     self = [super init];
@@ -76,6 +78,10 @@ using namespace fleece;
         _database = database;
         _expressions = expressions;
         _language = kC4N1QLQuery;
+        
+        // Return error if the N1QL query expression is not compiled:
+        if (![self compile: error])
+            return nil;
     }
     return self;
 }
@@ -203,7 +209,7 @@ using namespace fleece;
 }
 
 - (NSString*) explain: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
     CBL_LOCK(self.database) {
@@ -212,7 +218,7 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
@@ -282,7 +288,7 @@ using namespace fleece;
 
 #pragma mark - Private
 
-- (BOOL) check: (NSError**)outError {
+- (BOOL) compile: (NSError**)outError {
     CBL_LOCK(self) {
         if (_c4Query)
             return YES;
