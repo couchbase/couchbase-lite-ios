@@ -24,7 +24,7 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
-#import "CBLQuery+N.h"
+#import "CBLQuery+N1QL.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
@@ -65,18 +65,18 @@ using namespace fleece;
         _json = json;
         _language = kC4JSONQuery;
         
-        // make sure _columnNames & c4Query are populated
+        // Return error if the query is not compiled;
         NSError* error = nil;
-        if (![self check: &error]) {
-            CBLWarnError(Query, @"Query check fail - %@", error.description);
+        if (![self compile: &error])
             return nil;
-        }
     }
     return self;
 }
 
-- (instancetype) initWithDatabase:(CBLDatabase *)database
-                      expressions:(NSString *)expressions {
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                               expressions: (NSString*)expressions
+                                     error: (NSError**)error
+{
     Assert(database);
     Assert(expressions);
     self = [super init];
@@ -85,12 +85,9 @@ using namespace fleece;
         _expressions = expressions;
         _language = kC4N1QLQuery;
         
-        // make sure the _columnNames & c4Query are populated
-        NSError* error = nil;
-        if (![self check: &error]) {
-            CBLWarnError(Query, @"Query check fail - %@", error.description);
+        // Return error if the N1QL query expression is not compiled:
+        if (![self compile: error])
             return nil;
-        }
     }
     return self;
 }
@@ -217,7 +214,7 @@ using namespace fleece;
 }
 
 - (NSString*) explain: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
     CBL_LOCK(self.database) {
@@ -226,7 +223,7 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
@@ -303,7 +300,7 @@ using namespace fleece;
 
 #pragma mark - Private
 
-- (BOOL) check: (NSError**)outError {
+- (BOOL) compile: (NSError**)outError {
     CBL_LOCK(self) {
         if (_c4Query)
             return YES;

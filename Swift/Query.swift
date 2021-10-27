@@ -156,9 +156,9 @@ public class Query {
     /// - Parameters:
     ///     - database  The database to query.
     ///     - expressions  String representing the query expression.
-    init(database: Database, expressions: String) {
+    init(database: Database, expressions: String) throws {
         self.database = database
-        queryImpl = CBLQuery(database: database._impl, expressions: expressions)
+        queryImpl = try database._impl.createQuery(expressions)
     }
 
     // MARK: Internal

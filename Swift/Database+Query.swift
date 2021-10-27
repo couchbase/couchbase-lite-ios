@@ -26,8 +26,9 @@ extension Database {
     /// - Parameters:
     ///     - query Query string
     /// - Returns: A query created by the given query string.
-    public func createQuery(_ query: String) -> Query {
-        return Query(database: self, expressions: query)
+    /// - Throws: An error on when the given query string is invalid.
+    public func createQuery(_ query: String) throws -> Query {
+        return try Query(database: self, expressions: query)
     }
     
     /// All index names.

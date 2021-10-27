@@ -1,5 +1,5 @@
 //
-//  CBLQuery+N.h
+//  CBLQuery+N1QL.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2021 Couchbase, Inc All rights reserved.
@@ -35,8 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
  @param database  The database to query.
  @param expressions  String representing the query expression.
  */
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                      expressions: (NSString*)expressions NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                               expressions: (NSString*)expressions
+                                     error: (NSError**)error NS_DESIGNATED_INITIALIZER;
 
 @end
 
