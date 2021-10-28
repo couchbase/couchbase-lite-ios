@@ -290,10 +290,12 @@ using namespace fleece;
     if (value == nullptr || FLValue_GetType(value) == kFLNull)
         return nil;
     
-    CBL_LOCK(_rs.database) {
+    __block id result;
+    [_rs.database safeBlock:^{
         MRoot<id> root(_context, value, false);
-        return root.asNative();
-    }
+        result = root.asNative();
+    }];
+    return result;
 }
 
 - (FLValue) fleeceValueAtIndex: (NSUInteger)index {
