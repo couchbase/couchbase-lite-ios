@@ -67,8 +67,10 @@ using namespace fleece;
         
         // Return error if the query is not compiled;
         NSError* error = nil;
-        if (![self compile: &error])
+        if (![self compile: &error]) {
+            CBLWarnError(Query, @"JSON Query failed to compile %@", error);
             return nil;
+        }
     }
     return self;
 }
@@ -206,8 +208,20 @@ using namespace fleece;
 
 - (void) setParameters: (CBLQueryParameters*)parameters {
     CBL_LOCK(self) {
-        if (parameters)
+        if (parameters) {
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
+            
+            NSError* error = nil;
+            NSData* params = [_parameters encode: &error];
+            if (_parameters && !params) {
+                CBLWarnError(Query, @"Parameters failed to encode %@", error);
+                return;
+            }
+            
+            [self.database safeBlock:^{
+                c4query_setParameters(_c4Query, {params.bytes, params.length});
+            }];
+        }
         else
             _parameters = nil;
     }
@@ -231,17 +245,9 @@ using namespace fleece;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
     
-    NSData* params = nil;
-    CBL_LOCK(self) {
-        params = [_parameters encode: outError];
-        if (_parameters && !params)
-            return nil;
-    }
-    
     __block C4QueryEnumerator* e;
     __block C4Error c4Err;
     [self.database safeBlock:^{
-        c4query_setParameters(_c4Query, {params.bytes, params.length});
         e = c4query_run(_c4Query, &options, kC4SliceNull, &c4Err);
     }];
     
@@ -266,9 +272,12 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-        if (!_liveQuery)
-            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self columnNames: _columnNames];
-        return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+//        if (!_liveQuery)
+//            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self columnNames: _columnNames];
+//        return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+        if (!_changeNotifier)
+            _changeNotifier = [CBLChangeNotifier new];
+        return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
     }
 }
 
@@ -276,9 +285,13 @@ using namespace fleece;
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
-        [_liveQuery removeChangeListenerWithToken: token];
+//        [_liveQuery removeChangeListenerWithToken: token];
+        if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
+            [self stop]
     }
 }
+
+- (void) stop {}
 
 #pragma mark - Internal
 
