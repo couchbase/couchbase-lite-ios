@@ -37,6 +37,7 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLErrorMessage.h"
+#import "CBLLockable.h"
 
 #import "c4Replicator.h"
 #import "c4Socket.h"
@@ -65,7 +66,7 @@ typedef enum {
     kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
-@interface CBLReplicator ()
+@interface CBLReplicator () <CBLLockable>
 @property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
 
@@ -250,7 +251,7 @@ typedef enum {
     [self initReachability: _reachabilityURL];
 
     // Create a C4Replicator:
-    CBL_LOCK(_config.database) {
+    [_config.database safeBlock: ^{
         [_config.database mustBeOpenLocked];
         
         if (remoteURL || !otherDB)
@@ -258,17 +259,17 @@ typedef enum {
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB) {
-                CBL_LOCK(otherDB) {
+                [otherDB safeBlock: ^{
                     [otherDB mustBeOpenLocked];
                     
                     _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
-                }
+                }];
             }
 #else
             Assert(remoteURL, @"Endpoint has no URL");
 #endif
         }
-    }
+    }];
 
     return (_repl != nullptr);
 }
@@ -324,6 +325,12 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     [_config.database removeActiveStoppable: repl];
     
     CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
+}
+
+- (void) safeBlock:(void (^)())block {
+    CBL_LOCK(self) {
+        block();
+    }
 }
 
 #pragma mark - Server Certificate
@@ -605,11 +612,11 @@ static void onDocsEnded(C4Replicator* repl,
     }
    
     dispatch_async(replicator->_dispatchQueue, ^{
-        CBL_LOCK(replicator) {
+        [replicator safeBlock:^{
             if (repl == replicator->_repl) {
                 [replicator onDocsEnded: docs pushing: pushing];
             }
-        }
+        }];
     });
 }
 

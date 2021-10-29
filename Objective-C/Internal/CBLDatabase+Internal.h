@@ -30,6 +30,7 @@
 #import "CBLLiveQuery.h"
 #import "CBLConflictResolver.h"
 #import "CBLStoppable.h"
+#import "CBLLockable.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLEncryptionKey.h"
@@ -46,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// CBLDatabase:
 
 
-@interface CBLDatabase ()
+@interface CBLDatabase () <CBLLockable>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
