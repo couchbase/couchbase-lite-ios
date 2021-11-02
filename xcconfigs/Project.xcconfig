@@ -22,9 +22,9 @@ CBL_BUILD_NUMBER                   = 0
 CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
 
-IPHONEOS_DEPLOYMENT_TARGET         = 9.0
-MACOSX_DEPLOYMENT_TARGET           = 10.12
-TVOS_DEPLOYMENT_TARGET             = 9.0
+IPHONEOS_DEPLOYMENT_TARGET         = 12.5
+MACOSX_DEPLOYMENT_TARGET           = 10.13
+TVOS_DEPLOYMENT_TARGET             = 12.5
 
 CODE_SIGN_IDENTITY                 =
 
@@ -93,6 +93,7 @@ CLANG_WARN_STRICT_PROTOTYPES                               = YES
 CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION                  = YES
 CLANG_WARN_SUSPICIOUS_MOVE                                 = YES
 CLANG_WARN_UNREACHABLE_CODE                                = YES
+CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER              = YES_ERROR
 GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS         = YES
 GCC_TREAT_WARNINGS_AS_ERRORS                               = YES
 GCC_WARN_ABOUT_MISSING_PROTOTYPES                          = YES

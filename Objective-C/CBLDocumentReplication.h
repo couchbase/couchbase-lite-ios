@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLDocumentFlags.h"
+#import <CBLDocumentFlags.h>
 @class CBLReplicator;
 @class CBLReplicatedDocument;
 

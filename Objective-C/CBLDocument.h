@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLDictionary.h"
+#import <CBLDictionary.h>
 @class CBLMutableDocument;
 
 NS_ASSUME_NONNULL_BEGIN

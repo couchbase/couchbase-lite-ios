@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLArrayFragment.h"
+#import <CBLArrayFragment.h>
 @class CBLMutableFragment;
 
 NS_ASSUME_NONNULL_BEGIN

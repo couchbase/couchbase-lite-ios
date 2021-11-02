@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLConflict.h"
+#import <CBLConflict.h>
 @class CBLDocument;
 
 NS_ASSUME_NONNULL_BEGIN

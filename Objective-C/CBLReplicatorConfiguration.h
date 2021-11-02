@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
-#import "CBLDocumentFlags.h"
+#import <CBLDocumentFlags.h>
 @class CBLAuthenticator;
 @class CBLDatabase;
 @class CBLDocument;

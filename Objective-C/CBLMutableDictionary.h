@@ -18,8 +18,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLDictionary.h"
-#import "CBLMutableDictionaryFragment.h"
+#import <CBLDictionary.h>
+#import <CBLMutableDictionaryFragment.h>
 @class CBLMutableArray;
 @class CBLMutableDictionary;
 

@@ -15,10 +15,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
+//CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER              = YES_ERROR
 
 #import <Foundation/Foundation.h>
-#import "CBLIndex.h"
+#import <CBLIndex.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
