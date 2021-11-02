@@ -994,6 +994,12 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     _state = kCBLDatabaseStateClosed;
 }
 
+- (void) safeBlock:(void (^)())block {
+    CBL_LOCK(self) {
+        block();
+    }
+}
+
 #pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING
 
 - (BOOL) saveDocument: (CBLDocument*)document
