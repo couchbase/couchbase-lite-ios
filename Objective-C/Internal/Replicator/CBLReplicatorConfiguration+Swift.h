@@ -17,8 +17,8 @@
 //  limitations under the License.
 //
 
-#import "CBLReplicatorConfiguration.h"
-#import "CBLConflictResolver.h"
+#import <CBLReplicatorConfiguration.h>
+#import <CBLConflictResolver.h>
 
 
 NS_ASSUME_NONNULL_BEGIN

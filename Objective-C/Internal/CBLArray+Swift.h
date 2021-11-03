@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLArray.h"
+#import <CBLArray.h>
 
 @interface CBLArray ()
 

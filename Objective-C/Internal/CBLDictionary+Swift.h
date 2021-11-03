@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLDictionary.h"
+#import <CBLDictionary.h>
 
 @interface CBLDictionary ()
 

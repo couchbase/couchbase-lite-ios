@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLBlob.h"
+#import <CBLBlob.h>
 
 @interface CBLBlob ()
 
