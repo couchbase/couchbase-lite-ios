@@ -22,9 +22,9 @@ CBL_BUILD_NUMBER                   = 0
 CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
 
-IPHONEOS_DEPLOYMENT_TARGET         = 10.3
+IPHONEOS_DEPLOYMENT_TARGET         = 10.0
 MACOSX_DEPLOYMENT_TARGET           = 10.12
-TVOS_DEPLOYMENT_TARGET             = 10.3
+TVOS_DEPLOYMENT_TARGET             = 10.0
 
 CODE_SIGN_IDENTITY                 =
 
