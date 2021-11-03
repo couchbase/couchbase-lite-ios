@@ -23,9 +23,9 @@ CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
 CBL_COPYRIGHT_YEAR                 = 2021
 
-IPHONEOS_DEPLOYMENT_TARGET         = 9.0
+IPHONEOS_DEPLOYMENT_TARGET         = 10.0
 MACOSX_DEPLOYMENT_TARGET           = 10.12
-TVOS_DEPLOYMENT_TARGET             = 9.0
+TVOS_DEPLOYMENT_TARGET             = 10.0
 
 CODE_SIGN_IDENTITY                 =
 
