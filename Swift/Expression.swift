@@ -493,6 +493,7 @@ public final class Expression {
     /// expression is null or missing.
     ///
     /// - Returns: An IS NULL expression.
+    @available(*, deprecated, message: "Use isNotValued() instead.")
     public func isNullOrMissing() -> ExpressionProtocol {
         return QueryExpression(self.impl.isNullOrMissing())
     }
@@ -501,6 +502,7 @@ public final class Expression {
     /// expression is NOT null or missing.
     ///
     /// - Returns: An IS NOT NULL expression.
+    @available(*, deprecated, message: "Use isValued() instead.")
     public func notNullOrMissing() -> ExpressionProtocol {
         return QueryExpression(self.impl.notNullOrMissing())
     }
