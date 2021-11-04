@@ -114,18 +114,10 @@ function xcarchive
   echo "Finished archiving ${DESTINATION}."
 }
 
-# TODO: remove when build machine is updated to Xcode13
-# Run to create Mac Catalyst varient binary for Xcode version less than 13!
-TARGET_XCODE_VERSION="13.0"
-CUR_XCODE_VERSION=$(xcodebuild -version | awk '{print $2}' | head -n1)
-if [[ ! "$(printf '%s\n' "$CUR_XCODE_VERSION" "$TARGET_XCODE_VERSION" | sort -V | head -n1)" = "$TARGET_XCODE_VERSION" ]]; then
-  xcarchive "platform=macOS,arch=x86_64,variant=Mac Catalyst"
-fi
-# --END
-
 xcarchive "generic/platform=iOS Simulator"
 xcarchive "generic/platform=iOS"
 xcarchive "generic/platform=macOS"
+xcarchive "generic/platform=macOS,variant=Mac Catalyst"
 
 # create xcframework
 echo "Creating XCFramework..."
