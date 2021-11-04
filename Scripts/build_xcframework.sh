@@ -98,7 +98,7 @@ function xcarchive
 {
   DESTINATION=${1}
   echo "Archiving for ${DESTINATION}..."
-  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')
+  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g' | sed 's/\//\_/g')
   xcodebuild archive \
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
@@ -114,13 +114,13 @@ function xcarchive
   echo "Finished archiving ${DESTINATION}."
 }
 
-xcarchive "platform=macOS,arch=x86_64,variant=Mac Catalyst"
 xcarchive "generic/platform=iOS Simulator"
 xcarchive "generic/platform=iOS"
 xcarchive "generic/platform=macOS"
+xcarchive "generic/platform=macOS,variant=Mac Catalyst"
 
 # create xcframework
-echo "Creating XCFramework...: ${FRAMEWORK_PATH_ARGS}"
+echo "Creating XCFramework..."
 mkdir -p "${OUTPUT_BASE_DIR}"
 xcodebuild -create-xcframework \
     -output "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework" \
