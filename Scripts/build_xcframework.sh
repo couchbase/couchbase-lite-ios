@@ -30,6 +30,9 @@ do
     --quiet)
     QUIET="Y"
     ;;
+    --EE)
+    EE=YES
+    ;;
     *)
     usage
     exit 3
@@ -88,6 +91,13 @@ fi
 # Update the copyright with the current year!
 COPYRIGHT="CBL_COPYRIGHT=Copyright © $(date +'%Y') Couchbase. All rights reserved."
 
+# To distinguish between CE vs EE
+if [[ -z $EE ]]; then
+  EDITION="CBL_EDITION=Community"
+else
+  EDITION="CBL_EDITION=Enterprise"
+fi
+
 # archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
@@ -106,7 +116,7 @@ function xcarchive
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
     -destination "${DESTINATION}" \
-    ${BUILD_VERSION} ${BUILD_NUMBER} "${COPYRIGHT}" \
+    ${BUILD_VERSION} ${BUILD_NUMBER} "${COPYRIGHT}" "${EDITION}" \
     -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
     "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \

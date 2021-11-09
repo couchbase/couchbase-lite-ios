@@ -22,5 +22,7 @@
 	<string>$(CBL_COPYRIGHT)</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
+	<key>CBLEdition</key>
+	<string>$(CBL_EDITION)</string>
 </dict>
 </plist>

@@ -80,6 +80,7 @@ else
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
   TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
+  OPTS="--EE"
 fi
 
 if [ -z "$PRETTY" ]
@@ -208,8 +209,8 @@ OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
 
 echo "Building xcframework..."
-set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
+set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" $OPTS | $XCPRETTY
+set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" $OPTS | $XCPRETTY
 
 echo "Make Swift xcframework zip file ..."
 mkdir -p "$OUTPUT_SWIFT_XC_DIR"
