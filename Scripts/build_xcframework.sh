@@ -85,6 +85,9 @@ then
   fi
 fi
 
+# Update the copyright with the current year!
+COPYRIGHT="CBL_COPYRIGHT=Copyright © $(date +'%Y') Couchbase. All rights reserved."
+
 # archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
@@ -103,7 +106,7 @@ function xcarchive
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
     -destination "${DESTINATION}" \
-    ${BUILD_VERSION} ${BUILD_NUMBER} \
+    ${BUILD_VERSION} ${BUILD_NUMBER} "${COPYRIGHT}" \
     -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
     "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
