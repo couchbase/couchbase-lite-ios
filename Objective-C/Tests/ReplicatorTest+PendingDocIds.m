@@ -150,14 +150,12 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIDsWithCreate {
+- (void) testPendingDocIDsWithCreate {
     NSSet* docIds = [self createDocs];
     [self validatePendingDocumentIDs: docIds];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIDsWithUpdate {
+- (void) testPendingDocIDsWithUpdate {
     [self createDocs];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
@@ -174,8 +172,7 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIdsWithDelete {
+- (void) testPendingDocIdsWithDelete {
     [self createDocs];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
@@ -192,8 +189,7 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIdsWithPurge {
+- (void) testPendingDocIdsWithPurge {
     NSSet* docIds = [self createDocs];
 
     // purge random doc
@@ -207,8 +203,7 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIdsWithFilter {
+- (void) testPendingDocIdsWithFilter {
     [self createDocs];
 
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
@@ -243,8 +238,7 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2448
-- (void) _testPendingDocIdsWhenOffline {
+- (void) testPendingDocIdsWhenOffline {
     XCTestExpectation* offline = [self expectationWithDescription: @"Replicator Offline"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Replicator Stopped"];
     

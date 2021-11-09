@@ -140,14 +140,12 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIDsWithCreate() throws {
+    func testPendingDocIDsWithCreate() throws {
         let docIds = try createDocs()
         validatePendingDocumentIDs(docIds)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIDsWithUpdate() throws {
+    func testPendingDocIDsWithUpdate() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
@@ -164,8 +162,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         validatePendingDocumentIDs(updatedIds)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithDelete() throws {
+    func testPendingDocIdsWithDelete() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
@@ -181,8 +178,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         validatePendingDocumentIDs(deletedIds)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithPurge() throws {
+    func testPendingDocIdsWithPurge() throws {
         var docs = try createDocs()
         
         try db.purgeDocument(withID: "doc-3")
@@ -191,8 +187,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         validatePendingDocumentIDs(docs)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithFilter() throws {
+    func testPendingDocIdsWithFilter() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
