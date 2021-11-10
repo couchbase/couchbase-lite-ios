@@ -89,7 +89,7 @@ then
 fi
 
 # Update the copyright with the current year!
-COPYRIGHT="CBL_COPYRIGHT=Copyright © $(date +'%Y') Couchbase. All rights reserved."
+CBL_COPYRIGHT_YEAR="CBL_COPYRIGHT_YEAR=$(date +'%Y')"
 
 # To distinguish between CE vs EE
 if [[ -z $EE ]]; then
@@ -116,7 +116,7 @@ function xcarchive
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
     -destination "${DESTINATION}" \
-    ${BUILD_VERSION} ${BUILD_NUMBER} "${COPYRIGHT}" "${EDITION}" \
+    ${BUILD_VERSION} ${BUILD_NUMBER} "${CBL_COPYRIGHT_YEAR}" "${EDITION}" \
     -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
     "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
