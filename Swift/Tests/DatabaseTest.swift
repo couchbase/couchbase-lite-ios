@@ -317,7 +317,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 1)
         
         doc.setValue(2, forKey: "key")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLErrorDomain, code: .invalidParameter) {
             try otherDB.saveDocument(doc)
         } // forbidden
         
