@@ -20,219 +20,218 @@
 
 import Foundation
 
-/// Domain for Couchbase Lite errors.
-public let ErrorDomain = CBLErrorDomain
-
-public enum CBLError: Int {
+public struct CBLError {
+    public static let domain = CBLErrorDomain
+    
     /// Internal assertion failure
-    case assertionFailed = 1
+    public static let assertionFailed       = 1
     
     /// Oops  an unimplemented API call
-    case unimplemented
+    public static let unimplemented         = 2
     
     /// Unsupported encryption algorithm
-    case unsupportedEncryption
+    public static let unsupportedEncryption = 3
     
     /// Invalid revision ID syntax
-    case badRevisionID
+    public static let badRevisionID         = 4
     
     /// Document contains corrupted/unreadable data
-    case corruptRevisionData
+    public static let corruptRevisionData   = 5
     
     /// Database/KeyStore/index is not open
-    case notOpen
+    public static let notOpen               = 6
     
     /// Document not found
-    case notFound
+    public static let notFound              = 7
     
     /// Document update conflict
-    case conflict
+    public static let conflict              = 8
     
     /// Invalid function parameter or struct value
-    case invalidParameter
+    public static let invalidParameter      = 9
     
     /// Internal unexpected C++ exception
-    case unexpectedError  = 10
+    public static let unexpectedError       = 10
     
     /// Database file can't be opened; may not exist
-    case cantOpenFile
+    public static let cantOpenFile          = 11
     
     /// File I/O error
-    case ioError
+    public static let ioError               = 12
     
     /// Memory allocation failed (out of memory?)
-    case memoryError
+    public static let memoryError           = 13
     
     /// File is not writeable
-    case notWriteable
+    public static let notWriteable          = 14
     
     /// Data is corrupted
-    case corruptData
+    public static let corruptData           = 15
     
     /// Database is busy/locked
-    case busy
+    public static let busy                  = 16
     
     /// Function must be called while in a transaction
-    case notInTransaction
+    public static let notInTransaction      = 17
     
     /// Database can't be closed while a transaction is open
-    case transactionNotClosed
+    public static let transactionNotClosed  = 18
     
     /// Operation not supported in this database
-    case unsupported
+    public static let unsupported           = 19
     
     /// File is not a database  or encryption key is wrong
-    case unreadableDatabase = 20
+    public static let unreadableDatabase    = 20
     
     /// Database exists but not in the format/storage requested
-    case wrongFormat
+    public static let wrongFormat           = 21
     
     /// Encryption/decryption error
-    case crypto
+    public static let crypto                = 22
     
     /// Invalid query
-    case invalidQuery
+    public static let invalidQuery          = 23
     
     /// No such index  or query requires a nonexistent index
-    case missingIndex
+    public static let missingIndex          = 24
     
     /// Unknown query param name  or param number out of range
-    case invalidQueryParam
+    public static let invalidQueryParam     = 25
     
     /// Unknown error from remote server
-    case remoteError
+    public static let remoteError           = 26
     
     /// Database file format is older than what I can open
-    case databaseTooOld
+    public static let databaseTooOld        = 27
     
     /// Database file format is newer than what I can open
-    case databaseTooNew
+    public static let databaseTooNew        = 28
     
     /// Invalid document ID
-    case badDocID
+    public static let badDocID              = 29
     
     /// Database can't be upgraded (might be unsupported dev version)
-    case cantUpgradeDatabase = 30
+    public static let cantUpgradeDatabase   = 30
     
     // Note: These are equivalent to the C4Error codes declared in LiteCore's c4Base.h
 
     // MARK: -- Network error codes start here
     
     /// Network error codes start here
-    case networkBase                 = 5000
+    public static let networkBase                 = 5000
     
     /// DNS lookup failed
-    case dnsFailure                  = 5001
+    public static let dnsFailure                  = 5001
     
     /// DNS server doesn't know the hostname
-    case unknownHost                 = 5002
+    public static let unknownHost                 = 5002
     
     /// Socket timeout during an operation
-    case timeout                     = 5003
+    public static let timeout                     = 5003
     
     /// The provided url is not valid
-    case invalidURL                  = 5004
+    public static let invalidURL                  = 5004
     
     /// Too many HTTP redirects for the HTTP client to handle
-    case tooManyRedirects            = 5005
+    public static let tooManyRedirects            = 5005
     
     /// Failure during TLS handshake process
-    case tlsHandshakeFailed          = 5006
+    public static let tlsHandshakeFailed          = 5006
     
     /// The provided TLS certificate has expired
-    case tlsCertExpired              = 5007
+    public static let tlsCertExpired              = 5007
     
     /// Cert isn't trusted for other reason
-    case tlsCertUntrusted            = 5008
+    public static let tlsCertUntrusted            = 5008
     
     /// A required client certificate was not provided
-    case tlsClientCertRequired       = 5009
+    public static let tlsClientCertRequired       = 5009
     
     /// Client certificate was rejected by the server
-    case tlsClientCertRejected       = 5010
+    public static let tlsClientCertRejected       = 5010
     
     /// Self-signed cert  or unknown anchor cert
-    case tlsCertUnknownRoot          = 5011
+    public static let tlsCertUnknownRoot          = 5011
     
     /// Attempted redirect to invalid replication endpoint by server
-    case invalidRedirect             = 5012
+    public static let invalidRedirect             = 5012
     
     // MARK: -- HTTP status codes start here
     
     /// HTTP status codes start here
-    case httpBase                    = 10000
+    public static let httpBase                    = 10000
     
     /// Missing or incorrect user authentication
-    case httpAuthRequired            = 10401
+    public static let httpAuthRequired            = 10401
     
     /// User doesn't have permission to access resource
-    case httpForbidden               = 10403
+    public static let httpForbidden               = 10403
     
     /// Resource not found
-    case httpNotFound                = 10404
+    public static let httpNotFound                = 10404
     
     /// Update conflict
-    case httpConflict                = 10409
+    public static let httpConflict                = 10409
     
     /// HTTP proxy requires authentication
-    case httpProxyAuthRequired       = 10407
+    public static let httpProxyAuthRequired       = 10407
     
     /// Data is too large to upload
-    case httpEntityTooLarge          = 10413
+    public static let httpEntityTooLarge          = 10413
     
     /// HTCPCP/1.0 error (RFC 2324)
-    case httpImATeapot               = 10418
+    public static let httpImATeapot               = 10418
     
     /// Something's wrong with the server
-    case httpInternalServerError     = 10500
+    public static let httpInternalServerError     = 10500
     
     /// Unimplemented server functionality
-    case httpNotImplemented          = 10501
+    public static let httpNotImplemented          = 10501
     
     /// Service is down temporarily(?)
-    case httpServiceUnavailable      = 10503
+    public static let httpServiceUnavailable      = 10503
     
     // MARK: -- WebSocket status codes start here
     
     /// WebSocket status codes start here
-    case webSocketBase               = 11000
+    public static let webSocketBase               = 11000
     
     /// Peer has to close  e.g. because host app is quitting
-    case webSocketGoingAway          = 11001
+    public static let webSocketGoingAway          = 11001
     
     /// Protocol violation: invalid framing data
-    case webSocketProtocolError      = 11002
+    public static let webSocketProtocolError      = 11002
     
     /// Message payload cannot be handled
-    case webSocketDataError          = 11003
+    public static let webSocketDataError          = 11003
     
     /// TCP socket closed unexpectedly
-    case webSocketAbnormalClose      = 11006
+    public static let webSocketAbnormalClose      = 11006
     
     /// Unparseable WebSocket message
-    case webSocketBadMessageFormat   = 11007
+    public static let webSocketBadMessageFormat   = 11007
     
     /// Message violated unspecified policy
-    case webSocketPolicyError        = 11008
+    public static let webSocketPolicyError        = 11008
     
     /// Message is too large for peer to handle
-    case webSocketMessageTooBig      = 11009
+    public static let webSocketMessageTooBig      = 11009
     
     /// Peer doesn't provide a necessary extension
-    case webSocketMissingExtension   = 11010
+    public static let webSocketMissingExtension   = 11010
     
     /// Can't fulfill request due to "unexpected condition"
-    case webSocketCantFulfill        = 11011
+    public static let webSocketCantFulfill        = 11011
     
 #if COUCHBASE_ENTERPRISE
     /// Recoverable messaging error
-    case webSocketCloseUserTransient = 14001
+    public static let webSocketCloseUserTransient = 14001
     
     /// Non-recoverable messaging error
-    case webSocketCloseUserPermanent = 14002
+    public static let webSocketCloseUserPermanent = 14002
 #endif
     
     /// Invalid JSON string error
-    case invalidJSON                 = 17001
+    public static let invalidJSON                 = 17001
 }
 

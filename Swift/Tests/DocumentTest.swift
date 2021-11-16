@@ -84,8 +84,8 @@ class DocumentTest: CBLTestCase {
         }
         
         XCTAssertNotNil(error)
-        XCTAssertEqual(error!.code, CBLErrorBadDocID)
-        XCTAssertEqual(error!.domain, CBLErrorDomain)
+        XCTAssertEqual(error!.code, CBLError.badDocID)
+        XCTAssertEqual(error!.domain, CBLError.domain)
         
         // get document with empty doc-id string; skip test exception breakpoint
         ignoreException {
@@ -1279,7 +1279,7 @@ class DocumentTest: CBLTestCase {
         doc1.setValue("Scott", forKey: "name")
         
         // Purge before save:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.purgeDocument(doc1)
         }
         
@@ -1637,8 +1637,8 @@ class DocumentTest: CBLTestCase {
                 let _ = try MutableDocument(json: json)
             } catch {
                 exceptionThrown = true
-                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
-                XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
+                XCTAssertEqual((error as NSError).code, CBLError.invalidJSON)
+                XCTAssertEqual((error as NSError).domain, CBLError.domain)
             }
             XCTAssert(exceptionThrown)
             
@@ -1647,8 +1647,8 @@ class DocumentTest: CBLTestCase {
                 let _ = try MutableDictionaryObject(json: json)
             } catch {
                 exceptionThrown = true
-                XCTAssertEqual((error as NSError).code, CBLErrorInvalidJSON)
-                XCTAssertEqual((error as NSError).domain, CBLErrorDomain)
+                XCTAssertEqual((error as NSError).code, CBLError.invalidJSON)
+                XCTAssertEqual((error as NSError).domain, CBLError.domain)
             }
             XCTAssert(exceptionThrown)
         }
