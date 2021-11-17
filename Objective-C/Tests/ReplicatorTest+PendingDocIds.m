@@ -373,7 +373,8 @@
     [self validateIsDocumentPending: @{@"doc-3": @NO, @"doc-2": @NO}];
 }
 
-- (void) testIsDocumentPendingWithPushFilter {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWithPushFilter {
     [self createDocs];
 
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];

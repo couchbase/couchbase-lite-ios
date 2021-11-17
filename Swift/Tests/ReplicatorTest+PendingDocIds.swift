@@ -278,7 +278,8 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         try validateIsDocumentPending(["doc-0": true, "doc-1": false, "doc-2": true])
     }
     
-    func testIsDocumentPendingWithPushFilter() throws {
+    // TODO: testIsDocumentPendingWithPushFilter
+    func _testIsDocumentPendingWithPushFilter() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
