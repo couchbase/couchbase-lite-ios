@@ -234,14 +234,16 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
     }
     
-    func testIsDocumentPendingWithCreate() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2575
+    func _testIsDocumentPendingWithCreate() throws {
         noOfDocument = 2
         let _ = try createDocs()
         
         try validateIsDocumentPending(["doc-0": true, "doc-1": true, "doc-3": false])
     }
     
-    func testIsDocumentPendingWithUpdate() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2575
+    func _testIsDocumentPendingWithUpdate() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
@@ -258,7 +260,8 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         try validateIsDocumentPending(["doc-2": true, "doc-4": true, "doc-1": false])
     }
     
-    func testIsDocumentPendingWithDelete() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2575
+    func _testIsDocumentPendingWithDelete() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
@@ -274,7 +277,8 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         try validateIsDocumentPending(["doc-2": true, "doc-4": true, "doc-1": false])
     }
     
-    func testIsDocumentPendingWithPurge() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2575
+    func _testIsDocumentPendingWithPurge() throws {
         noOfDocument = 3
         let _ = try createDocs()
         
@@ -283,7 +287,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         try validateIsDocumentPending(["doc-0": true, "doc-1": false, "doc-2": true])
     }
     
-    // TODO: testIsDocumentPendingWithPushFilter
+    // TODO: https://issues.couchbase.com/browse/CBL-2575
     func _testIsDocumentPendingWithPushFilter() throws {
         let _ = try createDocs()
         
