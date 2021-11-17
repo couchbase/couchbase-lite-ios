@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "CouchbaseLiteSwift",
     platforms: [
-        .iOS(.v9), .macOS(.v10_11)
+        .iOS(.v10), .macOS(.v10_12)
     ],
     products: [
         .library(
