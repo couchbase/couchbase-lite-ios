@@ -28,19 +28,19 @@ import Foundation
 public final class Blob: Equatable, Hashable {
     
     /// Value of type property for blob object
-    static let blobType: String = kCBLBlobType
+    public static let blobType: String = kCBLBlobType
     
     /// Blob dict property containing a blobType of the data.
-    static let typeProperty: String = kCBLTypeProperty
+    public static let typeProperty: String = kCBLTypeProperty
     
     /// Blob dict property containing a digest of the data.
-    static let blobDigestProperty: String = kCBLBlobDigestProperty
+    public static let blobDigestProperty: String = kCBLBlobDigestProperty
     
     /// Blob dict property containing a length of the data.
-    static let blobLengthProperty: String = kCBLBlobLengthProperty
+    public static let blobLengthProperty: String = kCBLBlobLengthProperty
     
     /// Blob dict property containing a content type of the data.
-    static let blobContentType: String = kCBLBlobContentTypeProperty
+    public static let blobContentType: String = kCBLBlobContentTypeProperty
     
     /// Initializes a Blob with the given in-memory data.
     ///
