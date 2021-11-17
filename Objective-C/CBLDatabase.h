@@ -478,9 +478,10 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  Creates a Query object from the given query string.
  
  @param query Query expression
+ @param error error On return, the given query string is invalid.
  @return query created using the given expression string.
  */
-- (CBLQuery*) createQuery: (NSString*)query;
+- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
 
 @end
 

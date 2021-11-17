@@ -24,7 +24,7 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
-#import "CBLQuery+N.h"
+#import "CBLQuery+N1QL.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
@@ -67,8 +67,10 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithDatabase:(CBLDatabase *)database
-                      expressions:(NSString *)expressions {
+- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
+                               expressions: (NSString*)expressions
+                                     error: (NSError**)error
+{
     Assert(database);
     Assert(expressions);
     self = [super init];
@@ -76,6 +78,10 @@ using namespace fleece;
         _database = database;
         _expressions = expressions;
         _language = kC4N1QLQuery;
+        
+        // Return error if the N1QL query expression is not compiled:
+        if (![self compile: error])
+            return nil;
     }
     return self;
 }
@@ -170,9 +176,9 @@ using namespace fleece;
 - (void) dealloc {
     [_liveQuery stop];
     
-    CBL_LOCK(self.database) {
+    [self.database safeBlock:^{
         c4query_release(_c4Query);
-    }
+    }];
 }
 
 - (NSString*) description {
@@ -203,16 +209,19 @@ using namespace fleece;
 }
 
 - (NSString*) explain: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
-    CBL_LOCK(self.database) {
-        return sliceResult2string(c4query_explain(_c4Query));
-    }
+    __block NSString* result;
+    [self.database safeBlock: ^{
+        result = sliceResult2string(c4query_explain(_c4Query));
+    }];
+    
+    return result;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (![self check: outError])
+    if (![self compile: outError])
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
@@ -224,11 +233,12 @@ using namespace fleece;
             return nil;
     }
     
-    C4Error c4Err;
-    C4QueryEnumerator* e;
-    CBL_LOCK(self.database) {
+    
+    __block C4QueryEnumerator* e;
+    __block C4Error c4Err;
+    [self.database safeBlock:^{
         e = c4query_run(_c4Query, &options, {params.bytes, params.length}, &c4Err);
-    }
+    }];
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
         convertError(c4Err, outError);
@@ -282,7 +292,7 @@ using namespace fleece;
 
 #pragma mark - Private
 
-- (BOOL) check: (NSError**)outError {
+- (BOOL) compile: (NSError**)outError {
     CBL_LOCK(self) {
         if (_c4Query)
             return YES;
@@ -290,9 +300,9 @@ using namespace fleece;
         [self.database mustBeOpenLocked];
         
         // Compile JSON query:
-        C4Error c4Err;
-        C4Query* query;
-        CBL_LOCK(self.database) {
+        __block C4Error c4Err;
+        __block C4Query* query;
+        [self.database safeBlock:^{
             if (_language == kC4JSONQuery) {
                 assert(_json);
                 query = c4query_new2(self.database.c4db,
@@ -302,7 +312,7 @@ using namespace fleece;
                 CBLStringBytes exp(_expressions);
                 query = c4query_new2(self.database.c4db, kC4N1QLQuery, exp, nullptr, &c4Err);
             }
-        }
+        }];
         
         if (!query) {
             convertError(c4Err, outError);

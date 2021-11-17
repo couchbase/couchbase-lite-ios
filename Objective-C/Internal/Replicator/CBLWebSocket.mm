@@ -377,11 +377,22 @@ static void doDispose(C4Socket* s) {
     _expectedAcceptHeader = [[self class] webSocketAcceptHeaderForKey: nonceKey];
     
     // Construct the HTTP request:
-    for (Dict::iterator header(_options[kC4ReplicatorOptionExtraHeaders].asDict()); header; ++header)
-        _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
+    NSString* headerCookie = nil;
+    for (Dict::iterator header(_options[kC4ReplicatorOptionExtraHeaders].asDict()); header; ++header) {
+        NSString* keyString = slice2string(header.keyString());
+        NSString* valueString = slice2string(header.value().asString());
+        
+        if ([keyString isEqualToString: @"Cookie"])
+            headerCookie = valueString; // extract if any cookie in header
+        else
+            _logic[keyString] = valueString;
+    }
+    
+    NSMutableString* cookies = [NSMutableString string];
+    if (headerCookie.length > 0)
+        [cookies appendFormat: @"%@;", headerCookie];
     
     slice sessionCookie = _options[kC4ReplicatorOptionCookies].asString();
-    NSMutableString* cookies = [NSMutableString string];
     if (sessionCookie.buf)
         [cookies appendFormat: @"%@;", sessionCookie.asNSString()];
     

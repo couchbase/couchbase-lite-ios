@@ -64,6 +64,7 @@ typedef CBLURLEndpointListenerConfiguration Config;
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 typedef CBLURLEndpointListener Listener;
+
 @end
 
 @implementation URLEndpointListenerTest {

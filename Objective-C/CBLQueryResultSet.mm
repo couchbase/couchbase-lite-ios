@@ -43,9 +43,9 @@ namespace cbl {
         { }
 
         virtual ~QueryResultContext() {
-            CBL_LOCK(database()) {
+            [database() safeBlock:^{
                 c4queryenum_release(_enumerator);
-            }
+            }];
         }
 
         C4QueryEnumerator* enumerator() const   {return _enumerator;}
@@ -93,11 +93,11 @@ namespace cbl {
 }
 
 - (id) nextObject {
-    CBL_LOCK(self.database) {
+    __block id row = nil;
+    [self.database safeBlock: ^{
         if (_isAllEnumerated)
-            return nil;
+            return;
         
-        id row = nil;
         if (c4queryenum_next(_c4enum, &_error)) {
             row = self.currentObject;
         } else if (_error.code) {
@@ -106,8 +106,8 @@ namespace cbl {
             _isAllEnumerated = YES;
             CBLLogInfo(Query, @"End of query enumeration (%p)", _c4enum);
         }
-        return row;
-    }
+    }];
+    return row;
 }
 
 - (NSArray<CBLQueryResult*>*) allResults {
@@ -141,14 +141,17 @@ namespace cbl {
     // TODO: We should make it strong reference instead:
     // https://github.com/couchbase/couchbase-lite-ios/issues/1983
     CBLDatabase* db = self.database;
-    CBL_LOCK(db) {
+    
+    __block id result;
+    [db safeBlock: ^{
         if (!c4queryenum_seek(_c4enum, index, &_error)) {
             NSString* message = sliceResult2string(c4error_getMessage(_error));
             [NSException raise: NSInternalInconsistencyException
                         format: @"CBLQueryEnumerator couldn't get a value: %@", message];
         }
-        return self.currentObject;
-    }
+        result = self.currentObject;
+    }];
+    return result;
 }
 
 // TODO: Should we make this public? How else can the app find the error?
@@ -164,13 +167,13 @@ namespace cbl {
     if (outError)
         *outError = nil;
     
-    C4Error c4error;
-    C4QueryEnumerator *newEnum;
+    __block C4Error c4error;
+    __block C4QueryEnumerator *newEnum;
     
     CBLDatabase* db = self.database;
-    CBL_LOCK(db) {
+    [db safeBlock: ^{
         newEnum = c4queryenum_refresh(_c4enum, &c4error);
-    }
+    }];
     if (!newEnum) {
         if (c4error.code)
             convertError(c4error, outError);

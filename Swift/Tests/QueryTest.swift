@@ -320,13 +320,11 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 1)
         
         // N1QL Query
-        var q2 = db.createQuery(query:
-                                    "SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, 'woman')")
+        var q2 = try db.createQuery("SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, 'woman')")
         numRows = try verifyQuery(q2) { (n, r) in }
         XCTAssertEqual(numRows, 1)
         
-        q2 = db.createQuery(query:
-                                    "SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, \"woman\")")
+        q2 = try db.createQuery("SELECT _id FROM `\(db.name)` WHERE MATCH(sentence, \"woman\")")
         numRows = try verifyQuery(q2) { (n, r) in }
         XCTAssertEqual(numRows, 1)
     }
@@ -1362,7 +1360,7 @@ class QueryTest: CBLTestCase {
     }
     
     func testN1QLLiveQuery() throws {
-        let q = db.createQuery(query: "SELECT * FROM testdb WHERE number1 < 10")
+        let q = try db.createQuery("SELECT * FROM testdb WHERE number1 < 10")
         try testLiveQuery(query: q)
     }
     
@@ -1806,11 +1804,33 @@ class QueryTest: CBLTestCase {
         doc2.setValue("Ice Cream", forKey: "lastName")
         try self.db.saveDocument(doc2)
         
-        let q = self.db.createQuery(query: "SELECT firstName, lastName FROM \(self.db.name)")
+        let q = try self.db.createQuery("SELECT firstName, lastName FROM \(self.db.name)")
         let results = try q.execute().allResults()
         XCTAssertEqual(results[0].string(forKey: "firstName"), "Jerry")
         XCTAssertEqual(results[0].string(forKey: "lastName"), "Ice Cream")
         XCTAssertEqual(results[1].string(forKey: "firstName"), "Ben")
         XCTAssertEqual(results[1].string(forKey: "lastName"), "Ice Cream")
+    }
+    
+    func testInvalidN1QL() throws {
+        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidQuery) {
+            _ = try self.db.createQuery("SELECT firstName, lastName")
+        }
+    }
+    
+    func testN1QLQueryOffsetWithoutLimit() throws {
+        let doc1 = MutableDocument()
+        doc1.setValue("Jerry", forKey: "firstName")
+        doc1.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument()
+        doc2.setValue("Ben", forKey: "firstName")
+        doc2.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc2)
+        
+        let q = try self.db.createQuery("SELECT firstName, lastName FROM \(self.db.name) offset 1")
+        let results = try q.execute().allResults()
+        XCTAssertEqual(results.count, 1)
     }
 }

@@ -150,12 +150,14 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testPendingDocIDsWithCreate {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIDsWithCreate {
     NSSet* docIds = [self createDocs];
     [self validatePendingDocumentIDs: docIds];
 }
 
-- (void) testPendingDocIDsWithUpdate {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIDsWithUpdate {
     [self createDocs];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
@@ -172,7 +174,8 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-- (void) testPendingDocIdsWithDelete {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIdsWithDelete {
     [self createDocs];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
@@ -189,7 +192,8 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-- (void) testPendingDocIdsWithPurge {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIdsWithPurge {
     NSSet* docIds = [self createDocs];
 
     // purge random doc
@@ -203,7 +207,8 @@
     [self validatePendingDocumentIDs: updatedDocIds];
 }
 
-- (void) testPendingDocIdsWithFilter {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIdsWithFilter {
     [self createDocs];
 
     XCTestExpectation* x = [self expectationWithDescription: @"Replicator Stopped"];
@@ -238,7 +243,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testPendingDocIdsWhenOffline {
+// TODO: https://issues.couchbase.com/browse/CBL-2448
+- (void) _testPendingDocIdsWhenOffline {
     XCTestExpectation* offline = [self expectationWithDescription: @"Replicator Offline"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Replicator Stopped"];
     
@@ -317,7 +323,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testIsDocumentPendingWithCreate {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWithCreate {
     NSString* docId = @"doc-1";
     CBLMutableDocument* doc = [self createDocument: docId];
     [doc setString: kCreateActionValue forKey: kActionKey];
@@ -326,7 +333,8 @@
     [self validateIsDocumentPending: @{docId: @YES, @"doc-2": @NO}];
 }
 
-- (void) testIsDocumentPendingWithUpdate {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWithUpdate {
     [self createDocs];
 
     // sync it to otherdb
@@ -341,7 +349,8 @@
     [self validateIsDocumentPending: @{@"doc-1": @YES, @"doc-2": @NO}];
 }
 
-- (void) testIsDocumentPendingWithDelete {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWithDelete {
     [self createDocs];
 
     // sync to otherdb
@@ -357,7 +366,8 @@
     [self validateIsDocumentPending: @{@"doc-1": @YES, @"doc-2": @NO}];
 }
 
-- (void) testIsDocumentPendingWithPurge {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWithPurge {
     [self createDocs];
 
     // sync to otherdb
@@ -410,7 +420,8 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
-- (void) testIsDocumentPendingWhenOffline {
+// TODO: https://issues.couchbase.com/browse/CBL-2575
+- (void) _testIsDocumentPendingWhenOffline {
     XCTestExpectation* offline = [self expectationWithDescription: @"Replicator Offline"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Replicator Stopped"];
     

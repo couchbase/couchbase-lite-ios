@@ -1,8 +1,8 @@
 //
-//  CBLBase64.h
+//  CBLLockable.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CBLBase64 : NSObject
-+ (NSString*) encode:(const void*) input length:(size_t) length;
-+ (NSString*) encode:(NSData*) rawBytes;
-+ (NSData*) decode:(const char*) string length:(size_t) inputLength;
-+ (NSData*) decode:(NSString*) string;
+NS_ASSUME_NONNULL_BEGIN
 
-/** Decodes the URL-safe Base64 variant that uses '-' and '_' instead of '+' and '/', and omits trailing '=' characters. */
-+ (NSData*) decodeURLSafe: (NSString*)string;
-+ (NSData*) decodeURLSafe: (const char*)string length: (size_t)inputLength;
+@protocol CBLLockable <NSObject>
+
+- (void) safeBlock: (void (^)(void))block;
+
 @end
+
+
+NS_ASSUME_NONNULL_END

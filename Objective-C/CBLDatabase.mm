@@ -41,7 +41,7 @@
 #import "CBLData.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
-#import "CBLQuery+N.h"
+#import "CBLQuery+N1QL.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -687,8 +687,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark - Query
 
-- (CBLQuery*) createQuery: (NSString*)query {
-    return [[CBLQuery alloc] initWithDatabase: self expressions: query];
+- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error {
+    return [[CBLQuery alloc] initWithDatabase: self expressions: query error: error];
 }
 
 #pragma mark - INTERNAL
@@ -992,6 +992,12 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     _c4db = nil;
     
     _state = kCBLDatabaseStateClosed;
+}
+
+- (void) safeBlock:(void (^)())block {
+    CBL_LOCK(self) {
+        block();
+    }
 }
 
 #pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING

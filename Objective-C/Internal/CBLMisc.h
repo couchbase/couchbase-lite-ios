@@ -24,9 +24,6 @@ extern "C" {
 #endif
     
 NS_ASSUME_NONNULL_BEGIN
-
-/** Generates UUID. */
-NSString* __nullable CBLCreateUUID( void );
     
 /** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
 BOOL CBLIsFileExistsError( NSError* error );
