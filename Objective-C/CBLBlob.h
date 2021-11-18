@@ -21,10 +21,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Value of type property for blob object */
 extern NSString* const kCBLBlobType;
+
+/** Blob dict property containing a blobType of the data. */
 extern NSString* const kCBLTypeProperty;
+
+/** Blob dict property containing a digest of the data. */
 extern NSString* const kCBLBlobDigestProperty;
+
+/** Blob dict property containing a length of the data. */
 extern NSString* const kCBLBlobLengthProperty;
+
+/** Blob dict property containing a content type of the data. */
 extern NSString* const kCBLBlobContentTypeProperty;
 
 /** 
