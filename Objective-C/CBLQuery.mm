@@ -20,7 +20,6 @@
 #import "CBLQuery.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLLiveQuery.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
@@ -31,8 +30,13 @@
 #import "c4Query.h"
 #import "fleece/slice.hh"
 #import "CBLStringBytes.h"
+#import "CBLChangeNotifier.h"
+#import "CBLQueryObserver.h"
+#import "CBLQueryChangeNotifier.h"
 
 using namespace fleece;
+
+#pragma mark -
 
 @implementation CBLQuery
 {
@@ -41,7 +45,7 @@ using namespace fleece;
     C4QueryLanguage _language;
     C4Query* _c4Query;
     NSDictionary* _columnNames;
-    CBLLiveQuery* _liveQuery;
+    CBLQueryChangeNotifier* _changeNotifier;
     
     CBLQueryDataSource* _from;
 }
@@ -181,9 +185,7 @@ using namespace fleece;
     return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
 }
 
-- (void) dealloc {
-    [_liveQuery stop];
-    
+- (void) dealloc {    
     [self.database safeBlock:^{
         c4query_release(_c4Query);
     }];
@@ -272,12 +274,13 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-//        if (!_liveQuery)
-//            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self columnNames: _columnNames];
-//        return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
         if (!_changeNotifier)
-            _changeNotifier = [CBLChangeNotifier new];
-        return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
+            _changeNotifier = [CBLQueryChangeNotifier new];
+        
+        return [_changeNotifier addChangeListenerWithQueue: queue
+                                                  listener: listener
+                                                     queue: self
+                                               columnNames: _columnNames];
     }
 }
 
@@ -285,13 +288,9 @@ using namespace fleece;
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
-//        [_liveQuery removeChangeListenerWithToken: token];
-        if ([_changeNotifier removeChangeListenerWithToken: token] == 0)
-            [self stop]
+        [_changeNotifier removeChangeListenerWithToken: token];
     }
 }
-
-- (void) stop {}
 
 #pragma mark - Internal
 

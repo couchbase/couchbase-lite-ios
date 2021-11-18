@@ -22,8 +22,9 @@
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
+#import "CBLQueryChangeNotifier.h"
 
-@interface CBLQueryObserver ()
+@interface CBLQueryObserver () <CBLStoppable>
 
 @property (nonatomic, readonly) CBLQuery* query;
 
@@ -31,52 +32,90 @@
 
 @implementation CBLQueryObserver {
     CBLQuery* _query;
-    
-    CBLChangeNotifier<CBLQueryChange*>* _changeNotifier;
-    
-    CBLQueryResultSet* _rs;
     NSDictionary* _columnNames;
+    C4QueryObserver* _obs;
+    CBLQueryChangeNotifier* _listenerToken;
 }
 
-- (instancetype) initWithQuery: (CBLQuery*)query columnNames:(nonnull NSDictionary *)columnNames {
+#pragma mark - Constructor
+
+- (instancetype) initWithQuery: (CBLQuery*)query
+                   columnNames: (NSDictionary *)columnNames
+                         token: (id<CBLListenerToken>)token {
     NSParameterAssert(query);
     NSParameterAssert(columnNames);
+    NSParameterAssert(token);
     
     self = [super init];
     if (self) {
         _query = query;
         _columnNames = columnNames;
+        _listenerToken = token;
+        _obs = c4queryobs_create(query.c4query, liveQueryCallback, (__bridge void *)self);
+        
+        [query.database addActiveStoppable: self];
     }
     return self;
 }
 
-- (void) start {
-    
+- (void) dealloc {
+    if (_obs) {
+        [self stopAndFree];
+    }
 }
 
-- (void) stop {
-    
+#pragma mark - Methods
+
+- (void) start {
+    [self observerEnable: YES];
 }
+
+- (void) stopAndFree {
+    CBL_LOCK(self) {
+        if (_obs) {
+            [self observerEnable: NO];
+            c4queryobs_free(_obs);
+            _obs = nil;
+        }
+    }
+    
+    [_query.database removeActiveStoppable: self];
+    
+    _query = nil;
+    _columnNames = nil;
+    _listenerToken = nil;
+}
+
+#pragma mark - Internal
 
 - (CBLQuery*) query {
     return _query;
 }
 
+- (NSString*) description {
+    return [NSString stringWithFormat:@"%@[%@:%@]%@", self.class, [_query description], _obs, [_listenerToken description]];
+}
+
+- (void) stop {
+    [self stopAndFree];
+}
+
+#pragma mark - Private
+
 static void liveQueryCallback(C4QueryObserver *obs, C4Query *query, void *context) {
-    CBLQueryObserver *liveQuery = (__bridge CBLQueryObserver*)context;
-    dispatch_queue_t queue = [liveQuery query].database.queryQueue;
+    CBLQueryObserver *queryObs = (__bridge CBLQueryObserver*)context;
+    dispatch_queue_t queue = [queryObs query].database.queryQueue;
     if (!queue)
         return;
     
     dispatch_async(queue, ^{
-        [liveQuery postQueryChange: obs];
+        [queryObs postQueryChange: obs];
     });
 };
 
 - (void) postQueryChange: (C4QueryObserver*)obs {
     CBL_LOCK(self) {
         C4Error c4error = {};
-        CBLQuery* strongQuery = _query;
         
         // Note: enumerator('e') will be released in ~QueryResultContext; no need to release it
         C4QueryEnumerator* e = c4queryobs_getEnumerator(obs, true, &c4error);
@@ -86,19 +125,25 @@ static void liveQueryCallback(C4QueryObserver *obs, C4Query *query, void *contex
             return;
         }
         
-        _rs = [[CBLQueryResultSet alloc] initWithQuery: strongQuery
-                                            enumerator: e
-                                           columnNames: _columnNames];
+        CBLQueryResultSet *rs = [[CBLQueryResultSet alloc] initWithQuery: self.query
+                                                              enumerator: e
+                                                             columnNames: _columnNames];
         
-        if (!_rs) {
+        if (!rs) {
             CBLLogInfo(Query, @"%@: Result set returns empty", self);
             return;
         }
         
         NSError* error = nil;
-        [_changeNotifier postChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
-                                                                   results: _rs
-                                                                     error: error]];
+        [_listenerToken postChange: [[CBLQueryChange alloc] initWithQuery: self.query
+                                                                  results: rs
+                                                                    error: error]];
+    }
+}
+
+- (void) observerEnable: (BOOL)enable {
+    CBL_LOCK(self) {
+        c4queryobs_setEnabled(_obs, enable);
     }
 }
 

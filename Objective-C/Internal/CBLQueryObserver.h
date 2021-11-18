@@ -19,28 +19,27 @@
 
 #import <Foundation/Foundation.h>
 
-@class CBLQuery;
-@class CBLQueryChange;
 @protocol CBLListenerToken;
+@class CBLQuery;
+@class CBLChangeNotifier;
+@class CBLQueryChange;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryObserver : NSObject
 
-/** Initialize with a Query. */
-- (instancetype) initWithQuery: (CBLQuery*)query columnNames:(nonnull NSDictionary *)columnNames;
+- (instancetype) init NS_UNAVAILABLE; 
 
-/**
- Adds a query change listener with the given dispatch queue on which the changes
- will be posted. If the dispatch queue is not specified, the changes will be
- posted on the main queue.
- 
- @param queue The dispatch queue.
- @param listener The listener block to post the changes.
- @return An opaque listener token object for removing the listener.
- */
-- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                           listener: (void (^)(CBLQueryChange*))listener;
+/** Initialize with a Query. */
+- (instancetype) initWithQuery: (CBLQuery*)query
+                   columnNames: (NSDictionary *)columnNames
+                         token: (id<CBLListenerToken>)token;
+
+/** Starts the observer */
+- (void) start;
+
+/** Stops and frees the observer */
+- (void) stopAndFree;
 
 @end
 

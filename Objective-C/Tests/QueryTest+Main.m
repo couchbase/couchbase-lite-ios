@@ -18,7 +18,6 @@
 //
 
 #import "QueryTest.h"
-#import "CBLLiveQuery.h"
 #import "CBLQuery+internal.h"
 #import "CBLQuery+JSON.h"
 #import "CBLQueryBuilder.h"
