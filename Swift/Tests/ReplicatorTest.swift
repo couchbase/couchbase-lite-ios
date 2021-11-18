@@ -342,8 +342,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(docs[0].id, "doc1")
         XCTAssertNotNil(docs[0].error)
         let err = docs[0].error! as NSError
-        XCTAssertEqual(err.domain, CBLErrorDomain)
-        XCTAssertEqual(err.code, CBLErrorHTTPConflict)
+        XCTAssertEqual(err.domain, CBLError.domain)
+        XCTAssertEqual(err.code, CBLError.httpConflict)
         XCTAssertFalse(docs[0].flags.contains(.deleted))
         XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         

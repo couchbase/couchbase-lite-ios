@@ -30,6 +30,9 @@ do
     --quiet)
     QUIET="Y"
     ;;
+    --EE)
+    EE=YES
+    ;;
     *)
     usage
     exit 3
@@ -85,6 +88,16 @@ then
   fi
 fi
 
+# Update the copyright with the current year!
+CBL_COPYRIGHT_YEAR="CBL_COPYRIGHT_YEAR=$(date +'%Y')"
+
+# To distinguish between CE vs EE
+if [[ -z $EE ]]; then
+  EDITION="CBL_EDITION=Community"
+else
+  EDITION="CBL_EDITION=Enterprise"
+fi
+
 # archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
@@ -98,12 +111,12 @@ function xcarchive
 {
   DESTINATION=${1}
   echo "Archiving for ${DESTINATION}..."
-  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g')
+  ARCHIVE_PATH=${BUILD_DIR}/$(echo ${DESTINATION} | sed 's/ /_/g' | sed 's/\//\_/g')
   xcodebuild archive \
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
     -destination "${DESTINATION}" \
-    ${BUILD_VERSION} ${BUILD_NUMBER} \
+    ${BUILD_VERSION} ${BUILD_NUMBER} "${CBL_COPYRIGHT_YEAR}" "${EDITION}" \
     -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
     "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
@@ -114,13 +127,13 @@ function xcarchive
   echo "Finished archiving ${DESTINATION}."
 }
 
-xcarchive "platform=macOS,arch=x86_64,variant=Mac Catalyst"
 xcarchive "generic/platform=iOS Simulator"
 xcarchive "generic/platform=iOS"
 xcarchive "generic/platform=macOS"
+xcarchive "generic/platform=macOS,variant=Mac Catalyst"
 
 # create xcframework
-echo "Creating XCFramework...: ${FRAMEWORK_PATH_ARGS}"
+echo "Creating XCFramework..."
 mkdir -p "${OUTPUT_BASE_DIR}"
 xcodebuild -create-xcframework \
     -output "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework" \

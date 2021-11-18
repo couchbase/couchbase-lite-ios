@@ -1817,7 +1817,7 @@ class QueryTest: CBLTestCase {
     }
     
     func testInvalidN1QL() throws {
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidQuery) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
             _ = try self.db.createQuery("SELECT firstName, lastName")
         }
     }
