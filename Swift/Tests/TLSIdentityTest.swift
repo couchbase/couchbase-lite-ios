@@ -160,7 +160,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Get:
         var identity: TLSIdentity?
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         }
         
@@ -184,7 +184,7 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         }
     }
@@ -209,7 +209,7 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentityInKeyChain(identity: identity!)
         
         // Create again with the same label:
-        self.expectError(domain: CBLErrorDomain, code: CBLErrorCrypto) {
+        self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
             identity = try TLSIdentity.createIdentity(forServer: true,
                                                       attributes: attrs,
                                                       expiration: nil,
@@ -225,7 +225,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Get:
         var identity: TLSIdentity?
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
         }
         
@@ -249,7 +249,7 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Get:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
         }
     }
@@ -274,7 +274,7 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentityInKeyChain(identity: identity!)
         
         // Create again with the same label:
-        self.expectError(domain: CBLErrorDomain, code: CBLErrorCrypto) {
+        self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
             identity = try TLSIdentity.createIdentity(forServer: false,
                                                       attributes: attrs,
                                                       expiration: nil,
@@ -359,7 +359,7 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         }
     }
@@ -372,14 +372,14 @@ class TLSIdentityTest: CBLTestCase {
         
         // Get:
         var identity: TLSIdentity?
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         }
         
         XCTAssertNil(identity)
         
         // Create:
-        self.expectError(domain: CBLErrorDomain, code: CBLErrorCrypto) {
+        self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
             identity = try TLSIdentity.createIdentity(forServer: false,
                                                       attributes: [:],
                                                       expiration: nil,
@@ -395,7 +395,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Get:
         var identity: TLSIdentity?
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         }
         

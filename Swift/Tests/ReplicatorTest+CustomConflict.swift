@@ -373,8 +373,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             })
         }
         XCTAssertNotNil(error)
-        XCTAssertEqual(error.code, CBLErrorConflict)
-        XCTAssertEqual(error.domain, CBLErrorDomain)
+        XCTAssertEqual(error.code, CBLError.conflict)
+        XCTAssertEqual(error.domain, CBLError.domain)
         
         replicator.removeChangeListener(withToken: token)
         resolver = TestConflictResolver() { (conflict) -> Document? in
@@ -412,8 +412,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                 token = repl.addDocumentReplicationListener({ (docRepl) in
                     if let err = docRepl.documents.first?.error as NSError? {
                         error = err
-                        XCTAssertEqual(err.code, CBLErrorConflict)
-                        XCTAssertEqual(err.domain, CBLErrorDomain)
+                        XCTAssertEqual(err.code, CBLError.conflict)
+                        XCTAssertEqual(err.domain, CBLError.domain)
                     }
                 })
             })

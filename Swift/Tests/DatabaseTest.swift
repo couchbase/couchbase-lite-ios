@@ -317,7 +317,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 1)
         
         doc.setValue(2, forKey: "key")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try otherDB.saveDocument(doc)
         } // forbidden
         
@@ -332,7 +332,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(otherDB.count, 0)
         
         doc.setValue(2, forKey: "key")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try otherDB.saveDocument(doc)
         } // forbidden
         
@@ -604,7 +604,7 @@ class DatabaseTest: CBLTestCase {
             XCTFail("Shouldn't reach here, it should throw an exception when saving")
         } catch {
             XCTAssertNotNil(error)
-            XCTAssertEqual((error as NSError?)?.code, CBLErrorNotFound)
+            XCTAssertEqual((error as NSError?)?.code, CBLError.notFound)
         }
     }
     
@@ -707,7 +707,7 @@ class DatabaseTest: CBLTestCase {
     func testDeletePreSaveDoc() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setValue(1, forKey: "key")
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.deleteDocument(doc)
         }
     }
@@ -745,12 +745,12 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: doc1a.id))
         
         // Delete doc1a, 404 error:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.deleteDocument(doc1a)
         }
         
         // Delete doc, 404 error:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.deleteDocument(doc1b)
         }
         
@@ -887,7 +887,7 @@ class DatabaseTest: CBLTestCase {
     
     func testPurgePreSaveDoc() throws {
         let doc = createDocument("doc1")
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.purgeDocument(doc)
         }
     }
@@ -904,7 +904,7 @@ class DatabaseTest: CBLTestCase {
         let otherDB = try openDB(name: db.name)
         XCTAssertNotNil(otherDB.document(withID: doc.id))
         XCTAssertEqual(otherDB.count, 1)
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLErrorInvalidParameter) {
             try otherDB.purgeDocument(doc)
         }
         try otherDB.close()
@@ -913,7 +913,7 @@ class DatabaseTest: CBLTestCase {
     func testPurgeDocInDifferentDB() throws {
         let doc = try generateDocument(withID: "doc1")
         let otherDB = try openDB(name: "otherDB")
-        expectError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLErrorInvalidParameter) {
             try otherDB.purgeDocument(doc)
         }
         try otherDB.delete()
@@ -925,7 +925,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: "doc1"))
         XCTAssertEqual(db.count, 0)
         
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.purgeDocument(doc)
         }
     }
@@ -979,7 +979,7 @@ class DatabaseTest: CBLTestCase {
     func testPreSavePurgeDocumentWithID() throws {
         let documentID = "\(Date().timeIntervalSince1970)"
         let _ = createDocument(documentID)
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.purgeDocument(withID: documentID)
         }
     }
@@ -1010,7 +1010,7 @@ class DatabaseTest: CBLTestCase {
         let document = try generateDocument(withID: nil)
         let documentID = document.id
         let otherDB = try openDB(name: "otherDB")
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try otherDB.purgeDocument(withID: documentID)
         }
         try otherDB.delete()
@@ -1023,7 +1023,7 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: documentID))
         XCTAssertEqual(db.count, 0)
         
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) { [unowned self] in
+        expectError(domain: CBLError.domain, code: CBLError.notFound) { [unowned self] in
             try self.db.purgeDocument(withID: documentID)
         }
     }
@@ -1070,10 +1070,10 @@ class DatabaseTest: CBLTestCase {
         XCTAssertNil(db.document(withID: documentID))
         
         // Delete document & anotherDocumentReference -> 404 NotFound
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.deleteDocument(document)
         }
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) {
+        expectError(domain: CBLError.domain, code: CBLError.notFound) {
             try self.db.deleteDocument(anotherDocumentReference)
         }
         

@@ -1813,4 +1813,26 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(results[1].string(forKey: "firstName"), "Ben")
         XCTAssertEqual(results[1].string(forKey: "lastName"), "Ice Cream")
     }
+    
+    func testInvalidN1QL() throws {
+        expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
+            _ = try self.db.createQuery("SELECT firstName, lastName")
+        }
+    }
+    
+    func testN1QLQueryOffsetWithoutLimit() throws {
+        let doc1 = MutableDocument()
+        doc1.setValue("Jerry", forKey: "firstName")
+        doc1.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc1)
+        
+        let doc2 = MutableDocument()
+        doc2.setValue("Ben", forKey: "firstName")
+        doc2.setValue("Ice Cream", forKey: "lastName")
+        try self.db.saveDocument(doc2)
+        
+        let q = try self.db.createQuery("SELECT firstName, lastName FROM \(self.db.name) offset 1")
+        let results = try q.execute().allResults()
+        XCTAssertEqual(results.count, 1)
+    }
 }
