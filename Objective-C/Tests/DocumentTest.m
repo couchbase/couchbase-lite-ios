@@ -1830,8 +1830,8 @@
     NSError* error;
     NSDictionary* json = [NSJSONSerialization JSONObjectWithData: [[blob toJSON] dataUsingEncoding: NSUTF8StringEncoding]
                                                          options: 0 error: &error];
-    AssertEqualObjects(json, (@{@"@type": @"blob", @"content_type": contentType, @"length": @(8),
-                                @"digest": blob.digest}));
+    AssertEqualObjects(json, (@{kCBLTypeProperty: kCBLBlobType, kCBLBlobContentTypeProperty: contentType, kCBLBlobLengthProperty: @(8),
+                                kCBLBlobDigestProperty: blob.digest}));
 }
 
 - (void) testEnumeratingKeys {
@@ -2045,10 +2045,10 @@
     AssertEqualObjects(jsonDict[@"aka"][2], @"Albert Ein-douche");
     AssertEqualObjects(jsonDict[@"family"][0][@"name"], @"Morty Smith");
     AssertEqualObjects(jsonDict[@"family"][3][@"name"], @"Summer Smith");
-    AssertEqualObjects(jsonDict[@"origin"][@"length"], @12);
-    AssertEqualObjects(jsonDict[@"origin"][@"digest"], @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
-    AssertEqualObjects(jsonDict[@"origin"][@"@type"], @"blob");
-    AssertEqualObjects(jsonDict[@"origin"][@"content_type"], @"text/plain");
+    AssertEqualObjects(jsonDict[@"origin"][kCBLBlobLengthProperty], @12);
+    AssertEqualObjects(jsonDict[@"origin"][kCBLBlobDigestProperty], @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
+    AssertEqualObjects(jsonDict[@"origin"][kCBLTypeProperty], kCBLBlobType);
+    AssertEqualObjects(jsonDict[@"origin"][kCBLBlobContentTypeProperty], @"text/plain");
     
     // use same doc and mutate to include more key-values
     mDoc = [doc toMutable];
@@ -2120,15 +2120,15 @@
     
     
     [self.db saveBlob: data error: &error];
-    AssertEqualObjects([[data toJSON] toJSONObj], (@{@"@type": @"blob",
-                                                     @"content_type": @"text/plain",
-                                                     @"length": @(data.length),
-                                                     @"digest": data.digest}));
+    AssertEqualObjects([[data toJSON] toJSONObj], (@{kCBLTypeProperty: kCBLBlobType,
+                                                     kCBLBlobContentTypeProperty: @"text/plain",
+                                                     kCBLBlobLengthProperty: @(data.length),
+                                                     kCBLBlobDigestProperty: data.digest}));
     NSDictionary* dict = [[data toJSON] toJSONObj];
-    AssertEqualObjects(dict[@"@type"], @"blob");
-    AssertEqualObjects(dict[@"content_type"], @"text/plain");
-    AssertEqualObjects(dict[@"length"], @(data.length));
-    AssertEqualObjects(dict[@"digest"], data.digest);
+    AssertEqualObjects(dict[kCBLTypeProperty], kCBLBlobType);
+    AssertEqualObjects(dict[kCBLBlobContentTypeProperty], @"text/plain");
+    AssertEqualObjects(dict[kCBLBlobLengthProperty], @(data.length));
+    AssertEqualObjects(dict[kCBLBlobDigestProperty], data.digest);
 }
 
 - (void) testGetBlobFromProps {
@@ -2139,10 +2139,10 @@
     
     [self.db saveBlob: data error: &error];
     
-    CBLBlob* blob = [self.db getBlob: (@{@"@type": @"blob",
-                         @"content_type": @"text/plain",
-                         @"length": @(data.length),
-                         @"digest": data.digest})];
+    CBLBlob* blob = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType,
+                         kCBLBlobContentTypeProperty: @"text/plain",
+                         kCBLBlobLengthProperty: @(data.length),
+                         kCBLBlobDigestProperty: data.digest})];
     AssertNotNil(blob);
     AssertEqualObjects(blob.digest, data.digest);
     AssertEqualObjects(blob.content, content);
@@ -2158,10 +2158,10 @@
 }
 
 - (void) testUnknownDigest {
-    CBLBlob* b = [self.db getBlob: (@{@"@type": @"blob",
-                                      @"content_type": @"text/plain",
-                                      @"length": @12,
-                                      @"digest": @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI="})];
+    CBLBlob* b = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType,
+                                      kCBLBlobContentTypeProperty: @"text/plain",
+                                      kCBLBlobLengthProperty: @12,
+                                      kCBLBlobDigestProperty: @"sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI="})];
     AssertNil(b);
 }
 
@@ -2173,38 +2173,38 @@
     [self.db saveBlob: b error: &error];
     
     [self expectException: @"NSInvalidArgumentException" in: ^{
-        b = [self.db getBlob: (@{@"@type": @"bl0b",
-                                          @"content_type": @"text/plain",
-                                          @"length": @12,
-                                          @"digest": b.digest})];
+        b = [self.db getBlob: (@{kCBLTypeProperty: @"bl0b",
+                                          kCBLBlobContentTypeProperty: @"text/plain",
+                                          kCBLBlobLengthProperty: @12,
+                                          kCBLBlobDigestProperty: b.digest})];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in: ^{
-        b = [self.db getBlob: (@{@"type": @"blob",
-                                          @"content_type": @"text/plain",
-                                          @"length": @12,
-                                          @"digest": b.digest})];
+        b = [self.db getBlob: (@{@"type": kCBLBlobType,
+                                          kCBLBlobContentTypeProperty: @"text/plain",
+                                          kCBLBlobLengthProperty: @12,
+                                          kCBLBlobDigestProperty: b.digest})];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in: ^{
-        b = [self.db getBlob: (@{@"@type": @"blob",
-                                          @"content_type": @1234,
-                                          @"length": @12,
-                                          @"digest": b.digest})];
+        b = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType,
+                                          kCBLBlobContentTypeProperty: @1234,
+                                          kCBLBlobLengthProperty: @12,
+                                          kCBLBlobDigestProperty: b.digest})];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in: ^{
-        b = [self.db getBlob: (@{@"@type": @"blob",
-                                          @"content_type": @"text/plain",
-                                          @"length": @"12",
-                                          @"digest": b.digest})];
+        b = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType,
+                                          kCBLBlobContentTypeProperty: @"text/plain",
+                                          kCBLBlobLengthProperty: @"12",
+                                          kCBLBlobDigestProperty: b.digest})];
     }];
     
     [self expectException: @"NSInvalidArgumentException" in: ^{
-        b = [self.db getBlob: (@{@"@type": @"blob",
-                                          @"content_type": @"text/plain",
-                                          @"length": @12,
-                                          @"digest": @12})];
+        b = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType,
+                                          kCBLBlobContentTypeProperty: @"text/plain",
+                                          kCBLBlobLengthProperty: @12,
+                                          kCBLBlobDigestProperty: @12})];
     }];
 }
 
@@ -2216,14 +2216,14 @@
     [self.db saveBlob: blob error: &error];
     AssertNil(error);
     
-    blob = [self.db getBlob: (@{@"@type": @"blob", @"digest": blob.digest})];
+    blob = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType, kCBLBlobDigestProperty: blob.digest})];
     AssertNotNil(blob);
     AssertEqualObjects(blob.content, content);
     
     Assert([self.db performMaintenance: kCBLMaintenanceTypeCompact error: &error]);
     AssertNil(error);
     
-    blob = [self.db getBlob: (@{@"@type": @"blob", @"digest": blob.digest})];
+    blob = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType, kCBLBlobDigestProperty: blob.digest})];
     AssertNil(blob);
     AssertNil(blob.content);
     AssertEqual(blob.length, 0);

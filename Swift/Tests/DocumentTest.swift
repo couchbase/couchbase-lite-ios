@@ -1597,10 +1597,10 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual((jsonObj["aka"] as! Array<Any>)[2] as! String, "Albert Ein-douche")
         XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[0]["name"] as! String, "Morty Smith")
         XCTAssertEqual((jsonObj["family"] as! Array<[String: Any]>)[3]["name"] as! String, "Summer Smith")
-        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["length"] as! Int, 12);
-        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["digest"] as! String, "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
-        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["@type"] as! String, "blob");
-        XCTAssertEqual((jsonObj["origin"] as! [String: Any])["content_type"] as! String, "text/plain");
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])[Blob.blobLengthProperty] as! Int, 12);
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])[Blob.blobDigestProperty] as! String, "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=");
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])[Blob.typeProperty] as! String, Blob.blobType);
+        XCTAssertEqual((jsonObj["origin"] as! [String: Any])[Blob.blobContentType] as! String, "text/plain");
         XCTAssertEqual(jsonObj.count, 12)
         
         mDoc = doc!.toMutable()
@@ -1670,10 +1670,10 @@ class DocumentTest: CBLTestCase {
         let blob = Blob(contentType: "text/plain", data: content)
         try self.db.saveBlob(blob: blob)
         
-        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["@type"] as! String, "blob")
-        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["content_type"] as! String, "text/plain")
-        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["length"] as! UInt64, blob.length)
-        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])["digest"] as? String, blob.digest)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])[Blob.typeProperty] as! String, Blob.blobType)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])[Blob.blobContentType] as! String, "text/plain")
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])[Blob.blobLengthProperty] as! UInt64, blob.length)
+        XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any])[Blob.blobDigestProperty] as? String, blob.digest)
         XCTAssertEqual((blob.toJSON().toJSONObj() as! [String: Any]).count, 4)
     }
     
@@ -1682,10 +1682,10 @@ class DocumentTest: CBLTestCase {
         let blob = Blob(contentType: "text/plain", data: content)
         try self.db.saveBlob(blob: blob)
         
-        let retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
-                                                            "digest": blob.digest!,
-                                                            "content_type": "text/plain",
-                                                            "length": blob.length])
+        let retrivedBlob = try self.db.getBlob(properties: [Blob.typeProperty: Blob.blobType,
+                                                            Blob.blobDigestProperty: blob.digest!,
+                                                            Blob.blobContentType: "text/plain",
+                                                            Blob.blobLengthProperty: blob.length])
         XCTAssertNotNil(retrivedBlob)
         XCTAssertEqual(retrivedBlob!.digest, blob.digest)
         XCTAssertEqual(retrivedBlob!.content, blob.content)
@@ -1700,10 +1700,10 @@ class DocumentTest: CBLTestCase {
     }
     
     func testUnknownDigest() throws {
-        let blob = try self.db.getBlob(properties: ["@type":"blob",
-                                                    "digest": "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=",
-                                                    "content_type": "text/plain",
-                                                    "length": 12])
+        let blob = try self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                    Blob.blobDigestProperty: "sha1-JeAPM4tj7RcZE3+YUIsEMzfCBqI=",
+                                                    Blob.blobContentType: "text/plain",
+                                                    Blob.blobLengthProperty: 12])
         XCTAssertNil(blob)
     }
     
@@ -1714,42 +1714,42 @@ class DocumentTest: CBLTestCase {
         
         var b: Blob?
         expectExcepion(exception: .invalidArgumentException) {
-            b = try! self.db.getBlob(properties: ["@type":"bl0b",
-                                                  "digest": blob.digest! as String,
-                                                  "content_type": "text/plain",
-                                                  "length": blob.length])
+            b = try! self.db.getBlob(properties: [Blob.typeProperty:"bl0b",
+                                                  Blob.blobDigestProperty: blob.digest! as String,
+                                                  Blob.blobContentType: "text/plain",
+                                                  Blob.blobLengthProperty: blob.length])
         }
         XCTAssertNil(b)
         
         expectExcepion(exception: .invalidArgumentException) {
-            b = try! self.db.getBlob(properties: ["type":"blob",
-                                                  "digest": blob.digest! as String,
-                                                  "content_type": "text/plain",
-                                                  "length": blob.length])
+            b = try! self.db.getBlob(properties: ["type":Blob.blobType,
+                                                  Blob.blobDigestProperty: blob.digest! as String,
+                                                  Blob.blobContentType: "text/plain",
+                                                  Blob.blobLengthProperty: blob.length])
         }
         XCTAssertNil(b)
         
         expectExcepion(exception: .invalidArgumentException) {
-            b = try! self.db.getBlob(properties: ["@type":"blob",
-                                                  "digest": blob.digest! as String,
-                                                  "content_type": 1234,
-                                                  "length": blob.length])
+            b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                  Blob.blobDigestProperty: blob.digest! as String,
+                                                  Blob.blobContentType: 1234,
+                                                  Blob.blobLengthProperty: blob.length])
         }
         XCTAssertNil(b)
         
         expectExcepion(exception: .invalidArgumentException) {
-            b = try! self.db.getBlob(properties: ["@type":"blob",
-                                                  "digest": blob.digest! as String,
-                                                  "content_type": "text/plain",
-                                                  "length": "12"])
+            b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                  Blob.blobDigestProperty: blob.digest! as String,
+                                                  Blob.blobContentType: "text/plain",
+                                                  Blob.blobLengthProperty: "12"])
         }
         XCTAssertNil(b)
         
         expectExcepion(exception: .invalidArgumentException) {
-            b = try! self.db.getBlob(properties: ["@type":"blob",
-                                                  "digest": 12,
-                                                  "content_type": "text/plain",
-                                                  "length": blob.length])
+            b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                  Blob.blobDigestProperty: 12,
+                                                  Blob.blobContentType: "text/plain",
+                                                  Blob.blobLengthProperty: blob.length])
         }
         XCTAssertNil(b)
     }
@@ -1759,19 +1759,19 @@ class DocumentTest: CBLTestCase {
         let blob = Blob(contentType: "text/plain", data: content)
         try self.db.saveBlob(blob: blob)
         
-        var retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
-                                                            "digest": blob.digest!,
-                                                            "content_type": "text/plain",
-                                                            "length": blob.length])
+        var retrivedBlob = try self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                            Blob.blobDigestProperty: blob.digest!,
+                                                            Blob.blobContentType: "text/plain",
+                                                            Blob.blobLengthProperty: blob.length])
         XCTAssertNotNil(retrivedBlob)
         XCTAssertEqual(retrivedBlob!.digest, blob.digest)
         XCTAssertEqual(retrivedBlob!.content, blob.content)
         
         try self.db.performMaintenance(type: .compact)
-        retrivedBlob = try self.db.getBlob(properties: ["@type":"blob",
-                                                            "digest": blob.digest!,
-                                                            "content_type": "text/plain",
-                                                            "length": blob.length])
+        retrivedBlob = try self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
+                                                            Blob.blobDigestProperty: blob.digest!,
+                                                            Blob.blobContentType: "text/plain",
+                                                            Blob.blobLengthProperty: blob.length])
         XCTAssertNil(retrivedBlob)
         XCTAssertEqual(retrivedBlob?.length ?? 0, 0)
         
