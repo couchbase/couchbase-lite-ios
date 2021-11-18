@@ -49,7 +49,7 @@ class DocumentExpirationTest: CBLTestCase {
     
     func testSetExpiryToNonExistingDocument() {
         let expiryDate = Date(timeIntervalSinceNow: 30)
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotFound) { [unowned self] in
+        expectError(domain: CBLError.domain, code: CBLError.notFound) { [unowned self] in
             try self.db.setDocumentExpiration(withID: "someInvalidID", expiration: expiryDate)
         }
     }
