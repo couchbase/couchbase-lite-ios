@@ -45,4 +45,8 @@
     });
 }
 
+- (nonnull id)copyWithZone:(nullable NSZone *)zone {
+    return [[[self class] alloc] initWithListener: _listener queue: _queue];
+}
+
 @end

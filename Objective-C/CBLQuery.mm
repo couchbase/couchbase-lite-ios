@@ -209,17 +209,17 @@ using namespace fleece;
 }
 
 - (void) setParameters: (CBLQueryParameters*)parameters {
+    NSParameterAssert(parameters);
+    
     CBL_LOCK(self) {
         if (parameters) {
-            _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
-            
             NSError* error = nil;
-            NSData* params = [_parameters encode: &error];
-            if (_parameters && !params) {
-                CBLWarnError(Query, @"Parameters failed to encode %@", error);
-                return;
-            }
+            NSData* params = [parameters encode: &error];
+            if (!params)
+                [NSException raise: NSInvalidArgumentException
+                            format: @"Invalid query parameter, failed to encode"];
             
+            _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
             [self.database safeBlock:^{
                 c4query_setParameters(_c4Query, {params.bytes, params.length});
             }];
@@ -277,10 +277,10 @@ using namespace fleece;
         if (!_changeNotifier)
             _changeNotifier = [CBLQueryChangeNotifier new];
         
-        return [_changeNotifier addChangeListenerWithQueue: queue
-                                                  listener: listener
-                                                     queue: self
-                                               columnNames: _columnNames];
+        return [_changeNotifier addQueryChangeListenerWithQueue: queue
+                                                       listener: listener
+                                                          queue: self
+                                                    columnNames: _columnNames];
     }
 }
 
@@ -288,7 +288,7 @@ using namespace fleece;
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
-        [_changeNotifier removeChangeListenerWithToken: token];
+        [_changeNotifier removeQueryChangeListenerWithToken: token];
     }
 }
 
