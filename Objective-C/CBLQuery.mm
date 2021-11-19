@@ -71,10 +71,9 @@ using namespace fleece;
         
         // Return error if the query is not compiled;
         NSError* error = nil;
-        if (![self compile: &error]) {
-            CBLWarnError(Query, @"JSON Query failed to compile %@", error);
-            return nil;
-        }
+        if (![self compile: &error])
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Invalid query args, failed to compile %@", error];
     }
     return self;
 }
@@ -230,9 +229,6 @@ using namespace fleece;
 }
 
 - (NSString*) explain: (NSError**)outError {
-    if (![self compile: outError])
-        return nil;
-    
     __block NSString* result;
     [self.database safeBlock: ^{
         result = sliceResult2string(c4query_explain(_c4Query));
@@ -242,9 +238,6 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (![self compile: outError])
-        return nil;
-    
     C4QueryOptions options = kC4DefaultQueryOptions;
     
     __block C4QueryEnumerator* e;
