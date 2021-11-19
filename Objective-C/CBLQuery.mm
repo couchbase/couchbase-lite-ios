@@ -208,8 +208,6 @@ using namespace fleece;
 }
 
 - (void) setParameters: (CBLQueryParameters*)parameters {
-    NSParameterAssert(parameters);
-    
     CBL_LOCK(self) {
         if (parameters) {
             NSError* error = nil;
