@@ -1848,16 +1848,25 @@
     [self validateN1QLQuery: $sprintf(@"SELECT firstName, lastName FROM %@", self.db.name)];
     [self validateN1QLQuery: @"SELECT firstName, lastName FROM _"];
     [self validateN1QLQuery: @"SELECT firstName, lastName FROM _default"];
-    
-    // FIXME: Should throw error!
-    // [self validateN1QLQuery: @"SELECT firstName, lastName"];
+}
+
+- (void) testInvalidN1QLQuery {
+    [self ignoreException: ^{
+        NSError* error;
+        CBLQuery* q = [self.db createQuery: @"SELECT firstName, lastName" error: &error];
+        AssertNil(q);
+        AssertEqual(error.domain, CBLErrorDomain);
+        AssertEqual(error.code, CBLErrorInvalidQuery);
+    }];
 }
 
 - (void) validateN1QLQuery: (NSString*)queryString {
-    CBLQuery* q = [self.db createQuery: queryString];
-    NSError* error = nil;
-    NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
+    NSError* error;
+    CBLQuery* q = [self.db createQuery: queryString error: &error];
+    AssertNotNil(q);
+    AssertNil(error);
     
+    NSArray<CBLQueryResult*>* result = [q execute: &error].allResults;
     AssertEqual(result.count, 2);
     AssertEqualObjects([result[0] stringForKey: @"firstName"], @"Jerry");
     AssertEqualObjects([result[0] stringForKey: @"lastName"], @"Ice Cream");

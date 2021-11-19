@@ -21,6 +21,16 @@ import Foundation
 
 extension Database {
     
+    /// Creates a Query object from the given query string.
+    ///
+    /// - Parameters:
+    ///     - query Query string
+    /// - Returns: A query created by the given query string.
+    /// - Throws: An error on when the given query string is invalid.
+    public func createQuery(_ query: String) throws -> Query {
+        return try Query(database: self, expressions: query)
+    }
+    
     /// All index names.
     public var indexes: Array<String> { return _impl.indexes }
     

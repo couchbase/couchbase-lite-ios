@@ -409,15 +409,6 @@ public final class Database {
     /// Log object used for configuring console, file, and custom logger.
     public static let log = Log()
     
-    /// Creates a Query object from the given query string.
-    ///
-    /// - Parameters:
-    ///     - query Query expression
-    /// - Returns: Query created using the given expression string.
-    public func createQuery(query: String) -> Query {
-        return Query(database: self, expressions: query)
-    }
-    
     // MARK: Internal
     
     func addReplicator(_ replicator: Replicator) {
