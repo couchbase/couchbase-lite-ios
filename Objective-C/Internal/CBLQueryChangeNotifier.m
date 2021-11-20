@@ -32,20 +32,23 @@
                                                       queue: (CBLQuery*)query
                                                 columnNames: (NSDictionary *)columnNames {
     CBLChangeListenerToken* token = [super addChangeListenerWithQueue: queue listener: listener];
+    NSString* uuid = [[NSUUID UUID] UUIDString];
+    token.key = uuid;
+    
     CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: query
                                                         columnNames: columnNames
                                                               token: token];
     // start immediately
     [obs start];
     
-    _queryObs[token] = obs;
+    _queryObs[uuid] = obs;
     
     return token;
 }
 
 - (void) removeQueryChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-    [_queryObs[t] stopAndFree];
+    [_queryObs[t.key] stopAndFree];
     
     [super removeChangeListenerWithToken: token];
 }

@@ -71,9 +71,11 @@ using namespace fleece;
         
         // Return error if the query is not compiled;
         NSError* error = nil;
-        if (![self compile: &error])
+        if (![self compile: &error]) {
+            CBLWarnError(Query, @"JSON query failed to compile %@", error);
             [NSException raise: NSInvalidArgumentException
                         format: @"Invalid query args, failed to compile %@", error];
+        }
     }
     return self;
 }
@@ -212,9 +214,11 @@ using namespace fleece;
         if (parameters) {
             NSError* error = nil;
             NSData* params = [parameters encode: &error];
-            if (!params)
+            if (!params) {
+                CBLWarnError(Query, @"Query parameters failed to encode %@", error);
                 [NSException raise: NSInvalidArgumentException
                             format: @"Invalid query parameter, failed to encode"];
+            }
             
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
             [self.database safeBlock:^{

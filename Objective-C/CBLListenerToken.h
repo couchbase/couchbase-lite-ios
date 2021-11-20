@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
  Listener token returned when adding a change listener. The token is used
  for removing the added change listener.
  */
-@protocol CBLListenerToken <NSObject, NSCopying>
+@protocol CBLListenerToken <NSObject>
 
 @end
 
