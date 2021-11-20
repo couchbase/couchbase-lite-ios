@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithListener: (void (^)(ChangeType))listener
                             queue: (nullable dispatch_queue_t)queue;
 
-/** An arbitrary context that can be associated by the client, such as a document-change-notifier, c4queryObserver. */
+/** An arbitrary context that can be associated by the client, such as a documentID, c4queryObserver. */
 @property (nonatomic, nullable) id context;
 
 /**
