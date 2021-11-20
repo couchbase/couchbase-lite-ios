@@ -22,7 +22,6 @@
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
-#import "CBLQueryChangeNotifier.h"
 
 @interface CBLQueryObserver () <CBLStoppable>
 
@@ -34,7 +33,7 @@
     CBLQuery* _query;
     NSDictionary* _columnNames;
     C4QueryObserver* _obs;
-    CBLQueryChangeNotifier* _listenerToken;
+    CBLChangeNotifier* _listenerToken;
 }
 
 #pragma mark - Constructor
