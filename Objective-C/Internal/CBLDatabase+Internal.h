@@ -27,7 +27,6 @@
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
 #import "CBLReplicator.h"
-#import "CBLLiveQuery.h"
 #import "CBLConflictResolver.h"
 #import "CBLStoppable.h"
 #import "CBLLockable.h"

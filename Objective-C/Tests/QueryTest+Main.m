@@ -18,7 +18,6 @@
 //
 
 #import "QueryTest.h"
-#import "CBLLiveQuery.h"
 #import "CBLQuery+internal.h"
 #import "CBLQuery+JSON.h"
 #import "CBLQueryBuilder.h"
@@ -1821,14 +1820,14 @@
 - (void) testQueryOnClosedDB {
     NSError* error = nil;
     [self.db close: &error];
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryExpression property: @"string"]
-                                            isNot: [CBLQueryExpression string: @"string1"]]];
+    
     [self expectException: NSInternalInconsistencyException in: ^{
-        NSError* err = nil;
-        CBLQueryResultSet* set = [q execute: &err];
-        AssertNil(set);
+        CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                         from: [CBLQueryDataSource database: self.db]
+                                        where: [[CBLQueryExpression property: @"string"]
+                                                isNot: [CBLQueryExpression string: @"string1"]]];
+        
+        NSLog(@" %@", q);
     }];
 }
 

@@ -1367,7 +1367,8 @@ class QueryTest: CBLTestCase {
     func testLiveQuery(query: Query) throws {
         try loadNumbers(100)
         var count = 0;
-        let x = expectation(description: "changes")
+        let x1 = expectation(description: "changesListener for 9 items")
+        let x2 = expectation(description: "changesListener for 10 items")
         
         let token = query.addChangeListener { (change) in
             count = count + 1
@@ -1376,17 +1377,20 @@ class QueryTest: CBLTestCase {
             let rows =  Array(change.results!)
             if count == 1 {
                 XCTAssertEqual(rows.count, 9)
+                x1.fulfill()
             } else {
                 XCTAssertEqual(rows.count, 10)
-                x.fulfill()
+                x2.fulfill()
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        wait(for: [x1], timeout: 2.0)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             try! self.createDoc(numbered: -1, of: 100)
         }
         
-        waitForExpectations(timeout: 2.0) { (error) in }
+        wait(for: [x2], timeout: 2.0)
         
         query.removeChangeListener(withToken: token)
     }
