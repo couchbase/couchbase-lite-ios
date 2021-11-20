@@ -73,6 +73,7 @@ typedef enum {
     
     C4DatabaseObserver* _dbObs;
     CBLChangeNotifier<CBLDatabaseChange*>* _dbChangeNotifier;
+    NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
     
     BOOL _shellMode;
     dispatch_source_t _docExpiryTimer;
@@ -949,20 +950,31 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 // call from a db-lock(c4docobs_create)
 - (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
                                                         listener: (void (^)(CBLDocumentChange*))listener
-                                                           queue: (dispatch_queue_t)queue {
-    CBLDocumentChangeNotifier* docNotifier = [[CBLDocumentChangeNotifier alloc] initWithDatabase: self
-                                                                                      documentID: documentID];
+                                                           queue: (dispatch_queue_t)queue
+{
+    if (!_docChangeNotifiers)
+        _docChangeNotifiers = [NSMutableDictionary dictionary];
+    
+    CBLDocumentChangeNotifier* docNotifier = _docChangeNotifiers[documentID];
+    if (!docNotifier) {
+        docNotifier = [[CBLDocumentChangeNotifier alloc] initWithDatabase: self
+                                                               documentID: documentID];
+        _docChangeNotifiers[documentID] = docNotifier;
+    }
+    
     CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
                                                                    listener: listener];
-    token.context = docNotifier;
+    token.context = documentID;
     return token;
 }
 
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
     CBL_LOCK(self) {
-        CBLDocumentChangeNotifier* notifier = (CBLDocumentChangeNotifier*)token.context;
+        NSString* documentID = (NSString*)token.context;
+        CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
         if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
             [notifier stop];
+            [_docChangeNotifiers removeObjectForKey:documentID];
         }
     }
 }
@@ -971,6 +983,9 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     c4dbobs_free(_dbObs);
     _dbObs = nullptr;
     _dbChangeNotifier = nil;
+
+    [_docChangeNotifiers.allValues makeObjectsPerformSelector: @selector(stop)];
+    _docChangeNotifiers = nil;
 }
 
 - (void) freeC4DB {
