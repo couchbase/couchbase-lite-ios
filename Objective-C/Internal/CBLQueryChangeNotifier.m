@@ -23,7 +23,6 @@
 #import "CBLQueryChange+Internal.h"
 
 @implementation CBLQueryChangeNotifier {
-    CBLQueryObserver* _obs;
     NSMutableDictionary* _queryObs;
 }
 
