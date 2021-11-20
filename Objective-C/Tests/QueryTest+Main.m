@@ -1873,5 +1873,187 @@
     AssertEqualObjects([result[1] stringForKey: @"lastName"], @"Ice Cream");
 }
 
+/**
+ When adding a second listener after the first listener is notified, the second listener
+ should get the change (current result).
+ */
+- (void) testLiveQuerySecondListenerReturnsResultsImmediately {
+    [self createDocNumbered: 7 of: 10];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    // first listener
+    XCTestExpectation* first = [self expectationWithDescription: @"first-set-of-notifications"];
+    __block int count = 0;
+    id token1 = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        if (count == 1) {
+            
+            // initial notification about already existing result set!
+            AssertEqual(rows.count, 1);
+            NSString* docID = [rows[0] valueAtIndex: 0];
+            CBLDocument* doc = [self.db documentWithID: docID];
+            AssertEqualObjects([doc valueForKey: @"number1"], @(7));
+        } else if (count == 2) {
+            
+            // newly added doc notification
+            AssertEqual(rows.count, 2);
+            NSString* docID = [rows[0] valueAtIndex: 0];
+            CBLDocument* doc = [self.db documentWithID: docID];
+            AssertEqualObjects([doc valueForKey: @"number1"], @(3));
+            
+            [first fulfill];
+        }
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self createDocNumbered: 3 of: 10];
+    });
+    
+    // wait for first set of notifications
+    [self waitForExpectations: @[first] timeout: 10.0];
+    AssertEqual(count, 2);
+    [q removeChangeListenerWithToken: token1];
+    
+    // adding a second listener is returning the last results!
+    XCTestExpectation* second = [self expectationWithDescription: @"second-notification"];
+    count = 0;
+    id token2 = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        
+        // newly added doc notification!
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        AssertEqual(rows.count, 2);
+        NSString* docID = [rows[0] valueAtIndex: 0];
+        CBLDocument* doc = [self.db documentWithID: docID];
+        AssertEqualObjects([doc valueForKey: @"number1"], @(3));
+        
+        [second fulfill];
+    }];
+    
+    // wait for second notification
+    [self waitForExpectations: @[second] timeout: 5.0];
+    AssertEqual(count, 1);
+    [q removeChangeListenerWithToken: token2];
+}
+
+- (void) testLiveQueryReturnsEmptyResultSet {
+    [self createDocNumbered: 1 of: 10];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    // first listener
+    XCTestExpectation* x = [self expectationWithDescription: @"live-query-finish"];
+    __block int count = 0;
+    id token = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        if (count == 1) {
+            // initial notification about already existing result set!
+            AssertEqual(rows.count, 1);
+            NSString* docID = [rows[0] valueAtIndex: 0];
+            CBLDocument* doc = [self.db documentWithID: docID];
+            AssertEqualObjects([doc valueForKey: @"number1"], @(1));
+        } else if (count == 2) {
+            
+            // deleted the doc should return empty result set!
+            AssertEqual(rows.count, 0);
+            
+            [x fulfill];
+        }
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSError* error = nil;
+        Assert([self.db purgeDocumentWithID: @"doc1" error: &error]);
+    });
+    
+    // wait for first set of notifications
+    [self waitForExpectations: @[x] timeout: 10.0];
+    AssertEqual(count, 2);
+    [q removeChangeListenerWithToken: token];
+}
+
+/**
+ When having more than one listeners, each listener should have independent result sets.
+ This means that both listeners should be able to iterate separately through the result correct
+ when getting the same change notified.
+ */
+- (void) testLiveQueryMultipleListenersReturnIndependentResultSet {
+    [self loadNumbers: 100];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    XCTestExpectation* x = [self expectationWithDescription: @"first-listener finish"];
+    XCTestExpectation* y = [self expectationWithDescription: @"second-listener finish"];
+    
+    __block int count = 0;
+    id token1 = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        NSUInteger num = 0;
+        if (count == 1) {
+            AssertEqual(change.results.allObjects.count, 9);
+            NSLog(@">> -- -- << ");
+            for (CBLQueryResult* result in change.results) {
+                NSLog(@">> -- %@", result.toJSON);
+                num++;
+                NSString* docID = [result valueAtIndex: 0];
+                CBLDocument* doc = [self.db documentWithID: docID];
+                Assert([doc integerForKey: @"number1"] < 10);
+            }
+            AssertEqual(num, 9);
+        } else if (count == 2) {
+            AssertEqual(change.results.allObjects.count, 10);
+            for (CBLQueryResult* result in change.results) {
+                num++;
+                NSString* docID = [result valueAtIndex: 0];
+                CBLDocument* doc = [self.db documentWithID: docID];
+                Assert([doc integerForKey: @"number1"] < 10);
+            }
+            AssertEqual(num, 10);
+        }
+        [x fulfill];
+    }];
+    
+    id token2 = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        NSUInteger num = 0;
+        if (count == 1) {
+            AssertEqual(change.results.allObjects.count, 9);
+            for (CBLQueryResult* result in change.results) {
+                num++;
+                NSString* docID = [result valueAtIndex: 0];
+                CBLDocument* doc = [self.db documentWithID: docID];
+                Assert([doc integerForKey: @"number1"] < 10);
+            }
+            AssertEqual(num, 9);
+        } else if (count == 2) {
+            AssertEqual(change.results.allObjects.count, 10);
+            for (CBLQueryResult* result in change.results) {
+                num++;
+                NSString* docID = [result valueAtIndex: 0];
+                CBLDocument* doc = [self.db documentWithID: docID];
+                Assert([doc integerForKey: @"number1"] < 10);
+            }
+            AssertEqual(num, 10);
+        }
+        [y fulfill];
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self createDocNumbered: -1 of: 100];
+    });
+    
+    [self waitForExpectations: @[x, y] timeout: 10.0];
+    [q removeChangeListenerWithToken: token1];
+    [q removeChangeListenerWithToken: token2];
+}
 
 @end
