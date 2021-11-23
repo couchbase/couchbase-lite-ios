@@ -1369,85 +1369,6 @@
     }
 }
 
-#pragma mark - Live Query
-
-- (void) testLiveQuery {
-    [self loadNumbers: 100];
-    
-    __block int count = 0;
-    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
-                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
-    
-    id token = [q addChangeListener: ^(CBLQueryChange* change) {
-        count++;
-        AssertNotNil(change.query);
-        AssertNil(change.error);
-        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
-        if (count == 1) {
-            AssertEqual(rows.count, 9u);
-        } else {
-            AssertEqual(rows.count, 10u);
-            CBLDocument* doc = [self.db documentWithID: [rows[0] valueAtIndex: 0]];
-            AssertEqualObjects([doc valueForKey: @"number1"], @(-1));
-            [x fulfill];
-        }
-    }];
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self createDocNumbered: -1 of: 100];
-    });
-    
-    [self waitForExpectationsWithTimeout: 10.0 handler: ^(NSError *error) { }];
-    
-    [q removeChangeListenerWithToken: token];
-}
-
-- (void) testLiveQueryNoUpdate {
-    [self loadNumbers: 100];
-    
-    __block int count = 0;
-    CBLQuery* q = [CBLQueryBuilder select: @[]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
-                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
-    
-    id token = [q addChangeListener:^(CBLQueryChange* change) {
-        count++;
-        AssertNotNil(change.query);
-        AssertNil(change.error);
-        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
-        if (count == 1) {
-            AssertEqual(rows.count, 9u);
-        } else {
-            XCTFail(@"Unexpected update from LiveQuery");
-        }
-    }];
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-                       // This change will not affect the query results because 'number1 < 10' is not true.
-                       [self createDocNumbered: 111 of: 100];
-                   });
-    
-    // Wait 2 seconds, then fulfil the expectation:
-    XCTestExpectation *x = [self expectationWithDescription: @"Timeout"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-                       [x fulfill];
-                   });
-    
-    NSLog(@"Waiting...");
-    [self waitForExpectationsWithTimeout: 5.0 handler: ^(NSError *error) { }];
-    NSLog(@"Done!");
-    
-    AssertEqual(count, 1);
-    
-    [q removeChangeListenerWithToken: token];
-}
-
 #pragma mark - Results
 
 - (void) testQueryResult {
@@ -1873,13 +1794,92 @@
     AssertEqualObjects([result[1] stringForKey: @"lastName"], @"Ice Cream");
 }
 
+#pragma mark - LiveQuery
+
+- (void) testLiveQuery {
+    [self loadNumbers: 100];
+    
+    __block int count = 0;
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    id token = [q addChangeListener: ^(CBLQueryChange* change) {
+        count++;
+        AssertNotNil(change.query);
+        AssertNil(change.error);
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        if (count == 1) {
+            AssertEqual(rows.count, 9u);
+        } else {
+            AssertEqual(rows.count, 10u);
+            CBLDocument* doc = [self.db documentWithID: [rows[0] valueAtIndex: 0]];
+            AssertEqualObjects([doc valueForKey: @"number1"], @(-1));
+            [x fulfill];
+        }
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self createDocNumbered: -1 of: 100];
+    });
+    
+    [self waitForExpectationsWithTimeout: 10.0 handler: ^(NSError *error) { }];
+    
+    [q removeChangeListenerWithToken: token];
+}
+
+- (void) testLiveQueryNoUpdate {
+    [self loadNumbers: 100];
+    
+    __block int count = 0;
+    CBLQuery* q = [CBLQueryBuilder select: @[]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    id token = [q addChangeListener:^(CBLQueryChange* change) {
+        count++;
+        AssertNotNil(change.query);
+        AssertNil(change.error);
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
+        if (count == 1) {
+            AssertEqual(rows.count, 9u);
+        } else {
+            XCTFail(@"Unexpected update from LiveQuery");
+        }
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       // This change will not affect the query results because 'number1 < 10' is not true.
+                       [self createDocNumbered: 111 of: 100];
+                   });
+    
+    // Wait 2 seconds, then fulfil the expectation:
+    XCTestExpectation *x = [self expectationWithDescription: @"Timeout"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [x fulfill];
+                   });
+    
+    NSLog(@"Waiting...");
+    [self waitForExpectationsWithTimeout: 5.0 handler: ^(NSError *error) { }];
+    NSLog(@"Done!");
+    
+    AssertEqual(count, 1);
+    
+    [q removeChangeListenerWithToken: token];
+}
+
 /**
  When adding a second listener after the first listener is notified, the second listener
  should get the change (current result).
  */
 - (void) testLiveQuerySecondListenerReturnsResultsImmediately {
     [self createDocNumbered: 7 of: 10];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
@@ -1894,16 +1894,12 @@
             
             // initial notification about already existing result set!
             AssertEqual(rows.count, 1);
-            NSString* docID = [rows[0] valueAtIndex: 0];
-            CBLDocument* doc = [self.db documentWithID: docID];
-            AssertEqualObjects([doc valueForKey: @"number1"], @(7));
+            AssertEqualObjects([rows[0] integerAtIndex: 0], @(7));
         } else if (count == 2) {
             
             // newly added doc notification
             AssertEqual(rows.count, 2);
-            NSString* docID = [rows[0] valueAtIndex: 0];
-            CBLDocument* doc = [self.db documentWithID: docID];
-            AssertEqualObjects([doc valueForKey: @"number1"], @(3));
+            AssertEqualObjects([rows[0] integerAtIndex: 0], @(3));
             
             [first fulfill];
         }
@@ -1927,9 +1923,7 @@
         // newly added doc notification!
         NSArray<CBLQueryResult*>* rows = [change.results allObjects];
         AssertEqual(rows.count, 2);
-        NSString* docID = [rows[0] valueAtIndex: 0];
-        CBLDocument* doc = [self.db documentWithID: docID];
-        AssertEqualObjects([doc valueForKey: @"number1"], @(3));
+        AssertEqualObjects([rows[0] integerAtIndex: 0], @(3));
         
         [second fulfill];
     }];
@@ -1942,7 +1936,7 @@
 
 - (void) testLiveQueryReturnsEmptyResultSet {
     [self createDocNumbered: 1 of: 10];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
@@ -1956,14 +1950,11 @@
         if (count == 1) {
             // initial notification about already existing result set!
             AssertEqual(rows.count, 1);
-            NSString* docID = [rows[0] valueAtIndex: 0];
-            CBLDocument* doc = [self.db documentWithID: docID];
-            AssertEqualObjects([doc valueForKey: @"number1"], @(1));
+            AssertEqualObjects([rows[0] integerAtIndex: 0], @(1));
         } else if (count == 2) {
             
             // deleted the doc should return empty result set!
             AssertEqual(rows.count, 0);
-            
             [x fulfill];
         }
     }];
@@ -1986,7 +1977,7 @@
  */
 - (void) testLiveQueryMultipleListenersReturnIndependentResultSet {
     [self loadNumbers: 100];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
@@ -2001,17 +1992,13 @@
         if (count1 == 1) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                NSString* docID = [result valueAtIndex: 0];
-                CBLDocument* doc = [self.db documentWithID: docID];
-                Assert([doc integerForKey: @"number1"] < 10);
+                Assert([result valueAtIndex: 0] < 10);
             }
             AssertEqual(num, 9);
         } else if (count1 == 2) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                NSString* docID = [result valueAtIndex: 0];
-                CBLDocument* doc = [self.db documentWithID: docID];
-                Assert([doc integerForKey: @"number1"] < 10);
+                Assert([result valueAtIndex: 0] < 10);
             }
             AssertEqual(num, 10);
             [x fulfill];
@@ -2025,17 +2012,13 @@
         if (count2 == 1) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                NSString* docID = [result valueAtIndex: 0];
-                CBLDocument* doc = [self.db documentWithID: docID];
-                Assert([doc integerForKey: @"number1"] < 10);
+                Assert([result integerAtIndex: 0] < 10);
             }
             AssertEqual(num, 9);
         } else if (count2 == 2) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                NSString* docID = [result valueAtIndex: 0];
-                CBLDocument* doc = [self.db documentWithID: docID];
-                Assert([doc integerForKey: @"number1"] < 10);
+                Assert([result integerAtIndex: 0] < 10);
             }
             AssertEqual(num, 10);
             [y fulfill];
@@ -2109,12 +2092,15 @@
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         // even when creating three docs, it should send only single notification!
+        CBLMutableDocument* doc1 = [CBLMutableDocument document];
+        [doc1 setInteger: -1 forKey: @"number1"];
+        
+        CBLMutableDocument* doc2 = [CBLMutableDocument document];
+        [doc2 setInteger: -2 forKey: @"number1"];
+        
         NSError* error = nil;
-        [self.db inBatch: &error usingBlock:^{
-            [self createDocNumbered: -1 of: 100];
-            [self createDocNumbered: -2 of: 100];
-            [self createDocNumbered: -3 of: 100];
-        }];
+        Assert([self.db saveDocument: doc1 error: &error]);
+        Assert([self.db saveDocument: doc2 error: &error]);
     });
     
     // wait for updated query parameter change
