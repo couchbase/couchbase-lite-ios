@@ -1894,12 +1894,12 @@
             
             // initial notification about already existing result set!
             AssertEqual(rows.count, 1);
-            AssertEqualObjects([rows[0] integerAtIndex: 0], @(7));
+            AssertEqual([rows[0] integerAtIndex: 0], 7);
         } else if (count == 2) {
             
             // newly added doc notification
             AssertEqual(rows.count, 2);
-            AssertEqualObjects([rows[0] integerAtIndex: 0], @(3));
+            AssertEqual([rows[0] integerAtIndex: 0], 3);
             
             [first fulfill];
         }
@@ -1923,7 +1923,7 @@
         // newly added doc notification!
         NSArray<CBLQueryResult*>* rows = [change.results allObjects];
         AssertEqual(rows.count, 2);
-        AssertEqualObjects([rows[0] integerAtIndex: 0], @(3));
+        AssertEqual([rows[0] integerAtIndex: 0], 3);
         
         [second fulfill];
     }];
@@ -1950,7 +1950,7 @@
         if (count == 1) {
             // initial notification about already existing result set!
             AssertEqual(rows.count, 1);
-            AssertEqualObjects([rows[0] integerAtIndex: 0], @(1));
+            AssertEqual([rows[0] integerAtIndex: 0], 1);
         } else if (count == 2) {
             
             // deleted the doc should return empty result set!
@@ -1992,13 +1992,13 @@
         if (count1 == 1) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                Assert([result valueAtIndex: 0] < 10);
+                Assert([result integerAtIndex: 0] < 10);
             }
             AssertEqual(num, 9);
         } else if (count1 == 2) {
             for (CBLQueryResult* result in change.results) {
                 num++;
-                Assert([result valueAtIndex: 0] < 10);
+                Assert([result integerAtIndex: 0] < 10);
             }
             AssertEqual(num, 10);
             [x fulfill];
