@@ -2040,23 +2040,24 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(Expression.int(10)))
             .orderBy(Ordering.property("number1"))
-        
         var count = 0;
         let token = query.addChangeListener { (change) in
             count = count + 1
             let rows =  Array(change.results!)
             if count == 1 {
                 XCTAssertEqual(rows.count, 9)
-            } else {
-                XCTAssertEqual(rows.count, 11)
+            } else if count == 2 {
+                // since swift is faster, saving and querying happened ~0.13secs!
+                XCTAssertEqual(rows.count, 18)
                 x.fulfill()
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            let doc1 = MutableDocument().setInt(-1, forKey: "number1")
-            let doc2 = MutableDocument().setInt(-2, forKey: "number1")
-            try! self.db.saveDocument(doc1)
-            try! self.db.saveDocument(doc2)
+            for i in 1...9 {
+                DispatchQueue(label: "com.concurrent", attributes: .concurrent).async {
+                    try! self.createDoc(numbered: -i, of: 100)
+                }
+            }
         }
         
         // wait for updated query parameter change

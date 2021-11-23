@@ -2070,6 +2070,11 @@
     [q removeChangeListenerWithToken: token];
 }
 
+/**
+ This test can be flaky!, once the saving of 100 docs + querying(+newly created docs) result
+ in less than 0.5 secs. Similar to swift, in that case it will coalesce all result in
+ second change set
+ */
 - (void) testLiveQueryCoalescing {
     [self loadNumbers: 100];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -2085,27 +2090,31 @@
         if (count == 1) {
             AssertEqual(rows.count, 9);
         } else if (count == 2) {
-            AssertEqual(rows.count, 12);
+            // second listener will be executed immedietely since the first creation of 100 items
+            // happened earlier(>0.5secs)
+            AssertEqual(rows.count, 10);
+        } else if (count == 3) {
+            // once the first change notify, it will coalesce next set of changes
+            AssertEqual(rows.count, 18);
             [x fulfill];
         }
     }];
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        // even when creating three docs, it should send only single notification!
-        CBLMutableDocument* doc1 = [CBLMutableDocument document];
-        [doc1 setInteger: -1 forKey: @"number1"];
-        
-        CBLMutableDocument* doc2 = [CBLMutableDocument document];
-        [doc2 setInteger: -2 forKey: @"number1"];
-        
-        NSError* error = nil;
-        Assert([self.db saveDocument: doc1 error: &error]);
-        Assert([self.db saveDocument: doc2 error: &error]);
+        dispatch_queue_t queue = dispatch_queue_create("DISPATCH_QUEUE_CONCURRENT",DISPATCH_QUEUE_CONCURRENT);
+        for (NSNumber* num in @[@(-1), @(-2), @(-3), @(-4), @(-5), @(-6), @(-7), @(-8), @(-9)]) {
+            dispatch_async(queue, ^{
+                NSError* error = nil;
+                CBLMutableDocument* doc1 = [CBLMutableDocument document];
+                [doc1 setInteger: [num intValue] forKey: @"number1"];
+                Assert([self.db saveDocument: doc1 error: &error]);
+            });
+        }
     });
     
     // wait for updated query parameter change
     [self waitForExpectations: @[x] timeout: 10.0];
-    AssertEqual(count, 2);
+    AssertEqual(count, 3);
     [q removeChangeListenerWithToken: token];
 }
 
