@@ -25,7 +25,7 @@
     dispatch_queue_t _queue;
 }
 
-@synthesize key=_key;
+@synthesize context=_context;
 
 - (instancetype) initWithListener: (void (^)(id))listener
                             queue: (nullable dispatch_queue_t)queue

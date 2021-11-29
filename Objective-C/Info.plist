@@ -19,8 +19,10 @@
 	<key>CFBundleVersion</key>
 	<string>$(CBL_BUILD_NUMBER)</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2017 Couchbase. All rights reserved.</string>
+	<string>Copyright © $(CBL_COPYRIGHT_YEAR) Couchbase. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
+	<key>CBLEdition</key>
+	<string>$(CBL_EDITION)</string>
 </dict>
 </plist>

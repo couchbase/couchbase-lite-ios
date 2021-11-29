@@ -20,7 +20,6 @@
 #import "CBLQuery.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLLiveQuery.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
@@ -31,8 +30,12 @@
 #import "c4Query.h"
 #import "fleece/slice.hh"
 #import "CBLStringBytes.h"
+#import "CBLChangeNotifier.h"
+#import "CBLQueryObserver.h"
 
 using namespace fleece;
+
+#pragma mark -
 
 @implementation CBLQuery
 {
@@ -41,7 +44,7 @@ using namespace fleece;
     C4QueryLanguage _language;
     C4Query* _c4Query;
     NSDictionary* _columnNames;
-    CBLLiveQuery* _liveQuery;
+    CBLChangeNotifier* _changeNotifier;
     
     CBLQueryDataSource* _from;
 }
@@ -50,6 +53,7 @@ using namespace fleece;
 @synthesize JSONRepresentation=_json;
 @synthesize parameters=_parameters;
 @synthesize expressions=_expressions;
+@synthesize c4query=_c4Query;
 
 #pragma mark - JSON representation
 
@@ -63,6 +67,14 @@ using namespace fleece;
         _database = database;
         _json = json;
         _language = kC4JSONQuery;
+        
+        // Return error if the query is not compiled;
+        NSError* error = nil;
+        if (![self compile: &error]) {
+            CBLWarnError(Query, @"JSON query failed to compile %@", error);
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Invalid query args, failed to compile %@", error];
+        }
     }
     return self;
 }
@@ -173,9 +185,7 @@ using namespace fleece;
     return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
 }
 
-- (void) dealloc {
-    [_liveQuery stop];
-    
+- (void) dealloc {    
     [self.database safeBlock:^{
         c4query_release(_c4Query);
     }];
@@ -200,18 +210,26 @@ using namespace fleece;
 
 - (void) setParameters: (CBLQueryParameters*)parameters {
     CBL_LOCK(self) {
-        if (parameters)
+        if (parameters) {
+            NSError* error = nil;
+            NSData* params = [parameters encode: &error];
+            if (!params) {
+                CBLWarnError(Query, @"Query parameters failed to encode %@", error);
+                [NSException raise: NSInvalidArgumentException
+                            format: @"Invalid query parameter, failed to encode"];
+            }
+            
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
+            [self.database safeBlock:^{
+                c4query_setParameters(_c4Query, {params.bytes, params.length});
+            }];
+        }
         else
             _parameters = nil;
-        [_liveQuery queryParametersChanged];
     }
 }
 
 - (NSString*) explain: (NSError**)outError {
-    if (![self compile: outError])
-        return nil;
-    
     __block NSString* result;
     [self.database safeBlock: ^{
         result = sliceResult2string(c4query_explain(_c4Query));
@@ -221,24 +239,14 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (![self compile: outError])
-        return nil;
-    
     C4QueryOptions options = kC4DefaultQueryOptions;
-    
-    NSData* params = nil;
-    CBL_LOCK(self) {
-        params = [_parameters encode: outError];
-        if (_parameters && !params)
-            return nil;
-    }
-    
     
     __block C4QueryEnumerator* e;
     __block C4Error c4Err;
     [self.database safeBlock:^{
-        e = c4query_run(_c4Query, &options, {params.bytes, params.length}, &c4Err);
+        e = c4query_run(_c4Query, &options, kC4SliceNull, &c4Err);
     }];
+    
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
         convertError(c4Err, outError);
@@ -260,9 +268,20 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-        if (!_liveQuery)
-            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
-        return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+        if (!_changeNotifier)
+            _changeNotifier = [CBLChangeNotifier new];
+        
+        CBLChangeListenerToken* token = [_changeNotifier addChangeListenerWithQueue: queue
+                                                                           listener: listener];
+        
+        // create c4queryobs & start immediately
+        CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: self
+                                                            columnNames: _columnNames
+                                                                  token: token];
+        [obs start];
+        token.context = obs;
+        
+        return token;
     }
 }
 
@@ -270,7 +289,10 @@ using namespace fleece;
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
-        [_liveQuery removeChangeListenerWithToken: token];
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        [(CBLQueryObserver*)t.context stopAndFree];
+        
+        [_changeNotifier removeChangeListenerWithToken: token];
     }
 }
 
@@ -287,6 +309,12 @@ using namespace fleece;
 - (NSUInteger) columnCount {
     CBL_LOCK(self) {
         return c4query_columnCount(_c4Query);
+    }
+}
+
+- (C4Query*) c4Query {
+    CBL_LOCK(self) {
+        return _c4Query;
     }
 }
 
