@@ -2031,38 +2031,4 @@ class QueryTest: CBLTestCase {
         query.removeChangeListener(withToken: token)
         XCTAssertEqual(count, 2)
     }
-    
-    func testLiveQueryCoalescing() throws {
-        try loadNumbers(100)
-        let x = expectation(description: "wait-for-live-query-changes")
-        let query = QueryBuilder
-            .select(SelectResult.property("number1"))
-            .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(Expression.int(10)))
-            .orderBy(Ordering.property("number1"))
-        var count = 0;
-        let token = query.addChangeListener { (change) in
-            count = count + 1
-            let rows =  Array(change.results!)
-            if count == 1 {
-                XCTAssertEqual(rows.count, 9)
-            } else if count == 2 {
-                // since swift is faster, saving and querying happened ~0.13secs!
-                XCTAssertEqual(rows.count, 18)
-                x.fulfill()
-            }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            for i in 1...9 {
-                DispatchQueue(label: "com.concurrent", attributes: .concurrent).async {
-                    try! self.createDoc(numbered: -i, of: 100)
-                }
-            }
-        }
-        
-        // wait for updated query parameter change
-        wait(for: [x], timeout: 10.0)
-        query.removeChangeListener(withToken: token)
-        XCTAssertEqual(count, 2)
-    }
 }
