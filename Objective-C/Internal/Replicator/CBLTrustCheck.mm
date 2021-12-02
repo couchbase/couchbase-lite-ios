@@ -112,7 +112,7 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
-#if TARGET_OS_MACCATALYST
+#if TARGET_OS_MACCATALYST || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
     if (@available(iOS 12.0, macos 10.14, *)) {
         CFErrorRef error;
         BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
@@ -146,7 +146,7 @@ static BOOL sOnlyTrustAnchorCerts;
     // Evaluate trust:
     SecTrustResultType result;
     OSStatus err;
-#if TARGET_OS_MACCATALYST
+#if TARGET_OS_MACCATALYST || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
     if (@available(iOS 12.0, macos 10.14, *)) {
         if (!SecTrustEvaluateWithError(_trust, nullptr))
             CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
@@ -173,7 +173,14 @@ static BOOL sOnlyTrustAnchorCerts;
 
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
+        SecCertificateRef cert;
+        if (@available(macOS 12.0, iOS 15.0, *)) {
+            CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+            cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+            CFRelease(certs);
+        } else {
+            cert = SecTrustGetCertificateAtIndex(_trust, 0);
+        }
         if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
             [self forceTrusted];
             return credential;
@@ -200,8 +207,16 @@ static BOOL sOnlyTrustAnchorCerts;
     CFIndex certCount = SecTrustGetCertificateCount(_trust);
     if (certCount != 1)
         return NO;
+
+    SecCertificateRef certRef;
+    if (@available(macOS 12.0, iOS 15.0, *)) {
+        CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+        certRef = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+        CFRelease(certs);
+    } else {
+        certRef = SecTrustGetCertificateAtIndex(_trust, 0);
+    }
     
-    SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
     C4Cert* c4cert = toC4Cert(@[(__bridge id) certRef], outError);
     if (!c4cert)
         return NO;

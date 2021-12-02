@@ -698,9 +698,15 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
     SecCertificateRef cert = NULL;
     if (trust != NULL) {
-        if (SecTrustGetCertificateCount(trust) > 0)
-            cert = SecTrustGetCertificateAtIndex(trust, 0);
-        else
+        if (SecTrustGetCertificateCount(trust) > 0) {
+            if (@available(macOS 12.0, iOS 15.0, *)) {
+                CFArrayRef certs = SecTrustCopyCertificateChain(trust);
+                cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+                CFRelease(certs);
+            } else {
+                cert = SecTrustGetCertificateAtIndex(trust, 0);
+            }
+        } else
             CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
     }
     _replicator.serverCertificate = cert;
