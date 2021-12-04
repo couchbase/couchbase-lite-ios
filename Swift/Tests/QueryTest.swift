@@ -1775,8 +1775,8 @@ class QueryTest: CBLTestCase {
     func testLiveQuery(query: Query) throws {
         try loadNumbers(100)
         var count = 0;
-        let x1 = expectation(description: "changesListener for 9 items")
-        let x2 = expectation(description: "changesListener for 10 items")
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "2nd change")
         
         let token = query.addChangeListener { (change) in
             count = count + 1
@@ -1793,50 +1793,29 @@ class QueryTest: CBLTestCase {
         }
         
         wait(for: [x1], timeout: 2.0)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            try! self.createDoc(numbered: -1, of: 100)
-        }
+        try! self.createDoc(numbered: -1, of: 100)
         
         wait(for: [x2], timeout: 2.0)
-        
         query.removeChangeListener(withToken: token)
     }
     
     func testLiveQueryNoUpdate() throws {
-        try loadNumbers(100)
         var count = 0;
         let q = QueryBuilder
             .select()
             .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(Expression.int(10)))
-            .orderBy(Ordering.property("number1"))
-        
+        let x1 = expectation(description: "1st change")
         let token = q.addChangeListener { (change) in
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
             let rows =  Array(change.results!)
-            if count == 1 {
-                XCTAssertEqual(rows.count, 9)
-            } else {
-                XCTFail("Unexpected update from LiveQuery")
-            }
+            XCTAssertEqual(rows.count, 0)
+            x1.fulfill()
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            try! self.createDoc(numbered: 111, of: 100)
-        }
-        
-        let x = expectation(description: "timeout")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            x.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5.0) { (error) in }
-        
+        wait(for: [x1], timeout: 5.0)
         XCTAssertEqual(count, 1)
-        
         q.removeChangeListener(withToken: token)
     }
     
@@ -1851,7 +1830,7 @@ class QueryTest: CBLTestCase {
             .orderBy(Ordering.property("number1"))
         
         // first listener
-        let x1 = expectation(description: "first set of notifications")
+        let x1 = expectation(description: "1st change")
         var count = 0;
         let token = query.addChangeListener { (change) in
             count = count + 1
@@ -1859,36 +1838,30 @@ class QueryTest: CBLTestCase {
             if count == 1 {
                 XCTAssertEqual(rows.count, 1)
                 XCTAssertEqual(rows[0].int(at: 0), 7)
-            } else {
-                XCTAssertEqual(rows.count, 2)
-                XCTAssertEqual(rows[0].int(at: 0), 3)
                 x1.fulfill()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            try! self.createDoc(numbered: 3, of: 100)
-        }
-        
         wait(for: [x1], timeout: 5.0)
-        query.removeChangeListener(withToken: token)
-        XCTAssertEqual(count, 2)
+        XCTAssertEqual(count, 1)
         
         // adding a second listener should be returning the last results!
-        let x2 = expectation(description: "changesListener for 10 items")
-        count = 0
+        let x2 = expectation(description: "1st change from 2nd listener")
+        var count2 = 0
         let token2 = query.addChangeListener { (change) in
-            count = count + 1
+            count2 = count2 + 1
             let rows =  Array(change.results!)
-            if count == 1 {
-                XCTAssertEqual(rows.count, 2)
-                XCTAssertEqual(rows[0].int(at: 0), 3)
+            if count2 == 1 {
+                XCTAssertEqual(rows.count, 1)
+                XCTAssertEqual(rows[0].int(at: 0), 7)
                 x2.fulfill()
             }
         }        
         
         wait(for: [x2], timeout: 2.0)
+        query.removeChangeListener(withToken: token)
         query.removeChangeListener(withToken: token2)
         XCTAssertEqual(count, 1)
+        XCTAssertEqual(count2, 1)
     }
     
     func testLiveQueryReturnsEmptyResultSet() throws {
@@ -1934,7 +1907,8 @@ class QueryTest: CBLTestCase {
             .where(Expression.property("number1").lessThan(Expression.int(10)))
             .orderBy(Ordering.property("number1"))
         
-        let x1 = expectation(description: "1-wait-for-live-query-changes")
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "2nd change")
         var count1 = 0;
         let token1 = query.addChangeListener { (change) in
             count1 = count1 + 1
@@ -1949,7 +1923,7 @@ class QueryTest: CBLTestCase {
                     XCTAssert(result.int(at: 0) < 10)
                 }
                 XCTAssertEqual(num, 9)
-                
+                x1.fulfill()
             } else if count1 == 2 {
                 var num = 0
                 for result in results {
@@ -1957,11 +1931,12 @@ class QueryTest: CBLTestCase {
                     XCTAssert(result.int(at: 0) < 10)
                 }
                 XCTAssertEqual(num, 10)
-                x1.fulfill()
+                x2.fulfill()
             }
         }
         
-        let x2 = expectation(description: "2-wait-for-live-query-changes")
+        let y1 = expectation(description: "1st change - 2nd listener")
+        let y2 = expectation(description: "2nd change - 2nd listener")
         var count2 = 0;
         let token2 = query.addChangeListener { (change) in
             count2 = count2 + 1
@@ -1977,7 +1952,7 @@ class QueryTest: CBLTestCase {
                     XCTAssert(result.int(at: 0) < 10)
                 }
                 XCTAssertEqual(num, 9)
-                
+                y1.fulfill()
             } else if count2 == 2 {
                 var num = 0
                 for result in results {
@@ -1985,14 +1960,14 @@ class QueryTest: CBLTestCase {
                     XCTAssert(result.int(at: 0) < 10)
                 }
                 XCTAssertEqual(num, 10)
-                x2.fulfill()
+                y2.fulfill()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            try! self.createDoc(numbered: -1, of: 100)
-        }
+        wait(for: [x1, y1], timeout: 5.0)
+        try! self.createDoc(numbered: -1, of: 100)
         
-        wait(for: [x1, x2], timeout: 10.0)
+        wait(for: [x2, y2], timeout: 5.0)
+        
         query.removeChangeListener(withToken: token1)
         query.removeChangeListener(withToken: token2)
         XCTAssertEqual(count1, 2)
@@ -2001,7 +1976,8 @@ class QueryTest: CBLTestCase {
     
     func testLiveQueryUpdateQueryParam() throws {
         try loadNumbers(100)
-        let x = expectation(description: "wait-for-live-query-changes")
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "1st change")
         let query = QueryBuilder
             .select(SelectResult.property("number1"))
             .from(DataSource.database(db))
@@ -2017,17 +1993,16 @@ class QueryTest: CBLTestCase {
             let rows =  Array(change.results!)
             if count == 1 {
                 XCTAssertEqual(rows.count, 9)
+                x1.fulfill()
             } else {
                 XCTAssertEqual(rows.count, 4)
-                x.fulfill()
+                x2.fulfill()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            query.parameters = Parameters().setInt(5, forName: "param")
-        }
+        wait(for: [x1], timeout: 5.0)
+        query.parameters = Parameters().setInt(5, forName: "param")
         
-        // wait for updated query parameter change
-        wait(for: [x], timeout: 5.0)
+        wait(for: [x2], timeout: 5.0)
         query.removeChangeListener(withToken: token)
         XCTAssertEqual(count, 2)
     }
