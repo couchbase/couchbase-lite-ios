@@ -112,7 +112,7 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
-#if TARGET_OS_MACCATALYST || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
     if (@available(iOS 12.0, macos 10.14, *)) {
         CFErrorRef error;
         BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
@@ -146,7 +146,7 @@ static BOOL sOnlyTrustAnchorCerts;
     // Evaluate trust:
     SecTrustResultType result;
     OSStatus err;
-#if TARGET_OS_MACCATALYST || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 130000
     if (@available(iOS 12.0, macos 10.14, *)) {
         if (!SecTrustEvaluateWithError(_trust, nullptr))
             CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
@@ -174,7 +174,7 @@ static BOOL sOnlyTrustAnchorCerts;
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
         SecCertificateRef cert = NULL;
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
         if (@available(macOS 12.0, iOS 15.0, *)) {
             CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
             cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
@@ -213,7 +213,7 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
 
     C4Cert* c4cert = nil;
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
     if (@available(macOS 12.0, iOS 15.0, *)) {
         CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
         SecCertificateRef certRef = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);

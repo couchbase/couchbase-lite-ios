@@ -699,7 +699,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     SecCertificateRef cert = NULL;
     if (trust != NULL) {
         if (SecTrustGetCertificateCount(trust) > 0) {
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 120000 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 150000
             if (@available(macOS 12.0, iOS 15.0, *)) {
                 CFArrayRef certs = SecTrustCopyCertificateChain(trust);
                 cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
