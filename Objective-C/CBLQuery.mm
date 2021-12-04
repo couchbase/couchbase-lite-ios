@@ -32,7 +32,6 @@
 #import "CBLStringBytes.h"
 #import "CBLChangeNotifier.h"
 #import "CBLQueryObserver.h"
-#import "CBLQueryChangeNotifier.h"
 
 using namespace fleece;
 
@@ -45,7 +44,7 @@ using namespace fleece;
     C4QueryLanguage _language;
     C4Query* _c4Query;
     NSDictionary* _columnNames;
-    CBLQueryChangeNotifier* _changeNotifier;
+    CBLChangeNotifier* _changeNotifier;
     
     CBLQueryDataSource* _from;
 }
@@ -270,12 +269,19 @@ using namespace fleece;
     
     CBL_LOCK(self) {
         if (!_changeNotifier)
-            _changeNotifier = [CBLQueryChangeNotifier new];
+            _changeNotifier = [CBLChangeNotifier new];
         
-        return [_changeNotifier addQueryChangeListenerWithQueue: queue
-                                                       listener: listener
-                                                          queue: self
-                                                    columnNames: _columnNames];
+        CBLChangeListenerToken* token = [_changeNotifier addChangeListenerWithQueue: queue
+                                                                           listener: listener];
+        
+        // create c4queryobs & start immediately
+        CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: self
+                                                            columnNames: _columnNames
+                                                                  token: token];
+        [obs start];
+        token.context = obs;
+        
+        return token;
     }
 }
 
@@ -283,7 +289,10 @@ using namespace fleece;
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
-        [_changeNotifier removeQueryChangeListenerWithToken: token];
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        [(CBLQueryObserver*)t.context stopAndFree];
+        
+        [_changeNotifier removeChangeListenerWithToken: token];
     }
 }
 

@@ -584,7 +584,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBL_LOCK(self) {
         [self mustBeOpen];
             
-        if (((CBLChangeListenerToken*)token).key)
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        if (t.context)
             [self removeDocumentChangeListenerWithToken: token];
         else
             [self removeDatabaseChangeListenerWithToken: token];
@@ -963,13 +964,13 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     
     CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
                                                                    listener: listener];
-    token.key = documentID;
+    token.context = documentID;
     return token;
 }
 
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
     CBL_LOCK(self) {
-        NSString* documentID = token.key;
+        NSString* documentID = (NSString*)token.context;
         CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
         if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
             [notifier stop];
