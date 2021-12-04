@@ -704,12 +704,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
                 CFArrayRef certs = SecTrustCopyCertificateChain(trust);
                 cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
                 CFRelease(certs);
-            } else
+            } else {
 #else
             {
                 cert = SecTrustGetCertificateAtIndex(trust, 0);
+#endif
             }
-#endif 
         } else
             CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
     }
