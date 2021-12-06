@@ -463,6 +463,67 @@
     r = nil;
 }
 
+- (void) testBackgroundingDuringDataTransfer {
+    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle-nd-ready"];
+    XCTestExpectation* busy = [self allowOverfillExpectationWithDescription: @"transferring data"];
+    XCTestExpectation* offline = [self expectationWithDescription: @"app-in-background"];
+    XCTestExpectation* stop = [self allowOverfillExpectationWithDescription: @"finish-transfer"];
+    
+    // setup replicator
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePush
+                                                     continuous: YES];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    __block int busyCount = 0;
+    __block int idleCount = 0;
+    id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
+        if (change.status.activity == kCBLReplicatorIdle) {
+            if (++idleCount == 1)
+                [idle fulfill];
+            else if (change.status.progress.completed == change.status.progress.total)
+                [change.replicator stop];
+        } else if (change.status.activity == kCBLReplicatorBusy) {
+            if (++busyCount == 1)
+                [busy fulfill];
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            [offline fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stop fulfill];
+        }
+    }];
+    
+    // start and wait for idle
+    AssertEqual(self.otherDB.count, 0);
+    [replicator start];
+    [self waitForExpectations: @[idle] timeout: 5.0];
+    
+    // replicate a doc with blob, and wait for busy
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg" data: data];
+    [doc1 setBlob: blob forKey: @"blob"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    [self waitForExpectations: @[busy] timeout: 5.0];
+    
+    // background during the data transfer!
+    [replicator appBackgrounding];
+    [self waitForExpectations: @[offline] timeout: 5.0];
+    
+    // forground after 0.2 secs
+    [NSThread sleepForTimeInterval: 0.2];
+    [replicator appForegrounding];
+    [self waitForExpectations: @[stop] timeout: 5.0];
+    [replicator removeChangeListenerWithToken: token];
+    
+    // make sure the doc with blob transferred successfully!
+    AssertEqual(self.otherDB.count, 1);
+    CBLDocument* doc = [self.otherDB documentWithID: @"doc1"];
+    CBLBlob* blob2 = [doc blobForKey: @"blob"];
+    AssertEqualObjects(blob2.digest, blob.digest);
+}
+
 #endif // TARGET_OS_IPHONE
 
 - (void) testStartWithResetCheckpoint {
