@@ -464,7 +464,6 @@
 }
 
 - (void) testBackgroundingDuringDataTransfer {
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
     XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle-nd-ready"];
     XCTestExpectation* busy = [self allowOverfillExpectationWithDescription: @"transferring data"];
     XCTestExpectation* offline = [self expectationWithDescription: @"app-in-background"];
