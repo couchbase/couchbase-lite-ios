@@ -112,7 +112,7 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
-#if TARGET_OS_MACCATALYST
+
     if (@available(iOS 12.0, macos 10.14, *)) {
         CFErrorRef error;
         BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
@@ -121,12 +121,14 @@ static BOOL sOnlyTrustAnchorCerts;
         
         return trusted;
     } else {
-        CBLWarnError(Sync, @"Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
-    }
+#if TARGET_OS_MACCATALYST
+        CBLWarnError(Sync, @"Catalyst:SecTrustEvaluate API not available, macOS < 10.14, iOS < 12");
 #else
-    SecTrustResultType result;
-    SecTrustEvaluate(_trust, &result);
+        SecTrustResultType result;
+        SecTrustEvaluate(_trust, &result);
 #endif
+    }
+    
     return YES;
 }
 
@@ -146,18 +148,19 @@ static BOOL sOnlyTrustAnchorCerts;
     // Evaluate trust:
     SecTrustResultType result;
     OSStatus err;
-#if TARGET_OS_MACCATALYST
+
     if (@available(iOS 12.0, macos 10.14, *)) {
         if (!SecTrustEvaluateWithError(_trust, nullptr))
             CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
         err = SecTrustGetTrustResult(_trust, &result);
     } else {
-        CBLWarnError(Sync, @"SecTrustEvaluateWithError Catalyst version not available: Not supported by macOS < 10.14 and iOS < 12.0");
+#if TARGET_OS_MACCATALYST
+        CBLWarnError(Sync, @"Catalyst:SecTrustEvaluate API not available, macOS < 10.14, iOS < 12");
         return nil;
-    }
 #else
     err = SecTrustEvaluate(_trust, &result);
 #endif
+    }
     
     if (err) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
