@@ -1350,88 +1350,6 @@ class QueryTest: CBLTestCase {
         }
     }
     
-    func testJSONLiveQuery() throws {
-        let q = QueryBuilder
-            .select()
-            .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(Expression.int(10)))
-            .orderBy(Ordering.property("number1"))
-        try testLiveQuery(query: q)
-    }
-    
-    func testN1QLLiveQuery() throws {
-        let q = try db.createQuery("SELECT * FROM testdb WHERE number1 < 10")
-        try testLiveQuery(query: q)
-    }
-    
-    func testLiveQuery(query: Query) throws {
-        try loadNumbers(100)
-        var count = 0;
-        let x1 = expectation(description: "changesListener for 9 items")
-        let x2 = expectation(description: "changesListener for 10 items")
-        
-        let token = query.addChangeListener { (change) in
-            count = count + 1
-            XCTAssertNotNil(change.query)
-            XCTAssertNil(change.error)
-            let rows =  Array(change.results!)
-            if count == 1 {
-                XCTAssertEqual(rows.count, 9)
-                x1.fulfill()
-            } else {
-                XCTAssertEqual(rows.count, 10)
-                x2.fulfill()
-            }
-        }
-        
-        wait(for: [x1], timeout: 2.0)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            try! self.createDoc(numbered: -1, of: 100)
-        }
-        
-        wait(for: [x2], timeout: 2.0)
-        
-        query.removeChangeListener(withToken: token)
-    }
-    
-    func testLiveQueryNoUpdate() throws {
-        try loadNumbers(100)
-        var count = 0;
-        let q = QueryBuilder
-            .select()
-            .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(Expression.int(10)))
-            .orderBy(Ordering.property("number1"))
-        
-        let token = q.addChangeListener { (change) in
-            count = count + 1
-            XCTAssertNotNil(change.query)
-            XCTAssertNil(change.error)
-            let rows =  Array(change.results!)
-            if count == 1 {
-                XCTAssertEqual(rows.count, 9)
-            } else {
-                XCTFail("Unexpected update from LiveQuery")
-            }
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            try! self.createDoc(numbered: 111, of: 100)
-        }
-        
-        let x = expectation(description: "timeout")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            x.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5.0) { (error) in }
-        
-        XCTAssertEqual(count, 1)
-        
-        q.removeChangeListener(withToken: token)
-    }
-    
     func testResultSetEnumeration() throws {
         try loadNumbers(5)
         let q = QueryBuilder
@@ -1836,5 +1754,256 @@ class QueryTest: CBLTestCase {
         let q = try self.db.createQuery("SELECT firstName, lastName FROM \(self.db.name) offset 1")
         let results = try q.execute().allResults()
         XCTAssertEqual(results.count, 1)
+    }
+    
+    // MARK: -- LiveQuery
+    
+    func testJSONLiveQuery() throws {
+        let q = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        try testLiveQuery(query: q)
+    }
+    
+    func testN1QLLiveQuery() throws {
+        let q = try db.createQuery("SELECT * FROM testdb WHERE number1 < 10")
+        try testLiveQuery(query: q)
+    }
+    
+    func testLiveQuery(query: Query) throws {
+        try loadNumbers(100)
+        var count = 0;
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "2nd change")
+        
+        let token = query.addChangeListener { (change) in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let rows =  Array(change.results!)
+            if count == 1 {
+                XCTAssertEqual(rows.count, 9)
+                x1.fulfill()
+            } else {
+                XCTAssertEqual(rows.count, 10)
+                x2.fulfill()
+            }
+        }
+        
+        wait(for: [x1], timeout: 2.0)
+        try! self.createDoc(numbered: -1, of: 100)
+        
+        wait(for: [x2], timeout: 2.0)
+        query.removeChangeListener(withToken: token)
+    }
+    
+    func testLiveQueryNoUpdate() throws {
+        var count = 0;
+        let q = QueryBuilder
+            .select()
+            .from(DataSource.database(db))
+        let x1 = expectation(description: "1st change")
+        let token = q.addChangeListener { (change) in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let rows =  Array(change.results!)
+            XCTAssertEqual(rows.count, 0)
+            x1.fulfill()
+        }
+        
+        wait(for: [x1], timeout: 5.0)
+        XCTAssertEqual(count, 1)
+        q.removeChangeListener(withToken: token)
+    }
+    
+    // When adding a second listener after the first listener is notified, the second listener
+    // should get the change (current result).
+    func testLiveQuerySecondListenerReturnsResultsImmediately() throws {
+        try createDoc(numbered: 7, of: 10)
+        let query = QueryBuilder
+            .select(SelectResult.property("number1"))
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        
+        // first listener
+        let x1 = expectation(description: "1st change")
+        var count = 0;
+        let token = query.addChangeListener { (change) in
+            count = count + 1
+            let rows =  Array(change.results!)
+            if count == 1 {
+                XCTAssertEqual(rows.count, 1)
+                XCTAssertEqual(rows[0].int(at: 0), 7)
+                x1.fulfill()
+            }
+        }
+        wait(for: [x1], timeout: 5.0)
+        XCTAssertEqual(count, 1)
+        
+        // adding a second listener should be returning the last results!
+        let x2 = expectation(description: "1st change from 2nd listener")
+        var count2 = 0
+        let token2 = query.addChangeListener { (change) in
+            count2 = count2 + 1
+            let rows =  Array(change.results!)
+            if count2 == 1 {
+                XCTAssertEqual(rows.count, 1)
+                XCTAssertEqual(rows[0].int(at: 0), 7)
+                x2.fulfill()
+            }
+        }        
+        
+        wait(for: [x2], timeout: 2.0)
+        query.removeChangeListener(withToken: token)
+        query.removeChangeListener(withToken: token2)
+        XCTAssertEqual(count, 1)
+        XCTAssertEqual(count2, 1)
+    }
+    
+    func testLiveQueryReturnsEmptyResultSet() throws {
+        try loadNumbers(100)
+        let query = QueryBuilder
+            .select(SelectResult.property("number1"))
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        
+        let x1 = expectation(description: "wait-for-live-query-changes")
+        var count = 0;
+        let token = query.addChangeListener { (change) in
+            count = count + 1
+            let rows =  Array(change.results!)
+            if count == 1 {
+                // initial notification about already existing result set!
+                XCTAssertEqual(rows.count, 9)
+                XCTAssertEqual(rows[0].int(at: 0), 1)
+            } else {
+                // deleted the doc should return empty result set!
+                XCTAssertEqual(rows.count, 8)
+                x1.fulfill()
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            try! self.db.purgeDocument(withID: "doc1")
+        }
+        
+        wait(for: [x1], timeout: 10.0)
+        query.removeChangeListener(withToken: token)
+        XCTAssertEqual(count, 2)
+    }
+    
+    /// When having more than one listeners, each listener should have independent result sets.
+    /// This means that both listeners should be able to iterate separately through the result
+    /// correct when getting the same change notified.
+    func testLiveQueryMultipleListenersReturnIndependentResultSet() throws {
+        try loadNumbers(100)
+        let query = QueryBuilder
+            .select(SelectResult.property("number1"))
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
+            .orderBy(Ordering.property("number1"))
+        
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "2nd change")
+        var count1 = 0;
+        let token1 = query.addChangeListener { (change) in
+            count1 = count1 + 1
+            guard let results = change.results else {
+                XCTFail("Results are empty")
+                return
+            }
+            if count1 == 1 {
+                var num = 0
+                for result in results {
+                    num = num + 1
+                    XCTAssert(result.int(at: 0) < 10)
+                }
+                XCTAssertEqual(num, 9)
+                x1.fulfill()
+            } else if count1 == 2 {
+                var num = 0
+                for result in results {
+                    num = num + 1
+                    XCTAssert(result.int(at: 0) < 10)
+                }
+                XCTAssertEqual(num, 10)
+                x2.fulfill()
+            }
+        }
+        
+        let y1 = expectation(description: "1st change - 2nd listener")
+        let y2 = expectation(description: "2nd change - 2nd listener")
+        var count2 = 0;
+        let token2 = query.addChangeListener { (change) in
+            count2 = count2 + 1
+            guard let results = change.results else {
+                XCTFail("Results are empty")
+                return
+            }
+            
+            if count2 == 1 {
+                var num = 0
+                for result in results {
+                    num = num + 1
+                    XCTAssert(result.int(at: 0) < 10)
+                }
+                XCTAssertEqual(num, 9)
+                y1.fulfill()
+            } else if count2 == 2 {
+                var num = 0
+                for result in results {
+                    num = num + 1
+                    XCTAssert(result.int(at: 0) < 10)
+                }
+                XCTAssertEqual(num, 10)
+                y2.fulfill()
+            }
+        }
+        wait(for: [x1, y1], timeout: 5.0)
+        try! self.createDoc(numbered: -1, of: 100)
+        
+        wait(for: [x2, y2], timeout: 5.0)
+        
+        query.removeChangeListener(withToken: token1)
+        query.removeChangeListener(withToken: token2)
+        XCTAssertEqual(count1, 2)
+        XCTAssertEqual(count2, 2)
+    }
+    
+    func testLiveQueryUpdateQueryParam() throws {
+        try loadNumbers(100)
+        let x1 = expectation(description: "1st change")
+        let x2 = expectation(description: "1st change")
+        let query = QueryBuilder
+            .select(SelectResult.property("number1"))
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(Expression.parameter("param")))
+            .orderBy(Ordering.property("number1"))
+        
+        // set the param
+        query.parameters = Parameters().setInt(10, forName: "param")
+        
+        var count = 0;
+        let token = query.addChangeListener { (change) in
+            count = count + 1
+            let rows =  Array(change.results!)
+            if count == 1 {
+                XCTAssertEqual(rows.count, 9)
+                x1.fulfill()
+            } else {
+                XCTAssertEqual(rows.count, 4)
+                x2.fulfill()
+            }
+        }
+        wait(for: [x1], timeout: 5.0)
+        query.parameters = Parameters().setInt(5, forName: "param")
+        
+        wait(for: [x2], timeout: 5.0)
+        query.removeChangeListener(withToken: token)
+        XCTAssertEqual(count, 2)
     }
 }
