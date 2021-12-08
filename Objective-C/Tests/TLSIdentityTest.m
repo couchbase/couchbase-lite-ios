@@ -54,14 +54,15 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 #elif TARGET_OS_IOS
         if (@available(iOS 10.3, *))
             publicKeyRef = SecCertificateCopyPublicKey(certRef);
+        else
+            Assert(false, @"Catalyst:SecCertificateCopyPublicKey is not supported, iOS < 10.3, macOS < 10.3");
 #elif TARGET_OS_OSX
         if (@available(macOS 10.3, *)) {
             OSStatus status = SecCertificateCopyPublicKey(certRef, &publicKeyRef);
             Assert(status == errSecSuccess);
-        }
-#endif
-        else
+        } else
             Assert(false, @"Catalyst:SecCertificateCopyPublicKey is not supported, iOS < 10.3, macOS < 10.3");
+#endif
     }
     Assert(publicKeyRef);
                 
