@@ -464,7 +464,7 @@
 }
 
 - (void) testBackgroundingDuringDataTransfer {
-    XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle-nd-ready"];
+    XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle-and-ready"];
     XCTestExpectation* busy = [self allowOverfillExpectationWithDescription: @"transferring data"];
     XCTestExpectation* offline = [self expectationWithDescription: @"app-in-background"];
     XCTestExpectation* stop = [self allowOverfillExpectationWithDescription: @"finish-transfer"];
@@ -507,12 +507,13 @@
     [self waitForExpectations: @[busy] timeout: 5.0];
     
     // background during the data transfer!
-    [replicator appBackgrounding];
+    [r setSuspended: YES];
     [self waitForExpectations: @[offline] timeout: 5.0];
     
     // forground after 0.2 secs
     [NSThread sleepForTimeInterval: 0.2];
-    [replicator appForegrounding];
+    [r setSuspended: NO];
+    
     [self waitForExpectations: @[stop] timeout: 5.0];
     [replicator removeChangeListenerWithToken: token];
     
