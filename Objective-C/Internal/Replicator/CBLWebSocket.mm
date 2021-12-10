@@ -69,6 +69,13 @@ struct PendingWrite {
 @interface CBLWebSocket () <NSStreamDelegate>
 @end
 
+// For controlling async closing, closed states. 
+typedef enum {
+    kCBLWebsocketStateClosed = 0,       ///< The websocket was closed.
+    kCBLWebsocketStateClosing,          ///< The websocket was asked to close but in progress.
+    kCBLWebsocketStateConnecting,       ///< The websocket is created and requested to connect.
+} CBLWebsocketState;
+
 @implementation CBLWebSocket
 {
     AllocedDict _options;
@@ -95,6 +102,8 @@ struct PendingWrite {
     NSURL* _remoteURL;
     
     NSArray* _clientIdentity;
+    
+    CBLWebsocketState _state;
 }
 
 + (C4SocketFactory) socketFactory {
@@ -186,6 +195,8 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
 
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
+        
+        _state = kCBLWebsocketStateConnecting;
     }
     return self;
 }
@@ -379,7 +390,20 @@ static void doDispose(C4Socket* s) {
     if (sessionCookie.buf)
         [cookies appendFormat: @"%@;", sessionCookie.asNSString()];
     
-    NSString* cookie = [_db getCookies: _remoteURL];
+    NSError* error = nil;
+    NSString* cookie = [_db getCookies: _remoteURL error: &error];
+    if (error) {
+        CBL_LOCK(self){
+            if (_state <= kCBLWebsocketStateClosing) {
+                CBLWarn(Sync, @"%@ Websocket is already closed or closing, skip WS request", self);
+                return;
+            }
+        }
+        
+        [self closeWithError: error];
+        return;
+    }
+    
     if (cookie.length > 0)
         [cookies appendString: cookie];
     
@@ -576,10 +600,25 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // callback from C4Socket
 - (void) closeSocket {
-    CBLLogInfo(WebSocket, @"CBLWebSocket closeSocket requested");
+    CBLLogInfo(WebSocket, @"%@ CBLWebSocket closeSocket requested", self);
+    CBL_LOCK(self) {
+        // ignore the second closing or closed
+        if (_state <= kCBLWebsocketStateClosing) {
+            CBLWarn(WebSocket, @"%@ Ignoring the closeSocket request, since it already closing or closed (state=%d)",
+                    self, _state);
+            return;
+        }
+        
+        _state = kCBLWebsocketStateClosing;
+    }
     dispatch_async(_queue, ^{
         if (_in || _out) {
             [self closeWithError: nil];
+        }
+        
+        CBL_LOCK(self) {
+            _state = kCBLWebsocketStateClosed;
+            CBLLogVerbose(WebSocket, @"%@ Finished closing socket", self);
         }
     });
 }
