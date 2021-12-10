@@ -602,7 +602,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeSocket {
     CBLLogInfo(WebSocket, @"%@ CBLWebSocket closeSocket requested", self);
     CBL_LOCK(self) {
-        // ignore the second closing or closed
         if (_state <= kCBLWebsocketStateClosing) {
             CBLWarn(WebSocket, @"%@ Ignoring the closeSocket request, since it already closing or closed (state=%d)",
                     self, _state);
