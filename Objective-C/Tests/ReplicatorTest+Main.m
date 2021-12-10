@@ -507,12 +507,12 @@
     [self waitForExpectations: @[busy] timeout: 5.0];
     
     // background during the data transfer!
-    [r setSuspended: YES];
+    [replicator setSuspended: YES];
     [self waitForExpectations: @[offline] timeout: 5.0];
     
     // forground after 0.2 secs
     [NSThread sleepForTimeInterval: 0.2];
-    [r setSuspended: NO];
+    [replicator setSuspended: NO];
     
     [self waitForExpectations: @[stop] timeout: 5.0];
     [replicator removeChangeListenerWithToken: token];
