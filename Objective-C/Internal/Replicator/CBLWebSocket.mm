@@ -385,6 +385,7 @@ static void doDispose(C4Socket* s) {
     NSString* cookie = [_db getCookies: _remoteURL error: &error];
     if (error) {
         // in case database is not open: CBL-2657
+        CBLWarn(Sync, @"Error while fetching cookies: %@", error);
         [self closeWithError: error];
         return;
     }
@@ -614,7 +615,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeWithError: (NSError*)error {
     CBL_LOCK(self) {
         if (_closing) {
-            CBLWarn(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
+            CBLLogVerbose(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
             return;
         }
         
