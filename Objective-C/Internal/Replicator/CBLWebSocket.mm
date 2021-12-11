@@ -103,7 +103,7 @@ typedef enum {
     
     NSArray* _clientIdentity;
     
-    CBLWebsocketState _state;
+    BOOL _closing;
 }
 
 + (C4SocketFactory) socketFactory {
@@ -195,8 +195,6 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
 
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
-        
-        _state = kCBLWebsocketStateConnecting;
     }
     return self;
 }
@@ -393,13 +391,7 @@ static void doDispose(C4Socket* s) {
     NSError* error = nil;
     NSString* cookie = [_db getCookies: _remoteURL error: &error];
     if (error) {
-        CBL_LOCK(self){
-            if (_state <= kCBLWebsocketStateClosing) {
-                CBLWarn(Sync, @"%@ Websocket is already closed or closing, skip WS request", self);
-                return;
-            }
-        }
-        
+        // in case database is not open: CBL-2657
         [self closeWithError: error];
         return;
     }
@@ -601,23 +593,9 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 // callback from C4Socket
 - (void) closeSocket {
     CBLLogInfo(WebSocket, @"%@ CBLWebSocket closeSocket requested", self);
-    CBL_LOCK(self) {
-        if (_state <= kCBLWebsocketStateClosing) {
-            CBLWarn(WebSocket, @"%@ Ignoring the closeSocket request, since it already closing or closed (state=%d)",
-                    self, _state);
-            return;
-        }
-        
-        _state = kCBLWebsocketStateClosing;
-    }
     dispatch_async(_queue, ^{
         if (_in || _out) {
             [self closeWithError: nil];
-        }
-        
-        CBL_LOCK(self) {
-            _state = kCBLWebsocketStateClosed;
-            CBLLogVerbose(WebSocket, @"%@ Finished closing socket", self);
         }
     });
 }
@@ -641,6 +619,13 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // Closes the connection and passes the NSError (if any) to LiteCore.
 - (void) closeWithError: (NSError*)error {
+    CBL_LOCK(self) {
+        if (_closing)
+            return;
+        
+        _closing = YES;
+    }
+    
     [self disconnect];
 
     C4Error c4err;
