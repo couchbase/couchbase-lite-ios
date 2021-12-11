@@ -69,13 +69,6 @@ struct PendingWrite {
 @interface CBLWebSocket () <NSStreamDelegate>
 @end
 
-// For controlling async closing, closed states. 
-typedef enum {
-    kCBLWebsocketStateClosed = 0,       ///< The websocket was closed.
-    kCBLWebsocketStateClosing,          ///< The websocket was asked to close but in progress.
-    kCBLWebsocketStateConnecting,       ///< The websocket is created and requested to connect.
-} CBLWebsocketState;
-
 @implementation CBLWebSocket
 {
     AllocedDict _options;
