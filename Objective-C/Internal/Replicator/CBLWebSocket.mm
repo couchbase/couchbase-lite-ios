@@ -95,6 +95,8 @@ struct PendingWrite {
     NSURL* _remoteURL;
     
     NSArray* _clientIdentity;
+    
+    BOOL _closing;
 }
 
 + (C4SocketFactory) socketFactory {
@@ -379,7 +381,15 @@ static void doDispose(C4Socket* s) {
     if (sessionCookie.buf)
         [cookies appendFormat: @"%@;", sessionCookie.asNSString()];
     
-    NSString* cookie = [_db getCookies: _remoteURL];
+    NSError* error = nil;
+    NSString* cookie = [_db getCookies: _remoteURL error: &error];
+    if (error) {
+        // in case database is not open: CBL-2657
+        CBLWarn(Sync, @"Error while fetching cookies: %@", error);
+        [self closeWithError: error];
+        return;
+    }
+    
     if (cookie.length > 0)
         [cookies appendString: cookie];
     
@@ -576,7 +586,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // callback from C4Socket
 - (void) closeSocket {
-    CBLLogInfo(WebSocket, @"CBLWebSocket closeSocket requested");
+    CBLLogInfo(WebSocket, @"%@ CBLWebSocket closeSocket requested", self);
     dispatch_async(_queue, ^{
         if (_in || _out) {
             [self closeWithError: nil];
@@ -603,6 +613,13 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // Closes the connection and passes the NSError (if any) to LiteCore.
 - (void) closeWithError: (NSError*)error {
+    // This function is always called from queue.
+    if (_closing) {
+        CBLLogVerbose(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
+        return;
+    }
+    _closing = YES;
+    
     [self disconnect];
 
     C4Error c4err;
