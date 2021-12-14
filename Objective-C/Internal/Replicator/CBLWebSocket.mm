@@ -613,14 +613,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // Closes the connection and passes the NSError (if any) to LiteCore.
 - (void) closeWithError: (NSError*)error {
-    CBL_LOCK(self) {
-        if (_closing) {
-            CBLLogVerbose(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
-            return;
-        }
-        
-        _closing = YES;
+    // This function is always called from queue.
+    if (_closing) {
+        CBLLogVerbose(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
+        return;
     }
+    _closing = YES;
     
     [self disconnect];
 
