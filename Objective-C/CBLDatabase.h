@@ -230,6 +230,10 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  Note: Blobs that are not associated with any documents will be removed from the database
  when compacting the database.
  
+ @Note
+ (UNCOMMITTED) Use this API if you are developing Javascript language bindings.
+ If you are developing a native app, you must use the Blob API.
+ 
  @param blob The blob to save.
  @param error On return, the error if any.
  @return /True on success, false on failure.
@@ -251,6 +255,10 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  content_type   | String                    | No        | Content type ex. text/plain.
  length         | Number                    | No        | Binary length of the Blob in bytes.
  digest         | String                    | Yes       | The cryptographic digest of the Blob's content.
+ 
+ @Note
+ (UNCOMMITTED) Use this API if you are developing Javascript language bindings.
+ If you are developing a native app, you must use the Blob API.
  */
 - (nullable CBLBlob*) getBlob: (NSDictionary*)properties;
 
