@@ -765,14 +765,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark Cookie save
 
-- (NSString*) getCookies: (NSURL*)url {
+- (NSString*) getCookies: (NSURL*)url error: (NSError**)error {
     CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
         C4Error err = {};
         C4Address addr = {};
         [url c4Address: &addr];
         C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
-        if (err.code != 0)
+        if (err.code != 0) {
             CBLWarn(WebSocket, @"Error while getting cookies %d/%d", err.domain, err.code);
+            convertError(err, error);
+            return nil;
+        }
         
         if (!cookies.buf) {
             CBLLogVerbose(WebSocket, @"No cookies");
