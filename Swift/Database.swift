@@ -217,6 +217,10 @@ public final class Database {
     /// Note: Blobs that are not associated with any documents will be removed from the database
     /// when compacting the database.
     ///
+    /// - Note:
+    /// (UNCOMMITTED) Use this API if you are developing Javascript language bindings.
+    /// If you are developing a native app, you must use the Blob API.
+    ///
     /// - Parameter blob: The blob to save.
     /// - Throws: An error on a failure.
     public func saveBlob(blob: Blob) throws {
@@ -229,6 +233,10 @@ public final class Database {
     /// - Parameter properties: The properties for getting the blob object. If dictionary is not valid, it will
     /// throw InvalidArgument exception. See the note section
     /// - Throws: An error on a failure.
+    ///
+    /// - Note:
+    /// (UNCOMMITTED) Use this API if you are developing Javascript language bindings.
+    /// If you are developing a native app, you must use the Blob API.
     ///
     /// - Note:
     /// Key            | Value                     | Mandatory | Description
