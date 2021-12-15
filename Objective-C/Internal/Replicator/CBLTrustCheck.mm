@@ -186,7 +186,7 @@ static BOOL sOnlyTrustAnchorCerts;
         } else
 #endif
         {
-            cert = SecTrustGetCertificateAtIndex(_trust, 0);
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
             certData = CFBridgingRelease(SecCertificateCopyData(cert));
         }
         
