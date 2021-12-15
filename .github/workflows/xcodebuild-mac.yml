@@ -16,7 +16,7 @@ jobs:
       matrix:
         scheme: ["CBL_ObjC", "CBL_Swift"]
         platform: ["platform=macOS", "platform=macOS,variant=Mac Catalyst"]
-        arch: ["x86_64", "arm64"]
+        arch: ["x86_64"]
     steps: 
       - name: Checkout
         uses: actions/checkout@v2
