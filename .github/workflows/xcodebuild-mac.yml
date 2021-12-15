@@ -1,0 +1,38 @@
+name: Xcode-Build
+
+on:
+   push:
+     branches:
+       - master
+   pull_request:
+     branches:
+       - '**'
+
+jobs: 
+  build:
+    runs-on: macOS-latest
+
+    strategy:
+      matrix:
+        scheme: ["CBL_ObjC", "CBL_Swift"]
+        platform: ["platform=macOS", "platform=macOS,variant=Mac Catalyst"]
+        arch: ["x86_64", "arm64"]
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v2
+        with: 
+          submodules: recursive
+      - name: "Build-for-testing"
+        env:
+          SCHEME: ${{ matrix.scheme }}
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "${PLATFORM},arch=${ARCH}"
+      - name: "Test"
+        env:
+          SCHEME: ${{ matrix.scheme }}
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          xcodebuild test-without-building -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "${PLATFORM},arch=${ARCH}"
