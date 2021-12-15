@@ -27,11 +27,11 @@ jobs:
         env:
           SCHEME: ${{ matrix.scheme }}
         run: |
-          DEVICE=$(cat default)
+          DEVICE=$(cat device)
           xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
       - name: "Test"
         env:
           SCHEME: ${{ matrix.scheme }}
         run: |
-          DEVICE=$(cat default)
+          DEVICE=$(cat device)
           xcodebuild test-without-building -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
