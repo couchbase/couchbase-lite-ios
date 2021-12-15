@@ -1,4 +1,4 @@
-name: Xcode-Build
+name: macOS
 
 on:
    push:
@@ -10,8 +10,8 @@ on:
 
 jobs: 
   build:
+    name: build-and-test
     runs-on: macOS-latest
-
     strategy:
       matrix:
         scheme: ["CBL_ObjC", "CBL_Swift"]

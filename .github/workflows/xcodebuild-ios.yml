@@ -1,4 +1,4 @@
-name: Test - iOS 
+name: iOS
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and analyse default scheme using xcodebuild command
+    name: build-and-test
     runs-on: macos-latest
     strategy:
        matrix:
@@ -21,16 +21,17 @@ jobs:
       - name: "Select-iOS-Simulator"
         run: |
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}'`
+          echo $device | cat >device
           echo "Selected the device : ${device}"
       - name: "Build-for-testing"
         env:
           SCHEME: ${{ matrix.scheme }}
-          DEVICE: ${{ 'device' }}
         run: |
+          DEVICE=$(cat default)
           xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
       - name: "Test"
         env:
           SCHEME: ${{ matrix.scheme }}
-          DEVICE: ${{ 'device' }}
         run: |
+          DEVICE=$(cat default)
           xcodebuild test-without-building -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
