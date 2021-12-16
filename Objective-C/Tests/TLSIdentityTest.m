@@ -55,13 +55,13 @@ API_AVAILABLE(macos(10.12), ios(10.0))
         if (@available(iOS 10.3, *))
             publicKeyRef = SecCertificateCopyPublicKey(certRef);
         else
-            Assert(false, @"Catalyst:SecCertificateCopyPublicKey is not supported, iOS < 10.3, macOS < 10.3");
+            Assert(false, @"IOS:SecCertificateCopyPublicKey is not supported, iOS < 10.3");
 #elif TARGET_OS_OSX
         if (@available(macOS 10.3, *)) {
             OSStatus status = SecCertificateCopyPublicKey(certRef, &publicKeyRef);
             Assert(status == errSecSuccess);
         } else
-            Assert(false, @"Catalyst:SecCertificateCopyPublicKey is not supported, iOS < 10.3, macOS < 10.3");
+            Assert(false, @"OSX:SecCertificateCopyPublicKey is not supported, macOS < 10.3");
 #endif
     }
     Assert(publicKeyRef);
@@ -70,7 +70,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
         NSDictionary* attrs = CFBridgingRelease(SecKeyCopyAttributes(publicKeyRef));
         return [attrs objectForKey: (id)kSecAttrApplicationLabel];
     } else {
-        Assert(false, @"Not Supported by this OS version");
+        Assert(false, @"SecKeyCopyAttributes is not supported, iOS < 10.0, macOS < 10.12");
     }
     return nil;
 }

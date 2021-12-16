@@ -713,14 +713,24 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
-    SecCertificateRef cert = NULL;
     if (trust != NULL) {
-        if (SecTrustGetCertificateCount(trust) > 0)
-            cert = SecTrustGetCertificateAtIndex(trust, 0);
+        if (SecTrustGetCertificateCount(trust) > 0) {
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+            if (@available(macOS 12.0, iOS 15.0, *)) {
+                CFArrayRef certs = SecTrustCopyCertificateChain(trust);
+                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+                _replicator.serverCertificate = cert;
+                CFRelease(certs);
+            } else
+#endif
+            {
+                SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+                _replicator.serverCertificate = cert;
+            }
+        }
         else
             CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
     }
-    _replicator.serverCertificate = cert;
 }
 
 // Asynchronously sends data over the socket, and calls the completion handler block afterwards.

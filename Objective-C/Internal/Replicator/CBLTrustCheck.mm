@@ -176,8 +176,21 @@ static BOOL sOnlyTrustAnchorCerts;
 
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
-        if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
+        NSData* certData = nil;
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+        if (@available(macOS 12.0, iOS 15.0, *)) {
+            CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+            SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+            certData = CFBridgingRelease(SecCertificateCopyData(cert));
+            CFRelease(certs);
+        } else
+#endif
+        {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
+            certData = CFBridgingRelease(SecCertificateCopyData(cert));
+        }
+        
+        if ([_pinnedCertData isEqual: certData]) {
             [self forceTrusted];
             return credential;
         } else {
@@ -204,8 +217,20 @@ static BOOL sOnlyTrustAnchorCerts;
     if (certCount != 1)
         return NO;
     
-    SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
-    C4Cert* c4cert = toC4Cert(@[(__bridge id) certRef], outError);
+    C4Cert* c4cert = nil;
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+    if (@available(macOS 12.0, iOS 15.0, *)) {
+        CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+        SecCertificateRef certRef = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+        c4cert = toC4Cert(@[(__bridge id) certRef], outError);
+        CFRelease(certs);
+    } else
+#endif
+    {
+        SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
+        c4cert = toC4Cert(@[(__bridge id) certRef], outError);
+    }
+    
     if (!c4cert)
         return NO;
     
