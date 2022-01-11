@@ -298,7 +298,8 @@
     AssertEqual(allResults.count, 2u);
 }
 
-- (void) testLeftJoin {
+// TODO: https://issues.couchbase.com/browse/CBL-2722
+- (void) _testLeftJoin {
     [self loadNumbers: 100];
     
     CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
