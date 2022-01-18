@@ -172,7 +172,6 @@ typedef CBLURLEndpointListener Listener;
     CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
     AssertNil(err);
     
-    // For keeping the replication long enough to validate connection status, we will use blob
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     
     // DB#1
@@ -213,12 +212,18 @@ typedef CBLURLEndpointListener Listener;
     [repl2 start];
     [self waitForExpectations: @[exp1, exp2] timeout: timeout];
     
-    // all data are transferred to/from
-    if (type < kCBLReplicatorTypePull)
-        AssertEqual(listener.config.database.count, existingDocsInListener + 2u);
-    
-    AssertEqual(db1.count, existingDocsInListener + 1/* db2 doc*/);
-    AssertEqual(db2.count, existingDocsInListener + 1/* db1 doc*/);
+    NSUInteger expectedReplicatorDBDocs = existingDocsInListener;
+    if (type == kCBLReplicatorTypePull || type == kCBLReplicatorTypePushAndPull) {
+        // when pulled, db#1 and db#2 will be receiving each other's extra doc. ie., db#1 will get
+        // the extra doc from db#2 and vice versa
+        expectedReplicatorDBDocs += 1;
+    }
+    AssertEqual(db1.count, expectedReplicatorDBDocs);
+    AssertEqual(db2.count, expectedReplicatorDBDocs);
+    if (type == kCBLReplicatorTypePush || type == kCBLReplicatorTypePushAndPull) {
+        // it should have two extra docs from each db#1 and db#2
+        AssertEqual(listener.config.database.count, existingDocsInListener + 2);
+    }
     
     // cleanup
     [repl1 removeChangeListenerWithToken: token1];
@@ -1081,7 +1086,8 @@ typedef CBLURLEndpointListener Listener;
     [doc setValue: @"Tiger" forKey: @"species"];
     Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
     
-    [self validateMultipleReplicationsTo: _listener replType: kCBLReplicatorTypePushAndPull];
+    // pushAndPull can cause race; so only push is validated
+    [self validateMultipleReplicationsTo: _listener replType: kCBLReplicatorTypePush];
     
     // cleanup
     [self stopListen];
