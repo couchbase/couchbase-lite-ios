@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 0 # Pull all history or else we won't get branch info
 
     - name: Check Submodules
-      working-directory: ${{github.workspace}}/Scripts
+      working-directory: ${{github.workspace}}
       run: |
         pip install termcolor
-        ./check_deps.py $GITHUB_BASE_REF
+        ./vendor/couchbase-lite-core/build_cmake/scripts/check_deps.py -branch $GITHUB_BASE_REF -path ${{github.workspace}}/
