@@ -26,4 +26,4 @@ jobs:
       working-directory: ${{github.workspace}}
       run: |
         pip install termcolor
-        ./vendor/couchbase-lite-core/build_cmake/scripts/check_deps.py -branch $GITHUB_BASE_REF -path ${{github.workspace}}
+        ./vendor/couchbase-lite-core/build_cmake/scripts/check_deps.py $GITHUB_BASE_REF ${{github.workspace}}
