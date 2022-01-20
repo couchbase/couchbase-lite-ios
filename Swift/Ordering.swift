@@ -24,9 +24,12 @@ public protocol OrderingProtocol {
     
 }
 
+@available(*, deprecated, message: "Please use QuerySortOrder")
+typealias SortOrder = QuerySortOrder
+
 /// SortOrder allows to specify the ordering direction which is ascending or
 /// descending order. The default ordering is the ascending order.
-public protocol SortOrder: OrderingProtocol {
+public protocol QuerySortOrder: OrderingProtocol {
     
     /// Specifies ascending order.
     ///
@@ -48,7 +51,7 @@ public final class Ordering {
     /// - Parameter property: The property name.
     /// - Returns: The SortOrder object used for specifying the sort order, 
     ///            ascending or descending order.
-    public static func property(_ property: String) -> SortOrder {
+    public static func property(_ property: String) -> QuerySortOrder {
         return expression(Expression.property(property))
     }
     
@@ -57,9 +60,9 @@ public final class Ordering {
     /// - Parameter expression: The Expression object.
     /// - Returns: The SortOrder object used for specifying the sort order,
     ///            ascending or descending order.
-    public static func expression(_ expression: ExpressionProtocol) -> SortOrder {
+    public static func expression(_ expression: ExpressionProtocol) -> QuerySortOrder {
         let sortOrder = CBLQueryOrdering.expression(expression.toImpl())
-        return QuerySortOrder(impl: sortOrder)
+        return _QuerySortOrder(impl: sortOrder)
     }
     
 }
@@ -87,7 +90,7 @@ public final class Ordering {
 }
 
 
-/* internal */ class QuerySortOrder: QueryOrdering, SortOrder {
+/* internal */ class _QuerySortOrder: QueryOrdering, QuerySortOrder {
     
     public func ascending() -> OrderingProtocol {
         let o = self.impl as! CBLQuerySortOrder
