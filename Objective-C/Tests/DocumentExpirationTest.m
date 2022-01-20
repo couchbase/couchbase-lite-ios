@@ -424,7 +424,8 @@
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
 
-- (void) testSetExpirationThenDeletionAfterwards {
+// TODO: https://issues.couchbase.com/browse/CBL-2748
+- (void) _testSetExpirationThenDeletionAfterwards {
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
