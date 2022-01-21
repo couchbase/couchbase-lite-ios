@@ -485,7 +485,8 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRow, 101)
     }
     
-    func testCrossJoin() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2748
+    func _testCrossJoin() throws {
         try loadNumbers(10)
         
         
