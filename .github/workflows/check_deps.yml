@@ -1,0 +1,29 @@
+# Copyright 2022-Present Couchbase, Inc.
+#
+# Use of this software is governed by the Business Source License included in
+# the file licenses/BSL-Couchbase.txt.  As of the Change Date specified in that
+# file, in accordance with the Business Source License, use of this software
+# will be governed by the Apache License, Version 2.0, included in the file
+# licenses/APL2.txt.
+
+name: Check Submodules
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true # Only need one level for this check
+        fetch-depth: 0 # Pull all history or else we won't get branch info
+
+    - name: Check Submodules
+      working-directory: ${{github.workspace}}
+      run: |
+        pip install termcolor
+        ./vendor/couchbase-lite-core/build_cmake/scripts/check_deps.py $GITHUB_BASE_REF ${{github.workspace}}
