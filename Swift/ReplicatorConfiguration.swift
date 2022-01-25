@@ -149,8 +149,8 @@ public struct ReplicatorConfiguration {
      
      When setting the  _maxAttempts to zero(default), the default maxAttempts of 10 times for single shot
      replicators and infinite times for continuous replicators will be applied and present to users.
-     Settings the value to 1 will result in, will perform an initial request and if there is a transient error
-     occurs, will stop will retrying
+     Settings the value to 1, will perform an initial request and if there is a transient error
+     occurs, will stop and no retry.
      */
     public var maxAttempts: UInt = 0
     
