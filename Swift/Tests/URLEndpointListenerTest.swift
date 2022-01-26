@@ -57,15 +57,10 @@ class URLEndpontListenerTest: ReplicatorTest {
     }
     
     func stopListener(listener: URLEndpointListener? = nil) throws {
-        var l: URLEndpointListener!
-        if let listener = listener {
-            l = listener
-        } else {
-            l = self.listener
-        }
+        let l = listener ?? self.listener
         
-        l.stop()
-        if let id = l.tlsIdentity {
+        l?.stop()
+        if let id = l?.tlsIdentity {
             try id.deleteFromKeyChain()
         }
     }
