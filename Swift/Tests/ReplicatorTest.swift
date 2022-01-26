@@ -681,11 +681,13 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: Deleted Doc with Filter
     
-    func testPushDeletedDocWithFilterSingleShot() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2771
+    func _testPushDeletedDocWithFilterSingleShot() throws {
         try testPushDeletedDocWithFilter(false)
     }
     
-    func testPushDeletedDocWithFilterContinuous() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-2771
+    func _testPushDeletedDocWithFilterContinuous() throws {
         try testPushDeletedDocWithFilter(true)
     }
     
