@@ -88,8 +88,7 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2748
-- (void) _testDeleteSingleDocumentForIsDeletedExpression {
+- (void) testDeleteSingleDocumentForIsDeletedExpression {
     // save a new doc
     NSError* error;
     CBLMutableDocument* documentToSave = [[CBLMutableDocument alloc] init];
@@ -124,8 +123,7 @@
     AssertEqual([[rs allObjects] count], 1u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2748
-- (void) _testDeleteMultipleDocumentForIsDeletedExpression {
+- (void) testDeleteMultipleDocumentForIsDeletedExpression {
     // create
     NSUInteger documentsCount = 10;
     NSError* batchError;

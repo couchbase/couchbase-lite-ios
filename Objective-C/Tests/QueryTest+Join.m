@@ -374,8 +374,7 @@
     AssertEqual(numRows, 101u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2748
-- (void) _testCrossJoin {
+- (void) testCrossJoin {
     [self loadNumbers: 10];
     
     CBLQueryJoin* join = [CBLQueryJoin crossJoin: [CBLQueryDataSource database: self.db as: @"secondary"]];

@@ -347,8 +347,7 @@ class DocumentExpirationTest: CBLTestCase {
         waitForExpectations(timeout: 5.0)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2748
-    func _testSetExpirationThenDeletionAfterwards() throws {
+    func testSetExpirationThenDeletionAfterwards() throws {
         let promise = expectation(description: "document expiry expectation")
         
         // Create doc

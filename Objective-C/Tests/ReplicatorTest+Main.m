@@ -1227,11 +1227,13 @@
 
 #pragma mark Deleted Doc with Filter
 
-- (void) testPushDeletedDocWithFilterSingleShot {
+// TODO: https://issues.couchbase.com/browse/CBL-2771
+- (void) _testPushDeletedDocWithFilterSingleShot {
     [self testPushDeletedDocWithFilter: NO];
 }
 
-- (void) testPushDeletedDocWithFilterContinuous {
+// TODO: https://issues.couchbase.com/browse/CBL-2771
+- (void) _testPushDeletedDocWithFilterContinuous {
     [self testPushDeletedDocWithFilter: YES];
 }
 
