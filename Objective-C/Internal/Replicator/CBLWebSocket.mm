@@ -31,6 +31,7 @@
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
+#import <net/if.h>
 #import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
@@ -93,6 +94,7 @@ struct PendingWrite {
     CBLReplicator* _replicator;
     CBLDatabase* _db;
     NSURL* _remoteURL;
+    NSString* _networkInterface;
     
     NSArray* _clientIdentity;
     
@@ -170,6 +172,7 @@ static void doDispose(C4Socket* s) {
         _replicator = (__bridge CBLReplicator*)context;
         _db = _replicator.config.database;
         _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        _networkInterface = _replicator.config.networkInterface;
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
@@ -300,15 +303,36 @@ static void doDispose(C4Socket* s) {
     // Open the streams:
     NSInputStream *inStream;
     NSOutputStream *outStream;
-    [NSStream getStreamsToHostWithName: _logic.directHost port: _logic.directPort
-                           inputStream: &inStream outputStream: &outStream];
+    if (_networkInterface) {
+        CBLLogInfo(WebSocket, @"%@ connecting thru network interface %@",
+                   self, _networkInterface);
+        NSError* error;
+        if (![self connectToHostWithName: _logic.directHost
+                                    port: _logic.directPort
+                        networkInterface: _networkInterface
+                             inputStream: &inStream
+                            outputStream: &outStream
+                                   error: &error]) {
+            [self closeWithError: error];
+            return;
+        }
+    } else {
+        [NSStream getStreamsToHostWithName: _logic.directHost
+                                      port: _logic.directPort
+                               inputStream: &inStream
+                              outputStream: &outStream];
+    }
+    
     _in = inStream;
     _out = outStream;
+    
     CFReadStreamSetDispatchQueue((__bridge CFReadStreamRef)_in, _queue);
     CFWriteStreamSetDispatchQueue((__bridge CFWriteStreamRef)_out, _queue);
     _in.delegate = _out.delegate = self;
+    
     [self configureSOCKS];
     [self configureTLS];
+    
     [_in open];
     [_out open];
 
@@ -321,6 +345,85 @@ static void doDispose(C4Socket* s) {
         CBLLogInfo(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
         [self _sendWebSocketRequest];
     }
+}
+
+- (BOOL) connectToHostWithName: (NSString*)hostname
+                          port: (NSInteger)port
+              networkInterface: (NSString* _Nullable)interface
+                   inputStream: (NSInputStream**)inputStream
+                  outputStream: (NSOutputStream**)outputStream
+                         error: (NSError** _Nullable)error
+{
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+        
+    struct addrinfo* addr;
+    const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
+    const char* cPort = [[NSString stringWithFormat: @"%ld", (long)port]
+                         cStringUsingEncoding: NSUTF8StringEncoding];
+    if (getaddrinfo(cHost, cPort, &hints, &addr)) {
+        CBLWarnError(WebSocket, @"%@ : failed to get address info, errno = %d",
+                     self, errno);
+        return [self errnoError: error];
+    }
+    
+    int sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+    if (sockfd < 0) {
+        CBLWarnError(WebSocket, @"%@: failed to create socket, errno = %d",
+                     self, errno);
+        freeaddrinfo(addr);
+        return [self errnoError: error];
+    }
+    
+    if (interface) {
+        int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (index == 0) {
+            CBLWarnError(WebSocket, @"%@: failed to find network interface %@, errno=",
+                         self, interface, errno);
+            freeaddrinfo(addr);
+            return [self errnoError: error];
+        }
+        
+        if (setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index)) < 0) {
+            CBLWarnError(WebSocket, @"%@: failed to set network interface %@, errno=",
+                         self, interface, errno);
+            freeaddrinfo(addr);
+            return [self errnoError: error];
+        }
+    }
+    
+    int status = connect(sockfd, addr->ai_addr, addr->ai_addrlen);
+    if (status != 0) {
+        CBLWarnError(WebSocket, @"%@: failed to connect to the remote host, "
+                     "network interface = %@, errno = %d", self, interface, errno);
+        freeaddrinfo(addr);
+        [self errnoError: error];
+        return false;
+    }
+    
+    CFReadStreamRef readStream;
+    CFWriteStreamRef writeStream;
+    CFStreamCreatePairWithSocket(kCFAllocatorDefault, sockfd, &readStream, &writeStream);
+    freeaddrinfo(addr);
+    
+    CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
+    CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
+    
+    *inputStream = CFBridgingRelease(readStream);
+    *outputStream = CFBridgingRelease(writeStream);
+    
+    return true;
+}
+
+- (bool) errnoError: (NSError**)error {
+    if (error) {
+        NSString* desc = [NSString stringWithUTF8String: strerror(errno)];
+        *error = [NSError errorWithDomain: NSPOSIXErrorDomain
+                                     code: errno
+                                 userInfo: @{NSLocalizedDescriptionKey : desc}];
+    }
+    return false;
 }
 
 - (void) configureSOCKS {
