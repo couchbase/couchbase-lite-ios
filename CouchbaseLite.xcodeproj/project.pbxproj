@@ -1927,6 +1927,8 @@
 		1ADA05382240218F0068F745 /* AuthenticatorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticatorTest.m; sourceTree = "<group>"; };
 		1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStoppable.h; sourceTree = "<group>"; };
 		1AF555C322946ED90077DF6D /* QueryTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Main.m"; sourceTree = "<group>"; };
+		1AF98EB827AD22C500B3EA5F /* generate_swift_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_swift_release_zip.sh; sourceTree = "<group>"; };
+		1AF98EC427B0E08D00B3EA5F /* generate_objc_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_objc_release_zip.sh; sourceTree = "<group>"; };
 		270AB2BA2073EF57009A4596 /* CBLChangeNotifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLChangeNotifier.h; sourceTree = "<group>"; };
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
@@ -2268,7 +2270,6 @@
 		9388CB9321BCDF8B005CA66D /* get_repo_version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = get_repo_version.sh; sourceTree = "<group>"; };
 		9388CB9421BCDF8B005CA66D /* build_framework.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_framework.sh; sourceTree = "<group>"; };
 		9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = strip_frameworks.sh; sourceTree = "<group>"; };
-		9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_release_zip.sh; sourceTree = "<group>"; };
 		9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DocumentExpirationTest.m; sourceTree = "<group>"; };
 		9388CBE621BF7195005CA66D /* CBLLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLLog.h; sourceTree = "<group>"; };
 		9388CBE721BF7195005CA66D /* CBLLog.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLLog.mm; sourceTree = "<group>"; };
@@ -3208,9 +3209,10 @@
 				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
 				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
-				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
 				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
 				1A967A5F251BF78400B70945 /* generate_package_manifest.sh */,
+				1AF98EB827AD22C500B3EA5F /* generate_swift_release_zip.sh */,
+				1AF98EC427B0E08D00B3EA5F /* generate_objc_release_zip.sh */,
 			);
 			path = Scripts;
 			sourceTree = "<group>";
