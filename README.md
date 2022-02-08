@@ -5,7 +5,7 @@
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
-Couchbase Lite 2.x has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
+Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
 
 ## Requirements
@@ -25,7 +25,7 @@ Couchbase Lite 2.x has a completely new set of APIs. The implementation is on to
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-ios.git", 
-                 from: "2.8.0"),
+                 from: "3.0.0"),
     ],
 ```
 
@@ -35,7 +35,7 @@ dependencies: [
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-swift-ee.git", 
-                 from: "2.8.0"),
+                 from: "3.0.0"),
     ],
 ```
 
