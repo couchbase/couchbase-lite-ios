@@ -24,11 +24,15 @@
 
 /* Begin PBXBuildFile section */
 		1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
-		1A0BFA2727B51FD700BA84E5 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
 		1A0BFA2D27B51FD700BA84E5 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		1A0BFA2F27B51FD700BA84E5 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		1A0BFA3027B51FD700BA84E5 /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
 		1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
+		1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4627B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4827B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4927B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
 		1A2AB74622BBFD50000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75622BBFDB6000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75722BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
@@ -1888,6 +1892,7 @@
 
 /* Begin PBXFileReference section */
 		1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_ObjC_SG_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+SG.m"; sourceTree = "<group>"; };
 		1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexConfiguration.h; sourceTree = "<group>"; };
 		1A3470C0266F3E7C0042C6BA /* CBLIndexConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndexConfiguration.m; sourceTree = "<group>"; };
@@ -3646,6 +3651,7 @@
 				1A4160D6228367520061A567 /* ReplicatorTest.h */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
+				1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
 				93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */,
@@ -5333,9 +5339,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A0BFA4627B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */,
 				1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */,
-				1A0BFA2727B51FD700BA84E5 /* ReplicatorTest+Main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5975,6 +5981,7 @@
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
 				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
+				1A0BFA4827B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
 				1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
@@ -6008,6 +6015,7 @@
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
+				1A0BFA4927B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
@@ -6107,6 +6115,7 @@
 				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
+				1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -6253,6 +6262,7 @@
 				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
 				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
 				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
+				1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
