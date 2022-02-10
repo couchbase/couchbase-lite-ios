@@ -166,6 +166,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         kCBL_LogDomainListener  = setNamedLogDomainLevel("Listener", kC4LogDebug);
         setNamedLogDomainLevel("BLIP", kC4LogDebug);
         setNamedLogDomainLevel("SyncBusy", kC4LogDebug);
+        setNamedLogDomainLevel("TLS", kC4LogDebug);
         
         // Now map user defaults starting with CBLLog... to log levels:
         NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];
