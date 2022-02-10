@@ -23,6 +23,12 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
+		1A0BFA2727B51FD700BA84E5 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
+		1A0BFA2D27B51FD700BA84E5 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
+		1A0BFA2F27B51FD700BA84E5 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		1A0BFA3027B51FD700BA84E5 /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
+		1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
 		1A2AB74622BBFD50000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75622BBFDB6000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75722BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
@@ -1540,6 +1546,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1A0BFA1127B51FD700BA84E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9398D9111E03434200464432;
+			remoteInfo = CouchbaseLite;
+		};
 		1A93FACE24F03E800015D54D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -1874,6 +1887,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_ObjC_SG_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexConfiguration.h; sourceTree = "<group>"; };
 		1A3470C0266F3E7C0042C6BA /* CBLIndexConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndexConfiguration.m; sourceTree = "<group>"; };
@@ -2454,6 +2468,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1A0BFA2C27B51FD700BA84E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA2D27B51FD700BA84E5 /* CouchbaseLite.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F92701E4D30A4007FD5A2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3479,6 +3501,7 @@
 				930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */,
 				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
 				93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */,
+				1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4496,6 +4519,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1A0BFA0F27B51FD700BA84E5 /* CBL_ObjC_SG_Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0BFA3127B51FD700BA84E5 /* Build configuration list for PBXNativeTarget "CBL_ObjC_SG_Tests" */;
+			buildPhases = (
+				1A0BFA1227B51FD700BA84E5 /* Sources */,
+				1A0BFA2C27B51FD700BA84E5 /* Frameworks */,
+				1A0BFA2E27B51FD700BA84E5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1A0BFA1027B51FD700BA84E5 /* PBXTargetDependency */,
+			);
+			name = CBL_ObjC_SG_Tests;
+			productName = CouchbaseLiteTests;
+			productReference = 1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		275F92731E4D30A4007FD5A2 /* CBL_Swift */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */;
@@ -4845,6 +4886,9 @@
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
+					1A0BFA0F27B51FD700BA84E5 = {
+						DevelopmentTeam = N2Q372V7W2;
+					};
 					275F92731E4D30A4007FD5A2 = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = N2Q372V7W2;
@@ -4968,6 +5012,7 @@
 				9343F18A207D636300F19A89 /* CBL_EE_Swift_Tests */,
 				9343F1A4207D63BF00F19A89 /* PerfTests_EE_Mac */,
 				27BF031C1FB6290C003D5BB8 /* All */,
+				1A0BFA0F27B51FD700BA84E5 /* CBL_ObjC_SG_Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -5067,6 +5112,15 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1A0BFA2E27B51FD700BA84E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA2F27B51FD700BA84E5 /* Support in Resources */,
+				1A0BFA3027B51FD700BA84E5 /* iTunesMusicLibrary.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F927A1E4D30A4007FD5A2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5275,6 +5329,16 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1A0BFA1227B51FD700BA84E5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */,
+				1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */,
+				1A0BFA2727B51FD700BA84E5 /* ReplicatorTest+Main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F926F1E4D30A4007FD5A2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6230,6 +6294,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1A0BFA1027B51FD700BA84E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
+			targetProxy = 1A0BFA1127B51FD700BA84E5 /* PBXContainerItemProxy */;
+		};
 		275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
@@ -6393,6 +6462,60 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1A0BFA3227B51FD700BA84E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1A0BFA3327B51FD700BA84E5 /* Debug_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug_EE;
+		};
+		1A0BFA3427B51FD700BA84E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		1A0BFA3527B51FD700BA84E5 /* Release_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release_EE;
+		};
 		275F92861E4D30A4007FD5A2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
@@ -8746,6 +8869,17 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1A0BFA3127B51FD700BA84E5 /* Build configuration list for PBXNativeTarget "CBL_ObjC_SG_Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0BFA3227B51FD700BA84E5 /* Debug */,
+				1A0BFA3327B51FD700BA84E5 /* Debug_EE */,
+				1A0BFA3427B51FD700BA84E5 /* Release */,
+				1A0BFA3527B51FD700BA84E5 /* Release_EE */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
