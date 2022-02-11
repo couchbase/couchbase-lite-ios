@@ -78,7 +78,8 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
-- (void) testSelfSignedSSLFailure_SG {
+// disabling this test: since GH Action SG Tests will be running on Sync Gateway without SSL.
+- (void) _testSelfSignedSSLFailure_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
@@ -88,7 +89,8 @@
     [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
 }
 
-- (void) testSelfSignedSSLPinned_SG {
+// disabling this test: since GH Action SG Tests will be running on Sync Gateway without SSL.
+- (void) _testSelfSignedSSLPinned_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
