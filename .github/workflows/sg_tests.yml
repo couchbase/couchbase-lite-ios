@@ -25,11 +25,11 @@ jobs:
           device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}'`
           echo $device | cat >device
           echo "Selected the device : ${device}"
-      - name: "Build-for-testing"
+      - name: Build-for-testing
         run: |
           DEVICE=$(cat device)
           xcodebuild build-for-testing -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
-      - name: "Test"
+      - name: Run-SG-Tests
         run: |
           DEVICE=$(cat device)
-          xcodebuild test-without-building -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}" CBL_TEST_HOST='localhost'
+          xcodebuild test-without-building -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
