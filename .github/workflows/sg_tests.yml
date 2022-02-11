@@ -27,10 +27,9 @@ jobs:
           echo "Selected the device : ${device}"
       - name: "Build-for-testing"
         run: |
-          export CBL_TEST_HOST=localhost
           DEVICE=$(cat device)
           xcodebuild build-for-testing -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
       - name: "Test"
         run: |
           DEVICE=$(cat device)
-          xcodebuild test-without-building -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
+          xcodebuild test-without-building -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}" CBL_TEST_HOST='localhost'
