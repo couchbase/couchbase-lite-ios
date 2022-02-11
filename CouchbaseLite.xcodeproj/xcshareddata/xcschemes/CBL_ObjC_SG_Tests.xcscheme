@@ -15,7 +15,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1A0BFA0F27B51FD700BA84E5"
-            BuildableName = "CBL_ObjC_Tests copy.xctest"
+            BuildableName = "CBL_ObjC_SG_Tests.xctest"
             BlueprintName = "CBL_ObjC_SG_Tests"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
@@ -33,7 +33,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1A0BFA0F27B51FD700BA84E5"
-               BuildableName = "CBL_ObjC_Tests copy.xctest"
+               BuildableName = "CBL_ObjC_SG_Tests.xctest"
                BlueprintName = "CBL_ObjC_SG_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
