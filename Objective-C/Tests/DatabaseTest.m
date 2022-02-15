@@ -1514,8 +1514,7 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-// TODO: https://issues.couchbase.com/browse/CBL-2446
-- (void) _testCloseWithActiveReplicators {
+- (void) testCloseWithActiveReplicators {
     [self openOtherDB];
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1547,8 +1546,7 @@
     Assert([self.db isClosedLocked]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2446
-- (void) _testCloseWithActiveLiveQueriesAndReplicators {
+- (void) testCloseWithActiveLiveQueriesAndReplicators {
     // Live Queries:
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
@@ -1738,8 +1736,7 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-// TODO: https://issues.couchbase.com/browse/CBL-2446
-- (void) _testDeleteWithActiveReplicators {
+- (void) testDeleteWithActiveReplicators {
     [self openOtherDB];
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1771,8 +1768,7 @@
     Assert([self.db isClosedLocked]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2446
-- (void) _testDeleteWithActiveLiveQueriesAndReplicators {
+- (void) testDeleteWithActiveLiveQueriesAndReplicators {
     [self openOtherDB];
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
