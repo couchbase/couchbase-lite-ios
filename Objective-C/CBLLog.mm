@@ -82,7 +82,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
         domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
                               @"SQL": @(kCBLLogDomainDatabase),
-                              @"TLS": @(kCBLLogDomainDatabase), // for both replicator & listener
                               @"Query": @(kCBLLogDomainQuery),
                               @"Sync": @(kCBLLogDomainReplicator),
                               @"SyncBusy": @(kCBLLogDomainReplicator),
