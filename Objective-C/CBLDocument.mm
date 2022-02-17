@@ -230,9 +230,11 @@ using namespace fleece;
     if (!body.buf)
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     
-    FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.database.sharedKeys, nullslice);
-    hasAttachment = hasAttachment || c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
-    FLDoc_Release(doc);
+    if (!hasAttachment) {
+        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.database.sharedKeys, nullslice);
+        hasAttachment = c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
+        FLDoc_Release(doc);
+    }
     
     // adds the attachment flag to `outRevFlags`
     if (outRevFlags)
