@@ -1479,6 +1479,41 @@
 
 #pragma mark - Sync Gateway Tests
 
+- (void) testPushPullWithBlobs {
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    // Create a doc with a blob:
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpeg"
+                                                    data: data];
+    [doc1 setBlob: blob forKey: @"blob"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    // Push:
+    [self eraseRemoteEndpoint: target];
+    id config = [self configWithTarget: target type : kCBLReplicatorTypePush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Get the doc and update:
+    doc1 = [[self.db documentWithID: @"doc1"] toMutable];
+    [doc1 setString: @"1 Main st" forKey: @"address"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    // Push again
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Clean db and pull:
+    [self cleanDB];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(self.db.count, 1);
+}
+
 - (void) testAuthenticationFailure_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     if (!target)
