@@ -1479,7 +1479,7 @@
 
 #pragma mark - Sync Gateway Tests
 
-- (void) testPushPullWithBlobs {
+- (void) testPushPullWithBlobs_SG {
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
