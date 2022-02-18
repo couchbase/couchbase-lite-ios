@@ -90,6 +90,7 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"WS": @(kCBLLogDomainNetwork),
                               @"BLIPMessages": @(kCBLLogDomainNetwork),
                               @"Zip": @(kCBLLogDomainNetwork),
+                              @"TLS": @(kCBLLogDomainNetwork),
 #ifdef COUCHBASE_ENTERPRISE
                               @"Listener": @(kCBLLogDomainListener)
 #endif
