@@ -81,11 +81,16 @@ static NSDictionary* domainDictionary = nil;
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
         domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
+                              @"SQL": @(kCBLLogDomainDatabase),
                               @"Query": @(kCBLLogDomainQuery),
                               @"Sync": @(kCBLLogDomainReplicator),
                               @"SyncBusy": @(kCBLLogDomainReplicator),
+                              @"Changes": @(kCBLLogDomainReplicator),
                               @"BLIP": @(kCBLLogDomainNetwork),
                               @"WS": @(kCBLLogDomainNetwork),
+                              @"BLIPMessages": @(kCBLLogDomainNetwork),
+                              @"Zip": @(kCBLLogDomainNetwork),
+                              @"TLS": @(kCBLLogDomainNetwork),
 #ifdef COUCHBASE_ENTERPRISE
                               @"Listener": @(kCBLLogDomainListener)
 #endif
@@ -166,6 +171,11 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         kCBL_LogDomainListener  = setNamedLogDomainLevel("Listener", kC4LogDebug);
         setNamedLogDomainLevel("BLIP", kC4LogDebug);
         setNamedLogDomainLevel("SyncBusy", kC4LogDebug);
+        setNamedLogDomainLevel("TLS", kC4LogDebug);
+        setNamedLogDomainLevel("Changes", kC4LogDebug);
+        setNamedLogDomainLevel("SQL", kC4LogDebug);
+        setNamedLogDomainLevel("Zip", kC4LogDebug);
+        setNamedLogDomainLevel("BLIPMessages", kC4LogDebug);
         
         // Now map user defaults starting with CBLLog... to log levels:
         NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];
