@@ -1,12 +1,12 @@
-name: Swift
+name: Swift-Package
 
 on:
   push:
     paths:
-      - 'Product.swift'
+      - 'Package.swift'
   pull_request:
     paths:
-      - 'Product.swift'
+      - 'Package.swift'
 
 jobs:
   build:
