@@ -38,6 +38,7 @@
 @synthesize authenticator=_authenticator;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
+@synthesize networkInterface=_networkInterface;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
@@ -117,6 +118,11 @@
     _headers = headers;
 }
 
+- (void) setNetworkInterface: (NSString*)networkInterface {
+    [self checkReadonly];
+    _networkInterface = networkInterface;
+}
+
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
     _documentIDs = documentIDs;
@@ -187,6 +193,7 @@
 #endif
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
+        _networkInterface = config.networkInterface;
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;

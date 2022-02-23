@@ -84,6 +84,9 @@ public struct ReplicatorConfiguration {
     /// Extra HTTP headers to send in all requests to the remote target.
     public var headers: Dictionary<String, String>?
     
+    /// Specific network interface for connecting to the remote target.
+    public var networkInterface: String?
+    
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
@@ -210,6 +213,7 @@ public struct ReplicatorConfiguration {
         self.authenticator = config.authenticator
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
+        self.networkInterface = config.networkInterface
         self.channels = config.channels
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
@@ -239,6 +243,7 @@ public struct ReplicatorConfiguration {
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
+        c.networkInterface = self.networkInterface;
         c.channels = self.channels
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)
