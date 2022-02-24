@@ -357,49 +357,64 @@ static void doDispose(C4Socket* s) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
-        
+    
     struct addrinfo* addr;
     const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
     const char* cPort = [[NSString stringWithFormat: @"%ld", (long)port]
                          cStringUsingEncoding: NSUTF8StringEncoding];
     if (getaddrinfo(cHost, cPort, &hints, &addr)) {
-        CBLWarnError(WebSocket, @"%@ : failed to get address info, errno = %d",
-                     self, errno);
-        return [self errnoError: error];
+        NSString* m = [NSString stringWithFormat: @"failed to get address info, %s", strerror(errno)];
+        return [self populateError: error errNo: errno msg: m];
     }
     
     int sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (sockfd < 0) {
-        CBLWarnError(WebSocket, @"%@: failed to create socket, errno = %d",
-                     self, errno);
         freeaddrinfo(addr);
-        return [self errnoError: error];
+        
+        NSString* m = [NSString stringWithFormat: @"failed to create socket, %s", strerror(errno)];
+        return [self populateError: error errNo: errno msg: m];
     }
     
     if (interface) {
-        int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+        unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
         if (index == 0) {
-            CBLWarnError(WebSocket, @"%@: failed to find network interface %@, errno=",
-                         self, interface, errno);
             freeaddrinfo(addr);
-            return [self errnoError: error];
+            
+            NSString* m = [NSString stringWithFormat: @"failed to find network interface %@ %s",
+                           interface, strerror(errno)];
+            return [self populateError: error errNo: errno msg: m];
         }
-        
-        if (setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index)) < 0) {
-            CBLWarnError(WebSocket, @"%@: failed to set network interface %@, errno=",
-                         self, interface, errno);
+        int result = -1;
+        switch (addr->ai_family) {
+            case AF_INET:
+                result = setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+                break;
+            case AF_INET6:
+                result = setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &index, sizeof(index));
+                break;
+            default:
+                CBLWarnError(WebSocket, @"%@: Address family not supported! %d",
+                             self, addr->ai_family);
+
+                result = -1;
+                break;
+        }
+        if (result < 0) {
             freeaddrinfo(addr);
-            return [self errnoError: error];
+            
+            NSString* m = [NSString stringWithFormat: @"failed to set network interface %@ %s",
+                           interface, strerror(errno)];
+            return [self populateError: error errNo: errno msg: m];
         }
     }
     
     int status = connect(sockfd, addr->ai_addr, addr->ai_addrlen);
     if (status != 0) {
-        CBLWarnError(WebSocket, @"%@: failed to connect to the remote host, "
-                     "network interface = %@, errno = %d", self, interface, errno);
         freeaddrinfo(addr);
-        [self errnoError: error];
-        return false;
+        
+        NSString* m = [NSString stringWithFormat: @"failed to connect to the remote host, " \
+                       "network interface = %@ %s", interface, strerror(errno)];
+        return [self populateError: error errNo: errno msg: m];
     }
     
     CFReadStreamRef readStream;
@@ -416,12 +431,12 @@ static void doDispose(C4Socket* s) {
     return true;
 }
 
-- (bool) errnoError: (NSError**)error {
+- (bool) populateError: (NSError**)error errNo: (int)errNo msg: (NSString*)msg {
+    CBLWarnError(WebSocket, @"%@: %@ errno=%d", self, msg, errNo);
     if (error) {
-        NSString* desc = [NSString stringWithUTF8String: strerror(errno)];
         *error = [NSError errorWithDomain: NSPOSIXErrorDomain
-                                     code: errno
-                                 userInfo: @{NSLocalizedDescriptionKey : desc}];
+                                     code: errNo
+                                 userInfo: @{NSLocalizedDescriptionKey : msg}];
     }
     return false;
 }
