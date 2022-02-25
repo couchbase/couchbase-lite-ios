@@ -396,7 +396,6 @@ static void doDispose(C4Socket* s) {
             default:
                 CBLWarnError(WebSocket, @"%@: address family not supported! %d", self,
                              addr->ai_family);
-
                 result = -1;
                 break;
         }
