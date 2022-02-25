@@ -37,7 +37,6 @@
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
 #import "CBLStringBytes.h"
-#import "c4.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
