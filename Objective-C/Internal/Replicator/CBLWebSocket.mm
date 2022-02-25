@@ -366,12 +366,14 @@ static void doDispose(C4Socket* s) {
         NSString* m = [NSString stringWithFormat: @"failed to get address info, %s", strerror(errno)];
         return [self populateError: error errNo: errno msg: m];
     }
+    CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info - (%d %d %d)", self, hostname,
+                  (long)port, interface, addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     
     int sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (sockfd < 0) {
         freeaddrinfo(addr);
-        
-        NSString* m = [NSString stringWithFormat: @"failed to create socket, %s", strerror(errno)];
+        NSString* m = [NSString stringWithFormat: @"failed to create socket, %s (%d %d %d)",
+                       strerror(errno), addr->ai_family, addr->ai_socktype, addr->ai_protocol];
         return [self populateError: error errNo: errno msg: m];
     }
     
@@ -379,7 +381,6 @@ static void doDispose(C4Socket* s) {
         unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
         if (index == 0) {
             freeaddrinfo(addr);
-            
             NSString* m = [NSString stringWithFormat: @"failed to find network interface %@ %s",
                            interface, strerror(errno)];
             return [self populateError: error errNo: errno msg: m];
@@ -393,17 +394,17 @@ static void doDispose(C4Socket* s) {
                 result = setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &index, sizeof(index));
                 break;
             default:
-                CBLWarnError(WebSocket, @"%@: Address family not supported! %d",
-                             self, addr->ai_family);
+                CBLWarnError(WebSocket, @"%@: address family not supported! %d", self,
+                             addr->ai_family);
 
                 result = -1;
                 break;
         }
         if (result < 0) {
             freeaddrinfo(addr);
-            
-            NSString* m = [NSString stringWithFormat: @"failed to set network interface %@ %s",
-                           interface, strerror(errno)];
+            NSString* m = [NSString stringWithFormat: @"failed to set network interface %@ " \
+                           " %s (%d %d %d)", interface, strerror(errno), addr->ai_family,
+                           addr->ai_socktype, addr->ai_protocol];
             return [self populateError: error errNo: errno msg: m];
         }
     }
@@ -411,9 +412,9 @@ static void doDispose(C4Socket* s) {
     int status = connect(sockfd, addr->ai_addr, addr->ai_addrlen);
     if (status != 0) {
         freeaddrinfo(addr);
-        
         NSString* m = [NSString stringWithFormat: @"failed to connect to the remote host, " \
-                       "network interface = %@ %s", interface, strerror(errno)];
+                       "network interface = %@ %s (%d %d %d) ", interface, strerror(errno),
+                       addr->ai_family, addr->ai_socktype, addr->ai_protocol];
         return [self populateError: error errNo: errno msg: m];
     }
     
