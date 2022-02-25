@@ -366,17 +366,13 @@ static void doDispose(C4Socket* s) {
     if (res) {
         NSString* msg = [NSString stringWithFormat: @"failed(%d) to get address info: %s", res,
                          gai_strerror(res)];
-        if (res == EAI_NONAME) {
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            if (error) {
-                *error = [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
-                                             code: kCFHostErrorUnknown
-                                         userInfo: @{NSLocalizedDescriptionKey : msg,
-                                                     (id)kCFGetAddrInfoFailureKey: @EAI_NONAME}];
-            }
-        } else
-            [self populateError: error errNo: res msg: msg];
-        
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        if (error) {
+            *error = [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
+                                         code: res
+                                     userInfo: @{NSLocalizedDescriptionKey : msg,
+                                                 (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
+        }
         return false;
     }
     CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info - (%d %d %d)", self, hostname,
