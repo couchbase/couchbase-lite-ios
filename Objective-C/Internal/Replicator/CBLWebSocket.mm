@@ -359,7 +359,7 @@ static void doDispose(C4Socket* s) {
 
 - (void) connectToHostWithName: (NSString*)hostname
                           port: (NSInteger)port
-              networkInterface: (NSString* _Nullable)interface
+              networkInterface: (NSString*)interface
 {
     // Get address info:
     struct addrinfo hints;
@@ -368,34 +368,28 @@ static void doDispose(C4Socket* s) {
     
     struct addrinfo* addr;
     const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
-    const char* cPort = [[NSString stringWithFormat: @"%ld", (long)port]
-                         cStringUsingEncoding: NSUTF8StringEncoding];
+    const char* cPort = [$sprintf(@"%ld", (long)port) cStringUsingEncoding: NSUTF8StringEncoding];
+    
     int res = getaddrinfo(cHost, cPort, &hints, &addr);
     if (res) {
-        NSString* msg = [NSString stringWithFormat:
-                         @"Failed to get address info with error %d, %s", res, gai_strerror(res)];
+        NSString* msg = $sprintf(@"Failed to get address info with error %d", res);
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        NSError* error = [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
-                                             code: res
-                                         userInfo: @{NSLocalizedDescriptionKey : msg,
-                                                     (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
-        [self closeWithError: error];
+        [self closeWithError: addrInfoError(res, msg)];
         return;
     }
     
-    CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info as family=%d, socktype=%d, protocol=%d",
-                  self, hostname, (long)port, interface, addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+    CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info as %@",
+                  self, hostname, (long)port, interface, addrInfo(addr));
     
     // Create socket:
     Assert(_sockfd < 0);
     _sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (_sockfd < 0) {
-        NSString* msg = [NSString stringWithFormat:
-                         @"Failed to create socket with error %s (family=%d, socktype=%d, protocol=%d)",
-                         strerror(errno), addr->ai_family, addr->ai_socktype, addr->ai_protocol];
-        freeaddrinfo(addr);
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(addr));
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        [self closeWithError: [self posixErrorWithErrNo: errno msg: msg]];
+        [self closeWithError: posixError(errNo, msg)];
+        freeaddrinfo(addr);
         return;
     }
     
@@ -403,12 +397,11 @@ static void doDispose(C4Socket* s) {
     if (interface) {
         unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
         if (index == 0) {
-            freeaddrinfo(addr);
-            NSString* msg = [NSString stringWithFormat:
-                             @"Failed to find network interface %@ with error %s",
-                             interface, strerror(errno)];
+            int errNo = errno;
+            NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: [self posixErrorWithErrNo: errno msg: msg]];
+            [self closeWithError: posixError(errNo, msg)];
+            freeaddrinfo(addr);
             return;
         }
         int result = -1;
@@ -425,12 +418,12 @@ static void doDispose(C4Socket* s) {
                 break;
         }
         if (result < 0) {
-            NSString* msg = [NSString stringWithFormat: @"Failed to set network interface to socket %@ " \
-                             "with error %s (family=%d, socktype=%d, protocol=%d)",
-                             interface, strerror(errno), addr->ai_family, addr->ai_socktype, addr->ai_protocol];
-            freeaddrinfo(addr);
+            int errNo = errno;
+            NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
+                                     interface, errNo, addrInfo(addr));
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: [self posixErrorWithErrNo: errno msg: msg]];
+            [self closeWithError: posixError(errNo, msg)];
+            freeaddrinfo(addr);
             return;
         }
     }
@@ -453,9 +446,10 @@ static void doDispose(C4Socket* s) {
                 // Enable non-blocking mode on the socket:
                 int flags = fcntl(_sockfd, F_GETFL);
                 if (fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
-                    NSString* msg = @"Failed to enable non-blocking mode";
+                    int errNo = errno;
+                    NSString* msg = $sprintf(@"Failed to enable non-blocking mode with errno %d", errNo);
                     CBLWarnError(WebSocket, @"%@: %@", self, msg);
-                    [self closeWithError: [self posixErrorWithErrNo: errno msg: msg]];
+                    [self closeWithError: posixError(errNo, msg)];
                     return;
                 }
                 
@@ -467,29 +461,43 @@ static void doDispose(C4Socket* s) {
                 CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
                 CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
                 
-                NSInputStream *input = CFBridgingRelease(readStream);
-                NSOutputStream *output = CFBridgingRelease(writeStream);
+                NSInputStream* input = CFBridgingRelease(readStream);
+                NSOutputStream* output = CFBridgingRelease(writeStream);
                 
                 // Connect with the streams:
                 [self _connectWithInputStream: input outputStream: output];
             });
         } else {
-            NSString* msg = [NSString stringWithFormat:
-                             @"Failed to connect to the remote host via network interface %@ " \
-                             "with error %s (family=%d, socktype=%d, protocol=%d)",
-                             interface, strerror(errno), addr->ai_family, addr->ai_socktype, addr->ai_protocol];
+            int errNo = errno;
+            NSString* msg = interface ?
+                $sprintf(@"Failed to connect via the specified network interface %@ with errno %d", interface, errNo) :
+                $sprintf(@"Failed to connect with errno %d", errNo);
+            CBLWarnError(WebSocket, @"%@: %@", self, msg);
+            NSError* error = posixError(errNo, msg);
             dispatch_async(_queue, ^{
-                [self closeWithError: [self posixErrorWithErrNo: errno msg: msg]];
+                [self closeWithError: error];
             });
         }
         freeaddrinfo(addr);
     });
 }
 
-- (NSError*) posixErrorWithErrNo: (int)errNo msg: (NSString*)msg {
+static inline NSError* posixError(int errNo, NSString* msg) {
     return [NSError errorWithDomain: NSPOSIXErrorDomain
                                code: errNo
                            userInfo: @{NSLocalizedDescriptionKey : msg}];
+}
+
+static inline NSError* addrInfoError(int res, NSString* msg) {
+    return [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
+                               code: res
+                           userInfo: @{NSLocalizedDescriptionKey: msg,
+                                       (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
+}
+
+static inline NSString* addrInfo(const struct addrinfo* addr) {
+    return $sprintf(@"family=%d, socktype=%d, protocol=%d",
+                    addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 }
 
 - (void) configureSOCKS {
