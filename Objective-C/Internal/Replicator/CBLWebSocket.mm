@@ -410,7 +410,7 @@ static void doDispose(C4Socket* s) {
                 result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
                 break;
             case AF_INET6:
-                result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &index, sizeof(index));
+                result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
                 break;
             default:
                 CBLWarnError(WebSocket, @"%@: Address family %d is not supported", self, addr->ai_family);
