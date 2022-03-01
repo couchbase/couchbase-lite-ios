@@ -205,7 +205,7 @@ static void doDispose(C4Socket* s) {
         _sockfd = -1;
         _networkInterface = _replicator.config.networkInterface;
         if (_networkInterface) {
-            queueName = [NSString stringWithFormat: @"%@-Connecting", queueName];
+            queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         }
     }
