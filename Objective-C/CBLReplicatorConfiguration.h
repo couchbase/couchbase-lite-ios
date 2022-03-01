@@ -78,6 +78,11 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  */
 @property (nonatomic, nullable) NSDictionary<NSString*, NSString*>* headers;
 
+/*
+ Specific network interface (e.g. en0 and pdp_ip0) for connecting to the remote target.
+ */
+@property (nonatomic, nullable) NSString* networkInterface;
+
 /**
  A set of Sync Gateway channel names to pull from. Ignored for push replication.
  The default value is nil, meaning that all accessible channels will be pulled.
