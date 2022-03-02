@@ -490,7 +490,7 @@ static inline NSError* posixError(int errNo, NSString* msg) {
 
 static inline NSError* addrInfoError(int res, NSString* msg) {
     return [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
-                               code: res
+                               code: kCFHostErrorUnknown
                            userInfo: @{NSLocalizedDescriptionKey: msg,
                                        (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
 }
