@@ -104,6 +104,7 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
+    struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
 }
 
@@ -203,6 +204,7 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _sockfd = -1;
+        _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
@@ -219,6 +221,8 @@ static void doDispose(C4Socket* s) {
     free(_readBuffer);
     if (_httpResponse)
         CFRelease(_httpResponse);
+    if (_addr)
+        freeaddrinfo(_addr);
 }
 
 - (void) dispose {
@@ -366,11 +370,10 @@ static void doDispose(C4Socket* s) {
     memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     
-    struct addrinfo* addr;
     const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
     const char* cPort = [$sprintf(@"%ld", (long)port) cStringUsingEncoding: NSUTF8StringEncoding];
     
-    int res = getaddrinfo(cHost, cPort, &hints, &addr);
+    int res = getaddrinfo(cHost, cPort, &hints, &_addr);
     if (res) {
         NSString* msg = $sprintf(@"Failed to get address info with error %d", res);
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
@@ -379,17 +382,16 @@ static void doDispose(C4Socket* s) {
     }
     
     CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info as %@",
-                  self, hostname, (long)port, interface, addrInfo(addr));
+                  self, hostname, (long)port, interface, addrInfo(_addr));
     
     // Create socket:
     Assert(_sockfd < 0);
-    _sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+    _sockfd = socket(_addr->ai_family, _addr->ai_socktype, _addr->ai_protocol);
     if (_sockfd < 0) {
         int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(addr));
+        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(_addr));
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
         [self closeWithError: posixError(errNo, msg)];
-        freeaddrinfo(addr);
         return;
     }
     
@@ -401,11 +403,10 @@ static void doDispose(C4Socket* s) {
             NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             [self closeWithError: posixError(errNo, msg)];
-            freeaddrinfo(addr);
             return;
         }
         int result = -1;
-        switch (addr->ai_family) {
+        switch (_addr->ai_family) {
             case AF_INET:
                 result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
                 break;
@@ -413,17 +414,16 @@ static void doDispose(C4Socket* s) {
                 result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
                 break;
             default:
-                CBLWarnError(WebSocket, @"%@: Address family %d is not supported", self, addr->ai_family);
+                CBLWarnError(WebSocket, @"%@: Address family %d is not supported", self, _addr->ai_family);
                 result = -1;
                 break;
         }
         if (result < 0) {
             int errNo = errno;
             NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
-                                     interface, errNo, addrInfo(addr));
+                                     interface, errNo, addrInfo(_addr));
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             [self closeWithError: posixError(errNo, msg)];
-            freeaddrinfo(addr);
             return;
         }
     }
@@ -432,11 +432,10 @@ static void doDispose(C4Socket* s) {
     dispatch_async(_socketConnectQueue, ^{
         int sockfd = self.sockfd;
         if (sockfd < 0) {
-            freeaddrinfo(addr);
             return; // Already disconnected
         }
         
-        int status = connect(sockfd, addr->ai_addr, addr->ai_addrlen);
+        int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
         
         if (status == 0) {
             dispatch_async(_queue, ^{
@@ -478,7 +477,6 @@ static void doDispose(C4Socket* s) {
                 [self closeWithError: error];
             });
         }
-        freeaddrinfo(addr);
     });
 }
 
@@ -809,7 +807,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeWithError: (NSError*)error {
     // This function is always called from queue.
     if (_closing) {
-        CBLLogVerbose(Sync, @"%@ Websocket is already closing. ignoring the close now", self);
+        CBLLogVerbose(Sync, @"%@ Websocket is already closing. Ignoring the close.", self);
         return;
     }
     _closing = YES;
