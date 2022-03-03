@@ -496,8 +496,7 @@
     NSString* warning = [NSString stringWithFormat: @"The document ID of the resolved document '%@'"
                          " is not matching with the document ID of the conflicting document '%@'.",
                          wrongDocID, docId];
-    AssertEqualObjects(custom.lines.lastObject, warning);
-    
+    Assert([custom.lines containsObject: warning]);
     [replicator removeChangeListenerWithToken: token];
     CBLDatabase.log.custom = nil;
 }

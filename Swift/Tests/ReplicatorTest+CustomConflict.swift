@@ -339,9 +339,10 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(db.document(withID: docID)!.toDictionary() == ["edit": "update"])
         
         // validate the warning log
-        XCTAssertEqual(customLogger.lines.last,
-                       "The document ID of the resolved document '\(wrongDocID)' is not matching " +
-            "with the document ID of the conflicting document '\(docID)'.")
+        XCTAssert(customLogger.lines
+                    .contains("The document ID of the resolved document '\(wrongDocID)' " +
+                              "is not matching with the document ID of the conflicting " +
+                              "document '\(docID)'."))
         
         Database.log.custom = nil
     }
