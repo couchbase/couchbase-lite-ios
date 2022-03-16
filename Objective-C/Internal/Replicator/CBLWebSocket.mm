@@ -178,9 +178,11 @@ static void doDispose(C4Socket* s) {
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
-        _replicator = (__bridge CBLReplicator*)context;
-        _db = _replicator.config.database;
-        _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        if (options.buf) {
+            _replicator = (__bridge CBLReplicator*)context;
+            _db = _replicator.config.database;
+            _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        }
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
         
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
@@ -678,7 +680,12 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
         c4socket_gotHTTPResponse(socket, (int)httpStatus, {headersFleece.buf, headersFleece.size});
     }];
 
-    if (httpStatus != 101) {
+    if (httpStatus == 200) {
+        NSData* bodyData = (NSData*)CFBridgingRelease(CFHTTPMessageCopyBody(httpResponse));
+        NSString* newStr = [[NSString alloc] initWithData: bodyData encoding: NSUTF8StringEncoding];
+        NSLog(@">> newstr: %@", newStr);
+        [self connected: headers];
+    } else if (httpStatus != 101) {
         // Unexpected HTTP status:
         C4WebSocketCloseCode closeCode = kWebSocketClosePolicyError;
         if (httpStatus >= 300 && httpStatus < 1000)
