@@ -23,7 +23,6 @@
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLWebSocket.h"
-#import "CBLConnectedClient.h"
 
 #define kDummyTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]]
 
@@ -2151,20 +2150,6 @@
     [self waitForExpectations: @[exp1, exp3] timeout: timeout];
     [repl removeChangeListenerWithToken: token1];
     [repl removeChangeListenerWithToken: token3];
-}
-
-- (void) testConnectedClient {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
-    
-    XCTestExpectation* e = [self expectationWithDescription: @"ex"];
-    XCTestExpectation* e2 = [self expectationWithDescription: @"ex2"];
-    NSURL* url = [NSURL URLWithString: @"ws://192.168.225.98:4984/scratch"];
-    CBLConnectedClient* client = [[CBLConnectedClient alloc] initWithURL: url authenticator: nil];
-    [self waitForExpectations: @[e] timeout: 0.5];
-    
-    [client documentWithID: @"doc-1"];
-    [self waitForExpectations: @[e2] timeout: 10.0];
-    
 }
 
 @end

@@ -21,8 +21,16 @@
 #import "CBLStringBytes.h"
 #import "CBLWebSocket.h"
 #import "CBLCoreBridge.h"
+#include "CBLDocument+Internal.h"
 
 using namespace fleece;
+
+@interface CBLConnectedClient ()
+
+@property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
+@property (nonatomic, weak) void(^getDocCompletion)(CBLDocumentInfo* nullable);
+
+@end
 
 @implementation CBLConnectedClient {
     C4ConnectedClient*  _client;
@@ -30,11 +38,18 @@ using namespace fleece;
     C4Error             _c4err;
 }
 
+@synthesize dispatchQueue=_dispatchQueue;
+@synthesize getDocCompletion=_getDocCompletion;
+
 - (instancetype) initWithURL: (NSURL*)url authenticator: (CBLAuthenticator*)authenticator {
     self = [super init];
     
     if (self) {
         _url = url;
+        
+        NSString* qName = $sprintf(@"ConnectedClient <%@>", url.absoluteString);
+        _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        
         CBLStringBytes sliceURL(_url.absoluteString);
         C4SocketFactory socketFactory = CBLWebSocket.socketFactory;
         socketFactory.context = (__bridge void*)self;
@@ -51,19 +66,37 @@ using namespace fleece;
     return self;
 }
 
-static void documentResultCallack(C4ConnectedClient* client, C4DocResponse doc, void* context) {
-    NSLog(@"---------------------------------------------");
-    NSLog(@">> %@ %@ %@", slice2string(doc.docID), slice2string(doc.revID), slice2string(doc.body));
-    NSLog(@"---------------------------------------------");
+- (void) dealloc {
+    c4client_free(_client);
     
+    _client = nil;
 }
 
-- (CBLDocument*) documentWithID: (NSString*)identifier {
+static void documentResultCallack(C4ConnectedClient* c4client, C4DocResponse doc, void* context) {
+    auto client = (__bridge CBLConnectedClient*)context;
+    auto cblDoc = [[CBLDocumentInfo alloc] initWithID: slice2string(doc.docID)
+                                                revID: slice2string(doc.revID)
+                                                 body: doc.body];
+    dispatch_async(client->_dispatchQueue, ^{
+        client.getDocCompletion(cblDoc);
+    });
+}
+
+- (void) documentWithID: (NSString*)identifier completion: (void (^)(CBLDocumentInfo* nullable))completion {
     CBLStringBytes docID(identifier);
     _c4err = {};
-    c4client_getDoc(_client, docID, nullslice, nullslice, false,
+    self.getDocCompletion = completion;
+    
+    c4client_getDoc(_client, docID, nullslice, nullslice, true,
                     &documentResultCallack, (__bridge void*)self, &_c4err);
-    return nil;
+}
+
+- (void) start {
+    c4client_start(_client);
+}
+
+- (void) stop {
+    c4client_stop(_client);
 }
 
 @end

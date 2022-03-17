@@ -22,6 +22,7 @@
 #import "CBLURLEndpointListener+Internal.h"
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
+#import "CBLConnectedClient.h"
 
 #define kWsPort 4984
 #define kWssPort 4985
@@ -1691,5 +1692,37 @@ typedef CBLURLEndpointListener Listener;
 - (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
+
+- (void) testConnectedClient {
+    NSError* err = nil; 
+    CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
+    [doc1 setString: @"someString" forKey: @"someKeyString"];
+    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.disableTLS = YES;
+
+    [self listen: config errorCode: 0 errorDomain: nil];
+    
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    XCTestExpectation* e2 = [self expectationWithDescription: @"ex2"];
+    CBLConnectedClient* client = [[CBLConnectedClient alloc] initWithURL: _listener.localEndpoint.url
+                                                           authenticator: nil];
+    
+    [client documentWithID: @"doc-1" completion:^(CBLDocumentInfo* doc) {
+        AssertEqualObjects(doc.id, @"doc-1");
+        AssertEqualObjects(doc.revisionID, @"1-32a289db92b52a11cc4fe04216ada40c17296b45");
+        AssertEqualObjects([doc stringForKey: @"someKeyString"], @"someString");
+        AssertEqual(doc.count, 1);
+        AssertEqualObjects(doc.keys, @[@"someKeyString"]);
+        [e2 fulfill];
+    }];
+    [self waitForExpectations: @[e2] timeout: 10.0];
+    
+    // cleanup
+    [client stop];
+    [self stopListen];
+}
+
 
 @end

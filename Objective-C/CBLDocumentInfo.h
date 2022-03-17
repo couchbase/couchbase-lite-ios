@@ -1,5 +1,5 @@
 //
-//  CBLConnectedClient.h
+//  CBLDocumentInfo.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,22 +17,20 @@
 //  limitations under the License.
 //
 
-
 #import <Foundation/Foundation.h>
-#import "CBLAuthenticator.h"
-#import "CBLDocumentInfo.h"
+#import "CBLDictionary.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLConnectedClient : NSObject
+@interface CBLDocumentInfo : NSObject<CBLDictionary>
 
-- (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
+/** The document's ID. */
+@property (readonly, nonatomic) NSString* id;
 
-- (void) documentWithID: (NSString*)identifier completion: (void (^)(CBLDocumentInfo* nullable))completion;
+/** The ID representing a document’s revision. */
+@property (readonly, nonatomic, nullable) NSString* revisionID;
 
-- (void) start;
-
-- (void) stop;
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
