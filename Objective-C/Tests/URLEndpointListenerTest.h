@@ -23,7 +23,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 @interface CBLURLEndpointListener (Test)
 
 @property (nonatomic, readonly) NSURL* localURL;
@@ -36,8 +35,6 @@ typedef CBLURLEndpointListenerConfiguration Config;
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 typedef CBLURLEndpointListener Listener;
-
-
 
 API_AVAILABLE(macos(10.12), ios(10.0))
 @interface URLEndpointListenerTest : ReplicatorTest {
