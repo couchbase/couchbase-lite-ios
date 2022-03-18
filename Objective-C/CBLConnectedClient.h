@@ -28,9 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
 
-- (void) documentWithID: (NSString*)identifier completion: (void (^)(CBLDocumentInfo* nullable))completion;
-
-- (void) start;
+- (void) documentWithID: (NSString*)identifier
+             completion: (void (^)(CBLDocumentInfo* _Nullable docInfo,  NSError* _Nullable error))completion;
 
 - (void) stop;
 

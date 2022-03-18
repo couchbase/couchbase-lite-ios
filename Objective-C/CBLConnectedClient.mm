@@ -21,14 +21,15 @@
 #import "CBLStringBytes.h"
 #import "CBLWebSocket.h"
 #import "CBLCoreBridge.h"
-#include "CBLDocument+Internal.h"
+#import "CBLDocument+Internal.h"
+#import "CBLStatus.h"
 
 using namespace fleece;
 
 @interface CBLConnectedClient ()
 
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
-@property (nonatomic, weak) void(^getDocCompletion)(CBLDocumentInfo* nullable);
+@property (nonatomic, weak) void(^getDocCompletion)(CBLDocumentInfo* docInfo, NSError* error);
 
 @end
 
@@ -72,17 +73,25 @@ using namespace fleece;
     _client = nil;
 }
 
-static void documentResultCallack(C4ConnectedClient* c4client, C4DocResponse doc, void* context) {
+static void documentResultCallack(C4ConnectedClient* c4client, C4DocResponse doc, C4Error err, void* context) {
     auto client = (__bridge CBLConnectedClient*)context;
-    auto cblDoc = [[CBLDocumentInfo alloc] initWithID: slice2string(doc.docID)
-                                                revID: slice2string(doc.revID)
-                                                 body: doc.body];
+    CBLDocumentInfo* cblDoc = nil;
+    NSError* error = nil;
+    if (err.code == 0) {
+        cblDoc = [[CBLDocumentInfo alloc] initWithID: slice2string(doc.docID)
+                                               revID: slice2string(doc.revID)
+                                                body: doc.body];
+    } else {
+        convertError(err, &error);
+    }
+    
     dispatch_async(client->_dispatchQueue, ^{
-        client.getDocCompletion(cblDoc);
+        client.getDocCompletion(cblDoc, error);
     });
 }
 
-- (void) documentWithID: (NSString*)identifier completion: (void (^)(CBLDocumentInfo* nullable))completion {
+- (void) documentWithID: (NSString*)identifier
+             completion: (void (^)(CBLDocumentInfo*, NSError*))completion {
     CBLStringBytes docID(identifier);
     _c4err = {};
     self.getDocCompletion = completion;
@@ -91,6 +100,9 @@ static void documentResultCallack(C4ConnectedClient* c4client, C4DocResponse doc
                     &documentResultCallack, (__bridge void*)self, &_c4err);
 }
 
+// Note: Currently we are not using and exposing this method.
+// When connectedClient is created, it will automatically gets created.
+// Also in going forward, we will try to avoid exposing start() and stop().
 - (void) start {
     c4client_start(_client);
 }

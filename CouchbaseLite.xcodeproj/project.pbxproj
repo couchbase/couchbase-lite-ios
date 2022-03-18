@@ -98,6 +98,8 @@
 		1A41912B2475DB3B008122BE /* URLEndpointListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4191292475DB3B008122BE /* URLEndpointListener.swift */; };
 		1A4191482475ED3D008122BE /* URLEndpointListenerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
+		1A6323E427E4679E003A5A28 /* ConnectedClientTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6323D727E4678C003A5A28 /* ConnectedClientTest.m */; };
+		1A6323E527E467A0003A5A28 /* ConnectedClientTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6323D727E4678C003A5A28 /* ConnectedClientTest.m */; };
 		1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
@@ -1915,6 +1917,8 @@
 		1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListenerConfiguration.swift; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
+		1A6323D727E4678C003A5A28 /* ConnectedClientTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectedClientTest.m; sourceTree = "<group>"; };
+		1A6323E627E46817003A5A28 /* URLEndpointListenerTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = URLEndpointListenerTest.h; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A6F835527E313A20055C9F8 /* CBLDocumentInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDocumentInfo.h; sourceTree = "<group>"; };
@@ -3658,7 +3662,9 @@
 				93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */,
 				934EF80B2453770E0053A47C /* TLSIdentityTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
+				1A6323E627E46817003A5A28 /* URLEndpointListenerTest.h */,
 				1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */,
+				1A6323D727E4678C003A5A28 /* ConnectedClientTest.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
@@ -5963,6 +5969,7 @@
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
 				9369A6AE207DD0FD009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F146207D61EC00F19A89 /* QueryTest.m in Sources */,
+				1A6323E427E4679E003A5A28 /* ConnectedClientTest.m in Sources */,
 				1A4160D82283694B0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6000,6 +6007,7 @@
 				93EB25CD21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */,
 				930C7F9520FE4F7500C74A12 /* CBLMockConnection.m in Sources */,
+				1A6323E527E467A0003A5A28 /* ConnectedClientTest.m in Sources */,
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78822AB07D80098E16B /* CustomLogger.m in Sources */,
