@@ -50,7 +50,7 @@ namespace cbl {
     float     asFloat   (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     double    asDouble  (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     
-    // parses the JSON string, into FLValue
+    // parses the JSON string, into NSObject(NSArray, NSDictionary)
     id parseJSON(const FLSlice json, NSError** error);
     
     // Doc Context
