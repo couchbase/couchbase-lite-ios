@@ -51,7 +51,7 @@ namespace cbl {
     double    asDouble  (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     
     // parses the JSON string, into FLValue
-    FLValue parseJSON(const FLSlice json, NSError** error);
+    id parseJSON(const FLSlice json, NSError** error);
     
     // Doc Context
     class DocContext : public fleece::MContext {

@@ -254,25 +254,24 @@ using namespace fleece;
 - (BOOL) setJSON: (NSString*)json error: (NSError**)error {
     CBLStringBytes jsonSlice(json);
     NSError* err;
-    FLValue result = cbl::parseJSON(jsonSlice, &err);
+    id result = cbl::parseJSON(jsonSlice, &err);
     if (!result || err) {
         if (error)
             *error = err;
         return NO;
     }
     
-    if (FLValue_GetType(result) != kFLArray) {
-        CBLWarnError(Database, @"%@: FLValue is not an Array", self);
-        return createError(CBLErrorInvalidJSON, @"Value is not an Array", error);
+    if (![result isKindOfClass: [NSArray class]]) {
+        CBLWarnError(Database, @"%@: Parsed result is not an Array", self);
+        return createError(CBLErrorInvalidJSON, @"Parsed result is not an Array", error);
     }
     
-    FLArray array = FLValue_AsArray(result);
+    NSArray* array = (NSArray*)result;
     CBL_LOCK(self.sharedLock) {
         _array.clear();
-        uint count = FLArray_Count(array);
-        for (uint i = 0; i < count; i++) {
-            id value = FLValue_GetNSObject(FLArray_Get(array, (uint32_t)i), nil);
-            _array.append([value cbl_toCBLObject]);
+        
+        for (uint i = 0; i < array.count; i++) {
+            _array.append([[array objectAtIndex: i] cbl_toCBLObject]);
         }
     }
     return YES;

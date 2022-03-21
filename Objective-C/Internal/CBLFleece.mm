@@ -173,7 +173,7 @@ namespace cbl {
             return asDouble(val.asNative(&container));
     }
 
-    FLValue parseJSON(const FLSlice json, NSError** error) {
+    id parseJSON(const FLSlice json, NSError** error) {
         FLError flEerror = {};
         Encoder enc;
         if (!FLEncoder_ConvertJSON(enc, json)) {
@@ -196,6 +196,11 @@ namespace cbl {
             return nullptr;
         }
         
-        return FLValue_FromData(FLSlice(result), kFLTrusted);
+        // updated way!
+        FLDoc doc = FLDoc_FromResultData(result, kFLTrusted, nullptr, nullslice);
+        FLSliceResult_Release(result);
+        id r = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        FLDoc_Release(doc);
+        return r;
     }
 }
