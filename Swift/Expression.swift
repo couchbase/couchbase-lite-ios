@@ -148,6 +148,18 @@ public protocol ExpressionProtocol {
     @available(*, deprecated, message: "Use isValued() instead.")
     func notNullOrMissing() -> ExpressionProtocol
     
+    /// Creates an IS VALUED expression that evaluates whether or not the current expression
+    /// is NOT null or missing.
+    ///
+    /// - Returns: The IS VALUED expression.
+    func isValued() -> ExpressionProtocol
+    
+    /// Creates an IS NOT VALUED expression that evaluates whether or not the current expression
+    /// is null or missing.
+    ///
+    /// - Returns: The IS NOT VALUED expression.
+    func isNotValued() ->ExpressionProtocol
+    
     // MARK: Bitwise operators
     
     /// Creates a logical AND expression that performs logical AND operation with the current
@@ -503,6 +515,24 @@ public final class Expression {
     /// - Returns: An IS NOT NULL expression.
     public func notNullOrMissing() -> ExpressionProtocol {
         return QueryExpression(self.impl.notNullOrMissing())
+    }
+    
+    // MARK: isValued() and isNotValued()
+    
+    /// Creates an IS VALUED expression that evaluates whether or not the current expression
+    /// is NOT null or missing.
+    ///
+    /// - Returns: The IS VALUED expression.
+    public func isValued() -> ExpressionProtocol {
+        return QueryExpression(self.impl.isValued())
+    }
+    
+    /// Creates an IS NOT VALUED expression that evaluates whether or not the current expression
+    /// is null or missing.
+    ///
+    /// - Returns: The IS NOT VALUED expression.
+    public func isNotValued() -> ExpressionProtocol {
+        return QueryExpression(self.impl.isNotValued());
     }
     
     // MARK: Bitwise operators
