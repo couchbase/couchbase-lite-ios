@@ -147,15 +147,24 @@ class QueryTest: CBLTestCase {
         let age = Expression.property("age")
         let work = Expression.property("work")
         
+        
         let tests: [[Any]] = [
             [name.isNullOrMissing(), []],
+            [name.isNotValued(), []],
             [name.notNullOrMissing(), [doc1, doc2]],
+            [name.isValued(), [doc1, doc2]],
             [address.isNullOrMissing(), [doc1]],
+            [address.isNotValued(), [doc1]],
             [address.notNullOrMissing(), [doc2]],
+            [address.isValued(), [doc2]],
             [age.isNullOrMissing(), [doc1]],
+            [age.isNotValued(), [doc1]],
             [age.notNullOrMissing(), [doc2]],
+            [age.isValued(), [doc2]],
             [work.isNullOrMissing(), [doc1, doc2]],
-            [work.notNullOrMissing(), []]
+            [work.isNotValued(), [doc1, doc2]],
+            [work.notNullOrMissing(), []],
+            [work.isValued(), []]
         ]
         
         for test in tests {
