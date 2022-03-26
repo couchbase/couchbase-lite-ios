@@ -19,18 +19,32 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLAuthenticator.h"
-#import "CBLDocumentInfo.h"
+#import "CBLDocument.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+/*
+ Important:
+ 1. Name 'ConnectedClient' vs 'RemoteDatabase'?
+ 
+ */
 
 @interface CBLConnectedClient : NSObject
 
 - (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
 
 - (void) documentWithID: (NSString*)identifier
-             completion: (void (^)(CBLDocumentInfo* _Nullable docInfo,  NSError* _Nullable error))completion;
+             completion: (void (^)(CBLDocument* _Nullable,  NSError* _Nullable))completion;
 
 - (void) stop;
+
+- (BOOL) saveDocument: (CBLMutableDocument *)document
+           completion: (void (^)(BOOL, NSError* _Nullable))completion
+                error: (NSError**)error;
+
+- (BOOL) deleteDocument: (CBLDocument *)document
+             completion: (void (^)(BOOL, NSError* _Nullable))completion
+                  error: (NSError**)error;
 
 @end
 

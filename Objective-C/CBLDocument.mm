@@ -27,6 +27,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
+#import "CBLData.h"
 
 using namespace fleece;
 
@@ -34,6 +35,7 @@ using namespace fleece;
 {
     std::unique_ptr<MRoot<id>> _root;
     NSError* _encodingError;
+    fleece::MDict<id> _mDict;
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
@@ -171,11 +173,22 @@ using namespace fleece;
 }
 
 - (void) updateDictionary {
-    if (_fleeceData) {
+    if (_fleeceData && _database) {
         _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_fleeceData), self.isMutable));
         [_database safeBlock:^{
             _dict = _root->asNative();
         }];
+    } else if (_fleeceData) {
+        // connected-client document (no database but body)
+        FLDictIterator iter;
+        FLDictIterator_Begin(_fleeceData, &iter);
+        FLValue value;
+        while (NULL != (value = FLDictIterator_GetValue(&iter))) {
+            id val = FLValue_GetNSObject(value, nil);
+            _mDict.set(FLDictIterator_GetKeyString(&iter), [val cbl_toCBLObject]);
+            FLDictIterator_Next(&iter);
+        }
+        _dict = [[CBLDictionary alloc] initWithCopyOfMDict: _mDict isMutable: false];
     } else {
         // New document:
         _root.reset();
@@ -210,9 +223,9 @@ using namespace fleece;
 
 #pragma mark - Fleece Encoding
 
-- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags shared: (BOOL)shared error:(NSError**)outError {
     _encodingError = nil;
-    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
+    auto encoder = shared ? c4db_getSharedFleeceEncoder(self.c4db) : FLEncoder_New();
     bool hasAttachment = false;
     FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
@@ -227,6 +240,13 @@ using namespace fleece;
     FLError flErr;
     const char* errMessage = FLEncoder_GetErrorMessage(encoder);
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
+    
+    // reset or free the encoder after use
+    if (!shared)
+        FLEncoder_Free(encoder);
+    else
+        FLEncoder_Reset(encoder);
+    
     if (!body.buf)
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     

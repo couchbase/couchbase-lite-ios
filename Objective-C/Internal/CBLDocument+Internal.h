@@ -31,7 +31,7 @@
 #import "CBLDictionary.h"
 #import "CBLFragment.h"
 #import "fleece/Fleece.h"
-#import "CBLDocumentInfo.h"
+//#import "CBLDocumentInfo.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -69,6 +69,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+@property (nonatomic, readonly) bool isMutable;
+
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
@@ -77,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
                        documentID: (NSString*)documentID
                              body: (nullable FLDict)body;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                        revisionID: (NSString*)revisionID
                              body: (nullable FLDict)body;
@@ -97,12 +99,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
-// Encodes the document and returns the corresponding slice
-//
-//  - outRevFlags: Attachment flag will be set, if any present.
-//  - error: On return, the error if any.
+/** Encodes the document and returns the corresponding slice
+    
+ @param outRevFlags Attachment flag will be set, if any present.
+ @param shared use shared encoder if true, else create a new FLEncoder for encoding
+ @param outError  On return, the error if any. */
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
-                               error: (NSError**)outError;
+                              shared: (BOOL)shared
+                               error:(NSError**)outError;
 
 - (void) setEncodingError: (NSError*)error;
 
@@ -163,10 +167,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface CBLDocumentInfo ()
-
-- (instancetype) initWithID: (NSString*)docID revID: (NSString*)revID body: (FLSlice)body;
-
-@end
+//@interface CBLDocumentInfo ()
+//
+//- (instancetype) initWithID: (NSString*)docID revID: (NSString*)revID body: (FLSlice)body;
+//
+//@end
 
 NS_ASSUME_NONNULL_END
