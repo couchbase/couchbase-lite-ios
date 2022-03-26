@@ -31,7 +31,6 @@
 #import "CBLDictionary.h"
 #import "CBLFragment.h"
 #import "fleece/Fleece.h"
-//#import "CBLDocumentInfo.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -166,11 +165,5 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithDocument: (nullable CBLDocument*)document;
 
 @end
-
-//@interface CBLDocumentInfo ()
-//
-//- (instancetype) initWithID: (NSString*)docID revID: (NSString*)revID body: (FLSlice)body;
-//
-//@end
 
 NS_ASSUME_NONNULL_END

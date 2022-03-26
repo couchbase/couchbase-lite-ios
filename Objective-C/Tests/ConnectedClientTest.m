@@ -31,10 +31,41 @@
     CBLConnectedClient* _client;
 }
 
+#pragma mark - helper methods
+
+- (void) startConnectedClient: (nullable NSURL*)url {
+    _client = [[CBLConnectedClient alloc] initWithURL: url
+                                        authenticator: nil];
+}
+
+- (void) validateDocument: (CBLDocument*)expDoc
+                errorCode: (NSInteger)errorCode  {
+    XCTestExpectation* e = [self expectationWithDescription: @"validation exp"];
+    __block NSInteger code = errorCode;
+    [_client documentWithID: expDoc.id completion:^(CBLDocument* doc, NSError* error) {
+        if (code != 0) {
+            AssertEqual(error.code, code);  // error code as expected
+            AssertNil(doc);                 // empty doc in case of error.
+        } else {
+            AssertNil(error);               // empty error
+
+                                            // same doc-information returned
+            AssertEqualObjects(doc.id, expDoc.id);
+            AssertEqualObjects([doc toDictionary], [expDoc toDictionary]);
+        }
+
+        
+        [e fulfill];
+    }];
+    
+    [self waitForExpectations: @[e] timeout: timeout];
+}
+
+#pragma mark - lifecycle
+
 - (void)setUp {
     [super setUp];
-    CBLDatabase.log.console.level = kCBLLogLevelDebug; // TODO: during dev
-    timeout = 5.0;
+    timeout = 10.0;
 }
 
 - (void)tearDown {
@@ -46,10 +77,7 @@
     [super tearDown];
 }
 
-- (void) startConnectedClient: (nullable NSURL*)url {
-    _client = [[CBLConnectedClient alloc] initWithURL: url
-                                        authenticator: nil];
-}
+#pragma mark - Tests
 
 - (void) testConnectedClient {
     XCTestExpectation* e = [self expectationWithDescription: @"expectation"];
@@ -125,30 +153,6 @@
     
     [self validateDocument: doc1 errorCode: 0];
 }
- 
-- (void) validateDocument: (CBLDocument*)expDoc
-                errorCode: (NSInteger)errorCode  {
-    XCTestExpectation* e = [self expectationWithDescription: @"validation exp"];
-    __block NSInteger code = errorCode;
-    [_client documentWithID: expDoc.id completion:^(CBLDocument* doc, NSError* error) {
-        if (code != 0) {
-            AssertEqual(error.code, code);  // error code as expected
-            AssertNil(doc);                 // empty doc in case of error.
-        } else {
-            AssertNil(error);               // empty error
-
-                                            // same doc-information returned
-            AssertEqualObjects(doc.id, expDoc.id);            
-            AssertEqualObjects([doc toDictionary], [expDoc toDictionary]);
-        }
-
-        
-        [e fulfill];
-    }];
-    
-    [self waitForExpectations: @[e] timeout: timeout];
-}
-
 
 - (void) testDeleteDocument {
     XCTestExpectation* e = [self expectationWithDescription: @"save document exp"];
@@ -174,7 +178,7 @@
         [e fulfill];
     } error: &err];
     
-    [self waitForExpectations: @[e] timeout: 10];
+    [self waitForExpectations: @[e] timeout: timeout];
     
     [self validateDocument: doc1 errorCode: CBLErrorNotFound];
 }
