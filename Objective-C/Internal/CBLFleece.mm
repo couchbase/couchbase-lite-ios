@@ -33,17 +33,22 @@
 @end
 
 namespace cbl {
-    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
-    :fleece::MContext(fleece::alloc_slice())
-    ,_db(db)
-    ,_doc(doc)
+    BaseDocContext::BaseDocContext()
+    : fleece::MContext(fleece::alloc_slice())
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
     
-    
-    id DocContext::toObject(fleece::Value value) {
+    id BaseDocContext::toObject(fleece::Value value) {
         return value.asNSObject(_fleeceToNSStrings);
     }
+
+    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
+    : BaseDocContext()
+    ,_db(db)
+    ,_doc(doc)
+    { }
+    
+    RemoteDocContext::RemoteDocContext(): BaseDocContext() { }
 }
 
 namespace fleece {
@@ -96,7 +101,7 @@ namespace fleece {
                 return [value.asNSObject() cbl_toCBLObject];
             }
             default: {
-                return ((DocContext*)parent->context())->toObject(value);
+                return ((BaseDocContext*)parent->context())->toObject(value);
             }
         }
     }
@@ -173,7 +178,7 @@ namespace cbl {
             return asDouble(val.asNative(&container));
     }
 
-    FLValue parseJSON(const FLSlice json, NSError** error) {
+    id parseJSON(const FLSlice json, NSError** error) {
         FLError flEerror = {};
         Encoder enc;
         if (!FLEncoder_ConvertJSON(enc, json)) {
@@ -196,6 +201,11 @@ namespace cbl {
             return nullptr;
         }
         
-        return FLValue_FromData(FLSlice(result), kFLTrusted);
+        // updated way!
+        FLDoc doc = FLDoc_FromResultData(result, kFLTrusted, nullptr, nullslice);
+        FLSliceResult_Release(result);
+        id r = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        FLDoc_Release(doc);
+        return r;
     }
 }

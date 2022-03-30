@@ -104,6 +104,12 @@ using namespace fleece;
     
 }
 
+// This is used by ConnectedClient API
+// Used to convert a CBLDocument to CBLMutableDocument
+- (instancetype) initAsCopyOfRemoteDB: (CBLDocument*)doc {
+    return [self initWithDocumentID: doc.id revisionID: doc.revisionID body: doc.remoteDocBody];
+}
+
 #pragma mark - Edit
 
 - (CBLMutableDocument*) mutableCopyWithZone: (NSZone *)zone {

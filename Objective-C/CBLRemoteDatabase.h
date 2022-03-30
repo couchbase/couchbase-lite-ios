@@ -1,5 +1,5 @@
 //
-//  CBLConnectedClient.h
+//  CBLRemoteDatabase.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -23,28 +23,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*
- Important:
- 1. Name 'ConnectedClient' vs 'RemoteDatabase'?
- 
- */
+@interface CBLRemoteDatabase : NSObject
 
-@interface CBLConnectedClient : NSObject
-
+/** Creates a new RemoteDatabase instance, and starts it automatically. */
 - (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
 
+/** Gets an existing document with the given ID. If a document with the given ID
+    doesn't exist in the database, the value returned will be nil. */
 - (void) documentWithID: (NSString*)identifier
              completion: (void (^)(CBLDocument* _Nullable,  NSError* _Nullable))completion;
 
+/** Stop and close the connection with the remote. */
 - (void) stop;
 
-- (BOOL) saveDocument: (CBLMutableDocument *)document
-           completion: (void (^)(BOOL, NSError* _Nullable))completion
-                error: (NSError**)error;
+/** Saves a document to the Remote SG. */
+- (void) saveDocument: (CBLMutableDocument *)document
+           completion: (void (^)(CBLDocument*, NSError* _Nullable))completion;
 
-- (BOOL) deleteDocument: (CBLDocument *)document
-             completion: (void (^)(BOOL, NSError* _Nullable))completion
-                  error: (NSError**)error;
+/** Deletes a document from the Remote SG*/
+- (void) deleteDocument: (CBLDocument *)document
+             completion: (void (^)(CBLDocument*, NSError* _Nullable))completion;
 
 @end
 

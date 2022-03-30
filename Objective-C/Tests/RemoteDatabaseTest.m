@@ -1,5 +1,5 @@
 //
-//  ConnectedClientTest.m
+//  RemoteDatabaseTest.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -18,23 +18,23 @@
 //
 
 #import "URLEndpointListenerTest.h"
-#import "CBLConnectedClient.h"
+#import "CBLRemoteDatabase.h"
 #import "CBLErrors.h"
 
 // Note: Only for EE runs
 
-@interface ConnectedClientTest : URLEndpointListenerTest
+@interface RemoteDatabaseTest : URLEndpointListenerTest
 
 @end
 
-@implementation ConnectedClientTest {
-    CBLConnectedClient* _client;
+@implementation RemoteDatabaseTest {
+    CBLRemoteDatabase* _client;
 }
 
 #pragma mark - helper methods
 
 - (void) startConnectedClient: (nullable NSURL*)url {
-    _client = [[CBLConnectedClient alloc] initWithURL: url
+    _client = [[CBLRemoteDatabase alloc] initWithURL: url
                                         authenticator: nil];
 }
 
@@ -53,8 +53,6 @@
             AssertEqualObjects(doc.id, expDoc.id);
             AssertEqualObjects([doc toDictionary], [expDoc toDictionary]);
         }
-
-        
         [e fulfill];
     }];
     
@@ -63,12 +61,12 @@
 
 #pragma mark - lifecycle
 
-- (void)setUp {
+- (void) setUp {
     [super setUp];
     timeout = 10.0;
 }
 
-- (void)tearDown {
+- (void) tearDown {
     if (_client)
         [_client stop];
     _client = nil;
@@ -80,6 +78,7 @@
 #pragma mark - Tests
 
 - (void) testConnectedClient {
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
     XCTestExpectation* e = [self expectationWithDescription: @"expectation"];
     
     // create a doc in server (listener)
@@ -138,16 +137,14 @@
     // start the connected client
     [self startConnectedClient: _listener.localEndpoint.url];
     
-    NSError* err = nil;
     CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
     [doc1 setString: @"someString" forKey: @"someKeyString"];
     [_client saveDocument: doc1
-               completion:^(BOOL success, NSError *error) {
-        Assert(success);
+               completion:^(CBLDocument* doc, NSError *error) {
         AssertNil(error);
         
         [e fulfill];
-    } error: &err];
+    }];
     
     [self waitForExpectations: @[e] timeout: timeout];
     
@@ -171,16 +168,74 @@
     // start the connected client
     [self startConnectedClient: _listener.localEndpoint.url];
     
-    [_client deleteDocument: doc1 completion:^(BOOL success, NSError *error) {
-        Assert(success);
-        AssertNil(error);
-        
+    [_client deleteDocument: doc1 completion:^(CBLDocument* doc, NSError *error) {
+        AssertNil(error);       // make sure no error
+        AssertNil(doc);         // make sure it 'nil'
         [e fulfill];
-    } error: &err];
+    }];
     
     [self waitForExpectations: @[e] timeout: timeout];
     
     [self validateDocument: doc1 errorCode: CBLErrorNotFound];
+}
+
+- (void) testSaveUpdatedDocument {
+    // ---
+    // CREATE A DOC & SYNC & GET IT BACK
+    // ---
+    
+    // save a doc in otherDB
+    NSError* err = nil;
+    CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
+    [doc1 setString: @"someString" forKey: @"someKeyString"];
+    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    
+    // start the listener & get it to 'doc'
+    __block CBLDocument* doc = nil;
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.disableTLS = YES;
+    [self listen: config errorCode: 0 errorDomain: nil];
+    [self startConnectedClient: _listener.localEndpoint.url];
+    XCTestExpectation* eGet = [self expectationWithDescription: @"get document exp"];
+    [_client documentWithID: @"doc-1" completion: ^(CBLDocument* d, NSError* error) {
+        AssertNil(error);                     // empty error
+        doc = d;
+        [eGet fulfill];
+    }];
+    [self waitForExpectations: @[eGet] timeout: timeout];
+    
+    // ---
+    // UPDATE THE DOC
+    // ---
+    XCTestExpectation* eSave = [self expectationWithDescription: @"save document exp"];
+    CBLMutableDocument* doc2 = [doc toMutable];
+    [doc2 setString: @"updated" forKey: @"revised"];
+    [_client saveDocument: doc2
+               completion:^(CBLDocument* d, NSError *error) {
+        AssertNil(error);
+        AssertEqualObjects(d.id, @"doc-1");
+        AssertEqualObjects([d stringForKey: @"someKeyString"], @"someString");
+        AssertEqualObjects([d stringForKey: @"revised"], @"updated");
+        AssertEqual(d.count, 2);
+        [eSave fulfill];
+    }];
+    
+    [self waitForExpectations: @[eSave] timeout: timeout];
+    
+    // ---
+    // GET THE DOC AGAIN AND VERIFY
+    // ---
+    XCTestExpectation* eGet2 = [self expectationWithDescription: @"get document exp2"];
+    [_client documentWithID: @"doc-1" completion: ^(CBLDocument* d, NSError* error) {
+        AssertNil(error);                     // empty error
+        doc = d;
+        [eGet2 fulfill];
+    }];
+    [self waitForExpectations: @[eGet2] timeout: timeout];
+    AssertEqualObjects(doc.id, @"doc-1");
+    AssertEqualObjects([doc stringForKey: @"someKeyString"], @"someString");
+    AssertEqualObjects([doc stringForKey: @"revised"], @"updated");
+    AssertEqual(doc.count, 2);
 }
 
 @end

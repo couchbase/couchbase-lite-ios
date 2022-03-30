@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                    dict: (nullable CBLDictionary*)dict;
 
+- (instancetype) initAsCopyOfRemoteDB: (CBLDocument*)doc;
+
 @end
 
 //////////////////
@@ -68,7 +70,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-@property (nonatomic, readonly) bool isMutable;
+// Used by ConnectedClient API
+// if the document is remoteDoc, this contains the document body
+@property (nonatomic, readonly) FLSliceResult remoteDocBody;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -78,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
                        documentID: (NSString*)documentID
                              body: (nullable FLDict)body;
 
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+- (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                        revisionID: (NSString*)revisionID
                              body: (nullable FLDict)body;
@@ -94,6 +98,10 @@ NS_ASSUME_NONNULL_BEGIN
                               contentLevel: (C4DocContentLevel)contentLevel
                                      error: (NSError**)outError;
 
+- (instancetype) initWithDocumentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                               body: (FLSliceResult)body;
+
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
@@ -101,10 +109,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** Encodes the document and returns the corresponding slice
     
  @param outRevFlags Attachment flag will be set, if any present.
- @param shared use shared encoder if true, else create a new FLEncoder for encoding
+ @param sharedEncoder if true, will use the shared encoder, else new FLEncoder without shared keys
  @param outError  On return, the error if any. */
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
-                              shared: (BOOL)shared
+                    useSharedEncoder: (BOOL)sharedEncoder
                                error:(NSError**)outError;
 
 - (void) setEncodingError: (NSError*)error;

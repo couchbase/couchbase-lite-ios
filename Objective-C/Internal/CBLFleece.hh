@@ -50,24 +50,38 @@ namespace cbl {
     float     asFloat   (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     double    asDouble  (const fleece::MValue<id>&, const fleece::MCollection<id> &container);
     
-    // parses the JSON string, into FLValue
-    FLValue parseJSON(const FLSlice json, NSError** error);
+    // parses the JSON string, into NSObject(NSArray, NSDictionary)
+    id parseJSON(const FLSlice json, NSError** error);
+
+    class BaseDocContext: public fleece::MContext {
+    public: 
+        BaseDocContext();
+        
+        NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
+        
+        id toObject(fleece::Value);
+        
+    private:
+        NSMapTable* _fleeceToNSStrings;
+    };
     
     // Doc Context
-    class DocContext : public fleece::MContext {
+    class DocContext : public BaseDocContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
         
         CBLDatabase* database() const   {return _db;}
         CBLC4Document* __nullable document() const {return _doc;}
-        NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
-        
-        id toObject(fleece::Value);
         
         private:
         CBLDatabase *_db;
         CBLC4Document* __nullable _doc;
-        NSMapTable* _fleeceToNSStrings;
+        
+    };
+
+    class RemoteDocContext : public BaseDocContext {
+    public:
+        RemoteDocContext();
     };
 }
 

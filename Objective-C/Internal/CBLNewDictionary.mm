@@ -232,29 +232,19 @@ using namespace fleece;
 - (BOOL) setJSON:(NSString *)json error:(NSError **)outError {
     CBLStringBytes jsonSlice(json);
     NSError* err;
-    FLValue result = cbl::parseJSON(jsonSlice, &err);
+    id result = cbl::parseJSON(jsonSlice, &err);
     if (!result || err) {
         if (outError)
             *outError = err;
         return NO;
     }
     
-    if (FLValue_GetType(result) != kFLDict) {
-        CBLWarnError(Database, @"%@: Expected JSON Dictionary. Failed to convert FLValue to FLDict", self);
-        return createError(CBLErrorInvalidJSON, @"Value is not a Dictionary", outError);
+    if (![result isKindOfClass: [NSDictionary class]]) {
+        CBLWarnError(Database, @"%@: Expected JSON Dictionary. Failed to convert FLValue to NSDictionary", self);
+        return createError(CBLErrorInvalidJSON, @"Parsed result is not a Dictionary", outError);
     }
     
-    FLDict dict = FLValue_AsDict(result);
-    _dict = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(dict)];
-    FLDictIterator iter;
-    FLDictIterator_Begin(dict, &iter);
-    FLValue value;
-    while (NULL != (value = FLDictIterator_GetValue(&iter))) {
-        id val = FLValue_GetNSObject(value, nil);
-        NSString* key = slice2string(FLDictIterator_GetKeyString(&iter));
-        [_dict setValue: [val cbl_toPlainObject] forKey: key];
-        FLDictIterator_Next(&iter);
-    }
+    _dict = [NSMutableDictionary dictionaryWithDictionary: (NSDictionary*)result];
     return YES;
 }
 
