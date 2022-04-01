@@ -1,3 +1,4 @@
+#NoCommit #OnlyTest
 
 # Couchbase Lite for iOS and MacOS
 
