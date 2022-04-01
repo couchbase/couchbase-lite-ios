@@ -237,7 +237,7 @@ class LogTest: CBLTestCase {
         }
         
         let contents = try String(contentsOf: last, encoding: .ascii)
-        XCTAssert(contents.contains(contents))
+        XCTAssert(contents.contains(inputString))
     }
 
     func testFileLoggingLogFilename() throws {
