@@ -1189,7 +1189,7 @@
     // create a doc & not save
     NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
     NSString* documentID = [NSString stringWithFormat:@"%0.0f", timestamp];
-    CBLMutableDocument* doc = [self createDocument: documentID];
+    [self createDocument: documentID];
     
     // not found
     [self expectError: CBLErrorDomain
@@ -1199,7 +1199,6 @@
                    }];
     
     documentID = nil;
-    doc = nil;
     AssertEqual(0, (long)self.db.count);
 }
 
