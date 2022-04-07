@@ -176,15 +176,17 @@ static BOOL sOnlyTrustAnchorCerts;
 
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
-        if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
-            [self forceTrusted];
-            return credential;
-        } else {
-            MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                          @"Server SSL Certificate does not match pinned cert");
-            return nil;
+        CFIndex count = SecTrustGetCertificateCount(_trust);
+        for (CFIndex i = 0; i < count; i++) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, i);
+            if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
+                [self forceTrusted];
+                return credential;
+            }
         }
+        MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                      @"Server SSL Certificates does not match pinned cert");
+        return nil;
     }
 
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
