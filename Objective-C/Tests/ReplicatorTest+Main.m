@@ -1586,6 +1586,15 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
+- (void) testPinnedCertWithNonTLS_SG {
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
 - (void) dontTestContinuousPushNeverending_SG {
     // NOTE: This test never stops even after the replication goes idle.
     // It can be used to test the response to connectivity issues like killing the remote server.
@@ -1761,6 +1770,76 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: doc.id];
     AssertNil([savedDoc stringForKey: propertyKey]);
+}
+
+#pragma mark - SG (TLS with chain of certs)
+/**
+ - Use the `certs.pem` & `certs.key` in the `LiteCore/Replicator/tests/data/ssl_config.json`
+    - "SSLCert": "../../../../../Objective-C/Tests/Support/chain-certs/certs.pem",
+    - "SSLKey":  "../../../../../Objective-C/Tests/Support/chain-certs/certs.key",
+ */
+// Replicator with non-matching cert + sg with muliple certs
+- (void) testMultipleCertSGWithNonMatchingCert_SG {
+    id target = [self remoteEndpointWithName: @"itunes" secure: YES];
+    if (!target)
+        return;
+    
+    NSURL* url = [NSURL URLWithString: @"wss://localhost:4986/itunes"];
+    target = [[CBLURLEndpoint alloc] initWithURL: url];
+    
+    self.disableDefaultServerCertPinning = YES;    // without this, SSL handshake will fail
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
+}
+
+- (SecCertificateRef) certChains: (NSString*)name {
+    NSData* certData = [self dataFromResource: name ofType: @"cer"];
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    return (SecCertificateRef)CFAutorelease(cert);
+}
+
+// Replicator with single matching cert + sg with muliple certs
+- (void) testMultipleCertSGWithMatchingCert_SG {
+    id target = [self remoteEndpointWithName: @"itunes" secure: YES];
+    if (!target)
+        return;
+    
+    NSURL* url = [NSURL URLWithString: @"wss://localhost:4986/itunes"];
+    target = [[CBLURLEndpoint alloc] initWithURL: url];
+    
+    // replicator with leaf cert
+    NSError* error;
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.pinnedServerCertificate = [self certChains: @"chain-certs/leaf"];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // replicator with intermediate cert
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    config.pinnedServerCertificate = [self certChains: @"chain-certs/inter"];
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    // replicator with root cert
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    config.pinnedServerCertificate = [self certChains: @"chain-certs/root"];
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
+- (void) testMultipleCertSGWithExpiredCert_SG {
+    id target = [self remoteEndpointWithName: @"itunes" secure: YES];
+    if (!target)
+        return;
+    
+    NSURL* url = [NSURL URLWithString: @"wss://localhost:4986/itunes"];
+    target = [[CBLURLEndpoint alloc] initWithURL: url];
+    
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    config.pinnedServerCertificate = [self certChains: @"chain-certs/expired"];
+    [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
 }
 
 #pragma mark - Replicator Config
