@@ -17,15 +17,9 @@
 //  limitations under the License.
 //
 
-#import "URLEndpointListenerTest.h"
+#import "RemoteDatabaseTest.h"
 #import "CBLRemoteDatabase.h"
 #import "CBLErrors.h"
-
-// Note: Only for EE runs
-
-@interface RemoteDatabaseTest : URLEndpointListenerTest
-
-@end
 
 @implementation RemoteDatabaseTest {
     CBLRemoteDatabase* _client;

@@ -27,6 +27,8 @@
 		1A2AB75622BBFDB6000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75722BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75822BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
+		1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
+		1A2F2C3727FD5B3300084B3C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1A3470C1266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A3470C2266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1A3470C3266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -140,6 +142,8 @@
 		1AAB2787227793E50037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		1AC2EC7D28068C8200016E8A /* URLEndpointListenerTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC2EC7928068AED00016E8A /* URLEndpointListenerTest+Main.m */; };
+		1AC2EC8928068C8300016E8A /* URLEndpointListenerTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC2EC7928068AED00016E8A /* URLEndpointListenerTest+Main.m */; };
 		1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
@@ -153,7 +157,6 @@
 		1ACAB8CA266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
 		1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
-		1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
 		1AECFF7B24AE988F0015C9F8 /* CBLStoppable.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */; };
 		1AECFF8724AE98A30015C9F8 /* CBLStoppable.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */; };
@@ -1933,6 +1936,8 @@
 		1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLConflict+Internal.h"; sourceTree = "<group>"; };
 		1AAF6371226A8B060016754C /* QueryTest+Meta.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Meta.m"; sourceTree = "<group>"; };
 		1AAF6382226A8DBF0016754C /* QueryTest+Join.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Join.m"; sourceTree = "<group>"; };
+		1AC2EC6D280684C700016E8A /* RemoteDatabaseTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RemoteDatabaseTest.h; sourceTree = "<group>"; };
+		1AC2EC7928068AED00016E8A /* URLEndpointListenerTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "URLEndpointListenerTest+Main.m"; sourceTree = "<group>"; };
 		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
 		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -3656,6 +3661,8 @@
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1A6323E627E46817003A5A28 /* URLEndpointListenerTest.h */,
 				1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */,
+				1AC2EC7928068AED00016E8A /* URLEndpointListenerTest+Main.m */,
+				1AC2EC6D280684C700016E8A /* RemoteDatabaseTest.h */,
 				1A6323D727E4678C003A5A28 /* RemoteDatabaseTest.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
@@ -5924,8 +5931,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				9343F139207D61EC00F19A89 /* NotificationTest.m in Sources */,
+				1A2F2C3727FD5B3300084B3C /* TrustCheckTest.m in Sources */,
 				930C7F9420FE4F7500C74A12 /* CBLMockConnection.m in Sources */,
 				9343F13A207D61EC00F19A89 /* MiscTest.m in Sources */,
+				1AC2EC7D28068C8200016E8A /* URLEndpointListenerTest+Main.m in Sources */,
 				933F841D220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78722AB07D70098E16B /* CustomLogger.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
@@ -5994,8 +6003,10 @@
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78822AB07D80098E16B /* CustomLogger.m in Sources */,
+				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
 				1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
+				1AC2EC8928068C8300016E8A /* URLEndpointListenerTest+Main.m in Sources */,
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
@@ -6210,7 +6221,6 @@
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
-				1ACEB9672256B74A00DED54C /* TrustCheckTest.m in Sources */,
 				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				1A4160C62283673E0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,

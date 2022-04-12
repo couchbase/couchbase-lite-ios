@@ -19,6 +19,11 @@
 
 #import "CBLTestCase.h"
 #import <MultipeerConnectivity/MultipeerConnectivity.h>
+#import "CBLMessageEndpointConnection.h"
+#import "CBLMessage.h"
+#import "CBLMessagingError.h"
+#import "CBLMessageEndpoint.h"
+#import "CBLMessageEndpointListener.h"
 
 #ifndef COUCHBASE_ENTERPRISE
 #error Couchbase Lite EE Only
@@ -373,7 +378,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 
 #pragma mark - Tests
 
-- (void) testPushDoc {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPushDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];
@@ -395,7 +401,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Tiger");
 }
 
-- (void) testPullDoc {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPullDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];
@@ -421,7 +428,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Cat");
 }
 
-- (void) testPushPullDoc {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPushPullDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];
@@ -447,7 +455,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
 
-- (void) testPushDocContinuous {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPushDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];
@@ -469,7 +478,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Tiger");
 }
 
-- (void) testPullDocContinuous {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPullDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];
@@ -491,7 +501,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqualObjects([savedDoc stringForKey:@"name"], @"Cat");
 }
 
-- (void) testPushPullDocContinuous {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testPushPullDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"name"];

@@ -183,7 +183,7 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
     }
     
     // Update doc in the remote database
-    C4Error err;
+    C4Error err = { };
     CBLStringBytes docID(document.id);
     CBLStringBytes revID(document.revisionID); // make sure, this is nullslice when no revisionID present
     ConnectedClientUpdateDocumentContext* ctx;
@@ -197,19 +197,19 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
                                                                           completion: completion];
     
     [_contexts addObject: ctx];
-    c4client_updateDoc(_client,
-                       docID,
-                       nullslice,
-                       revID,
-                       revFlags,
-                       (FLSlice)body,
-                       &updateDocumentCallback,
-                       (__bridge void*)ctx,
-                       &err);
+    BOOL success = c4client_putDoc(_client,
+                                   docID,
+                                   nullslice,
+                                   revID,
+                                   revFlags,
+                                   (FLSlice)body,
+                                   &updateDocumentCallback,
+                                   (__bridge void*)ctx,
+                                   &err);
     
     FLSliceResult_Release(body);
     
-    if (err) {
+    if (!success || err.code != 0) {
         NSError* error = nil;
         convertError(err, &error);
         completion(nil, error);

@@ -300,7 +300,8 @@ MultipeerConnectionDelegate {
     
     // MARK: Tests
     
-    func testPushDoc() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPushDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)
@@ -318,7 +319,8 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
-    func testPullDoc() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)
@@ -336,7 +338,8 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
-    func testPushPullDoc() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPushPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)
@@ -358,7 +361,8 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
     
-    func testPushDocContinous() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPushDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)
@@ -376,7 +380,8 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
-    func testPullDocContinous() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)
@@ -394,7 +399,8 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
-    func testPushPullDocContinous() throws {
+    // FIXME: https://issues.couchbase.com/browse/CBL-2959
+    func _testPushPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
         try self.db.saveDocument(doc1)

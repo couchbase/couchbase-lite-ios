@@ -12,6 +12,8 @@
 #import "CBLMockConnection.h"
 #import "CBLMockConnectionErrorLogic.h"
 #import "CBLMockConnectionLifecycleLocation.h"
+#import "CBLMessageEndpointListener.h"
+#import "CBLErrors.h"
 
 @interface MockConnectionFactory : NSObject <CBLMessageEndpointDelegate>
 
@@ -33,7 +35,7 @@
     XCTestExpectation* x = [self expectationWithDescription:@"Listener idle"];
     __block id token = nil;
     __weak CBLMessageEndpointListener* wListener = listener;
-    token = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
+    token = [listener addChangeListener:^(CBLMessageEndpointListenerChange* change) {
         if(change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
             [wListener removeChangeListenerWithToken:token];
@@ -47,7 +49,7 @@
     XCTestExpectation* x = [self expectationWithDescription:@"Listener stop"];
     __block id token = nil;
     __weak CBLMessageEndpointListener* wListener = listener;
-    token = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
+    token = [listener addChangeListener:^(CBLMessageEndpointListenerChange * change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
             [wListener removeChangeListenerWithToken:token];
@@ -198,7 +200,8 @@
     timeout = oldTimeout;
 }
 
-- (void) testMEP2PWithMessageStream {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PWithMessageStream {
     CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
@@ -286,7 +289,8 @@
     Assert(success);
 }
 
-- (void) testMEP2PWithByteStream {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PWithByteStream {
     CBLProtocolType protocolType = kCBLProtocolTypeByteStream;
     
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
@@ -375,39 +379,48 @@
     Assert(success);
 }
 
-- (void) testMEP2PContinuousPush {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PContinuousPush {
     [self runTwoStepContinuousWithType: kCBLReplicatorTypePush usingUID: @"p2ptest1"];
 }
 
-- (void) testMEP2PContinuousPull {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PContinuousPull {
     [self runTwoStepContinuousWithType: kCBLReplicatorTypePull usingUID: @"p2ptest2"];
 }
 
-- (void) testMEP2PContinuousPushPull {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PContinuousPushPull {
     [self runTwoStepContinuousWithType: kCBLReplicatorTypePushAndPull usingUID: @"p2ptest3"];
 }
 
-- (void) testMEP2PRecoverableFailureDuringOpen {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PRecoverableFailureDuringOpen {
     [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: YES];
 }
 
-- (void) testMEP2PRecoverableFailureDuringSend {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PRecoverableFailureDuringSend {
     [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: YES];
 }
 
-- (void) testMEP2PRecoverableFailureDuringReceive {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PRecoverableFailureDuringReceive {
     [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: YES];
 }
 
-- (void) testMEP2PPermanentFailureDuringOpen {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PPermanentFailureDuringOpen {
     [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: NO];
 }
 
-- (void) testMEP2PPermanentFailureDuringSend {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PPermanentFailureDuringSend {
     [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: NO];
 }
 
-- (void)testMEP2PPermanentFailureDuringReceive {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PPermanentFailureDuringReceive {
     [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: NO];
 }
 
@@ -455,7 +468,8 @@
     AssertNotNil(replicator.status.error);
 }
 
-- (void) testMEP2PPassiveCloseAll {
+// FIXME: https://issues.couchbase.com/browse/CBL-2959
+- (void) _testMEP2PPassiveCloseAll {
     CBLMutableDocument* doc = [CBLMutableDocument documentWithID:@"test"];
     [doc setString:@"Smokey" forKey:@"name"];
     [self saveDocument:doc];

@@ -21,6 +21,12 @@
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CBLURLEndpointListener.h"
 
+#define kWsPort 4984
+#define kWssPort 4985
+
+#define kServerCertLabel @"CBL-Server-Cert"
+#define kClientCertLabel @"CBL-Client-Cert"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLURLEndpointListener (Test)
@@ -49,13 +55,27 @@ API_AVAILABLE(macos(10.12), ios(10.0))
  \Note Use `_listener` handle for accessing newly created listener
  @param config Configuration used to create the listener.
  @param code Expected error code
- @param domain Expected error domain
- */
+ @param domain Expected error domain */
 - (Listener*) listen: (Config*)config errorCode: (NSInteger)code errorDomain: (nullable NSString*)domain;
+
+/**
+ Create a Listener
+ \Note Use `_listener` handle for accessing newly created listener
+ @param tls enable/disable TLS 
+ @param auth pass the Authenticator if necessary, else nil.*/
+- (Listener*) listenWithTLS: (BOOL)tls auth: (nullable id<CBLListenerAuthenticator>)auth;
 
 /**
  Stops the listener. */
 - (void) stopListen;
+
+/**
+ Stops the passed in listener. */
+- (void) stopListener: (CBLURLEndpointListener*)listener;
+
+/**
+ Deletes the passed in identity from the keychain  */
+- (void) deleteFromKeyChain: (CBLTLSIdentity*)identity;
 
 @end
 
