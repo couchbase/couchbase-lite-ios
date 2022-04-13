@@ -70,6 +70,9 @@
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
 .objc_class_name_CBLValueIndexItem
+.objc_class_name_CBLIndexConfiguration
+.objc_class_name_CBLFullTextIndexConfiguration
+.objc_class_name_CBLValueIndexConfiguration
 
 # NSString constants:
 _CBLErrorDomain
