@@ -60,10 +60,7 @@ pipeline {
         }
         stage('Build'){
             steps {
-		script {
-		  System.setProperty("org.jenkinsci.plugins.durabletask.BourneShellScript.LAUNCH_DIAGNOSTICS", "true");
-		}
-                sh """ 
+		sh """ 
 		    ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
