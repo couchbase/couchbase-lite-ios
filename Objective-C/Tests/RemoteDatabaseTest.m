@@ -28,8 +28,7 @@
 #pragma mark - helper methods
 
 - (void) startConnectedClient: (nullable NSURL*)url {
-    _client = [[CBLRemoteDatabase alloc] initWithURL: url
-                                        authenticator: nil];
+    _client = [[CBLRemoteDatabase alloc] initWithURL: url authenticator: nil];
 }
 
 - (void) validateDocument: (CBLDocument*)expDoc
@@ -38,12 +37,14 @@
     __block NSInteger code = errorCode;
     [_client documentWithID: expDoc.id completion:^(CBLDocument* doc, NSError* error) {
         if (code != 0) {
-            AssertEqual(error.code, code);  // error code as expected
-            AssertNil(doc);                 // empty doc in case of error.
+            // error code as expected
+            AssertEqual(error.code, code);
+            // empty doc in case of error.
+            AssertNil(doc);
         } else {
-            AssertNil(error);               // empty error
-
-                                            // same doc-information returned
+            // empty error
+            AssertNil(error);
+            // same doc-information returned
             AssertEqualObjects(doc.id, expDoc.id);
             AssertEqualObjects([doc toDictionary], [expDoc toDictionary]);
         }
@@ -57,7 +58,7 @@
 
 - (void) setUp {
     [super setUp];
-    timeout = 10.0;
+    timeout = 20.0;
 }
 
 - (void) tearDown {
@@ -72,7 +73,6 @@
 #pragma mark - Tests
 
 - (void) testConnectedClient {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
     XCTestExpectation* e = [self expectationWithDescription: @"expectation"];
     
     // create a doc in server (listener)
@@ -91,15 +91,13 @@
     
     // get the document with ID
     [_client documentWithID: @"doc-1" completion: ^(CBLDocument* doc, NSError* error) {
-        AssertNil(error);                     // empty error
+        // empty error
+        AssertNil(error);
         
-        // same doc-information returned
+        // verify doc-info
         AssertEqualObjects(doc.id, @"doc-1");
         AssertEqualObjects(doc.revisionID, @"1-32a289db92b52a11cc4fe04216ada40c17296b45");
-        AssertEqualObjects([doc stringForKey: @"someKeyString"], @"someString");
-        AssertEqual(doc.count, 1);
-        AssertEqualObjects(doc.keys, @[@"someKeyString"]);
-        
+        AssertEqualObjects([doc toDictionary], (@{@"someKeyString": @"someString"}));
         [e fulfill];
     }];
     [self waitForExpectations: @[e] timeout: timeout];
@@ -113,8 +111,10 @@
     
     // try to get a doc
     [_client documentWithID: @"doc-1" completion:^(CBLDocument* doc, NSError* error) {
-        AssertEqual(error.code, CBLErrorUnknownHost);   // gets `unknown hostname` error
-        AssertNil(doc);                                 // empty doc
+        // gets `unknown hostname` error
+        AssertEqual(error.code, CBLErrorUnknownHost);
+        // empty doc
+        AssertNil(doc);
         [e fulfill];
     }];
     [self waitForExpectations: @[e] timeout: timeout];
@@ -136,7 +136,9 @@
     [_client saveDocument: doc1
                completion:^(CBLDocument* doc, NSError *error) {
         AssertNil(error);
-        
+        AssertEqualObjects(doc.id, @"doc-1");
+        AssertEqualObjects(doc.revisionID, @"1-fe2101bba4cca4939c61d285b61beecab4db3266");
+        AssertEqualObjects([doc toDictionary], (@{@"someKeyString": @"someString"}));
         [e fulfill];
     }];
     
@@ -146,7 +148,7 @@
 }
 
 - (void) testDeleteDocument {
-    XCTestExpectation* e = [self expectationWithDescription: @"save document exp"];
+    XCTestExpectation* e = [self expectationWithDescription: @"delete document exp"];
     
     // create a doc in server (listener)
     NSError* err = nil;
@@ -162,9 +164,8 @@
     // start the connected client
     [self startConnectedClient: _listener.localEndpoint.url];
     
-    [_client deleteDocument: doc1 completion:^(CBLDocument* doc, NSError *error) {
+    [_client deleteDocument: doc1 completion:^(NSError *error) {
         AssertNil(error);       // make sure no error
-        AssertNil(doc);         // make sure it 'nil'
         [e fulfill];
     }];
     
@@ -175,7 +176,7 @@
 
 - (void) testSaveUpdatedDocument {
     // ---
-    // CREATE A DOC & SYNC & GET IT BACK
+    // CREATE A DOC & Save to remote-db & GET IT BACK
     // ---
     
     // save a doc in otherDB
@@ -192,7 +193,7 @@
     [self startConnectedClient: _listener.localEndpoint.url];
     XCTestExpectation* eGet = [self expectationWithDescription: @"get document exp"];
     [_client documentWithID: @"doc-1" completion: ^(CBLDocument* d, NSError* error) {
-        AssertNil(error);                     // empty error
+        AssertNil(error);
         doc = d;
         [eGet fulfill];
     }];
@@ -204,13 +205,12 @@
     XCTestExpectation* eSave = [self expectationWithDescription: @"save document exp"];
     CBLMutableDocument* doc2 = [doc toMutable];
     [doc2 setString: @"updated" forKey: @"revised"];
-    [_client saveDocument: doc2
-               completion:^(CBLDocument* d, NSError *error) {
+    [_client saveDocument: doc2 completion: ^(CBLDocument* d, NSError *error) {
         AssertNil(error);
         AssertEqualObjects(d.id, @"doc-1");
-        AssertEqualObjects([d stringForKey: @"someKeyString"], @"someString");
-        AssertEqualObjects([d stringForKey: @"revised"], @"updated");
-        AssertEqual(d.count, 2);
+        AssertEqualObjects(d.revisionID, @"2-3ff2955afc1852bb790d8ba4f12068e783227653");
+        AssertEqualObjects([d toDictionary], (@{@"someKeyString": @"someString",
+                                                @"revised": @"updated"}));
         [eSave fulfill];
     }];
     
@@ -227,9 +227,9 @@
     }];
     [self waitForExpectations: @[eGet2] timeout: timeout];
     AssertEqualObjects(doc.id, @"doc-1");
-    AssertEqualObjects([doc stringForKey: @"someKeyString"], @"someString");
-    AssertEqualObjects([doc stringForKey: @"revised"], @"updated");
-    AssertEqual(doc.count, 2);
+    AssertEqualObjects(doc.revisionID, @"2-3ff2955afc1852bb790d8ba4f12068e783227653");
+    AssertEqualObjects([doc toDictionary], (@{@"someKeyString": @"someString",
+                                              @"revised": @"updated"}));
 }
 
 @end

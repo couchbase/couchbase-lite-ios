@@ -35,9 +35,8 @@ using namespace fleece;
 {
     std::unique_ptr<MRoot<id>> _root;
     NSError* _encodingError;
-    fleece::MDict<id> _mDict;
     
-    BOOL isRemoteDoc;           // Document is from RemoteDB/ConnectedClient
+    BOOL _isRemoteDoc;           // Document is from RemoteDB/ConnectedClient
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
@@ -134,8 +133,8 @@ using namespace fleece;
 // this constructor is used by ConnectedClient APIs
 // used to create a CBLDocument without database and c4doc
 // will retain the passed in `body`(FLSliceResult)
-- (instancetype) initWithDocumentID: (NSString *)documentID
-                         revisionID: (NSString *)revisionID
+- (instancetype) initWithDocumentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
                                body: (FLSliceResult)body {
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
@@ -143,7 +142,9 @@ using namespace fleece;
     if (self) {
         _id = documentID;
         
+        // keeps a retained copy of body for CBLDocument & releases in dealloc
         _remoteDocBody = FLSliceResult_Retain(body);
+        
         FLDict dict = kFLEmptyDict;
         if (body.buf) {
             FLValue docBodyVal = FLValue_FromData(slice(_remoteDocBody), kFLTrusted);
@@ -151,7 +152,7 @@ using namespace fleece;
         }
         _fleeceData = dict;
         _revID = revisionID;
-        isRemoteDoc = true;
+        _isRemoteDoc = true;
         [self updateDictionary];
     }
     return self;
@@ -159,7 +160,7 @@ using namespace fleece;
 
 - (void) dealloc {
     if (_remoteDocBody)
-        FLSliceResult_Release(_remoteDocBody);
+        FLSliceResult_Release(_remoteDocBody); // releases the retained copy
 }
 
 #pragma mark - Public
@@ -175,13 +176,13 @@ using namespace fleece;
 }
 
 - (CBLMutableDocument*) mutableCopyWithZone: (NSZone*)zone {
-    return isRemoteDoc ?
+    return _isRemoteDoc ?
     [[CBLMutableDocument alloc] initAsCopyOfRemoteDB: self] :
     [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: nil];
 }
 
 - (CBLMutableDocument*) toMutable {
-    if (_revID && !_c4Doc && !isRemoteDoc)
+    if (_revID && !_c4Doc && !_isRemoteDoc)
         [NSException raise: NSInternalInconsistencyException
                     format: @"%@", kCBLErrorMessageNoDocEditInReplicationFilter];
     return [self mutableCopy];
@@ -210,7 +211,7 @@ using namespace fleece;
 
 - (void) updateDictionary {
     if (_fleeceData) {
-        if (isRemoteDoc) {
+        if (_isRemoteDoc) {
             _root.reset(new MRoot<id>(new cbl::RemoteDocContext(), Dict(_fleeceData), self.isMutable));
             _dict = _root->asNative();
         } else {
@@ -251,11 +252,17 @@ using namespace fleece;
     }
 }
 
+- (void) markAsRemoteDoc {
+    CBL_LOCK(self) {
+        _isRemoteDoc = YES;
+    }
+}
+
 #pragma mark - Fleece Encoding
 
-- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags useSharedEncoder: (BOOL)sharedEncoder error:(NSError**)outError {
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
     _encodingError = nil;
-    auto encoder = sharedEncoder ? c4db_getSharedFleeceEncoder(self.c4db) : FLEncoder_New();
+    auto encoder = _isRemoteDoc ? FLEncoder_New() : c4db_getSharedFleeceEncoder(self.c4db);
     bool hasAttachment = false;
     FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
@@ -272,7 +279,7 @@ using namespace fleece;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
     
     // reset or free the encoder after use
-    if (!sharedEncoder)
+    if (_isRemoteDoc)
         FLEncoder_Free(encoder);
     else
         FLEncoder_Reset(encoder);
@@ -408,11 +415,11 @@ using namespace fleece;
     return [_dict dictionaryForKey: key];
 }
 
-- (BOOL) containsValueForKey: (nonnull NSString *)key {
+- (BOOL) containsValueForKey: (nonnull NSString*)key {
     return [_dict booleanForKey: key];
 }
 
-- (CBLFragment *) objectForKeyedSubscript: (NSString *)key {
+- (CBLFragment *) objectForKeyedSubscript: (NSString*)key {
     return [_dict objectForKeyedSubscript: key];
 }
 
@@ -423,7 +430,7 @@ using namespace fleece;
     return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
-- (NSDictionary<NSString *,id>*) toDictionary {
+- (NSDictionary<NSString*,id>*) toDictionary {
     return [_dict toDictionary];
 }
 

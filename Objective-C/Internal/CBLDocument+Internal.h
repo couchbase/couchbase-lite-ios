@@ -109,16 +109,16 @@ NS_ASSUME_NONNULL_BEGIN
 /** Encodes the document and returns the corresponding slice
     
  @param outRevFlags Attachment flag will be set, if any present.
- @param sharedEncoder if true, will use the shared encoder, else new FLEncoder without shared keys
  @param outError  On return, the error if any. */
-- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
-                    useSharedEncoder: (BOOL)sharedEncoder
-                               error:(NSError**)outError;
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError;
 
 - (void) setEncodingError: (NSError*)error;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;
+
+// this will set the remoteDoc flag
+- (void) markAsRemoteDoc;
 
 @end
 

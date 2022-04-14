@@ -33,16 +33,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) documentWithID: (NSString*)identifier
              completion: (void (^)(CBLDocument* _Nullable,  NSError* _Nullable))completion;
 
-/** Stop and close the connection with the remote. */
+/** Stop and close the connection with the remote database. */
 - (void) stop;
 
-/** Saves a document to the Remote SG. */
+/** Saves a document to the remote database. */
 - (void) saveDocument: (CBLMutableDocument *)document
            completion: (void (^)(CBLDocument*, NSError* _Nullable))completion;
 
-/** Deletes a document from the Remote SG*/
+/** Deletes a document from the remote database. */
 - (void) deleteDocument: (CBLDocument *)document
-             completion: (void (^)(CBLDocument*, NSError* _Nullable))completion;
+             completion: (void (^)(NSError* _Nullable))completion;
 
 @end
 

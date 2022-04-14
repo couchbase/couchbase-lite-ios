@@ -1095,7 +1095,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     FLSliceResult body;
     if (!deletion && !document.isEmpty) {
         // Encode properties to Fleece data:
-        body = [document encodeWithRevFlags: &revFlags useSharedEncoder: YES error: outError];
+        body = [document encodeWithRevFlags: &revFlags error: outError];
         if (!body.buf) {
             *outDoc = nullptr;
             return NO;
@@ -1273,7 +1273,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             if (resolvedDoc) {
                 // Unless the remote revision is being used as-is, we need a new revision:
                 NSError* err = nil;
-                mergedBody = [resolvedDoc encodeWithRevFlags: &mergedFlags useSharedEncoder: YES error: &err];
+                mergedBody = [resolvedDoc encodeWithRevFlags: &mergedFlags error: &err];
                 if (err) {
                     createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
                     return false;

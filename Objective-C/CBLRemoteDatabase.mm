@@ -128,19 +128,18 @@ static void getDocumentCallback(C4ConnectedClient* c4client,
 
 - (void) saveDocument: (CBLMutableDocument *)document
            completion: (void (^)(CBLDocument*, NSError*))completion {
-    [self saveDocument: document asDeletion: NO completion: completion];
+    [self saveDocument: document asDeletion: NO updateCompletion: completion deleteCompletion: nil];
 }
 
 - (void) deleteDocument: (CBLDocument *)document
-             completion: (void (^)(CBLDocument*, NSError*))completion {
-    [self saveDocument: document asDeletion: YES completion: completion];
+             completion: (void (^)(NSError*))completion {
+    [self saveDocument: document asDeletion: YES updateCompletion: nil deleteCompletion: completion];
 }
 
 static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newRevID, C4Error* err, void *context) {
-    ConnectedClientUpdateDocumentContext* ctx = (__bridge ConnectedClientUpdateDocumentContext*)context;
-    BOOL success = err == nil || err->code == 0;
+    ConnectedClientPutDocumentContext* ctx = (__bridge ConnectedClientPutDocumentContext*)context;
     NSError* error = nil;
-    if (!success && err) {
+    if (err != nil && err->code != 0) {
         convertError(*err, &error);
     }
     
@@ -150,26 +149,29 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
                                                   revisionID: slice2string(newRevID)
                                                         body: ctx.docBody];
     dispatch_async(ctx.remoteDB->_dispatchQueue, ^{
-        ctx.docUpdateCompletion(updatedDoc, error);
+        ctx.isDeleted ? ctx.docDeleteCompletion(error) : ctx.docUpdateCompletion(updatedDoc, error);
         [ctx.remoteDB.contexts removeObject: ctx];
     });
 }
 
 - (void) saveDocument: (CBLDocument*)document
            asDeletion: (BOOL)deletion
-           completion: (void (^)(CBLDocument*, NSError*))completion {
+     updateCompletion: (void (^)(CBLDocument*, NSError*))updateCompletion
+     deleteCompletion: (void (^)(NSError*))deleteCompletion {
+    [document markAsRemoteDoc];
     
     C4RevisionFlags revFlags = 0;
     if (deletion)
         revFlags = kRevDeleted;
+    
     FLSliceResult body;
     if (!deletion && !document.isEmpty) {
         // Encode properties to Fleece data:
         // TODO: https://issues.couchbase.com/browse/CBL-2992
         NSError* error = nil;
-        body = [document encodeWithRevFlags: &revFlags useSharedEncoder: NO error: &error];
+        body = [document encodeWithRevFlags: &revFlags error: &error];
         if (!body.buf) {
-            completion(nil, error);
+            deletion ? deleteCompletion(error) : updateCompletion(nil, error);
             return;
         }
     } else {
@@ -186,15 +188,15 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
     C4Error err = { };
     CBLStringBytes docID(document.id);
     CBLStringBytes revID(document.revisionID); // make sure, this is nullslice when no revisionID present
-    ConnectedClientUpdateDocumentContext* ctx;
+    ConnectedClientPutDocumentContext* ctx;
     if (!deletion)
-        ctx = [[ConnectedClientUpdateDocumentContext alloc] initWithRemoteDB: self
-                                                                       docID: document.id
-                                                                     docBody: body
-                                                                  completion: completion];
+        ctx = [[ConnectedClientPutDocumentContext alloc] initWithRemoteDB: self
+                                                                    docID: document.id
+                                                                  docBody: body
+                                                               completion: updateCompletion];
     else
-        ctx = [[ConnectedClientUpdateDocumentContext alloc] initDeletionWithRemoteDB: self
-                                                                          completion: completion];
+        ctx = [[ConnectedClientPutDocumentContext alloc] initDeletionWithRemoteDB: self
+                                                                       completion: deleteCompletion];
     
     [_contexts addObject: ctx];
     BOOL success = c4client_putDoc(_client,
@@ -209,10 +211,11 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
     
     FLSliceResult_Release(body);
     
-    if (!success || err.code != 0) {
+    if (!success) {
+        Assert(err.code != 0);
         NSError* error = nil;
         convertError(err, &error);
-        completion(nil, error);
+        deletion ? deleteCompletion(error) : updateCompletion(nil, error);
     }
 }
 
