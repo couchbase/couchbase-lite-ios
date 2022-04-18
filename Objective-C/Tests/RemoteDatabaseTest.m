@@ -164,14 +164,23 @@
     // start the connected client
     [self startConnectedClient: _listener.localEndpoint.url];
     
-    [_client deleteDocument: doc1 completion:^(NSError *error) {
+    XCTestExpectation* getDocExp = [self expectationWithDescription: @"get doc exp"];
+    __block CBLDocument* doc = nil;
+    [_client documentWithID: @"doc-1" completion:^(CBLDocument* d, NSError* error) {
+        doc = d;
+        [getDocExp fulfill];
+    }];
+    
+    [self waitForExpectations: @[getDocExp] timeout: timeout];
+    
+    [_client deleteDocument: doc completion:^(CBLDocument* d, NSError *error) {
         AssertNil(error);       // make sure no error
         [e fulfill];
     }];
     
     [self waitForExpectations: @[e] timeout: timeout];
     
-    [self validateDocument: doc1 errorCode: CBLErrorNotFound];
+    [self validateDocument: doc errorCode: CBLErrorNotFound];
 }
 
 - (void) testSaveUpdatedDocument {

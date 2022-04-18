@@ -2627,13 +2627,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1A38C42E27E054DB00DF0D6E /* ConnectedClient */ = {
+		1A38C42E27E054DB00DF0D6E /* RemoteDatabase */ = {
 			isa = PBXGroup;
 			children = (
 				1A38C43A27E0550900DF0D6E /* CBLRemoteDatabase.h */,
 				1A38C43B27E0550900DF0D6E /* CBLRemoteDatabase.mm */,
 			);
-			name = ConnectedClient;
+			name = RemoteDatabase;
 			sourceTree = "<group>";
 		};
 		1A41601A227D084A0061A567 /* ConflictResolution */ = {
@@ -3183,7 +3183,7 @@
 		938195D91EBCD5F70032CC51 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
-				1A38C42E27E054DB00DF0D6E /* ConnectedClient */,
+				1A38C42E27E054DB00DF0D6E /* RemoteDatabase */,
 				1AAB27262273739F0037A880 /* ConflictResolution */,
 				27D7ECFC1F2A851600828ECF /* Authenticators */,
 				93DBD01B2004BD0A0017CA83 /* Endpoints */,

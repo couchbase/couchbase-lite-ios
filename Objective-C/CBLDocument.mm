@@ -35,12 +35,10 @@ using namespace fleece;
 {
     std::unique_ptr<MRoot<id>> _root;
     NSError* _encodingError;
-    
-    BOOL _isRemoteDoc;           // Document is from RemoteDB/ConnectedClient
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
-@synthesize remoteDocBody=_remoteDocBody;
+@synthesize remoteDocBody=_remoteDocBody, isRemoteDoc=_isRemoteDoc;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -254,6 +252,9 @@ using namespace fleece;
 
 - (void) markAsRemoteDoc {
     CBL_LOCK(self) {
+        if (_c4Doc || _database)
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"Document with c4doc cannot be marked as remote doc"];
         _isRemoteDoc = YES;
     }
 }

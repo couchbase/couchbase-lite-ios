@@ -25,24 +25,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLRemoteDatabase : NSObject
 
+/** Completion blocks. */
+typedef void (^CBLGetDocumentCompletion)(CBLDocument* _Nullable, NSError* _Nullable);
+typedef void (^CBLPutDocumentCompletion)(CBLDocument* _Nullable, NSError* _Nullable);
+
 /** Creates a new RemoteDatabase instance, and starts it automatically. */
 - (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
 
 /** Gets an existing document with the given ID. If a document with the given ID
     doesn't exist in the database, the value returned will be nil. */
 - (void) documentWithID: (NSString*)identifier
-             completion: (void (^)(CBLDocument* _Nullable,  NSError* _Nullable))completion;
+             completion: (CBLGetDocumentCompletion)completion;
 
 /** Stop and close the connection with the remote database. */
 - (void) stop;
 
 /** Saves a document to the remote database. */
 - (void) saveDocument: (CBLMutableDocument *)document
-           completion: (void (^)(CBLDocument*, NSError* _Nullable))completion;
+           completion: (CBLPutDocumentCompletion)completion;
 
 /** Deletes a document from the remote database. */
 - (void) deleteDocument: (CBLDocument *)document
-             completion: (void (^)(NSError* _Nullable))completion;
+             completion: (CBLPutDocumentCompletion)completion;
 
 @end
 

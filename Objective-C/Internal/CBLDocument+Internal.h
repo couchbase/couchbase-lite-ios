@@ -74,6 +74,9 @@ NS_ASSUME_NONNULL_BEGIN
 // if the document is remoteDoc, this contains the document body
 @property (nonatomic, readonly) FLSliceResult remoteDocBody;
 
+// Document is from remote-DB or a regular-DB
+@property (nonatomic, readonly) BOOL isRemoteDoc;
+
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
@@ -98,6 +101,10 @@ NS_ASSUME_NONNULL_BEGIN
                               contentLevel: (C4DocContentLevel)contentLevel
                                      error: (NSError**)outError;
 
+/**
+ - this constructor is used by ConnectedClient APIs
+ - used to create a CBLDocument without database and c4doc
+ - will retain the passed in `body`(FLSliceResult) */
 - (instancetype) initWithDocumentID: (NSString*)documentID
                          revisionID: (NSString*)revisionID
                                body: (FLSliceResult)body;

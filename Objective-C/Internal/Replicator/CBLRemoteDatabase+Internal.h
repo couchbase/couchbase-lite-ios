@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation ConnectedClientContext
 @synthesize remoteDB=_remoteDB;
 
-- (instancetype) initWithRemoteDB: (CBLRemoteDatabase *)db {
+- (instancetype) initWithRemoteDB: (CBLRemoteDatabase*)db {
     self = [super init];
     if (self) {
         _remoteDB = db;
@@ -68,45 +68,36 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString* docID;
 @property (nonatomic) FLSliceResult docBody;
 @property (nonatomic) BOOL isDeleted;
-@property (nonatomic) void(^docUpdateCompletion)(CBLDocument*, NSError*);
-@property (nonatomic) void(^docDeleteCompletion)(NSError*);
+@property (nonatomic) void(^docUpdateCompletion)(CBLDocument* _Nullable, NSError*);
 
 - (instancetype) init NS_UNAVAILABLE;
 
 - (instancetype) initWithRemoteDB: (CBLRemoteDatabase*)db
-                            docID: (NSString*)docID
+                            docID: (nullable NSString*)docID
                           docBody: (FLSliceResult)docBody
-                       completion: (void(^)(CBLDocument*, NSError*))completion;
-
-- (instancetype) initDeletionWithRemoteDB: (CBLRemoteDatabase *)db
-                               completion: (void (^)(NSError *))completion;
-
+                        isDeleted: (BOOL)isDeleted
+                       completion: (void(^)(CBLDocument* _Nullable, NSError*))completion;
 @end
 
 @implementation ConnectedClientPutDocumentContext
 
 @synthesize docUpdateCompletion=_docUpdateCompletion, docID=_docID, docBody=_docBody;
-@synthesize isDeleted=_isDeleted, docDeleteCompletion=_docDeleteCompletion;
+@synthesize isDeleted=_isDeleted;
 
 - (instancetype) initWithRemoteDB: (CBLRemoteDatabase *)db
-                            docID: (NSString*)docID
+                            docID: (nullable NSString*)docID
                           docBody: (FLSliceResult)docBody
-                       completion: (void (^)(CBLDocument*, NSError *))completion {
+                        isDeleted: (BOOL)isDeleted
+                       completion: (void (^)(CBLDocument* _Nullable, NSError*))completion {
     self = [super initWithRemoteDB: db];
     if (self) {
-        _docID = docID;
-        _docBody = FLSliceResult_Retain(docBody);
+        if (isDeleted) {
+            _isDeleted = isDeleted;
+        } else {
+            _docID = docID;
+            _docBody = FLSliceResult_Retain(docBody);
+        }
         _docUpdateCompletion = completion;
-    }
-    return self;
-}
-
-- (instancetype) initDeletionWithRemoteDB: (CBLRemoteDatabase *)db
-                               completion: (void (^)(NSError *))completion {
-    self = [super initWithRemoteDB: db];
-    if (self) {
-        _isDeleted=true;
-        _docDeleteCompletion = completion;
     }
     return self;
 }
