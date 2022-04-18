@@ -150,8 +150,12 @@ static BOOL sOnlyTrustAnchorCerts;
     OSStatus err;
 
     if (@available(iOS 12.0, macos 10.14, *)) {
-        if (!SecTrustEvaluateWithError(_trust, nullptr))
-            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
+        CFErrorRef error;
+        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+        if (!trusted) {
+            NSError* cferr = (__bridge NSError*)error;
+            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
+        }
         err = SecTrustGetTrustResult(_trust, &result);
     } else {
 #if TARGET_OS_MACCATALYST
