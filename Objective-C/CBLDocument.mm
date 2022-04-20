@@ -254,7 +254,7 @@ using namespace fleece;
     CBL_LOCK(self) {
         if (_c4Doc || _database)
             [NSException raise: NSInternalInconsistencyException
-                        format: @"Document with c4doc cannot be marked as remote doc"];
+                        format: @"Document cannot be saved as a remote doc"];
         _isRemoteDoc = YES;
     }
 }

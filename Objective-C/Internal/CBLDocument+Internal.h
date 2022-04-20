@@ -102,9 +102,9 @@ NS_ASSUME_NONNULL_BEGIN
                                      error: (NSError**)outError;
 
 /**
- - this constructor is used by ConnectedClient APIs
- - used to create a CBLDocument without database and c4doc
- - will retain the passed in `body`(FLSliceResult) */
+ This constructor is used by ConnectedClient APIs.
+ Used to create a CBLDocument without database and c4doc
+ Will retain the passed in `body`(FLSliceResult) */
 - (instancetype) initWithDocumentID: (NSString*)documentID
                          revisionID: (NSString*)revisionID
                                body: (FLSliceResult)body;
