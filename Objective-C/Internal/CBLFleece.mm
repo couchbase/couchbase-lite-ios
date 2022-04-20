@@ -33,17 +33,22 @@
 @end
 
 namespace cbl {
-    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
-    :fleece::MContext(fleece::alloc_slice())
-    ,_db(db)
-    ,_doc(doc)
+    BaseDocContext::BaseDocContext()
+    : fleece::MContext(fleece::alloc_slice())
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
     
-    
-    id DocContext::toObject(fleece::Value value) {
+    id BaseDocContext::toObject(fleece::Value value) {
         return value.asNSObject(_fleeceToNSStrings);
     }
+
+    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
+    : BaseDocContext()
+    ,_db(db)
+    ,_doc(doc)
+    { }
+    
+    RemoteDocContext::RemoteDocContext(): BaseDocContext() { }
 }
 
 namespace fleece {
@@ -96,7 +101,7 @@ namespace fleece {
                 return [value.asNSObject() cbl_toCBLObject];
             }
             default: {
-                return ((DocContext*)parent->context())->toObject(value);
+                return ((BaseDocContext*)parent->context())->toObject(value);
             }
         }
     }

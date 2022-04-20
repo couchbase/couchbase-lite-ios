@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                    dict: (nullable CBLDictionary*)dict;
 
+- (instancetype) initAsCopyOfRemoteDB: (CBLDocument*)doc;
+
 @end
 
 //////////////////
@@ -68,6 +70,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+// Used by ConnectedClient API
+// if the document is remoteDoc, this contains the document body
+@property (nonatomic, readonly) FLSliceResult remoteDocBody;
+
+// Document is from remote-DB or a regular-DB
+@property (nonatomic, readonly) BOOL isRemoteDoc;
+
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
@@ -92,21 +101,31 @@ NS_ASSUME_NONNULL_BEGIN
                               contentLevel: (C4DocContentLevel)contentLevel
                                      error: (NSError**)outError;
 
+/**
+ This constructor is used by ConnectedClient APIs.
+ Used to create a CBLDocument without database and c4doc
+ Will retain the passed in `body`(FLSliceResult) */
+- (instancetype) initWithDocumentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                               body: (FLSliceResult)body;
+
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
 
-// Encodes the document and returns the corresponding slice
-//
-//  - outRevFlags: Attachment flag will be set, if any present.
-//  - error: On return, the error if any.
-- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
-                               error: (NSError**)outError;
+/** Encodes the document and returns the corresponding slice
+    
+ @param outRevFlags Attachment flag will be set, if any present.
+ @param outError  On return, the error if any. */
+- (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError;
 
 - (void) setEncodingError: (NSError*)error;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;
+
+// this will set the remoteDoc flag
+- (void) markAsRemoteDoc;
 
 @end
 

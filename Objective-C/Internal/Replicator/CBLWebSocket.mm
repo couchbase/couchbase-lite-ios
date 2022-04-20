@@ -28,7 +28,6 @@
 #import "c4Socket.h"
 #import "MYURLUtils.h"
 #import "fleece/Fleece.hh"
-#import "fleece/Expert.hh"              // for AllocedDict
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
@@ -179,9 +178,11 @@ static void doDispose(C4Socket* s) {
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
-        _replicator = (__bridge CBLReplicator*)context;
-        _db = _replicator.config.database;
-        _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        if ([(__bridge id)context isKindOfClass: [CBLReplicator class]]) {
+            _replicator = (__bridge CBLReplicator*)context;
+            _db = _replicator.config.database;
+            _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        }
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
         
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];

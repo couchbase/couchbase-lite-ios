@@ -1015,6 +1015,10 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
            asDeletion: (BOOL)deletion
                 error: (NSError**)outError
 {
+    if (document.isRemoteDoc)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Remote document cannot be saved to the local database."];
+    
     if (deletion && !document.revisionID)
         return createError(CBLErrorNotFound,
                            kCBLErrorMessageDeleteDocFailedNotSaved, outError);
