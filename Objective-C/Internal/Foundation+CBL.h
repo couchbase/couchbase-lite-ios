@@ -22,11 +22,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSURL (CBL)
-- (void) c4Address: (C4Address*)addr;
-
-@end
-
 @interface NSString (CBL)
 
 // for unit testing purpose only
