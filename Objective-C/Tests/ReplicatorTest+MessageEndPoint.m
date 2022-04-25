@@ -431,8 +431,7 @@
     XCTestExpectation* listenerStop = [self expectationWithDescription:@"Listener stop"];
     XCTestExpectation* listenerIdle = [self expectationWithDescription:@"Listener idle"];
     NSMutableArray* listenerErrors = [NSMutableArray array];
-    __block id listenerToken = nil;
-    listenerToken = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
+    [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
         if(change.status.error) {
             [listenerErrors addObject: change.status.error];
         }

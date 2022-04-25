@@ -150,8 +150,12 @@ static BOOL sOnlyTrustAnchorCerts;
     OSStatus err;
 
     if (@available(iOS 12.0, macos 10.14, *)) {
-        if (!SecTrustEvaluateWithError(_trust, nullptr))
-            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
+        CFErrorRef error;
+        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+        if (!trusted) {
+            NSError* cferr = (__bridge NSError*)error;
+            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
+        }
         err = SecTrustGetTrustResult(_trust, &result);
     } else {
 #if TARGET_OS_MACCATALYST
@@ -176,15 +180,17 @@ static BOOL sOnlyTrustAnchorCerts;
 
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
-        if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
-            [self forceTrusted];
-            return credential;
-        } else {
-            MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                          @"Server SSL Certificate does not match pinned cert");
-            return nil;
+        CFIndex count = SecTrustGetCertificateCount(_trust);
+        for (CFIndex i = 0; i < count; i++) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, i);
+            if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
+                [self forceTrusted];
+                return credential;
+            }
         }
+        MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                      @"Server SSL Certificates does not match pinned cert");
+        return nil;
     }
 
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
