@@ -862,8 +862,16 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return nil;
         
         C4Error err = {};
-        C4Address addr = {};
-        [url c4Address: &addr];
+        CBLStringBytes schemeSlice(url.scheme);
+        CBLStringBytes hostSlice(url.host);
+        CBLStringBytes pathSlice(url.path.stringByDeletingLastPathComponent);
+        C4Address addr = {
+            .scheme = schemeSlice,
+            .hostname = hostSlice,
+            .port = url.port.unsignedShortValue,
+            .path = pathSlice,
+        };
+        
         C4SliceResult cookies = c4db_getCookies(_c4db, addr, &err);
         if (err.code != 0) {
             CBLWarn(WebSocket, @"Error while getting cookies %d/%d", err.domain, err.code);

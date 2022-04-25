@@ -18,21 +18,6 @@
 //
 
 #import "Foundation+CBL.h"
-#import "CBLStringBytes.h"
-
-@implementation NSURL (CBL)
-- (void) c4Address: (C4Address*)addr {
-    CBLStringBytes schemeSlice(self.scheme);
-    CBLStringBytes hostSlice(self.host);
-    CBLStringBytes pathSlice(self.path.stringByDeletingLastPathComponent);
-    
-    addr->scheme = schemeSlice;
-    addr->hostname = hostSlice;
-    addr->port = self.port.unsignedShortValue;
-    addr->path = pathSlice;
-}
-
-@end
 
 @implementation NSString (CBL)
 - (id) toJSONObj {
