@@ -1649,6 +1649,15 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
+- (void) testPinnedCertWithNonTLS_SG {
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
 - (void) dontTestContinuousPushNeverending_SG {
     // NOTE: This test never stops even after the replication goes idle.
     // It can be used to test the response to connectivity issues like killing the remote server.
@@ -1824,6 +1833,104 @@
     AssertEqual(self.db.count, 0u);
     CBLDocument* savedDoc = [self.db documentWithID: doc.id];
     AssertNil([savedDoc stringForKey: propertyKey]);
+}
+
+#pragma mark - SG (TLS with chain of certs)
+// Replicator with non-matching cert + sg with muliple certs
+- (void) testMultipleCertSGWithNonMatchingCert_SG {
+    id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
+        return;
+    
+    self.disableDefaultServerCertPinning = YES;    // without this, SSL handshake will fail
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
+}
+
+- (SecCertificateRef) getCert: (NSString*)certInPEM {
+    NSData *certData = [[NSData alloc] initWithBase64EncodedString: certInPEM options: 0];
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    return (SecCertificateRef)CFAutorelease(cert);
+}
+
+// Replicator with single matching cert + sg with muliple certs
+- (void) testMultipleCertSGWithMatchingCert_SG {
+    id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
+        return;
+    
+    // replicator with leaf cert
+    NSString* cert =                                                        \
+        @"MIICoDCCAYgCCQDOqeOThcl0DTANBgkqhkiG9w0BAQsFADAQMQ4wDAYDVQQDDAVJ" \
+        "bnRlcjAeFw0yMjA0MDgwNDE2MjNaFw0zMjA0MDUwNDE2MjNaMBQxEjAQBgNVBAMM"  \
+        "CWxvY2FsaG9zdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMt7VQ0j"  \
+        "74/GJVnTfC0YQZHeCFoZbZyJ/4KPOpe1UoqRQ1xNtllPMHf4ukIeNd3tS4CHQDqK"  \
+        "83a7uGXEOzY3JFaVRnTpMcHRMnpmZQLWZs+WMCP5fzI4EcaJjFmqQSUjfZiocdh/"  \
+        "n5vKc64bhKyUStE2CSObMnJ/L5mPY1JUAgxQrXtK4lw1T/ppV2m4hiutr+gkhXjc"  \
+        "Sam4DheuMg7hSUZSwh7VI253ev1Hp4JdSmndQHvle99S+N5jJ11NZnEuQxcImmOI"  \
+        "MBVfRFpREFPOH+JrqsnYSic2GQvv31nAJsXzYX2t/VT0a3TUes3B9OZfAVA7nMFA"  \
+        "r3E9mjVGYVtn7skCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEADbjYO9VxOGZT5LAv"  \
+        "ON+U+2FPG5Tons1ubWslThROqml7CCfNKPVhZCwe0BUQLWc35NYvqVjoSAenCHu6"  \
+        "EUANfqtuNxQAoeDCaP1epGYZ8fakJXvuyTjek3RV2PeiuFUIZQP/HWGfI640kh4V"  \
+        "xvUBa3joelnt+KjDB/yJemmf0dIXJ0dLtFBTN+YVp4aSFTtzcbqh50H6BSAgSiWR"  \
+        "ocTu5YpDXHZ6ufaMTRa2HUcSmFeWi75sS6ySgECTbeld1/mFZcSf1zXHU9WFg39D"  \
+        "knQNR2i1cJMbMZ3GCRyB6y3SxFb7/9BS70DV3p4n5BjYMlhNnHJx4u1JUTLWgybV"  \
+        "qrV+HA====";
+    NSError* error;
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    config.pinnedServerCertificate = [self getCert: cert];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // replicator with intermediate cert
+    cert =                                                                  \
+        @"MIIDFTCCAf2gAwIBAgIJANZ8gSANI5jNMA0GCSqGSIb3DQEBCwUAMA8xDTALBgNV" \
+        "BAMMBFJvb3QwHhcNMjIwNDA4MDQxNjIzWhcNMzIwNDA1MDQxNjIzWjAQMQ4wDAYD"  \
+        "VQQDDAVJbnRlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOm1MUNQ"  \
+        "xZKOCXw93eB/pmyCk5kEV3+H8RQC5Nq7orHvnHL6D/YVfVsobZyHkMSP3FVzl0bo"  \
+        "s1s+8kCjJ7O+M3TpzuSL8y4uLSEPmZF5qY2N7QobabrKVYueFxFmOD7+ypILx2QC"  \
+        "+hWd3J3XiLiiXqOO2jtjtwwy2+pD21DjmcPHGC4GKyv8/jp7hH4MFF6ux1wRQej1"  \
+        "on5jJQNFERUFdfX3wAmZgjww8bfyCEkHxnyIfJjEhyOtMLGGNUu8Hms7az+uYT6I"  \
+        "S4Q6VeBJ5WTKyhk7aJB1Rl6zZbROvTIq+ZaxAJNwsIzd/HiaoTwFUe3EFilIeGFK"  \
+        "w3vnPwiq99tDBHsCAwEAAaNzMHEwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU"  \
+        "WXW5x/ufCrRKhv3F5wBqY0JVUEswPwYDVR0jBDgwNoAUefIiQi9GC9aBspej7UJT"  \
+        "zQzs/mKhE6QRMA8xDTALBgNVBAMMBFJvb3SCCQD1tOzs5zPQ/zANBgkqhkiG9w0B"  \
+        "AQsFAAOCAQEAEJhO1fA0d8Hu/5IHTlsGfmtcXOyXDcQQVz/3FKWrTPgDOYeMMNbG"  \
+        "WqvuG4YxmXt/+2OC1IYK/slrIK5XXldfRu90UM4wVXeD3ATLS3AG0Z/+yPRGbUbF"  \
+        "y5+11nXySGyKdV1ik0KgLGeYf0cuJ/vu+/7mkj4mGDfmTQv+8/HYKNaOqgKuVRlf"  \
+        "LHBh/RlbHMBn2nwL79vbrIeDaQ0zq9srt9F3CEy+SvlxX63Txmrym3fqTQjPUi5s"  \
+        "rEsy+eNr4N+aDWqGRcUkbP/C/ktGGNBHYG1NaPJq7CV1tdLe+usIcRWRR9vOBWbr"  \
+        "EkBGJMvCdhlWRv2FnrQ+VUQ+mhYHBS2Kng==";
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    config.pinnedServerCertificate = [self getCert: cert];
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    // replicator with root cert
+    cert =                                                                  \
+        @"MIIDFDCCAfygAwIBAgIJAPW07OznM9D/MA0GCSqGSIb3DQEBCwUAMA8xDTALBgNV" \
+        "BAMMBFJvb3QwHhcNMjIwNDA4MDQxNjIzWhcNMzIwNDA1MDQxNjIzWjAPMQ0wCwYD"  \
+        "VQQDDARSb290MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJV+Ptou"  \
+        "R1BS/0XXN+JImdNesaBJ2tcHrFHq2yK9V4qu2iUX8LgOcBpPg8yR0zJlzjwF+SLE"  \
+        "R8jBhD79YF8kF+r7cqBhsvy+e/ri0AaBiGsdP7NFPFEUCOukhnMIvLt10BvsRoCd"  \
+        "+eFrDZO0ZJer3ylp2GeB01rTgngWfrenhZdyGR8ISn+ijtN+J2IhAxsoLGDWiAL/"  \
+        "XWX55agSuAGi6zlomkReTMuyfkidLfrejUQCnrcDQQ7xqjdCB1QYBt6o1U1oHN3F"  \
+        "D6ICXirXJyVDJ2Ry6q+FrGJbJDUPlNwlPqAyukFFbeOINPKWiFQUw8nSo3i3DFMG"  \
+        "UZ3HhkQ/xfboZQIDAQABo3MwcTAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5"  \
+        "8iJCL0YL1oGyl6PtQlPNDOz+YjA/BgNVHSMEODA2gBR58iJCL0YL1oGyl6PtQlPN"  \
+        "DOz+YqETpBEwDzENMAsGA1UEAwwEUm9vdIIJAPW07OznM9D/MA0GCSqGSIb3DQEB"  \
+        "CwUAA4IBAQANxGwoeEBaibMQAqSWPnDBISiwk9uKy3buateXOtLlBSpM9ohE4iPG"  \
+        "GDFZ+9LoKJGy4vWmv6XD4zBeoqZ9hOgnvdEu0P+JITffjXCsfb0JPsOOjwbcJ+5+"  \
+        "TnfoXCyPRTEi/6OG1sKO2ibav5vMTUuUDdVYbPA2hfEAdn/n0GrN4fQ1USMKk+Ld"  \
+        "KWgWGZto+l0fKIXdHHpxr01V9Q/+6kzbpZOSxw41m/o1TwJxYSuRXZfK67YpBYGO"  \
+        "N4X2c7Qsvjd52vcZdRra+bkS0BJXwEDZZdmrZOlRAYIhE7lZ5ojqcZ+/UJztyPZq"  \
+        "Dbr9kMLDVeMuJfGyebdZ0zeMhVSv0PlD";
+    [self.db saveDocument: [[CBLMutableDocument alloc] init] error: &error];
+    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    config.pinnedServerCertificate = [self getCert: cert];
+    [self run: config errorCode: 0 errorDomain: nil];
 }
 
 #pragma mark - Replicator Config

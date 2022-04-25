@@ -150,8 +150,12 @@ static BOOL sOnlyTrustAnchorCerts;
     OSStatus err;
 
     if (@available(iOS 12.0, macos 10.14, *)) {
-        if (!SecTrustEvaluateWithError(_trust, nullptr))
-            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed! Evaluating trust result...");
+        CFErrorRef error;
+        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+        if (!trusted) {
+            NSError* cferr = (__bridge NSError*)error;
+            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
+        }
         err = SecTrustGetTrustResult(_trust, &result);
     } else {
 #if TARGET_OS_MACCATALYST
@@ -177,27 +181,34 @@ static BOOL sOnlyTrustAnchorCerts;
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
         NSData* certData = nil;
+        CFIndex count = SecTrustGetCertificateCount(_trust);
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
         if (@available(macOS 12.0, iOS 15.0, *)) {
-            CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
-            SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
-            certData = CFBridgingRelease(SecCertificateCopyData(cert));
-            CFRelease(certs);
+            for (CFIndex i = 0; i < count; i++) {
+                CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+                certData = CFBridgingRelease(SecCertificateCopyData(cert));
+                CFRelease(certs);
+                if ([_pinnedCertData isEqual: certData]) {
+                    [self forceTrusted];
+                    return credential;
+                }
+            }
         } else
 #endif
         {
-            SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, 0);
-            certData = CFBridgingRelease(SecCertificateCopyData(cert));
+            for (CFIndex i = 0; i < count; i++) {
+                SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, i);
+                if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
+                    [self forceTrusted];
+                    return credential;
+                }
+            }
         }
-        
-        if ([_pinnedCertData isEqual: certData]) {
-            [self forceTrusted];
-            return credential;
-        } else {
-            MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                          @"Server SSL Certificate does not match pinned cert");
-            return nil;
-        }
+
+        MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                      @"Server SSL Certificates does not match pinned cert");
+        return nil;
     }
 
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
