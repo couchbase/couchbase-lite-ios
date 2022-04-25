@@ -1779,9 +1779,6 @@
     if (!target)
         return;
     
-    NSURL* url = [NSURL URLWithString: @"wss://localhost:4994/scratch"];
-    target = [[CBLURLEndpoint alloc] initWithURL: url];
-    
     self.disableDefaultServerCertPinning = YES;    // without this, SSL handshake will fail
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: CBLErrorTLSCertUnknownRoot errorDomain: CBLErrorDomain];
@@ -1798,9 +1795,6 @@
     id target = [self remoteEndpointWithName: @"scratch" secure: YES];
     if (!target)
         return;
-    
-    NSURL* url = [NSURL URLWithString: @"wss://localhost:4994/scratch"];
-    target = [[CBLURLEndpoint alloc] initWithURL: url];
     
     // replicator with leaf cert
     NSString* cert =                                                        \
