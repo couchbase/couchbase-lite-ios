@@ -29,8 +29,16 @@
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 @class CBLIndexConfiguration;
+@class CBLScope;
+@class CBLCollection;
+
 NS_ASSUME_NONNULL_BEGIN
 
+/**  The default scope name constant */
+extern NSString* const kCBLDefaultScopeName;
+
+/** The default collection name constant */
+extern NSString* const kCBLDefaultCollectionName;
 
 /**
 Concurruncy control type used when saving or deleting a document.
@@ -482,6 +490,76 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return query created using the given expression string.
  */
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
+
+#pragma mark -- Scopes
+
+/**
+ Get scope names that have at least one collection.
+ 
+ @note: The default scope is exceptional as it will always be listed even though there are
+ no collections under it. */
+- (NSArray*) getScopes;
+
+/**
+ Get a scope object by name. As the scope cannot exist by itself without having a collection,
+ the nil value will be returned if there are no collections under the given scope’s name.
+ 
+ @param name Scope name, if empty, it will use default scope name.
+ @return Scope object
+ 
+ @note: The default scope is exceptional, and it will always be returned. */
+- (nullable CBLScope*) getScopeWithName: (nullable NSString*)name;
+
+#pragma mark -- Collections
+
+/** Get all collections in the specified scope.
+ 
+ @param scope Scope name
+ @return list of collections in the scope.
+ */
+- (NSArray*) getCollections: (nullable NSString*)scope;
+
+/**
+ Create a named collection in the specified scope.
+ 
+ @param name name for the new collection
+ @param scope collection will be created under this scope, if not specified, use the default scope.
+ @param error error On return, the given query string is invalid.
+ @return Newly created collection or if already exists, the existing collection will be returned.
+ */
+- (CBLCollection*) createCollectionWithName: (NSString*)name
+                                      scope: (nullable NSString*)scope
+                                      error: (NSError**)error;
+
+/**
+ Get a collection in the specified scope by name.
+ 
+ @param name Name of the collection to be fetched.
+ @param scope Name of the scope the collection resides, if not specified uses the default scope.
+ @return collection instance or If the collection doesn't exist, a nil value will be returned.
+ */
+- (nullable CBLCollection*) getCollectionWithName: (NSString*)name scope: (nullable NSString*)scope;
+
+/**
+ Delete a collection by name  in the specified scope.
+ If the collection doesn't exist, the operation will be no-ops.
+ 
+ @note: the default collection can be deleted but cannot be recreated.
+ 
+ @param name Name of the collection to be deleted
+ @param scope Name of the scope the collection resides, if not specified uses the default scope.
+ @param error error On return, the given query string is invalid.
+ @return True on success, false on failure.
+ */
+- (BOOL) deleteCollectionWithName: (NSString*)name
+                            scope: (nullable NSString*)scope
+                            error: (NSError**)error;
+
+/** Get the default scope. */
+- (CBLScope*) getDefaultScope;
+
+/** Get the default collection. If the default collection is deleted, null will be returned. */
+- (nullable CBLCollection*) getDefaultCollection;
 
 @end
 

@@ -45,6 +45,11 @@ public enum MaintenanceType: UInt8 {
 
 /// A Couchbase Lite database.
 public final class Database {
+    /// The default scope name constant
+    public static let defaultScopeName: String = kCBLDefaultScopeName
+    
+    /// The default collection name constant
+    public static let defaultCollectionName: String = kCBLDefaultCollectionName
     
     /// Initializes a Couchbase Lite database with a given name and database options.
     /// If the database does not yet exist, it will be created, unless the `readOnly` option is used.

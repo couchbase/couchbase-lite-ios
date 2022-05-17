@@ -42,6 +42,8 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLQuery+N1QL.h"
+#import "CBLCollection.h"
+#import "CBLScope.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -59,6 +61,9 @@ static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
 static NSString* kBlobDataProperty = @kC4BlobDataProperty;
 static NSString* kBlobLengthProperty = @"length";
 static NSString* kBlobContentTypeProperty = @"content_type";
+
+NSString* const kCBLDefaultScopeName = @"_default";
+NSString* const kCBLDefaultCollectionName = @"_default";
 
 // this variable defines the state of database
 typedef enum {
@@ -690,6 +695,54 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error {
     return [[CBLQuery alloc] initWithDatabase: self expressions: query error: error];
+}
+
+#pragma mark -- Scope
+
+- (CBLScope*) getDefaultScope {
+    // TODO: add implementation
+    return [[CBLScope alloc] init];
+}
+
+- (NSArray*) getScopes {
+    // TODO: add implementation
+    return [NSArray array];
+}
+
+- (nullable CBLScope*) getScopeWithName: (nullable NSString*)name {
+    // TODO: add implementation
+    return nil;
+}
+
+#pragma mark -- Collections
+
+- (nullable CBLCollection*) getDefaultCollection {
+    // TODO: add implementation
+    return  nil;
+}
+
+- (NSArray*) getCollections: (nullable NSString*)scope {
+    // TODO: add implementation
+    return [NSArray array];
+}
+
+- (CBLCollection*) createCollectionWithName: (NSString*)name
+                                      scope: (nullable NSString*)scope
+                                      error: (NSError**)error {
+    // TODO: add implementation
+    return [[CBLCollection alloc] init];
+}
+
+- (nullable CBLCollection*) getCollectionWithName: (NSString*)name scope: (nullable NSString*)scope {
+    // TODO: add implementation
+    return nil;
+}
+
+- (BOOL) deleteCollectionWithName: (NSString*)name
+                            scope: (nullable NSString*)scope
+                            error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
 }
 
 #pragma mark - INTERNAL
