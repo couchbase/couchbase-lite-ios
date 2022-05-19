@@ -34,6 +34,10 @@
 
 @implementation ReplicatorTest_Main
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #ifdef COUCHBASE_ENTERPRISE
 
 - (void) testEmptyPush {
@@ -2258,5 +2262,7 @@
     [repl removeChangeListenerWithToken: token1];
     [repl removeChangeListenerWithToken: token3];
 }
+
+#pragma clang diagnostic pop
 
 @end

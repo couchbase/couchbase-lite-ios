@@ -28,6 +28,10 @@
 
 @implementation DocumentExpirationTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) testGetExpirationBeforeSaveDocument {
     CBLDocument* doc = [self createDocument: nil];
     AssertEqual(self.db.count, 0u);
@@ -581,5 +585,7 @@
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
 }
+
+#pragma clang diagnostic pop
 
 @end

@@ -27,6 +27,10 @@
 
 @implementation DictionaryTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) testCreateDictionary {
     CBLMutableDictionary* address = [[CBLMutableDictionary alloc] init];
     AssertEqual(address.count, 0u);
@@ -398,5 +402,7 @@
         [mDict toJSON];
     }];
 }
+
+#pragma clang diagnostic pop
 
 @end

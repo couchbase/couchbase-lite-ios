@@ -20,11 +20,17 @@
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
+#import "CBLScope.h"
+#import "CollectionUtils.h"
 
 @interface DatabaseTest : CBLTestCase
 @end
 
 @implementation DatabaseTest
+
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 // Helper methods to verify document
 - (void) verifyDocumentWithID: (NSString*)documentID data: (NSDictionary*)data {
@@ -2414,5 +2420,75 @@
     Assert([self.db deleteIndexForName: @"index2" error: &error]);
     Assert([self.db deleteIndexForName: @"index3" error: &error]);
 }
+
+- (void) testCollection {
+    [self createDocs: 10];
+    CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
+    
+    NSError* error = nil;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"dbName" error: &error];
+    CBLCollection* c = [db createCollectionWithName: @"collection1" scope: nil error: &error];
+    AssertNotNil(c);
+    
+    AssertEqual(c.count, 0);
+    AssertEqual(c.name, @"collection1");
+    AssertEqual(c.scope.name, kCBLDefaultScopeName);
+    
+    c = [db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    AssertEqual(c.name, @"collection2");
+    AssertEqual(c.scope.name, @"scope1");
+    
+    // ---------------------------------
+    // -- TODO: No action, dummy APIs --
+    // collection APIs
+    CBLDocument* doc = [c documentWithID: @"docID"];
+    AssertNil(doc);
+    
+    CBLMutableDocument* mDoc = [CBLMutableDocument document];
+    AssertFalse([c saveDocument: mDoc error: &error]);
+    AssertFalse([c saveDocument: mDoc conflictHandler: ^BOOL(CBLMutableDocument* md1, CBLDocument* d1) { return YES; } error: &error]);
+    AssertFalse([c saveDocument: mDoc concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
+    AssertFalse([c deleteDocument: doc1 error: &error]);
+    AssertFalse([c deleteDocument: doc1 concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
+    AssertFalse([c purgeDocument: doc1 error: &error]);
+    AssertFalse([c purgeDocumentWithID: @"docID" error: &error]);
+    AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
+    AssertNil([c getDocumentExpirationWithID: @"docID"]);
+    
+    // change listeners
+    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" listener:^(CBLDocumentChange* change) {
+        
+    }]);
+    dispatch_queue_t q = dispatch_queue_create(@"dispatch-queue".UTF8String, DISPATCH_QUEUE_SERIAL);
+    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }]);
+    AssertNotNil([c addChangeListener: ^(CBLDatabaseChange* change) {
+        AssertNil(change.collection);
+    }]);
+    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLDatabaseChange* change) {
+        AssertNil(change.collection);
+    }]);
+    
+    // scope APIs
+    CBLScope* s = c.scope;
+    AssertEqual([s getCollections].count, 0);
+    AssertEqualObjects([s getCollectionWithName: @"name"].name, @"name");
+    
+    c = [db getDefaultCollection];
+    AssertEqual(c.name, kCBLDefaultCollectionName);
+    
+    s = [db getDefaultScope];
+    AssertEqual(s.name, kCBLDefaultScopeName);
+    
+    AssertNil(doc.collection);
+    
+    // query - datasource
+    AssertNotNil([CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
+                                    from: [CBLQueryDataSource collection: c]]);
+    AssertNotNil([CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
+                                    from: [CBLQueryDataSource collection: c as: @"col-alias"]]);
+    
+}
+
+#pragma clang diagnostic pop
 
 @end

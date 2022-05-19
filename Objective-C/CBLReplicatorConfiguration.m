@@ -45,6 +45,7 @@
 @synthesize conflictResolver=_conflictResolver;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
+@synthesize collections=_collections;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -80,6 +81,17 @@
     CBLAssertNotNil(config);
     
     return [self initWithConfig: config readonly: NO];
+}
+
+- (instancetype) initWithTarget:(id<CBLEndpoint>)target {
+    CBLAssertNotNil(target);
+    self = [super init];
+    if (self) {
+        _target = target;
+        
+        // TODO: Add implementation
+    }
+    return self;
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -176,6 +188,20 @@
     _enableAutoPurge = enableAutoPurge;
 }
 
+- (void) addCollection: (CBLCollection*)collection
+                config: (nullable CBLCollectionConfiguration*)config {
+    
+    // TODO: Add implementation
+
+}
+
+- (void) addCollections: (NSArray*)collections
+                 config: (nullable CBLCollectionConfiguration*)config {
+
+    // TODO: Add implementation
+    
+}
+
 #pragma mark - Internal
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
@@ -195,13 +221,17 @@
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
         _headers = config.headers;
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _documentIDs = config.documentIDs;
         _channels = config.channels;
         _pushFilter = config.pushFilter;
         _pullFilter = config.pullFilter;
+        _conflictResolver = config.conflictResolver;
+#pragma clang diagnostic pop
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
-        _conflictResolver = config.conflictResolver;
         _maxAttempts = config.maxAttempts;
         _maxAttemptWaitTime = config.maxAttemptWaitTime;
         _enableAutoPurge = config.enableAutoPurge;

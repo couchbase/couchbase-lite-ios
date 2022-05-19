@@ -31,6 +31,10 @@
     MockConnectionFactory* _delegate;
 }
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (XCTestExpectation *) waitForListenerIdle: (CBLMessageEndpointListener*)listener {
     XCTestExpectation* x = [self expectationWithDescription:@"Listener idle"];
     __block id token = nil;
@@ -611,5 +615,7 @@
     retVal.errorLogic = _errorLogic;
     return retVal;
 }
+
+#pragma clang diagnostic pop
 
 @end

@@ -22,10 +22,15 @@
 @implementation CBLReplicatorConfiguration (Swift)
 
 - (void) setConflictResolverUsingBlock: (CBLConflictResolverBlock)block {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     if (block)
         self.conflictResolver = [[CBLConflictResolverBridge alloc] initWithResolverBlock: block];
     else
         self.conflictResolver = nil;
+#pragma clang diagnostic pop
 }
 
 @end

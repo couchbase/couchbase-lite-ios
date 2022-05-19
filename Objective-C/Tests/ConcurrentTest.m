@@ -28,6 +28,10 @@
 
 @implementation ConcurrentTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) setProperties: (id <CBLMutableDictionary>)dictionary
                 custom: (nullable NSDictionary*)custom
 {
@@ -323,5 +327,7 @@
     [self waitForExpectations: @[exp2] timeout: 10.0]; // Test deadlock
 }
 #endif
+
+#pragma clang diagnostic pop
 
 @end

@@ -23,6 +23,7 @@
 @implementation CBLDatabaseChange
 
 @synthesize database=_database, documentIDs=_documentIDs, isExternal=_isExternal;
+@synthesize collection=_collection;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                       documentIDs: (NSArray *)documentIDs

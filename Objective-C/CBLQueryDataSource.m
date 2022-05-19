@@ -20,6 +20,7 @@
 #import "CBLQueryDataSource.h"
 #import "CBLDatabase.h"
 #import "CBLQuery+Internal.h"
+#import "CBLCollection.h"
 
 @implementation CBLQueryDataSource
 
@@ -41,9 +42,16 @@
     if (_alias)
         return _alias;
     else {
-        CBLDatabase* db = $castIf(CBLDatabase, _source);
-        if (db)
-            return db.name;
+        // TODO: Clean this! 
+        if ([_source isKindOfClass: [CBLDatabase class]]) {
+            CBLDatabase* db = $castIf(CBLDatabase, _source);
+            if (db)
+                return db.name;
+        } else if ([_source isKindOfClass: [CBLCollection class]]) {
+            CBLCollection* c = $castIf(CBLCollection, _source);
+            if (c)
+                return c.name;
+        }
     }
     return nil;
 }
@@ -58,6 +66,18 @@
     CBLAssertNotNil(database);
     
     return [[CBLQueryDataSource alloc] initWithDataSource: database as: alias];
+}
+
++ (instancetype) collection:(CBLCollection *)collection {
+    CBLAssertNotNil(collection);
+    
+    return [CBLQueryDataSource collection: collection as: nil];
+}
+
++ (instancetype) collection: (CBLCollection*)collection as: (nullable NSString*)alias {
+    CBLAssertNotNil(collection);
+    
+    return [[CBLQueryDataSource alloc] initWithDataSource: collection as: alias];
 }
 
 @end

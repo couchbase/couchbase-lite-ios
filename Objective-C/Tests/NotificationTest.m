@@ -26,6 +26,10 @@
 
 @implementation NotificationTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) testDatabaseChange {
     XCTestExpectation* x = [self expectationWithDescription:@"change"];
     id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
@@ -169,5 +173,7 @@
     // Remove again:
     [_db removeChangeListenerWithToken:listener1];
 }
+
+#pragma clang diagnostic pop
 
 @end

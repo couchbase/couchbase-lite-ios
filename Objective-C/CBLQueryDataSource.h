@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLQueryDatabase, CBLDatabase;
+@class CBLCollection;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -45,6 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
  @return The CBLQueryDatabase instance.
  */
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias;
+
+
++ (instancetype) collection: (CBLCollection*)collection;
++ (instancetype) collection: (CBLCollection*)collection as: (nullable NSString*)alias;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

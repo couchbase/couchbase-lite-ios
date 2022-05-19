@@ -1,5 +1,5 @@
 //
-//  CBLScope.h
+//  CBLIndexable.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,38 +17,20 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-
-@class CBLCollection;
+#import "CBLIndexConfiguration.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLScope <NSObject>
+@protocol CBLIndexable <NSObject>
 
-#pragma mark Properties
+/** Return all index names. */
+- (NSArray*) indexes;
 
-/** Scope name. */
-@property (readonly, nonatomic) NSString* name;
+/** Create an index with the index name and config. */
+- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
 
-#pragma mark Collections
-
-/** Get all collections in the scope. */
-- (NSArray<CBLCollection*>*) getCollections;
-
-/**
- Get a collection in the scope by name.
- If the collection doesn't exist, a nil value will be returned. */
-- (CBLCollection*) getCollectionWithName: (NSString*)name;
-
-@end
-
-/**  The default scope name constant */
-extern NSString* const kCBLDefaultScopeName;
-
-@interface CBLScope : NSObject<CBLScope>
-
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
+/** Delete an index by name. */
+- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

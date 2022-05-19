@@ -79,6 +79,21 @@ using namespace fleece;
     return self;
 }
 
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                 JSONRepresentation: (NSData*)json
+{
+    Assert(collection);
+    Assert(json);
+    self = [super init];
+    if (self) {
+        _json = json;
+        _language = kC4JSONQuery;
+        
+        // TODO: Add implementation
+    }
+    return self;
+}
+
 - (nullable instancetype) initWithDatabase: (CBLDatabase*)database
                                expressions: (NSString*)expressions
                                      error: (NSError**)error
@@ -182,7 +197,12 @@ using namespace fleece;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
     }
-    return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
+    
+    // TODO: cleanup?
+    if ([from.source isKindOfClass: [CBLDatabase class]])
+        return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
+    else
+        return [self initWithCollection: (CBLCollection*)from.source JSONRepresentation: json];
 }
 
 - (void) dealloc {    

@@ -30,6 +30,10 @@
 
 @implementation PredicateQueryTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (CBLDocument*) docForRow: (CBLQueryRow*)row {
     NSString* docID = [row stringAtIndex: 0];
     C4SequenceNumber sequence = [row integerAtIndex: 1];
@@ -410,5 +414,7 @@
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
+
+#pragma clang diagnostic pop
 
 @end

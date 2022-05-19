@@ -1,5 +1,5 @@
 //
-//  CBLScope.h
+//  CBLScope+Internal.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,38 +17,14 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-
-@class CBLCollection;
+#pragma once
+#import "CBLScope.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLScope <NSObject>
+@interface CBLScope ()
 
-#pragma mark Properties
-
-/** Scope name. */
-@property (readonly, nonatomic) NSString* name;
-
-#pragma mark Collections
-
-/** Get all collections in the scope. */
-- (NSArray<CBLCollection*>*) getCollections;
-
-/**
- Get a collection in the scope by name.
- If the collection doesn't exist, a nil value will be returned. */
-- (CBLCollection*) getCollectionWithName: (NSString*)name;
-
-@end
-
-/**  The default scope name constant */
-extern NSString* const kCBLDefaultScopeName;
-
-@interface CBLScope : NSObject<CBLScope>
-
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
+- (instancetype) initWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

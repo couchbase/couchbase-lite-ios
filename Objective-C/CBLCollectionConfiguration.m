@@ -1,8 +1,8 @@
 //
-//  CBLListenerToken.h
+//  CBLCollectionConfiguration.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -16,18 +16,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+#import "CBLCollectionConfiguration.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation CBLCollectionConfiguration
 
-/**
- Listener token returned when adding a change listener. The token is used
- for removing the added change listener.
- */
-@protocol CBLListenerToken <NSObject>
-
-/// Remove the listener associated with the token.
-- (void) remove;
+@synthesize documentIDs=_documentIDs, channels=_channels;
+@synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
+@synthesize conflictResolver=_conflictResolver;
 
 @end
-
-NS_ASSUME_NONNULL_END

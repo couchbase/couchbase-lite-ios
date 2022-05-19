@@ -37,6 +37,10 @@
 
 @implementation QueryTest_Main
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #pragma mark - Where
 
 - (void) testNoWhereQuery {
@@ -2029,5 +2033,7 @@
     AssertEqual(count, 2);
     [q removeChangeListenerWithToken: token];
 }
+
+#pragma clang diagnostic pop
 
 @end

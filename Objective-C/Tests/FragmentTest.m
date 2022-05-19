@@ -25,6 +25,10 @@
 
 @implementation FragmentTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) testBasicGetFragmentValues {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setData: @{ @"name": @"Jason",
@@ -660,5 +664,7 @@
         AssertFalse(d[@"array"][0][3].exists);
     }];
 }
+
+#pragma clang diagnostic pop
 
 @end

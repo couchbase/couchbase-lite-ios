@@ -44,7 +44,9 @@
 
 @implementation CBLReplicatedDocument
 
-@synthesize id=_id, flags=_flags, c4Error=_c4Error, isTransientError=_isTransientError, error=_error;
+@synthesize id=_id, flags=_flags, c4Error=_c4Error;
+@synthesize isTransientError=_isTransientError, error=_error;
+@synthesize collection=_collection;
 
 - (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded {
     self = [super init];

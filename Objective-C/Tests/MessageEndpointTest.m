@@ -135,6 +135,10 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     XCTestExpectation* _serverConnected;
 }
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void)setUp {
     [super setUp];
     
@@ -526,6 +530,20 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqual(_db.count, 2u);
     CBLDocument* savedDoc2 = [_db documentWithID: @"doc2"];
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
+}
+
+#pragma clang diagnostic pop
+
+- (void) testCollection {
+    CBLCollection* collection = [self.db getCollectionWithName: @"collection1"
+                                                         scope: @"scope1"];
+    CBLMessageEndpointListenerConfiguration* config;
+    config = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[collection]
+                                                                     protocolType: kCBLProtocolTypeByteStream];
+    
+    AssertEqual(config.collections.count, 1);
+    CBLCollection* c = (CBLCollection*)config.collections.firstObject;
+    AssertEqualObjects(c.name, @"collection1");
 }
 
 @end
