@@ -222,7 +222,7 @@ __deprecated_msg("Use [... initWithTarget:] instead.");
  If a null configuration is specified, a default empty configuration will be applied.
  
  @param collection The collection to be added.
- @param config Respective configuration for the collection, if nil, default config */
+ @param config Configuration for the collection, if nil, default config */
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config;
 

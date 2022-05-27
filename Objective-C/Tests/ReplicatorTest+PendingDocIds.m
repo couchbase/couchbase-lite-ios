@@ -508,7 +508,7 @@
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
     
-    CBLCollection* c1 = [self.db getCollectionWithName: @"name1" scope: @"scope1"];
+    CBLCollection* c1 = [self.db collectionWithName: @"name1" scope: @"scope1"];
     NSError* error = nil;
     
     AssertNil([replicator pendingDocumentIDsForCollection: c1 error: &error]);

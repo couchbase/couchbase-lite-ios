@@ -535,8 +535,7 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 #pragma clang diagnostic pop
 
 - (void) testCollection {
-    CBLCollection* collection = [self.db getCollectionWithName: @"collection1"
-                                                         scope: @"scope1"];
+    CBLCollection* collection = [self.db collectionWithName: @"collection1" scope: @"scope1"];
     CBLMessageEndpointListenerConfiguration* config;
     config = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[collection]
                                                                      protocolType: kCBLProtocolTypeByteStream];

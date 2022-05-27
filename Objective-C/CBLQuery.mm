@@ -197,11 +197,11 @@ using namespace fleece;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
     }
-    
-    // TODO: cleanup?
-    if ([from.source isKindOfClass: [CBLDatabase class]])
+     
+    if ([from.source isKindOfClass: [CBLDatabase class]]) {
+        // TODO: use [.. initWithCollections: JSONRepresentation] & [database defaultCollection]
         return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
-    else
+    } else
         return [self initWithCollection: (CBLCollection*)from.source JSONRepresentation: json];
 }
 

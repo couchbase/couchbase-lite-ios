@@ -63,7 +63,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 @property (readonly, atomic, nullable) NSString* path;
 
 /** The number of documents in the database. */
-@property (readonly, atomic) uint64_t count __deprecated_msg("Use database.getDefaultCollection().count instead.");
+@property (readonly, atomic) uint64_t count
+__deprecated_msg("Use [database defaultCollection].count instead.");
 
 /** 
  The database's configuration. The returned configuration object is readonly;
@@ -113,7 +114,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return The CBLDocument object.
  */
 - (nullable CBLDocument*) documentWithID: (NSString*)id
-__deprecated_msg("Use database.getDefaultCollection().getDocument(id:) instead.");
+__deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 #pragma mark - Subscript
@@ -142,7 +143,7 @@ __deprecated_msg("Use database.getDefaultCollection().getDocument(id:) instead."
  @return True on success, false on failure.
  */
 - (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] saveDocument:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] saveDocument:error:] instead.");
 
 /**
  Saves a document to the database. When used with kCBLConcurrencyControlLastWriteWins
@@ -158,7 +159,7 @@ __deprecated_msg("Use [[database getDefaultCollection] saveDocument:error:] inst
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                 error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] saveDocument:concurrencyControl:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] saveDocument:concurrencyControl:error:] instead.");
 
 /**
  Saves a document to the database. When write operations are executed concurrently and if conflicts
@@ -176,7 +177,7 @@ __deprecated_msg("Use [[database getDefaultCollection] saveDocument:concurrencyC
 - (BOOL) saveDocument: (CBLMutableDocument*)document
       conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
                 error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] saveDocument:conflictHandler:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] saveDocument:conflictHandler:error:] instead.");
 
 /**
  Deletes a document from the database. When write operations are executed
@@ -189,7 +190,7 @@ __deprecated_msg("Use [[database getDefaultCollection] saveDocument:conflictHand
  @return /True on success, false on failure.
  */
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] deleteDocument:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] deleteDocument:error:] instead.");
 
 /**
  Deletes a document from the database. When used with kCBLConcurrencyControlLastWriteWins
@@ -205,7 +206,7 @@ __deprecated_msg("Use [[database getDefaultCollection] deleteDocument:error:] in
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                   error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] deleteDocument:concurrencyControl:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] deleteDocument:concurrencyControl:error:] instead.");
 
 /** 
  Purges the given document from the database.
@@ -217,7 +218,7 @@ __deprecated_msg("Use [[database getDefaultCollection] deleteDocument:concurrenc
  @return True on success, false on failure.
  */
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] purgeDocument:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] purgeDocument:error:] instead.");
 
 
 /**
@@ -230,7 +231,7 @@ __deprecated_msg("Use [[database getDefaultCollection] purgeDocument:error:] ins
  @return True on success, false on failure.
  */
 - (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] purgeDocumentWithID:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] instead.");
 
 #pragma mark - Blob Save/Get
 
@@ -371,7 +372,7 @@ __deprecated_msg("Use [[database getDefaultCollection] purgeDocumentWithID:error
  @return An opaque listener token object for removing the listener.
  */
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener
-__deprecated_msg("Use [[database getDefaultCollection] addChangeListener:] instead.");
+__deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.");
 
 /**
  Adds a database change listener with the dispatch queue on which changes
@@ -384,7 +385,7 @@ __deprecated_msg("Use [[database getDefaultCollection] addChangeListener:] inste
  */
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLDatabaseChange*))listener
-__deprecated_msg("Use [[database getDefaultCollection] addChangeListenerWithQueue:listener:] instead.");
+__deprecated_msg("Use [[database defaultCollection] addChangeListenerWithQueue:listener:] instead.");
 
 /** 
  Adds a document change listener for the document with the given ID. Changes
@@ -396,7 +397,7 @@ __deprecated_msg("Use [[database getDefaultCollection] addChangeListenerWithQueu
  */
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
                                                 listener: (void (^)(CBLDocumentChange*))listener
-__deprecated_msg("Use [[database getDefaultCollection] addDocumentChangeListenerWithID:listener:] instead.");
+__deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:listener:] instead.");
 
 
 /**
@@ -412,7 +413,7 @@ __deprecated_msg("Use [[database getDefaultCollection] addDocumentChangeListener
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener
-__deprecated_msg("Use [[database getDefaultCollection] addDocumentChangeListenerWithID:queue:listener:] instead.");
+__deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:queue:listener:] instead.");
 /** 
  Removes a change listener with the given listener token.
  
@@ -427,7 +428,7 @@ __deprecated_msg("Use [ListenerToken remove] instead.");
 
 /** All index names. */
 @property (atomic, readonly) NSArray<NSString*>* indexes
-__deprecated_msg("Use [[database getDefaultCollection] indexes] instead.");
+__deprecated_msg("Use [[database defaultCollection] indexes] instead.");
 
 /**
  Creates an index which could be a value index or a full-text search index with the given name.
@@ -453,7 +454,7 @@ __deprecated_msg("Use [[database getDefaultCollection] indexes] instead.");
  */
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
                           name: (NSString*)name error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] createIndexWithConfig:name:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:error:] instead.");
 
 /**
  Deletes the index of the given index name.
@@ -463,7 +464,7 @@ __deprecated_msg("Use [[database getDefaultCollection] createIndexWithConfig:nam
  @return True on success, false on failure.
  */
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] deleteIndexForName:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] deleteIndexForName:error:] instead.");
 
 
 #pragma mark - DOCUMENT EXPIRATION
@@ -480,7 +481,7 @@ __deprecated_msg("Use [[database getDefaultCollection] deleteIndexForName:error:
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
                                error: (NSError**)error
-__deprecated_msg("Use [[database getDefaultCollection] setDocumentExpirationWithID:expiration:error:] instead.");
+__deprecated_msg("Use [[database defaultCollection] setDocumentExpirationWithID:expiration:error:] instead.");
 
 /**
  Returns the expiration time of a document, if exists, else nil.
@@ -489,7 +490,7 @@ __deprecated_msg("Use [[database getDefaultCollection] setDocumentExpirationWith
  @return the expiration time of a document, if one has been set, else nil.
  */
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID
-__deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWithID:] instead.");
+__deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:] instead.");
 
 
 #pragma mark - Query
@@ -510,7 +511,7 @@ __deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWith
  
  @note: The default scope is exceptional as it will always be listed even though there are
  no collections under it. */
-- (NSArray*) getScopes;
+- (NSArray*) scopes;
 
 /**
  Get a scope object by name. As the scope cannot exist by itself without having a collection,
@@ -520,7 +521,7 @@ __deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWith
  @return Scope object
  
  @note: The default scope is exceptional, and it will always be returned. */
-- (nullable CBLScope*) getScopeWithName: (nullable NSString*)name;
+- (nullable CBLScope*) scopeWithName: (nullable NSString*)name;
 
 #pragma mark -- Collections
 
@@ -529,7 +530,7 @@ __deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWith
  @param scope Scope name
  @return list of collections in the scope.
  */
-- (NSArray*) getCollections: (nullable NSString*)scope;
+- (NSArray*) collections: (nullable NSString*)scope;
 
 /**
  Create a named collection in the specified scope.
@@ -550,7 +551,7 @@ __deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWith
  @param scope Name of the scope the collection resides, if not specified uses the default scope.
  @return collection instance or If the collection doesn't exist, a nil value will be returned.
  */
-- (nullable CBLCollection*) getCollectionWithName: (NSString*)name scope: (nullable NSString*)scope;
+- (nullable CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope;
 
 /**
  Delete a collection by name  in the specified scope.
@@ -568,10 +569,10 @@ __deprecated_msg("Use [[database getDefaultCollection] getDocumentExpirationWith
                             error: (NSError**)error;
 
 /** Get the default scope. */
-- (CBLScope*) getDefaultScope;
+- (CBLScope*) defaultScope;
 
 /** Get the default collection. If the default collection is deleted, null will be returned. */
-- (nullable CBLCollection*) getDefaultCollection;
+- (nullable CBLCollection*) defaultCollection;
 
 @end
 

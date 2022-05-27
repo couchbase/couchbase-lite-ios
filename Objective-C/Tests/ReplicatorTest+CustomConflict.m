@@ -1033,7 +1033,7 @@
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc]
                                           initWithTarget: target];
     
-    CBLCollection* c1 = [self.db getCollectionWithName: @"collection1" scope: @"scope1"];
+    CBLCollection* c1 = [self.db collectionWithName: @"collection1" scope: @"scope1"];
     CBLCollectionConfiguration* cConfig = [[CBLCollectionConfiguration alloc] init];
     
     TestConflictResolver* r;

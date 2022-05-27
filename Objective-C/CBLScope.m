@@ -35,12 +35,12 @@ NSString* const kCBLDefaultScopeName = @"_default";
     return self;
 }
 
-- (CBLCollection *) getCollectionWithName: (NSString *)collectionName {
+- (CBLCollection *) collectionWithName: (NSString *)collectionName {
     // TODO: add implementation
     return [[CBLCollection alloc] initWithName: collectionName scope: nil error: nil];
 }
 
-- (NSArray<CBLCollection*>*) getCollections {
+- (NSArray<CBLCollection*>*) collections {
     // TODO: add implementation
     return [NSArray array];
 }

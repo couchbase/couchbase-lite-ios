@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** The default collection name constant */
 extern NSString* const kCBLDefaultCollectionName;
 
-@protocol CBLCollection <NSObject>
+@interface CBLCollection : NSObject<CBLDatabaseChangeObservable, CBLIndexable>
 
 /** Collection name.*/
 @property (readonly, nonatomic) NSString* name;
@@ -50,10 +50,10 @@ extern NSString* const kCBLDefaultCollectionName;
  Gets an existing document with the given ID. If a document with the given ID
  doesn't exist in the collection, the value returned will be nil.
  
- @param id The document ID.
+ @param documentID The document ID.
  @return The CBLDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)id;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
 #pragma mark - Save, Delete, Purge
 
@@ -203,18 +203,16 @@ extern NSString* const kCBLDefaultCollectionName;
  If a dispatch queue is given, the events will be posted on the dispatch queue. To remove the listener,
  call remove() function on the returned listener token.
 
- @param id The document ID.
+ @param documentID The document ID.
  @param queue The dispatch queue.
  @param listener The listener to post changes.
  @return An opaque listener token object for removing the listener.
  */
-- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)documentID
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener;
 
-@end
-
-@interface CBLCollection : NSObject<CBLCollection, CBLDatabaseChangeObservable, CBLIndexable>
+#pragma mark -
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

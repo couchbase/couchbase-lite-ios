@@ -701,31 +701,31 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark -- Scope
 
-- (CBLScope*) getDefaultScope {
+- (CBLScope*) defaultScope {
     // TODO: add implementation
     return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
 }
 
-- (NSArray*) getScopes {
+- (NSArray*) scopes {
     // TODO: add implementation
     return [NSArray array];
 }
 
-- (nullable CBLScope*) getScopeWithName: (nullable NSString*)name {
+- (nullable CBLScope*) scopeWithName: (nullable NSString*)name {
     // TODO: add implementation
     return nil;
 }
 
 #pragma mark -- Collections
 
-- (nullable CBLCollection*) getDefaultCollection {
+- (nullable CBLCollection*) defaultCollection {
     // TODO: add implementation
     return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
-                                          scope: [self getDefaultScope]
+                                          scope: [self defaultScope]
                                           error: nil];
 }
 
-- (NSArray*) getCollections: (nullable NSString*)scope {
+- (NSArray*) collections: (nullable NSString*)scope {
     // TODO: add implementation
     return [NSArray array];
 }
@@ -740,7 +740,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [[CBLCollection alloc] initWithName: name scope: s error: error];
 }
 
-- (CBLCollection*) getCollectionWithName: (NSString*)name scope: (nullable NSString*)scope {
+- (CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope {
     
     // TODO: add implementation
     
@@ -770,12 +770,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return NO;
 }
 
-- (CBLCollection*) getCollectionWithName: (NSString*)name {
+- (CBLCollection*) collectionWithName: (NSString*)name {
     // TODO: add implementation
     return [[CBLCollection alloc] initWithName: name scope: nil error: nil];
 }
 
-- (NSArray<CBLCollection*>*) getCollections {
+- (NSArray<CBLCollection*>*) collections {
     // TODO: add implementation
     return [NSArray array];
 }

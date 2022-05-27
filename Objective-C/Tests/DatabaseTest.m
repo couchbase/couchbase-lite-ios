@@ -2470,13 +2470,13 @@
     
     // scope APIs
     CBLScope* s = c.scope;
-    AssertEqual([s getCollections].count, 0);
-    AssertEqualObjects([s getCollectionWithName: @"name"].name, @"name");
+    AssertEqual([s collections].count, 0);
+    AssertEqualObjects([s collectionWithName: @"name"].name, @"name");
     
-    c = [db getDefaultCollection];
+    c = [db defaultCollection];
     AssertEqual(c.name, kCBLDefaultCollectionName);
     
-    s = [db getDefaultScope];
+    s = [db defaultScope];
     AssertEqual(s.name, kCBLDefaultScopeName);
     
     AssertNil(doc.collection);

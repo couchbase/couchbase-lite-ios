@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (readonly, nonatomic) uint64_t sequence;
 
+/** The collection that the document belongs to. */
 @property (readonly, nullable, nonatomic) CBLCollection* collection;
 
 /**
