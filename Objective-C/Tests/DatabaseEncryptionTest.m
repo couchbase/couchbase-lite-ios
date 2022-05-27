@@ -28,6 +28,10 @@
     CBLDatabase* _seekrit;
 }
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) tearDown {
     [_seekrit close: nil];
     [super tearDown];
@@ -253,5 +257,7 @@
         AssertEqual([r integerAtIndex: 0], i++);
     }
 }
+
+#pragma clang diagnostic pop
 
 @end

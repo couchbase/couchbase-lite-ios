@@ -18,6 +18,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLReplicatorTypes.h"
+
+@class CBLCollection;
 @class CBLDatabase;
 @class CBLDocumentReplication;
 @class CBLReplicatorChange;
@@ -25,27 +28,6 @@
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
-
-
-/** Activity level of a replicator. */
-typedef enum {
-    kCBLReplicatorStopped,    ///< The replicator is finished or hit a fatal error.
-    kCBLReplicatorOffline,    ///< The replicator is offline as the remote host is unreachable.
-    kCBLReplicatorConnecting, ///< The replicator is connecting to the remote host.
-    kCBLReplicatorIdle,       ///< The replicator is inactive waiting for changes or offline.
-    kCBLReplicatorBusy        ///< The replicator is actively transferring data.
-} CBLReplicatorActivityLevel;
-
-
-/** 
- Progress of a replicator. If `total` is zero, the progress is indeterminate; otherwise,
- dividing the two will produce a fraction that can be used to draw a progress bar.
- */
-typedef struct {
-    uint64_t completed; ///< The number of completed changes processed.
-    uint64_t total;     ///< The total number of changes to be processed.
-} CBLReplicatorProgress;
-
 
 /** Combined activity level and progress of a replicator. */
 @interface CBLReplicatorStatus: NSObject
@@ -62,7 +44,7 @@ typedef struct {
 @end
 
 
-/** 
+/**
  A replicator for replicating document changes between a local database and a target database.
  The replicator can be bidirectional or either push or pull. The replicator can also be one-short
  or continuous. The replicator runs asynchronously, so observe the status property to
@@ -169,23 +151,47 @@ the replicator change notification.
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
 /**
- Gets a set of document Ids, who have revisions pending push. This API is a snapshot and results may
- change between the time the call was made and the time the call returns.
+ Get pending document ids for default collection. If the default collection is not part of the
+ replication, an Illegal State Exception will be thrown.
  
  @param error error On return, the error if any.
  @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
  */
-- (nullable NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error;
+- (nullable NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error
+__deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instead.");
 
 /**
- Checks if the document with the given ID has revisions pending push.  This API is a snapshot and results may
- change between the time the call was made and the time the call returns.
+ Get pending document ids for the given collection. If the given collection is not part of
+ the replication, an Illegal State Exception will be thrown.
+ 
+ @param collection The given collection.
+ @param error error On return, the error if any.
+ @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
+ */
+- (nullable NSSet<NSString*>*) pendingDocumentIDsForCollection: (CBLCollection*)collection
+                                                         error: (NSError**)error;
+
+/**
+ Check whether the document in the default collection is pending to push or not. If the default
+ collection is not  part of the replicator, an Illegal State Exception will be thrown.
+ 
  @param documentID The ID of the document to check
  @param error error On return, the error if any.
- @return true if the document has one or more revisions pending, false otherwise
- 
- */
-- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW;
+ @return true if the document has one or more revisions pending, false otherwise. */
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW
+__deprecated_msg("Use [replicator isDocumentPending:collection:error:] instead.");
+
+/**
+ Check whether the document in the given collection is pending to push or not. If the given
+ collection is not part of the replicator, an Illegal State Exception will be thrown.
+
+ @param documentID The ID of the document to check
+ @param collection The collection which document belongs
+ @param error error On return, the error if any.
+ @return true if the document has one or more revisions pending, false otherwise. */
+- (BOOL) isDocumentPending: (NSString*)documentID
+                collection: (CBLCollection*)collection
+                     error: (NSError**)error NS_SWIFT_NOTHROW;
 
 @end
 

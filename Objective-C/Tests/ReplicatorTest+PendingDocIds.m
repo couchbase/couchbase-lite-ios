@@ -32,6 +32,10 @@
 
 @implementation ReplicatorTest_PendingDocIds
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #ifdef COUCHBASE_ENTERPRISE
 
 #pragma mark - Helper Methods
@@ -496,5 +500,22 @@
 }
 
 #endif
+
+#pragma clang diagnostic pop
+
+- (void) testCollection {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"wss://foo"]];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    
+    CBLCollection* c1 = [self.db collectionWithName: @"name1" scope: @"scope1"];
+    NSError* error = nil;
+    
+    AssertNil([replicator pendingDocumentIDsForCollection: c1 error: &error]);
+    AssertFalse([replicator isDocumentPending: @"doc2" collection: c1 error: &error]);
+    
+    id<CBLListenerToken> token = [replicator addChangeListener:^(CBLReplicatorChange* change) { }];
+    [token remove];
+}
 
 @end

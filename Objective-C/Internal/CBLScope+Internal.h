@@ -1,8 +1,8 @@
 //
-//  CBLListenerToken.h
+//  CBLScope+Internal.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,16 +17,14 @@
 //  limitations under the License.
 //
 
+#pragma once
+#import "CBLScope.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Listener token returned when adding a change listener. The token is used
- for removing the added change listener.
- */
-@protocol CBLListenerToken <NSObject>
+@interface CBLScope ()
 
-/// Remove the listener associated with the token.
-- (void) remove;
+- (instancetype) initWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

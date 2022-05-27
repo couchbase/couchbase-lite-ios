@@ -37,6 +37,10 @@
 
 @synthesize db=_db, otherDB=_otherDB;
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description {
     XCTestExpectation* e = [super expectationWithDescription: description];
     e.assertForOverFulfill = false;
@@ -383,5 +387,7 @@
     
     return [self stringFromResource: @"rick_morty" ofType: @"json"];
 }
+
+#pragma clang diagnostic pop
 
 @end

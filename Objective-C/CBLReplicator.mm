@@ -239,8 +239,14 @@ typedef enum {
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+        
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         .pushFilter = filter(_config.pushFilter, true),
         .validationFunc = filter(_config.pullFilter, false),
+#pragma clang diagnostic pop
+        
         .optionsDictFleece = optionsFleece,
         .onStatusChanged = &statusChanged,
         .onDocumentsEnded = &onDocsEnded,
@@ -401,6 +407,16 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+#pragma mark -- Pending docIDs
+
+- (NSSet<NSString*>*) pendingDocumentIDsForCollection: (CBLCollection *)collection
+                                                error: (NSError**)error {
+    
+    // TODO: Add implementation
+    
+    return nil;
+}
+
 - (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
     if (_config.replicatorType > 1) {
         if (error)
@@ -437,6 +453,15 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     FLDoc_Release(doc);
     
     return [NSSet setWithArray: list];
+}
+
+- (BOOL) isDocumentPending: (NSString *)documentID
+                collection: (CBLCollection *)collection
+                     error: (NSError**)error {
+    
+    // TODO: Add implementation 
+    
+    return NO;
 }
 
 - (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
@@ -659,11 +684,16 @@ static void onDocsEnded(C4Replicator* repl,
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     NSError* error = nil;
+    
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (![_config.database resolveConflictInDocument: doc.id
                                withConflictResolver: _config.conflictResolver
                                               error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
+#pragma clang diagnostic pop
     
     [doc updateError: error];
     [self logErrorOnDocument: doc pushing: NO];
@@ -686,7 +716,7 @@ static void onDocsEnded(C4Replicator* repl,
 
 #pragma mark - PUSH/PULL FILTER:
 
-static bool pushFilter(C4String collectionName,
+static bool pushFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
@@ -694,7 +724,7 @@ static bool pushFilter(C4String collectionName,
                                  body: flbody pushing: true];
 }
 
-static bool pullFilter(C4String collectionName,
+static bool pullFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
@@ -718,8 +748,13 @@ static bool pullFilter(C4String collectionName,
     
     if ((flags & kRevPurged) == kRevPurged)
         docFlags |= kCBLDocumentFlagsAccessRemoved;
-    
+
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
+#pragma clang diagnostic pop
+
 }
 
 #pragma mark - BACKGROUNDING SUPPORT:

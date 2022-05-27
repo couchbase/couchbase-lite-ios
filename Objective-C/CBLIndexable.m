@@ -1,8 +1,8 @@
 //
-//  CBLListenerToken.h
+//  CBLIndexable.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,17 +17,8 @@
 //  limitations under the License.
 //
 
-NS_ASSUME_NONNULL_BEGIN
+#import "CBLIndexable.h"
 
-/**
- Listener token returned when adding a change listener. The token is used
- for removing the added change listener.
- */
-@protocol CBLListenerToken <NSObject>
-
-/// Remove the listener associated with the token.
-- (void) remove;
+@implementation CBLIndexable
 
 @end
-
-NS_ASSUME_NONNULL_END

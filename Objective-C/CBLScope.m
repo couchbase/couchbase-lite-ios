@@ -1,8 +1,8 @@
 //
-//  CBLDatabaseChange.m
+//  CBLScope.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,25 +17,32 @@
 //  limitations under the License.
 //
 
-#import "CBLDatabaseChange.h"
-#import "CBLDatabase+Internal.h"
+#import "CBLScope+Internal.h"
+#import "CBLCollection+Internal.h"
 
-@implementation CBLDatabaseChange
+NSString* const kCBLDefaultScopeName = @"_default";
 
-@synthesize database=_database, documentIDs=_documentIDs, isExternal=_isExternal;
-@synthesize collection=_collection;
+@implementation CBLScope
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                      documentIDs: (NSArray *)documentIDs
-                       isExternal: (BOOL)isExternal
-{
+@synthesize name=_name;
+
+- (instancetype) initWithName: (NSString *)name error: (NSError**)error {
+    CBLAssertNotNil(name);
     self = [super init];
     if (self) {
-        _database = database;
-        _documentIDs = documentIDs;
-        _isExternal = isExternal;
+        _name = name;
     }
     return self;
+}
+
+- (CBLCollection *) collectionWithName: (NSString *)collectionName {
+    // TODO: add implementation
+    return [[CBLCollection alloc] initWithName: collectionName scope: nil error: nil];
+}
+
+- (NSArray<CBLCollection*>*) collections {
+    // TODO: add implementation
+    return [NSArray array];
 }
 
 @end

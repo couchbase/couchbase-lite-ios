@@ -40,6 +40,11 @@ NS_ASSUME_NONNULL_END
 
 @implementation CBLURLEndpointListener (Test)
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+
 - (NSURL*) localURL {
     assert(self.port > 0);
     NSURLComponents* comps = [[NSURLComponents alloc] init];
@@ -1690,6 +1695,16 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
+}
+
+#pragma clang diagnostic pop
+
+- (void) testCollections {
+    CBLCollection* collection = [self.db collectionWithName: @"collection1" scope: @"scope1"];
+    Config* config = [[Config alloc] initWithCollections: @[collection]];
+    AssertEqual(config.collections.count, 1);
+    CBLCollection* c = (CBLCollection*)config.collections.firstObject;
+    AssertEqualObjects(c.name, @"collection1");
 }
 
 @end

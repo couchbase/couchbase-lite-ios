@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLQueryDatabase, CBLDatabase;
+@class CBLCollection;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -35,16 +36,34 @@ NS_ASSUME_NONNULL_BEGIN
  @param database The database used as the data source as the query.
  @return The CBLQueryDatabase instance.
  */
-+ (instancetype) database: (CBLDatabase*)database;
++ (instancetype) database: (CBLDatabase*)database
+__deprecated_msg("Use [DataSource collection: [database defaultCollection]]) instead.");
 
 /** 
  Create a database data source with the given alias name.
  
  @param database The database used as the data source as the query.
- @alias The alias name of the data source.
+ @param alias The alias name of the data source.
  @return The CBLQueryDatabase instance.
  */
-+ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias;
++ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias
+__deprecated_msg("Use [DataSource collection: [database defaultCollection] as:]) instead.");
+
+/** Create a collection data source.
+ 
+ @param collection The collection used as the data source as the query.
+ @return The CBLQueryDatabase instance.
+ */
++ (instancetype) collection: (CBLCollection*)collection;
+
+/**
+ Create a collection data source with the given alias name.
+ 
+ @param collection The collection used as the data source as the query.
+ @param alias The alias name of the data source.
+ @return The CBLQueryDatabase instance.
+ */
++ (instancetype) collection: (CBLCollection*)collection as: (nullable NSString*)alias;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

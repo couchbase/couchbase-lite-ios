@@ -1,8 +1,8 @@
 //
-//  CBLListenerToken.h
+//  CBLIndexable.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,16 +17,20 @@
 //  limitations under the License.
 //
 
+#import "CBLIndexConfiguration.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Listener token returned when adding a change listener. The token is used
- for removing the added change listener.
- */
-@protocol CBLListenerToken <NSObject>
+@protocol CBLIndexable <NSObject>
 
-/// Remove the listener associated with the token.
-- (void) remove;
+/** Return all index names. */
+- (NSArray*) indexes;
+
+/** Create an index with the index name and config. */
+- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
+
+/** Delete an index by name. */
+- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

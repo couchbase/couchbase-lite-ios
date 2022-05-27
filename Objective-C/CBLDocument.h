@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLDictionary.h"
 @class CBLMutableDocument;
+@class CBLCollection;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -40,6 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
  is greater than another's, that means it was changed more recently.
  */
 @property (readonly, nonatomic) uint64_t sequence;
+
+/** The collection that the document belongs to. */
+@property (readonly, nullable, nonatomic) CBLCollection* collection;
 
 /**
  Returns a mutable copy of the document.

@@ -38,6 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                JSONRepresentation: (NSData*)json NS_DESIGNATED_INITIALIZER;
 
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                 JSONRepresentation: (NSData*)json NS_DESIGNATED_INITIALIZER;
+
 @end
 
 NS_ASSUME_NONNULL_END

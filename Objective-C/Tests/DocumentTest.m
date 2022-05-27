@@ -32,6 +32,10 @@
 
 @implementation DocumentTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) populateData: (CBLMutableDocument*)doc {
     [doc setValue: @(YES) forKey: @"true"];
     [doc setValue: @(NO) forKey: @"false"];
@@ -2228,5 +2232,7 @@
     AssertNil(blob.content);
     AssertEqual(blob.length, 0);
 }
+
+#pragma clang diagnostic pop
 
 @end

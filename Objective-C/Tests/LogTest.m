@@ -40,6 +40,10 @@
     NSString* logFileDirectory;
 }
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void) setUp {
     [super setUp];
     [self backupLoggerConfig];
@@ -420,6 +424,8 @@
     }
     Assert(found);
 }
+
+#pragma clang diagnostic pop
 
 @end
 

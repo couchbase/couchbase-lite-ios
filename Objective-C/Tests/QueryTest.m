@@ -21,6 +21,10 @@
 
 @implementation QueryTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #pragma mark - Helper methods
 
 - (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
@@ -167,5 +171,7 @@
         AssertEqual(rows, total);
     }
 }
+
+#pragma clang diagnostic pop
 
 @end

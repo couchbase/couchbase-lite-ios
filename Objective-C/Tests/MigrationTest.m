@@ -25,6 +25,10 @@
 
 @implementation MigrationTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
     NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
@@ -65,5 +69,7 @@
     
     Assert([database delete: &error], @"Couldn't delete database");
 }
+
+#pragma clang diagnostic pop
 
 @end

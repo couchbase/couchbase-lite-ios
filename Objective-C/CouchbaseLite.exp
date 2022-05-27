@@ -22,9 +22,12 @@
 .objc_class_name_CBLAuthenticator
 .objc_class_name_CBLBasicAuthenticator
 .objc_class_name_CBLBlob
+.objc_class_name_CBLCollection
+.objc_class_name_CBLCollectionConfiguration
 .objc_class_name_CBLConsoleLogger
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
+.objc_class_name_CBLDatabaseChangeObservable
 .objc_class_name_CBLDatabaseConfiguration
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
@@ -36,6 +39,7 @@
 .objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment
 .objc_class_name_CBLIndex
+.objc_class_name_CBLIndexable
 .objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLLog
 .objc_class_name_CBLLogFileConfiguration
@@ -66,6 +70,7 @@
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
+.objc_class_name_CBLScope
 .objc_class_name_CBLSessionAuthenticator
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
@@ -77,3 +82,5 @@
 # NSString constants:
 _CBLErrorDomain
 _kCBLAllPropertiesName
+_kCBLDefaultCollectionName
+_kCBLDefaultScopeName

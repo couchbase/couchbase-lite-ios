@@ -37,6 +37,7 @@ using namespace fleece;
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
+@synthesize collection=_collection;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID

@@ -20,23 +20,17 @@
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
 #import "CBLDocumentFlags.h"
+#import "CBLReplicatorTypes.h"
+
 @class CBLAuthenticator;
+@class CBLCollection;
+@class CBLCollectionConfiguration;
 @class CBLDatabase;
 @class CBLDocument;
-@protocol CBLEndpoint;
 @protocol CBLConflictResolver;
+@protocol CBLEndpoint;
 
 NS_ASSUME_NONNULL_BEGIN
-
-/** Replicator type. */
-typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
-    kCBLReplicatorTypePushAndPull = 0,              ///< Bidirectional; both push and pull
-    kCBLReplicatorTypePush,                         ///< Pushing changes to the target
-    kCBLReplicatorTypePull                          ///< Pulling changes from the target
-};
-
-/** Replication Filter */
-typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags flags);
 
 /** Replicator Configuration */
 @interface CBLReplicatorConfiguration: NSObject
@@ -84,35 +78,44 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
 @property (nonatomic, nullable) NSString* networkInterface;
 
 /**
- A set of Sync Gateway channel names to pull from. Ignored for push replication.
- The default value is nil, meaning that all accessible channels will be pulled.
- Note: channels that are not accessible to the user will be ignored by Sync Gateway.
+ Channels filter when using init(database:target:) to configure the default collection
+ for the replication.
  */
-@property (nonatomic, nullable) NSArray<NSString*>* channels;
+@property (nonatomic, nullable) NSArray<NSString*>* channels
+__deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
+                 " with a CollectionConfiguration object instead");
 
 /**
- A set of document IDs to filter by: if not nil, only documents with these IDs will be pushed
- and/or pulled.
+ documentIDs filter when using init(database:target:) to configure the default collection
+ for the replication.
  */
-@property (nonatomic, nullable) NSArray<NSString*>* documentIDs;
+@property (nonatomic, nullable) NSArray<NSString*>* documentIDs
+__deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
+                 " with a CollectionConfiguration object instead");
 
 /**
- Filter block for validating whether the documents can be pushed to the remote endpoint.
- Only documents for which the block returns true are replicated.
+ Push filter when using init(database:target:) to configure the default collection
+ for the replication.
  */
-@property (nonatomic, nullable) CBLReplicationFilter pushFilter;
+@property (nonatomic, nullable) CBLReplicationFilter pushFilter
+__deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
+                 " with a CollectionConfiguration object instead");
 
 /**
- Filter block for validating whether the documents can be pulled from the remote endpoint.
- Only documents for which the block returns true are replicated.
+ Pull filter when using init(database:target:) to configure the default collection
+ for the replication.
  */
-@property (nonatomic, nullable) CBLReplicationFilter pullFilter;
+@property (nonatomic, nullable) CBLReplicationFilter pullFilter
+__deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
+                 " with a CollectionConfiguration object instead");
 
 /**
- The custom conflict resolver object can be set here. If this value is not set, or set to nil,
- the default conflict resolver will be applied.
+ Conflict resolver when using init(database:target:) to configure the default collection
+ for the replication.
  */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver
+__deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
+                 " with a CollectionConfiguration object instead");
 
 #if TARGET_OS_IPHONE
 /**
@@ -169,6 +172,14 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  */
 @property (nonatomic) BOOL enableAutoPurge;
 
+/**
+ The dictionary containing the collections and configurations used for replication.
+ The dictionary contains the collections and the configurations added via
+ the addCollection(_ collection:,config:) or addCollections(_ collections:,config:).
+ Modifying the entries in the dictionary will reflect the collections and
+ configured used for the replication. */
+@property (nonatomic) NSDictionary<CBLCollection*, CBLCollectionConfiguration*>* collections;
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
@@ -181,7 +192,20 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  @return The CBLReplicatorConfiguration object.
  */
 - (instancetype) initWithDatabase: (CBLDatabase*)database
-                           target: (id <CBLEndpoint>)target;
+                           target: (id <CBLEndpoint>)target
+__deprecated_msg("Use [... initWithTarget:] instead.");
+
+/**
+ Create a ReplicatorConfiguration object with the target’s endpoint.
+ After the ReplicatorConfiguration object is created, use addCollection(_ collection:, config:)
+ or addCollections(_ collections:, config:) to specify and configure the collections used for
+ replicating with the target. If there are no collections specified, the replicator will fail
+ to start with a no collections specified error.
+ 
+ @param target The target endpoint.
+ @return The CBLReplicatorConfiguration object.
+ */
+- (instancetype) initWithTarget: (id <CBLEndpoint>)target;
 
 /**
  Initializes a CBLReplicatorConfiguration with the configuration object.
@@ -190,6 +214,30 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  @return The CBLReplicatorConfiguration object.
  */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
+
+/**
+ Add a collection used for the replication with an optional collection configuration.
+ If the collection has been added before, the previous added and its configuration if specified
+ will be replaced.
+ If a null configuration is specified, a default empty configuration will be applied.
+ 
+ @param collection The collection to be added.
+ @param config Configuration for the collection, if nil, default config */
+- (void) addCollection: (CBLCollection*)collection
+                config: (nullable CBLCollectionConfiguration*)config;
+
+/**
+ Add multiple collections used for the replication with an optional shared collection configuration.
+ If any of the collections have been added before, the previously added collections and their
+ configuration if specified will be replaced. Adding an empty collection array will be no-ops. if
+ specified will be replaced.
+ 
+ If a null configuration is specified, a default empty configuration will be applied.
+    
+ @param collections The collections to be added.
+ @param config Respective configuration for the collections, if nil, default config */
+- (void) addCollections: (NSArray*)collections
+                 config: (nullable CBLCollectionConfiguration*)config;
 
 @end
 

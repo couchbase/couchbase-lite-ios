@@ -42,6 +42,8 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLQuery+N1QL.h"
+#import "CBLCollection+Internal.h"
+#import "CBLScope+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -196,7 +198,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - SUBSCRIPTION
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
+#pragma clang diagnostic pop
+    
 }
 
 #pragma mark - SAVE
@@ -690,6 +697,87 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error {
     return [[CBLQuery alloc] initWithDatabase: self expressions: query error: error];
+}
+
+#pragma mark -- Scope
+
+- (CBLScope*) defaultScope {
+    // TODO: add implementation
+    return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
+}
+
+- (NSArray*) scopes {
+    // TODO: add implementation
+    return [NSArray array];
+}
+
+- (nullable CBLScope*) scopeWithName: (nullable NSString*)name {
+    // TODO: add implementation
+    return nil;
+}
+
+#pragma mark -- Collections
+
+- (nullable CBLCollection*) defaultCollection {
+    // TODO: add implementation
+    return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
+                                          scope: [self defaultScope]
+                                          error: nil];
+}
+
+- (NSArray*) collections: (nullable NSString*)scope {
+    // TODO: add implementation
+    return [NSArray array];
+}
+
+- (CBLCollection*) createCollectionWithName: (NSString*)name
+                                      scope: (nullable NSString*)scope
+                                      error: (NSError**)error {
+    
+    // TODO: add implementation
+    
+    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: error];
+    return [[CBLCollection alloc] initWithName: name scope: s error: error];
+}
+
+- (CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope {
+    
+    // TODO: add implementation
+    
+    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: nil];
+    return [[CBLCollection alloc] initWithName: name scope: s error: nil];
+}
+
+- (BOOL) deleteCollectionWithName: (NSString*)name
+                            scope: (nullable NSString*)scope
+                            error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
+}
+
+#pragma mark - indexable
+
+- (BOOL) createIndexWithName: (NSString*)name
+                      config: (CBLIndexConfiguration*)config
+                       error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
+}
+
+- (BOOL) deleteIndexWithName: (NSString*)name
+                       error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
+}
+
+- (CBLCollection*) collectionWithName: (NSString*)name {
+    // TODO: add implementation
+    return [[CBLCollection alloc] initWithName: name scope: nil error: nil];
+}
+
+- (NSArray<CBLCollection*>*) collections {
+    // TODO: add implementation
+    return [NSArray array];
 }
 
 #pragma mark - INTERNAL

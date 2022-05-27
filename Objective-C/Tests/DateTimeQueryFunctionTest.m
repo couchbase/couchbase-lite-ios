@@ -28,6 +28,10 @@
 
 @implementation DateTimeQueryFunctionTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #pragma mark - Tests
 
 - (void) testStringToMillis {
@@ -210,5 +214,7 @@
     Assert([self.db purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
+
+#pragma clang diagnostic pop
 
 @end

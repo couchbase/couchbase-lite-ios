@@ -22,6 +22,9 @@
 
 @implementation DocPerfTest
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (void) test {
     const unsigned revs = 10000;
@@ -49,5 +52,6 @@
     Assert(ok);
 }
 
+#pragma clang diagnostic pop
 
 @end

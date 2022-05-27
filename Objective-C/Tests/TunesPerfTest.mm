@@ -39,6 +39,9 @@ static constexpr int kNumIterations = 10;
 static constexpr auto kInterTestSleep = milliseconds(0);
 #endif
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 @implementation TunesPerfTest
 {
@@ -393,5 +396,6 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     }
 }
 
+#pragma clang diagnostic pop
 
 @end

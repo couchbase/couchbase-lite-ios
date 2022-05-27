@@ -29,8 +29,10 @@
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 @class CBLIndexConfiguration;
-NS_ASSUME_NONNULL_BEGIN
+@class CBLScope;
+@class CBLCollection;
 
+NS_ASSUME_NONNULL_BEGIN
 
 /**
 Concurruncy control type used when saving or deleting a document.
@@ -61,7 +63,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 @property (readonly, atomic, nullable) NSString* path;
 
 /** The number of documents in the database. */
-@property (readonly, atomic) uint64_t count;
+@property (readonly, atomic) uint64_t count
+__deprecated_msg("Use [database defaultCollection].count instead.");
 
 /** 
  The database's configuration. The returned configuration object is readonly;
@@ -110,7 +113,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param id The document ID.
  @return The CBLDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)id;
+- (nullable CBLDocument*) documentWithID: (NSString*)id
+__deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 #pragma mark - Subscript
@@ -138,7 +142,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error;
+- (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] saveDocument:error:] instead.");
 
 /**
  Saves a document to the database. When used with kCBLConcurrencyControlLastWriteWins
@@ -153,7 +158,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                error: (NSError**)error;
+                error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] saveDocument:concurrencyControl:error:] instead.");
 
 /**
  Saves a document to the database. When write operations are executed concurrently and if conflicts
@@ -170,7 +176,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 */
 - (BOOL) saveDocument: (CBLMutableDocument*)document
       conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
-                error: (NSError**)error;
+                error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] saveDocument:conflictHandler:error:] instead.");
 
 /**
  Deletes a document from the database. When write operations are executed
@@ -182,7 +189,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param error On return, the error if any.
  @return /True on success, false on failure.
  */
-- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
+- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] deleteDocument:error:] instead.");
 
 /**
  Deletes a document from the database. When used with kCBLConcurrencyControlLastWriteWins
@@ -197,7 +205,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                  error: (NSError**)error;
+                  error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] deleteDocument:concurrencyControl:error:] instead.");
 
 /** 
  Purges the given document from the database.
@@ -208,7 +217,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error;
+- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] purgeDocument:error:] instead.");
 
 
 /**
@@ -220,7 +230,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error;
+- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] instead.");
 
 #pragma mark - Blob Save/Get
 
@@ -360,7 +371,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param listener The listener to post the changes.
  @return An opaque listener token object for removing the listener.
  */
-- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener
+__deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.");
 
 /**
  Adds a database change listener with the dispatch queue on which changes
@@ -372,7 +384,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return An opaque listener token object for removing the listener.
  */
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                           listener: (void (^)(CBLDatabaseChange*))listener;
+                                           listener: (void (^)(CBLDatabaseChange*))listener
+__deprecated_msg("Use [[database defaultCollection] addChangeListenerWithQueue:listener:] instead.");
 
 /** 
  Adds a document change listener for the document with the given ID. Changes
@@ -383,7 +396,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return An opaque listener token object for removing the listener.
  */
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
-                                                listener: (void (^)(CBLDocumentChange*))listener;
+                                                listener: (void (^)(CBLDocumentChange*))listener
+__deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:listener:] instead.");
 
 
 /**
@@ -398,20 +412,23 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
                                                    queue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentChange*))listener;
+                                                listener: (void (^)(CBLDocumentChange*))listener
+__deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:queue:listener:] instead.");
 /** 
  Removes a change listener with the given listener token.
  
  @param token The listener token.
  */
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token
+__deprecated_msg("Use [ListenerToken remove] instead.");
 
 
 #pragma mark - Index
 
 
 /** All index names. */
-@property (atomic, readonly) NSArray<NSString*>* indexes;
+@property (atomic, readonly) NSArray<NSString*>* indexes
+__deprecated_msg("Use [[database defaultCollection] indexes] instead.");
 
 /**
  Creates an index which could be a value index or a full-text search index with the given name.
@@ -436,7 +453,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return True on success, false on failure.
  */
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
-                          name: (NSString*)name error: (NSError**)error;
+                          name: (NSString*)name error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:error:] instead.");
 
 /**
  Deletes the index of the given index name.
@@ -445,7 +463,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param error error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error;
+- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] deleteIndexForName:error:] instead.");
 
 
 #pragma mark - DOCUMENT EXPIRATION
@@ -461,7 +480,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  */
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
-                               error: (NSError**)error;
+                               error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] setDocumentExpirationWithID:expiration:error:] instead.");
 
 /**
  Returns the expiration time of a document, if exists, else nil.
@@ -469,7 +489,8 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @param documentID The ID of the document to set the expiration date for
  @return the expiration time of a document, if one has been set, else nil.
  */
-- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID
+__deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:] instead.");
 
 
 #pragma mark - Query
@@ -482,6 +503,76 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
  @return query created using the given expression string.
  */
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
+
+#pragma mark -- Scopes
+
+/**
+ Get scope names that have at least one collection.
+ 
+ @note: The default scope is exceptional as it will always be listed even though there are
+ no collections under it. */
+- (NSArray*) scopes;
+
+/**
+ Get a scope object by name. As the scope cannot exist by itself without having a collection,
+ the nil value will be returned if there are no collections under the given scope’s name.
+ 
+ @param name Scope name, if empty, it will use default scope name.
+ @return Scope object
+ 
+ @note: The default scope is exceptional, and it will always be returned. */
+- (nullable CBLScope*) scopeWithName: (nullable NSString*)name;
+
+#pragma mark -- Collections
+
+/** Get all collections in the specified scope.
+ 
+ @param scope Scope name
+ @return list of collections in the scope.
+ */
+- (NSArray*) collections: (nullable NSString*)scope;
+
+/**
+ Create a named collection in the specified scope.
+ 
+ @param name name for the new collection
+ @param scope collection will be created under this scope, if not specified, use the default scope.
+ @param error error On return, the given query string is invalid.
+ @return Newly created collection or if already exists, the existing collection will be returned.
+ */
+- (CBLCollection*) createCollectionWithName: (NSString*)name
+                                      scope: (nullable NSString*)scope
+                                      error: (NSError**)error;
+
+/**
+ Get a collection in the specified scope by name.
+ 
+ @param name Name of the collection to be fetched.
+ @param scope Name of the scope the collection resides, if not specified uses the default scope.
+ @return collection instance or If the collection doesn't exist, a nil value will be returned.
+ */
+- (nullable CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope;
+
+/**
+ Delete a collection by name  in the specified scope.
+ If the collection doesn't exist, the operation will be no-ops.
+ 
+ @note: the default collection can be deleted but cannot be recreated.
+ 
+ @param name Name of the collection to be deleted
+ @param scope Name of the scope the collection resides, if not specified uses the default scope.
+ @param error error On return, the given query string is invalid.
+ @return True on success, false on failure.
+ */
+- (BOOL) deleteCollectionWithName: (NSString*)name
+                            scope: (nullable NSString*)scope
+                            error: (NSError**)error;
+
+/** Get the default scope. */
+- (CBLScope*) defaultScope;
+
+/** Get the default collection. If the default collection is deleted, null will be returned. */
+- (nullable CBLCollection*) defaultCollection;
 
 @end
 

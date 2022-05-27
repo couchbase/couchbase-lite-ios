@@ -180,10 +180,10 @@ static BOOL sOnlyTrustAnchorCerts;
 
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
-        NSData* certData = nil;
         CFIndex count = SecTrustGetCertificateCount(_trust);
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
         if (@available(macOS 12.0, iOS 15.0, *)) {
+            NSData* certData = nil;
             for (CFIndex i = 0; i < count; i++) {
                 CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
                 SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
