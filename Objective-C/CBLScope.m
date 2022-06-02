@@ -45,4 +45,11 @@ NSString* const kCBLDefaultScopeName = @"_default";
     return [NSArray array];
 }
 
+- (CBLQuery*) createQuery: (NSString*)query error: (NSError**)error {
+    
+    // TODO: Add implementation
+    
+    return nil;
+}
+
 @end

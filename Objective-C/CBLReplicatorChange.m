@@ -24,6 +24,7 @@
 @implementation CBLReplicatorChange
 
 @synthesize replicator=_replicator, status=_status;
+@synthesize scope=_scope, collection=_collection;
 
 - (instancetype) initWithReplicator: (CBLReplicator*)replicator
                              status: (CBLReplicatorStatus*)status

@@ -24,16 +24,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** Database Change information  */
+__deprecated
 @interface CBLDatabaseChange : NSObject
 
 /** The database. */
-@property (readonly, nonatomic) CBLDatabase* database __deprecated_msg("Use collection instead.");
+@property (readonly, nonatomic) CBLDatabase* database;
 
 /** The IDs of the document that changed. */
 @property (readonly, nonatomic) NSArray<NSString*>* documentIDs;
-
-/** Collection. */
-@property (readonly, nonatomic) CBLCollection* collection;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

@@ -20,14 +20,13 @@
 import Foundation
 
 /// Database Change information
+@available(*, deprecated)
 public struct DatabaseChange {
     
     /// The database.
     public let database: Database
     
-    
     /// The IDs of the document that changed.
     public let documentIDs: [String]
-    
 }
 

@@ -36,7 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLReplicatorConfiguration: NSObject
 
 /** The local database to replicate with the target endpoint. */
-@property (nonatomic, readonly) CBLDatabase* database;
+
+@property (nonatomic, readonly) CBLDatabase* database
+__deprecated_msg(" Use config.collections instead");
 
 /**
  The replication endpoint to replicate with.
@@ -83,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable) NSArray<NSString*>* channels
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
-                 " with a CollectionConfiguration object instead");
+                 " with a CBLCollectionConfiguration object instead");
 
 /**
  documentIDs filter when using init(database:target:) to configure the default collection
@@ -91,7 +93,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  */
 @property (nonatomic, nullable) NSArray<NSString*>* documentIDs
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
-                 " with a CollectionConfiguration object instead");
+                 " with a CBLCollectionConfiguration object instead");
 
 /**
  Push filter when using init(database:target:) to configure the default collection
@@ -99,7 +101,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  */
 @property (nonatomic, nullable) CBLReplicationFilter pushFilter
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
-                 " with a CollectionConfiguration object instead");
+                 " with a CBLCollectionConfiguration object instead");
 
 /**
  Pull filter when using init(database:target:) to configure the default collection
@@ -107,7 +109,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  */
 @property (nonatomic, nullable) CBLReplicationFilter pullFilter
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
-                 " with a CollectionConfiguration object instead");
+                 " with a CBLCollectionConfiguration object instead");
 
 /**
  Conflict resolver when using init(database:target:) to configure the default collection
@@ -115,7 +117,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  */
 @property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
-                 " with a CollectionConfiguration object instead");
+                 " with a CBLCollectionConfiguration object instead");
 
 #if TARGET_OS_IPHONE
 /**
@@ -238,6 +240,20 @@ __deprecated_msg("Use [... initWithTarget:] instead.");
  @param config Respective configuration for the collections, if nil, default config */
 - (void) addCollections: (NSArray*)collections
                  config: (nullable CBLCollectionConfiguration*)config;
+
+/**
+ Remove the collection. If the collection doesn’t exist, this operation will be no ops.
+ 
+ @param collection The collection to be removed. */
+- (void) removeCollection: (CBLCollection*)collection;
+
+/**
+ Get a copy of the collection’s config. If the config needs to be changed for the collection, the
+ collection will need to be re-added with the updated config.
+ 
+ @param collection The collection whose config is needed.
+ @return The collection configuration. */
+- (CBLCollectionConfiguration*) getCollectionConfig: (CBLCollection*)collection;
 
 @end
 

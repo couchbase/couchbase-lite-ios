@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.h
+//  CBLQueryFactory.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,20 +17,22 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
+#import <Foundation/Foundation.h>
+
+@class CBLQuery;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLIndexable <NSObject>
+@protocol CBLQueryFactory <NSObject>
 
-/** Return all index names. */
-- (NSArray<NSString*>*) indexes;
-
-/** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
-
-/** Delete an index by name. */
-- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
+/**
+ Create a query object from an SQL string.
+ 
+ @param query Query expression
+ @param error error On return, the given query string is invalid(e.g., syntax error).
+ @return query created using the given expression string.
+ */
+- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
 
 @end
 

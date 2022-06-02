@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLLogger.h"
+#import "CBLQueryFactory.h"
 @class CBLDatabaseConfiguration;
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
@@ -26,11 +27,11 @@
 @class CBLLog;
 @class CBLBlob;
 @class CBLQuery;
-@protocol CBLConflictResolver;
-@protocol CBLListenerToken;
 @class CBLIndexConfiguration;
 @class CBLScope;
 @class CBLCollection;
+@protocol CBLConflictResolver;
+@protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -54,7 +55,7 @@ typedef NS_ENUM(uint32_t, CBLMaintenanceType) {
 };
 
 /** A Couchbase Lite database. */
-@interface CBLDatabase : NSObject
+@interface CBLDatabase : NSObject <CBLQueryFactory>
 
 /** The database's name. */
 @property (readonly, nonatomic) NSString* name;
@@ -493,17 +494,6 @@ __deprecated_msg("Use [[database defaultCollection] setDocumentExpirationWithID:
 __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:] instead.");
 
 
-#pragma mark - Query
-
-/**
- Creates a Query object from the given query string.
- 
- @param query Query expression
- @param error error On return, the given query string is invalid.
- @return query created using the given expression string.
- */
-- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
-
 #pragma mark -- Scopes
 
 /**
@@ -511,7 +501,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  
  @note: The default scope is exceptional as it will always be listed even though there are
  no collections under it. */
-- (NSArray*) scopes;
+- (NSArray<CBLScope*>*) scopes;
 
 /**
  Get a scope object by name. As the scope cannot exist by itself without having a collection,
@@ -530,7 +520,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @param scope Scope name
  @return list of collections in the scope.
  */
-- (NSArray*) collections: (nullable NSString*)scope;
+- (NSArray<CBLCollection*>*) collections: (nullable NSString*)scope;
 
 /**
  Create a named collection in the specified scope.

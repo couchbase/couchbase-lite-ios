@@ -19,21 +19,59 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLDatabase.h"
-#import "CBLDatabaseChangeObservable.h"
+#import "CBLCollectionChangeObservable.h"
 #import "CBLIndexable.h"
-
-@protocol CBLListenerToken;
-@class CBLScope;
 @class CBLDocument;
-@class CBLMutableDocument;
 @class CBLDocumentChange;
+@class CBLMutableDocument;
+@class CBLScope;
+@protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** The default collection name constant */
 extern NSString* const kCBLDefaultCollectionName;
 
-@interface CBLCollection : NSObject<CBLDatabaseChangeObservable, CBLIndexable>
+/**
+ A `CBLCollection` represent a collection which is a container for documents.
+ 
+ A collection can be thought as a table in the relational database. Each collection belongs to
+ a scope which is simply a namespce, and has a name which is unique within its scope.
+ 
+ When a new database is created, a default collection named "_default" will be automatically
+ created. The default collection is created under the default scope named "_default".
+ You may decide to delete the default collection, but noted that the default collection cannot
+ be re-created. The name of the default collection and scope can be referenced by using
+ `kCBLDefaultCollectionName` and `kCBLDefaultScopeName` constant.
+ 
+ When creating a new collection, the collection name, and the scope name are required.
+ The naming rules of the collections and scopes are as follows:
+ - Must be between 1 and 251 characters in length.
+ - Can only contain the characters A-Z, a-z, 0-9, and the symbols _, -, and %.
+ - Cannot start with _ or %.
+ - Both scope and collection names are case sensitive.
+ 
+ ##  `CBLCollection` Lifespan
+ `CBLCollection` is ref-counted and is owned by the database object that creates it. Hence,
+ most of the time there is no need to retain or release it. A `CBLCollection` object and its
+ reference remain valid until either the database is closed or the collection itself is deleted.
+ 
+ If the collection reference needs to be kept longer, the collection object should be retained,
+ and the reference will remain valid until it's released. Most operations on the invalid \ref
+ CBLCollection object will fail with either the `kCBLErrorNotOpen` error or null/zero/empty
+ result.
+ 
+ ## Legacy Database and API
+ When using the legacy database, the existing documents and indexes in the database will be
+ automatically migrated to the default collection.
+ 
+ Any pre-existing database functions that refer to documents, listeners, and indexes without
+ specifying a collection such as \ref [database documentWithID:]] will implicitly operate on
+ the default collection. In other words, they behave exactly the way they used to, but
+ collection-aware code should avoid them and use the new Collection API instead.
+ These legacy functions are deprecated and will be removed eventually.
+ */
+@interface CBLCollection : NSObject<CBLCollectionChangeObservable, CBLIndexable>
 
 /** Collection name.*/
 @property (readonly, nonatomic) NSString* name;

@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import "CBLQueryFactory.h"
 @class CBLCollection;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -42,7 +42,7 @@ extern NSString* const kCBLDefaultScopeName;
  and the reference will remain valid until it's released. Most operations on the invalid
  CBLScope object will fail with null or empty result.
  */
-@interface CBLScope : NSObject
+@interface CBLScope : NSObject <CBLQueryFactory>
 
 /** Scope name. */
 @property (readonly, nonatomic) NSString* name;
@@ -58,7 +58,7 @@ extern NSString* const kCBLDefaultScopeName;
 /**
  Get a collection in the scope by name.
  If the collection doesn't exist, a nil value will be returned. */
-- (CBLCollection*) collectionWithName: (NSString*)name;
+- (nullable CBLCollection*) collectionWithName: (NSString*)name;
 
 @end
 

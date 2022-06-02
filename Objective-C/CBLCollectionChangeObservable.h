@@ -1,5 +1,5 @@
 //
-//  CBLDatabaseChangeObservable.h
+//  CBLCollectionChangeObservable.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,12 +17,12 @@
 //  limitations under the License.
 //
 
-#import "CBLDatabaseChange.h"
+#import "CBLCollectionChange.h"
 #import "CBLListenerToken.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLDatabaseChangeObservable <NSObject>
+@protocol CBLCollectionChangeObservable <NSObject>
 
 /**
  Add a change listener to listen to change events occurring to any documents in the collection.
@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param listener The listener to post the changes.
  @return An opaque listener token object for removing the listener.
  */
-- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener;
 
 /**
  Add a change listener to listen to change events occurring to any documents in the collection.
@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return An opaque listener token object for removing the listener.
  */
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                           listener: (void (^)(CBLDatabaseChange*))listener;
+                                           listener: (void (^)(CBLCollectionChange*))listener;
 
 
 @end

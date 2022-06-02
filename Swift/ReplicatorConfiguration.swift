@@ -57,6 +57,7 @@ public typealias ReplicationFilter = (Document, DocumentFlags) -> Bool
 public struct ReplicatorConfiguration {
     
     /// The local database to replicate with the replication target.
+    @available(*, deprecated, message: "Use config.collections instead.")
     public let database: Database
     
     /// The replication target to replicate with.
@@ -91,50 +92,62 @@ public struct ReplicatorConfiguration {
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
     /// Sync Gateway.
+    @available(*, deprecated, message: """
+                Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
+                object instead
+                """)
     public var channels: [String]?
     
     /// A set of document IDs to filter by: if given, only documents with
     /// these IDs will be pushed and/or pulled.
+    @available(*, deprecated, message: """
+                Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
+                object instead
+                """)
     public var documentIDs: [String]?
     
-    /**
-     Filter closure for validating whether the documents can be pushed to the remote endpoint.
-     Only documents for which the closure returns true are replicated.
-     */
+    
+    /// Filter closure for validating whether the documents can be pushed to the remote endpoint.
+    /// Only documents for which the closure returns true are replicated.
+    @available(*, deprecated, message: """
+                Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
+                object instead
+                """)
     public var pushFilter: ReplicationFilter?
     
-    /**
-     Filter closure for validating whether the documents can be pulled from the remote endpoint.
-     Only documents for which the closure returns true are replicated.
-     */
+    /// Filter closure for validating whether the documents can be pulled from the remote endpoint.
+    /// Only documents for which the closure returns true are replicated.
+    @available(*, deprecated, message: """
+                Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
+                object instead
+                """)
     public var pullFilter: ReplicationFilter?
     
-    /**
-     The custom conflict resolver object can be set here. If this value is not set, or set to nil,
-     the default conflict resolver will be applied.
-     */
+    /// The custom conflict resolver object can be set here. If this value is not set, or set to nil,
+    /// the default conflict resolver will be applied.
+    @available(*, deprecated, message: """
+                Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
+                object instead
+                """)
     public var conflictResolver: ConflictResolverProtocol?
     
     #if os(iOS)
-    /**
-     Allows the replicator to continue replicating in the background. The default
-     value is NO, which means that the replicator will suspend itself when the
-     replicator detects that the application is running in the background.
-     
-     If setting the value to YES, please ensure that the application requests
-     for extending the background task properly.
-     */
+    /// Allows the replicator to continue replicating in the background. The default
+    /// value is NO, which means that the replicator will suspend itself when the
+    /// replicator detects that the application is running in the background.
+    ///
+    /// If setting the value to YES, please ensure that the application requests
+    /// for extending the background task properly.
     public var allowReplicatingInBackground: Bool = false
     #endif
     
-    /**
-    The heartbeat interval in second.
-    
-    The interval when the replicator sends the ping message to check whether the other peer is still alive. Set the value to
-    zero(by default) means using the default heartbeat of 300 seconds.
-      
-    Note: Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
-     */
+    /// The heartbeat interval in second.
+    ///
+    /// The interval when the replicator sends the ping message to check whether the other peer is
+    /// still alive. Set the value to zero(by default) means using the default heartbeat of 300 secs.
+    ///
+    /// - Note: Setting the heartbeat to negative value will result in InvalidArgumentException
+    ///         being thrown.
     public var heartbeat: TimeInterval = 0 {
         willSet(newValue) {
             guard newValue >= 0 else {
@@ -146,27 +159,24 @@ public struct ReplicatorConfiguration {
         }
     }
     
-    /**
-     The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
-     able to connect and replicate with the remote server again.
-     
-     When setting the  _maxAttempts to zero(default), the default maxAttempts of 10 times for single shot
-     replicators and infinite times for continuous replicators will be applied and present to users.
-     Settings the value to 1, will perform an initial request and if there is a transient error
-     occurs, will stop without retry.
-     */
+    /// The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
+    /// able to connect and replicate with the remote server again.
+    ///
+    /// When setting the  _maxAttempts_ to zero(default), the default _maxAttempts_ of 10 times for single
+    /// shot replicators and infinite times for continuous replicators will be applied and present to
+    /// users.
+    /// Settings the value to 1, will perform an initial request and if there is a transient error
+    /// occurs, will stop without retry.
     public var maxAttempts: UInt = 0
     
-    /**
-     Max wait time for the next attempt(retry).
+    /// Max wait time for the next attempt(retry).
+    ///
+    /// The exponential backoff for calculating the wait time will be used by default and cannot be
+    /// customized. Set the value to zero(by default) means using the default max attempts of
+    /// 300 seconds.
      
-     The exponential backoff for calculating the wait time will be used by default and cannot be
-     customized. Set the value to zero(by default) means using the default max attempts of
-     300 seconds.
-     
-     Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
-     being thrown.
-     */
+    /// Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
+    /// being thrown.
     public var maxAttemptWaitTime: TimeInterval = 0 {
         willSet(newValue) {
             
@@ -190,15 +200,69 @@ public struct ReplicatorConfiguration {
     /// they will not receive the events.
     public var enableAutoPurge: Bool = true
     
+    /// The collections used for the replication.
+    public var collections = [Collection]()
+    
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
     /// - Parameters:
     ///   - database: The local database.
     ///   - target: The replication target.
+    @available(*, deprecated, message: " Use init(target:) instead. ")
     public init(database: Database, target: Endpoint) {
         self.database = database
         self.target = target
+    }
+    
+    /// Create a ReplicatorConfiguration object with the target’s endpoint. After the ReplicatorConfiguration
+    /// object is created, use addCollection(_ collection:, config:) or addCollections(_ collections:, config:) to
+    /// specify and configure the collections used for replicating with the target. If there are no collections
+    /// specified, the replicator will fail to start with a no collections specified error.
+    public init(target: Endpoint) {
+        self.target = target
+        self.database = try! Database(name: "Dummy! TODO:") // TODO: remove me!!
+    }
+    
+    /// Add a collection used for the replication with an optional collection configuration. If the collection has
+    /// been added before, the previous added and its configuration if specified will be replaced. If a null
+    /// configuration is specified, a default empty configuration will be applied.
+    public func addCollection(_ collection: Collection,
+                              config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
+        
+        // TODO: Add implementation
+        
+        return self
+    }
+    
+    /// Add multiple collections used for the replication with an optional shared collection configuration.
+    /// If any of the collections have been added before, the previously added collections and their
+    /// configuration if specified will be replaced. Adding an empty collection array will be no-ops. if
+    /// specified will be replaced. If a null configuration is specified, a default empty configuration will be
+    /// applied.
+    public func addCollections(_ collections: Array<Collection>,
+                               config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
+        
+        // TODO: Add implementation
+        
+        return self
+    }
+    
+    /// Remove the collection. If the collection doesn’t exist, this operation will be no ops.
+    public func removeCollection(_ collection: Collection) -> ReplicatorConfiguration {
+        
+        // TODO: Add implementation
+        
+        return self
+    }
+    
+    /// Get a copy of the collection’s config. If the config needs to be changed for the collection, the
+    /// collection will need to be re-added with the updated config.
+    public func getCollectionConfig(_ collection: Collection) -> CollectionConfiguration {
+        
+        // TODO: Add implementation
+        
+        return CollectionConfiguration()
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given

@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.h
+//  QueryFactory.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,21 +17,14 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
-
-@protocol CBLIndexable <NSObject>
-
-/** Return all index names. */
-- (NSArray<NSString*>*) indexes;
-
-/** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
-
-/** Delete an index by name. */
-- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
-
-@end
-
-NS_ASSUME_NONNULL_END
+public protocol QueryFactory {
+    /// Creates a Query object from the given query string.
+    ///
+    /// - Parameters:
+    ///     - query Query string
+    /// - Returns: A query created by the given query string.
+    /// - Throws: An error on when the given query string is invalid.
+    func createQuery(_ query: String) throws -> Query
+}

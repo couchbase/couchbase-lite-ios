@@ -74,7 +74,13 @@ typedef enum {
     CBLDatabaseConfiguration* _config;
     
     C4DatabaseObserver* _dbObs;
+
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CBLChangeNotifier<CBLDatabaseChange*>* _dbChangeNotifier;
+#pragma clang diagnostic pop
+
     NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
     
     BOOL _shellMode;
@@ -711,7 +717,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [NSArray array];
 }
 
-- (nullable CBLScope*) scopeWithName: (nullable NSString*)name {
+- (nullable CBLScope*) scopeWithName: (NSString*)name {
     // TODO: add implementation
     return nil;
 }
@@ -986,6 +992,9 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 // call from a db-lock(c4dbobs_create)
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
@@ -996,6 +1005,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     
     return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener];
 }
+#pragma clang diagnostic pop
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBL_LOCK(self) {
@@ -1023,10 +1033,15 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
             if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
                 if(docIDs.count > 0) {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
                     [_dbChangeNotifier postChange:
                         [[CBLDatabaseChange alloc] initWithDatabase: self
                                                         documentIDs: docIDs
                                                          isExternal: external] ];
+#pragma clang diagnostic pop
                     docIDs = [NSMutableArray new];
                 }
             }

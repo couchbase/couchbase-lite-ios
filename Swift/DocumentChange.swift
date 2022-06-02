@@ -28,5 +28,7 @@ public struct DocumentChange {
     /// The ID of the document that changed.
     public let documentID: String
     
+    /// Collection.
+    public let collection: Collection? // TODO: Collection is not optonal as per spec!
 }
 

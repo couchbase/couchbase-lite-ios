@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.h
+//  CBLCollection+Swift.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,20 +17,14 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
+#pragma once
+#import "CBLCollection.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLIndexable <NSObject>
+@interface CBLCollection ()
 
-/** Return all index names. */
-- (NSArray<NSString*>*) indexes;
-
-/** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
-
-/** Delete an index by name. */
-- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
+@property (nonatomic, readonly) CBLDatabase* _db;
 
 @end
 

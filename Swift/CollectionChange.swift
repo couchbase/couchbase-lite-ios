@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.h
+//  CollectionChange.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,21 +17,13 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
+import Foundation
 
-NS_ASSUME_NONNULL_BEGIN
-
-@protocol CBLIndexable <NSObject>
-
-/** Return all index names. */
-- (NSArray<NSString*>*) indexes;
-
-/** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
-
-/** Delete an index by name. */
-- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
-
-@end
-
-NS_ASSUME_NONNULL_END
+/// The collection change event
+public struct CollectionChange {
+    /// The collection
+    let collection: Collection
+ 
+    /// The IDs of the documents that changed.
+    let documentIDs: Array<String>
+}

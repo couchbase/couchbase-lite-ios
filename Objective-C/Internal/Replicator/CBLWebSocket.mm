@@ -180,7 +180,11 @@ static void doDispose(C4Socket* s) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
         _replicator = (__bridge CBLReplicator*)context;
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _db = _replicator.config.database;
+#pragma clang diagnostic pop
         _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
         
