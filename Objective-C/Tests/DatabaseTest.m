@@ -2461,10 +2461,10 @@
     }]);
     dispatch_queue_t q = dispatch_queue_create(@"dispatch-queue".UTF8String, DISPATCH_QUEUE_SERIAL);
     AssertNotNil([c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }]);
-    AssertNotNil([c addChangeListener: ^(CBLDatabaseChange* change) {
+    AssertNotNil([c addChangeListener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
     }]);
-    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLDatabaseChange* change) {
+    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
     }]);
     

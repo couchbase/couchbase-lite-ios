@@ -248,7 +248,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     init(impl: CBLCollection) {
         _impl = impl
-        _db = try! Database(name: impl._db.name)
+        _db = try! Database(name: "dummy name!!") // TODO: update this
     }
     
     let _impl: CBLCollection

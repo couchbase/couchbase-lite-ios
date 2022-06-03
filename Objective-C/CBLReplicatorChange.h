@@ -30,12 +30,6 @@
 /** The changed status. */
 @property (nonatomic, readonly) CBLReplicatorStatus* status;
 
-/** Scope Name.  */
-@property (nonatomic, readonly) NSString* scope;
-
-/** Collection Name. */
-@property (nonatomic, readonly) NSString* collection;
-
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 

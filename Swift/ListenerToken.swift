@@ -23,6 +23,11 @@ import Foundation
 /// for removing the added change listener.
 public class ListenerToken {
     
+    /// Remove the listener associated with the token.
+    func remove() {
+        // TODO: Add implementation
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLListenerToken) {

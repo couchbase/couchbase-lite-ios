@@ -142,10 +142,7 @@ public final class Replicator {
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
         let token = _impl.addChangeListener(with: queue, listener: { (change) in
-            listener(ReplicatorChange(replicator: self,
-                                      status: Status(withStatus: change.status),
-                                      scope: "", collection: ""))
-            // TODO: Update with scope and collecton name!
+            listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
         return ListenerToken(token)
     }
@@ -182,7 +179,9 @@ public final class Replicator {
             let docs = replication.documents.map {
                 return ReplicatedDocument(id: $0.id,
                                           flags: DocumentFlags(rawValue: Int($0.flags.rawValue)),
-                                          error: $0.error)
+                                          error: $0.error,
+                                          scope: $0.scope,
+                                          collection: $0.collection)
             }
             listener(DocumentReplication(replicator: self, isPush: replication.isPush,documents: docs))
         })
@@ -196,20 +195,47 @@ public final class Replicator {
         _impl.removeChangeListener(with: token._impl)
     }
     
-    /// Gets a set of document Ids, who have revisions pending push. This API is a snapshot and results
-    /// may change between the time the call was made and the time the call returns.
+    /// Get pending document ids for default collection. If the default collection is not part of
+    /// the replication, an Illegal State Exception will be thrown.
     ///
     /// - Returns: A  set of document Ids, each of which has one or more pending revisions
+    @available(*, deprecated, message: "Use pendingDocumentIds(collection:) instead.")
     public func pendingDocumentIds() throws -> Set<String> {
         return try _impl.pendingDocumentIDs()
     }
 
-    /// Checks if the document with the given ID has revisions pending push.  This API is a snapshot and
-    /// results may change between the time the call was made and the time the call returns.
+    /// Check whether the document in the default collection is pending to push or not. If the
+    /// default collection is not  part of the replicator, an Illegal State Exception will be thrown.
     ///
     /// - Parameter documentID: The ID of the document to check
     /// - Returns: true if the document has one or more revisions pending, false otherwise
+    @available(*, deprecated, message: "Use isDocumentPending(_ documentID:collection:) instead.")
     public func isDocumentPending(_ documentID: String) throws -> Bool {
+        var error: NSError?
+        let result = _impl.isDocumentPending(documentID, error: &error)
+        if let err = error {
+            throw err
+        }
+
+        return result
+    }
+    
+    /// Get pending document ids for the given collection. If the given collection is not part of
+    /// the replication, an Invalid Parameter Exception will be thrown.
+    ///
+    /// - Parameter collection The collection where the document belongs
+    /// - Returns: A  set of document Ids, each of which has one or more pending revisions
+    public func pendingDocumentIds(collection: Collection) throws -> Set<String> {
+        return try _impl.pendingDocumentIDs()
+    }
+
+    /// Check whether the document in the given collection is pending to push or not. If the given collection
+    /// is not part of the replicator, an Invalid Parameter Exception will be thrown.
+    ///
+    /// - Parameter collection The collection where the document belongs
+    /// - Parameter documentID: The ID of the document to check
+    /// - Returns: true if the document has one or more revisions pending, false otherwise
+    public func isDocumentPending(_ documentID: String, collection: Collection) throws -> Bool {
         var error: NSError?
         let result = _impl.isDocumentPending(documentID, error: &error)
         if let err = error {

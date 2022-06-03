@@ -27,10 +27,4 @@ public struct ReplicatorChange {
     
     /// The replicator status.
     public let status: Replicator.Status
-    
-    /// Scope Name
-    public let scope: String
-    
-    /// Collection Name
-    public let collection: String
 }

@@ -46,7 +46,7 @@
 
 @synthesize id=_id, flags=_flags, c4Error=_c4Error;
 @synthesize isTransientError=_isTransientError, error=_error;
-@synthesize collection=_collection;
+@synthesize scope=_scope, collection=_collection;
 
 - (instancetype) initWithC4DocumentEnded: (const C4DocumentEnded*)docEnded {
     self = [super init];
