@@ -2441,7 +2441,7 @@
     // ---------------------------------
     // -- TODO: No action, dummy APIs --
     // collection APIs
-    CBLDocument* doc = [c documentWithID: @"docID"];
+    CBLDocument* doc = [c documentWithID: @"docID" error: &error];
     AssertNil(doc);
     
     CBLMutableDocument* mDoc = [CBLMutableDocument document];
@@ -2470,13 +2470,13 @@
     
     // scope APIs
     CBLScope* s = c.scope;
-    AssertEqual([s collections].count, 0);
-    AssertEqualObjects([s collectionWithName: @"name"].name, @"name");
+    AssertEqual([s collections: &error].count, 0);
+    AssertEqualObjects([s collectionWithName: @"name" error: &error].name, @"name");
     
-    c = [db defaultCollection];
+    c = [db defaultCollection: &error];
     AssertEqual(c.name, kCBLDefaultCollectionName);
     
-    s = [db defaultScope];
+    s = [db defaultScope: &error];
     AssertEqual(s.name, kCBLDefaultScopeName);
     
     AssertNil(doc.collection);
