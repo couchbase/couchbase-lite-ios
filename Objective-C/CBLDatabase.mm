@@ -707,36 +707,36 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark -- Scope
 
-- (CBLScope*) defaultScope {
+- (nullable CBLScope*) defaultScope: (NSError**)error {
     // TODO: add implementation
     return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
 }
 
-- (NSArray*) scopes {
+- (nullable NSArray*) scopes: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
 
-- (nullable CBLScope*) scopeWithName: (NSString*)name {
+- (nullable CBLScope*) scopeWithName: (NSString*)name error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }
 
 #pragma mark -- Collections
 
-- (nullable CBLCollection*) defaultCollection {
+- (nullable CBLCollection*) defaultCollection: (NSError**)error {
     // TODO: add implementation
     return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
-                                          scope: [self defaultScope]
+                                          scope: [self defaultScope: error]
                                           error: nil];
 }
 
-- (NSArray*) collections: (nullable NSString*)scope {
+- (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
 
-- (CBLCollection*) createCollectionWithName: (NSString*)name
+- (nullable CBLCollection*) createCollectionWithName: (NSString*)name
                                       scope: (nullable NSString*)scope
                                       error: (NSError**)error {
     
@@ -746,7 +746,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [[CBLCollection alloc] initWithName: name scope: s error: error];
 }
 
-- (CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope {
+- (nullable CBLCollection*) collectionWithName: (NSString*)name
+                                scope: (nullable NSString*)scope
+                                error: (NSError**)error {
     
     // TODO: add implementation
     
@@ -776,12 +778,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return NO;
 }
 
-- (CBLCollection*) collectionWithName: (NSString*)name {
-    // TODO: add implementation
-    return [[CBLCollection alloc] initWithName: name scope: nil error: nil];
-}
-
-- (NSArray<CBLCollection*>*) collections {
+- (NSArray<CBLCollection*>*) collections: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }

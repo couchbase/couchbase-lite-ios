@@ -258,11 +258,11 @@ public struct ReplicatorConfiguration {
     
     /// Get a copy of the collection’s config. If the config needs to be changed for the collection, the
     /// collection will need to be re-added with the updated config.
-    public func getCollectionConfig(_ collection: Collection) -> CollectionConfiguration {
+    public func getCollectionConfig(_ collection: Collection) -> CollectionConfiguration? {
         
         // TODO: Add implementation
         
-        return CollectionConfiguration()
+        return nil
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given

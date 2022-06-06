@@ -42,7 +42,7 @@ extern NSString* const kCBLDefaultScopeName;
  and the reference will remain valid until it's released. Most operations on the invalid
  CBLScope object will fail with null or empty result.
  */
-@interface CBLScope : NSObject <CBLQueryFactory>
+@interface CBLScope : NSObject
 
 /** Scope name. */
 @property (readonly, nonatomic) NSString* name;
@@ -52,13 +52,22 @@ extern NSString* const kCBLDefaultScopeName;
 
 #pragma mark Collections
 
-/** Get all collections in the scope. */
-- (NSArray<CBLCollection*>*) collections;
+/**
+ Get all collections in the scope.
+ 
+ @param error On return, the error if any.
+ @return Collections in the scope
+ */
+- (nullable NSArray<CBLCollection*>*) collections: (NSError**)error;
 
 /**
  Get a collection in the scope by name.
- If the collection doesn't exist, a nil value will be returned. */
-- (nullable CBLCollection*) collectionWithName: (NSString*)name;
+ If the collection doesn't exist, a nil value will be returned.
+ 
+ @param error On return, the error if any.
+ @return Collection for the specified name.
+ */
+- (nullable CBLCollection*) collectionWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

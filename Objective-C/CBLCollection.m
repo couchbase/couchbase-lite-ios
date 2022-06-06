@@ -55,7 +55,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (NSArray *) indexes {
+- (nullable NSArray*) indexes: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
@@ -90,7 +90,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (CBLDocument*) documentWithID: (NSString*)docID {
+- (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }

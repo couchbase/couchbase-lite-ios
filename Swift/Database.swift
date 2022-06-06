@@ -349,7 +349,10 @@ public final class Database {
     {
         let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
             [unowned self] (change) in
-            listener(DocumentChange(database: self, documentID: change.documentID, collection: defaultCollection()))
+            
+            // TODO: update implementation!
+            
+            listener(DocumentChange(database: self, documentID: change.documentID, collection: try? defaultCollection()))
         }
         return ListenerToken(token)
     }
@@ -435,48 +438,45 @@ public final class Database {
     
     
     /// Get the default scope.
-    public func defaultScope() -> Scope {
-        return Scope(_impl.defaultScope())
+    public func defaultScope() throws -> Scope {
+        let s = try _impl.defaultScope()
+        return Scope(s)
     }
     
     /// Get scope names that have at least one collection.
     /// Note: the default scope is exceptional as it will always be listed even though there are no collections
     /// under it.
-    public func scopes() -> [Scope] {
+    public func scopes() throws -> [Scope] {
         var scopes = [Scope]()
-        for s in _impl.scopes() {
+        let res = try _impl.scopes()
+        for s in res {
             scopes.append(Scope(s))
         }
-        
         return scopes
     }
     
     /// Get a scope object by name. As the scope cannot exist by itself without having a collection, the nil
     /// value will be returned if there are no collections under the given scope’s name.
     /// Note: The default scope is exceptional, and it will always be returned.
-    public func scope(name: String) -> Scope? {
-        guard let s = _impl.scope(withName: name) else {
-            return nil
-        }
-        
+    public func scope(name: String) throws -> Scope? {
+        let s = try _impl.scope(withName: name)
         return Scope(s)
     }
     
     // MARK: Collections
     
     /// Get the default collection. If the default collection is deleted, null will be returned.
-    public func defaultCollection() -> Collection? {
-        guard let c = _impl.defaultCollection() else {
-            return nil
-        }
-        
+    public func defaultCollection() throws  -> Collection? {
+        let c = try _impl.defaultCollection()
         return Collection(impl: c)
     }
     
     /// Get all collections in the specified scope.
-    public func collections(scope: String? = defaultScopeName) -> [Collection] {
+    public func collections(scope: String? = defaultScopeName) throws -> [Collection] {
         var collections = [Collection]()
-        for c in _impl.collections(scope) {
+        let res = try _impl.collections(scope)
+        
+        for c in res {
             collections.append(Collection(impl: c))
         }
         return collections
@@ -485,22 +485,14 @@ public final class Database {
     /// Create a named collection in the specified scope.
     /// If the collection already exists, the existing collection will be returned.
     public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
-        var error: NSError?
-        let result = _impl.createCollection(withName: name, scope: scope, error: &error)
-        if let err = error {
-            throw err
-        }
-        
+        let result = try _impl.createCollection(withName: name, scope: scope)
         return Collection(impl: result)
     }
 
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
-    public func collection(name: String, scope: String? = defaultScopeName) -> Collection? {
-        guard let c = _impl.collection(withName: name, scope: scope) else {
-            return nil
-        }
-        
+    public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
+        let c = try _impl.collection(withName: name, scope: scope)
         return Collection(impl: c)
     }
     

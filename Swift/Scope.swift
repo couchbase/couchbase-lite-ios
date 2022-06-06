@@ -32,9 +32,9 @@ public final class Scope {
     // MARK: Collections
     
     /// Get all collections in the scope.
-    public func collections() -> [Collection] {
+    public func collections() throws -> [Collection] {
         var collections = [Collection]()
-        for c in _impl.collections() {
+        for c in try _impl.collections() {
             collections.append(Collection(impl: c))
         }
         
@@ -42,11 +42,8 @@ public final class Scope {
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
-    public func collection(name: String) -> Collection? {
-        guard let c = _impl.collection(withName: name) else {
-            return nil
-        }
-        
+    public func collection(name: String) throws -> Collection? {
+        let c = try _impl.collection(withName: name)
         return Collection(impl: c)
     }
     

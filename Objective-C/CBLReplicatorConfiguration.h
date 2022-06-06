@@ -174,13 +174,8 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  */
 @property (nonatomic) BOOL enableAutoPurge;
 
-/**
- The dictionary containing the collections and configurations used for replication.
- The dictionary contains the collections and the configurations added via
- the addCollection(_ collection:,config:) or addCollections(_ collections:,config:).
- Modifying the entries in the dictionary will reflect the collections and
- configured used for the replication. */
-@property (nonatomic) NSDictionary<CBLCollection*, CBLCollectionConfiguration*>* collections;
+/** The collections used for the replication. */
+@property (nonatomic) NSArray<CBLCollection*>* collections;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

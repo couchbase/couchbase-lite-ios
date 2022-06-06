@@ -36,7 +36,7 @@ extern NSString* const kCBLDefaultCollectionName;
  A `CBLCollection` represent a collection which is a container for documents.
  
  A collection can be thought as a table in the relational database. Each collection belongs to
- a scope which is simply a namespce, and has a name which is unique within its scope.
+ a scope which is simply a namespace, and has a name which is unique within its scope.
  
  When a new database is created, a default collection named "_default" will be automatically
  created. The default collection is created under the default scope named "_default".
@@ -52,15 +52,10 @@ extern NSString* const kCBLDefaultCollectionName;
  - Both scope and collection names are case sensitive.
  
  ##  `CBLCollection` Lifespan
- `CBLCollection` is ref-counted and is owned by the database object that creates it. Hence,
- most of the time there is no need to retain or release it. A `CBLCollection` object and its
- reference remain valid until either the database is closed or the collection itself is deleted.
- 
- If the collection reference needs to be kept longer, the collection object should be retained,
- and the reference will remain valid until it's released. Most operations on the invalid \ref
- CBLCollection object will fail with either the `kCBLErrorNotOpen` error or null/zero/empty
- result.
- 
+ A `Collection` object and its reference remain valid until either the database is closed or
+ the collection itself is deleted, in that case it will return
+ CBLErrorNotOpen while accessing the collection APIs.
+
  ## Legacy Database and API
  When using the legacy database, the existing documents and indexes in the database will be
  automatically migrated to the default collection.
@@ -89,9 +84,10 @@ extern NSString* const kCBLDefaultCollectionName;
  doesn't exist in the collection, the value returned will be nil.
  
  @param documentID The document ID.
+ @param error On return, the error if any.
  @return The CBLDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error;
 
 #pragma mark - Save, Delete, Purge
 

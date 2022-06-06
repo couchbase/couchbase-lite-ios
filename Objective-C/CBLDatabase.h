@@ -499,38 +499,50 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /**
  Get scope names that have at least one collection.
  
- @note: The default scope is exceptional as it will always be listed even though there are
- no collections under it. */
-- (NSArray<CBLScope*>*) scopes;
+ @note: The default scope is exceptional as it will always be listed
+ even though there are no collections under it.
+ 
+ @param error error on return, the error if any. CBLErrorNotOpen code will be
+ returned if the database is closed.
+ @return returns the scope names
+ */
+- (nullable NSArray<CBLScope*>*) scopes: (NSError**)error;
 
 /**
  Get a scope object by name. As the scope cannot exist by itself without having a collection,
  the nil value will be returned if there are no collections under the given scope’s name.
  
- @param name Scope name, if empty, it will use default scope name.
- @return Scope object
+ @note: The default scope is exceptional, and it will always be returned.
  
- @note: The default scope is exceptional, and it will always be returned. */
-- (nullable CBLScope*) scopeWithName: (nullable NSString*)name;
+ @param name Scope name, if empty, it will use default scope name.
+ @param error error on return, the error if any. CBLErrorNotOpen code will be
+ returned if the database is closed.
+ @return Scope object
+ */
+- (nullable CBLScope*) scopeWithName: (nullable NSString*)name
+                               error: (NSError**)error;
 
 #pragma mark -- Collections
 
 /** Get all collections in the specified scope.
  
  @param scope Scope name
+ @param error error on return, the error if any. CBLErrorNotOpen code will be
+ returned if the database is closed.
  @return list of collections in the scope.
  */
-- (NSArray<CBLCollection*>*) collections: (nullable NSString*)scope;
+- (nullable NSArray<CBLCollection*>*) collections: (nullable NSString*)scope
+                                   error: (NSError**)error;
 
 /**
  Create a named collection in the specified scope.
  
  @param name name for the new collection
  @param scope collection will be created under this scope, if not specified, use the default scope.
- @param error error On return, the given query string is invalid.
+ @param error error on return, the error if any.
  @return Newly created collection or if already exists, the existing collection will be returned.
  */
-- (CBLCollection*) createCollectionWithName: (NSString*)name
+- (nullable CBLCollection*) createCollectionWithName: (NSString*)name
                                       scope: (nullable NSString*)scope
                                       error: (NSError**)error;
 
@@ -539,9 +551,13 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  
  @param name Name of the collection to be fetched.
  @param scope Name of the scope the collection resides, if not specified uses the default scope.
+ @param error error on return, the error if any. CBLErrorNotOpen code will be
+ returned if the database is closed.
  @return collection instance or If the collection doesn't exist, a nil value will be returned.
  */
-- (nullable CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope;
+- (nullable CBLCollection*) collectionWithName: (NSString*)name
+                                         scope: (nullable NSString*)scope
+                                         error: (NSError**)error;
 
 /**
  Delete a collection by name  in the specified scope.
@@ -551,18 +567,29 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  
  @param name Name of the collection to be deleted
  @param scope Name of the scope the collection resides, if not specified uses the default scope.
- @param error error On return, the given query string is invalid.
+ @param error error on return, the error if any. CBLErrorNotOpen code will be
+ returned if the database is closed.
  @return True on success, false on failure.
  */
 - (BOOL) deleteCollectionWithName: (NSString*)name
                             scope: (nullable NSString*)scope
                             error: (NSError**)error;
 
-/** Get the default scope. */
-- (CBLScope*) defaultScope;
+/**
+ Get the default scope.
+ 
+ @param error On return, the error if any.
+ @return Default Scope
+ */
+- (nullable CBLScope*) defaultScope: (NSError**)error;
 
-/** Get the default collection. If the default collection is deleted, null will be returned. */
-- (nullable CBLCollection*) defaultCollection;
+/**
+ Get the default collection. If the default collection is deleted, null will be returned.
+ 
+ @param error On return, the error if any.
+ @return Default collection
+ */
+- (nullable CBLCollection*) defaultCollection: (NSError**)error;
 
 @end
 

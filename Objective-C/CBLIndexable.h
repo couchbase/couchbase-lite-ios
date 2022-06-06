@@ -24,10 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol CBLIndexable <NSObject>
 
 /** Return all index names. */
-- (NSArray<NSString*>*) indexes;
+- (nullable NSArray<NSString*>*) indexes: (NSError**)error;
 
 /** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name config: (CBLIndexConfiguration*)config error: (NSError**)error;
+- (BOOL) createIndexWithName: (NSString*)name
+                      config: (CBLIndexConfiguration*)config
+                       error: (NSError**)error;
 
 /** Delete an index by name. */
 - (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;

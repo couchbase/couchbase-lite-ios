@@ -19,16 +19,16 @@
 
 import Foundation
 
-/// A `CBLCollection` represent a collection which is a container for documents.
+/// A `Collection` represent a collection which is a container for documents.
 ///
 /// A collection can be thought as a table in the relational database. Each collection belongs to
 /// a scope which is simply a namespce, and has a name which is unique within its scope.
 ///
-/// When a new database is created, a default collection named "_default" will be automatically
-/// created. The default collection is created under the default scope named "_default".
+/// When a new database is created, a default collection named `_default` will be automatically
+/// created. The default collection is created under the default scope named `_default`.
 /// You may decide to delete the default collection, but noted that the default collection cannot
 /// be re-created. The name of the default collection and scope can be referenced by using
-/// `kCBLDefaultCollectionName` and `kCBLDefaultScopeName` constant.
+/// `Collection.defaultCollectionName` and `Scope.defaultScopeName` constant.
 ///
 /// When creating a new collection, the collection name, and the scope name are required.
 /// The naming rules of the collections and scopes are as follows:
@@ -38,14 +38,9 @@ import Foundation
 /// - Both scope and collection names are case sensitive.
 ///
 /// ## CBLCollection Lifespan
-/// `CBLCollection` is ref-counted and is owned by the database object that creates it. Hence,
-/// most of the time there is no need to retain or release it. A `CBLCollection` object and its
-/// reference remain valid until either the database is closed or the collection itself is deleted.
-///
-/// If the collection reference needs to be kept longer, the collection object should be retained,
-/// and the reference will remain valid until it's released. Most operations on the invalid \ref
-/// CBLCollection object will fail with either the `kCBLErrorNotOpen` error or null/zero/empty
-/// result.
+/// A `Collection` object and its reference remain valid until either
+/// the database is closed or the collection itself is deleted, in that case it will
+/// return CBLErrorNotOpen while accessing the collection APIs.
 ///
 /// ## Legacy Database and API
 /// When using the legacy database, the existing documents and indexes in the database will be
@@ -74,11 +69,12 @@ public final class Collection : CollectionChangeObservable, Indexable {
     var count: UInt64 { _impl.count }
     
     /// Get an existing document by id.
-    func document(id: String) -> Document? {
-        if let implDoc = _impl.document(withID: id) {
-            return Document(implDoc)
-        }
-        return nil;
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
+    func document(id: String) throws -> Document? {
+        let implDoc = try _impl.document(withID: id)
+        return Document(implDoc)
     }
     
     /// Save a document into the collection. The default concurrency control, lastWriteWins,
@@ -87,6 +83,9 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When saving a document that already belongs to a collection, the collection instance of
     /// the document and this collection instance must be the same, otherwise, the InvalidParameter
     /// error will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func save(document: MutableDocument) throws {
         try _impl.save(document._impl as! CBLMutableDocument)
     }
@@ -98,6 +97,9 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When saving a document that already belongs to a collection, the collection instance of the
     /// document and this collection instance must be the same, otherwise, the InvalidParameter
     /// error will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func save(document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
@@ -119,6 +121,9 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When saving a document that already belongs to a collection, the collection instance of the
     /// document and this collection instance must be the same, otherwise, the InvalidParameter error
     /// will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
         do {
@@ -144,6 +149,9 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When deleting a document that already belongs to a collection, the collection instance of
     /// the document and this collection instance must be the same, otherwise, the InvalidParameter error
     /// will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func delete(document: Document) throws {
         try _impl.delete(document._impl)
     }
@@ -154,6 +162,9 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// When deleting a document, the collection instance of the document and this collection instance
     /// must be the same, otherwise, the InvalidParameter error will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func delete(document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
@@ -170,12 +181,18 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     /// When purging a document, the collection instance of the document and this collection instance
     /// must be the same, otherwise, the InvalidParameter error will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func purge(document: Document) throws {
         try _impl.purgeDocument(document._impl)
     }
     
     /// Purge a document by id from the collection. If the document doesn't exist in the collection,
     /// the NotFound error will be thrown.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func purge(id: String) throws {
         try _impl.purgeDocument(withID: id)
     }
@@ -183,11 +200,17 @@ public final class Collection : CollectionChangeObservable, Indexable {
     // MARK: Document Expiry
     
     /// Set an expiration date to the document of the given id. Setting a nil date will clear the expiration.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func setDocumentExpiration(id: String, expiration: Date?) throws {
         try _impl.setDocumentExpirationWithID(id, expiration: expiration)
     }
     
     /// Get the expiration date set to the document of the given id.
+    ///
+    /// CBLErrorNotOpen code will be thrown if the collection is deleted
+    /// or the database is closed.
     func getDocumentExpiration(id: String) -> Date? {
         return _impl.getDocumentExpiration(withID: id)
     }
@@ -196,6 +219,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     /// Add a change listener to listen to change events occurring to a document of the given document id.
     /// To remove the listener, call remove() function on the returned listener token.
+    ///
+    /// If the collection is deleted or the database is closed, a warning message will be logged.
     func addDocumentChangeListener(id: String,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         return self.addDocumentChangeListener(id: id, queue: nil, listener: listener)
@@ -204,6 +229,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// Add a change listener to listen to change events occurring to a document of the given document id.
     /// If a dispatch queue is given, the events will be posted on the dispatch queue. To remove the listener,
     /// call remove() function on the returned listener token.
+    ///
+    /// If the collection is deleted or the database is closed, a warning message will be logged.
     func addDocumentChangeListener(id: String, queue: DispatchQueue?,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
@@ -213,10 +240,19 @@ public final class Collection : CollectionChangeObservable, Indexable {
         return ListenerToken(token)
     }
     
+    /// Add a change listener to listen to change events occurring to any documents in the collection.
+    /// To remove the listener, call remove() function on the returned listener token
+    ///.
+    /// If the collection is deleted or the database is closed, a warning message will be logged.
     public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         return self.addChangeListener(queue: nil, listener: listener)
     }
-        
+     
+    /// Add a change listener to listen to change events occurring to any documents in the collection.
+    /// If a dispatch queue is given, the events will be posted on the dispatch queue.
+    /// To remove the listener, call remove() function on the returned listener token.
+    ///
+    /// If the collection is deleted or the database is closed, a warning message will be logged.
     public func addChangeListener(queue: DispatchQueue?,
                                   listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         let token = _impl.addChangeListener(with: queue) { [unowned self] (change) in
@@ -229,8 +265,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     // MARK: Indexable
     
     /// Return all index names
-    public func indexes() -> [String] {
-        return _impl.indexes()
+    public func indexes() throws -> [String] {
+        return try _impl.indexes()
     }
     
     /// Create an index with the index name and config.

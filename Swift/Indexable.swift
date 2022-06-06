@@ -20,14 +20,8 @@
 import Foundation
 
 public protocol Indexable {
-    // TODO: Remove this comment after code review!
-    // Since the protocol signature difference with
-    // 1. previous(var indexes) & current(func indexes() -> [String])
-    // 2. previous(createIndex(_ config: name: )) & current( createIndex(name: config:) ) arg reverse
-    // Database class will not implementthis protocol
-    
     /// Return all index names
-    func indexes() -> [String]
+    func indexes() throws -> [String]
     
     /// Create an index with the index name and config.
     func createIndex(withName name: String, config: IndexConfiguration) throws
