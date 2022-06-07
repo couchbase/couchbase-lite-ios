@@ -2453,7 +2453,7 @@
     AssertFalse([c purgeDocument: doc1 error: &error]);
     AssertFalse([c purgeDocumentWithID: @"docID" error: &error]);
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
-    AssertNil([c getDocumentExpirationWithID: @"docID"]);
+    AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);
     
     // change listeners
     AssertNotNil([c addDocumentChangeListenerWithID: @"docID" listener:^(CBLDocumentChange* change) {

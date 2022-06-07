@@ -209,7 +209,7 @@
     
 }
 
-- (CBLCollectionConfiguration*) getCollectionConfig:(CBLCollection *)collection {
+- (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
     
     // TODO: Add Implementation
     

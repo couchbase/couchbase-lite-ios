@@ -95,7 +95,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return nil;
 }
 
-- (NSDate*) getDocumentExpirationWithID: (NSString*)docID {
+- (NSDate*) getDocumentExpirationWithID: (NSString*)docID error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }
