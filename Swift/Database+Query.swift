@@ -32,7 +32,7 @@ extension Database : QueryFactory {
     }
     
     /// All index names.
-    @available(*, deprecated, message: "Use database.defaultCollection().indexes instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().indexes() instead.")
     public var indexes: Array<String> { return _impl.indexes }
     
     /// Creates an index which could be a value index or a full-text search index with the given

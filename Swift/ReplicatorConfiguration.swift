@@ -225,7 +225,7 @@ public struct ReplicatorConfiguration {
     }
     
     /// Add a collection used for the replication with an optional collection configuration. If the collection has
-    /// been added before, the previous added and its configuration if specified will be replaced. If a null
+    /// been added before, the previous added and its configuration if specified will be replaced. If a nil
     /// configuration is specified, a default empty configuration will be applied.
     public func addCollection(_ collection: Collection,
                               config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
@@ -238,7 +238,7 @@ public struct ReplicatorConfiguration {
     /// Add multiple collections used for the replication with an optional shared collection configuration.
     /// If any of the collections have been added before, the previously added collections and their
     /// configuration if specified will be replaced. Adding an empty collection array will be no-ops. if
-    /// specified will be replaced. If a null configuration is specified, a default empty configuration will be
+    /// specified will be replaced. If a nil configuration is specified, a default empty configuration will be
     /// applied.
     public func addCollections(_ collections: Array<Collection>,
                                config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
@@ -258,7 +258,10 @@ public struct ReplicatorConfiguration {
     
     /// Get a copy of the collection’s config. If the config needs to be changed for the collection, the
     /// collection will need to be re-added with the updated config.
-    public func getCollectionConfig(_ collection: Collection) -> CollectionConfiguration? {
+    ///
+    /// - Parameter collection The collection whose config is needed.
+    /// - Returns The collection config if exists.
+    public func collectionConfig(_ collection: Collection) -> CollectionConfiguration? {
         
         // TODO: Add implementation
         

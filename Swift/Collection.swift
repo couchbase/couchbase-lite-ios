@@ -40,7 +40,7 @@ import Foundation
 /// ## CBLCollection Lifespan
 /// A `Collection` object and its reference remain valid until either
 /// the database is closed or the collection itself is deleted, in that case it will
-/// return CBLErrorNotOpen while accessing the collection APIs.
+/// throw an NSError with the CBLError.notOpen code while accessing the collection APIs.
 ///
 /// ## Legacy Database and API
 /// When using the legacy database, the existing documents and indexes in the database will be
@@ -70,8 +70,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     /// Get an existing document by id.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func document(id: String) throws -> Document? {
         let implDoc = try _impl.document(withID: id)
         return Document(implDoc)
@@ -84,8 +84,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// the document and this collection instance must be the same, otherwise, the InvalidParameter
     /// error will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func save(document: MutableDocument) throws {
         try _impl.save(document._impl as! CBLMutableDocument)
     }
@@ -98,8 +98,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// document and this collection instance must be the same, otherwise, the InvalidParameter
     /// error will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func save(document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
@@ -122,8 +122,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// document and this collection instance must be the same, otherwise, the InvalidParameter error
     /// will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
         do {
@@ -150,8 +150,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// the document and this collection instance must be the same, otherwise, the InvalidParameter error
     /// will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func delete(document: Document) throws {
         try _impl.delete(document._impl)
     }
@@ -163,8 +163,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When deleting a document, the collection instance of the document and this collection instance
     /// must be the same, otherwise, the InvalidParameter error will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func delete(document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
@@ -182,8 +182,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// When purging a document, the collection instance of the document and this collection instance
     /// must be the same, otherwise, the InvalidParameter error will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func purge(document: Document) throws {
         try _impl.purgeDocument(document._impl)
     }
@@ -191,8 +191,8 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// Purge a document by id from the collection. If the document doesn't exist in the collection,
     /// the NotFound error will be thrown.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func purge(id: String) throws {
         try _impl.purgeDocument(withID: id)
     }
@@ -201,18 +201,18 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     /// Set an expiration date to the document of the given id. Setting a nil date will clear the expiration.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
     func setDocumentExpiration(id: String, expiration: Date?) throws {
         try _impl.setDocumentExpirationWithID(id, expiration: expiration)
     }
     
     /// Get the expiration date set to the document of the given id.
     ///
-    /// CBLErrorNotOpen code will be thrown if the collection is deleted
-    /// or the database is closed.
-    func getDocumentExpiration(id: String) -> Date? {
-        return _impl.getDocumentExpiration(withID: id)
+    /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
+    /// the database is closed.
+    func getDocumentExpiration(id: String) throws -> Date? {
+        return try _impl.getDocumentExpiration(withID: id)
     }
     
     // MARK: Document Change Publisher

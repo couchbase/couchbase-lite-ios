@@ -23,7 +23,7 @@
 @protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
-
+/** The collection configuration that can be configured specifically for the replication. */
 @interface CBLCollectionConfiguration : NSObject
 
 /**

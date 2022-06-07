@@ -19,8 +19,9 @@
 
 import Foundation
 
+/// The Indexable interface defines a set of functions for managing the query indexes.
 public protocol Indexable {
-    /// Return all index names
+    /// Return all index names, or nil if an error occurred.
     func indexes() throws -> [String]
     
     /// Create an index with the index name and config.

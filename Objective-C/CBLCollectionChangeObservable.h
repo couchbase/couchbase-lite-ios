@@ -21,7 +21,10 @@
 #import "CBLListenerToken.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
+/**
+ The CollectionChangeObservable interface represents the object that can notify
+ change events that occur to documents in collections.
+ */
 @protocol CBLCollectionChangeObservable <NSObject>
 
 /**

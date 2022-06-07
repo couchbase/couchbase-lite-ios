@@ -23,14 +23,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** The QueryFactory interface defines a function for creating a query from the given SQL string. */
 @protocol CBLQueryFactory <NSObject>
 
 /**
  Create a query object from an SQL string.
  
  @param query Query expression
- @param error error On return, the given query string is invalid(e.g., syntax error).
- @return query created using the given expression string.
+ @param error On return, the error if any., the given query string is invalid(e.g., syntax error).
+ @return query created using the given expression string, or nil if an error occurred.
  */
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
 

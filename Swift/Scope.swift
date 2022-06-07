@@ -19,6 +19,15 @@
 
 import Foundation
 
+/// A CBLScope represents a scope or namespace of the collections.
+///
+/// The scope implicitly exists when there is at least one collection created under the scope.
+/// The default scope is exceptional in that it will always exists even there are no collections
+/// under it.
+///
+/// `CBLScope` Lifespan
+/// A `CBLScope` object remain valid until either the database is closed or
+/// the scope itself is invalidated as all collections in the scope have been deleted. 
 public final class Scope {
     
     /// The default scope name constant

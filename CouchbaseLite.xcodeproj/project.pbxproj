@@ -2986,7 +2986,6 @@
 				1AAFB67B284A266F00878453 /* Collection.swift */,
 				1AAFB679284A266F00878453 /* CollectionChange.swift */,
 				1AAFB67A284A266F00878453 /* CollectionChangeObservable.swift */,
-				1AAFB678284A266F00878453 /* CollectionConfiguration.swift */,
 				275F928B1E4D3119007FD5A2 /* Database.swift */,
 				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				93CED8C820488BC900E6F0A4 /* DatabaseChange.swift */,
@@ -3005,6 +3004,7 @@
 			children = (
 				1A41601A227D084A0061A567 /* ConflictResolution */,
 				93CED8D020488C9500E6F0A4 /* Authenticator.swift */,
+				1AAFB678284A266F00878453 /* CollectionConfiguration.swift */,
 				93248DE72005E72A00C15B00 /* Endpoint.swift */,
 				27E35A911E8C4F4300E103F9 /* Replicator.swift */,
 				93DB80001ED8FCE200C4F845 /* ReplicatorConfiguration.swift */,

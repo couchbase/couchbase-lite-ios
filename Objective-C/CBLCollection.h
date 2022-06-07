@@ -203,7 +203,7 @@ extern NSString* const kCBLDefaultCollectionName;
  
  @param documentID The ID of the document to set the expiration date for
  @param date The expiration date. Set nil date will reset the document expiration.
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return True on success, false on failure.
  */
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
@@ -214,9 +214,11 @@ extern NSString* const kCBLDefaultCollectionName;
  Get the expiration date set to the document of the given id.
  
  @param documentID The ID of the document to set the expiration date for
+ @param error On return, the error if any.
  @return the expiration time of a document, if one has been set, else nil.
  */
-- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID
+                                           error: (NSError**)error;
 
 #pragma mark - Document change publisher
 

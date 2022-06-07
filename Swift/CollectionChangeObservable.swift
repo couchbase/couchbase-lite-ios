@@ -19,6 +19,8 @@
 
 import Foundation
 
+/// The CollectionChangeObservable interface represents the object that can notify
+/// change events that occur to documents in collections.
 public protocol CollectionChangeObservable {
     /// Add a change listener to listen to change events occurring to any documents in the collection.
     /// To remove the listener, call remove() function on the returned listener token.

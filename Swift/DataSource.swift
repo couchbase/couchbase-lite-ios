@@ -44,7 +44,8 @@ public final class DataSource {
     ///
     /// - Parameter database: The database object.
     /// - Returns: The database data source.
-    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:) instead.")
+    @available(*, deprecated,
+                message: "Use DataSource.collection(database.defaultCollection()) instead.")
     public static func database(_ database: Database) -> DataSourceAs {
         return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl),
                                 source: database)

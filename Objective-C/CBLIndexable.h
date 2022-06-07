@@ -20,10 +20,10 @@
 #import "CBLIndexConfiguration.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
+/** The Indexable interface defines a set of functions for managing the query indexes. */
 @protocol CBLIndexable <NSObject>
 
-/** Return all index names. */
+/** Return all index names, or nil if an error occurred. */
 - (nullable NSArray<NSString*>*) indexes: (NSError**)error;
 
 /** Create an index with the index name and config. */

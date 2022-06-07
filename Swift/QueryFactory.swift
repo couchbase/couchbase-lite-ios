@@ -19,6 +19,7 @@
 
 import Foundation
 
+/// The QueryFactory interface defines a function for creating a query from the given SQL string.
 public protocol QueryFactory {
     /// Creates a Query object from the given query string.
     ///

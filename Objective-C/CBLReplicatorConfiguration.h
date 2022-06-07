@@ -247,8 +247,8 @@ __deprecated_msg("Use [... initWithTarget:] instead.");
  collection will need to be re-added with the updated config.
  
  @param collection The collection whose config is needed.
- @return The collection configuration. */
-- (CBLCollectionConfiguration*) getCollectionConfig: (CBLCollection*)collection;
+ @return The collection configuration, or nil if config doesn't exist */
+- (nullable CBLCollectionConfiguration*) collectionConfig: (CBLCollection*)collection;
 
 @end
 

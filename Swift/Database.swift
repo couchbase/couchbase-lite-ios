@@ -465,7 +465,7 @@ public final class Database {
     
     // MARK: Collections
     
-    /// Get the default collection. If the default collection is deleted, null will be returned.
+    /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
         let c = try _impl.defaultCollection()
         return Collection(impl: c)

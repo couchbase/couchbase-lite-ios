@@ -19,6 +19,7 @@
 
 import Foundation
 
+/// The collection configuration that can be configured specifically for the replication.
 public struct CollectionConfiguration {
     /// The custom conflict resolver function. If this value is nil, the default conflict resolver will be used..
     public var conflictResolver: ConflictResolver?
