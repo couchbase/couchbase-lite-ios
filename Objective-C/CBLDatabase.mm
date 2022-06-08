@@ -38,7 +38,6 @@
 #import "CBLConflict+Internal.h"
 #import "CBLTimer.h"
 #import "CBLErrorMessage.h"
-#import "Foundation+CBL.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
