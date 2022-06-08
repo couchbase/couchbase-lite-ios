@@ -20,7 +20,7 @@
 #import "CBLCollection.h"
 #import "CBLIndexable.h"
 #import "CBLChangeListenerToken.h"
-#import "CBLDatabaseChangeObservable.h"
+#import "CBLCollectionChangeObservable.h"
 
 NSString* const kCBLDefaultCollectionName = @"_default";
 
@@ -55,7 +55,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (NSArray *) indexes {
+- (nullable NSArray*) indexes: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
@@ -90,12 +90,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (CBLDocument*) documentWithID: (NSString*)docID {
+- (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }
 
-- (NSDate*) getDocumentExpirationWithID: (NSString*)docID {
+- (NSDate*) getDocumentExpirationWithID: (NSString*)docID error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }
@@ -139,14 +139,14 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener {
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener {
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener
                                                           queue: nil];
     return token;
 }
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                           listener: (void (^)(CBLDatabaseChange*))listener {
+                                           listener: (void (^)(CBLCollectionChange*))listener {
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener
                                                           queue: nil];
     return token;

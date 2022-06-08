@@ -1,8 +1,8 @@
 //
-//  ListenerToken.swift
+//  QueryFactory.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,21 +19,13 @@
 
 import Foundation
 
-/// Listener token returned when adding a change listener. The token is used
-/// for removing the added change listener.
-public class ListenerToken {
-    
-    /// Remove the listener associated with the token.
-    func remove() {
-        // TODO: Add implementation
-    }
-    
-    // MARK: Internal
-    
-    init(_ impl: CBLListenerToken) {
-        _impl = impl
-    }
-    
-    let _impl: CBLListenerToken
-    
+/// The QueryFactory interface defines a function for creating a query from the given SQL string.
+public protocol QueryFactory {
+    /// Creates a Query object from the given query string.
+    ///
+    /// - Parameters:
+    ///     - query Query string
+    /// - Returns: A query created by the given query string.
+    /// - Throws: An error on when the given query string is invalid.
+    func createQuery(_ query: String) throws -> Query
 }

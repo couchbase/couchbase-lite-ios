@@ -1032,8 +1032,8 @@
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"wss://foo"]];
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc]
                                           initWithTarget: target];
-    
-    CBLCollection* c1 = [self.db collectionWithName: @"collection1" scope: @"scope1"];
+    NSError* error = nil;
+    CBLCollection* c1 = [self.db collectionWithName: @"collection1" scope: @"scope1" error: &error];
     CBLCollectionConfiguration* cConfig = [[CBLCollectionConfiguration alloc] init];
     
     TestConflictResolver* r;

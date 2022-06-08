@@ -41,6 +41,15 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return _impl.sequence
     }
     
+    /// The collection that the document belongs to.
+    public var collection: Collection? {
+        guard let c = _impl.collection else {
+            return nil
+        }
+        
+        return Collection(impl: c)
+    }
+    
     // MARK: Edit
     
     /// Returns a mutable copy of the document.

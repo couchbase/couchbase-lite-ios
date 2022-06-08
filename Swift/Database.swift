@@ -71,6 +71,7 @@ public final class Database {
     public var path: String? { return _impl.path }
     
     /// The total numbers of documents in the database.
+    @available(*, deprecated, message: "Use database.defaultCollection().count instead.")
     public var count: UInt64 { return _impl.count }
     
     /// The database configuration.
@@ -79,6 +80,7 @@ public final class Database {
     }
     
     /// Gets a Document object with the given ID.
+    @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
         if let implDoc = _impl.document(withID: id) {
             return Document(implDoc)
@@ -98,6 +100,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:) instead.")
     public func saveDocument(_ document: MutableDocument) throws {
         try _impl.save(document._impl as! CBLMutableDocument)
     }
@@ -113,6 +116,7 @@ public final class Database {
     /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:concurrencyControl:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
@@ -141,6 +145,7 @@ public final class Database {
     /// - Returns: True if successful. False if there is a conflict, but the conflict wasn't
     ///             resolved as the conflict handler returns 'false' value.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
         ) throws -> Bool {
@@ -167,6 +172,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:) instead.")
     public func deleteDocument(_ document: Document) throws {
         try _impl.delete(document._impl)
     }
@@ -182,6 +188,7 @@ public final class Database {
     /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:concurrencyControl:) instead.")
     @discardableResult public func deleteDocument(
         _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
@@ -203,6 +210,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(:) instead.")
     public func purgeDocument(_ document: Document) throws {
         try _impl.purgeDocument(document._impl)
     }
@@ -213,6 +221,7 @@ public final class Database {
     ///
     /// - Parameter documentID: The document.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(withID:) instead.")
     public func purgeDocument(withID documentID: String) throws {
         try _impl.purgeDocument(withID: documentID)
     }
@@ -269,6 +278,7 @@ public final class Database {
     ///     - documentID: The ID of the document to set the expiration date for
     ///     - expiration: The expiration date. Set nil date will reset the document expiration.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().setDocumentExpiration(withID:expiration:) instead.")
     public func setDocumentExpiration(withID documentID: String, expiration: Date?) throws {
         try _impl.setDocumentExpirationWithID(documentID, expiration: expiration)
     }
@@ -277,6 +287,7 @@ public final class Database {
     ///
     /// - Parameter documentID: The ID of the document to set the expiration date for.
     /// - Returns: the expiration time of a document, if one has been set, else nil.
+    @available(*, deprecated, message: "Use database.defaultCollection().getDocumentExpiration(withID:) instead.")
     public func getDocumentExpiration(withID documentID: String) -> Date? {
         return _impl.getDocumentExpiration(withID: documentID)
     }
@@ -285,6 +296,7 @@ public final class Database {
     ///
     /// - Parameter listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
+    @available(*, deprecated, message: "Use database.defaultCollection().addChangeListener(:) instead.")
     @discardableResult public func addChangeListener(
         _ listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
@@ -299,6 +311,7 @@ public final class Database {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
+    @available(*, deprecated, message: "Use database.defaultCollection().addChangeListener(withQueue:listener:) instead.")
     @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
         listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
@@ -314,6 +327,7 @@ public final class Database {
     ///   - documentID: The document ID.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
+    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(withID:listener:) instead.")
     @discardableResult public func addDocumentChangeListener(withID id: String,
         listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
@@ -329,12 +343,16 @@ public final class Database {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
+    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(withID:queue:listener:) instead.")
     @discardableResult public func addDocumentChangeListener(withID id: String,
         queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
         let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
             [unowned self] (change) in
-            listener(DocumentChange(database: self, documentID: change.documentID))
+            
+            // TODO: update implementation!
+            
+            listener(DocumentChange(database: self, documentID: change.documentID, collection: try? defaultCollection()))
         }
         return ListenerToken(token)
     }
@@ -342,6 +360,7 @@ public final class Database {
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
+    @available(*, deprecated, message: "Use database.defaultCollection().removeChangeListener(withToken:) instead.")
     public func removeChangeListener(withToken token: ListenerToken) {
         _impl.removeChangeListener(with: token._impl)
     }
@@ -413,6 +432,76 @@ public final class Database {
     
     /// Log object used for configuring console, file, and custom logger.
     public static let log = Log()
+    
+    
+    // MARK: Scopes
+    
+    
+    /// Get the default scope.
+    public func defaultScope() throws -> Scope {
+        let s = try _impl.defaultScope()
+        return Scope(s)
+    }
+    
+    /// Get scope names that have at least one collection.
+    /// Note: the default scope is exceptional as it will always be listed even though there are no collections
+    /// under it.
+    public func scopes() throws -> [Scope] {
+        var scopes = [Scope]()
+        let res = try _impl.scopes()
+        for s in res {
+            scopes.append(Scope(s))
+        }
+        return scopes
+    }
+    
+    /// Get a scope object by name. As the scope cannot exist by itself without having a collection, the nil
+    /// value will be returned if there are no collections under the given scope’s name.
+    /// Note: The default scope is exceptional, and it will always be returned.
+    public func scope(name: String) throws -> Scope? {
+        let s = try _impl.scope(withName: name)
+        return Scope(s)
+    }
+    
+    // MARK: Collections
+    
+    /// Get the default collection. If the default collection is deleted, nil will be returned.
+    public func defaultCollection() throws  -> Collection? {
+        let c = try _impl.defaultCollection()
+        return Collection(impl: c)
+    }
+    
+    /// Get all collections in the specified scope.
+    public func collections(scope: String? = defaultScopeName) throws -> [Collection] {
+        var collections = [Collection]()
+        let res = try _impl.collections(scope)
+        
+        for c in res {
+            collections.append(Collection(impl: c))
+        }
+        return collections
+    }
+    
+    /// Create a named collection in the specified scope.
+    /// If the collection already exists, the existing collection will be returned.
+    public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
+        let result = try _impl.createCollection(withName: name, scope: scope)
+        return Collection(impl: result)
+    }
+
+    /// Get a collection in the specified scope by name.
+    /// If the collection doesn't exist, a nil value will be returned.
+    public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
+        let c = try _impl.collection(withName: name, scope: scope)
+        return Collection(impl: c)
+    }
+    
+    /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
+    /// will be no-ops. Note: the default collection can be deleted but cannot be recreated.
+    public func deleteCollection(name: String, scope: String? = defaultScopeName) throws {
+        try _impl.deleteCollection(withName: name, scope: scope)
+    }
+
     
     // MARK: Internal
     

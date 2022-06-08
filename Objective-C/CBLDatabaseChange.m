@@ -20,10 +20,13 @@
 #import "CBLDatabaseChange.h"
 #import "CBLDatabase+Internal.h"
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
+
 @implementation CBLDatabaseChange
 
 @synthesize database=_database, documentIDs=_documentIDs, isExternal=_isExternal;
-@synthesize collection=_collection;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                       documentIDs: (NSArray *)documentIDs
@@ -39,3 +42,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop

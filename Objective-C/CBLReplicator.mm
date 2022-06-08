@@ -94,6 +94,11 @@ typedef enum {
 @synthesize bgMonitor=_bgMonitor;
 @synthesize dispatchQueue=_dispatchQueue;
 
+// Too many deprecated config.database usage, hence declared on top!
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
     CBLAssertNotNil(config);
     
@@ -738,6 +743,9 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
                                           documentID: slice2string(docID)
                                           revisionID: slice2string(revID)
@@ -749,9 +757,7 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
     if ((flags & kRevPurged) == kRevPurged)
         docFlags |= kCBLDocumentFlagsAccessRemoved;
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 #pragma clang diagnostic pop
 
@@ -796,3 +802,5 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
 }
 
 @end
+
+#pragma clang diagnostic pop

@@ -2441,7 +2441,7 @@
     // ---------------------------------
     // -- TODO: No action, dummy APIs --
     // collection APIs
-    CBLDocument* doc = [c documentWithID: @"docID"];
+    CBLDocument* doc = [c documentWithID: @"docID" error: &error];
     AssertNil(doc);
     
     CBLMutableDocument* mDoc = [CBLMutableDocument document];
@@ -2453,7 +2453,7 @@
     AssertFalse([c purgeDocument: doc1 error: &error]);
     AssertFalse([c purgeDocumentWithID: @"docID" error: &error]);
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
-    AssertNil([c getDocumentExpirationWithID: @"docID"]);
+    AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);
     
     // change listeners
     AssertNotNil([c addDocumentChangeListenerWithID: @"docID" listener:^(CBLDocumentChange* change) {
@@ -2461,22 +2461,22 @@
     }]);
     dispatch_queue_t q = dispatch_queue_create(@"dispatch-queue".UTF8String, DISPATCH_QUEUE_SERIAL);
     AssertNotNil([c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }]);
-    AssertNotNil([c addChangeListener: ^(CBLDatabaseChange* change) {
+    AssertNotNil([c addChangeListener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
     }]);
-    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLDatabaseChange* change) {
+    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
     }]);
     
     // scope APIs
     CBLScope* s = c.scope;
-    AssertEqual([s collections].count, 0);
-    AssertEqualObjects([s collectionWithName: @"name"].name, @"name");
+    AssertEqual([s collections: &error].count, 0);
+    AssertEqualObjects([s collectionWithName: @"name" error: &error].name, @"name");
     
-    c = [db defaultCollection];
+    c = [db defaultCollection: &error];
     AssertEqual(c.name, kCBLDefaultCollectionName);
     
-    s = [db defaultScope];
+    s = [db defaultScope: &error];
     AssertEqual(s.name, kCBLDefaultScopeName);
     
     AssertNil(doc.collection);

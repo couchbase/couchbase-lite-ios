@@ -19,21 +19,54 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLDatabase.h"
-#import "CBLDatabaseChangeObservable.h"
+#import "CBLCollectionChangeObservable.h"
 #import "CBLIndexable.h"
-
-@protocol CBLListenerToken;
-@class CBLScope;
 @class CBLDocument;
-@class CBLMutableDocument;
 @class CBLDocumentChange;
+@class CBLMutableDocument;
+@class CBLScope;
+@protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** The default collection name constant */
 extern NSString* const kCBLDefaultCollectionName;
 
-@interface CBLCollection : NSObject<CBLDatabaseChangeObservable, CBLIndexable>
+/**
+ A `CBLCollection` represent a collection which is a container for documents.
+ 
+ A collection can be thought as a table in the relational database. Each collection belongs to
+ a scope which is simply a namespace, and has a name which is unique within its scope.
+ 
+ When a new database is created, a default collection named "_default" will be automatically
+ created. The default collection is created under the default scope named "_default".
+ You may decide to delete the default collection, but noted that the default collection cannot
+ be re-created. The name of the default collection and scope can be referenced by using
+ `kCBLDefaultCollectionName` and `kCBLDefaultScopeName` constant.
+ 
+ When creating a new collection, the collection name, and the scope name are required.
+ The naming rules of the collections and scopes are as follows:
+ - Must be between 1 and 251 characters in length.
+ - Can only contain the characters A-Z, a-z, 0-9, and the symbols _, -, and %.
+ - Cannot start with _ or %.
+ - Both scope and collection names are case sensitive.
+ 
+ ##  `CBLCollection` Lifespan
+ A `Collection` object and its reference remain valid until either the database is closed or
+ the collection itself is deleted, in that case it will return
+ CBLErrorNotOpen while accessing the collection APIs.
+
+ ## Legacy Database and API
+ When using the legacy database, the existing documents and indexes in the database will be
+ automatically migrated to the default collection.
+ 
+ Any pre-existing database functions that refer to documents, listeners, and indexes without
+ specifying a collection such as \ref [database documentWithID:]] will implicitly operate on
+ the default collection. In other words, they behave exactly the way they used to, but
+ collection-aware code should avoid them and use the new Collection API instead.
+ These legacy functions are deprecated and will be removed eventually.
+ */
+@interface CBLCollection : NSObject<CBLCollectionChangeObservable, CBLIndexable>
 
 /** Collection name.*/
 @property (readonly, nonatomic) NSString* name;
@@ -51,9 +84,10 @@ extern NSString* const kCBLDefaultCollectionName;
  doesn't exist in the collection, the value returned will be nil.
  
  @param documentID The document ID.
+ @param error On return, the error if any.
  @return The CBLDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error;
 
 #pragma mark - Save, Delete, Purge
 
@@ -169,7 +203,7 @@ extern NSString* const kCBLDefaultCollectionName;
  
  @param documentID The ID of the document to set the expiration date for
  @param date The expiration date. Set nil date will reset the document expiration.
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return True on success, false on failure.
  */
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
@@ -180,9 +214,11 @@ extern NSString* const kCBLDefaultCollectionName;
  Get the expiration date set to the document of the given id.
  
  @param documentID The ID of the document to set the expiration date for
+ @param error On return, the error if any.
  @return the expiration time of a document, if one has been set, else nil.
  */
-- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID;
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID
+                                           error: (NSError**)error;
 
 #pragma mark - Document change publisher
 

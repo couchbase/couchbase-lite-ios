@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.h
+//  CBLQueryFactory.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,22 +17,23 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexConfiguration.h"
+#import <Foundation/Foundation.h>
+
+@class CBLQuery;
 
 NS_ASSUME_NONNULL_BEGIN
-/** The Indexable interface defines a set of functions for managing the query indexes. */
-@protocol CBLIndexable <NSObject>
 
-/** Return all index names, or nil if an error occurred. */
-- (nullable NSArray<NSString*>*) indexes: (NSError**)error;
+/** The QueryFactory interface defines a function for creating a query from the given SQL string. */
+@protocol CBLQueryFactory <NSObject>
 
-/** Create an index with the index name and config. */
-- (BOOL) createIndexWithName: (NSString*)name
-                      config: (CBLIndexConfiguration*)config
-                       error: (NSError**)error;
-
-/** Delete an index by name. */
-- (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
+/**
+ Create a query object from an SQL string.
+ 
+ @param query Query expression
+ @param error On return, the error if any., the given query string is invalid(e.g., syntax error).
+ @return query created using the given expression string, or nil if an error occurred.
+ */
+- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
 
 @end
 

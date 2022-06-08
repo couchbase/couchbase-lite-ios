@@ -27,5 +27,4 @@ public struct ReplicatorChange {
     
     /// The replicator status.
     public let status: Replicator.Status
-    
 }

@@ -1,8 +1,8 @@
 //
-//  ListenerToken.swift
+//  Indexable.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,21 +19,15 @@
 
 import Foundation
 
-/// Listener token returned when adding a change listener. The token is used
-/// for removing the added change listener.
-public class ListenerToken {
+/// The Indexable interface defines a set of functions for managing the query indexes.
+public protocol Indexable {
+    /// Return all index names, or nil if an error occurred.
+    func indexes() throws -> [String]
     
-    /// Remove the listener associated with the token.
-    func remove() {
-        // TODO: Add implementation
-    }
+    /// Create an index with the index name and config.
+    func createIndex(withName name: String, config: IndexConfiguration) throws
     
-    // MARK: Internal
-    
-    init(_ impl: CBLListenerToken) {
-        _impl = impl
-    }
-    
-    let _impl: CBLListenerToken
-    
+    /// Delete an index by name.
+    func deleteIndex(forName name: String) throws
+
 }

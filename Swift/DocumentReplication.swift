@@ -46,4 +46,10 @@ public struct ReplicatedDocument {
     /// The error if occurred.
     public let error: Error?
     
+    /// Scope Name
+    public let scope: String
+    
+    /// Collection Name
+    public let collection: String
+    
 }

@@ -19,7 +19,7 @@
 
 import Foundation
 
-extension Database {
+extension Database : QueryFactory {
     
     /// Creates a Query object from the given query string.
     ///
@@ -32,6 +32,7 @@ extension Database {
     }
     
     /// All index names.
+    @available(*, deprecated, message: "Use database.defaultCollection().indexes() instead.")
     public var indexes: Array<String> { return _impl.indexes }
     
     /// Creates an index which could be a value index or a full-text search index with the given
@@ -56,6 +57,7 @@ extension Database {
     ///     - config: The index configuration
     ///     - name: The index name.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().createIndex(:name:) instead.")
     public func createIndex(_ config: IndexConfiguration, name: String) throws {
         try _impl.createIndex(withConfig: config.toImpl(), name: name)
     }
@@ -64,6 +66,7 @@ extension Database {
     ///
     /// - Parameter name: The index name.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().deleteIndex(forName:) instead.")
     public func deleteIndex(forName name: String) throws {
         try _impl.deleteIndex(forName: name)
     }

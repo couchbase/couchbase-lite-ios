@@ -23,6 +23,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLVersion.h"
+#import "CBLCollectionConfiguration.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -202,6 +203,19 @@
     
 }
 
+- (void) removeCollection:(CBLCollection *)collection {
+    
+    // TODO: Add implementation
+    
+}
+
+- (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
+    
+    // TODO: Add Implementation
+    
+    return [[CBLCollectionConfiguration alloc] init];
+}
+
 #pragma mark - Internal
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
@@ -209,7 +223,6 @@
     self = [super init];
     if (self) {
         _readonly = readonly;
-        _database = config.database;
         _target = config.target;
         _replicatorType = config.replicatorType;
         _continuous = config.continuous;
@@ -224,6 +237,7 @@
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        _database = config.database;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
         _pushFilter = config.pushFilter;

@@ -1,8 +1,8 @@
 //
-//  ListenerToken.swift
+//  CBLCollectionChange.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,23 +17,24 @@
 //  limitations under the License.
 //
 
-import Foundation
+#import <Foundation/Foundation.h>
 
-/// Listener token returned when adding a change listener. The token is used
-/// for removing the added change listener.
-public class ListenerToken {
-    
-    /// Remove the listener associated with the token.
-    func remove() {
-        // TODO: Add implementation
-    }
-    
-    // MARK: Internal
-    
-    init(_ impl: CBLListenerToken) {
-        _impl = impl
-    }
-    
-    let _impl: CBLListenerToken
-    
-}
+@class CBLCollection;
+
+NS_ASSUME_NONNULL_BEGIN
+
+/** The collection change event  */
+@interface CBLCollectionChange : NSObject
+
+/** The IDs of the document that changed. */
+@property (readonly, nonatomic) NSArray<NSString*>* documentIDs;
+
+/** Collection. */
+@property (readonly, nonatomic) CBLCollection* collection;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
+@end
+
+NS_ASSUME_NONNULL_END

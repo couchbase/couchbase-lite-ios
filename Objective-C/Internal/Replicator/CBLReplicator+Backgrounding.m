@@ -51,8 +51,12 @@
 }
 
 - (NSFileProtectionType) fileProtection {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSDictionary* attrs = [NSFileManager.defaultManager attributesOfItemAtPath: self.config.database.path error: NULL];
     return attrs[NSFileProtectionKey] ?: NSFileProtectionNone;
+#pragma clang diagnostic pop
 }
 
 - (void) endBackgrounding {

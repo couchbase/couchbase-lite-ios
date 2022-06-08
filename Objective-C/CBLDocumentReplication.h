@@ -54,8 +54,11 @@ NS_ASSUME_NONNULL_BEGIN
 /** The error if occurred */
 @property (nonatomic, readonly, nullable) NSError* error;
 
-/** Collection. */
-@property (nonatomic, readonly) CBLCollection* collection;
+/** Scope Name. */
+@property (nonatomic, readonly) NSString* scope;
+
+/** Collection Name. */
+@property (nonatomic, readonly) NSString* collection;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

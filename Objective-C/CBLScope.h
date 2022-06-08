@@ -34,13 +34,8 @@ extern NSString* const kCBLDefaultScopeName;
  under it.
  
  `CBLScope` Lifespan
- `CBLScope` is ref-counted and is owned by the database object that creates it. Hence,
- most of the time there is no need to retain or release it. A `CBLScope` object and its
- reference remain valid until either the database is closed or the scope itself is invalidated
- as all collections in the scope have been deleted.
- If the scope reference needs to be kept longer, the scope object should be retained,
- and the reference will remain valid until it's released. Most operations on the invalid
- CBLScope object will fail with null or empty result.
+ A `CBLScope` object remain valid until either the database is closed or
+ the scope itself is invalidated as all collections in the scope have been deleted.
  */
 @interface CBLScope : NSObject
 
@@ -52,13 +47,22 @@ extern NSString* const kCBLDefaultScopeName;
 
 #pragma mark Collections
 
-/** Get all collections in the scope. */
-- (NSArray<CBLCollection*>*) collections;
+/**
+ Get all collections in the scope.
+ 
+ @param error On return, the error if any.
+ @return Collections in the scope, or nil if an error occurred.
+ */
+- (nullable NSArray<CBLCollection*>*) collections: (NSError**)error;
 
 /**
  Get a collection in the scope by name.
- If the collection doesn't exist, a nil value will be returned. */
-- (CBLCollection*) collectionWithName: (NSString*)name;
+ If the collection doesn't exist, a nil value will be returned.
+ 
+ @param error On return, the error if any.
+ @return Collection for the specified name, or nil if an error occurred.
+ */
+- (nullable CBLCollection*) collectionWithName: (NSString*)name error: (NSError**)error;
 
 @end
 

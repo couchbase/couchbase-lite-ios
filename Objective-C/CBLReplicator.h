@@ -154,7 +154,7 @@ the replicator change notification.
  Get pending document ids for default collection. If the default collection is not part of the
  replication, an Illegal State Exception will be thrown.
  
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
  */
 - (nullable NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error
@@ -165,7 +165,7 @@ __deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instea
  the replication, an Illegal State Exception will be thrown.
  
  @param collection The given collection.
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
  */
 - (nullable NSSet<NSString*>*) pendingDocumentIDsForCollection: (CBLCollection*)collection
@@ -176,7 +176,7 @@ __deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instea
  collection is not  part of the replicator, an Illegal State Exception will be thrown.
  
  @param documentID The ID of the document to check
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return true if the document has one or more revisions pending, false otherwise. */
 - (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW
 __deprecated_msg("Use [replicator isDocumentPending:collection:error:] instead.");
@@ -187,7 +187,7 @@ __deprecated_msg("Use [replicator isDocumentPending:collection:error:] instead."
 
  @param documentID The ID of the document to check
  @param collection The collection which document belongs
- @param error error On return, the error if any.
+ @param error On return, the error if any.
  @return true if the document has one or more revisions pending, false otherwise. */
 - (BOOL) isDocumentPending: (NSString*)documentID
                 collection: (CBLCollection*)collection

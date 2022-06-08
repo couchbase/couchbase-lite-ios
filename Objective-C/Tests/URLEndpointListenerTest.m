@@ -1700,7 +1700,10 @@ typedef CBLURLEndpointListener Listener;
 #pragma clang diagnostic pop
 
 - (void) testCollections {
-    CBLCollection* collection = [self.db collectionWithName: @"collection1" scope: @"scope1"];
+    NSError* error = nil;
+    CBLCollection* collection = [self.db collectionWithName: @"collection1"
+                                                      scope: @"scope1"
+                                                      error: &error];
     Config* config = [[Config alloc] initWithCollections: @[collection]];
     AssertEqual(config.collections.count, 1);
     CBLCollection* c = (CBLCollection*)config.collections.firstObject;

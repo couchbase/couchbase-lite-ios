@@ -1,5 +1,5 @@
 //
-//  CBLIndexable.m
+//  CollectionChange.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -17,8 +17,13 @@
 //  limitations under the License.
 //
 
-#import "CBLIndexable.h"
+import Foundation
 
-@implementation CBLIndexable
-
-@end
+/// The collection change event
+public struct CollectionChange {
+    /// The collection
+    let collection: Collection
+ 
+    /// The IDs of the documents that changed.
+    let documentIDs: Array<String>
+}

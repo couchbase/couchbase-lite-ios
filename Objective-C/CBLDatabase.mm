@@ -74,7 +74,13 @@ typedef enum {
     CBLDatabaseConfiguration* _config;
     
     C4DatabaseObserver* _dbObs;
+
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CBLChangeNotifier<CBLDatabaseChange*>* _dbChangeNotifier;
+#pragma clang diagnostic pop
+
     NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
     
     BOOL _shellMode;
@@ -701,36 +707,36 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark -- Scope
 
-- (CBLScope*) defaultScope {
+- (nullable CBLScope*) defaultScope: (NSError**)error {
     // TODO: add implementation
     return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
 }
 
-- (NSArray*) scopes {
+- (nullable NSArray*) scopes: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
 
-- (nullable CBLScope*) scopeWithName: (nullable NSString*)name {
+- (nullable CBLScope*) scopeWithName: (NSString*)name error: (NSError**)error {
     // TODO: add implementation
     return nil;
 }
 
 #pragma mark -- Collections
 
-- (nullable CBLCollection*) defaultCollection {
+- (nullable CBLCollection*) defaultCollection: (NSError**)error {
     // TODO: add implementation
     return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
-                                          scope: [self defaultScope]
+                                          scope: [self defaultScope: error]
                                           error: nil];
 }
 
-- (NSArray*) collections: (nullable NSString*)scope {
+- (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
 
-- (CBLCollection*) createCollectionWithName: (NSString*)name
+- (nullable CBLCollection*) createCollectionWithName: (NSString*)name
                                       scope: (nullable NSString*)scope
                                       error: (NSError**)error {
     
@@ -740,7 +746,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [[CBLCollection alloc] initWithName: name scope: s error: error];
 }
 
-- (CBLCollection*) collectionWithName: (NSString*)name scope: (nullable NSString*)scope {
+- (nullable CBLCollection*) collectionWithName: (NSString*)name
+                                scope: (nullable NSString*)scope
+                                error: (NSError**)error {
     
     // TODO: add implementation
     
@@ -770,12 +778,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return NO;
 }
 
-- (CBLCollection*) collectionWithName: (NSString*)name {
-    // TODO: add implementation
-    return [[CBLCollection alloc] initWithName: name scope: nil error: nil];
-}
-
-- (NSArray<CBLCollection*>*) collections {
+- (NSArray<CBLCollection*>*) collections: (NSError**)error {
     // TODO: add implementation
     return [NSArray array];
 }
@@ -986,6 +989,9 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 // call from a db-lock(c4dbobs_create)
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
@@ -996,6 +1002,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     
     return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener];
 }
+#pragma clang diagnostic pop
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
     CBL_LOCK(self) {
@@ -1023,10 +1030,15 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
             if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
                 if(docIDs.count > 0) {
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
                     [_dbChangeNotifier postChange:
                         [[CBLDatabaseChange alloc] initWithDatabase: self
                                                         documentIDs: docIDs
                                                          isExternal: external] ];
+#pragma clang diagnostic pop
                     docIDs = [NSMutableArray new];
                 }
             }
