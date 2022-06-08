@@ -106,7 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
  Used to create a CBLDocument without database and c4doc
  Will retain the passed in `body`(FLSliceResult) */
 - (instancetype) initWithDocumentID: (NSString*)documentID
-                         revisionID: (NSString*)revisionID
+                         revisionID: (nullable NSString*)revisionID
                                body: (FLSliceResult)body;
 
 - (BOOL) selectConflictingRevision;

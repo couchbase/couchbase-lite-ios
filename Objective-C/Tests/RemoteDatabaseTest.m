@@ -84,6 +84,7 @@
     // start the listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.disableTLS = YES;
+    config.allowConnectedClient = YES;
     [self listen: config errorCode: 0 errorDomain: nil];
     
     // start the connected client
@@ -126,6 +127,7 @@
     // start the listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.disableTLS = YES;
+    config.allowConnectedClient = YES;
     [self listen: config errorCode: 0 errorDomain: nil];
     
     // start the connected client
@@ -159,6 +161,7 @@
     // start the listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.disableTLS = YES;
+    config.allowConnectedClient = YES;
     [self listen: config errorCode: 0 errorDomain: nil];
     
     // start the connected client
@@ -198,6 +201,7 @@
     __block CBLDocument* doc = nil;
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.disableTLS = YES;
+    config.allowConnectedClient = YES;
     [self listen: config errorCode: 0 errorDomain: nil];
     [self startConnectedClient: _listener.localEndpoint.url];
     XCTestExpectation* eGet = [self expectationWithDescription: @"get document exp"];

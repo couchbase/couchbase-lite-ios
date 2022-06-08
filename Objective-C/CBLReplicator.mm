@@ -686,7 +686,7 @@ static void onDocsEnded(C4Replicator* repl,
 
 #pragma mark - PUSH/PULL FILTER:
 
-static bool pushFilter(C4String collectionName,
+static bool pushFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
@@ -694,7 +694,7 @@ static bool pushFilter(C4String collectionName,
                                  body: flbody pushing: true];
 }
 
-static bool pullFilter(C4String collectionName,
+static bool pullFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;

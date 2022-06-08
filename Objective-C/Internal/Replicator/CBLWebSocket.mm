@@ -28,6 +28,7 @@
 #import "c4Socket.h"
 #import "MYURLUtils.h"
 #import "fleece/Fleece.hh"
+#import "fleece/Expert.hh"              // for AllocedDict
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
