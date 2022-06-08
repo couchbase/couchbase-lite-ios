@@ -131,6 +131,8 @@ NS_ASSUME_NONNULL_BEGIN
                       documentIDs: (NSArray*)documentIDs
                        isExternal: (BOOL)isExternal;
 
+- (instancetype) initWithDocIDs: (NSArray*)docIDs;
+
 @end
 
 

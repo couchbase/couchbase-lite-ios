@@ -37,4 +37,12 @@
     return self;
 }
 
+- (instancetype) initWithDocIDs: (NSArray*)docIDs {
+    self = [super init];
+    if (self) {
+        _documentIDs = docIDs;
+    }
+    return self;
+}
+
 @end

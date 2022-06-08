@@ -21,6 +21,8 @@
 #import "CBLAuthenticator.h"
 #import "CBLDocument.h"
 
+@class CBLDatabaseChange;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLRemoteDatabase : NSObject
@@ -28,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Completion blocks. */
 typedef void (^CBLGetDocumentCompletion)(CBLDocument* _Nullable, NSError* _Nullable);
 typedef void (^CBLPutDocumentCompletion)(CBLDocument* _Nullable, NSError* _Nullable);
+typedef void (^CBLDocChangeListener)(CBLDatabaseChange*);
 
 /** Creates a new RemoteDatabase instance, and starts it automatically. */
 - (instancetype) initWithURL: (NSURL*)url authenticator: (nullable CBLAuthenticator*)authenticator;
@@ -47,6 +50,9 @@ typedef void (^CBLPutDocumentCompletion)(CBLDocument* _Nullable, NSError* _Nulla
 /** Deletes a document from the remote database. */
 - (void) deleteDocument: (CBLDocument *)document
              completion: (CBLPutDocumentCompletion)completion;
+
+/** */
+- (void) addChangeListener: (CBLDocChangeListener)listener;
 
 @end
 

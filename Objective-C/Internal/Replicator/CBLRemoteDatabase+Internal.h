@@ -109,4 +109,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface ConnectedClientObserveChangeContext : ConnectedClientContext
+@property (nonatomic) CBLDocChangeListener docObserveChange;
+
+- (instancetype) init NS_UNAVAILABLE;
+
+- (instancetype) initWithRemoteDB: (CBLRemoteDatabase*)db
+                         observer: (CBLDocChangeListener)observer;
+@end
+
+@implementation ConnectedClientObserveChangeContext
+
+@synthesize docObserveChange=_docObserveChange;
+
+- (instancetype) initWithRemoteDB: (CBLRemoteDatabase*)db
+                       observer: (CBLDocChangeListener)observer {
+    self = [super initWithRemoteDB: db];
+    if (self) {
+        _docObserveChange = observer;
+    }
+    return self;
+}
+
+@end
+
 NS_ASSUME_NONNULL_END

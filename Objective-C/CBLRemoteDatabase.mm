@@ -24,6 +24,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
 #import "CBLRemoteDatabase+Internal.h"
+#import "CBLDatabase+Internal.h"
 
 using namespace fleece;
 
@@ -213,6 +214,22 @@ static void updateDocumentCallback(C4ConnectedClient* c4client, C4HeapSlice newR
         convertError(err, &error);
         completion(nil, error);
     }
+}
+
+static void observerCallback(C4ConnectedClient* client, C4Error* err, void* ctx) {
+    ConnectedClientObserveChangeContext* context = (__bridge ConnectedClientObserveChangeContext*)ctx;
+    dispatch_async(context.remoteDB.dispatchQueue, ^{
+        CBLDatabaseChange* c = [[CBLDatabaseChange alloc] initWithDocIDs: @[]];
+        context.docObserveChange(c);
+    });
+}
+
+- (void) addChangeListener:(CBLDocChangeListener)listener {
+    ConnectedClientObserveChangeContext* ctx = [[ConnectedClientObserveChangeContext alloc] initWithRemoteDB: self
+                                                                                                    observer: listener];
+    [_contexts addObject: ctx];
+    C4Error err = { };
+    c4client_observeCollection(_client, nullslice, &observerCallback, (__bridge void*)ctx, &err);
 }
 
 @end

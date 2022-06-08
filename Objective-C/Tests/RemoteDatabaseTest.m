@@ -245,4 +245,48 @@
                                               @"revised": @"updated"}));
 }
 
+- (void) testObserver {
+    XCTestExpectation* e2 = [self expectationWithDescription: @"expectation2"];
+    
+    // create a doc in server (listener)
+    NSError* err = nil;
+    CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
+    [doc1 setString: @"someString" forKey: @"someKeyString"];
+    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    
+    // start the listener
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.disableTLS = YES;
+    config.allowConnectedClient = YES;
+    [self listen: config errorCode: 0 errorDomain: nil];
+    
+    // start the connected client
+    [self startConnectedClient: _listener.localEndpoint.url];
+    
+    __block int count = 0;
+    [_client addChangeListener:^(CBLDatabaseChange* change) {
+        count++;
+        NSLog(@"-------------> document change listener!");
+        
+        if (count == 10) {
+            NSLog(@"-------------> All notification recieved!");
+            [e2 fulfill];
+        }
+    }];
+    
+    for (NSUInteger i = 0; i < 10; i++) {
+        XCTestExpectation* e = [self expectationWithDescription: @"expectation"];
+        NSString* docID = [NSString stringWithFormat: @"doc-%lu", (unsigned long)i];
+        doc1 = [self createDocument: docID];
+        NSString* k = [NSString stringWithFormat: @"key%lu", (unsigned long)i];
+        NSString* v = [NSString stringWithFormat: @"value%lu", (unsigned long)i];
+        [doc1 setString: k forKey: v];
+        
+        [_client saveDocument: doc1 completion: ^(CBLDocument* d, NSError *error) { [e fulfill]; }];
+        [self waitForExpectations: @[e] timeout: timeout];
+    }
+    
+    [self waitForExpectations: @[e2] timeout: timeout];
+}
+
 @end
