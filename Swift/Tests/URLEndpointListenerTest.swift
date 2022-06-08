@@ -1188,13 +1188,12 @@ class URLEndpontListenerTest: ReplicatorTest {
             try self.startListener(withConfig: config)
         }
         
-        // pinning root cert should fail
+        // pinning root cert should be successful
         run(target: listener!.localURLEndpoint,
             type: .pushAndPull,
             continuous: false,
             auth: nil,
-            serverCert: identity!.certs[1],
-            expectedError: CBLErrorTLSCertUnknownRoot)
+            serverCert: identity!.certs[1])
         
         // pinning leaf cert shoud be successful
         run(target: listener!.localURLEndpoint,

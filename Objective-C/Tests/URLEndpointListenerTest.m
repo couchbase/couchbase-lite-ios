@@ -1537,14 +1537,14 @@ typedef CBLURLEndpointListener Listener;
         [self listen: config];
     }];
     
-    // pinning root cert should fail
+    // pinning root cert should be successful(CBL-2973)
     [self runWithTarget: _listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
           authenticator: nil
              serverCert: (__bridge SecCertificateRef) identity.certs[1]
-              errorCode: CBLErrorTLSCertUnknownRoot
-            errorDomain: CBLErrorDomain];
+              errorCode: 0
+            errorDomain: nil];
     
     // pinning leaf cert shoud be successful
     [self runWithTarget: _listener.localEndpoint
