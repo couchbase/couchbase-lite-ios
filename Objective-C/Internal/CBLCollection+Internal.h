@@ -24,10 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
 
-- (instancetype) initWithName: (NSString*)name
-                        scope: (nullable CBLScope*)scope
-                        error: (NSError**)error;
-
+/**
+ This constructor will return the collection for the specified details
+ */
+- (instancetype) initWithDB: (CBLDatabase*)db
+             collectionName: (NSString*)collectionName
+                  scopeName: (NSString*)scopeName
+                      error: (NSError**)error;
 @end
 
 NS_ASSUME_NONNULL_END

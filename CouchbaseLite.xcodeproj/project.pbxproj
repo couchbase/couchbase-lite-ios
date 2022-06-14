@@ -206,10 +206,10 @@
 		1AEF059B283380F800D5DDEA /* CBLCollection.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AEF0598283380F800D5DDEA /* CBLCollection.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1AEF059C283380F800D5DDEA /* CBLCollection.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AEF0598283380F800D5DDEA /* CBLCollection.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AEF059D283380F800D5DDEA /* CBLCollection.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AEF0598283380F800D5DDEA /* CBLCollection.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		1AEF059E283380F800D5DDEA /* CBLCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.m */; };
-		1AEF059F283380F800D5DDEA /* CBLCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.m */; };
-		1AEF05A0283380F800D5DDEA /* CBLCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.m */; };
-		1AEF05A1283380F800D5DDEA /* CBLCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.m */; };
+		1AEF059E283380F800D5DDEA /* CBLCollection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.mm */; };
+		1AEF059F283380F800D5DDEA /* CBLCollection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.mm */; };
+		1AEF05A0283380F800D5DDEA /* CBLCollection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.mm */; };
+		1AEF05A1283380F800D5DDEA /* CBLCollection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF0599283380F800D5DDEA /* CBLCollection.mm */; };
 		1AEF05A32833900800D5DDEA /* CBLScope.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF05A22833900800D5DDEA /* CBLScope.m */; };
 		1AEF05A42833900800D5DDEA /* CBLScope.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF05A22833900800D5DDEA /* CBLScope.m */; };
 		1AEF05A52833900800D5DDEA /* CBLScope.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEF05A22833900800D5DDEA /* CBLScope.m */; };
@@ -2016,7 +2016,7 @@
 		1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStoppable.h; sourceTree = "<group>"; };
 		1AEF0583283380D500D5DDEA /* CBLScope.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLScope.h; sourceTree = "<group>"; };
 		1AEF0598283380F800D5DDEA /* CBLCollection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLCollection.h; sourceTree = "<group>"; };
-		1AEF0599283380F800D5DDEA /* CBLCollection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLCollection.m; sourceTree = "<group>"; };
+		1AEF0599283380F800D5DDEA /* CBLCollection.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLCollection.mm; sourceTree = "<group>"; };
 		1AEF05A22833900800D5DDEA /* CBLScope.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLScope.m; sourceTree = "<group>"; };
 		1AF555C322946ED90077DF6D /* QueryTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Main.m"; sourceTree = "<group>"; };
 		1AF98EB827AD22C500B3EA5F /* generate_swift_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_swift_release_zip.sh; sourceTree = "<group>"; };
@@ -3018,7 +3018,7 @@
 			isa = PBXGroup;
 			children = (
 				1AEF0598283380F800D5DDEA /* CBLCollection.h */,
-				1AEF0599283380F800D5DDEA /* CBLCollection.m */,
+				1AEF0599283380F800D5DDEA /* CBLCollection.mm */,
 				1AAFB665284A260900878453 /* CBLCollectionChange.h */,
 				1AAFB664284A260900878453 /* CBLCollectionChange.m */,
 				1AAFB666284A260900878453 /* CBLCollectionChangeObservable.h */,
@@ -5501,7 +5501,7 @@
 				9381961C1EC113860032CC51 /* CBLFragment.m in Sources */,
 				93EC42E91FB3930E00D54BB4 /* CBLQueryArrayExpression.m in Sources */,
 				93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */,
-				1AEF059F283380F800D5DDEA /* CBLCollection.m in Sources */,
+				1AEF059F283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
 				1AAFB668284A260A00878453 /* CBLCollectionChange.m in Sources */,
 				934A27AE1F30E641003946A7 /* CBLParameterExpression.m in Sources */,
@@ -5782,7 +5782,7 @@
 				9343EF6C207D611600F19A89 /* CBLMutableArray.mm in Sources */,
 				931713D922C182F500F1B5BF /* CBLCoreMLPredictiveModel.m in Sources */,
 				1AAFB669284A260A00878453 /* CBLCollectionChange.m in Sources */,
-				1AEF05A0283380F800D5DDEA /* CBLCollection.m in Sources */,
+				1AEF05A0283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				932CC55B207D9ED2000B4B78 /* CBLDatabaseEndpoint.m in Sources */,
 				9343EF6E207D611600F19A89 /* CBLQueryChange.m in Sources */,
 				69002EBE234E695600776107 /* CBLErrorMessage.m in Sources */,
@@ -5865,7 +5865,7 @@
 				9343F027207D61AB00F19A89 /* CBLQueryFunction.m in Sources */,
 				93095B32246DDF34005633B4 /* TLSIdentity.swift in Sources */,
 				1AAFB681284A266F00878453 /* CollectionConfiguration.swift in Sources */,
-				1AEF05A1283380F800D5DDEA /* CBLCollection.m in Sources */,
+				1AEF05A1283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				9343F028207D61AB00F19A89 /* CBLIndexBuilder.m in Sources */,
 				1A3471502671C8800042C6BA /* CBLFullTextIndexConfiguration.m in Sources */,
 				9388CC4E21C25141005CA66D /* ConsoleLogger.swift in Sources */,
@@ -6305,7 +6305,7 @@
 				93B41D661F0580E700A7F114 /* CBLQueryJoin.m in Sources */,
 				93CD024C1E9DA0AC00AFB3FA /* CBLC4Document.mm in Sources */,
 				934A27A11F30E61B003946A7 /* CBLPropertyExpression.m in Sources */,
-				1AEF059E283380F800D5DDEA /* CBLCollection.m in Sources */,
+				1AEF059E283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				93B41CB21F04706100A7F114 /* CBLReplicatorChange.m in Sources */,
 				93CD02731EA0004500AFB3FA /* CBLDocument.mm in Sources */,
 				9384D8291FC405BF00FE89D8 /* CBLQueryFullTextExpression.m in Sources */,

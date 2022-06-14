@@ -709,7 +709,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLScope*) defaultScope: (NSError**)error {
     // TODO: add implementation
-    return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
+//    return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName error: nil];
+    return nil;
 }
 
 - (nullable NSArray*) scopes: (NSError**)error {
@@ -726,9 +727,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     // TODO: add implementation
-    return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
-                                          scope: [self defaultScope: error]
-                                          error: nil];
+    return  [[CBLCollection alloc] initWithDB: self
+                               collectionName: kCBLDefaultCollectionName
+                                    scopeName: kCBLDefaultScopeName
+                                        error: nil];
 }
 
 - (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
@@ -741,9 +743,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                       error: (NSError**)error {
     
     // TODO: add implementation
-    
-    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: error];
-    return [[CBLCollection alloc] initWithName: name scope: s error: error];
+    return nil;
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -752,8 +752,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     // TODO: add implementation
     
-    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: nil];
-    return [[CBLCollection alloc] initWithName: name scope: s error: nil];
+    return nil;
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name

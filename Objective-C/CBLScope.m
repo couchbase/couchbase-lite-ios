@@ -37,7 +37,7 @@ NSString* const kCBLDefaultScopeName = @"_default";
 
 - (CBLCollection *) collectionWithName: (NSString *)collectionName error: (NSError**)error {
     // TODO: add implementation
-    return [[CBLCollection alloc] initWithName: collectionName scope: nil error: nil];
+    return nil;
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {
