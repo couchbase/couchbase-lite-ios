@@ -20,11 +20,15 @@
 #pragma once
 #import "CBLScope.h"
 
+@class CBLDatabase;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLScope ()
 
-- (instancetype) initWithName: (NSString*)name error: (NSError**)error;
+- (instancetype) initWithDB: (CBLDatabase*)db
+                       name: (NSString*)name
+                      error: (NSError**)error;
 
 @end
 

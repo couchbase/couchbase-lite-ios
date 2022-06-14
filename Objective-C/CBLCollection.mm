@@ -26,6 +26,7 @@
 #import "CBLScope.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLStatus.h"
+#import "CBLScope+Internal.h"
 
 using namespace fleece;
 
@@ -50,13 +51,10 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         _db = db;
         _name = collectionName;
         
-        C4CollectionSpec spec = { .scope = kFLSliceNull };
+        scopeName = scopeName.length > 0 ? scopeName : kCBLDefaultScopeName;
         CBLStringBytes cName(collectionName);
-        spec.name = cName;
-        if (scopeName.length > 0) {
-            CBLStringBytes sName(scopeName);
-            spec.scope = sName;
-        }
+        CBLStringBytes sName(scopeName);
+        C4CollectionSpec spec = { .name = cName, .scope = sName };
         
         __block C4Collection* c;
         __block C4Error err = {};
@@ -75,6 +73,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
             convertError(err, error);
             return nil;
         }
+        
+        _scope = [[CBLScope alloc] initWithDB: db name: scopeName error: error];
         
         _c4col = c;
     }

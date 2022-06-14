@@ -19,25 +19,31 @@
 
 #import "CBLScope+Internal.h"
 #import "CBLCollection+Internal.h"
+#import "CBLDatabase.h"
 
 NSString* const kCBLDefaultScopeName = @"_default";
 
-@implementation CBLScope
+@implementation CBLScope {
+    __weak CBLDatabase* _db;
+}
 
 @synthesize name=_name;
 
-- (instancetype) initWithName: (NSString *)name error: (NSError**)error {
+- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name error: (NSError**)error {
     CBLAssertNotNil(name);
     self = [super init];
     if (self) {
         _name = name;
+        _db = db;
     }
     return self;
 }
 
 - (CBLCollection *) collectionWithName: (NSString *)collectionName error: (NSError**)error {
-    // TODO: add implementation
-    return nil;
+    return [[CBLCollection alloc] initWithDB: _db
+                              collectionName: collectionName
+                                   scopeName: _name
+                                       error: error];
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {

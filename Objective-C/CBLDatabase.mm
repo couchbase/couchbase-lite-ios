@@ -709,8 +709,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLScope*) defaultScope: (NSError**)error {
     // TODO: add implementation
-//    return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName error: nil];
-    return nil;
+    return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName error: nil];
 }
 
 - (nullable NSArray*) scopes: (NSError**)error {
@@ -743,7 +742,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                       error: (NSError**)error {
     
     // TODO: add implementation
-    return nil;
+    return  [[CBLCollection alloc] initWithDB: self
+                               collectionName: name
+                                    scopeName: scope
+                                        error: nil];
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -752,7 +754,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     // TODO: add implementation
     
-    return nil;
+    return  [[CBLCollection alloc] initWithDB: self
+                               collectionName: name
+                                    scopeName: scope
+                                        error: nil];
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name
