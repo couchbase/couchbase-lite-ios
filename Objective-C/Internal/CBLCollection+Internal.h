@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype) initWithDB: (CBLDatabase*)db
              collectionName: (NSString*)collectionName
-                  scopeName: (NSString*)scopeName
+                  scopeName: (nullable NSString*)scopeName
                       error: (NSError**)error;
 @end
 
