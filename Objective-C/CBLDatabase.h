@@ -20,16 +20,19 @@
 #import <Foundation/Foundation.h>
 #import "CBLLogger.h"
 #import "CBLQueryFactory.h"
-@class CBLDatabaseConfiguration;
-@class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
-@class CBLDatabaseChange, CBLDocumentChange;
-@class CBLIndex;
-@class CBLLog;
 @class CBLBlob;
-@class CBLQuery;
-@class CBLIndexConfiguration;
-@class CBLScope;
 @class CBLCollection;
+@class CBLDatabaseChange;
+@class CBLDatabaseConfiguration;
+@class CBLDocument;
+@class CBLDocumentFragment;
+@class CBLDocumentChange;
+@class CBLIndex;
+@class CBLIndexConfiguration;
+@class CBLLog;
+@class CBLMutableDocument;
+@class CBLQuery;
+@class CBLScope;
 @protocol CBLConflictResolver;
 @protocol CBLListenerToken;
 

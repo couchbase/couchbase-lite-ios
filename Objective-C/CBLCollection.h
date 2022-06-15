@@ -17,10 +17,10 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "CBLDatabase.h"
 #import "CBLCollectionChangeObservable.h"
+#import "CBLDatabase.h"
 #import "CBLIndexable.h"
+
 @class CBLDocument;
 @class CBLDocumentChange;
 @class CBLMutableDocument;

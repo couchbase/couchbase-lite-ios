@@ -24,12 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
 
-/**
- This constructor will return the collection for the specified details
- */
+/** The database associated with the collection. */
+@property (nonatomic, readonly) CBLDatabase* db;
+
+/** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
-             collectionName: (NSString*)collectionName
-                  scopeName: (nullable NSString*)scopeName
+               c4collection: (C4Collection*)c4collection
                       error: (NSError**)error;
 @end
 

@@ -17,17 +17,15 @@
 //  limitations under the License.
 //
 
-#import "CBLScope+Internal.h"
 #import "CBLCollection+Internal.h"
 #import "CBLDatabase.h"
+#import "CBLScope+Internal.h"
 
 NSString* const kCBLDefaultScopeName = @"_default";
 
-@implementation CBLScope {
-    __weak CBLDatabase* _db;
-}
+@implementation CBLScope
 
-@synthesize name=_name;
+@synthesize name=_name, db=_db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name error: (NSError**)error {
     CBLAssertNotNil(name);
@@ -40,10 +38,7 @@ NSString* const kCBLDefaultScopeName = @"_default";
 }
 
 - (CBLCollection *) collectionWithName: (NSString *)collectionName error: (NSError**)error {
-    return [[CBLCollection alloc] initWithDB: _db
-                              collectionName: collectionName
-                                   scopeName: _name
-                                       error: error];
+    return [_db collectionWithName: collectionName scope: _name error: error];
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {

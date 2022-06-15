@@ -17,72 +17,47 @@
 //  limitations under the License.
 //
 
-#import "CBLCollection.h"
-#import "CBLIndexable.h"
 #import "CBLChangeListenerToken.h"
+#import "CBLCollection+Internal.h"
 #import "CBLCollectionChangeObservable.h"
+#import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLStringBytes.h"
-#import "CBLScope.h"
+#import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
-#import "CBLStatus.h"
+#import "CBLScope.h"
 #import "CBLScope+Internal.h"
+#import "CBLStatus.h"
+#import "CBLStringBytes.h"
 
 using namespace fleece;
 
 NSString* const kCBLDefaultCollectionName = @"_default";
 
 @implementation CBLCollection {
-    __weak CBLDatabase* _db;
     C4Collection* _c4col;
 }
 
-@synthesize count=_count, name=_name, scope=_scope;
+@synthesize count=_count, name=_name, scope=_scope, db=_db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
-             collectionName: (NSString*)collectionName
-                  scopeName: (NSString*)scopeName
+               c4collection: (C4Collection*)c4collection
                       error: (NSError**)error {
     CBLAssertNotNil(db);
-    CBLAssertNotNil(collectionName);
-    
+    CBLAssertNotNil(c4collection);
     self = [super init];
     if (self) {
+        C4CollectionSpec spec = c4coll_getSpec(c4collection);
+        
         _db = db;
-        _name = collectionName;
-        
-        scopeName = scopeName.length > 0 ? scopeName : kCBLDefaultScopeName;
-        CBLStringBytes cName(collectionName);
-        CBLStringBytes sName(scopeName);
-        C4CollectionSpec spec = { .name = cName, .scope = sName };
-        
-        __block C4Collection* c;
-        __block C4Error err = {};
-        [db safeBlock:^{
-            c = c4db_getCollection(db.c4db, spec);
-            if (!c) {
-                // collection doesn't exists, create one
-                c = c4db_createCollection(db.c4db, spec, &err);
-            }
-        }];
-        
-        if (err.code != 0) {
-            // TODO: Add to CBLErrorMessage : CBL-3296
-            CBLWarn(Database, @"%@ Failed to create new collection (%d/%d)",
-                    self, err.code, err.domain);
-            convertError(err, error);
-            return nil;
-        }
-        
-        _scope = [[CBLScope alloc] initWithDB: db name: scopeName error: error];
-        
-        _c4col = c;
+        _c4col = c4collection;
+        _name = slice2string(spec.name);
+        _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope) error: error];
     }
+    
     return self;
 }
 
 - (void) dealloc {
-    _db = nil;
     _c4col = nil;
 }
 
@@ -102,6 +77,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     __block BOOL success = NO;
     __block C4Error c4err;
     [db safeBlock: ^{
+        [self collectionIsValid];
+        
         CBLStringBytes iName(name);
         CBLStringBytes c4IndexSpec(config.getIndexSpecs);
         C4IndexOptions options = config.indexOptions;
@@ -121,6 +98,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     __block BOOL success = NO;
     __block C4Error c4err;
     [db safeBlock: ^{
+        [self collectionIsValid];
+        
         CBLStringBytes iName(name);
         success = c4coll_deleteIndex(_c4col, iName, &c4err);
     }];
