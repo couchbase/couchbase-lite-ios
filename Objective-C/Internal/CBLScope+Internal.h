@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLScope ()
 
+@property (nonatomic, readonly) CBLDatabase* db;
+
 - (instancetype) initWithDB: (CBLDatabase*)db
                        name: (NSString*)name
                       error: (NSError**)error;

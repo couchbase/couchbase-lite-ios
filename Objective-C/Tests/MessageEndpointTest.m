@@ -536,9 +536,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 
 - (void) testCollection {
     NSError* error = nil;
-    CBLCollection* collection = [self.db collectionWithName: @"collection1"
-                                                      scope: @"scope1"
-                                                      error: &error];
+    CBLCollection* collection = [self.db createCollectionWithName: @"collection1"
+                                                            scope: @"scope1"
+                                                            error: &error];
     CBLMessageEndpointListenerConfiguration* config;
     config = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[collection]
                                                                      protocolType: kCBLProtocolTypeByteStream];

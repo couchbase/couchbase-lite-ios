@@ -509,7 +509,7 @@
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
     
     NSError* error = nil;
-    CBLCollection* c1 = [self.db collectionWithName: @"name1" scope: @"scope1" error: &error];
+    CBLCollection* c1 = [self.db createCollectionWithName: @"name1" scope: @"scope1" error: &error];
     
     AssertNil([replicator pendingDocumentIDsForCollection: c1 error: &error]);
     AssertFalse([replicator isDocumentPending: @"doc2" collection: c1 error: &error]);

@@ -27,16 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 /** internal c4collection instance */
 @property (nonatomic, readonly) C4Collection* c4col;
 
-/** weak db reference */
-@property (nonatomic, readonly, weak) CBLDatabase* db;
+/** The database associated with the collection. */
+@property (nonatomic, readonly) CBLDatabase* db;
 
-/**
- This constructor will return the collection for the specified details
- */
+/** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
-             collectionName: (NSString*)collectionName
-                  scopeName: (nullable NSString*)scopeName
+               c4collection: (C4Collection*)c4collection
                       error: (NSError**)error;
+
 @end
 
 NS_ASSUME_NONNULL_END
