@@ -27,6 +27,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
+#import "CBLCollection+Internal.h"
 
 using namespace fleece;
 
@@ -112,6 +113,33 @@ using namespace fleece;
         C4Error err;
         
         auto doc = c4db_getDoc(database.c4db, docId, true, contentLevel, &err);
+        if (!doc) {
+            convertError(err, outError);
+            return nil;
+        }
+        
+        if (!includeDeleted && (doc->flags & kDocDeleted) != 0) {
+            c4doc_release(doc);
+            return nil;
+        }
+        
+        [self setC4Doc: [CBLC4Document document: doc]];
+    }
+    return self;
+}
+
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                     includeDeleted: (BOOL)includeDeleted
+                       contentLevel: (C4DocContentLevel)contentLevel
+                              error: (NSError**)outError {
+    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
+    if (self) {
+        _revID = nil;
+        CBLStringBytes docId(documentID);
+        C4Error err;
+        
+        auto doc = c4coll_getDoc(collection.c4col, docId, true, contentLevel, &err);
         if (!doc) {
             convertError(err, outError);
             return nil;

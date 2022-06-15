@@ -24,6 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
 
+/** internal c4collection instance */
+@property (nonatomic, readonly) C4Collection* c4col;
+
+/** weak db reference */
+@property (nonatomic, readonly, weak) CBLDatabase* db;
+
 /**
  This constructor will return the collection for the specified details
  */

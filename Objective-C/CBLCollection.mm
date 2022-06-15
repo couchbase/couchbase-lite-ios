@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLCollection.h"
+#import "CBLCollection+Internal.h"
 #import "CBLIndexable.h"
 #import "CBLChangeListenerToken.h"
 #import "CBLCollectionChangeObservable.h"
@@ -27,17 +27,15 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLStatus.h"
 #import "CBLScope+Internal.h"
+#import "CBLDocument+Internal.h"
 
 using namespace fleece;
 
 NSString* const kCBLDefaultCollectionName = @"_default";
 
-@implementation CBLCollection {
-    __weak CBLDatabase* _db;
-    C4Collection* _c4col;
-}
+@implementation CBLCollection
 
-@synthesize count=_count, name=_name, scope=_scope;
+@synthesize count=_count, name=_name, scope=_scope, c4col=_c4col, db=_db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
              collectionName: (NSString*)collectionName
@@ -171,6 +169,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return token;
 }
 
+#pragma mark - Document management
+
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                   error: (NSError**)error {
@@ -185,8 +185,21 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
-    // TODO: add implementation
-    return nil;
+    CBLDatabase* db = _db;
+    
+    __block CBLDocument* doc = nil;
+    __block NSError* outError = nil;
+    [db safeBlock: ^{
+        doc = [[CBLDocument alloc] initWithCollection: self
+                                           documentID: docID
+                                       includeDeleted: NO
+                                         contentLevel: kDocGetCurrentRev
+                                                error: &outError];
+    }];
+    if (error)
+        *error = outError;
+    
+    return doc;
 }
 
 - (NSDate*) getDocumentExpirationWithID: (NSString*)docID error: (NSError**)error {
@@ -232,6 +245,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     // TODO: add implementation
     return NO;
 }
+
+#pragma mark - Change Listener
 
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener {
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener

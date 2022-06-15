@@ -92,6 +92,13 @@ NS_ASSUME_NONNULL_BEGIN
                               contentLevel: (C4DocContentLevel)contentLevel
                                      error: (NSError**)outError;
 
+/** Collection initializer */
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                     includeDeleted: (BOOL)includeDeleted
+                       contentLevel: (C4DocContentLevel)contentLevel
+                              error: (NSError**)outError;
+
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
                             andDoc: (CBLDocument*)doc2;
