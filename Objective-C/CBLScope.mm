@@ -18,32 +18,45 @@
 //
 
 #import "CBLCollection+Internal.h"
-#import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLScope+Internal.h"
+#import "CBLStringBytes.h"
 
 NSString* const kCBLDefaultScopeName = @"_default";
 
 @implementation CBLScope
 
-@synthesize name=_name, db=_db;
+@synthesize name=_scopeName, db=_db;
 
-- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name error: (NSError**)error {
+- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name {
     CBLAssertNotNil(name);
     self = [super init];
     if (self) {
-        _name = name;
+        _scopeName = name;
         _db = db;
+        CBLLogVerbose(Database, @"%@ Creating scope %@ db=%@", self, name, db);
     }
     return self;
 }
 
-- (CBLCollection *) collectionWithName: (NSString *)collectionName error: (NSError**)error {
-    return [_db collectionWithName: collectionName scope: _name error: error];
+- (nullable CBLCollection *) collectionWithName: (NSString *)name error: (NSError**)error {
+    CBLStringBytes sName(_scopeName);
+    if (!c4db_hasScope(_db.c4db, sName)) {
+        CBLWarn(Database, @"%@ Scope doesn't exist! %@", self, _scopeName);
+        return nil;
+    }
+    
+    return [_db collectionWithName: name scope: _scopeName error: error];
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {
-    // TODO: add implementation
-    return [NSArray array];
+    CBLStringBytes sName(_scopeName);
+    if (!c4db_hasScope(_db.c4db, sName)) {
+        CBLWarn(Database, @"%@ Scope doesn't exist! %@", self, _scopeName);
+        return nil;
+    }
+    
+    return [_db collections: _scopeName error: error];
 }
 
 @end

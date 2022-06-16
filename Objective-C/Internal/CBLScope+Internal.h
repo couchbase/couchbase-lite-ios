@@ -29,8 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CBLDatabase* db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
-                       name: (NSString*)name
-                      error: (NSError**)error;
+                       name: (NSString*)name;
 
 @end
 

@@ -20,6 +20,12 @@
 #pragma once
 #import "CBLCollection.h"
 
+// TODO: Add to CBLErrorMessage : CBL-3296
+#define CBLCollectionErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
+                                    code: CBLErrorNotOpen \
+                                    userInfo: @{ NSLocalizedDescriptionKey: \
+                                        @"Collection has been deleted, or its database closed." }]
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
@@ -29,8 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
-               c4collection: (C4Collection*)c4collection
-                      error: (NSError**)error;
+               c4collection: (C4Collection*)c4collection;
 @end
 
 NS_ASSUME_NONNULL_END
