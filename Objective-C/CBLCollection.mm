@@ -53,8 +53,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         _name = slice2string(spec.name);
         _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope)];
         
-        CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ c4col=%@ scope=%@",
-                      self, _name, db, _c4col, _scope);
+        CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ scope=%@",
+                      self, _name, db, _scope);
     }
     
     return self;

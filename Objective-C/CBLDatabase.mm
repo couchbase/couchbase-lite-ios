@@ -793,7 +793,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         C4Error c4err = {};
         c4collection = c4db_createCollection(_c4db, spec, &c4err);
-        if (!c4collection) {
+        if (!c4collection || c4err.code != 0) {
             CBLWarn(Database, @"%@ Failed to create collection: %@.%@ (%d/%d)",
                     self, scopeName, name, c4err.domain, c4err.code);
             convertError(c4err, error);
@@ -823,12 +823,15 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         C4Error c4err = {};
         c = c4db_getCollection(_c4db, spec, &c4err);
-        if (!c) {
+        if (c4err.code != 0) {
             CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
                     self, scopeName, name, c4err.domain, c4err.code);
             convertError(c4err, error);
             return nil;
         }
+        
+        if (!c)
+            return nil;
     }
     
     return [[CBLCollection alloc] initWithDB: self c4collection: c];

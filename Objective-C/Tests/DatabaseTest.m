@@ -2607,7 +2607,7 @@
     
     // scope APIs
     CBLScope* s = c.scope;
-    AssertEqual([s collections: &error].count, 0);
+    AssertEqual([s collections: &error].count, 1); // 'collection2'
     AssertEqualObjects([s collectionWithName: @"collection2" error: &error].name, @"collection2");
     
     c = [self.db defaultCollection: &error];
