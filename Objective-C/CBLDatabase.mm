@@ -708,8 +708,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - Scope
 
 - (nullable CBLScope*) defaultScope: (NSError**)error {
-    // TODO: add implementation
-    return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName error: nil];
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName];
+    }
 }
 
 - (nullable NSArray*) scopes: (NSError**)error {
@@ -725,51 +729,82 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - Collections
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
-    return [self collectionWithName: kCBLDefaultCollectionName
-                              scope: kCBLDefaultScopeName
-                              error: error];
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        return [self collectionWithName: kCBLDefaultCollectionName
+                                  scope: kCBLDefaultScopeName
+                                  error: error];
+    }
+    
 }
 
 - (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
     NSString * scopeName = scope ?: kCBLDefaultScopeName;
     CBLStringBytes sName(scopeName);
-    FLMutableArray list = c4db_collectionNames(_c4db, sName);
-    
-    // TODO: check direct convertion of list to NSArray or each item to NSString is faster?
-    NSUInteger count = FLArray_Count(list);
-    NSMutableArray* collections = [NSMutableArray arrayWithCapacity: count];
-    for (uint i = 0; i < count; i++) {
-        NSString* name = FLValue_GetNSObject(FLArray_Get(list, i), nullptr);
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
         
-        CBLCollection* c = [self collectionWithName: name scope: scopeName error: error];
-        [collections addObject: c];
+        C4Error c4err = {};
+        FLMutableArray list = c4db_collectionNames(_c4db, sName, &c4err);
+        if (c4err.code != 0) {
+            CBLWarn(Database, @"%@ Failed to get collection names: %@ (%d/%d)",
+                    self, scopeName, c4err.domain, c4err.code);
+            convertError(c4err, error);
+            return nil;
+        }
+        
+        // TODO: check direct convertion of list to NSArray or each item to NSString is faster?
+        NSUInteger count = FLArray_Count(list);
+        NSMutableArray* collections = [NSMutableArray arrayWithCapacity: count];
+        for (uint i = 0; i < count; i++) {
+            NSString* name = FLValue_GetNSObject(FLArray_Get(list, i), nullptr);
+            
+            NSError* err = nil;
+            CBLCollection* c = [self collectionWithName: name scope: scopeName error: &err];
+            if (!c) {
+                CBLWarn(Database, @"%@ Failed to get collection: %@.%@ error: %@",
+                        self, scopeName, name, err);
+                if (error)
+                    *error = err;
+                return nil;
+            }
+            
+            [collections addObject: c];
+        }
+        FLArray_Release(list);
+        
+        return [NSArray arrayWithArray: collections];
     }
-    FLArray_Release(list);
-    
-    return [NSArray arrayWithArray: collections];
 }
 
-- (nullable CBLCollection*) createCollectionWithName: (NSString*)collectionName
+- (nullable CBLCollection*) createCollectionWithName: (NSString*)name
                                                scope: (nullable NSString*)scopeName
                                                error: (NSError**)error {
-    scopeName = scopeName.length > 0 ? scopeName : kCBLDefaultScopeName;
-    CBLStringBytes cName(collectionName);
+    scopeName = scopeName ?: kCBLDefaultScopeName;
+    CBLStringBytes cName(name);
     CBLStringBytes sName(scopeName);
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     
     C4Collection* c4collection;
     CBL_LOCK(self) {
-        [self mustBeOpen];
+        if (![self mustBeOpen: error])
+            return nil;
         
         C4Error c4err = {};
         c4collection = c4db_createCollection(_c4db, spec, &c4err);
         if (!c4collection) {
-            // TODO: handle error
+            CBLWarn(Database, @"%@ Failed to create collection: %@.%@ (%d/%d)",
+                    self, scopeName, name, c4err.domain, c4err.code);
+            convertError(c4err, error);
             return nil;
         }
+        CBLLogVerbose(Database, @"%@ Created collection %@.%@", self, scopeName, name);
     }
     
-    return [[CBLCollection alloc] initWithDB: self c4collection: c4collection error: error];
+    return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -785,16 +820,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     __block C4Collection* c;
     CBL_LOCK(self) {
-        [self mustBeOpen];
+        if (![self mustBeOpen: error])
+            return nil;
         
-        c = c4db_getCollection(_c4db, spec);
+        C4Error c4err = {};
+        c = c4db_getCollection(_c4db, spec, &c4err);
         if (!c) {
-            // TODO: handle error
+            CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
+                    self, scopeName, name, c4err.domain, c4err.code);
+            convertError(c4err, error);
             return nil;
         }
     }
     
-    return [[CBLCollection alloc] initWithDB: self c4collection: c error: error];
+    return [[CBLCollection alloc] initWithDB: self c4collection: c];
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name
@@ -805,6 +844,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLStringBytes sName(scopeName);
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return NO;
+        
+        if (!c4db_hasCollection(_c4db, spec)) {
+            CBLWarn(Database, @"%@ Collection doesn't exist! %@.%@", self, scopeName, name);
+            if (error)
+                *error = CBLCollectionErrorNotOpen;
+            return NO;
+        }
+        
+        CBLLogVerbose(Database, @"%@ Deleting collection %@.%@", self, scopeName, name);
         C4Error c4err = {};
         return c4db_deleteCollection(_c4db, spec, &c4err) || convertError(c4err, error);
     }
