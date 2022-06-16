@@ -41,8 +41,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 @synthesize count=_count, name=_name, scope=_scope, c4col=_c4col, db=_db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
-               c4collection: (C4Collection*)c4collection
-                      error: (NSError**)error {
+               c4collection: (C4Collection*)c4collection {
     CBLAssertNotNil(db);
     CBLAssertNotNil(c4collection);
     self = [super init];
@@ -50,16 +49,19 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         C4CollectionSpec spec = c4coll_getSpec(c4collection);
         
         _db = db;
-        _c4col = c4collection;
+        _c4col = c4coll_retain(c4collection);
         _name = slice2string(spec.name);
-        _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope) error: error];
+        _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope)];
+        
+        CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ c4col=%@ scope=%@",
+                      self, _name, db, _c4col, _scope);
     }
     
     return self;
 }
 
 - (void) dealloc {
-    _c4col = nil;
+    c4coll_release(_c4col);
 }
 
 - (NSString*) description {
@@ -75,47 +77,52 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(config);
     
     CBLDatabase* db = _db;
-    __block BOOL success = NO;
-    __block C4Error c4err;
-    [db safeBlock: ^{
-        [self collectionIsValid];
+    CBL_LOCK(db) {
+        if (![self collectionIsValid: error])
+            return NO;
         
         CBLStringBytes iName(name);
         CBLStringBytes c4IndexSpec(config.getIndexSpecs);
         C4IndexOptions options = config.indexOptions;
         
-        success = c4coll_createIndex(_c4col, iName, c4IndexSpec, config.queryLanguage,
-                                          config.indexType, &options, &c4err);
-    }];
-    
-    return success || convertError(c4err, error);
+        C4Error c4err = {};
+        return c4coll_createIndex(_c4col,
+                                  iName,
+                                  c4IndexSpec,
+                                  config.queryLanguage,
+                                  config.indexType,
+                                  &options,
+                                  &c4err) || convertError(c4err, error);
+    }
 }
 
 - (BOOL) deleteIndexWithName: (NSString*)name
                        error: (NSError**)error {
     CBLAssertNotNil(name);
-    
     CBLDatabase* db = _db;
-    __block BOOL success = NO;
-    __block C4Error c4err;
-    [db safeBlock: ^{
-        [self collectionIsValid];
+    CBL_LOCK(db) {
+        if (![self collectionIsValid: error])
+            return NO;
         
+        C4Error c4err = {};
         CBLStringBytes iName(name);
-        success = c4coll_deleteIndex(_c4col, iName, &c4err);
-    }];
-    
-    return success || convertError(c4err, error);
+        return c4coll_deleteIndex(_c4col, iName, &c4err) || convertError(c4err, error);
+    }
 }
 
 - (nullable NSArray*) indexes: (NSError**)error {
     CBLDatabase* db = _db;
-    __block NSMutableArray* ins = nil;
-    [db safeBlock: ^{
-        [self collectionIsValid];
+    CBL_LOCK(db) {
+        if (![self collectionIsValid: error])
+            return nil;
         
         C4Error err = {};
         C4SliceResult res = c4coll_getIndexesInfo(_c4col, &err);
+        if (err.code != 0){
+            convertError(err, error);
+            return nil;
+        }
+        
         FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
         FLSliceResult_Release(res);
         
@@ -123,13 +130,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         FLDoc_Release(doc);
         
         // extract only names
-        ins = [NSMutableArray arrayWithCapacity: indexes.count];
+        NSMutableArray* ins = [NSMutableArray arrayWithCapacity: indexes.count];
         for (NSDictionary* dict in indexes) {
             [ins addObject: dict[@"name"]];
         }
-    }];
-    
-    return [NSArray arrayWithArray: ins];
+        return [NSArray arrayWithArray: ins];
+    }
 }
 
 #pragma mark - Document Change Listeners
@@ -245,12 +251,11 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 #pragma mark - Internal
 
-- (BOOL) collectionIsValid {
+- (BOOL) collectionIsValid: (NSError**)error {
     BOOL valid = c4coll_isValid(_c4col);
     if (!valid) {
-        // TODO: Add to CBLErrorMessage : CBL-3296
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"Collection has been deleted, or its database closed."];
+        if (error)
+            *error = CBLCollectionErrorNotOpen;
     }
     
     return valid;
