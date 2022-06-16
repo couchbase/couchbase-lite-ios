@@ -96,7 +96,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
                      includeDeleted: (BOOL)includeDeleted
-                       contentLevel: (C4DocContentLevel)contentLevel
                               error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;

@@ -2631,6 +2631,176 @@
     
 }
 
+#pragma mark - GET Document
+
+- (void) testCollectionGetNonExistingDocWithID {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
+    AssertNil(error);
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
+        return [c documentWithID:@"non-exist" error: err];
+    }];
+}
+
+- (void) testCollectionGetExistingDocWithID {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
+    AssertNil(error);
+    
+    // Store doc to default collection/db:
+    CBLDocument* d1 = [self generateDocumentWithID: @"doc1"];
+
+    // get and validate!
+    CBLDocument* d2 = [c documentWithID: @"doc1" error: &error];
+    AssertNil(error);
+    AssertNotNil(d2);
+    AssertEqualObjects(d2.id, @"doc1");
+    AssertEqualObjects([d2 toDictionary], [d1 toDictionary]);
+}
+
+- (void) testCollectionGetDocFromClosedDB {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    AssertNil(error);
+    [self generateDocumentWithID: @"doc1"];
+
+    // Close db:
+    [self closeDatabase: self.db];
+
+    // Get doc:
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c documentWithID: @"doc1" error: err];
+    }];
+}
+
+- (void) testCollectionGetDocFromDeletedDB {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    AssertNil(error);
+    [self generateDocumentWithID: @"doc1"];
+
+    // Delete db:
+    [self deleteDatabase: self.db];
+
+    // Get doc:
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c documentWithID: @"doc1" error: err];
+    }];
+}
+
+#pragma mark - Purge document
+
+- (void) testCollectionPurgePreSaveDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
+        return [c purgeDocument: doc1 error: err];
+    }];
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
+        return [c purgeDocumentWithID: doc2.id error: err];
+    }];
+}
+
+- (void) testCollectionPurgeDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    [self saveDocument: doc1];
+    [self saveDocument: doc2];
+
+    // Purge Doc:
+    Assert([c purgeDocument: doc1 error: &error]);
+    AssertNil(error);
+    AssertEqual(self.db.count, 1u);
+    
+    Assert([c purgeDocumentWithID: doc2.id error: &error]);
+    AssertNil(error);
+    AssertEqual(self.db.count, 0u);
+}
+
+- (void) testCollectionPurgeSameDocTwice {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    [self saveDocument: doc1];
+    [self saveDocument: doc2];
+
+    // Purge Doc1 twice
+    Assert([c purgeDocument: doc1 error: &error]);
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [c purgeDocument: doc1 error: err];
+    }];
+    
+    Assert([c purgeDocumentWithID: doc2.id error: &error]);
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [c purgeDocumentWithID: doc2.id error: err];
+    }];
+}
+
+- (void) testCollectionPurgeDocOnClosedDB {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    [self saveDocument: doc1];
+    [self saveDocument: doc2];
+
+    // close db
+    [self closeDatabase: self.db];
+
+    // purge doc
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c purgeDocument: doc1 error: err];
+    }];
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c purgeDocumentWithID: doc2.id error: err];
+    }];
+}
+
+- (void) testCollectionPurgeDocOnDeletedDB {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    [self saveDocument: doc1];
+    [self saveDocument: doc2];
+
+    // delete db
+    [self deleteDatabase: self.db];
+
+    // purge doc
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c purgeDocument: doc1 error: err];
+    }];
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
+        return [c purgeDocumentWithID: doc2.id error: err];
+    }];
+}
+
 #pragma clang diagnostic pop
 
 @end

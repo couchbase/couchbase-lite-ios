@@ -36,6 +36,8 @@
 #import "CBLURLEndpointListener.h"
 #endif
 
+#define msec 1000.0
+
 struct c4BlobStore;
 
 @class CBLBlobStream;
@@ -75,6 +77,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url;
+
+// Gets called from CBLCollection as well. Must be called inside a lock
+- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
 
 @end
 

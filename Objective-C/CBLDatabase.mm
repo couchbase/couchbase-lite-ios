@@ -54,8 +54,6 @@ using namespace cbl;
 
 #define kDBExtension @"cblite2"
 
-#define msec 1000.0
-
 static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
 static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
 static NSString* kBlobDataProperty = @kC4BlobDataProperty;
