@@ -40,22 +40,10 @@ NSString* const kCBLDefaultScopeName = @"_default";
 }
 
 - (nullable CBLCollection *) collectionWithName: (NSString *)name error: (NSError**)error {
-    CBLStringBytes sName(_scopeName);
-    if (!c4db_hasScope(_db.c4db, sName)) {
-        CBLWarn(Database, @"%@ Scope doesn't exist! %@", self, _scopeName);
-        return nil;
-    }
-    
     return [_db collectionWithName: name scope: _scopeName error: error];
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {
-    CBLStringBytes sName(_scopeName);
-    if (!c4db_hasScope(_db.c4db, sName)) {
-        CBLWarn(Database, @"%@ Scope doesn't exist! %@", self, _scopeName);
-        return nil;
-    }
-    
     return [_db collections: _scopeName error: error];
 }
 
