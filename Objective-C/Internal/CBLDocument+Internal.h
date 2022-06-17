@@ -93,10 +93,10 @@ NS_ASSUME_NONNULL_BEGIN
                                      error: (NSError**)outError;
 
 /** Collection initializer */
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                         documentID: (NSString*)documentID
-                     includeDeleted: (BOOL)includeDeleted
-                              error: (NSError**)outError;
+- (nullable instancetype) initWithCollection: (CBLCollection*)collection
+                                  documentID: (NSString*)documentID
+                              includeDeleted: (BOOL)includeDeleted
+                                       error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
