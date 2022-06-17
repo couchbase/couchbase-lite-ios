@@ -40,6 +40,21 @@
     AssertEqualObjects([doc toDictionary], data);
 }
 
+- (void) verifyDocumentInCollectionWithID: (NSString*)documentID data: (NSDictionary*)data {
+    NSError* error = nil;
+    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
+                                             scope: nil
+                                             error: &error];
+    AssertNil(error);
+    
+    CBLDocument* doc = [c documentWithID: documentID error: &error];
+    AssertNil(error);
+    
+    AssertNotNil(doc);
+    AssertEqualObjects(doc.id, documentID);
+    AssertEqualObjects([doc toDictionary], data);
+}
+
 // Helper method to save n number of docs
 - (NSArray*) createDocs: (int)n {
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: n];
@@ -2808,6 +2823,221 @@
     [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
         return [c purgeDocumentWithID: doc2.id error: err];
     }];
+}
+
+#pragma mark - Save Doc
+
+- (void) testCollectionSaveDocWithID {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    Assert([c saveDocument: doc error: &error]);
+    [self verifyDocumentInCollectionWithID: doc.id data: [doc toDictionary]];
+}
+
+- (void) testCollectionSaveAndUpdateMutableDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"Daniel" forKey: @"firstName"];
+    Assert([c saveDocument: doc error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    // Update:
+    [doc setString: @"Tiger" forKey: @"lastName"];
+    Assert([c saveDocument: doc error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    // Update:
+    [doc setInteger: 20 forKey: @"age"];
+    Assert([c saveDocument: doc error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    NSDictionary* expectedResult = @{@"firstName": @"Daniel",
+                                     @"lastName": @"Tiger",
+                                     @"age": @(20)};
+    AssertEqualObjects([doc toDictionary], expectedResult);
+    AssertEqual(doc.sequence, 3u);
+
+    CBLDocument* savedDoc = [c documentWithID: doc.id error: &error];
+    AssertEqualObjects([savedDoc toDictionary], expectedResult);
+    AssertEqual(savedDoc.sequence, 3u);
+}
+
+- (void) testCollectionSaveDocWithConflict {
+    [self testCollectionSaveDocWithConflictUsingConcurrencyControl: -1];
+    [self testCollectionSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlLastWriteWins];
+    [self testCollectionSaveDocWithConflictUsingConcurrencyControl: kCBLConcurrencyControlFailOnConflict];
+}
+
+- (void) testCollectionSaveDocWithConflictUsingConcurrencyControl: (int)concurrencyControl {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"Daniel" forKey: @"firstName"];
+    [doc setString: @"Tiger" forKey: @"lastName"];
+    Assert([c saveDocument: doc error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    // Get two doc1 document objects (doc1a and doc1b):
+    CBLMutableDocument* doc1a = [[self.db documentWithID: @"doc1"] toMutable];
+    CBLMutableDocument* doc1b = [[self.db documentWithID: @"doc1"] toMutable];
+
+    // Modify doc1a:
+    [doc1a setString: @"Scott" forKey: @"firstName"];
+    Assert([c saveDocument: doc1a error: &error], @"Error: %@", error);
+    AssertNil(error);
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    Assert([c saveDocument: doc1a error: &error], @"Error: %@", error);
+    AssertNil(error);
+    AssertEqualObjects([doc1a toDictionary], (@{@"firstName": @"Scott",
+                                                @"lastName": @"Tiger",
+                                                @"nickName": @"Scotty"}));
+    AssertEqual(doc1a.sequence, 3u);
+
+    // Modify doc1b, result to conflict when save:
+    [doc1b setString: @"Lion" forKey: @"lastName"];
+    if ([c saveDocument: doc1b concurrencyControl: concurrencyControl error: &error]) {
+        AssertNil(error);
+        
+        CBLDocument* savedDoc = [c documentWithID: doc.id error: &error];
+        AssertEqualObjects([savedDoc toDictionary], [doc1b toDictionary]);
+        AssertEqual(savedDoc.sequence, 4u);
+    }
+
+    // Cleanup:
+    [self cleanDB];
+}
+
+- (void) testCollectionSavePurgedDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"name"];
+    Assert([c saveDocument: doc error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    CBLMutableDocument* doc1b = [[c documentWithID: docID error: &error] toMutable];
+    AssertNil(error);
+
+    Assert([c purgeDocumentWithID: docID error: &error], @"Error: %@", error);
+    AssertNil(error);
+
+    // try saving the purged doc instance: Should return NotFound!!
+    [doc1b setString: @"Peter" forKey: @"firstName"];
+    __block NSError* err;
+
+    // Skip exception breakpoint thrown from c4doc_update
+    // https://issues.couchbase.com/browse/CBL-2167
+    [self ignoreException:^{
+        AssertFalse([c saveDocument: doc1b error: &err]);
+    }];
+    AssertEqual(err.code, CBLErrorNotFound);
+    AssertEqual(err.domain, CBLErrorDomain);
+
+    // try saving the doc with same name, which should be saved without any issue.
+    CBLMutableDocument* doc1c = [[CBLMutableDocument alloc] initWithID: docID];
+    Assert([c saveDocument: doc1c error: &error], @"Error: %@", error);
+    AssertNil(error);
+}
+
+#pragma mark - Save conflict handler
+
+- (void) testCollectionConflictHandler {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    NSString* docID = @"doc1";
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+    [doc setString: @"Tiger" forKey: @"firstName"];
+    [self saveDocument: doc];
+    AssertEqual([c documentWithID: docID error: &error].generation, 1u);
+    AssertNil(error);
+
+    CBLMutableDocument* doc1a = [[c documentWithID: docID error: &error] toMutable];
+    AssertNil(error);
+    CBLMutableDocument* doc1b = [[c documentWithID: docID error: &error] toMutable];
+    AssertNil(error);
+
+    [doc1a setString: @"Scotty" forKey: @"nickName"];
+    [c saveDocument: doc1a error: &error];
+    AssertEqual([c documentWithID: docID error: &error].generation, 2u);
+
+    [doc1b setString: @"Scott" forKey: @"nickName"];
+    Assert([c saveDocument: doc1b
+           conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     Assert(doc1b == document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                     AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                     AssertEqual(document.generation, 2u);
+                     AssertEqual(old.generation, 2u);
+                     return YES;
+                 } error: &error]);
+    
+    error = nil;
+    AssertEqualObjects([c documentWithID: docID error: &error].toDictionary, doc1b.toDictionary);
+    error = nil;
+    AssertEqual([c documentWithID: docID error: &error].generation, 3u);
+
+    doc1a = [[c documentWithID: docID error: &error] toMutable];
+    doc1b = [[c documentWithID: docID error: &error] toMutable];
+
+    [doc1a setString: @"Sccotty" forKey: @"nickName"];
+    [c saveDocument: doc1a error: &error];
+    AssertEqual([c documentWithID: docID error: &error].generation, 4u);
+
+    [doc1b setString: @"Scotty" forKey: @"nickName"];
+    Assert([c saveDocument: doc1b
+           conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                     Assert(doc1b == document);
+                     AssertEqualObjects(doc1b.toDictionary, document.toDictionary);
+                     AssertEqualObjects(doc1a.toDictionary, old.toDictionary);
+                     AssertEqual(document.generation, 4u);
+                     AssertEqual(old.generation, 4u);
+                     [document setString: @"Scott" forKey: @"nickName"];
+                     return YES;
+                 } error: &error]);
+    NSDictionary* expected = @{@"nickName": @"Scott", @"firstName": @"Tiger"};
+    AssertEqualObjects([c documentWithID: docID error: &error].toDictionary, expected);
+    AssertEqual([c documentWithID: docID error: &error].generation, 5u);
+}
+
+#pragma mark - Delete Document
+
+- (void) testCollectionDeletePreSaveDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setValue: @1 forKey: @"key"];
+
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [c deleteDocument: doc error: err];
+    }];
+
+    AssertEqual(c.count, 0u);
+}
+
+- (void) testCollectionDeleteDoc {
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    CBLDocument* doc = [self generateDocumentWithID: @"doc1"];
+
+    Assert([c deleteDocument: doc error: &error]);
+    AssertNil(error);
+    AssertEqual(c.count, 0u);
+    AssertNil([c documentWithID: doc.id error: &error]);
 }
 
 #pragma clang diagnostic pop
