@@ -113,6 +113,15 @@
     return success;
 }
 
+// check the given collection list with the expected collection name list
+- (void) checkCollections: (NSArray<CBLCollection*>*)collections
+       expCollectionNames: (NSArray<NSString*>*)names {
+    AssertEqual(collections.count, names.count, @"Collection count mismatch");
+    for (CBLCollection* c in collections) {
+        Assert([names containsObject: c.name], @"%@ is missing", c.name);
+    }
+}
+
 #pragma mark - DatabaseConfiguration
 
 - (void) testCreateConfiguration {
@@ -2481,9 +2490,7 @@
     
     // verify no duplicate is created.
     NSArray<CBLCollection*>* collections = [self.db collections: kCBLDefaultScopeName error: &error];
-    AssertEqual(collections.count, 2);
-    Assert([(@[@"collection1", @"_default"]) containsObject: collections[0].name]);
-    Assert([(@[@"collection1", @"_default"]) containsObject: collections[1].name]);
+    [self checkCollections: collections expCollectionNames: @[@"collection1", @"_default"]];
     
     // Create in Custom Scope
     c1 = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
@@ -2491,24 +2498,24 @@
     
     // verify no duplicate is created.
     collections = [self.db collections: @"scope1" error: &error];
-    AssertEqual(collections.count, 1);
-    AssertEqualObjects(collections[0].name, @"collection2");
+    [self checkCollections: collections expCollectionNames: @[@"collection2"]];
 }
 
 - (void) testEmptyCollection {
-    AssertNil([self.db collectionWithName: @"dummy" scope: nil error: nil]);
-    AssertNil([self.db collectionWithName: @"dummy" scope: kCBLDefaultScopeName error: nil]);
-    AssertNil([self.db collectionWithName: @"dummy" scope: @"scope1" error: nil]);
+    NSError* error = nil;
+    AssertNil([self.db collectionWithName: @"dummy" scope: nil error: &error]);
+    AssertNil(error);
     
-    // TODO: When error is handled, check error here
+    AssertNil([self.db collectionWithName: @"dummy" scope: kCBLDefaultScopeName error: &error]);
+    AssertNil(error);
+    
+    AssertNil([self.db collectionWithName: @"dummy" scope: @"scope1" error: &error]);
+    AssertNil(error);
 }
 
 #pragma mark - Collection Indexable
 
 - (void) testCollectionIndex {
-    // Precheck:
-    Assert(self.db.indexes);
-    AssertEqual(self.db.indexes.count, 0u);
     NSError* error = nil;
     CBLCollection* c = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
     
@@ -2560,7 +2567,6 @@
 // This is generic test to make sure, Collection APIs are working fine for QE.
 - (void) testCollection {
     [self createDocs: 10];
-    CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
     
     NSError* error = nil;
     CBLCollection* c = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
@@ -2585,9 +2591,12 @@
     AssertFalse([c saveDocument: mDoc error: &error]);
     AssertFalse([c saveDocument: mDoc conflictHandler: ^BOOL(CBLMutableDocument* md1, CBLDocument* d1) { return YES; } error: &error]);
     AssertFalse([c saveDocument: mDoc concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
+    
+    CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
     AssertFalse([c deleteDocument: doc1 error: &error]);
     AssertFalse([c deleteDocument: doc1 concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
     AssertFalse([c purgeDocument: doc1 error: &error]);
+    
     AssertFalse([c purgeDocumentWithID: @"docID" error: &error]);
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
     AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);

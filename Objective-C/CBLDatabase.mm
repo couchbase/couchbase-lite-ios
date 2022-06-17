@@ -793,7 +793,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         C4Error c4err = {};
         c4collection = c4db_createCollection(_c4db, spec, &c4err);
-        if (!c4collection || c4err.code != 0) {
+        if (!c4collection) {
             CBLWarn(Database, @"%@ Failed to create collection: %@.%@ (%d/%d)",
                     self, scopeName, name, c4err.domain, c4err.code);
             convertError(c4err, error);
@@ -808,9 +808,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
                                          scope: (nullable NSString*)scope
                                          error: (NSError**)error {
-    
-    // TODO: Its expensive to get c4collection everytime from LC
-    
     NSString* scopeName = scope ?: kCBLDefaultScopeName;
     CBLStringBytes cName(name);
     CBLStringBytes sName(scopeName);
@@ -847,13 +844,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBL_LOCK(self) {
         if (![self mustBeOpen: error])
             return NO;
-        
-        if (!c4db_hasCollection(_c4db, spec)) {
-            CBLWarn(Database, @"%@ Collection doesn't exist! %@.%@", self, scopeName, name);
-            if (error)
-                *error = CBLCollectionErrorNotOpen;
-            return NO;
-        }
         
         CBLLogVerbose(Database, @"%@ Deleting collection %@.%@", self, scopeName, name);
         C4Error c4err = {};
