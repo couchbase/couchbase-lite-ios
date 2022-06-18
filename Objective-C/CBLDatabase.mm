@@ -753,6 +753,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             CBLWarn(Database, @"%@ Failed to get collection names: %@ (%d/%d)",
                     self, scopeName, c4err.domain, c4err.code);
             convertError(c4err, error);
+            FLArray_Release(list);
             return nil;
         }
         
@@ -769,6 +770,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                         self, scopeName, name, err);
                 if (error)
                     *error = err;
+                FLArray_Release(list);
                 return nil;
             }
             
@@ -802,9 +804,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return nil;
         }
         CBLLogVerbose(Database, @"%@ Created collection %@.%@", self, scopeName, name);
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
     }
-    
-    return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -831,9 +833,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         if (!c)
             return nil;
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c];
     }
-    
-    return [[CBLCollection alloc] initWithDB: self c4collection: c];
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name
