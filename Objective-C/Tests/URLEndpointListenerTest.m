@@ -1701,7 +1701,7 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) testCollections {
     NSError* error = nil;
-    CBLCollection* collection = [self.db collectionWithName: @"collection1"
+    CBLCollection* collection = [self.db createCollectionWithName: @"collection1"
                                                       scope: @"scope1"
                                                       error: &error];
     Config* config = [[Config alloc] initWithCollections: @[collection]];

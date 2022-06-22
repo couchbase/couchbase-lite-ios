@@ -113,6 +113,15 @@
     return success;
 }
 
+// check the given collection list with the expected collection name list
+- (void) checkCollections: (NSArray<CBLCollection*>*)collections
+       expCollectionNames: (NSArray<NSString*>*)names {
+    AssertEqual(collections.count, names.count, @"Collection count mismatch");
+    for (CBLCollection* c in collections) {
+        Assert([names containsObject: c.name], @"%@ is missing", c.name);
+    }
+}
+
 #pragma mark - DatabaseConfiguration
 
 - (void) testCreateConfiguration {
@@ -2421,22 +2430,156 @@
     Assert([self.db deleteIndexForName: @"index3" error: &error]);
 }
 
+#pragma mark - Collection Management Tests
+
+- (void) testCreateCollection {
+    // Verify collections in Default Scope
+    NSError* error = nil;
+    NSArray<CBLCollection*>* collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(collections.count, 1);
+    AssertEqualObjects(collections[0].name, kCBLDefaultCollectionName);
+    AssertEqualObjects(collections[0].scope.name, kCBLDefaultScopeName);
+    
+    // Create in Default Scope
+    CBLCollection* c = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
+    AssertNotNil(c);
+    
+    // verify
+    collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(collections.count, 2); // 'collection1', '_default'
+    Assert([(@[@"collection1", @"_default"]) containsObject: collections[0].name]);
+    Assert([(@[@"collection1", @"_default"]) containsObject: collections[1].name]);
+    
+    // Create in Custom Scope
+    c = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    
+    // verify
+    collections = [self.db collections: @"scope1" error: &error];
+    AssertEqual(collections.count, 1);
+    AssertEqualObjects(collections[0].name, @"collection2");
+}
+
+- (void) testDeleteCollection {
+    NSError* error = nil;
+    CBLCollection* c1 = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
+    AssertNotNil(c1);
+    CBLCollection* c2 = [self.db createCollectionWithName: @"collection2" scope: nil error: &error];
+    AssertNotNil(c2);
+    NSArray<CBLCollection*>* collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(collections.count, 3);
+    
+    // delete without scope
+    Assert([self.db deleteCollectionWithName: c1.name scope: nil error: &error]);
+    collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(collections.count, 2);
+    
+    // delete with default scope
+    Assert([self.db deleteCollectionWithName: c2.name scope: kCBLDefaultScopeName error: &error]);
+    collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(collections.count, 1);
+    AssertEqualObjects(collections[0].name, kCBLDefaultCollectionName);
+}
+
+- (void) testCreateDuplicateCollection {
+    // Create in Default Scope
+    NSError* error = nil;
+    CBLCollection* c1 = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
+    AssertNotNil(c1);
+    CBLCollection* c2 = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
+    AssertNotNil(c2);
+    
+    // verify no duplicate is created.
+    NSArray<CBLCollection*>* collections = [self.db collections: kCBLDefaultScopeName error: &error];
+    [self checkCollections: collections expCollectionNames: @[@"collection1", @"_default"]];
+    
+    // Create in Custom Scope
+    c1 = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    c2 = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    
+    // verify no duplicate is created.
+    collections = [self.db collections: @"scope1" error: &error];
+    [self checkCollections: collections expCollectionNames: @[@"collection2"]];
+}
+
+- (void) testEmptyCollection {
+    NSError* error = nil;
+    AssertNil([self.db collectionWithName: @"dummy" scope: nil error: &error]);
+    AssertNil(error);
+    
+    AssertNil([self.db collectionWithName: @"dummy" scope: kCBLDefaultScopeName error: &error]);
+    AssertNil(error);
+    
+    AssertNil([self.db collectionWithName: @"dummy" scope: @"scope1" error: &error]);
+    AssertNil(error);
+}
+
+#pragma mark - Collection Indexable
+
+- (void) testCollectionIndex {
+    NSError* error = nil;
+    CBLCollection* c = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
+    
+    // CREATE INDEX
+    // index1
+    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName", @"lastName"]];
+    Assert([c createIndexWithName: @"index1" config: config error: &error]);
+    
+    
+    // index2
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO
+                                                                                              language: nil];
+    Assert([c createIndexWithName: @"index2" config: config2 error: &error]);
+    
+    // index3
+    CBLFullTextIndexConfiguration* config3 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"es_detail"]
+                                                                                         ignoreAccents: YES
+                                                                                              language: @"es"];
+    Assert([c createIndexWithName: @"index3" config: config3 error: &error]);
+    
+    // same index twice!
+    CBLFullTextIndexConfiguration* config4 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
+                                                                                         ignoreAccents: NO
+                                                                                              language: nil];
+    Assert([c createIndexWithName: @"index2" config: config4 error: &error]);
+    
+    // index4: use backtick in case of property with hyphen
+    CBLFullTextIndexConfiguration* config5 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"`es-detail`"]
+                                                                                         ignoreAccents: YES
+                                                                                              language: @"es"];
+    Assert([c createIndexWithName: @"index4" config: config5 error: &error]);
+    
+    // verify indexes returning them
+    NSArray* names = [c indexes: &error];
+    AssertEqual(names.count, 4u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3", @"index4"]));
+    
+    // DELETE INDEX
+    Assert([c deleteIndexWithName: @"index1" error: &error]);
+    Assert([c deleteIndexWithName: @"index2" error: &error]);
+    names = [c indexes: &error];
+    AssertEqual(names.count, 2u);
+    AssertEqualObjects(names, (@[@"index3", @"index4"]));
+}
+
+#pragma mark - Temporary API test
+// TODO: remove when implementation and unit tests are done
+// This is generic test to make sure, Collection APIs are working fine for QE.
 - (void) testCollection {
     [self createDocs: 10];
-    CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
     
     NSError* error = nil;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"dbName" error: &error];
-    CBLCollection* c = [db createCollectionWithName: @"collection1" scope: nil error: &error];
+    CBLCollection* c = [self.db createCollectionWithName: @"collection1" scope: nil error: &error];
     AssertNotNil(c);
     
     AssertEqual(c.count, 0);
-    AssertEqual(c.name, @"collection1");
-    AssertEqual(c.scope.name, kCBLDefaultScopeName);
+    AssertEqualObjects(c.name, @"collection1");
+    AssertEqualObjects(c.scope.name, kCBLDefaultScopeName);
     
-    c = [db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
-    AssertEqual(c.name, @"collection2");
-    AssertEqual(c.scope.name, @"scope1");
+    c = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    AssertEqual([self.db collections: @"scope1" error: &error].count, 1); // 'collection2'
+    AssertEqualObjects(c.name, @"collection2");
+    AssertEqualObjects(c.scope.name, @"scope1");
     
     // ---------------------------------
     // -- TODO: No action, dummy APIs --
@@ -2448,9 +2591,12 @@
     AssertFalse([c saveDocument: mDoc error: &error]);
     AssertFalse([c saveDocument: mDoc conflictHandler: ^BOOL(CBLMutableDocument* md1, CBLDocument* d1) { return YES; } error: &error]);
     AssertFalse([c saveDocument: mDoc concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
+    
+    CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
     AssertFalse([c deleteDocument: doc1 error: &error]);
     AssertFalse([c deleteDocument: doc1 concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
     AssertFalse([c purgeDocument: doc1 error: &error]);
+    
     AssertFalse([c purgeDocumentWithID: @"docID" error: &error]);
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
     AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);
@@ -2470,14 +2616,14 @@
     
     // scope APIs
     CBLScope* s = c.scope;
-    AssertEqual([s collections: &error].count, 0);
-    AssertEqualObjects([s collectionWithName: @"name" error: &error].name, @"name");
+    AssertEqual([s collections: &error].count, 1); // 'collection2'
+    AssertEqualObjects([s collectionWithName: @"collection2" error: &error].name, @"collection2");
     
-    c = [db defaultCollection: &error];
-    AssertEqual(c.name, kCBLDefaultCollectionName);
+    c = [self.db defaultCollection: &error];
+    AssertEqualObjects(c.name, kCBLDefaultCollectionName);
     
-    s = [db defaultScope: &error];
-    AssertEqual(s.name, kCBLDefaultScopeName);
+    s = [self.db defaultScope: &error];
+    AssertEqualObjects(s.name, kCBLDefaultScopeName);
     
     AssertNil(doc.collection);
     
@@ -2486,6 +2632,11 @@
                                     from: [CBLQueryDataSource collection: c]]);
     AssertNotNil([CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
                                     from: [CBLQueryDataSource collection: c as: @"col-alias"]]);
+    
+    
+    // delete collection
+    Assert([self.db deleteCollectionWithName: @"collection1" scope: nil error: &error]);
+    Assert([self.db deleteCollectionWithName: @"collection2" scope: @"scope1" error: &error]);
     
 }
 

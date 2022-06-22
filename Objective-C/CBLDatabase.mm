@@ -17,33 +17,33 @@
 //  limitations under the License.
 //
 
-#import "CBLDatabase.h"
-#import "c4BlobStore.h"
-#import "c4Observer.h"
-#import "CBLCoreBridge.h"
-#import "CBLDatabase+Internal.h"
-#import "CBLDocument+Internal.h"
-#import "CBLDocumentChangeNotifier.h"
 #import "CBLChangeListenerToken.h"
-#import "CBLDocumentFragment.h"
-#import "CBLIndex+Internal.h"
-#import "CBLQuery+Internal.h"
-#import "CBLMisc.h"
-#import "CBLStringBytes.h"
-#import "CBLStatus.h"
-#import "CBLLog+Internal.h"
-#import "CBLLog+Admin.h"
-#import "CBLVersion.h"
-#import "fleece/Fleece.hh"
+#import "CBLCollection+Internal.h"
 #import "CBLConflict+Internal.h"
-#import "CBLErrorMessage.h"
-#import "Foundation+CBL.h"
+#import "CBLCoreBridge.h"
 #import "CBLData.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLDocumentChangeNotifier.h"
+#import "CBLDocumentFragment.h"
+#import "CBLDocument+Internal.h"
+#import "CBLErrorMessage.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
+#import "CBLIndex+Internal.h"
+#import "CBLLog+Admin.h"
+#import "CBLLog+Internal.h"
+#import "CBLMisc.h"
+#import "CBLQuery+Internal.h"
 #import "CBLQuery+N1QL.h"
-#import "CBLCollection+Internal.h"
 #import "CBLScope+Internal.h"
+#import "CBLStatus.h"
+#import "CBLStringBytes.h"
+#import "CBLVersion.h"
+#import "Foundation+CBL.h"
+#import "c4BlobStore.h"
+#import "c4Observer.h"
+#import "fleece/Fleece.hh"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabase+EncryptionInternal.h"
@@ -705,11 +705,15 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [[CBLQuery alloc] initWithDatabase: self expressions: query error: error];
 }
 
-#pragma mark -- Scope
+#pragma mark - Scope
 
 - (nullable CBLScope*) defaultScope: (NSError**)error {
-    // TODO: add implementation
-    return [[CBLScope alloc] initWithName: kCBLDefaultScopeName error: nil];
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName];
+    }
 }
 
 - (nullable NSArray*) scopes: (NSError**)error {
@@ -722,45 +726,133 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return nil;
 }
 
-#pragma mark -- Collections
+#pragma mark - Collections
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
-    // TODO: add implementation
-    return  [[CBLCollection alloc] initWithName: kCBLDefaultCollectionName
-                                          scope: [self defaultScope: error]
-                                          error: nil];
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        return [self collectionWithName: kCBLDefaultCollectionName
+                                  scope: kCBLDefaultScopeName
+                                  error: error];
+    }
+    
 }
 
 - (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
-    // TODO: add implementation
-    return [NSArray array];
+    NSString * scopeName = scope ?: kCBLDefaultScopeName;
+    CBLStringBytes sName(scopeName);
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        C4Error c4err = {};
+        FLMutableArray list = c4db_collectionNames(_c4db, sName, &c4err);
+        if (c4err.code != 0) {
+            CBLWarn(Database, @"%@ Failed to get collection names: %@ (%d/%d)",
+                    self, scopeName, c4err.domain, c4err.code);
+            convertError(c4err, error);
+            FLArray_Release(list);
+            return nil;
+        }
+        
+        // TODO: check direct convertion of list to NSArray or each item to NSString is faster?
+        NSUInteger count = FLArray_Count(list);
+        NSMutableArray* collections = [NSMutableArray arrayWithCapacity: count];
+        for (uint i = 0; i < count; i++) {
+            NSString* name = FLValue_GetNSObject(FLArray_Get(list, i), nullptr);
+            
+            NSError* err = nil;
+            CBLCollection* c = [self collectionWithName: name scope: scopeName error: &err];
+            if (!c) {
+                CBLWarn(Database, @"%@ Failed to get collection: %@.%@ error: %@",
+                        self, scopeName, name, err);
+                if (error)
+                    *error = err;
+                FLArray_Release(list);
+                return nil;
+            }
+            
+            [collections addObject: c];
+        }
+        FLArray_Release(list);
+        
+        return [NSArray arrayWithArray: collections];
+    }
 }
 
 - (nullable CBLCollection*) createCollectionWithName: (NSString*)name
-                                      scope: (nullable NSString*)scope
-                                      error: (NSError**)error {
+                                               scope: (nullable NSString*)scopeName
+                                               error: (NSError**)error {
+    scopeName = scopeName ?: kCBLDefaultScopeName;
+    CBLStringBytes cName(name);
+    CBLStringBytes sName(scopeName);
+    C4CollectionSpec spec = { .name = cName, .scope = sName };
     
-    // TODO: add implementation
-    
-    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: error];
-    return [[CBLCollection alloc] initWithName: name scope: s error: error];
+    C4Collection* c4collection;
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        C4Error c4err = {};
+        c4collection = c4db_createCollection(_c4db, spec, &c4err);
+        if (!c4collection) {
+            CBLWarn(Database, @"%@ Failed to create collection: %@.%@ (%d/%d)",
+                    self, scopeName, name, c4err.domain, c4err.code);
+            convertError(c4err, error);
+            return nil;
+        }
+        CBLLogVerbose(Database, @"%@ Created collection %@.%@", self, scopeName, name);
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
+    }
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
-                                scope: (nullable NSString*)scope
-                                error: (NSError**)error {
+                                         scope: (nullable NSString*)scope
+                                         error: (NSError**)error {
+    NSString* scopeName = scope ?: kCBLDefaultScopeName;
+    CBLStringBytes cName(name);
+    CBLStringBytes sName(scopeName);
+    C4CollectionSpec spec = { .name = cName, .scope = sName };
     
-    // TODO: add implementation
-    
-    CBLScope* s = [[CBLScope alloc] initWithName: scope ?: kCBLDefaultScopeName error: nil];
-    return [[CBLCollection alloc] initWithName: name scope: s error: nil];
+    __block C4Collection* c;
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        C4Error c4err = {};
+        c = c4db_getCollection(_c4db, spec, &c4err);
+        if (c4err.code != 0) {
+            CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
+                    self, scopeName, name, c4err.domain, c4err.code);
+            convertError(c4err, error);
+            return nil;
+        }
+        
+        if (!c)
+            return nil;
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c];
+    }
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name
                             scope: (nullable NSString*)scope
                             error: (NSError**)error {
-    // TODO: add implementation
-    return NO;
+    NSString* scopeName = scope ?: kCBLDefaultScopeName;
+    CBLStringBytes cName(name);
+    CBLStringBytes sName(scopeName);
+    C4CollectionSpec spec = { .name = cName, .scope = sName };
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: error])
+            return NO;
+        
+        CBLLogVerbose(Database, @"%@ Deleting collection %@.%@", self, scopeName, name);
+        C4Error c4err = {};
+        return c4db_deleteCollection(_c4db, spec, &c4err) || convertError(c4err, error);
+    }
 }
 
 #pragma mark - indexable
