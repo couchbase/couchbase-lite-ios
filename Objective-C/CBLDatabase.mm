@@ -1136,7 +1136,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                     [_dbChangeNotifier postChange:
                         [[CBLDatabaseChange alloc] initWithDatabase: self
                                                         documentIDs: docIDs
-                                                         isExternal: obs.external]];
+                                                         isExternal: external]];
 #pragma clang diagnostic pop
                     docIDs = [NSMutableArray new];
                 }
