@@ -41,8 +41,8 @@
     return self;
 }
 
-static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4SequenceNumber seq,
-                                void *context)
+static void docObserverCallback(C4DocumentObserver* obs, C4Collection* collection,
+                                C4Slice docID, C4SequenceNumber seq, void *context)
 {
     [(__bridge CBLDocumentChangeNotifier*)context postChange];
 }
