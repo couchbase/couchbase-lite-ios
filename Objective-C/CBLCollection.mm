@@ -17,9 +17,6 @@
 //  limitations under the License.
 //
 
-#import "CBLCollection+Internal.h"
-#import "CBLDocument+Internal.h"
-#import "CBLIndexable.h"
 #import "CBLChangeListenerToken.h"
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionChangeObservable.h"
@@ -36,9 +33,11 @@ using namespace fleece;
 
 NSString* const kCBLDefaultCollectionName = @"_default";
 
-@implementation CBLCollection
+@implementation CBLCollection {
+    C4Collection* _c4col;
+}
 
-@synthesize count=_count, name=_name, scope=_scope, c4col=_c4col, db=_db;
+@synthesize count=_count, name=_name, scope=_scope, db=_db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection {
@@ -157,69 +156,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return token;
 }
 
-#pragma mark - Document management
-
-- (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
-    CBL_LOCK(_db) {
-        if (![self collectionIsValid: error])
-            return nil;
-        
-        // TODO: nested lock!
-        if ([_db isClosedLocked]) {
-            CBLWarn(Database, @"%@ Database is closed!", self);
-            if (error)
-                *error = CBLCollectionErrorNotOpen;
-            
-            return nil;
-        }
-        
-        return [[CBLDocument alloc] initWithCollection: self
-                                            documentID: docID
-                                        includeDeleted: NO
-                                                 error: error];
-    }
-}
-
-- (NSDate*) getDocumentExpirationWithID: (NSString*)documentID error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(_db) {
-        if (![self collectionIsValid: error])
-            return nil;
-        
-        CBLStringBytes docID(documentID);
-        C4Error c4err = {};
-        int64_t timestamp = c4coll_getDocExpiration(_c4col, docID, &c4err);
-        if (timestamp == -1) {
-            convertError(c4err, error);
-            return nil;
-        }
-        
-        if (timestamp == 0) {
-            return nil;
-        }
-        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
-    }
-}
-
-- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
-                          expiration: (NSDate*)date
-                               error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(_db) {
-        if (![self collectionIsValid: error])
-            return NO;
-        
-        UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
-        C4Error err;
-        CBLStringBytes docID(documentID);
-        return c4coll_setDocExpiration(_c4col, docID, timestamp, &err) || convertError(err, error);
-    }
-    
-    return NO;
-}
-
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                   error: (NSError**)error {
@@ -229,6 +165,28 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (BOOL) deleteDocument: (CBLDocument*)document
                   error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
+}
+
+- (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
+    // TODO: add implementation
+    return nil;
+}
+
+- (NSDate*) getDocumentExpirationWithID: (NSString*)docID error: (NSError**)error {
+    // TODO: add implementation
+    return nil;
+}
+
+- (BOOL) purgeDocument: (CBLDocument*)document
+                 error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
+}
+
+- (BOOL) purgeDocumentWithID: (NSString*)documentID
+                       error: (NSError**)error {
     // TODO: add implementation
     return NO;
 }
@@ -253,61 +211,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
-- (BOOL) purgeDocument: (CBLDocument*)document
-                 error: (NSError**)error {
-    CBLAssertNotNil(document);
-    
-    CBL_LOCK(_db) {
-        if ([_db isClosedLocked]) {
-            if (error)
-                *error = CBLCollectionErrorNotOpen;
-            return NO;
-        }
-        
-        if (![_db prepareDocument: document error: error])
-            return NO;
-        
-        if (!document.revisionID)
-            return createError(CBLErrorNotFound,
-                               @"Document doesn't exist in the collection.", error);
-        
-        if ([self purgeDocumentWithID: document.id error: error]) {
-            [document replaceC4Doc: nil];
-            return TRUE;
-        }
-        
-        return NO;
-    }
+- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
+                          expiration: (NSDate*)date
+                               error: (NSError**)error {
+    // TODO: add implementation
+    return NO;
 }
-
-- (BOOL) purgeDocumentWithID: (NSString*)documentID
-                       error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(_db) {
-        if ([_db isClosedLocked]) {
-            if (error)
-                *error = CBLCollectionErrorNotOpen;
-            return NO;
-        }
-        
-        C4Transaction transaction(_db.c4db);
-        if (!transaction.begin())
-            return convertError(transaction.error(),  error);
-        
-        C4Error err = {};
-        CBLStringBytes docID(documentID);
-        if (c4coll_purgeDoc(_c4col, docID, &err)) {
-            if (!transaction.commit()) {
-                return convertError(transaction.error(), error);
-            }
-            return YES;
-        }
-        return convertError(err, error);
-    }
-}
-
-#pragma mark - Change Listener
 
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener {
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener

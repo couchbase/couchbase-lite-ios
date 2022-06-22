@@ -751,6 +751,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             CBLWarn(Database, @"%@ Failed to get collection names: %@ (%d/%d)",
                     self, scopeName, c4err.domain, c4err.code);
             convertError(c4err, error);
+            FLArray_Release(list);
             return nil;
         }
         
@@ -767,6 +768,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                         self, scopeName, name, err);
                 if (error)
                     *error = err;
+                FLArray_Release(list);
                 return nil;
             }
             
@@ -800,9 +802,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             return nil;
         }
         CBLLogVerbose(Database, @"%@ Created collection %@.%@", self, scopeName, name);
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
     }
-    
-    return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
 }
 
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -813,13 +815,12 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLStringBytes sName(scopeName);
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     
-    __block C4Collection* c;
     CBL_LOCK(self) {
         if (![self mustBeOpen: error])
             return nil;
         
         C4Error c4err = {};
-        c = c4db_getCollection(_c4db, spec, &c4err);
+        C4Collection* c = c4db_getCollection(_c4db, spec, &c4err);
         if (c4err.code != 0) {
             CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
                     self, scopeName, name, c4err.domain, c4err.code);
@@ -829,9 +830,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         if (!c)
             return nil;
+        
+        return [[CBLCollection alloc] initWithDB: self c4collection: c];
     }
-    
-    return [[CBLCollection alloc] initWithDB: self c4collection: c];
 }
 
 - (BOOL) deleteCollectionWithName: (NSString*)name

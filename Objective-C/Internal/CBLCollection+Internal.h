@@ -30,9 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
 
-/** internal c4collection instance */
-@property (nonatomic, readonly) C4Collection* c4col;
-
 /** The database associated with the collection. */
 @property (nonatomic, readonly) CBLDatabase* db;
 
