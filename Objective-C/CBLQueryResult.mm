@@ -281,7 +281,8 @@ using namespace fleece;
         return -1;
     
     NSInteger index =  colIndex.integerValue;
-    BOOL hasValue = (_missingColumns & (1 << index)) == 0;
+    // this will limit to fetch 64 dictionary keys, check 'testQuerySelectItemsMax'
+    BOOL hasValue = (_missingColumns & (1ULL << index)) == 0;
     return hasValue ? index : -1;
 }
 
