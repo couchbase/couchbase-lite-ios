@@ -2601,18 +2601,26 @@
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
     AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);
     
-    // change listeners
-    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" listener:^(CBLDocumentChange* change) {
-        
-    }]);
+    // change listener: only to make sure QE has API available to work with
+    id<CBLListenerToken> token = [c addDocumentChangeListenerWithID: @"docID"
+                                                           listener:^(CBLDocumentChange* ch) { }];
+    AssertNotNil(token);
+    [token remove];
+    
     dispatch_queue_t q = dispatch_queue_create(@"dispatch-queue".UTF8String, DISPATCH_QUEUE_SERIAL);
-    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }]);
-    AssertNotNil([c addChangeListener: ^(CBLCollectionChange* change) {
+    token = [c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }];
+    AssertNotNil(token);
+    [token remove];
+    
+    token = [c addChangeListener: ^(CBLCollectionChange* change) { AssertNil(change.collection); }];
+    AssertNotNil(token);
+    [token remove];
+    
+    token = [c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
-    }]);
-    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
-        AssertNil(change.collection);
-    }]);
+    }];
+    AssertNotNil(token);
+    [token remove];
     
     // scope APIs
     CBLScope* s = c.scope;
@@ -2638,6 +2646,34 @@
     Assert([self.db deleteCollectionWithName: @"collection1" scope: nil error: &error]);
     Assert([self.db deleteCollectionWithName: @"collection2" scope: @"scope1" error: &error]);
     
+}
+
+- (void) testDBEventTrigged {
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    CBLCollection* c = [self.db defaultCollection: nil];
+    
+    // Create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    id<CBLListenerToken> token = [c addChangeListener:^(CBLCollectionChange* change) {
+        AssertEqual(change.documentIDs.count, 1u);
+        NSString* documentID = change.documentIDs.firstObject;
+        AssertEqualObjects(documentID, doc.id);
+        [expectation fulfill];
+    }];
+    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    
+    // Set expiry
+    NSDate* begin = [NSDate dateWithTimeIntervalSinceNow: 1];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &err]);
+    AssertNil(err);
+    
+    // Wait for result
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    
+    // Remove listener
+    [token remove];
 }
 
 #pragma clang diagnostic pop

@@ -27,6 +27,7 @@
 
 - (CBLChangeListenerToken*) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                               listener: (void (^)(id))listener
+                                              delegate: (nullable id<CBLRemovableListenerToken>)delegate
 {
     CBLAssertNotNil(listener);
 
@@ -34,7 +35,8 @@
         if (!_listenerTokens)
             _listenerTokens = [NSMutableSet set];
         id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                              queue: queue];
+                                                              queue: queue
+                                                           delegate: delegate];
         [_listenerTokens addObject: token];
         return token;
     }
