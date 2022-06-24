@@ -2648,7 +2648,7 @@
     AssertNil(error);
     
     [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
-        return [c documentWithID:@"non-exist" error: err];
+        return [c documentWithID:@"non-exist" error: err] != nil;
     }];
 }
 
@@ -2681,7 +2681,7 @@
 
     // Get doc:
     [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c documentWithID: @"doc1" error: err];
+        return [c documentWithID: @"doc1" error: err] != nil;
     }];
 }
 
@@ -2698,7 +2698,7 @@
 
     // Get doc:
     [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c documentWithID: @"doc1" error: err];
+        return [c documentWithID: @"doc1" error: err] != nil;
     }];
 }
 
