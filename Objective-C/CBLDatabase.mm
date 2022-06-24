@@ -1119,13 +1119,12 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         const uint32_t kMaxChanges = 100u;
         C4DatabaseChange changes[kMaxChanges];
         bool external = false;
-        uint32_t nChanges = 0u;
+        C4CollectionObservation obs = {};
         NSMutableArray* docIDs = [NSMutableArray new];
         do {
             // Read changes in batches of kMaxChanges:
-            bool newExternal;
-            nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
-            if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
+            obs = c4dbobs_getChanges(_dbObs, changes, kMaxChanges);
+            if (obs.numChanges == 0 || external != obs.external || docIDs.count > 1000) {
                 if(docIDs.count > 0) {
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
@@ -1134,19 +1133,19 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                     [_dbChangeNotifier postChange:
                         [[CBLDatabaseChange alloc] initWithDatabase: self
                                                         documentIDs: docIDs
-                                                         isExternal: external] ];
+                                                         isExternal: external]];
 #pragma clang diagnostic pop
                     docIDs = [NSMutableArray new];
                 }
             }
             
-            external = newExternal;
-            for(uint32_t i = 0; i < nChanges; i++) {
+            external = obs.external;
+            for(uint32_t i = 0; i < obs.numChanges; i++) {
                 NSString *docID =slice2string(changes[i].docID);
                 [docIDs addObject: docID];
             }
-            c4dbobs_releaseChanges(changes, nChanges);
-        } while(nChanges > 0);
+            c4dbobs_releaseChanges(changes, obs.numChanges);
+        } while(obs.numChanges > 0);
     }
 }
 

@@ -71,6 +71,40 @@ class QueryTest: CBLTestCase {
         }
     }
     
+    func testQuerySelectItemsMax() throws {
+        let doc = MutableDocument(id: "docID").setString("value", forKey: "key")
+        try! self.db.saveDocument(doc)
+        
+        /**
+         Add one more query item, e.g., '`32`' before `key`, will fail to return the
+            - `r.string(forKey:)`
+            - `r.value(forKey:)`
+            - `r.toJSON()` // empty
+         */
+        let query =
+"""
+            select
+                `1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,
+                `13`,`14`,`15`,`16`,`17`,`18`,`19`,`20`,`21`,`22`,`23`,`24`,
+                `25`,`26`,`27`,`28`,`29`,`30`,`31`,`32`,
+                `1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,
+                `13`,`14`,`15`,`16`,`17`,`18`,`19`,`20`,`21`,`22`,`23`,`24`,
+                `25`,`26`,`27`,`28`,`29`,`30`,`31`, `key` from _ limit 1
+"""
+        let q = try self.db.createQuery(query)
+        let rs: ResultSet = try q.execute()
+        guard let r = rs.allResults().first else {
+            XCTFail("No result!")
+            return
+        }
+        
+        XCTAssertEqual(r.toJSON(), "{\"key\":\"value\"}")
+        XCTAssertEqual(r.string(forKey: "key"), "value")
+        XCTAssertEqual(r.string(at: 63), "value")
+        XCTAssertEqual(r.value(at: 63) as! String, "value")
+        XCTAssertEqual(r.value(forKey: "key") as! String, "value")
+    }
+    
     func testNoWhereQuery() throws {
         try loadJSONResource(name: "names_100")
         
