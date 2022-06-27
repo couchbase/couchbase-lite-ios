@@ -244,7 +244,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// To remove the listener, call remove() function on the returned listener token
     ///.
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken? {
+    public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         return self.addChangeListener(queue: nil, listener: listener)
     }
      
@@ -254,16 +254,12 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     public func addChangeListener(queue: DispatchQueue?,
-                                  listener: @escaping (CollectionChange) -> Void) -> ListenerToken? {
+                                  listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         let token = _impl.addChangeListener(with: queue) { [unowned self] (change) in
             listener(CollectionChange(collection: self, documentIDs: change.documentIDs))
         }
         
-        if let token = token {
-            return ListenerToken(token)
-        }
-        
-        return nil
+        return ListenerToken(token)
     }
     
     

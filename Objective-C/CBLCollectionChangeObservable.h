@@ -34,10 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
  If the collection is deleted or the database is closed, a warning message will be logged.
  
  @param listener The listener to post the changes.
- @return An opaque listener token object for removing the listener, or nil if collection is deleted
-        or db is closed
+ @return An opaque listener token object for removing the listener
  */
-- (nullable id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener;
 
 /**
  Add a change listener to listen to change events occurring to any documents in the collection.
@@ -48,11 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param queue The dispatch queue.
  @param listener The listener to post changes.
- @return An opaque listener token object for removing the listener or nil if collection is deleted
-        or db is closed
+ @return An opaque listener token object for removing the listener
  */
-- (nullable id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                                    listener: (void (^)(CBLCollectionChange*))listener;
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLCollectionChange*))listener;
 
 
 @end

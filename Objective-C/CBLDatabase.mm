@@ -137,10 +137,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (![self open: outError])
             return nil;
         
-        NSString* qName = $sprintf(@"Database <%@>", name);
+        NSString* qName = $sprintf(@"Database <%@: %@>", self, name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        qName = $sprintf(@"Database-Query <%@>", name);
+        qName = $sprintf(@"Database-Query <%@: %@>", self, name);
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;

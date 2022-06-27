@@ -58,7 +58,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         _name = slice2string(spec.name);
         _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope)];
         
-        NSString* qName = $sprintf(@"Collection <%@>", _name);
+        NSString* qName = $sprintf(@"Collection <%@: %@>", self, _name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ scope=%@",
@@ -243,7 +243,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
             CBLWarn(Database,
                     @"%@ Cannot add change listener. Database is closed or collection is removed.",
                     self);
-            return nil;
         }
         
         return [self addCollectionChangeListener: listener queue: queue];
@@ -315,9 +314,6 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 
 - (void) removeToken: (id)token {
     CBL_LOCK(self) {
-        if (![self collectionIsValid: nil])
-            return;
-        
         // TODO: handle document change listener as well
             
         if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
