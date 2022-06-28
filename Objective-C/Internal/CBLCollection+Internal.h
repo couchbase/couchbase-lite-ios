@@ -19,6 +19,7 @@
 
 #pragma once
 #import "CBLCollection.h"
+#import "CBLChangeListenerToken.h"
 
 // TODO: Add to CBLErrorMessage : CBL-3296
 #define CBLCollectionErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
@@ -28,7 +29,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLCollection ()
+@interface CBLCollection () <CBLRemovableListenerToken>
+
+/** dispatch queue */
+@property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
 
 /** The database associated with the collection. */
 @property (nonatomic, readonly) CBLDatabase* db;
@@ -36,6 +40,18 @@ NS_ASSUME_NONNULL_BEGIN
 /** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection;
+@end
+
+@interface CBLCollectionChange ()
+
+
+/** check whether the changes are from the current collection or not. */
+@property (readonly, nonatomic) BOOL isExternal;
+
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                        documentIDs: (NSArray*)documentIDs
+                         isExternal: (BOOL)isExternal;
+
 @end
 
 NS_ASSUME_NONNULL_END

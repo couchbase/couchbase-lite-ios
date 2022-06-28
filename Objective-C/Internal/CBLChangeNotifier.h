@@ -22,7 +22,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 /** A support class that manages change listeners and broadcasts changes,
     on behalf of an object that creates the changes. */
 @interface CBLChangeNotifier<ChangeType> : NSObject
@@ -34,10 +33,12 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param queue The dispatch queue.
  @param listener The listener to post changes.
+ @param delegate The delegate for removing the token reference.
  @return An opaque listener token object for removing the listener.
  */
 - (CBLChangeListenerToken*) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                              listener: (void (^)(ChangeType))listener;
+                                              listener: (void (^)(ChangeType))listener
+                                              delegate: (nullable id<CBLRemovableListenerToken>)delegate;
 
 
 /**

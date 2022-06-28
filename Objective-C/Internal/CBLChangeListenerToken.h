@@ -22,6 +22,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** This makes the parent object to release the owning reference of the token. */
+@protocol CBLRemovableListenerToken <NSObject>
+
+- (void) removeToken: (id)token;
+
+@end
+
+
 @interface CBLChangeListenerToken<ChangeType> : NSObject <CBLListenerToken>
 
 /**
@@ -29,13 +37,17 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param listener The listener block.
  @param queue The dispatch queue; if nil, the main queue will be used.
+ @param delegate The delegate for removing the references from change notifier.
  @return The CBLChangeListenerToken object.
  */
 - (instancetype) initWithListener: (void (^)(ChangeType))listener
-                            queue: (nullable dispatch_queue_t)queue;
+                            queue: (nullable dispatch_queue_t)queue
+                         delegate: (nullable id<CBLRemovableListenerToken>)delegate;
 
 /** An arbitrary context that can be associated by the client, such as a documentID, c4queryObserver. */
 @property (nonatomic, nullable) id context;
+
+@property (nonatomic, weak, nullable) id<CBLRemovableListenerToken> delegate;
 
 /**
  Posts an asynchronous change notification to the listener block on its dispatch queue.

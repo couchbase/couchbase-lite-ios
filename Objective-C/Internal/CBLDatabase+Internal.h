@@ -21,6 +21,7 @@
 #import "c4.h"
 #import "fleece/Fleece.h"
 #import "CBLBlob.h"
+#import "CBLChangeListenerToken.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabaseChange.h"
@@ -46,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// CBLDatabase:
 
 
-@interface CBLDatabase () <CBLLockable>
+@interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;

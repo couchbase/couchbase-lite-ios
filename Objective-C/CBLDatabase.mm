@@ -137,10 +137,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (![self open: outError])
             return nil;
         
-        NSString* qName = $sprintf(@"Database <%@>", name);
+        NSString* qName = $sprintf(@"Database <%@: %@>", self, name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        qName = $sprintf(@"Database-Query <%@>", name);
+        qName = $sprintf(@"Database-Query <%@: %@>", self, name);
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
@@ -1100,8 +1100,15 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     }
     
-    return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener];
+    return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
 }
+
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
+    [self removeChangeListenerWithToken: token];
+}
+
 #pragma clang diagnostic pop
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
@@ -1168,7 +1175,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     }
     
     CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
-                                                                   listener: listener];
+                                                                   listener: listener
+                                                                   delegate: self];
     token.context = documentID;
     return token;
 }

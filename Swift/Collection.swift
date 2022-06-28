@@ -258,6 +258,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
         let token = _impl.addChangeListener(with: queue) { [unowned self] (change) in
             listener(CollectionChange(collection: self, documentIDs: change.documentIDs))
         }
+        
         return ListenerToken(token)
     }
     
