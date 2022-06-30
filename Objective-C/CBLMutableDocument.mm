@@ -95,7 +95,7 @@ using namespace fleece;
 /* internal */ - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                                   dict: (nullable CBLDictionary*)dict
 {
-    self = [self initWithCollection: [doc.database mustDefaultCollection: nil]
+    self = [self initWithCollection: [doc.database defaultCollection: nil]
                          documentID: doc.id
                               c4Doc: doc.c4Doc];
     if (self) {
