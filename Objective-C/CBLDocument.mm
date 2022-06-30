@@ -40,13 +40,13 @@ using namespace fleece;
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
 @synthesize collection=_collection;
 
-- (instancetype) initWithCollection: (nullable CBLCollection*)collection
-                         documentID: (NSString*)documentID
-                              c4Doc: (nullable CBLC4Document*)c4Doc {
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                            c4Doc: (nullable CBLC4Document*)c4Doc {
     NSParameterAssert(documentID != nil);
     self = [super init];
     if (self) {
-        _database = collection.db; // TODO: Keep collection & remove database property
+        _database = database;
         _id = documentID;
         _revID = nil;
         [self setC4Doc: c4Doc];
@@ -58,7 +58,7 @@ using namespace fleece;
                          documentID: (NSString*)documentID
                                body: (nullable FLDict)body {
     NSParameterAssert(documentID != nil);
-    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
+    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
     if (self) {
         _fleeceData = body;
         _revID = nil;
@@ -74,7 +74,7 @@ using namespace fleece;
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
     NSParameterAssert(collection != nil);
-    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
+    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
     if (self) {
         _fleeceData = body;
         _revID = revisionID;
@@ -103,7 +103,7 @@ using namespace fleece;
 {
     NSParameterAssert(collection != nil);
     
-    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
+    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
     if (self) {
         _revID = nil;
         CBLStringBytes docId(documentID);

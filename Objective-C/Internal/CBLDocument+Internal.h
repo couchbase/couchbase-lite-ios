@@ -68,9 +68,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-- (instancetype) initWithCollection: (nullable CBLCollection*)collection
-                         documentID: (NSString*)documentID
-                              c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                            c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
