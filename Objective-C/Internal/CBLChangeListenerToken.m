@@ -25,15 +25,17 @@
     dispatch_queue_t _queue;
 }
 
-@synthesize context=_context;
+@synthesize context=_context, delegate=_delegate;
 
 - (instancetype) initWithListener: (void (^)(id))listener
                             queue: (nullable dispatch_queue_t)queue
+                         delegate: (nullable id<CBLRemovableListenerToken>)delegate
 {
     self = [super init];
     if (self) {
         _listener = listener;
         _queue = queue ?: dispatch_get_main_queue();
+        _delegate = delegate;
     }
     return self;
 }
@@ -46,9 +48,11 @@
 }
 
 - (void) remove {
-    
-    // TODO: Add implementation
-    
+    id delegate = self.delegate;
+    if (delegate != nil && [delegate respondsToSelector:@selector(removeToken:)]) {
+        [delegate removeToken: self];
+    }
+    self.delegate = nil;
 }
 
 @end

@@ -759,13 +759,13 @@
     NSString* docID = @"doc1";
     [self generateDocumentWithID: docID];
     AssertEqual([self.db documentWithID: docID].generation, 1u);
-    
+
     // keeps new doc(non-deleted)
     CBLMutableDocument* doc1a = [[self.db documentWithID: docID] toMutable];
     CBLMutableDocument* doc1b = [[self.db documentWithID: docID] toMutable];
-    
+
     [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
-    
+
     NSError* error = nil;
     [doc1b setString: @"value1" forKey: @"key1"];
     Assert([self.db saveDocument: doc1b
@@ -775,25 +775,33 @@
                      return YES;
                  } error: &error]);
     AssertEqualObjects([self.db documentWithID: docID].toDictionary, doc1b.toDictionary);
-    
+
     // keeps the deleted(old doc)
     doc1a = [[self.db documentWithID: docID] toMutable];
     doc1b = [[self.db documentWithID: docID] toMutable];
     [self deleteDocument: doc1a concurrencyControl: kCBLConcurrencyControlLastWriteWins];
-    
+
     [doc1b setString: @"value2" forKey: @"key2"];
-    AssertFalse([self.db saveDocument: doc1b
-                      conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
-                          AssertNil(old);
-                          AssertNotNil(document);
-                          return NO;
-                      } error: &error]);
-    AssertEqual(error.code, CBLErrorConflict);
+    
+    [self expectError: CBLErrorDomain code: CBLErrorConflict in: ^BOOL(NSError** err) {
+        return [self.db saveDocument: doc1b
+                     conflictHandler:^BOOL(CBLMutableDocument * document, CBLDocument * old) {
+                         AssertNil(old);
+                         AssertNotNil(document);
+                         return NO;
+                     } error: err];
+    }];
     AssertNil([self.db documentWithID: docID]);
-    Assert([[CBLDocument alloc] initWithDatabase: self.db
-                                      documentID: docID
-                                  includeDeleted: YES
-                                           error: &error].isDeleted);
+    
+    error = nil;
+    CBLCollection* collection = [self.db defaultCollection: &error];
+    AssertNil(error);
+    Assert([[CBLDocument alloc] initWithCollection: collection
+                                        documentID: docID
+                                    includeDeleted: YES
+                                             error: &error].isDeleted);
+    
+    
 }
 
 - (void) testConflictHandlerCalledTwice {
@@ -1171,26 +1179,28 @@
     CBLDocument* document = [self generateDocumentWithID: nil];
     NSString* documentID = document.id;
     AssertNotNil(documentID);
-    
+
     // Delete doc
-    NSError* errorWhileDeletion;
-    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
-    NSError* documentReadError;
-    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                                            documentID: documentID
-                                                        includeDeleted: YES
-                                                                 error: &documentReadError];
+    NSError* error = nil;
+    Assert([self.db deleteDocument: document error: &error]);
+    AssertNil(error);
+    
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNotNil(c);
+    AssertNil(error);
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                              documentID: documentID
+                                                          includeDeleted: YES
+                                                                   error: &error];
     AssertNotNil(savedDocument);
     
     // Purge doc on the deleted document
-    NSError* errorWhilePurging;
-    Assert([self.db purgeDocument: document error: &errorWhilePurging]);
-    AssertNil(errorWhilePurging);
-    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                               documentID: documentID
-                                           includeDeleted: YES
-                                                    error: &documentReadError];
+    Assert([self.db purgeDocument: document error: &error]);
+    AssertNil(error);
+    savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                 documentID: documentID
+                                             includeDeleted: YES
+                                                      error: &error];
     AssertNil(savedDocument);
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
@@ -1386,33 +1396,37 @@
 }
 
 - (void) testPurgeDocumentWithIDOnADeletedDocument {
+    NSError* error;
     CBLDocument* document = [self generateDocumentWithID: nil];
     NSString* documentID = document.id;
     AssertNotNil(documentID);
     
     // Delete document
-    NSError* errorWhileDeletion;
-    Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
-    AssertNil(errorWhileDeletion);
+    Assert([self.db deleteDocument: document error: &error]);
+    AssertNil(error);
     
-    NSError* documentReadError;
-    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                                            documentID: documentID
-                                                        includeDeleted: YES
-                                                                 error: &documentReadError];
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNotNil(c);
+    AssertNil(error);
     
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                              documentID: documentID
+                                                          includeDeleted: YES
+                                                                   error: &error];
+    AssertNil(error);
     AssertNotNil(savedDocument);
     
     // Purge the deleted document
-    NSError* errorWhilePurging;
-    Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
-    AssertNil(errorWhilePurging);
+    Assert([self.db purgeDocumentWithID: documentID error: &error]);
+    AssertNil(error);
     
-    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                               documentID: documentID
-                                           includeDeleted: YES
-                                                    error: &documentReadError];
-    AssertNil(savedDocument);
+    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
+        return [[CBLDocument alloc] initWithCollection: c
+                                            documentID: documentID
+                                        includeDeleted: YES
+                                                 error: err] != nil;
+    }];
+    
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
 }
@@ -2601,18 +2615,26 @@
     AssertFalse([c setDocumentExpirationWithID: @"docID" expiration: [NSDate date] error: &error]);
     AssertNil([c getDocumentExpirationWithID: @"docID" error: &error]);
     
-    // change listeners
-    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" listener:^(CBLDocumentChange* change) {
-        
-    }]);
+    // change listener: only to make sure QE has API available to work with
+    id<CBLListenerToken> token = [c addDocumentChangeListenerWithID: @"docID"
+                                                           listener:^(CBLDocumentChange* ch) { }];
+    AssertNotNil(token);
+    [token remove];
+    
     dispatch_queue_t q = dispatch_queue_create(@"dispatch-queue".UTF8String, DISPATCH_QUEUE_SERIAL);
-    AssertNotNil([c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }]);
-    AssertNotNil([c addChangeListener: ^(CBLCollectionChange* change) {
+    token = [c addDocumentChangeListenerWithID: @"docID" queue: q listener: ^(CBLDocumentChange* change) { }];
+    AssertNotNil(token);
+    [token remove];
+    
+    token = [c addChangeListener: ^(CBLCollectionChange* change) { AssertNil(change.collection); }];
+    AssertNotNil(token);
+    [token remove];
+    
+    token = [c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
         AssertNil(change.collection);
-    }]);
-    AssertNotNil([c addChangeListenerWithQueue: q listener: ^(CBLCollectionChange* change) {
-        AssertNil(change.collection);
-    }]);
+    }];
+    AssertNotNil(token);
+    [token remove];
     
     // scope APIs
     CBLScope* s = c.scope;
@@ -2640,174 +2662,32 @@
     
 }
 
-#pragma mark - GET Document
-
-- (void) testCollectionGetNonExistingDocWithID {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
-    AssertNil(error);
+- (void) testDBEventTrigged {
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
+    CBLCollection* c = [self.db defaultCollection: nil];
     
-    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
-        return [c documentWithID:@"non-exist" error: err] != nil;
+    // Create doc
+    CBLDocument* doc = [self generateDocumentWithID: nil];
+    id<CBLListenerToken> token = [c addChangeListener:^(CBLCollectionChange* change) {
+        AssertEqual(change.documentIDs.count, 1u);
+        NSString* documentID = change.documentIDs.firstObject;
+        AssertEqualObjects(documentID, doc.id);
+        [expectation fulfill];
     }];
-}
-
-- (void) testCollectionGetExistingDocWithID {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
-    AssertNil(error);
+    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
-    // Store doc to default collection/db:
-    CBLDocument* d1 = [self generateDocumentWithID: @"doc1"];
-
-    // get and validate!
-    CBLDocument* d2 = [c documentWithID: @"doc1" error: &error];
-    AssertNil(error);
-    AssertNotNil(d2);
-    AssertEqualObjects(d2.id, @"doc1");
-    AssertEqualObjects([d2 toDictionary], [d1 toDictionary]);
-}
-
-- (void) testCollectionGetDocFromClosedDB {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    AssertNil(error);
-    [self generateDocumentWithID: @"doc1"];
-
-    // Close db:
-    [self closeDatabase: self.db];
-
-    // Get doc:
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c documentWithID: @"doc1" error: err] != nil;
-    }];
-}
-
-- (void) testCollectionGetDocFromDeletedDB {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    AssertNil(error);
-    [self generateDocumentWithID: @"doc1"];
-
-    // Delete db:
-    [self deleteDatabase: self.db];
-
-    // Get doc:
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c documentWithID: @"doc1" error: err] != nil;
-    }];
-}
-
-#pragma mark - Purge document
-
-- (void) testCollectionPurgePreSaveDoc {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    // Set expiry
+    NSDate* begin = [NSDate dateWithTimeIntervalSinceNow: 1];
+    NSError* err;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &err]);
+    AssertNil(err);
     
-    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
-        return [c purgeDocument: doc1 error: err];
-    }];
+    // Wait for result
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
     
-    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError ** err) {
-        return [c purgeDocumentWithID: doc2.id error: err];
-    }];
-}
-
-- (void) testCollectionPurgeDoc {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
-    [self saveDocument: doc1];
-    [self saveDocument: doc2];
-
-    // Purge Doc:
-    Assert([c purgeDocument: doc1 error: &error]);
-    AssertNil(error);
-    AssertEqual(self.db.count, 1u);
-    
-    Assert([c purgeDocumentWithID: doc2.id error: &error]);
-    AssertNil(error);
-    AssertEqual(self.db.count, 0u);
-}
-
-- (void) testCollectionPurgeSameDocTwice {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
-    [self saveDocument: doc1];
-    [self saveDocument: doc2];
-
-    // Purge Doc1 twice
-    Assert([c purgeDocument: doc1 error: &error]);
-    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
-        return [c purgeDocument: doc1 error: err];
-    }];
-    
-    Assert([c purgeDocumentWithID: doc2.id error: &error]);
-    [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
-        return [c purgeDocumentWithID: doc2.id error: err];
-    }];
-}
-
-- (void) testCollectionPurgeDocOnClosedDB {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
-    [self saveDocument: doc1];
-    [self saveDocument: doc2];
-
-    // close db
-    [self closeDatabase: self.db];
-
-    // purge doc
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c purgeDocument: doc1 error: err];
-    }];
-    
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c purgeDocumentWithID: doc2.id error: err];
-    }];
-}
-
-- (void) testCollectionPurgeDocOnDeletedDB {
-    NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
-    [self saveDocument: doc1];
-    [self saveDocument: doc2];
-
-    // delete db
-    [self deleteDatabase: self.db];
-
-    // purge doc
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c purgeDocument: doc1 error: err];
-    }];
-    
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError ** err) {
-        return [c purgeDocumentWithID: doc2.id error: err];
-    }];
+    // Remove listener
+    [token remove];
 }
 
 #pragma clang diagnostic pop

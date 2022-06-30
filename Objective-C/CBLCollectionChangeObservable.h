@@ -30,10 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Add a change listener to listen to change events occurring to any documents in the collection.
  To remove the listener, call remove() function on the returned listener token.
- Throw Illegal State Exception or equivalent if the default collection doesn’t exist.
+ 
+ If the collection is deleted or the database is closed, a warning message will be logged.
  
  @param listener The listener to post the changes.
- @return An opaque listener token object for removing the listener.
+ @return An opaque listener token object for removing the listener
  */
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener;
 
@@ -41,11 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
  Add a change listener to listen to change events occurring to any documents in the collection.
  If a dispatch queue is given, the events will be posted on the dispatch queue.
  To remove the listener, call remove() function on the returned listener token.
- Throw Illegal State Exception or equivalent if the default collection doesn’t exist.
+ 
+ If the collection is deleted or the database is closed, a warning message will be logged.
  
  @param queue The dispatch queue.
  @param listener The listener to post changes.
- @return An opaque listener token object for removing the listener.
+ @return An opaque listener token object for removing the listener
  */
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLCollectionChange*))listener;

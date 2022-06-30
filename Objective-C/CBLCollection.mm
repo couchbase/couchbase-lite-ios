@@ -18,7 +18,9 @@
 //
 
 #import "CBLChangeListenerToken.h"
+#import "CBLChangeNotifier.h"
 #import "CBLCollection+Internal.h"
+#import "CBLCollectionChange.h"
 #import "CBLCollectionChangeObservable.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
@@ -36,9 +38,13 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 @implementation CBLCollection {
     C4Collection* _c4col;
+    
+    C4DatabaseObserver* _colObs;
+    CBLChangeNotifier<CBLCollectionChange*>* _colChangeNotifier;
 }
 
 @synthesize count=_count, name=_name, scope=_scope, db=_db;
+@synthesize dispatchQueue=_dispatchQueue;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection {
@@ -52,6 +58,9 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         _c4col = c4coll_retain(c4collection);
         _name = slice2string(spec.name);
         _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope)];
+        
+        NSString* qName = $sprintf(@"Collection <%@: %@>", self, _name);
+        _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ scope=%@",
                       self, _name, db, _scope);
@@ -76,8 +85,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(name);
     CBLAssertNotNil(config);
     
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -99,8 +107,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) deleteIndexWithName: (NSString*)name
                        error: (NSError**)error {
     CBLAssertNotNil(name);
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -111,8 +119,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (nullable NSArray*) indexes: (NSError**)error {
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -142,18 +149,20 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
                                                 listener: (void (^)(CBLDocumentChange*))listener {
-    // TODO: add the implementation, returning a token to avoid the warning
+    // TODO: Add implementation & Delegate is set to nil
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil];
+                                                          queue: nil
+                                                       delegate: nil];
     return token;
 }
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
                                                    queue: (dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener {
-    // TODO: add the implementation, returning a token to avoid the warning
+    // TODO: Add implementation & Delegate is set to nil
     id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil];
+                                                          queue: nil
+                                                       delegate: nil];
     return token;
 }
 
@@ -171,12 +180,13 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error {
-    CBL_LOCK(self) {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return nil;
         
-        // TODO: nested lock!
-        if ([_db isClosedLocked]) {
+        if ([_db isClosed]) {
             CBLWarn(Database, @"%@ Database is closed!", self);
             if (error)
                 *error = CBLCollectionErrorNotOpen;
@@ -194,7 +204,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (NSDate*) getDocumentExpirationWithID: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);
     
-    CBL_LOCK(self) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -217,8 +227,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                  error: (NSError**)error {
     CBLAssertNotNil(document);
     
-    CBL_LOCK(self) {
-        if ([_db isClosedLocked]) {
+    CBL_LOCK(_db) {
+        if ([_db isClosed]) {
             if (error)
                 *error = CBLCollectionErrorNotOpen;
             return NO;
@@ -245,7 +255,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(documentID);
     
     CBL_LOCK(_db) {
-        if ([_db isClosedLocked]) {
+        if ([_db isClosed]) {
             if (error)
                 *error = CBLCollectionErrorNotOpen;
             return NO;
@@ -295,16 +305,23 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLCollectionChange*))listener {
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil];
-    return token;
+    return [self addChangeListenerWithQueue: nil listener: listener];
 }
 
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLCollectionChange*))listener {
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil];
-    return token;
+    CBLAssertNotNil(listener);
+    
+    CBL_LOCK(self) {
+        NSError* error = nil;
+        if (![self collectionIsValid: &error]) {
+            CBLWarn(Database,
+                    @"%@ Cannot add change listener. Database is closed or collection is removed.",
+                    self);
+        }
+        
+        return [self addCollectionChangeListener: listener queue: queue];
+    }
 }
 
 #pragma mark - Internal
@@ -318,6 +335,68 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     
     return valid;
     
+}
+
+- (id<CBLListenerToken>) addCollectionChangeListener: (void (^)(CBLCollectionChange*))listener
+                                               queue: (dispatch_queue_t)queue {
+    if (!_colChangeNotifier) {
+        _colChangeNotifier = [CBLChangeNotifier new];
+        _colObs = c4dbobs_createOnCollection(_c4col, colObserverCallback, (__bridge void *)self);
+    }
+    
+    return [_colChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
+}
+
+static void colObserverCallback(C4CollectionObserver* obs, void* context) {
+    CBLCollection *c = (__bridge CBLCollection *)context;
+    dispatch_async(c.dispatchQueue, ^{
+        [c postCollectionChanged];
+    });
+}
+
+- (void) postCollectionChanged {
+    CBL_LOCK(self) {
+        if (!_colObs || !_c4col)
+            return;
+        
+        const uint32_t kMaxChanges = 100u;
+        C4DatabaseChange changes[kMaxChanges];
+        bool external = false;
+        C4CollectionObservation obs = {};
+        NSMutableArray* docIDs = [NSMutableArray new];
+        do {
+            // Read changes in batches of kMaxChanges:
+            obs = c4dbobs_getChanges(_colObs, changes, kMaxChanges);
+            if (obs.numChanges == 0 || external != obs.external || docIDs.count > 1000) {
+                if(docIDs.count > 0) {
+                    CBLCollectionChange* change = [[CBLCollectionChange alloc] initWithCollection: self
+                                                                                      documentIDs: docIDs
+                                                                                       isExternal: external];
+                    [_colChangeNotifier postChange: change];
+                    docIDs = [NSMutableArray new];
+                }
+            }
+            
+            external = obs.external;
+            for(uint32_t i = 0; i < obs.numChanges; i++) {
+                NSString *docID =slice2string(changes[i].docID);
+                [docIDs addObject: docID];
+            }
+            c4dbobs_releaseChanges(changes, obs.numChanges);
+        } while(obs.numChanges > 0);
+    }
+}
+
+- (void) removeToken: (id)token {
+    CBL_LOCK(self) {
+        // TODO: handle document change listener as well
+            
+        if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
+            c4dbobs_free(_colObs);
+            _colObs = nil;
+            _colChangeNotifier = nil;
+        }
+    }
 }
 
 @end

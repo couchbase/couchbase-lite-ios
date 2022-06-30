@@ -292,7 +292,8 @@ using namespace fleece;
             _changeNotifier = [CBLChangeNotifier new];
         
         CBLChangeListenerToken* token = [_changeNotifier addChangeListenerWithQueue: queue
-                                                                           listener: listener];
+                                                                           listener: listener
+                                                                           delegate: self];
         
         // create c4queryobs & start immediately
         CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: self
@@ -314,6 +315,12 @@ using namespace fleece;
         
         [_changeNotifier removeChangeListenerWithToken: token];
     }
+}
+
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
+    [self removeChangeListenerWithToken: token];
 }
 
 #pragma mark - Internal

@@ -68,34 +68,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                            c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithCollection: (nullable CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                              c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
 
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                             body: (nullable FLDict)body;
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                               body: (nullable FLDict)body;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                       revisionID: (NSString*)revisionID
-                             body: (nullable FLDict)body;
-
-- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
-                                documentID: (NSString*)documentID
-                            includeDeleted: (BOOL)includeDeleted
-                                     error: (NSError**)outError;
-
-- (nullable instancetype) initWithDatabase: (CBLDatabase*)database
-                                documentID: (NSString*)documentID
-                            includeDeleted: (BOOL)includeDeleted
-                              contentLevel: (C4DocContentLevel)contentLevel
-                                     error: (NSError**)outError;
-
-/** Collection initializer */
 - (nullable instancetype) initWithCollection: (CBLCollection*)collection
                                   documentID: (NSString*)documentID
                               includeDeleted: (BOOL)includeDeleted
+                                       error: (NSError**)outError;
+
+- (nullable instancetype) initWithCollection: (CBLCollection*)collection
+                                  documentID: (NSString*)documentID
+                              includeDeleted: (BOOL)includeDeleted
+                                contentLevel: (C4DocContentLevel)contentLevel
                                        error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;

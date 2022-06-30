@@ -40,14 +40,13 @@ using namespace fleece;
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
 @synthesize collection=_collection;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                            c4Doc: (nullable CBLC4Document*)c4Doc
-{
+- (instancetype) initWithCollection: (nullable CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                              c4Doc: (nullable CBLC4Document*)c4Doc {
     NSParameterAssert(documentID != nil);
     self = [super init];
     if (self) {
-        _database = database;
+        _database = collection.db; // TODO: Keep collection & remove database property
         _id = documentID;
         _revID = nil;
         [self setC4Doc: c4Doc];
@@ -55,14 +54,12 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                             body: (nullable FLDict)body {
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                               body: (nullable FLDict)body {
     NSParameterAssert(documentID != nil);
-    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
-        _database = database;
-        _id = documentID;
         _fleeceData = body;
         _revID = nil;
         [self updateDictionary];
@@ -70,16 +67,15 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                       revisionID: (NSString*)revisionID
-                             body: (nullable FLDict)body {
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                               body: (nullable FLDict)body {
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
-    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    NSParameterAssert(collection != nil);
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
-        _database = database;
-        _id = documentID;
         _fleeceData = body;
         _revID = revisionID;
         [self updateDictionary];
@@ -87,32 +83,33 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                   includeDeleted: (BOOL)includeDeleted
-                            error: (NSError**)outError
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                     includeDeleted: (BOOL)includeDeleted
+                              error: (NSError**)outError
 {
-    return [self initWithDatabase: database
-                       documentID: documentID
-                   includeDeleted: includeDeleted
-                     contentLevel: kDocGetCurrentRev
-                            error: outError];
+    return [self initWithCollection: collection
+                         documentID: documentID
+                     includeDeleted: includeDeleted
+                       contentLevel: kDocGetCurrentRev
+                              error: outError];
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                   includeDeleted: (BOOL)includeDeleted
-                     contentLevel: (C4DocContentLevel)contentLevel
-                            error: (NSError**)outError
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                     includeDeleted: (BOOL)includeDeleted
+                       contentLevel: (C4DocContentLevel)contentLevel
+                              error: (NSError**)outError
 {
-    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    NSParameterAssert(collection != nil);
+    
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
-        _database = database;
         _revID = nil;
         CBLStringBytes docId(documentID);
         C4Error err;
         
-        auto doc = c4db_getDoc(database.c4db, docId, true, contentLevel, &err);
+        auto doc = c4db_getDoc(collection.db.c4db, docId, true, contentLevel, &err);
         if (!doc) {
             convertError(err, outError);
             return nil;
@@ -126,16 +123,6 @@ using namespace fleece;
         [self setC4Doc: [CBLC4Document document: doc]];
     }
     return self;
-}
-
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                         documentID: (NSString*)documentID
-                     includeDeleted: (BOOL)includeDeleted
-                              error: (NSError**)outError {
-    return [self initWithDatabase: collection.db
-                       documentID: documentID
-                   includeDeleted: includeDeleted
-                            error: outError];
 }
 
 #pragma mark - Public

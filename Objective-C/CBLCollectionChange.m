@@ -18,9 +18,22 @@
 //
 
 #import "CBLCollectionChange.h"
+#import "CBLCollection+Internal.h"
 
 @implementation CBLCollectionChange
 
-@synthesize documentIDs=_documentIDs, collection=_collection;
+@synthesize documentIDs=_documentIDs, collection=_collection, isExternal=_isExternal;
+
+- (instancetype) initWithCollection: (CBLCollection *)collection
+                        documentIDs: (NSArray *)documentIDs
+                         isExternal: (BOOL)isExternal {
+    self = [super init];
+    if (self) {
+        _collection = collection;
+        _documentIDs = documentIDs;
+        _isExternal = isExternal;
+    }
+    return self;
+}
 
 @end

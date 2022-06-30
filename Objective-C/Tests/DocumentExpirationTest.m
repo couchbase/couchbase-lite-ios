@@ -435,6 +435,11 @@
     CBLDocument* doc = [self generateDocumentWithID: nil];
     
     // Setup document change notification
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNotNil(c);
+    AssertNil(error);
+    
     __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
@@ -443,10 +448,11 @@
         AssertEqualObjects(change.documentID, doc.id);
         AssertNil([change.database documentWithID: change.documentID]);
         if (count == 2) {
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithDatabase: change.database
-                                                                documentID: doc.id
-                                                            includeDeleted: YES
-                                                                     error: nil];
+            
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                                  documentID: doc.id
+                                                              includeDeleted: YES
+                                                                       error: nil];
             AssertNil(purgedDoc);
             [expectation fulfill];
         }
@@ -463,10 +469,10 @@
     AssertNil(err);
     AssertNil([self.db documentWithID: doc.id]);
     
-    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithDatabase: self.db
-                                                         documentID: doc.id
-                                                     includeDeleted: TRUE
-                                                              error: &err];
+    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                           documentID: doc.id
+                                                       includeDeleted: TRUE
+                                                                error: &err];
     AssertNotNil(deletedDoc);
     
     // Wait for result
@@ -483,6 +489,11 @@
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
     
+    NSError* error = nil;
+    CBLCollection* c = [self.db defaultCollection: &error];
+    AssertNotNil(c);
+    AssertNil(error);
+    
     // Setup document change notification
     __block int count = 0;
     id token = [self.db addDocumentChangeListenerWithID: doc.id listener: ^(CBLDocumentChange *change) {
@@ -490,10 +501,10 @@
         AssertEqualObjects(change.documentID, doc.id);
         AssertNil([change.database documentWithID: change.documentID]);
         if (count == 2) {
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithDatabase: change.database
-                                                                documentID: doc.id
-                                                            includeDeleted: YES
-                                                                     error: nil];
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                                  documentID: doc.id
+                                                              includeDeleted: YES
+                                                                       error: nil];
             AssertNil(purgedDoc);
             [expectation fulfill];
         }

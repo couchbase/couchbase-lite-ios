@@ -135,10 +135,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         if (![self open: outError])
             return nil;
         
-        NSString* qName = $sprintf(@"Database <%@>", name);
+        NSString* qName = $sprintf(@"Database <%@: %@>", self, name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        qName = $sprintf(@"Database-Query <%@>", name);
+        qName = $sprintf(@"Database-Query <%@: %@>", self, name);
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
@@ -249,10 +249,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
             CBL_LOCK(self) {
-                oldDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                    documentID: document.id
-                                                includeDeleted: YES
-                                                         error: error];
+                oldDoc = [[CBLDocument alloc] initWithCollection: [self mustDefaultCollection: error]
+                                                      documentID: document.id
+                                                  includeDeleted: YES
+                                                           error: error];
                 if (!oldDoc)
                     return createError(CBLErrorNotFound, error);
             }
@@ -915,6 +915,18 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
+- (CBLCollection*) mustDefaultCollection: (NSError**)outError {
+    NSError* e = nil;
+    CBLCollection* c = [self defaultCollection: &e];
+    if (!c) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to perform an operation on removed collection %@", e];
+        if (outError)
+            *outError = e;
+    }
+    return c;
+}
+
 - (C4SliceResult) getPublicUUID: (NSError**)outError {
     CBL_LOCK(self) {
         if (![self mustBeOpen: outError])
@@ -1065,10 +1077,10 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 {
     CBL_LOCK(self) {
         [self mustBeOpen];
-        return [[CBLDocument alloc] initWithDatabase: self
-                                          documentID: documentID
-                                      includeDeleted: NO
-                                               error: outError];
+        return [[CBLDocument alloc] initWithCollection: [self mustDefaultCollection: outError]
+                                            documentID: documentID
+                                        includeDeleted: NO
+                                                 error: outError];
     }
 }
 
@@ -1097,8 +1109,15 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     }
     
-    return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener];
+    return [_dbChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
 }
+
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
+    [self removeChangeListenerWithToken: token];
+}
+
 #pragma clang diagnostic pop
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
@@ -1165,7 +1184,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     }
     
     CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
-                                                                   listener: listener];
+                                                                   listener: listener
+                                                                   delegate: self];
     token.context = documentID;
     return token;
 }
@@ -1359,11 +1379,12 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         // Get latest local and remote document revisions from DB
         CBL_LOCK(self) {
             // Read local document:
-            localDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                  documentID: docID
-                                              includeDeleted: YES
-                                                contentLevel: kDocGetCurrentRev
-                                                       error: outError];
+            CBLCollection* c = [self mustDefaultCollection: outError];
+            localDoc = [[CBLDocument alloc] initWithCollection: c
+                                                    documentID: docID
+                                                includeDeleted: YES
+                                                  contentLevel: kDocGetCurrentRev
+                                                         error: outError];
             if (!localDoc) {
                 CBLWarn(Sync, @"Unable to find the document %@ during conflict resolution,\
                         skipping...", docID);
@@ -1371,11 +1392,11 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             }
             
             // Read the conflicting remote revision:
-            remoteDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                   documentID: docID
-                                               includeDeleted: YES
-                                                 contentLevel: kDocGetAll
-                                                        error: outError];
+            remoteDoc = [[CBLDocument alloc] initWithCollection: c
+                                                     documentID: docID
+                                                 includeDeleted: YES
+                                                   contentLevel: kDocGetAll
+                                                          error: outError];
             if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
                 CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may "
                         "have been resolved...", docID);

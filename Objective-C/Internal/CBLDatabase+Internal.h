@@ -21,6 +21,7 @@
 #import "c4.h"
 #import "fleece/Fleece.h"
 #import "CBLBlob.h"
+#import "CBLChangeListenerToken.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabaseChange.h"
@@ -48,7 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// CBLDatabase:
 
 
-@interface CBLDatabase () <CBLLockable>
+@interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
@@ -57,6 +58,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) mustBeOpenLocked;
 - (BOOL) isClosedLocked;
+
+// Must be called inside _db lock
+- (BOOL) isClosed;
 
 - (C4SliceResult) getPublicUUID: (NSError**)outError;
 
@@ -78,8 +82,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url;
 
-// Gets called from CBLCollection as well. Must be called inside a lock
+// TODO: Remove this function,
+// When Database class will call Collection APIs from within, this will become useless!
+// https://github.com/couchbase/couchbase-lite-ios/pull/2968#discussion_r906213671
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
+
+// return default collection, else throw exception
+- (CBLCollection*) mustDefaultCollection: (NSError**)outError;
 
 @end
 

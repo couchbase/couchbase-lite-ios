@@ -66,7 +66,7 @@ typedef enum {
     kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
-@interface CBLReplicator () <CBLLockable>
+@interface CBLReplicator () <CBLLockable, CBLRemovableListenerToken>
 @property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
 
@@ -378,7 +378,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
 {
-    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener];
+    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener delegate: nil];
 }
 
 - (id<CBLListenerToken>) addDocumentReplicationListener: (void (^)(CBLDocumentReplication*))listener {
@@ -390,7 +390,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 {
     CBL_LOCK(self) {
         [self setProgressLevel: kCBLProgressLevelPerDocument];
-        return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener];
+        return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener delegate: nil];
     }
 }
 
@@ -401,6 +401,12 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
             [self setProgressLevel: kCBLProgressLevelOverall];
     }
+}
+
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
+    [self removeChangeListenerWithToken: token];
 }
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
@@ -746,10 +752,10 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
-                                          documentID: slice2string(docID)
-                                          revisionID: slice2string(revID)
-                                                body: body];
+    auto doc = [[CBLDocument alloc] initWithCollection: [_config.database mustDefaultCollection: nil]
+                                            documentID: slice2string(docID)
+                                            revisionID: slice2string(revID)
+                                                  body: body];
     CBLDocumentFlags docFlags = 0;
     if ((flags & kRevDeleted) == kRevDeleted)
         docFlags |= kCBLDocumentFlagsDeleted;
