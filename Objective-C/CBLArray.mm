@@ -19,6 +19,7 @@
 
 #import "CBLArray.h"
 #import "CBLArray+Swift.h"
+#import "CBLCollection+Internal.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
@@ -70,7 +71,7 @@ using namespace fleece;
     id db;
     auto docContext = dynamic_cast<DocContext*>(_array.context());
     if (docContext)
-        db = (docContext)->database();
+        db = (docContext)->collection().db;
     _sharedLock = db != nil ? db : self;
 }
 

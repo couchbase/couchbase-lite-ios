@@ -89,6 +89,9 @@ typedef enum {
     NSCondition* _closeCondition;
     
     CBLDatabaseState _state;
+    
+    CBLCollection* _defaultCollection;
+    BOOL _defaultCollectionIsDeleted;
 }
 
 @synthesize name=_name;
@@ -142,6 +145,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
+        
+        _defaultCollectionIsDeleted = NO;
     }
     return self;
 }
@@ -220,68 +225,18 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                error: (NSError**)error
-{
-    CBLAssertNotNil(document);
-    
-    return [self saveDocument: document
-             withBaseDocument: nil
-           concurrencyControl: concurrencyControl
-                   asDeletion: NO
-                        error: error];
+                error: (NSError**)error {
+    return [[self mustDefaultCollection: error] saveDocument: document
+                                          concurrencyControl: concurrencyControl
+                                                       error: error];
 }
 
 - (BOOL) saveDocument: (CBLMutableDocument*)document
       conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
-                error: (NSError**)error
-{
-    CBLAssertNotNil(document);
-    CBLAssertNotNil(conflictHandler);
-    
-    CBLDocument* oldDoc = nil;
-    NSError* err;
-    while (true) {
-        BOOL success = [self saveDocument: document
-                         withBaseDocument: oldDoc
-                       concurrencyControl: kCBLConcurrencyControlFailOnConflict
-                               asDeletion: NO
-                                    error: &err];
-        // if it's a conflict, we will use the conflictHandler to resolve.
-        if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
-            CBL_LOCK(self) {
-                oldDoc = [[CBLDocument alloc] initWithCollection: [self mustDefaultCollection: error]
-                                                      documentID: document.id
-                                                  includeDeleted: YES
-                                                           error: error];
-                if (!oldDoc)
-                    return createError(CBLErrorNotFound, error);
-            }
-            
-            @try {
-                if (conflictHandler(document, oldDoc.isDeleted ? nil : oldDoc)) {
-                    continue;
-                } else {
-                    return createError(CBLErrorConflict, error);
-                }
-            } @catch(NSException* ex) {
-                CBLWarn(Database, @"Exception while resolving through save handler. Exception: %@",
-                        ex.description);
-                if (error)
-                    *error = [NSError errorWithDomain: CBLErrorDomain
-                                                 code: CBLErrorConflict
-                                             userInfo: @{NSLocalizedDescriptionKey: ex.description}];
-            }
-            return NO;
-        } else if (!success) { // any other error, we return false with errorInfo
-            if (error)
-                *error = err;
-            
-            return NO;
-        }
-        
-        // save didn't cause any error
-        return YES;
-    }
+                error: (NSError**)error {
+    return [[self mustDefaultCollection: error] saveDocument:document
+                                             conflictHandler: conflictHandler
+                                                       error: error];
 }
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
@@ -292,57 +247,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                  error: (NSError**)error
-{
-    CBLAssertNotNil(document);
-    
-    return [self saveDocument: document
-             withBaseDocument: nil
-           concurrencyControl: concurrencyControl
-                   asDeletion: YES
-                        error: error];
+                  error: (NSError**)error {
+    return [[self mustDefaultCollection: error] deleteDocument: document
+                                            concurrencyControl: concurrencyControl
+                                                         error: error];
 }
 
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
-    CBLAssertNotNil(document);
-    
-    CBL_LOCK(self) {
-        if (![self prepareDocument: document error: error])
-            return NO;
-        
-        if (!document.revisionID)
-            return createError(CBLErrorNotFound,
-                               @"Document doesn't exist in the database.", error);
-        
-        if ([self purgeDocumentWithID:document.id error:error]) {
-            [document replaceC4Doc: nil];
-            return TRUE;
-        }
-        
-        return NO;
-    }
+    return [[self mustDefaultCollection: error] purgeDocument: document
+                                                        error: error];
 }
 
 - (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        C4Transaction transaction(_c4db);
-        if (!transaction.begin())
-            return convertError(transaction.error(),  error);
-        
-        C4Error err;
-        CBLStringBytes docID(documentID);
-        if (c4db_purgeDoc(_c4db, docID, &err)) {
-            if (!transaction.commit()) {
-                return convertError(transaction.error(), error);
-            }
-            return YES;
-        }
-        return convertError(err, error);
-    }
+    return [[self mustDefaultCollection: error] purgeDocumentWithID: documentID
+                                                              error: error];
 }
 
 #pragma mark - Blob Save/Get
@@ -636,65 +554,25 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
-    CBLAssertNotNil(config);
-    CBLAssertNotNil(name);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        CBLStringBytes bName(name);
-        CBLStringBytes c4IndexSpec(config.getIndexSpecs);
-        C4IndexOptions options = config.indexOptions;
-        C4Error c4err;
-        
-        return c4db_createIndex2(_c4db,
-                                 bName,
-                                 c4IndexSpec,
-                                 config.queryLanguage,
-                                 config.indexType,
-                                 &options, &c4err) || convertError(c4err, error);
-    }
+    return [[self mustDefaultCollection: error] createIndexWithName: name config: config error: error];
 }
 
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
-    CBLAssertNotNil(name);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        CBLStringBytes bName(name);
-        C4Error c4err;
-        return c4db_deleteIndex(_c4db, bName, &c4err) || convertError(c4err, outError);
-    }
+    return [[self mustDefaultCollection: outError] deleteIndexWithName: name error: outError];
 }
 
 #pragma mark - DOCUMENT EXPIRATION
 
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
-                               error: (NSError**)error
-{
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(self) {
-        UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
-        C4Error err;
-        CBLStringBytes docID(documentID);
-        return c4doc_setExpiration(_c4db, docID, timestamp, &err) || convertError(err, error);
-    }
+                               error: (NSError**)error {
+    return [[self mustDefaultCollection: error] setDocumentExpirationWithID: documentID
+                                                                 expiration: date
+                                                                      error: error];
 }
 
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(self) {
-        CBLStringBytes docID(documentID);
-        UInt64 timestamp = c4doc_getExpiration(_c4db, docID, nullptr);
-        if (timestamp == 0) {
-            return nil;
-        }
-        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
-    }
+    return [[self mustDefaultCollection: nil] getDocumentExpirationWithID: documentID error: nil];
 }
 
 #pragma mark - Query
@@ -728,12 +606,26 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(self) {
-        if (![self mustBeOpen: error])
-            return nil;
-        
-        return [self collectionWithName: kCBLDefaultCollectionName
-                                  scope: kCBLDefaultScopeName
-                                  error: error];
+        if (!_defaultCollection && !_defaultCollectionIsDeleted) {
+            if (![self mustBeOpen: error])
+                return nil;
+            
+            C4Error c4err = {};
+            C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4err);
+            if (c4col) {
+                _defaultCollection = 
+                
+                [self collectionWithName: kCBLDefaultCollectionName
+                                                        scope: kCBLDefaultScopeName
+                                                        error: error];
+            } else {
+                _defaultCollectionIsDeleted = YES;
+                CBLWarn(Database,
+                        @"%@ The non-recoverable default collection is deleted from database",
+                        self);
+            }
+        }
+        return _defaultCollection;
     }
     
 }
@@ -1075,26 +967,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID
                                    error: (NSError**)outError
 {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        return [[CBLDocument alloc] initWithCollection: [self mustDefaultCollection: outError]
-                                            documentID: documentID
-                                        includeDeleted: NO
-                                                 error: outError];
-    }
-}
-
-// Must be called inside a lock
-- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
-    [self mustBeOpen];
-    
-    if (!document.database) {
-        document.database = self;
-    } else if (document.database != self) {
-        return createError(CBLErrorInvalidParameter,
-                           kCBLErrorMessageDocumentAnotherDatabase, error);
-    }
-    return YES;
+    return [[self mustDefaultCollection: outError] documentWithID: documentID
+                                                            error: outError];
 }
 
 // call from a db-lock(c4dbobs_create)
@@ -1215,128 +1089,14 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     _c4db = nil;
     
     _state = kCBLDatabaseStateClosed;
+    
+    _defaultCollection = nil;
 }
 
 - (void) safeBlock:(void (^)())block {
     CBL_LOCK(self) {
         block();
     }
-}
-
-#pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING
-
-- (BOOL) saveDocument: (CBLDocument*)document
-     withBaseDocument: (nullable CBLDocument*)baseDoc
-   concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-           asDeletion: (BOOL)deletion
-                error: (NSError**)outError
-{
-    if (deletion && !document.revisionID)
-        return createError(CBLErrorNotFound,
-                           kCBLErrorMessageDeleteDocFailedNotSaved, outError);
-    
-    CBL_LOCK(self) {
-        if (![self prepareDocument: document error: outError])
-            return NO;
-        
-        C4Document* curDoc = nil;
-        C4Document* newDoc = nil;
-        @try {
-            // Begin a db transaction:
-            C4Transaction transaction(_c4db);
-            if (!transaction.begin())
-                return convertError(transaction.error(), outError);
-            
-            if (![self saveDocument: document into: &newDoc withBaseDocument: baseDoc.c4Doc.rawDoc
-                         asDeletion: deletion error: outError])
-                return NO;
-            
-            if (!newDoc) {
-                // Handle conflict:
-                if (concurrencyControl == kCBLConcurrencyControlFailOnConflict)
-                    return createError(CBLErrorConflict, outError);
-                
-                C4Error err;
-                CBLStringBytes bDocID(document.id);
-                curDoc = c4db_getDoc(_c4db, bDocID, true, kDocGetCurrentRev, &err);
-                
-                // If deletion and the current doc has already been deleted
-                // or doesn't exist:
-                if (deletion) {
-                    if (!curDoc) {
-                        if (err.code == kC4ErrorNotFound)
-                            return YES;
-                        return convertError(err, outError);
-                    } else if ((curDoc->flags & kDocDeleted) != 0) {
-                        [document replaceC4Doc: [CBLC4Document document: curDoc]];
-                        curDoc = nil;
-                        return YES;
-                    }
-                }
-                
-                // Save changes on the current branch:
-                if (!curDoc)
-                    return convertError(err, outError);
-                
-                if (![self saveDocument: document into: &newDoc
-                       withBaseDocument: curDoc asDeletion: deletion error: outError])
-                    return NO;
-            }
-            
-            if (!transaction.commit())
-                return convertError(transaction.error(), outError);
-            
-            [document replaceC4Doc: [CBLC4Document document: newDoc]];
-            newDoc = nil;
-            return YES;
-        }
-        @finally {
-            c4doc_release(curDoc);
-            c4doc_release(newDoc);
-        }
-    }
-}
-
-// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-// call on db-lock(c4doc_create/update)
-- (BOOL) saveDocument: (CBLDocument*)document
-                 into: (C4Document**)outDoc
-     withBaseDocument: (nullable C4Document*)base
-           asDeletion: (BOOL)deletion
-                error: (NSError**)outError
-{
-    C4RevisionFlags revFlags = 0;
-    if (deletion)
-        revFlags = kRevDeleted;
-    FLSliceResult body;
-    if (!deletion && !document.isEmpty) {
-        // Encode properties to Fleece data:
-        body = [document encodeWithRevFlags: &revFlags error: outError];
-        if (!body.buf) {
-            *outDoc = nullptr;
-            return NO;
-        }
-    } else {
-        body = [self emptyFLSliceResult];
-    }
-    
-    // Save to database:
-    C4Error err;
-    C4Document *c4Doc = base != nullptr ? base : document.c4Doc.rawDoc;
-    if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, (FLSlice)body, revFlags, &err);
-    } else {
-        CBLStringBytes docID(document.id);
-        *outDoc = c4doc_create(_c4db, docID, (FLSlice)body, revFlags, &err);
-    }
-
-    FLSliceResult_Release(body);
-    
-    if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
-        // conflict is not an error, at this level
-        return convertError(err, outError);
-    }
-    return YES;
 }
 
 #pragma mark - Stoppable
@@ -1429,10 +1189,10 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
                         resolvedDoc.id, docID);
             }
             
-            if (resolvedDoc && resolvedDoc.database && resolvedDoc.database != self) {
+            if (resolvedDoc && resolvedDoc.collection.db && resolvedDoc.collection.db != self) {
                 [NSException raise: NSInternalInconsistencyException
                             format: kCBLErrorMessageResolvedDocWrongDb,
-                 resolvedDoc.database.name, self.name];
+                 resolvedDoc.collection.db.name, self.name];
             }
         } @catch (NSException *ex) {
             CBLWarn(Sync, @"Exception in conflict resolver: %@", ex.description);
@@ -1475,7 +1235,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         }
         
         if (resolvedDoc != localDoc)
-            resolvedDoc.database = self;
+            resolvedDoc.collection = [self mustDefaultCollection: outError];
         
         // The remote branch has to win, so that the doc revision history matches the server's.
         CBLStringBytes winningRevID = remoteDoc.revisionID;

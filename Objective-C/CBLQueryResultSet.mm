@@ -18,6 +18,7 @@
 //
 
 #import "CBLQueryResultSet.h"
+#import "CBLCollection+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLQuery+Internal.h"
@@ -37,13 +38,13 @@ namespace cbl {
     // The data happens to belong to the C4QueryEnumerator.
     class QueryResultContext : public DocContext {
     public:
-        QueryResultContext(CBLDatabase *db, C4QueryEnumerator *enumerator)
-        :DocContext(db, nullptr)
+        QueryResultContext(CBLCollection *col, C4QueryEnumerator *enumerator)
+        :DocContext(col, nullptr)
         ,_enumerator(enumerator)
         { }
 
         virtual ~QueryResultContext() {
-            [database() safeBlock:^{
+            [collection().db safeBlock:^{
                 c4queryenum_release(_enumerator);
             }];
         }
@@ -80,7 +81,9 @@ namespace cbl {
             return nil;
         _query = query;
         _c4enum = e;
-        _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(query.database, e))->retain();
+        NSError* error = nil;
+        CBLCollection* c = [query.database mustDefaultCollection: &error];
+        _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(c, e))->retain();
         _columnNames = columnNames;
         CBLLogInfo(Query, @"Beginning query enumeration (%p)", _c4enum);
     }

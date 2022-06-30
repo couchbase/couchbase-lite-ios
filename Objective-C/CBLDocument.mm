@@ -37,16 +37,16 @@ using namespace fleece;
     NSError* _encodingError;
 }
 
-@synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
+@synthesize id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
 @synthesize collection=_collection;
 
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                            c4Doc: (nullable CBLC4Document*)c4Doc {
+- (instancetype) initWithCollection: (nullable CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                              c4Doc: (nullable CBLC4Document*)c4Doc {
     NSParameterAssert(documentID != nil);
     self = [super init];
     if (self) {
-        _database = database;
+        _collection = collection;
         _id = documentID;
         _revID = nil;
         [self setC4Doc: c4Doc];
@@ -58,7 +58,7 @@ using namespace fleece;
                          documentID: (NSString*)documentID
                                body: (nullable FLDict)body {
     NSParameterAssert(documentID != nil);
-    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
         _fleeceData = body;
         _revID = nil;
@@ -74,7 +74,7 @@ using namespace fleece;
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
     NSParameterAssert(collection != nil);
-    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
         _fleeceData = body;
         _revID = revisionID;
@@ -103,7 +103,7 @@ using namespace fleece;
 {
     NSParameterAssert(collection != nil);
     
-    self = [self initWithDatabase: collection.db documentID: documentID c4Doc: nil];
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
     if (self) {
         _revID = nil;
         CBLStringBytes docId(documentID);
@@ -155,7 +155,7 @@ using namespace fleece;
 #pragma mark - Internal
 
 - (C4Database*) c4db {
-    C4Database* db = _database.c4db;
+    C4Database* db = _collection.db.c4db;
     Assert(db, @"%@ does not belong to a database", self);
     return db;
 }
@@ -171,8 +171,8 @@ using namespace fleece;
 
 - (void) updateDictionary {
     if (_fleeceData) {
-        _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_fleeceData), self.isMutable));
-        [_database safeBlock:^{
+        _root.reset(new MRoot<id>(new cbl::DocContext(_collection, _c4Doc), Dict(_fleeceData), self.isMutable));
+        [_collection.db safeBlock:^{
             _dict = _root->asNative();
         }];
     } else {
@@ -230,7 +230,7 @@ using namespace fleece;
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     
     if (!hasAttachment) {
-        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.database.sharedKeys, nullslice);
+        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, _collection.db.sharedKeys, nullslice);
         hasAttachment = c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
         FLDoc_Release(doc);
     }
@@ -386,12 +386,12 @@ using namespace fleece;
     if (!other)
         return NO;
     
-    if (![self.database isEqual: other.database]) {
-        if (self.database) {
-            if (!(other.database && [self.database.name isEqual: other.database.name]))
+    if (![self.collection.db isEqual: other.collection.db]) {
+        if (self.collection.db) {
+            if (!(other.collection.db && [self.collection.db.name isEqual: other.collection.db.name]))
                 return NO;
         } else {
-            if (other.database != nil)
+            if (other.collection.db != nil)
                 return NO;
         }
     }
@@ -403,7 +403,7 @@ using namespace fleece;
 }
 
 - (NSUInteger) hash {
-    return [self.database.name hash] ^  [self.id hash] ^ [_dict hash];
+    return [self.collection.db.name hash] ^  [self.id hash] ^ [_dict hash];
 }
 
 @end

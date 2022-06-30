@@ -1597,7 +1597,7 @@
     [doc setValue: @"Jim" forKey: @"name"];
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
-    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
     AssertEqualObjects([doc1 valueForKey: @"name"], @"Jim");
     Assert([[doc1 valueForKey: @"data"] isKindOfClass:[CBLBlob class]]);
     data = [doc1 valueForKey: @"data"];
@@ -2317,9 +2317,7 @@
 
 - (void) testCollectionPurgeDoc {
     NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
+    CBLCollection* c = [self.db defaultCollection: &error];
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
     [self saveDocument: doc1];
@@ -2337,9 +2335,7 @@
 
 - (void) testCollectionPurgeSameDocTwice {
     NSError* error = nil;
-    CBLCollection* c = [self.db collectionWithName: kCBLDefaultCollectionName
-                                             scope: nil
-                                             error: &error];
+    CBLCollection* c = [self.db defaultCollection: &error];
     
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     CBLMutableDocument* doc2 = [self createDocument: @"doc2"];

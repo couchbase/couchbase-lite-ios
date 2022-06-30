@@ -2602,9 +2602,9 @@
     AssertNil(doc);
     
     CBLMutableDocument* mDoc = [CBLMutableDocument document];
-    AssertFalse([c saveDocument: mDoc error: &error]);
-    AssertFalse([c saveDocument: mDoc conflictHandler: ^BOOL(CBLMutableDocument* md1, CBLDocument* d1) { return YES; } error: &error]);
-    AssertFalse([c saveDocument: mDoc concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
+    Assert([c saveDocument: mDoc error: &error]);
+    Assert([c saveDocument: mDoc conflictHandler: ^BOOL(CBLMutableDocument* md1, CBLDocument* d1) { return YES; } error: &error]);
+    Assert([c saveDocument: mDoc concurrencyControl: kCBLConcurrencyControlLastWriteWins error: &error]);
     
     CBLDocument* doc1 = [self.db documentWithID: $sprintf(@"doc_%03d", 1)];
     AssertFalse([c deleteDocument: doc1 error: &error]);

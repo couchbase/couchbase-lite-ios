@@ -54,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
     NSString* _revID;
 }
 
-@property (nonatomic, nullable) CBLDatabase* database;
+@property (nonatomic, nullable) CBLCollection* collection;
 
 @property (nonatomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
 
@@ -68,9 +68,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                            c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithCollection: (nullable CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                              c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID

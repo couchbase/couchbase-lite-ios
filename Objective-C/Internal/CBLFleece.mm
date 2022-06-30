@@ -25,6 +25,7 @@
 #import "MDictIterator.hh"
 #import "c4Document+Fleece.h"
 #import "CBLStatus.h"
+#import "CBLCollection+Internal.h"
 
 @implementation NSObject (CBLFleece)
 - (fleece::MCollection<id>*) fl_collection {
@@ -33,9 +34,9 @@
 @end
 
 namespace cbl {
-    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
+    DocContext::DocContext(CBLCollection *col, CBLC4Document *doc)
     :fleece::MContext(fleece::alloc_slice())
-    ,_db(db)
+    ,_col(col)
     ,_doc(doc)
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
     { }
@@ -63,7 +64,7 @@ namespace fleece {
     static id createSpecialObjectOfType(Dict properties, DocContext *context) {
         slice type = properties.get(C4STR(kC4ObjectTypeProperty)).asString();
         if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties)) {
-            return [[CBLBlob alloc] initWithDatabase: context->database()
+            return [[CBLBlob alloc] initWithDatabase: context->collection().db
                                           properties: context->toObject(properties)];
         }
         return nil;

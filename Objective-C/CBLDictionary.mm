@@ -19,6 +19,7 @@
 
 #import "CBLDictionary.h"
 #import "CBLCoreBridge.h"
+#import "CBLCollection+Internal.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDictionary+Swift.h"
@@ -75,7 +76,7 @@ using namespace fleece;
     id db;
     auto docContext = dynamic_cast<DocContext*>(_dict.context());
     if (docContext)
-        db = (docContext)->database();
+        db = (docContext)->collection().db;
     _sharedLock = db != nil ? db : self;
 }
 

@@ -48,9 +48,9 @@ using namespace fleece;
 }
 
 - (instancetype) initWithID: (nullable NSString*)documentID {
-    return [self initWithDatabase: nil
-                       documentID: (documentID ?: [self generateID])
-                            c4Doc: nil];
+    return [self initWithCollection: nil
+                         documentID: (documentID ?: [self generateID])
+                              c4Doc: nil];
 }
 
 - (instancetype) initWithData: (NSDictionary<NSString*,id>*)data {
@@ -95,9 +95,9 @@ using namespace fleece;
 /* internal */ - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
                                                   dict: (nullable CBLDictionary*)dict
 {
-    self = [self initWithDatabase: doc.database
-                       documentID: doc.id
-                            c4Doc: doc.c4Doc];
+    self = [self initWithCollection: doc.collection
+                         documentID: doc.id
+                              c4Doc: doc.c4Doc];
     if (self) {
         if (dict)
             _dict = [dict mutableCopy];

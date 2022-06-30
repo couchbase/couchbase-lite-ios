@@ -82,11 +82,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url;
 
-// TODO: Remove this function,
-// When Database class will call Collection APIs from within, this will become useless!
-// https://github.com/couchbase/couchbase-lite-ios/pull/2968#discussion_r906213671
-- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
-
 // return default collection, else throw exception
 - (CBLCollection*) mustDefaultCollection: (NSError**)outError;
 
