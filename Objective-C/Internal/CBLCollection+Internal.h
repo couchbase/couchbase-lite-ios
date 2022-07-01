@@ -35,7 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
 
 /** The database associated with the collection. */
-@property (nonatomic, readonly) CBLDatabase* db;
+// TODO: https://issues.couchbase.com/browse/CBL-3367
+@property (nonatomic, readonly, weak) CBLDatabase* db;
 
 @property (nonatomic, readonly) BOOL isValid;
 

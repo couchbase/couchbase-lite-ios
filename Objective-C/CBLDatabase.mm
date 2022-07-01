@@ -145,13 +145,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         _state = kCBLDatabaseStateOpened;
         
-        NSError* error = nil;
-        _defaultCollection = [self collectionWithName: kCBLDefaultCollectionName
-                                                scope: kCBLDefaultScopeName
-                                                error: &error];
-        if (error) {
-            CBLWarn(Database, @"%@ : Error getting the default collection: %@", self, error);
+        C4Error c4error = {};
+        C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4error);
+        if (c4error.code != 0) {
+            CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
+                    self, c4error.domain, c4error.code);
         }
+        
+        _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
     }
     return self;
 }
@@ -634,20 +635,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
     NSError *e = nil;
     BOOL res = [[self defaultCollectionOrThrow] createIndexWithName: name config: config error: &e];
+    throwIfNotOpenError(e);
+    
     if (error)
         *error = e;
-    
-    throwIfNotOpenError(e);
     return res;
 }
 
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
     NSError *e = nil;
     BOOL res = [[self defaultCollectionOrThrow] deleteIndexWithName: name error: &e];
+    throwIfNotOpenError(e);
+    
     if (outError)
         *outError = e;
-    
-    throwIfNotOpenError(e);
     return res;
 }
 
@@ -660,10 +661,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     BOOL res = [[self defaultCollectionOrThrow] setDocumentExpirationWithID: documentID
                                                                  expiration: date
                                                                       error: &e];
+    throwIfNotOpenError(e);
+    
     if (error)
         *error = e;
-    
-    throwIfNotOpenError(e);
     return res;
 }
 

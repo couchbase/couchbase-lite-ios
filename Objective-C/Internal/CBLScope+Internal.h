@@ -26,7 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLScope ()
 
-@property (nonatomic, readonly) CBLDatabase* db;
+// TODO: https://issues.couchbase.com/browse/CBL-3367
+@property (nonatomic, readonly, weak) CBLDatabase* db;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
                        name: (NSString*)name;
