@@ -594,17 +594,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    CBLAssertNotNil(token);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-            
-        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-        if (t.context)
-            [self removeDocumentChangeListenerWithToken: token];
-        else
-            [self removeDatabaseChangeListenerWithToken: token];
-    }
+    CBLCollection* c = [self defaultCollection: nil];
+    return [c removeToken: token];
 }
 
 #pragma mark - Index:
