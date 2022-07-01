@@ -31,6 +31,8 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 
+#define msec 1000.0
+
 using namespace fleece;
 
 NSString* const kCBLDefaultCollectionName = @"_default";
@@ -289,7 +291,10 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
     
     return valid;
-    
+}
+
+- (BOOL) isValid {
+    return [self collectionIsValid: nil];
 }
 
 - (id<CBLListenerToken>) addCollectionChangeListener: (void (^)(CBLCollectionChange*))listener

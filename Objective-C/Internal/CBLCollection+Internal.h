@@ -37,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** The database associated with the collection. */
 @property (nonatomic, readonly) CBLDatabase* db;
 
+@property (nonatomic, readonly) BOOL isValid;
+
 /** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection;

@@ -91,7 +91,6 @@ typedef enum {
     CBLDatabaseState _state;
     
     CBLCollection* _defaultCollection;
-    BOOL _defaultCollectionIsDeleted;
 }
 
 @synthesize name=_name;
@@ -146,7 +145,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         
         _state = kCBLDatabaseStateOpened;
         
-        _defaultCollectionIsDeleted = NO;
+        NSError* error = nil;
+        _defaultCollection = [self collectionWithName: kCBLDefaultCollectionName
+                                                scope: kCBLDefaultScopeName
+                                                error: &error];
+        if (error) {
+            CBLWarn(Database, @"%@ : Error getting the default collection: %@", self, error);
+        }
     }
     return self;
 }
@@ -611,7 +616,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - Index:
 
 - (NSArray<NSString*>*) indexes {
-    return [[self mustDefaultCollection: nil] indexes: nil];
+    NSError *error = nil;
+    NSArray *res = [[self defaultCollectionOrThrow] indexes: &error];
+    throwIfNotOpenError(error);
+    return res;
 }
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
@@ -624,14 +632,23 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
-    return [[self mustDefaultCollection: error] createIndexWithName: name
-                                                             config: config
-                                                              error: error];
+    NSError *e = nil;
+    BOOL res = [[self defaultCollectionOrThrow] createIndexWithName: name config: config error: &e];
+    if (error)
+        *error = e;
+    
+    throwIfNotOpenError(e);
+    return res;
 }
 
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
-    return [[self mustDefaultCollection: outError] deleteIndexWithName: name
-                                                                 error: outError];
+    NSError *e = nil;
+    BOOL res = [[self defaultCollectionOrThrow] deleteIndexWithName: name error: &e];
+    if (outError)
+        *outError = e;
+    
+    throwIfNotOpenError(e);
+    return res;
 }
 
 #pragma mark - DOCUMENT EXPIRATION
@@ -639,14 +656,23 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
                                error: (NSError**)error {
-    return [[self mustDefaultCollection: error] setDocumentExpirationWithID: documentID
+    NSError *e = nil;
+    BOOL res = [[self defaultCollectionOrThrow] setDocumentExpirationWithID: documentID
                                                                  expiration: date
-                                                                      error: error];
+                                                                      error: &e];
+    if (error)
+        *error = e;
+    
+    throwIfNotOpenError(e);
+    return res;
 }
 
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
-    return [[self mustDefaultCollection: nil] getDocumentExpirationWithID: documentID
-                                                                    error: nil];
+    NSError *error = nil;
+    NSDate* res = [[self defaultCollectionOrThrow] getDocumentExpirationWithID: documentID
+                                                                         error: &error];
+    throwIfNotOpenError(error);
+    return res;
 }
 
 #pragma mark - Query
@@ -680,24 +706,29 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(self) {
-        if (!_defaultCollection && !_defaultCollectionIsDeleted) {
-            if (![self mustBeOpen: error])
-                return nil;
-            
-            C4Error c4err = {};
-            C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4err);
-            if (c4col) {
-                _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
-            } else {
-                _defaultCollectionIsDeleted = YES;
-                CBLWarn(Database,
-                        @"%@ The non-recoverable default collection is deleted from database",
-                        self);
-            }
-        }
-        return _defaultCollection;
+        if (![self mustBeOpen: error])
+            return nil;
+        
+        return _defaultCollection.isValid ? _defaultCollection : nil;
     }
+}
+
+- (CBLCollection*) defaultCollectionOrThrow {
+    if (!_defaultCollection)
+        throwNotOpen();
     
+    return _defaultCollection;
+}
+
+static void throwNotOpen() {
+    [NSException raise: NSInternalInconsistencyException
+                format: @"The database was closed, or the default collection was deleted."];
+}
+
+static void throwIfNotOpenError(NSError* error) {
+    if (error && error.domain == CBLErrorDomain && error.code == CBLErrorNotOpen) {
+        throwNotOpen();
+    }
 }
 
 - (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
@@ -1167,6 +1198,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     
     _state = kCBLDatabaseStateClosed;
     
+    // TODO: circular reference issue
+    // https://issues.couchbase.com/browse/CBL-3367
     _defaultCollection = nil;
 }
 
@@ -1174,18 +1207,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     CBL_LOCK(self) {
         block();
     }
-}
-
-- (CBLCollection*) mustDefaultCollection: (NSError**)outError {
-    NSError* e = nil;
-    CBLCollection* c = [self defaultCollection: &e];
-    if (!c) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to perform an operation on removed collection %@", e];
-        if (outError)
-            *outError = e;
-    }
-    return c;
 }
 
 #pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING
