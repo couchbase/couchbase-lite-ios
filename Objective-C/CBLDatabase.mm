@@ -151,7 +151,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
             CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
                     self, c4error.domain, c4error.code);
         }
-        
         _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
     }
     return self;
