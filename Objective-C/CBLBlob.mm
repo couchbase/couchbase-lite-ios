@@ -390,7 +390,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
         *outHasAttachment = true;
     
     if (encContext->document) {
-        CBLDatabase* database = encContext->document.database;
+        CBLDatabase* database = encContext->document.collection.db;
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {

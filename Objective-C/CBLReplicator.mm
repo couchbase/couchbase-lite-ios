@@ -752,10 +752,11 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    auto doc = [[CBLDocument alloc] initWithDatabase: _config.database
-                                          documentID: slice2string(docID)
-                                          revisionID: slice2string(revID)
-                                                body: body];
+    CBLCollection* c = [_config.database defaultCollection: nil];
+    auto doc = [[CBLDocument alloc] initWithCollection: c
+                                            documentID: slice2string(docID)
+                                            revisionID: slice2string(revID)
+                                                  body: body];
     CBLDocumentFlags docFlags = 0;
     if ((flags & kRevDeleted) == kRevDeleted)
         docFlags |= kCBLDocumentFlagsDeleted;

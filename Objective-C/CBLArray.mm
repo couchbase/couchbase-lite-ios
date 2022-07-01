@@ -70,7 +70,7 @@ using namespace fleece;
     id db;
     auto docContext = dynamic_cast<DocContext*>(_array.context());
     if (docContext)
-        db = (docContext)->database();
+        db = (docContext)->collection().db;
     _sharedLock = db != nil ? db : self;
 }
 

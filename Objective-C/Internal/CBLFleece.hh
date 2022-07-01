@@ -18,12 +18,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLCollection+Internal.h"
+ #import "CBLDatabase+Internal.h"
 #import "CBLMutableArray.h"
 #import "CBLMutableDictionary.h"
 #import "fleece/Fleece.hh"
 #import "MArray.hh"
 #import "MDict.hh"
-#import "CBLDocument.h"
 
 @class CBLDatabase, CBLC4Document;
 
@@ -56,16 +57,16 @@ namespace cbl {
     // Doc Context
     class DocContext : public fleece::MContext {
     public:
-        DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
+        DocContext(CBLCollection *col, CBLC4Document* __nullable doc);
         
-        CBLDatabase* database() const   {return _db;}
+        CBLCollection* collection() const   {return _col;}
         CBLC4Document* __nullable document() const {return _doc;}
         NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
         
         id toObject(fleece::Value);
         
         private:
-        CBLDatabase *_db;
+        CBLCollection *_col;
         CBLC4Document* __nullable _doc;
         NSMapTable* _fleeceToNSStrings;
     };

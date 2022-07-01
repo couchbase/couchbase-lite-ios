@@ -790,10 +790,11 @@
                       } error: &error]);
     AssertEqual(error.code, CBLErrorConflict);
     AssertNil([self.db documentWithID: docID]);
-    Assert([[CBLDocument alloc] initWithDatabase: self.db
-                                      documentID: docID
-                                  includeDeleted: YES
-                                           error: &error].isDeleted);
+    CBLCollection* c = [self.db defaultCollection: nil];
+    Assert([[CBLDocument alloc] initWithCollection: c
+                                        documentID: docID
+                                    includeDeleted: YES
+                                             error: &error].isDeleted);
 }
 
 - (void) testConflictHandlerCalledTwice {
@@ -1177,20 +1178,21 @@
     Assert([self.db deleteDocument: document error: &errorWhileDeletion]);
     AssertNil(errorWhileDeletion);
     NSError* documentReadError;
-    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                                            documentID: documentID
-                                                        includeDeleted: YES
-                                                                 error: &documentReadError];
+    CBLCollection* c = [self.db defaultCollection: nil];
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                              documentID: documentID
+                                                          includeDeleted: YES
+                                                                   error: &documentReadError];
     AssertNotNil(savedDocument);
     
     // Purge doc on the deleted document
     NSError* errorWhilePurging;
     Assert([self.db purgeDocument: document error: &errorWhilePurging]);
     AssertNil(errorWhilePurging);
-    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                               documentID: documentID
-                                           includeDeleted: YES
-                                                    error: &documentReadError];
+    savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                 documentID: documentID
+                                             includeDeleted: YES
+                                                      error: &documentReadError];
     AssertNil(savedDocument);
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
@@ -1396,10 +1398,11 @@
     AssertNil(errorWhileDeletion);
     
     NSError* documentReadError;
-    CBLDocument* savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                                            documentID: documentID
-                                                        includeDeleted: YES
-                                                                 error: &documentReadError];
+    CBLCollection* c = [self.db defaultCollection: nil];
+    CBLDocument* savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                              documentID: documentID
+                                                          includeDeleted: YES
+                                                                   error: &documentReadError];
     
     AssertNotNil(savedDocument);
     
@@ -1408,10 +1411,10 @@
     Assert([self.db purgeDocumentWithID: documentID error: &errorWhilePurging]);
     AssertNil(errorWhilePurging);
     
-    savedDocument = [[CBLDocument alloc] initWithDatabase: self.db
-                                               documentID: documentID
-                                           includeDeleted: YES
-                                                    error: &documentReadError];
+    savedDocument = [[CBLDocument alloc] initWithCollection: c
+                                                 documentID: documentID
+                                             includeDeleted: YES
+                                                      error: &documentReadError];
     AssertNil(savedDocument);
     AssertEqual(self.db.count, 0u);
     AssertNil([self.db documentWithID: documentID]);
