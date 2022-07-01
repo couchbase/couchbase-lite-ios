@@ -24,6 +24,8 @@
 #import "CBLCollectionChangeObservable.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocumentChangeNotifier.h"
+#import "CBLDocument+Internal.h"
 #import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLScope.h"
@@ -38,14 +40,14 @@ using namespace fleece;
 NSString* const kCBLDefaultCollectionName = @"_default";
 
 @implementation CBLCollection {
-    C4Collection* _c4col;
-    
     C4DatabaseObserver* _colObs;
     CBLChangeNotifier<CBLCollectionChange*>* _colChangeNotifier;
+    NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
 }
 
 @synthesize count=_count, name=_name, scope=_scope, db=_db;
 @synthesize dispatchQueue=_dispatchQueue;
+@synthesize c4col=_c4col;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection {
@@ -152,11 +154,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
                                                 listener: (void (^)(CBLDocumentChange*))listener {
-    // TODO: Add implementation & Delegate is set to nil
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil
-                                                       delegate: nil];
-    return token;
+    return [self addDocumentChangeListenerWithID: listenerID queue: nil listener: listener];
 }
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
@@ -356,6 +354,31 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
             _colObs = nil;
             _colChangeNotifier = nil;
         }
+    }
+}
+
+#pragma mark - Document listener
+
+- (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
+                                                        listener: (void (^)(CBLDocumentChange*))listener
+                                                           queue: (dispatch_queue_t)queue {
+    CBL_LOCK(_db) {
+        if (!_docChangeNotifiers)
+            _docChangeNotifiers = [NSMutableDictionary dictionary];
+        
+        CBLDocumentChangeNotifier* docNotifier = _docChangeNotifiers[documentID];
+        if (!docNotifier) {
+            docNotifier = [[CBLDocumentChangeNotifier alloc] initWithCollection: self
+                                                                     documentID: documentID];
+            _docChangeNotifiers[documentID] = docNotifier;
+        }
+        
+        CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
+                                                                       listener: listener
+                                                                       delegate: self];
+        
+        token.context = documentID;
+        return token;
     }
 }
 

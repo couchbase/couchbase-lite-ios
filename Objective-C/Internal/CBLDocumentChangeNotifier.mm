@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import "CBLCollection+Internal.h"
 #import "CBLDocumentChangeNotifier.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLStringBytes.h"
@@ -24,19 +25,22 @@
 @implementation CBLDocumentChangeNotifier
 {
     NSString* _docID;
-    CBLDatabase* _db;
+    CBLCollection* _col;
     C4DocumentObserver* _obs;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                       documentID: (NSString*)documentID
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
 {
     self = [super init];
     if (self) {
-        _db = db;
+        _col = collection;
         _docID = documentID;
         CBLStringBytes bDocID(documentID);
-        _obs = c4docobs_create(db.c4db, bDocID, docObserverCallback, (__bridge void *)self);
+        _obs = c4docobs_createWithCollection(collection.c4col,
+                                             bDocID,
+                                             docObserverCallback,
+                                             (__bridge void *)self);
     }
     return self;
 }
@@ -48,7 +52,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Collection* collectio
 }
 
 - (void) postChange {
-    [self postChange: [[CBLDocumentChange alloc] initWithDatabase: _db documentID: _docID]];
+    [self postChange: [[CBLDocumentChange alloc] initWithCollection: _col documentID: _docID]];
 }
 
 - (void) stop {

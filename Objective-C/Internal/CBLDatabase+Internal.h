@@ -115,8 +115,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocumentChange ()
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID;
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID;
 
 @end
 

@@ -23,6 +23,9 @@
 /** Document change information  */
 @interface CBLDocumentChange : NSObject
 
+/** The collection. */
+@property (readonly, nonatomic) CBLCollection* collection;
+
 /** The database. */
 @property (readonly, nonatomic) CBLDatabase* database;
 
