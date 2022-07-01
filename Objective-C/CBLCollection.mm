@@ -168,9 +168,20 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                                    queue: queue];
 }
 
-- (CBLDocument*) documentWithID: (NSString*)docID error: (NSError**)error {
-    // TODO: add implementation
-    return nil;
+#pragma mark get doc
+
+- (CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(_db) {
+        if (![self collectionIsValid: error])
+            return nil;
+        
+        return [[CBLDocument alloc] initWithCollection: self
+                                            documentID: documentID
+                                        includeDeleted: NO
+                                                 error: error];
+    }
 }
 
 #pragma mark - Purge

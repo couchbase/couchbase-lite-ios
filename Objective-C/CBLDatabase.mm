@@ -206,7 +206,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - GET EXISTING DOCUMENT
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
-    return [self documentWithID: documentID error: nil];
+    CBLCollection* c = [self defaultCollection: nil];
+    return [c documentWithID: documentID error: nil];
 }
 
 #pragma mark - SUBSCRIPTION
@@ -948,19 +949,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
 #endif
     return c4config;
-}
-
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID
-                                   error: (NSError**)outError
-{
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        CBLCollection* c = [self defaultCollection: outError];
-        return [[CBLDocument alloc] initWithCollection: c
-                                            documentID: documentID
-                                        includeDeleted: NO
-                                                 error: outError];
-    }
 }
 
 // call from a db-lock(c4dbobs_create)
