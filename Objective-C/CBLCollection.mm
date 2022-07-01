@@ -185,11 +185,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return nil;
 }
 
-- (NSDate*) getDocumentExpirationWithID: (NSString*)docID error: (NSError**)error {
-    // TODO: add implementation
-    return nil;
-}
-
 - (BOOL) purgeDocument: (CBLDocument*)document
                  error: (NSError**)error {
     // TODO: add implementation
@@ -222,10 +217,45 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return NO;
 }
 
+#pragma mark - Doc Expiry
+
+- (NSDate*) getDocumentExpirationWithID: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(_db) {
+        if (![self collectionIsValid: error])
+            return nil;
+        
+        CBLStringBytes docID(documentID);
+        C4Error c4err = {};
+        int64_t timestamp = c4coll_getDocExpiration(_c4col, docID, &c4err);
+        if (timestamp == -1) {
+            convertError(c4err, error);
+            return nil;
+        }
+        
+        if (timestamp == 0) {
+            return nil;
+        }
+        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
+    }
+}
+
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (NSDate*)date
                                error: (NSError**)error {
-    // TODO: add implementation
+    CBLAssertNotNil(documentID);
+    
+    CBL_LOCK(_db) {
+        if (![self collectionIsValid: error])
+            return NO;
+        
+        UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
+        C4Error err;
+        CBLStringBytes docID(documentID);
+        return c4coll_setDocExpiration(_c4col, docID, timestamp, &err) || convertError(err, error);
+    }
+    
     return NO;
 }
 

@@ -54,8 +54,6 @@ using namespace cbl;
 
 #define kDBExtension @"cblite2"
 
-#define msec 1000.0
-
 static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
 static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
 static NSString* kBlobDataProperty = @kC4BlobDataProperty;
@@ -91,6 +89,9 @@ typedef enum {
     NSCondition* _closeCondition;
     
     CBLDatabaseState _state;
+    
+    CBLCollection* _defaultCollection;
+    BOOL _defaultCollectionIsDeleted;
 }
 
 @synthesize name=_name;
@@ -144,6 +145,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
+        
+        _defaultCollectionIsDeleted = NO;
     }
     return self;
 }
@@ -608,24 +611,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - Index:
 
 - (NSArray<NSString*>*) indexes {
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        FLSliceResult res = c4db_getIndexesInfo(_c4db, nullptr);
-        FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
-        FLSliceResult_Release(res);
-        
-        NSArray* indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
-        FLDoc_Release(doc);
-        
-        // extract only names
-        NSMutableArray* ins = [NSMutableArray arrayWithCapacity: indexes.count];
-        for (NSDictionary* dict in indexes) {
-            [ins addObject: dict[@"name"]];
-        }
-        
-        return [NSArray arrayWithArray: ins];
-    }
+    return [[self mustDefaultCollection: nil] indexes: nil];
 }
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
@@ -638,65 +624,29 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 - (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
-    CBLAssertNotNil(config);
-    CBLAssertNotNil(name);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        CBLStringBytes bName(name);
-        CBLStringBytes c4IndexSpec(config.getIndexSpecs);
-        C4IndexOptions options = config.indexOptions;
-        C4Error c4err;
-        
-        return c4db_createIndex2(_c4db,
-                                 bName,
-                                 c4IndexSpec,
-                                 config.queryLanguage,
-                                 config.indexType,
-                                 &options, &c4err) || convertError(c4err, error);
-    }
+    return [[self mustDefaultCollection: error] createIndexWithName: name
+                                                             config: config
+                                                              error: error];
 }
 
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
-    CBLAssertNotNil(name);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        CBLStringBytes bName(name);
-        C4Error c4err;
-        return c4db_deleteIndex(_c4db, bName, &c4err) || convertError(c4err, outError);
-    }
+    return [[self mustDefaultCollection: outError] deleteIndexWithName: name
+                                                                 error: outError];
 }
 
 #pragma mark - DOCUMENT EXPIRATION
 
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
-                               error: (NSError**)error
-{
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(self) {
-        UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
-        C4Error err;
-        CBLStringBytes docID(documentID);
-        return c4doc_setExpiration(_c4db, docID, timestamp, &err) || convertError(err, error);
-    }
+                               error: (NSError**)error {
+    return [[self mustDefaultCollection: error] setDocumentExpirationWithID: documentID
+                                                                 expiration: date
+                                                                      error: error];
 }
 
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
-    CBLAssertNotNil(documentID);
-    
-    CBL_LOCK(self) {
-        CBLStringBytes docID(documentID);
-        UInt64 timestamp = c4doc_getExpiration(_c4db, docID, nullptr);
-        if (timestamp == 0) {
-            return nil;
-        }
-        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
-    }
+    return [[self mustDefaultCollection: nil] getDocumentExpirationWithID: documentID
+                                                                    error: nil];
 }
 
 #pragma mark - Query
@@ -730,12 +680,22 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(self) {
-        if (![self mustBeOpen: error])
-            return nil;
-        
-        return [self collectionWithName: kCBLDefaultCollectionName
-                                  scope: kCBLDefaultScopeName
-                                  error: error];
+        if (!_defaultCollection && !_defaultCollectionIsDeleted) {
+            if (![self mustBeOpen: error])
+                return nil;
+            
+            C4Error c4err = {};
+            C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4err);
+            if (c4col) {
+                _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
+            } else {
+                _defaultCollectionIsDeleted = YES;
+                CBLWarn(Database,
+                        @"%@ The non-recoverable default collection is deleted from database",
+                        self);
+            }
+        }
+        return _defaultCollection;
     }
     
 }
@@ -1206,12 +1166,26 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     _c4db = nil;
     
     _state = kCBLDatabaseStateClosed;
+    
+    _defaultCollection = nil;
 }
 
 - (void) safeBlock:(void (^)())block {
     CBL_LOCK(self) {
         block();
     }
+}
+
+- (CBLCollection*) mustDefaultCollection: (NSError**)outError {
+    NSError* e = nil;
+    CBLCollection* c = [self defaultCollection: &e];
+    if (!c) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to perform an operation on removed collection %@", e];
+        if (outError)
+            *outError = e;
+    }
+    return c;
 }
 
 #pragma mark - DOCUMENT SAVE AND CONFLICT HANDLING

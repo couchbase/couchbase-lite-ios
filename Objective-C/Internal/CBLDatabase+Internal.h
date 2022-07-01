@@ -37,6 +37,8 @@
 #import "CBLURLEndpointListener.h"
 #endif
 
+#define msec 1000.0
+
 struct c4BlobStore;
 
 @class CBLBlobStream;
