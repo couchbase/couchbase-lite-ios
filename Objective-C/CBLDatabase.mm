@@ -585,17 +585,16 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
 }
 
-- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)identifier
                                                    queue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentChange*))listener
-{
-    CBLCollection* c = [self defaultCollection: nil];
-    return [c addDocumentChangeListenerWithID: id queue: queue listener: listener];
+                                                listener: (void (^)(CBLDocumentChange*))listener {
+    return [[self defaultCollectionOrThrow] addDocumentChangeListenerWithID: identifier
+                                                                      queue: queue
+                                                                   listener: listener];
 }
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    CBLCollection* c = [self defaultCollection: nil];
-    return [c removeToken: token];
+    return [[self defaultCollectionOrThrow] removeToken: token];
 }
 
 #pragma mark - Index:
