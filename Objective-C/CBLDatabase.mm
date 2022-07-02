@@ -138,13 +138,7 @@ static const C4DatabaseConfig2 kDBConfig = {
         
         _state = kCBLDatabaseStateOpened;
         
-        C4Error c4error = {};
-        C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4error);
-        if (c4error.code != 0) {
-            CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
-                    self, c4error.domain, c4error.code);
-        }
-        _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
+        [self setDefaultCollection];
     }
     return self;
 }
@@ -161,8 +155,20 @@ static const C4DatabaseConfig2 kDBConfig = {
         _c4db = c4db;
         
         _state = kCBLDatabaseStateOpened;
+        
+        [self setDefaultCollection];
     }
     return self;
+}
+
+- (void) setDefaultCollection {
+    C4Error c4error = {};
+    C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4error);
+    if (c4error.code != 0) {
+        CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
+                self, c4error.domain, c4error.code);
+    }
+    _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
 }
 
 - (instancetype) copyWithZone: (NSZone*)zone {
