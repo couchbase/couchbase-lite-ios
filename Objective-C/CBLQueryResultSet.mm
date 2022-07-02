@@ -81,7 +81,7 @@ namespace cbl {
             return nil;
         _query = query;
         _c4enum = e;
-        CBLCollection* c = [query.database defaultCollection: nil];
+        CBLCollection* c = [query.database defaultCollectionOrThrow];
         _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(c, e))->retain();
         _columnNames = columnNames;
         CBLLogInfo(Query, @"Beginning query enumeration (%p)", _c4enum);
