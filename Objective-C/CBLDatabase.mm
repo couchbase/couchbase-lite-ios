@@ -585,32 +585,16 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
 }
 
-- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)identifier
                                                    queue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentChange*))listener
-{
-    CBLAssertNotNil(id);
-    CBLAssertNotNil(listener);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-        
-        return [self addDocumentChangeListenerWithDocumentID: id listener: listener queue: queue];
-    }
+                                                listener: (void (^)(CBLDocumentChange*))listener {
+    return [[self defaultCollectionOrThrow] addDocumentChangeListenerWithID: identifier
+                                                                      queue: queue
+                                                                   listener: listener];
 }
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    CBLAssertNotNil(token);
-    
-    CBL_LOCK(self) {
-        [self mustBeOpen];
-            
-        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-        if (t.context)
-            [self removeDocumentChangeListenerWithToken: token];
-        else
-            [self removeDatabaseChangeListenerWithToken: token];
-    }
+    return [[self defaultCollectionOrThrow] removeToken: token];
 }
 
 #pragma mark - Index:
@@ -1148,28 +1132,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
             c4dbobs_releaseChanges(changes, obs.numChanges);
         } while(obs.numChanges > 0);
     }
-}
-
-// call from a db-lock(c4docobs_create)
-- (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
-                                                        listener: (void (^)(CBLDocumentChange*))listener
-                                                           queue: (dispatch_queue_t)queue
-{
-    if (!_docChangeNotifiers)
-        _docChangeNotifiers = [NSMutableDictionary dictionary];
-    
-    CBLDocumentChangeNotifier* docNotifier = _docChangeNotifiers[documentID];
-    if (!docNotifier) {
-        docNotifier = [[CBLDocumentChangeNotifier alloc] initWithDatabase: self
-                                                               documentID: documentID];
-        _docChangeNotifiers[documentID] = docNotifier;
-    }
-    
-    CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
-                                                                   listener: listener
-                                                                   delegate: self];
-    token.context = documentID;
-    return token;
 }
 
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {

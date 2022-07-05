@@ -77,6 +77,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url;
 
+- (CBLCollection*) defaultCollectionOrThrow;
+
 @end
 
 /// CBLDatabaseConfiguration:
@@ -115,8 +117,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocumentChange ()
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID;
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID;
 
 @end
 

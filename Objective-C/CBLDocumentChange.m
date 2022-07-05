@@ -17,22 +17,27 @@
 //  limitations under the License.
 //
 
+#import "CBLCollection+Internal.h"
 #import "CBLDocumentChange.h"
 #import "CBLDatabase+Internal.h"
 
 @implementation CBLDocumentChange
 
-@synthesize database=_database, documentID=_documentID;
+@synthesize documentID=_documentID, collection=_collection;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
 {
     self = [super init];
     if (self) {
-        _database = database;
+        _collection = collection;
         _documentID = documentID;
     }
     return self;
+}
+
+- (CBLDatabase*) database {
+    return _collection.db;
 }
 
 @end

@@ -24,6 +24,8 @@
 #import "CBLCollectionChangeObservable.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocumentChangeNotifier.h"
+#import "CBLDocument+Internal.h"
 #import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLScope.h"
@@ -38,14 +40,14 @@ using namespace fleece;
 NSString* const kCBLDefaultCollectionName = @"_default";
 
 @implementation CBLCollection {
-    C4Collection* _c4col;
-    
     C4DatabaseObserver* _colObs;
     CBLChangeNotifier<CBLCollectionChange*>* _colChangeNotifier;
+    NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
 }
 
 @synthesize count=_count, name=_name, scope=_scope, db=_db;
 @synthesize dispatchQueue=_dispatchQueue;
+@synthesize c4col=_c4col;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection {
@@ -72,6 +74,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (void) dealloc {
     c4coll_release(_c4col);
+    
+    [self freeC4Observer];
 }
 
 - (NSString*) description {
@@ -152,21 +156,15 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
                                                 listener: (void (^)(CBLDocumentChange*))listener {
-    // TODO: Add implementation & Delegate is set to nil
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil
-                                                       delegate: nil];
-    return token;
+    return [self addDocumentChangeListenerWithID: listenerID queue: nil listener: listener];
 }
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)listenerID
                                                    queue: (dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener {
-    // TODO: Add implementation & Delegate is set to nil
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: nil
-                                                       delegate: nil];
-    return token;
+    return [self addDocumentChangeListenerWithDocumentID: listenerID
+                                                listener: listener
+                                                   queue: queue];
 }
 
 - (BOOL) deleteDocument: (CBLDocument*)document
@@ -269,7 +267,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                            listener: (void (^)(CBLCollectionChange*))listener {
     CBLAssertNotNil(listener);
     
-    CBL_LOCK(self) {
+    CBL_LOCK(_db) {
         NSError* error = nil;
         if (![self collectionIsValid: &error]) {
             CBLWarn(Database,
@@ -315,7 +313,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (void) postCollectionChanged {
-    CBL_LOCK(self) {
+    CBL_LOCK(_db) {
         if (!_colObs || !_c4col)
             return;
         
@@ -348,14 +346,62 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (void) removeToken: (id)token {
-    CBL_LOCK(self) {
-        // TODO: handle document change listener as well
-            
-        if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
-            c4dbobs_free(_colObs);
-            _colObs = nil;
-            _colChangeNotifier = nil;
+    CBL_LOCK(_db) {
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        if (t.context)
+            [self removeDocumentChangeListenerWithToken: token];
+        else {
+            if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
+                c4dbobs_free(_colObs);
+                _colObs = nil;
+                _colChangeNotifier = nil;
+            }
         }
+    }
+}
+
+- (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
+    CBL_LOCK(_db) {
+        NSString* documentID = (NSString*)token.context;
+        CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
+        if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
+            [notifier stop];
+            [_docChangeNotifiers removeObjectForKey:documentID];
+        }
+    }
+}
+
+- (void) freeC4Observer {
+    c4dbobs_free(_colObs);
+    _colObs = nullptr;
+    _colChangeNotifier = nil;
+
+    [_docChangeNotifiers.allValues makeObjectsPerformSelector: @selector(stop)];
+    _docChangeNotifiers = nil;
+}
+
+#pragma mark - Document listener
+
+- (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
+                                                        listener: (void (^)(CBLDocumentChange*))listener
+                                                           queue: (dispatch_queue_t)queue {
+    CBL_LOCK(_db) {
+        if (!_docChangeNotifiers)
+            _docChangeNotifiers = [NSMutableDictionary dictionary];
+        
+        CBLDocumentChangeNotifier* docNotifier = _docChangeNotifiers[documentID];
+        if (!docNotifier) {
+            docNotifier = [[CBLDocumentChangeNotifier alloc] initWithCollection: self
+                                                                     documentID: documentID];
+            _docChangeNotifiers[documentID] = docNotifier;
+        }
+        
+        CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
+                                                                       listener: listener
+                                                                       delegate: self];
+        
+        token.context = documentID;
+        return token;
     }
 }
 

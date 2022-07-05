@@ -30,8 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 */
 @interface CBLDocumentChangeNotifier : CBLChangeNotifier<CBLDocumentChange*>
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                       documentID: (NSString*)documentID;
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID;
 
 /** Immediately stops the C4DocumentObserver. No more notifications will be sent. */
 - (void) stop;
