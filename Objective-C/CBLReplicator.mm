@@ -447,7 +447,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
     
     C4Error err = {};
-    C4SliceResult result = c4repl_getPendingDocIDs(_repl, &err);
+    // TODO: https://issues.couchbase.com/browse/CBL-3370
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, kC4DefaultCollectionSpec, &err);
     if (err.code > 0) {
         convertError(err, error);
         CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", err.domain, err.code);
@@ -497,7 +498,8 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     C4Error err = {};
     CBLStringBytes docID(documentID);
-    BOOL isPending = c4repl_isDocumentPending(_repl, docID, &err);
+    // TODO: https://issues.couchbase.com/browse/CBL-3370
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, kC4DefaultCollectionSpec, &err);
     if (err.code > 0) {
         convertError(err, error);
         CBLWarnError(Sync, @"Error getting document pending status: %d/%d", err.domain, err.code);
