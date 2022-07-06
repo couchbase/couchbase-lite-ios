@@ -60,7 +60,7 @@ public struct DatabaseConfiguration {
     init(_ impl: CBLDatabaseConfiguration) {
         self.directory = impl.directory
         #if COUCHBASE_ENTERPRISE
-        // TODO: handle encryption-key
+        // TODO: handle encryption-key: https://issues.couchbase.com/browse/CBL-3372
         #endif
     }
 }
