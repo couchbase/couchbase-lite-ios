@@ -420,7 +420,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         return NO;
     }
     
-    if (![self collectionIsValid: nil] || ![other collectionIsValid: nil])
+    if (!self.isValid || !other.isValid)
         return NO;
     
     return YES;
