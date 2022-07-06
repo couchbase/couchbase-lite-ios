@@ -414,11 +414,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     if (!other)
         return NO;
     
-    if (!(other && [self.name isEqual: other.name] &&
-          [self.scope.name isEqual: other.scope.name] &&
-          [self.db.path isEqual: other.db.path])) {
+    if (self.c4col != other.c4col)
         return NO;
-    }
     
     return YES;
 }
@@ -677,7 +674,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         CBLDocument* remoteDoc;
         
         // Get latest local and remote document revisions from DB
-        CBL_LOCK(self) {
+        CBL_LOCK(_db) {
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithCollection: self
                                                     documentID: docID
@@ -760,8 +757,9 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                     remoteDoc: (CBLDocument*)remoteDoc
                         error: (NSError**)outError
 {
-    CBL_LOCK(self) {
-        C4Transaction t(_db.c4db);
+    CBLDatabase* db = _db;
+    CBL_LOCK(db) {
+        C4Transaction t(db.c4db);
         if (!t.begin())
             return convertError(t.error(), outError);
         
