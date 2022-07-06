@@ -347,12 +347,9 @@ public final class Database {
     @discardableResult public func addDocumentChangeListener(withID id: String,
         queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
-            [unowned self] (change) in
-            
-            // TODO: update implementation!
-            
-            listener(DocumentChange(database: self, documentID: change.documentID, collection: try? defaultCollection()))
+        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
+            listener(DocumentChange(documentID: change.documentID,
+                                    collection: Collection(change.collection)))
         }
         return ListenerToken(token)
     }
@@ -468,7 +465,7 @@ public final class Database {
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
         let c = try _impl.defaultCollection()
-        return Collection(impl: c)
+        return Collection(c)
     }
     
     /// Get all collections in the specified scope.
@@ -477,7 +474,7 @@ public final class Database {
         let res = try _impl.collections(scope)
         
         for c in res {
-            collections.append(Collection(impl: c))
+            collections.append(Collection(c))
         }
         return collections
     }
@@ -486,14 +483,14 @@ public final class Database {
     /// If the collection already exists, the existing collection will be returned.
     public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
         let result = try _impl.createCollection(withName: name, scope: scope)
-        return Collection(impl: result)
+        return Collection(result)
     }
 
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
         let c = try _impl.collection(withName: name, scope: scope)
-        return Collection(impl: c)
+        return Collection(c)
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
@@ -546,6 +543,11 @@ public final class Database {
     private let _activeQueries = NSMutableSet()
 
     let _impl: CBLDatabase
+    
+    init(_ impl: CBLDatabase) {
+        _impl = impl
+        _config = DatabaseConfiguration(impl.config)
+    }
     
     // MARK: Debug
     

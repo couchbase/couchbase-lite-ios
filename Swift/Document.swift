@@ -47,7 +47,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
             return nil
         }
         
-        return Collection(impl: c)
+        return Collection(c)
     }
     
     // MARK: Edit

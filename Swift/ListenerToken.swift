@@ -24,8 +24,8 @@ import Foundation
 public class ListenerToken {
     
     /// Remove the listener associated with the token.
-    func remove() {
-        // TODO: Add implementation
+    public func remove() {
+        _impl.remove()
     }
     
     // MARK: Internal

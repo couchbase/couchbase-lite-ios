@@ -23,12 +23,15 @@ import Foundation
 public struct DocumentChange {
     
     /// The database.
-    public let database: Database
+    @available(*, deprecated, message: "Use collection instead.")
+    public var database: Database {
+        return collection.db
+    }
     
     /// The ID of the document that changed.
     public let documentID: String
     
     /// Collection.
-    public let collection: Collection? // TODO: Collection is not optonal as per spec!
+    public let collection: Collection
 }
 

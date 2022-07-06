@@ -57,4 +57,10 @@ public struct DatabaseConfiguration {
         return config
     }
     
+    init(_ impl: CBLDatabaseConfiguration) {
+        self.directory = impl.directory
+        #if COUCHBASE_ENTERPRISE
+        // TODO: handle encryption-key
+        #endif
+    }
 }

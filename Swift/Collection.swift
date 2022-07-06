@@ -58,21 +58,21 @@ public final class Collection : CollectionChangeObservable, Indexable {
     public static let defaultCollectionName: String = "_default"
     
     /// Collection name.
-    var name: String { _impl.name }
+    public var name: String { _impl.name }
     
     /// The scope of the collection.
-    var scope: Scope { Scope(_impl.scope) }
+    public var scope: Scope { Scope(_impl.scope) }
     
     // MARK: Document Management
     
     /// Total number of documents in the collection.
-    var count: UInt64 { _impl.count }
+    public var count: UInt64 { _impl.count }
     
     /// Get an existing document by id.
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func document(id: String) throws -> Document? {
+    public func document(id: String) throws -> Document? {
         let implDoc = try _impl.document(withID: id)
         return Document(implDoc)
     }
@@ -86,7 +86,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func save(document: MutableDocument) throws {
+    public func save(document: MutableDocument) throws {
         try _impl.save(document._impl as! CBLMutableDocument)
     }
     
@@ -100,7 +100,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func save(document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
+    public func save(document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
                 CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
@@ -124,7 +124,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func save(document: MutableDocument,
+    public func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
         do {
             try _impl.save(
@@ -152,7 +152,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func delete(document: Document) throws {
+    public func delete(document: Document) throws {
         try _impl.delete(document._impl)
     }
     
@@ -165,7 +165,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func delete(document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
+    public func delete(document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
                 CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
@@ -184,7 +184,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func purge(document: Document) throws {
+    public func purge(document: Document) throws {
         try _impl.purgeDocument(document._impl)
     }
     
@@ -193,7 +193,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func purge(id: String) throws {
+    public func purge(id: String) throws {
         try _impl.purgeDocument(withID: id)
     }
     
@@ -203,7 +203,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func setDocumentExpiration(id: String, expiration: Date?) throws {
+    public func setDocumentExpiration(id: String, expiration: Date?) throws {
         try _impl.setDocumentExpirationWithID(id, expiration: expiration)
     }
     
@@ -211,7 +211,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
-    func getDocumentExpiration(id: String) throws -> Date? {
+    public func getDocumentExpiration(id: String) throws -> Date? {
         return try _impl.getDocumentExpiration(withID: id)
     }
     
@@ -221,7 +221,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// To remove the listener, call remove() function on the returned listener token.
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    func addDocumentChangeListener(id: String,
+    public func addDocumentChangeListener(id: String,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         return self.addDocumentChangeListener(id: id, queue: nil, listener: listener)
     }
@@ -231,11 +231,11 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// call remove() function on the returned listener token.
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    func addDocumentChangeListener(id: String, queue: DispatchQueue?,
+    public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
             [unowned self] (change) in
-            listener(DocumentChange(database: _db, documentID: change.documentID, collection: self))
+            listener(DocumentChange(documentID: change.documentID, collection: self))
         }
         return ListenerToken(token)
     }
@@ -262,7 +262,6 @@ public final class Collection : CollectionChangeObservable, Indexable {
         return ListenerToken(token)
     }
     
-    
     // MARK: Indexable
     
     /// Return all index names
@@ -283,11 +282,15 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     // MARK: Internal
     
-    init(impl: CBLCollection) {
+    var db: Database {
+        return _db
+    }
+    
+    init(_ impl: CBLCollection) {
         _impl = impl
-        _db = try! Database(name: "dummy name!!") // TODO: update this
+        _db = Database(impl.db)
     }
     
     let _impl: CBLCollection
-    let _db: Database // TODO: update!!
+    fileprivate let _db: Database
 } 
