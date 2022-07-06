@@ -414,7 +414,13 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     if (!other)
         return NO;
     
-    if (self.c4col != other.c4col)
+    if (!(other && [self.name isEqual: other.name] &&
+          [self.scope.name isEqual: other.scope.name] &&
+          [self.db.path isEqual: other.db.path])) {
+        return NO;
+    }
+    
+    if (![self collectionIsValid: nil] || ![other collectionIsValid: nil])
         return NO;
     
     return YES;
