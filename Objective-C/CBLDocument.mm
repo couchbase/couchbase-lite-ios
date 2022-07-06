@@ -23,6 +23,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLNewDictionary.h"
+#import "CBLScope.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLFleece.hh"
@@ -105,9 +106,8 @@ using namespace fleece;
     if (self) {
         _revID = nil;
         CBLStringBytes docId(documentID);
-        C4Error err;
-        
-        auto doc = c4db_getDoc(collection.db.c4db, docId, true, contentLevel, &err);
+        C4Error err = {};
+        auto doc = c4coll_getDoc(collection.c4col, docId, true, contentLevel, &err);
         if (!doc) {
             convertError(err, outError);
             return nil;
@@ -169,8 +169,9 @@ using namespace fleece;
 
 - (void) updateDictionary {
     if (_fleeceData) {
-        _root.reset(new MRoot<id>(new cbl::DocContext(_collection, _c4Doc), Dict(_fleeceData), self.isMutable));
-        [_collection.db safeBlock:^{
+        CBLDatabase* db = _collection.db;
+        _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
+        [db safeBlock:^{
             _dict = _root->asNative();
         }];
     } else {
@@ -383,17 +384,9 @@ using namespace fleece;
     CBLDocument* other = $castIf(CBLDocument, object);
     if (!other)
         return NO;
-    CBLDatabase* db1 = self.collection.db;
-    CBLDatabase* db2 = other.collection.db;
-    if (![db1 isEqual: db2]) {
-        if (db1) {
-            if (!(db2 && [db1.name isEqual: db2.name]))
-                return NO;
-        } else {
-            if (db2 != nil)
-                return NO;
-        }
-    }
+    
+    if ((self.collection || other.collection) && ![self.collection isEqual: other.collection])
+        return NO;
     
     if (![self.id isEqualToString: other.id])
         return NO;
@@ -402,7 +395,8 @@ using namespace fleece;
 }
 
 - (NSUInteger) hash {
-    return [self.collection.db.name hash] ^  [self.id hash] ^ [_dict hash];
+    return [self.collection.name hash] ^ [self.collection.scope.name hash] ^
+    [self.collection.db.name hash] ^ [self.id hash] ^ [_dict hash];
 }
 
 @end

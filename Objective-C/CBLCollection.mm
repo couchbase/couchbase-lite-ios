@@ -22,6 +22,7 @@
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionChange.h"
 #import "CBLCollectionChangeObservable.h"
+#import "CBLConflict+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocumentChangeNotifier.h"
@@ -91,8 +92,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(name);
     CBLAssertNotNil(config);
     
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -114,8 +114,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) deleteIndexWithName: (NSString*)name
                        error: (NSError**)error {
     CBLAssertNotNil(name);
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -126,8 +125,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (nullable NSArray*) indexes: (NSError**)error {
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_db) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -203,7 +201,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         
         if ([self purgeDocumentWithID: document.id error: error]) {
             [document replaceC4Doc: nil];
-            return TRUE;
+            return YES;
         }
         
         return NO;
@@ -292,7 +290,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                     error: &err];
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
-            CBL_LOCK(self) {
+            CBL_LOCK(_db) {
                 oldDoc = [[CBLDocument alloc] initWithCollection: self
                                                     documentID: document.id
                                                 includeDeleted: YES
@@ -406,6 +404,23 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (BOOL) isValid {
     return [self collectionIsValid: nil];
+}
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLCollection* other = $castIf(CBLCollection, object);
+    if (!other)
+        return NO;
+    
+    if (!(other && [self.name isEqual: other.name] &&
+          [self.scope.name isEqual: other.scope.name] &&
+          [self.db.path isEqual: other.db.path])) {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (id<CBLListenerToken>) addCollectionChangeListener: (void (^)(CBLCollectionChange*))listener
@@ -650,6 +665,174 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                            @"Cannot operate on a document from another collection.", error);
     }
     return YES;
+}
+
+#pragma mark - RESOLVING REPLICATED CONFLICTS:
+
+- (bool) resolveConflictInDocument: (NSString*)docID
+              withConflictResolver: (id<CBLConflictResolver>)conflictResolver
+                             error: (NSError**)outError {
+    while (true) {
+        CBLDocument* localDoc;
+        CBLDocument* remoteDoc;
+        
+        // Get latest local and remote document revisions from DB
+        CBL_LOCK(self) {
+            // Read local document:
+            localDoc = [[CBLDocument alloc] initWithCollection: self
+                                                    documentID: docID
+                                                includeDeleted: YES
+                                                  contentLevel: kDocGetCurrentRev
+                                                         error: outError];
+            if (!localDoc) {
+                CBLWarn(Sync, @"Unable to find the document %@ during conflict resolution,\
+                        skipping...", docID);
+                return NO;
+            }
+            
+            // Read the conflicting remote revision:
+            remoteDoc = [[CBLDocument alloc] initWithCollection: self
+                                                     documentID: docID
+                                                 includeDeleted: YES
+                                                   contentLevel: kDocGetAll
+                                                          error: outError];
+            if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
+                CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may "
+                        "have been resolved...", docID);
+                // this means no conflict, so returning success
+                return YES;
+            }
+        }
+        
+        conflictResolver = conflictResolver ?: [CBLConflictResolver default];
+        
+        // Resolve conflict:
+        CBLDocument* resolvedDoc;
+        @try {
+            CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
+                       docID, localDoc.revisionID, remoteDoc.revisionID);
+            
+            if (localDoc.isDeleted && remoteDoc.isDeleted) {
+                resolvedDoc = remoteDoc;
+            } else {
+                CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
+                                                          localDocument: localDoc.isDeleted ? nil : localDoc
+                                                         remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
+                
+                resolvedDoc = [conflictResolver resolve: conflict];
+            }
+            
+            if (resolvedDoc && resolvedDoc.id != docID) {
+                CBLWarn(Sync, @"The document ID of the resolved document '%@' is not matching "
+                        "with the document ID of the conflicting document '%@'.",
+                        resolvedDoc.id, docID);
+            }
+            
+            if (resolvedDoc && resolvedDoc.collection && resolvedDoc.collection != self) {
+                [NSException raise: NSInternalInconsistencyException
+                            format: kCBLErrorMessageResolvedDocWrongDb,
+                 resolvedDoc.collection.name, self.name];
+            }
+        } @catch (NSException *ex) {
+            CBLWarn(Sync, @"Exception in conflict resolver: %@", ex.description);
+            *outError = [NSError errorWithDomain: CBLErrorDomain
+                                            code: CBLErrorConflict
+                                        userInfo: @{NSLocalizedDescriptionKey: ex.description}];
+            return NO;
+        }
+        
+        NSError* err;
+        BOOL success = [self saveResolvedDocument: resolvedDoc withLocalDoc: localDoc
+                                        remoteDoc: remoteDoc error: &err];
+        
+        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
+            continue;
+        
+        if (outError)
+            *outError = err;
+        
+        return success;
+    }
+}
+
+- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
+                 withLocalDoc: (CBLDocument*)localDoc
+                    remoteDoc: (CBLDocument*)remoteDoc
+                        error: (NSError**)outError
+{
+    CBL_LOCK(self) {
+        C4Transaction t(_db.c4db);
+        if (!t.begin())
+            return convertError(t.error(), outError);
+        
+        if (!resolvedDoc) {
+            if (localDoc.isDeleted)
+                resolvedDoc = localDoc;
+            
+            if (remoteDoc.isDeleted)
+                resolvedDoc = remoteDoc;
+        }
+        
+        if (resolvedDoc != localDoc)
+            resolvedDoc.collection = self;
+        
+        // The remote branch has to win, so that the doc revision history matches the server's.
+        CBLStringBytes winningRevID = remoteDoc.revisionID;
+        CBLStringBytes losingRevID = localDoc.revisionID;
+        
+        // mergedRevFlags:
+        C4RevisionFlags mergedFlags = 0;
+        
+        // mergedBody:
+        alloc_slice mergedBody;
+        if (resolvedDoc != remoteDoc) {
+            if (resolvedDoc) {
+                // Unless the remote revision is being used as-is, we need a new revision:
+                NSError* err = nil;
+                mergedBody = [resolvedDoc encodeWithRevFlags: &mergedFlags error: &err];
+                if (err) {
+                    createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
+                    return NO;
+                }
+                
+                if (!mergedBody) {
+                    createError(CBLErrorUnexpectedError, kCBLErrorMessageResolvedDocContainsNull, outError);
+                    return NO;
+                }
+            } else
+                mergedBody = [self emptyFLSliceResult];
+        }
+        
+        mergedFlags |= resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
+        if (!resolvedDoc || resolvedDoc.isDeleted)
+            mergedFlags |= kRevDeleted;
+        
+        // Tell LiteCore to do the resolution:
+        C4Document *c4doc = localDoc.c4Doc.rawDoc;
+        C4Error c4err;
+        if (!c4doc_resolveConflict(c4doc,
+                                   winningRevID,
+                                   losingRevID,
+                                   mergedBody,
+                                   mergedFlags,
+                                   &c4err)
+            || !c4doc_save(c4doc, 0, &c4err)) {
+            return convertError(c4err, outError);
+        }
+        CBLLogInfo(Sync, @"Conflict resolved as doc '%@' rev %.*s",
+                   localDoc.id, (int)c4doc->revID.size, (char*)c4doc->revID.buf);
+        
+        return t.commit() || convertError(t.error(), outError);
+    }
+}
+
+- (FLSliceResult) emptyFLSliceResult {
+    FLEncoder enc = c4db_getSharedFleeceEncoder(_db.c4db);
+    FLEncoder_BeginDict(enc, 0);
+    FLEncoder_EndDict(enc);
+    auto result = FLEncoder_Finish(enc, nullptr);
+    FLEncoder_Reset(enc);
+    return result;
 }
 
 @end

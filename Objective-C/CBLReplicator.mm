@@ -18,6 +18,7 @@
 //
 
 #import "CBLReplicator+Backgrounding.h"
+#import "CBLCollection+Internal.h"
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
@@ -695,16 +696,11 @@ static void onDocsEnded(C4Replicator* repl,
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     NSError* error = nil;
-    
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if (![_config.database resolveConflictInDocument: doc.id
-                               withConflictResolver: _config.conflictResolver
-                                              error: &error]) {
+    if (![[_config.database defaultCollectionOrThrow] resolveConflictInDocument: doc.id
+                                                           withConflictResolver: _config.conflictResolver
+                                                                          error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
-#pragma clang diagnostic pop
     
     [doc updateError: error];
     [self logErrorOnDocument: doc pushing: NO];
@@ -749,9 +745,6 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CBLCollection* c = [_config.database defaultCollectionOrThrow];
     auto doc = [[CBLDocument alloc] initWithCollection: c
                                             documentID: slice2string(docID)
@@ -764,7 +757,9 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
     if ((flags & kRevPurged) == kRevPurged)
         docFlags |= kCBLDocumentFlagsAccessRemoved;
 
-
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
 #pragma clang diagnostic pop
 

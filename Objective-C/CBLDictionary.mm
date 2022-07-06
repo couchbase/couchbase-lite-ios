@@ -75,7 +75,7 @@ using namespace fleece;
     id db;
     auto docContext = dynamic_cast<DocContext*>(_dict.context());
     if (docContext)
-        db = (docContext)->collection().db;
+        db = (docContext)->database();
     _sharedLock = db != nil ? db : self;
 }
 

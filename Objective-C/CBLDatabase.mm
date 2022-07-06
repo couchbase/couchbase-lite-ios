@@ -19,7 +19,6 @@
 
 #import "CBLChangeListenerToken.h"
 #import "CBLCollection+Internal.h"
-#import "CBLConflict+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLData.h"
 #import "CBLDatabase.h"
@@ -979,27 +978,10 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     return c4config;
 }
 
-// call from a db-lock(c4dbobs_create)
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {
-    [self removeChangeListenerWithToken: token];
-}
-
-#pragma clang diagnostic pop
-
-- (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
-    CBL_LOCK(self) {
-        if ([_dbChangeNotifier removeChangeListenerWithToken: token] == 0) {
-            c4dbobs_free(_dbObs);
-            _dbObs = nil;
-            _dbChangeNotifier = nil;
-        }
-    }
+    [[self defaultCollectionOrThrow] removeToken: token];
 }
 
 - (void) postDatabaseChanged {
@@ -1103,175 +1085,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     CBL_LOCK(self) {
         return _activeStoppables.count;
     }
-}
-
-#pragma mark - RESOLVING REPLICATED CONFLICTS:
-
-- (bool) resolveConflictInDocument: (NSString*)docID
-              withConflictResolver: (id<CBLConflictResolver>)conflictResolver
-                             error: (NSError**)outError {
-    while (true) {
-        CBLDocument* localDoc;
-        CBLDocument* remoteDoc;
-        
-        // Get latest local and remote document revisions from DB
-        CBL_LOCK(self) {
-            // Read local document:
-            CBLCollection* c = [self defaultCollectionOrThrow];
-            localDoc = [[CBLDocument alloc] initWithCollection: c
-                                                    documentID: docID
-                                                includeDeleted: YES
-                                                  contentLevel: kDocGetCurrentRev
-                                                         error: outError];
-            if (!localDoc) {
-                CBLWarn(Sync, @"Unable to find the document %@ during conflict resolution,\
-                        skipping...", docID);
-                return NO;
-            }
-            
-            // Read the conflicting remote revision:
-            remoteDoc = [[CBLDocument alloc] initWithCollection: c
-                                                     documentID: docID
-                                                 includeDeleted: YES
-                                                   contentLevel: kDocGetAll
-                                                          error: outError];
-            if (!remoteDoc || ![remoteDoc selectConflictingRevision]) {
-                CBLWarn(Sync, @"Unable to select conflicting revision for %@, the conflict may "
-                        "have been resolved...", docID);
-                // this means no conflict, so returning success
-                return YES;
-            }
-        }
-        
-        conflictResolver = conflictResolver ?: [CBLConflictResolver default];
-        
-        // Resolve conflict:
-        CBLDocument* resolvedDoc;
-        @try {
-            CBLLogInfo(Sync, @"Resolving doc '%@' (localDoc=%@ and remoteDoc=%@)",
-                       docID, localDoc.revisionID, remoteDoc.revisionID);
-            
-            if (localDoc.isDeleted && remoteDoc.isDeleted) {
-                resolvedDoc = remoteDoc;
-            } else {
-                CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
-                                                          localDocument: localDoc.isDeleted ? nil : localDoc
-                                                         remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
-                
-                resolvedDoc = [conflictResolver resolve: conflict];
-            }
-            
-            if (resolvedDoc && resolvedDoc.id != docID) {
-                CBLWarn(Sync, @"The document ID of the resolved document '%@' is not matching "
-                        "with the document ID of the conflicting document '%@'.",
-                        resolvedDoc.id, docID);
-            }
-            
-            if (resolvedDoc && resolvedDoc.collection.db && resolvedDoc.collection.db != self) {
-                [NSException raise: NSInternalInconsistencyException
-                            format: kCBLErrorMessageResolvedDocWrongDb,
-                 resolvedDoc.collection.db.name, self.name];
-            }
-        } @catch (NSException *ex) {
-            CBLWarn(Sync, @"Exception in conflict resolver: %@", ex.description);
-            *outError = [NSError errorWithDomain: CBLErrorDomain
-                                            code: CBLErrorConflict
-                                        userInfo: @{NSLocalizedDescriptionKey: ex.description}];
-            return NO;
-        }
-        
-        NSError* err;
-        BOOL success = [self saveResolvedDocument: resolvedDoc withLocalDoc: localDoc
-                                        remoteDoc: remoteDoc error: &err];
-        
-        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
-            continue;
-        
-        if (outError)
-            *outError = err;
-        
-        return success;
-    }
-}
-
-- (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
-                 withLocalDoc: (CBLDocument*)localDoc
-                    remoteDoc: (CBLDocument*)remoteDoc
-                        error: (NSError**)outError
-{
-    CBL_LOCK(self) {
-        C4Transaction t(_c4db);
-        if (!t.begin())
-            return convertError(t.error(), outError);
-        
-        if (!resolvedDoc) {
-            if (localDoc.isDeleted)
-                resolvedDoc = localDoc;
-            
-            if (remoteDoc.isDeleted)
-                resolvedDoc = remoteDoc;
-        }
-        
-        if (resolvedDoc != localDoc)
-            resolvedDoc.collection = [self defaultCollectionOrThrow];
-        
-        // The remote branch has to win, so that the doc revision history matches the server's.
-        CBLStringBytes winningRevID = remoteDoc.revisionID;
-        CBLStringBytes losingRevID = localDoc.revisionID;
-        
-        // mergedRevFlags:
-        C4RevisionFlags mergedFlags = 0;
-        
-        // mergedBody:
-        alloc_slice mergedBody;
-        if (resolvedDoc != remoteDoc) {
-            if (resolvedDoc) {
-                // Unless the remote revision is being used as-is, we need a new revision:
-                NSError* err = nil;
-                mergedBody = [resolvedDoc encodeWithRevFlags: &mergedFlags error: &err];
-                if (err) {
-                    createError(CBLErrorUnexpectedError, err.localizedDescription, outError);
-                    return false;
-                }
-                
-                if (!mergedBody) {
-                    createError(CBLErrorUnexpectedError, kCBLErrorMessageResolvedDocContainsNull, outError);
-                    return false;
-                }
-            } else
-                mergedBody = [self emptyFLSliceResult];
-        }
-        
-        mergedFlags |= resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
-        if (!resolvedDoc || resolvedDoc.isDeleted)
-            mergedFlags |= kRevDeleted;
-        
-        // Tell LiteCore to do the resolution:
-        C4Document *c4doc = localDoc.c4Doc.rawDoc;
-        C4Error c4err;
-        if (!c4doc_resolveConflict(c4doc,
-                                   winningRevID,
-                                   losingRevID,
-                                   mergedBody,
-                                   mergedFlags,
-                                   &c4err)
-            || !c4doc_save(c4doc, 0, &c4err)) {
-            return convertError(c4err, outError);
-        }
-        CBLLogInfo(Sync, @"Conflict resolved as doc '%@' rev %.*s",
-                   localDoc.id, (int)c4doc->revID.size, (char*)c4doc->revID.buf);
-        
-        return t.commit() || convertError(t.error(), outError);
-    }
-}
-
-- (FLSliceResult) emptyFLSliceResult {
-    FLEncoder enc = c4db_getSharedFleeceEncoder(_c4db);
-    FLEncoder_BeginDict(enc, 0);
-    FLEncoder_EndDict(enc);
-    auto result = FLEncoder_Finish(enc, nullptr);
-    FLEncoder_Reset(enc);
-    return result;
 }
 
 /** Check and show warning if file logging is not configured. */

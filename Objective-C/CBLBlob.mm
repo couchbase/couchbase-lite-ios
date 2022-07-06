@@ -20,6 +20,7 @@
 #import "CBLBlob.h"
 #import "CBLBlob+Swift.h"
 #import "CBLBlobStream.h"
+#import "CBLCollection+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLCoreBridge.h"
