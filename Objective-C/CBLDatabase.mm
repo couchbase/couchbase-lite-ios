@@ -90,6 +90,9 @@ typedef enum {
     CBLDatabaseState _state;
     
     CBLCollection* _defaultCollection;
+    
+    // this object will be retained and used to lock from outside classes.
+    id _mutex;
 }
 
 @synthesize name=_name;
@@ -136,6 +139,8 @@ static const C4DatabaseConfig2 kDBConfig = {
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
+        
+        _mutex = [NSObject new];
         
         [self setDefaultCollection];
     }
@@ -186,13 +191,13 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (NSString*) path {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
     }
 }
 
 - (uint64_t) count {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
     }
 }
@@ -328,7 +333,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (BOOL) inBatch: (NSError**)outError usingBlockWithError: (void (NS_NOESCAPE ^)(NSError**))block {
     CBLAssertNotNil(block);
     
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [self mustBeOpen];
         
         C4Transaction transaction(_c4db);
@@ -368,7 +373,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (BOOL) close: (NSError**)outError {
     NSArray *activeStoppables = nil;
     
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if ([self isClosed])
             return YES;
         
@@ -396,7 +401,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     }
     [_closeCondition unlock];
     
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if ([self isClosed])
             return YES;
         
@@ -418,13 +423,13 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (BOOL) isReadyToClose {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         return _activeStoppables.count == 0;
     }
 }
 
 - (BOOL) delete: (NSError**)outError {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [self mustBeOpen];
     }
     
@@ -437,7 +442,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)outError {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [self mustBeOpen];
         
         C4Error err;
@@ -608,7 +613,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - Scope
 
 - (nullable CBLScope*) defaultScope: (NSError**)error {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -629,7 +634,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - Collections
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -658,7 +663,7 @@ static void throwIfNotOpenError(NSError* error) {
 - (nullable  NSArray*) collections: (nullable NSString*)scope error: (NSError**)error {
     NSString * scopeName = scope ?: kCBLDefaultScopeName;
     CBLStringBytes sName(scopeName);
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -706,7 +711,7 @@ static void throwIfNotOpenError(NSError* error) {
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     
     C4Collection* c4collection;
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -733,7 +738,7 @@ static void throwIfNotOpenError(NSError* error) {
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     
     __block C4Collection* c;
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -760,7 +765,7 @@ static void throwIfNotOpenError(NSError* error) {
     CBLStringBytes cName(name);
     CBLStringBytes sName(scopeName);
     C4CollectionSpec spec = { .name = cName, .scope = sName };
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return NO;
         
@@ -804,7 +809,7 @@ static void throwIfNotOpenError(NSError* error) {
 }
 
 - (void) mustBeOpenLocked {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [self mustBeOpen];
     }
 }
@@ -828,13 +833,13 @@ static void throwIfNotOpenError(NSError* error) {
 }
 
 - (BOOL) isClosedLocked {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         return [self isClosed];
     }
 }
 
 - (C4SliceResult) getPublicUUID: (NSError**)outError {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: outError])
             return C4SliceResult{};
         
@@ -849,7 +854,7 @@ static void throwIfNotOpenError(NSError* error) {
 }
 
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: outError])
             return nil;
         
@@ -864,7 +869,7 @@ static void throwIfNotOpenError(NSError* error) {
 #pragma mark Cookie save
 
 - (NSString*) getCookies: (NSURL*)url error: (NSError**)error {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
@@ -896,7 +901,7 @@ static void throwIfNotOpenError(NSError* error) {
 }
 
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         C4Error err = {};
         CBLStringBytes header(cookie);
         CBLStringBytes host(url.host);
@@ -907,6 +912,10 @@ static void throwIfNotOpenError(NSError* error) {
         }
         return YES;
     }
+}
+
+- (id) mutex {
+    return _mutex;
 }
 
 #pragma mark - PRIVATE
@@ -985,7 +994,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) postDatabaseChanged {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         if (!_dbObs || !_c4db)
             return;
         
@@ -1023,7 +1032,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         NSString* documentID = (NSString*)token.context;
         CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
         if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
@@ -1054,7 +1063,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) safeBlock:(void (^)())block {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         block();
     }
 }
@@ -1062,7 +1071,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 #pragma mark - Stoppable
 
 - (void) addActiveStoppable: (id<CBLStoppable>)stoppable {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [self mustBeOpenAndNotClosing];
         
         if (!_activeStoppables)
@@ -1073,7 +1082,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) removeActiveStoppable: (id<CBLStoppable>)stoppable {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         [_activeStoppables removeObject: stoppable];
         
         if (_activeStoppables.count == 0)
@@ -1082,7 +1091,7 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (uint64_t) activeStoppableCount {
-    CBL_LOCK(self) {
+    CBL_LOCK(_mutex) {
         return _activeStoppables.count;
     }
 }

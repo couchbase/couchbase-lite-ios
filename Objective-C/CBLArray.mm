@@ -67,11 +67,11 @@ using namespace fleece;
 }
 
 - (void) setupSharedLock {
-    id db;
+    CBLDatabase* db;
     auto docContext = dynamic_cast<DocContext*>(_array.context());
     if (docContext)
         db = (docContext)->database();
-    _sharedLock = db != nil ? db : self;
+    _sharedLock = db != nil ? db.mutex : self;
 }
 
 - (id) copyWithZone: (NSZone*)zone {

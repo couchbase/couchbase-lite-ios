@@ -392,6 +392,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     
     if (encContext->document) {
         CBLDatabase* database = encContext->document.collection.db;
+        if (!database)
+            return;
+        
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {

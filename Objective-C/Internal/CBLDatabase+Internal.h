@@ -75,6 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CBLCollection*) defaultCollectionOrThrow;
 
+- (id) mutex;
+
 @end
 
 /// CBLDatabaseConfiguration:

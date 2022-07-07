@@ -37,7 +37,11 @@
 }
 
 - (CBLDatabase*) database {
-    return _collection.db;
+    CBLDatabase* db = _collection.db;
+    if (!db)
+        return nil;
+    
+    return db;
 }
 
 @end

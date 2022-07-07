@@ -153,9 +153,12 @@ using namespace fleece;
 #pragma mark - Internal
 
 - (C4Database*) c4db {
-    C4Database* db = _collection.db.c4db;
-    Assert(db, @"%@ does not belong to a database", self);
-    return db;
+    CBLDatabase* db = _collection.db;
+    if (!db) {
+        return nil;
+    }
+    Assert(db.c4db, @"%@ does not belong to a database", self);
+    return db.c4db;
 }
 
 - (bool) isMutable {
@@ -170,6 +173,9 @@ using namespace fleece;
 - (void) updateDictionary {
     if (_fleeceData) {
         CBLDatabase* db = _collection.db;
+        if (!db) {
+            return;
+        }
         _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
         [db safeBlock:^{
             _dict = _root->asNative();
@@ -229,7 +235,11 @@ using namespace fleece;
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     
     if (!hasAttachment) {
-        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.collection.db.sharedKeys, nullslice);
+        CBLDatabase* db = self.collection.db;
+        if (!db) {
+            return {};
+        }
+        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, db.sharedKeys, nullslice);
         hasAttachment = c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
         FLDoc_Release(doc);
     }
@@ -395,8 +405,12 @@ using namespace fleece;
 }
 
 - (NSUInteger) hash {
+    CBLDatabase* db = self.collection.db;
+    if (!db) {
+        return -1;
+    }
     return [self.collection.name hash] ^ [self.collection.scope.name hash] ^
-    [self.collection.db.name hash] ^ [self.id hash] ^ [_dict hash];
+    [db.name hash] ^ [self.id hash] ^ [_dict hash];
 }
 
 @end
