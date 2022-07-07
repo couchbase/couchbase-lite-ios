@@ -443,10 +443,11 @@
         AssertEqualObjects(change.documentID, doc.id);
         AssertNil([change.database documentWithID: change.documentID]);
         if (count == 2) {
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithDatabase: change.database
-                                                                documentID: doc.id
-                                                            includeDeleted: YES
-                                                                     error: nil];
+            CBLCollection* c = [self.db defaultCollection: nil];
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                                  documentID: doc.id
+                                                              includeDeleted: YES
+                                                                       error: nil];
             AssertNil(purgedDoc);
             [expectation fulfill];
         }
@@ -463,10 +464,11 @@
     AssertNil(err);
     AssertNil([self.db documentWithID: doc.id]);
     
-    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithDatabase: self.db
-                                                         documentID: doc.id
-                                                     includeDeleted: TRUE
-                                                              error: &err];
+    CBLCollection* c = [self.db defaultCollection: nil];
+    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                           documentID: doc.id
+                                                       includeDeleted: TRUE
+                                                                error: &err];
     AssertNotNil(deletedDoc);
     
     // Wait for result
@@ -490,10 +492,11 @@
         AssertEqualObjects(change.documentID, doc.id);
         AssertNil([change.database documentWithID: change.documentID]);
         if (count == 2) {
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithDatabase: change.database
-                                                                documentID: doc.id
-                                                            includeDeleted: YES
-                                                                     error: nil];
+            CBLCollection* c = [self.db defaultCollection: nil];
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+                                                                  documentID: doc.id
+                                                              includeDeleted: YES
+                                                                       error: nil];
             AssertNil(purgedDoc);
             [expectation fulfill];
         }

@@ -187,9 +187,11 @@
     [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
     // should be greater, so that it pushed new revision to remote
-    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: self.otherDB
-                                                           documentID: docId
-                                                       includeDeleted: YES error: &error].sequence);
+    CBLCollection* c = [self.otherDB defaultCollection: nil];
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithCollection: c
+                                                             documentID: docId
+                                                         includeDeleted: YES
+                                                                  error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedLocalWins {
@@ -216,10 +218,11 @@
     [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
     // should be greater, so that it pushed new revision to remote
-    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithDatabase: self.otherDB
-                                                           documentID: docId
-                                                       includeDeleted: YES
-                                                                error: &error].sequence);
+    CBLCollection* c = [self.otherDB defaultCollection: nil];
+    Assert(sequenceBeforePush < [[CBLDocument alloc] initWithCollection: c
+                                                             documentID: docId
+                                                         includeDeleted: YES
+                                                                  error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedRemoteWins {
@@ -242,17 +245,18 @@
     AssertNil([self.db documentWithID: @"doc"]);
     
     NSError* error;
-    UInt64 sequenceBeforePush = [[CBLDocument alloc] initWithDatabase: self.otherDB
-                                                           documentID: docId
-                                                       includeDeleted: YES
-                                                                error: &error].sequence;
+    CBLCollection* c = [self.otherDB defaultCollection: nil];
+    UInt64 sequenceBeforePush = [[CBLDocument alloc] initWithCollection: c
+                                                             documentID: docId
+                                                         includeDeleted: YES
+                                                                  error: &error].sequence;
     [self run: [self config: kCBLReplicatorTypePush] errorCode: 0 errorDomain: nil];
     
     // The deleted doc shouldn't be pushed to the remote DB:
-    AssertEqual(sequenceBeforePush, [[CBLDocument alloc] initWithDatabase: self.otherDB
-                                                               documentID: docId
-                                                           includeDeleted: YES
-                                                                    error: &error].sequence);
+    AssertEqual(sequenceBeforePush, [[CBLDocument alloc] initWithCollection: c
+                                                                 documentID: docId
+                                                             includeDeleted: YES
+                                                                      error: &error].sequence);
 }
 
 - (void) testConflictResolverDeletedBothRev {

@@ -45,6 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection;
+
+- (bool) resolveConflictInDocument: (NSString*)docID
+              withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
+                             error: (NSError**)outError;
 @end
 
 @interface CBLCollectionChange ()

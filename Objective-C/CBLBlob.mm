@@ -20,6 +20,7 @@
 #import "CBLBlob.h"
 #import "CBLBlob+Swift.h"
 #import "CBLBlobStream.h"
+#import "CBLCollection+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLCoreBridge.h"
@@ -390,7 +391,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
         *outHasAttachment = true;
     
     if (encContext->document) {
-        CBLDatabase* database = encContext->document.database;
+        CBLDatabase* database = encContext->document.collection.db;
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {
