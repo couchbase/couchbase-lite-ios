@@ -152,10 +152,13 @@ using namespace fleece;
 
 #pragma mark - Internal
 
-- (C4Database*) c4db {
-    C4Database* db = _collection.db.c4db;
-    Assert(db, @"%@ does not belong to a database", self);
-    return db;
+- (nullable C4Database*) c4db {
+    CBLDatabase* db = _collection.db;
+    if (!db) {
+        return nil;
+    }
+    Assert(db.c4db, @"%@ does not belong to a database", self);
+    return db.c4db;
 }
 
 - (bool) isMutable {
@@ -170,6 +173,10 @@ using namespace fleece;
 - (void) updateDictionary {
     if (_fleeceData) {
         CBLDatabase* db = _collection.db;
+        if (!db) {
+            CBLWarn(Database, @"Unable to update the document's content as the db has been released.");
+            return;
+        }
         _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
         [db safeBlock:^{
             _dict = _root->asNative();
@@ -210,7 +217,14 @@ using namespace fleece;
 
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
     _encodingError = nil;
-    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
+    C4Database* c4db = self.c4db;
+    if (!c4db) {
+        if (outError)
+            *outError = CBLDatabaseErrorNotOpen;
+        return {};
+    }
+    
+    auto encoder = c4db_getSharedFleeceEncoder(c4db);
     bool hasAttachment = false;
     FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
@@ -229,7 +243,13 @@ using namespace fleece;
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     
     if (!hasAttachment) {
-        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, self.collection.db.sharedKeys, nullslice);
+        CBLDatabase* db = self.collection.db;
+        if (!db) {
+            if (outError)
+                *outError = CBLDatabaseErrorNotOpen;
+            return {};
+        }
+        FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, db.sharedKeys, nullslice);
         hasAttachment = c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
         FLDoc_Release(doc);
     }
@@ -395,8 +415,7 @@ using namespace fleece;
 }
 
 - (NSUInteger) hash {
-    return [self.collection.name hash] ^ [self.collection.scope.name hash] ^
-    [self.collection.db.name hash] ^ [self.id hash] ^ [_dict hash];
+    return [self.collection hash] ^ [self.id hash] ^ [_dict hash];
 }
 
 @end

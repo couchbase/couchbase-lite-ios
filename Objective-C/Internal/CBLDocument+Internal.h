@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, nullable) CBLCollection* collection;
 
-@property (nonatomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
+@property (nonatomic, readonly, nullable) C4Database* c4db;
 
 @property (atomic, nullable) CBLC4Document* c4Doc;
 

@@ -392,6 +392,12 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     
     if (encContext->document) {
         CBLDatabase* database = encContext->document.collection.db;
+        if (!database) {
+            CBLWarn(Database, @"Unable to encode the blob, as the db has been released.");
+            [encContext->document setEncodingError: CBLDatabaseErrorNotOpen];
+            return;
+        }
+        
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {

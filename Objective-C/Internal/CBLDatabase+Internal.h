@@ -75,6 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CBLCollection*) defaultCollectionOrThrow;
 
+- (id) mutex;
+
 @end
 
 /// CBLDatabaseConfiguration:
@@ -113,8 +115,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocumentChange ()
 
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                         documentID: (NSString*)documentID;
+- (nullable instancetype) initWithCollection: (CBLCollection*)collection
+                                  documentID: (NSString*)documentID
+                                       error: (NSError**)error;
 
 @end
 

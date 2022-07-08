@@ -18,26 +18,31 @@
 //
 
 #import "CBLCollection+Internal.h"
-#import "CBLDocumentChange.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocumentChange.h"
+#import "CBLErrors.h"
 
 @implementation CBLDocumentChange
 
-@synthesize documentID=_documentID, collection=_collection;
+@synthesize documentID=_documentID, collection=_collection, database=_database;
 
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                         documentID: (NSString*)documentID
+- (nullable instancetype) initWithCollection: (CBLCollection*)collection
+                                  documentID: (NSString*)documentID
+                                       error: (NSError**)error
 {
     self = [super init];
     if (self) {
+        CBLDatabase* db = collection.db;
+        if (!db) {
+            if (error)
+                *error = CBLDatabaseErrorNotOpen;
+            return nil;
+        }
+        _database = db;
         _collection = collection;
         _documentID = documentID;
     }
     return self;
-}
-
-- (CBLDatabase*) database {
-    return _collection.db;
 }
 
 @end

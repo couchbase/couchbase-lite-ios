@@ -45,6 +45,9 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     C4DatabaseObserver* _colObs;
     CBLChangeNotifier<CBLCollectionChange*>* _colChangeNotifier;
     NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
+    
+    // retained database mutex
+    id _mutex;
 }
 
 @synthesize count=_count, name=_name, scope=_scope, db=_db;
@@ -69,6 +72,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         
         CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ scope=%@",
                       self, _name, db, _scope);
+        
+        _mutex = db.mutex;
     }
     
     return self;
@@ -84,6 +89,11 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return [NSString stringWithFormat: @"%@[%@.%@]%@", self.class, _scope.name, _name, _db];
 }
 
+- (NSUInteger) hash {
+    return [self.name hash] ^ [self.scope.name hash];
+}
+
+
 #pragma mark - Indexable
 
 - (BOOL) createIndexWithName: (NSString*)name
@@ -92,7 +102,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(name);
     CBLAssertNotNil(config);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -114,7 +124,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) deleteIndexWithName: (NSString*)name
                        error: (NSError**)error {
     CBLAssertNotNil(name);
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -125,7 +135,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (nullable NSArray*) indexes: (NSError**)error {
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -171,7 +181,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -188,7 +198,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                  error: (NSError**)error {
     CBLAssertNotNil(document);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -211,9 +221,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) purgeDocumentWithID: (NSString*)documentID
                        error: (NSError**)error {
     CBLAssertNotNil(documentID);
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
+            return NO;
+        
+        CBLDatabase* db = _db;
+        if (![self database: db isValid: error])
             return NO;
         
         C4Transaction transaction(db.c4db);
@@ -290,7 +303,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                     error: &err];
         // if it's a conflict, we will use the conflictHandler to resolve.
         if (!success && $equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict) {
-            CBL_LOCK(_db) {
+            CBL_LOCK(_mutex) {
                 oldDoc = [[CBLDocument alloc] initWithCollection: self
                                                     documentID: document.id
                                                 includeDeleted: YES
@@ -333,7 +346,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (NSDate*) getDocumentExpirationWithID: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return nil;
         
@@ -357,7 +370,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                error: (NSError**)error {
     CBLAssertNotNil(documentID);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: error])
             return NO;
         
@@ -378,7 +391,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                            listener: (void (^)(CBLCollectionChange*))listener {
     CBLAssertNotNil(listener);
     
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         NSError* error = nil;
         if (![self collectionIsValid: &error]) {
             CBLWarn(Database,
@@ -404,6 +417,16 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (BOOL) isValid {
     return [self collectionIsValid: nil];
+}
+
+- (BOOL) database: (CBLDatabase*)db isValid: (NSError**)error {
+    BOOL valid = db != nil;
+    if (!valid) {
+        if (error)
+            *error = CBLDatabaseErrorNotOpen;
+    }
+    
+    return valid;
 }
 
 - (BOOL) isEqual: (id)object {
@@ -444,7 +467,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (void) postCollectionChanged {
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (!_colObs || !_c4col)
             return;
         
@@ -477,7 +500,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (void) removeToken: (id)token {
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
         if (t.context)
             [self removeDocumentChangeListenerWithToken: token];
@@ -492,7 +515,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         NSString* documentID = (NSString*)token.context;
         CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
         if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
@@ -516,7 +539,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 - (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue {
-    CBL_LOCK(_db) {
+    CBL_LOCK(_mutex) {
         if (!_docChangeNotifiers)
             _docChangeNotifiers = [NSMutableDictionary dictionary];
         
@@ -547,9 +570,12 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
     if (deletion && !document.revisionID)
         return createError(CBLErrorNotFound,
                            kCBLErrorMessageDeleteDocFailedNotSaved, outError);
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_mutex) {
         if (![self collectionIsValid: outError])
+            return NO;
+        
+        CBLDatabase* db = _db;
+        if (![self database: db isValid: outError])
             return NO;
         
         if (![self prepareDocument: document error: outError])
@@ -564,7 +590,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                 return convertError(transaction.error(), outError);
             
             if (![self saveDocument: document into: &newDoc withBaseDocument: baseDoc.c4Doc.rawDoc
-                         asDeletion: deletion error: outError])
+                         asDeletion: deletion db: db error: outError])
                 return NO;
             
             if (!newDoc) {
@@ -594,8 +620,8 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                 if (!curDoc)
                     return convertError(err, outError);
                 
-                if (![self saveDocument: document into: &newDoc
-                       withBaseDocument: curDoc asDeletion: deletion error: outError])
+                if (![self saveDocument: document into: &newDoc withBaseDocument: curDoc
+                             asDeletion: deletion db: db error: outError])
                     return NO;
             }
             
@@ -620,6 +646,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                  into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
            asDeletion: (BOOL)deletion
+                   db: (CBLDatabase*)db
                 error: (NSError**)outError
 {
     C4RevisionFlags revFlags = 0;
@@ -634,7 +661,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
             return NO;
         }
     } else {
-        FLEncoder enc = c4db_getSharedFleeceEncoder(_db.c4db);
+        FLEncoder enc = c4db_getSharedFleeceEncoder(db.c4db);
         FLEncoder_BeginDict(enc, 0);
         FLEncoder_EndDict(enc);
         body = FLEncoder_Finish(enc, nullptr);
@@ -680,7 +707,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         CBLDocument* remoteDoc;
         
         // Get latest local and remote document revisions from DB
-        CBL_LOCK(_db) {
+        CBL_LOCK(_mutex) {
             // Read local document:
             localDoc = [[CBLDocument alloc] initWithCollection: self
                                                     documentID: docID
@@ -763,8 +790,11 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                     remoteDoc: (CBLDocument*)remoteDoc
                         error: (NSError**)outError
 {
-    CBLDatabase* db = _db;
-    CBL_LOCK(db) {
+    CBL_LOCK(_mutex) {
+        CBLDatabase* db = _db;
+        if (![self database: db isValid: outError])
+            return NO;
+        
         C4Transaction t(db.c4db);
         if (!t.begin())
             return convertError(t.error(), outError);
@@ -804,7 +834,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                     return NO;
                 }
             } else
-                mergedBody = [self emptyFLSliceResult];
+                mergedBody = [self emptyFLSliceResult: db];
         }
         
         mergedFlags |= resolvedDoc.c4Doc != nil ? resolvedDoc.c4Doc.revFlags : 0;
@@ -830,8 +860,8 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
     }
 }
 
-- (FLSliceResult) emptyFLSliceResult {
-    FLEncoder enc = c4db_getSharedFleeceEncoder(_db.c4db);
+- (FLSliceResult) emptyFLSliceResult: (CBLDatabase*)db {
+    FLEncoder enc = c4db_getSharedFleeceEncoder(db.c4db);
     FLEncoder_BeginDict(enc, 0);
     FLEncoder_EndDict(enc);
     auto result = FLEncoder_Finish(enc, nullptr);

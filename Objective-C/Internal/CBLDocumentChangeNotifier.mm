@@ -52,7 +52,16 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Collection* collectio
 }
 
 - (void) postChange {
-    [self postChange: [[CBLDocumentChange alloc] initWithCollection: _col documentID: _docID]];
+    NSError* e = nil;
+    CBLDocumentChange* c = [[CBLDocumentChange alloc] initWithCollection: _col
+                                                              documentID: _docID
+                                                                   error: &e];
+    if (!c) {
+        CBLWarn(Database, @"Unable to post the doc change %@ %@ %@", e, _docID, _col);
+        return;
+    }
+    
+    [self postChange: c];
 }
 
 - (void) stop {
