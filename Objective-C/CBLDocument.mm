@@ -152,7 +152,7 @@ using namespace fleece;
 
 #pragma mark - Internal
 
-- (C4Database*) c4db {
+- (nullable C4Database*) c4db {
     CBLDatabase* db = _collection.db;
     if (!db) {
         return nil;
@@ -174,6 +174,7 @@ using namespace fleece;
     if (_fleeceData) {
         CBLDatabase* db = _collection.db;
         if (!db) {
+            CBLWarn(Database, @"Unable to update the document's content as the db has been released.");
             return;
         }
         _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
@@ -216,7 +217,14 @@ using namespace fleece;
 
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
     _encodingError = nil;
-    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
+    C4Database* c4db = self.c4db;
+    if (!c4db) {
+        if (outError)
+            *outError = CBLDatabaseErrorNotOpen;
+        return {};
+    }
+    
+    auto encoder = c4db_getSharedFleeceEncoder(c4db);
     bool hasAttachment = false;
     FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
@@ -237,6 +245,8 @@ using namespace fleece;
     if (!hasAttachment) {
         CBLDatabase* db = self.collection.db;
         if (!db) {
+            if (outError)
+                *outError = CBLDatabaseErrorNotOpen;
             return {};
         }
         FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, db.sharedKeys, nullslice);
@@ -405,12 +415,7 @@ using namespace fleece;
 }
 
 - (NSUInteger) hash {
-    CBLDatabase* db = self.collection.db;
-    if (!db) {
-        return -1;
-    }
-    return [self.collection.name hash] ^ [self.collection.scope.name hash] ^
-    [db.name hash] ^ [self.id hash] ^ [_dict hash];
+    return [self.collection hash] ^ [self.id hash] ^ [_dict hash];
 }
 
 @end

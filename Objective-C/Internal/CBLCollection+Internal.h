@@ -27,6 +27,11 @@
                                     userInfo: @{ NSLocalizedDescriptionKey: \
                                         @"Collection has been deleted, or its database closed." }]
 
+#define CBLDatabaseErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
+                                    code: CBLErrorNotOpen \
+                                    userInfo: @{ NSLocalizedDescriptionKey: \
+                                        @"Database is not open." }]
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection () <CBLRemovableListenerToken>

@@ -89,6 +89,11 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return [NSString stringWithFormat: @"%@[%@.%@]%@", self.class, _scope.name, _name, _db];
 }
 
+- (NSUInteger) hash {
+    return [self.name hash] ^ [self.scope.name hash];
+}
+
+
 #pragma mark - Indexable
 
 - (BOOL) createIndexWithName: (NSString*)name
@@ -221,7 +226,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
             return NO;
         
         CBLDatabase* db = _db;
-        if (!db)
+        if (![self database: db isValid: error])
             return NO;
         
         C4Transaction transaction(db.c4db);
@@ -414,6 +419,16 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return [self collectionIsValid: nil];
 }
 
+- (BOOL) database: (CBLDatabase*)db isValid: (NSError**)error {
+    BOOL valid = db != nil;
+    if (!valid) {
+        if (error)
+            *error = CBLDatabaseErrorNotOpen;
+    }
+    
+    return valid;
+}
+
 - (BOOL) isEqual: (id)object {
     if (self == object)
         return YES;
@@ -560,7 +575,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
             return NO;
         
         CBLDatabase* db = _db;
-        if (!db)
+        if (![self database: db isValid: outError])
             return NO;
         
         if (![self prepareDocument: document error: outError])
@@ -777,7 +792,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 {
     CBL_LOCK(_mutex) {
         CBLDatabase* db = _db;
-        if (!db)
+        if (![self database: db isValid: outError])
             return NO;
         
         C4Transaction t(db.c4db);
