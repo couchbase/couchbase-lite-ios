@@ -342,7 +342,8 @@ public struct ReplicatorConfiguration {
         }
         
         return { (doc, flags) in
-            return f(Document(doc), DocumentFlags(rawValue: Int(flags.rawValue)))
+            // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
+            return f(Document(doc, collection: nil), DocumentFlags(rawValue: Int(flags.rawValue)))
         }
     }
     

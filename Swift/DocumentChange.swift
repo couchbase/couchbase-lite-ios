@@ -24,9 +24,7 @@ public struct DocumentChange {
     
     /// The database.
     @available(*, deprecated, message: "Use collection instead.")
-    public var database: Database {
-        return collection.db
-    }
+    public let database: Database
     
     /// The ID of the document that changed.
     public let documentID: String

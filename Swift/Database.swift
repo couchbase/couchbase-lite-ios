@@ -62,6 +62,9 @@ public final class Database {
         CBLDatabase.checkFileLogging(true);
         _config = DatabaseConfiguration(config: config)
         _impl = try CBLDatabase(name: name, config: _config.toImpl())
+        
+        let dCollection = try _impl.defaultCollection()
+        _defaultCollection = Collection(dCollection, db: self)
     }
     
     /// The database's name.
@@ -82,10 +85,15 @@ public final class Database {
     /// Gets a Document object with the given ID.
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
-        if let implDoc = _impl.document(withID: id) {
-            return Document(implDoc)
+        do {
+            return try defaultCollectionOrThrowEx().document(id: id)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
         }
-        return nil;
+        
+        return nil
     }
     
     /// Gets document fragment object by the given document ID.
@@ -102,7 +110,15 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:) instead.")
     public func saveDocument(_ document: MutableDocument) throws {
-        try _impl.save(document._impl as! CBLMutableDocument)
+        do {
+            try defaultCollectionOrThrowEx().save(document: document)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+            
+            throw err
+        }
     }
     
     /// Saves a document to the database. When used with lastWriteWins concurrency
@@ -119,18 +135,17 @@ public final class Database {
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:concurrencyControl:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
-        do {
-            let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
-            try _impl.save(document._impl as! CBLMutableDocument, concurrencyControl: cc)
-            return true
-        } catch let err as NSError {
-            if err.code == CBLErrorConflict {
-                return false
+            do {
+                return try defaultCollectionOrThrowEx().save(document: document,
+                                                             concurrencyControl: concurrencyControl)
+            } catch let err as NSError {
+                if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                    Database.throwNotOpenEx()
+                }
+                
+                throw err
             }
-            throw err
         }
-    }
     
     /// Saves a document to the database. When write operations are executed concurrently and if
     /// conflicts occur, the conflict handler will be called. Use the conflict handler to directly
@@ -148,21 +163,18 @@ public final class Database {
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
-        ) throws -> Bool {
+    ) throws -> Bool {
         do {
-            try _impl.save(
-                document._impl as! CBLMutableDocument,
-                conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    return conflictHandler(document, old != nil ? Document(old!) : nil)
-                }
-            )
-            return true
+            return try defaultCollectionOrThrowEx().save(document: document,
+                                                         conflictHandler: conflictHandler)
         } catch let err as NSError {
-            if err.code == CBLErrorConflict {
-                return false
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
             }
+
             throw err
         }
+        return false
     }
     
     /// Deletes a document from the database. When write operations are executed
@@ -173,8 +185,17 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:) instead.")
-    public func deleteDocument(_ document: Document) throws {
-        try _impl.delete(document._impl)
+    public func deleteDocument(_ document: Document) throws
+    {
+        do {
+            return try defaultCollectionOrThrowEx().delete(document: document)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+            
+            throw err
+        }
     }
     
     /// Deletes a document from the database. When used with lastWriteWins concurrency
@@ -190,16 +211,16 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:concurrencyControl:) instead.")
     @discardableResult public func deleteDocument(
-        _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool
+    {
         do {
-            let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
-            try _impl.delete(document._impl, concurrencyControl: cc)
-            return true
+            return try defaultCollectionOrThrowEx().delete(document: document,
+                                                           concurrencyControl: concurrencyControl)
         } catch let err as NSError {
-            if err.code == CBLErrorConflict {
-                return false
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
             }
+            
             throw err
         }
     }
@@ -212,7 +233,15 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(:) instead.")
     public func purgeDocument(_ document: Document) throws {
-        try _impl.purgeDocument(document._impl)
+        do {
+            try defaultCollectionOrThrowEx().purge(document: document)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+            
+            throw err
+        }
     }
     
     /// Purges the document for the given documentID from the database.
@@ -223,7 +252,15 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(withID:) instead.")
     public func purgeDocument(withID documentID: String) throws {
-        try _impl.purgeDocument(withID: documentID)
+        do {
+            try defaultCollectionOrThrowEx().purge(id: documentID)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+            
+            throw err
+        }
     }
     
     ///  Save a blob object directly into the database without associating it with any documents.
@@ -280,7 +317,15 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().setDocumentExpiration(withID:expiration:) instead.")
     public func setDocumentExpiration(withID documentID: String, expiration: Date?) throws {
-        try _impl.setDocumentExpirationWithID(documentID, expiration: expiration)
+        do {
+            try defaultCollectionOrThrowEx().setDocumentExpiration(id: documentID, expiration: expiration)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+            
+            throw err
+        }
     }
     
     /// Returns the expiration time of a document, if exists, else nil.
@@ -289,7 +334,15 @@ public final class Database {
     /// - Returns: the expiration time of a document, if one has been set, else nil.
     @available(*, deprecated, message: "Use database.defaultCollection().getDocumentExpiration(withID:) instead.")
     public func getDocumentExpiration(withID documentID: String) -> Date? {
-        return _impl.getDocumentExpiration(withID: documentID)
+        do {
+            return try defaultCollectionOrThrowEx().getDocumentExpiration(id: documentID)
+        } catch let err as NSError {
+            if err.code == CBLError.notOpen && err.domain == CBLErrorDomain {
+                Database.throwNotOpenEx()
+            }
+        }
+        
+        return nil
     }
     
     /// Adds a database change listener. Changes will be posted on the main queue.
@@ -300,7 +353,9 @@ public final class Database {
     @discardableResult public func addChangeListener(
         _ listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
-        return self.addChangeListener(withQueue: nil, listener: listener)
+        return defaultCollectionOrThrowEx().addChangeListener(listener: { colChange in
+            listener(DatabaseChange(database: self, documentIDs: colChange.documentIDs))
+        })
     }
     
     /// Adds a database change listener with the dispatch queue on which changes
@@ -315,10 +370,9 @@ public final class Database {
     @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
         listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addChangeListener(with: queue) { [unowned self] (change) in
-            listener(DatabaseChange(database: self, documentIDs: change.documentIDs))
+        return defaultCollectionOrThrowEx().addChangeListener(queue: queue) { colChange in
+            listener(DatabaseChange(database: self, documentIDs: colChange.documentIDs))
         }
-        return ListenerToken(token)
     }
     
     /// Adds a document change listener block for the given document ID.
@@ -331,7 +385,7 @@ public final class Database {
     @discardableResult public func addDocumentChangeListener(withID id: String,
         listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        return self.addDocumentChangeListener(withID: id, queue: nil, listener: listener)
+        return defaultCollectionOrThrowEx().addDocumentChangeListener(id: id, listener: listener)
     }
     
     /// Adds a document change listener for the document with the given ID and the
@@ -347,11 +401,8 @@ public final class Database {
     @discardableResult public func addDocumentChangeListener(withID id: String,
         queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
-            listener(DocumentChange(documentID: change.documentID,
-                                    collection: Collection(change.collection)))
-        }
-        return ListenerToken(token)
+        return defaultCollectionOrThrowEx().addDocumentChangeListener(id: id, queue: queue,
+                                                                      listener: listener)
     }
     
     /// Removes a change listener with the given listener token.
@@ -359,7 +410,7 @@ public final class Database {
     /// - Parameter token: The listener token.
     @available(*, deprecated, message: "Use database.defaultCollection().removeChangeListener(withToken:) instead.")
     public func removeChangeListener(withToken token: ListenerToken) {
-        _impl.removeChangeListener(with: token._impl)
+        token.remove()
     }
     
     /// Close database synchronously. Before closing the database, the active replicators, listeners and live queries will be stopped.
@@ -437,7 +488,7 @@ public final class Database {
     /// Get the default scope.
     public func defaultScope() throws -> Scope {
         let s = try _impl.defaultScope()
-        return Scope(s)
+        return Scope(s, db: self)
     }
     
     /// Get scope names that have at least one collection.
@@ -447,7 +498,7 @@ public final class Database {
         var scopes = [Scope]()
         let res = try _impl.scopes()
         for s in res {
-            scopes.append(Scope(s))
+            scopes.append(Scope(s, db: self))
         }
         return scopes
     }
@@ -457,15 +508,21 @@ public final class Database {
     /// Note: The default scope is exceptional, and it will always be returned.
     public func scope(name: String) throws -> Scope? {
         let s = try _impl.scope(withName: name)
-        return Scope(s)
+        return Scope(s, db: self)
     }
     
     // MARK: Collections
     
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
-        let c = try _impl.defaultCollection()
-        return Collection(c)
+        do {
+            let _ = try _impl.defaultCollection()
+        } catch let err as NSError {
+            _defaultCollection = nil
+            throw err
+        }
+        
+        return _defaultCollection
     }
     
     /// Get all collections in the specified scope.
@@ -474,7 +531,7 @@ public final class Database {
         let res = try _impl.collections(scope)
         
         for c in res {
-            collections.append(Collection(c))
+            collections.append(Collection(c, db: self))
         }
         return collections
     }
@@ -483,14 +540,14 @@ public final class Database {
     /// If the collection already exists, the existing collection will be returned.
     public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
         let result = try _impl.createCollection(withName: name, scope: scope)
-        return Collection(result)
+        return Collection(result, db: self)
     }
 
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
         let c = try _impl.collection(withName: name, scope: scope)
-        return Collection(c)
+        return Collection(c, db: self)
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
@@ -534,6 +591,20 @@ public final class Database {
         _lock.unlock()
     }
     
+    func defaultCollectionOrThrowEx() -> Collection {
+        guard let dCol = try? defaultCollection() else {
+            Database.throwNotOpenEx()
+            fatalError()
+        }
+        
+        return dCol
+    }
+    
+    static func throwNotOpenEx() {
+        NSException(name: .internalInconsistencyException,
+                    reason: "The database was closed, or the default collection was deleted.").raise()
+    }
+    
     private let _config: DatabaseConfiguration
     
     private var _lock = NSRecursiveLock()
@@ -544,10 +615,7 @@ public final class Database {
 
     let _impl: CBLDatabase
     
-    init(_ impl: CBLDatabase) {
-        _impl = impl
-        _config = DatabaseConfiguration(impl.config)
-    }
+    private var _defaultCollection: Collection?
     
     // MARK: Debug
     

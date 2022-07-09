@@ -32,7 +32,8 @@ public final class DocumentFragment: DictionaryFragment {
     /// Gets the document from the document fragment object.
     public var document: Document? {
         if let docImpl = _impl.document {
-            return Document(docImpl)
+            // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
+            return Document(docImpl, collection: nil)
         }
         return nil
     }

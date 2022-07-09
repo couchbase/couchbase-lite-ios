@@ -61,7 +61,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     public var name: String { _impl.name }
     
     /// The scope of the collection.
-    public var scope: Scope { Scope(_impl.scope) }
+    public var scope: Scope { _scope }
     
     // MARK: Document Management
     
@@ -74,7 +74,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// the database is closed.
     public func document(id: String) throws -> Document? {
         let implDoc = try _impl.document(withID: id)
-        return Document(implDoc)
+        return Document(implDoc, collection: self)
     }
     
     /// Save a document into the collection. The default concurrency control, lastWriteWins,
@@ -130,7 +130,7 @@ public final class Collection : CollectionChangeObservable, Indexable {
             try _impl.save(
                 document._impl as! CBLMutableDocument,
                 conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    return conflictHandler(document, old != nil ? Document(old!) : nil)
+                    return conflictHandler(document, old != nil ? Document(old!, collection: self) : nil)
                 }
             )
             return true
@@ -233,9 +233,11 @@ public final class Collection : CollectionChangeObservable, Indexable {
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
-        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
-            [unowned self] (change) in
-            listener(DocumentChange(documentID: change.documentID, collection: self))
+        let token = _impl.addDocumentChangeListener(withID: id, queue: queue)
+        { [unowned self] (change) in
+            listener(DocumentChange(database: _db,
+                                    documentID: change.documentID,
+                                    collection: self))
         }
         return ListenerToken(token)
     }
@@ -282,15 +284,13 @@ public final class Collection : CollectionChangeObservable, Indexable {
     
     // MARK: Internal
     
-    var db: Database {
-        return _db
-    }
-    
-    init(_ impl: CBLCollection) {
+    init(_ impl: CBLCollection, db: Database) {
         _impl = impl
-        _db = Database(impl.db)
+        _db = db
+        _scope = Scope(_impl.scope, db: db)
     }
     
     let _impl: CBLCollection
-    fileprivate let _db: Database
+    let _db: Database
+    let _scope: Scope
 } 

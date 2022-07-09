@@ -32,7 +32,8 @@ public struct Conflict {
         guard let doc = toImpl().localDocument else {
             return nil
         }
-        return Document(doc)
+        // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
+        return Document(doc,collection: nil)
     }
     
     /// The document replicated from the remote database. If nil, document is deleted.
@@ -40,7 +41,8 @@ public struct Conflict {
         guard let doc = toImpl().remoteDocument else {
             return nil
         }
-        return Document(doc)
+        // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
+        return Document(doc, collection: nil)
     }
     
     // MARK: Internal

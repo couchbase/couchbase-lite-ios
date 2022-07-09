@@ -52,8 +52,8 @@ public final class ConflictResolver {
         guard let doc = resolver.resolve(conflict.toImpl()) else {
             return nil
         }
-        
-        return Document(doc)
+        // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
+        return Document(doc, collection: nil)
     }
     
 }

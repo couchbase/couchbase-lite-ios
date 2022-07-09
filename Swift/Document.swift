@@ -42,13 +42,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     }
     
     /// The collection that the document belongs to.
-    public var collection: Collection? {
-        guard let c = _impl.collection else {
-            return nil
-        }
-        
-        return Collection(c)
-    }
+    public var collection: Collection? { _collection }
     
     // MARK: Edit
     
@@ -262,12 +256,13 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     
     // MARK: Internal
     
-    init(_ impl: CBLDocument) {
+    init(_ impl: CBLDocument, collection: Collection?) {
         _impl = impl
+        _collection = collection
     }
     
     // MARK: Private
     
     let _impl: CBLDocument
-    
+    let _collection: Collection?
 }
