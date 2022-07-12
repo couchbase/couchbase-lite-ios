@@ -182,6 +182,10 @@
 		1AAFB6A5284A294300878453 /* CBLCollection+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A16129C283DDE8000AA4987 /* CBLCollection+Internal.h */; };
 		1AAFB6A6284A294400878453 /* CBLCollection+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A16129C283DDE8000AA4987 /* CBLCollection+Internal.h */; };
 		1AAFB6A7284A294500878453 /* CBLCollection+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A16129C283DDE8000AA4987 /* CBLCollection+Internal.h */; };
+		1AC16CE7287D4D820041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		1AC16CF5287D4D9C0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
 		1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
@@ -2006,6 +2010,7 @@
 		1AAFB67D284A266F00878453 /* Indexable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Indexable.swift; sourceTree = "<group>"; };
 		1AAFB696284A269E00878453 /* QueryFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryFactory.swift; sourceTree = "<group>"; };
 		1AAFB69F284A293700878453 /* CBLCollection+Swift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLCollection+Swift.h"; sourceTree = "<group>"; };
+		1AC16CE6287D4D820041728F /* CollectionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CollectionTest.m; sourceTree = "<group>"; };
 		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
 		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -3712,6 +3717,7 @@
 				1ADA05382240218F0068F745 /* AuthenticatorTest.m */,
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
+				1AC16CE6287D4D820041728F /* CollectionTest.m */,
 				9385F3021FC645AE00032037 /* ConcurrentTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9369A6AC207DD0ED009B5B83 /* DatabaseEncryptionTest.m */,
@@ -6092,6 +6098,7 @@
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
 				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
+				1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
@@ -6145,6 +6152,7 @@
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
+				1AC16CF5287D4D9C0041728F /* CollectionTest.m in Sources */,
 				1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */,
 				1A4160DE228375960061A567 /* ReplicatorTest+Main.m in Sources */,
 				939260B220A0FF1600E5748C /* MessageEndpointTest.m in Sources */,
@@ -6233,6 +6241,7 @@
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
+				1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
 				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
 				938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */,
@@ -6371,6 +6380,7 @@
 				1ADA05392240218F0068F745 /* AuthenticatorTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
 				9385F3031FC645AE00032037 /* ConcurrentTest.m in Sources */,
+				1AC16CE7287D4D820041728F /* CollectionTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
 				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
 				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
