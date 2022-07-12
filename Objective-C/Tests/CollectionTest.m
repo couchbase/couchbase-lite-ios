@@ -201,7 +201,7 @@
     AssertNil(error);
 }
 
-- (void) testDeleteCollection1 {
+- (void) testDeleteCollection {
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
@@ -234,6 +234,7 @@
     colA = [self.db createCollectionWithName: @"colA"
                                        scope: @"scopeA" error: &error];
     AssertNotNil(colA);
+    AssertEqual(colA.count, 0);
 }
 
 - (void) testGetCollectionsFromScope {

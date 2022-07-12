@@ -95,7 +95,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (uint64_t) count {
     CBL_LOCK(_mutex) {
-        _count = _c4col != nullptr ? c4coll_getDocumentCount(_c4col) : 0;
+        _count = c4coll_isValid(_c4col) ? c4coll_getDocumentCount(_c4col) : 0;
     }
     
     return _count;
