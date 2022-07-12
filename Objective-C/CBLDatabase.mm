@@ -622,13 +622,47 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (nullable NSArray*) scopes: (NSError**)error {
-    // TODO: add implementation
-    return [NSArray array];
+    C4Error c4err = {};
+    FLMutableArray list = c4db_scopeNames(_c4db, &c4err);
+    if (c4err.code != 0) {
+        CBLWarn(Database, @"%@ Failed to get scope names (%d/%d)",
+                self, c4err.domain, c4err.code);
+        convertError(c4err, error);
+        FLArray_Release(list);
+        return nil;
+    }
+    
+    NSUInteger count = FLArray_Count(list);
+    NSMutableArray* scopes = [NSMutableArray arrayWithCapacity: count];
+    for (uint i = 0; i < count; i++) {
+        NSString* name = FLValue_GetNSObject(FLArray_Get(list, i), nullptr);
+        
+        NSError* err = nil;
+        CBLScope* s = [self scopeWithName: name error: &err];
+        if (!s) {
+            CBLWarn(Database, @"%@ Failed to get scope: %@ error: %@", self, name, err);
+            if (error)
+                *error = err;
+            FLArray_Release(list);
+            return nil;
+        }
+        
+        [scopes addObject: s];
+    }
+    FLArray_Release(list);
+    
+    return [NSArray arrayWithArray: scopes];
 }
 
 - (nullable CBLScope*) scopeWithName: (NSString*)name error: (NSError**)error {
-    // TODO: add implementation
-    return nil;
+    NSString* scopeName = name ?: kCBLDefaultScopeName;
+    
+    CBLStringBytes sname(scopeName);
+    BOOL exists = c4db_hasScope(_c4db, sname);
+    if (!exists)
+        return nil;
+    
+    return [[CBLScope alloc] initWithDB: self name: name];
 }
 
 #pragma mark - Collections
