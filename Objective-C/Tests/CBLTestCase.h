@@ -134,6 +134,8 @@ NS_ASSUME_NONNULL_BEGIN
     object and after save with a new document objct getting from the database. */
 - (void) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
 
+- (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num;
+
 /** URL for a resource. */
 - (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type;
 

@@ -203,13 +203,22 @@
 }
 
 - (void) saveDocument: (CBLMutableDocument*)document {
+    [self saveDocument: document collection: nil];
+}
+
+- (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col {
     NSError* error;
-    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
+    CBLCollection* c = col ?: [self.db defaultCollection: &error];
+    AssertNotNil(c);
     
-    CBLDocument* savedDoc = [_db documentWithID: document.id];
+    Assert([c saveDocument: document error: &error], @"Saving error: %@", error);
+    AssertNil(error);
+    
+    CBLDocument* savedDoc = [c documentWithID: document.id error: &error];
     AssertNotNil(savedDoc);
     AssertEqualObjects(savedDoc.id, document.id);
     AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
+    AssertNil(error);
 }
 
 - (void) saveDocument: (CBLMutableDocument*)document eval: (void(^)(CBLDocument*))block {
@@ -218,6 +227,20 @@
     Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
     block(document);
     block([_db documentWithID: document.id]);
+}
+
+- (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
+    NSError *batchError;
+    BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
+        for (NSInteger i = start; i < (start+num); i++) {
+            NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+            [doc setValue: @(i) forKey: @"number1"];
+            [doc setValue: @(num-i) forKey: @"number2"];
+            [self saveDocument: doc collection: col];
+        }
+    }];
+    Assert(ok, @"Error when inserting documents: %@", batchError);
 }
 
 - (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type {
