@@ -813,26 +813,6 @@ static void throwIfNotOpenError(NSError* error) {
     }
 }
 
-#pragma mark - indexable
-
-- (BOOL) createIndexWithName: (NSString*)name
-                      config: (CBLIndexConfiguration*)config
-                       error: (NSError**)error {
-    // TODO: add implementation
-    return NO;
-}
-
-- (BOOL) deleteIndexWithName: (NSString*)name
-                       error: (NSError**)error {
-    // TODO: add implementation
-    return NO;
-}
-
-- (NSArray<CBLCollection*>*) collections: (NSError**)error {
-    // TODO: add implementation
-    return [NSArray array];
-}
-
 #pragma mark - INTERNAL
 
 // Must be called inside self lock
