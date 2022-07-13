@@ -416,4 +416,253 @@
     Assert([(@[@"scopeA", @"SCOPEa"]) containsObject: scopes[1].name]);
 }
 
+#pragma mark - 8.3 Collections and Cross Database Instance
+
+- (void) testCreateThenGetCollectionFromDifferentDatabaseInstance {
+    NSError* error = nil;
+    CBLCollection* col = [self.db createCollectionWithName: @"colA"
+                                                     scope: @"scopeA" error: &error];
+    
+    [self createDocNumbered: col start: 0 num: 10];
+    AssertEqual(col.count, 10);
+    AssertNil(error);
+    
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    CBLCollection* col2 = [db2 createCollectionWithName: @"colA"
+                                                  scope: @"scopeA" error: &error];
+    AssertEqualObjects(col.name, col2.name);
+    AssertEqualObjects(col.scope.name, col2.scope.name);
+    AssertEqual(col2.count, 10);
+    AssertNil(error);
+    
+    AssertEqual([self.db collections: @"scopeA" error: &error].count, 1);
+    AssertNil(error);
+    AssertEqual([db2 collections: @"scopeA" error: &error].count, 1);
+    AssertNil(error);
+    
+    [self createDocNumbered: col start: 10 num: 10];
+    AssertEqual(col.count, 20);
+}
+
+- (void) testDeleteThenGetCollectionFromDifferentDatabaseInstance {
+    NSError* error = nil;
+    CBLCollection* col = [self.db createCollectionWithName: @"colA"
+                                                     scope: @"scopeA" error: &error];
+    
+    [self createDocNumbered: col start: 0 num: 10];
+    AssertEqual(col.count, 10);
+    AssertNil(error);
+    
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    AssertNil(error);
+    CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertEqual(col.count, 0);
+    AssertEqual(col2.count, 0);
+    AssertNil(error);
+    
+    AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertNil(error);
+    AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertNil(error);
+}
+
+- (void) testDeleteAndRecreateThenGetCollectionFromDifferentDatabaseInstance {
+    NSError* error = nil;
+    CBLCollection* col = [self.db createCollectionWithName: @"colA"
+                                                     scope: @"scopeA" error: &error];
+    
+    [self createDocNumbered: col start: 0 num: 10];
+    AssertEqual(col.count, 10);
+    AssertNil(error);
+    
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    AssertNil(error);
+    CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertEqual(col2.count, 10);
+    AssertNil(error);
+    
+    // Delete the collection from db:
+    Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    
+    // Recreate:
+    CBLCollection* col3 = [self.db createCollectionWithName: @"colA"
+                                                      scope: @"scopeA" error: &error];
+    AssertEqual(col3.count, 0);
+    AssertNil(error);
+    
+    [self createDocNumbered: col3 start: 0 num: 3];
+    CBLCollection* col4 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertEqual(col4.count, 3);
+    AssertEqual(col3.count, 3);
+    AssertNil(error);
+}
+
+#pragma mark - 8.4 Listeners
+
+- (void) testCollectionChangeListener {
+    NSError* error = nil;
+    CBLCollection* col1 = [self.db createCollectionWithName: @"colA"
+                                                      scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    CBLCollection* col2 = [self.db createCollectionWithName: @"colB"
+                                                      scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"change listener 1"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"change listener 2"];
+    XCTestExpectation* exp3 = [self expectationWithDescription: @"change listener 3"];
+    XCTestExpectation* exp4 = [self expectationWithDescription: @"change listener 4"];
+    __block int changeListenerFired = 0;
+    __block int count1 = 0;
+    id token1 = [col1 addChangeListener: ^(CBLCollectionChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count1 == 10)
+                [exp1 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count2 = 0;
+    id token2 = [col1 addChangeListener: ^(CBLCollectionChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count2 == 10)
+                [exp2 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count3 = 0;
+    dispatch_queue_t q1 = dispatch_queue_create(@"dispatch-queue-1".UTF8String, DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t q2 = dispatch_queue_create(@"dispatch-queue-2".UTF8String, DISPATCH_QUEUE_SERIAL);
+    id token3 = [col1 addChangeListenerWithQueue: q1 listener: ^(CBLCollectionChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count3 == 10)
+                [exp3 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count4 = 0;
+    id token4 = [col1 addChangeListenerWithQueue: q2 listener: ^(CBLCollectionChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count4 == 10)
+                [exp4 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    [self createDocNumbered: col1 start: 0 num: 10];
+    [self createDocNumbered: col2 start: 0 num: 10];
+    
+    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: 5.0];
+    changeListenerFired = 0;
+    [token1 remove];
+    [token2 remove];
+    [token3 remove];
+    [token4 remove];
+    
+    [self createDocNumbered: col1 start: 10 num: 10];
+    [self createDocNumbered: col2 start: 10 num: 10];
+    AssertEqual(changeListenerFired, 0);
+}
+
+- (void) testCollectionDocumentChangeListener {
+    NSError* error = nil;
+    CBLCollection* col1 = [self.db createCollectionWithName: @"colA"
+                                                      scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    CBLCollection* col2 = [self.db createCollectionWithName: @"colB"
+                                                      scope: @"scopeA" error: &error];
+    AssertNil(error);
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"doc change listener 1"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"doc change listener 2"];
+    XCTestExpectation* exp3 = [self expectationWithDescription: @"doc change listener 3"];
+    XCTestExpectation* exp4 = [self expectationWithDescription: @"doc change listener 4"];
+    
+    __block int changeListenerFired = 0;
+    __block int count1 = 0;
+    id token1 = [col1 addDocumentChangeListenerWithID: @"doc-1" listener: ^(CBLDocumentChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count1 == 2)
+                [exp1 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count2 = 0;
+    id token2 = [col1 addDocumentChangeListenerWithID: @"doc-1" listener: ^(CBLDocumentChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count2 == 2)
+                [exp2 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count3 = 0;
+    dispatch_queue_t q1 = dispatch_queue_create(@"dispatch-queue-1".UTF8String, DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t q2 = dispatch_queue_create(@"dispatch-queue-2".UTF8String, DISPATCH_QUEUE_SERIAL);
+    id token3 = [col1 addDocumentChangeListenerWithID: @"doc-1" queue: q1 listener: ^(CBLDocumentChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count3 == 2)
+                [exp3 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    __block int count4 = 0;
+    id token4 = [col1 addDocumentChangeListenerWithID: @"doc-1" queue: q2 listener: ^(CBLDocumentChange* change) {
+        changeListenerFired++;
+        if ([change.collection.name isEqualToString: @"colA"]) {
+            if (++count4 == 2)
+                [exp4 fulfill];
+        } else {
+            Assert(NO, @"CollectionB shouldn't receive any listener");
+        }
+    }];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc-1"];
+    [doc setString: @"str" forKey: @"key"];
+    [col1 saveDocument: doc error: &error];
+    
+    doc = [[col1 documentWithID: @"doc-1" error: &error] toMutable];
+    [doc setString: @"str2" forKey: @"key2"];
+    [col1 saveDocument: doc error: &error];
+    
+    [self createDocNumbered: col2 start: 0 num: 10];
+    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: 5.0];
+    changeListenerFired = 0;
+    [token1 remove];
+    [token2 remove];
+    [token3 remove];
+    [token4 remove];
+    
+    doc = [[col1 documentWithID: @"doc-1" error: &error] toMutable];
+    [doc setString: @"str3" forKey: @"key3"];
+    [col1 saveDocument: doc error: &error];
+    
+    [self createDocNumbered: col2 start: 10 num: 10];
+    AssertEqual(changeListenerFired, 0);
+}
+
 @end
