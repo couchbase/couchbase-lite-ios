@@ -115,6 +115,8 @@
 		1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1A9083ED287EE014006B1885 /* CBLConflict+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A9083E1287EDF19006B1885 /* CBLConflict+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		1A9083EE287EE016006B1885 /* CBLConflict+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A9083E1287EDF19006B1885 /* CBLConflict+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0924F737320015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
@@ -1986,6 +1988,7 @@
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1A9083E1287EDF19006B1885 /* CBLConflict+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLConflict+Swift.h"; sourceTree = "<group>"; };
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
 		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
 		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
@@ -2748,6 +2751,7 @@
 				1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */,
 				937F01E51EFB280000060D64 /* CBLAuthenticator+Internal.h */,
 				1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */,
+				1A9083E1287EDF19006B1885 /* CBLConflict+Swift.h */,
 				935A58CD21AFAD31009A29CB /* CBLDocumentReplication+Internal.h */,
 				2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */,
 				2753AFF21EC39CA200C12E98 /* CBLHTTPLogic.m */,
@@ -4098,6 +4102,7 @@
 				2753AFFA1EC39CA200C12E98 /* CBLWebSocket.h in Headers */,
 				9308F4061E64B22800F53EE4 /* MYErrorUtils.h in Headers */,
 				9308F4081E64B22D00F53EE4 /* MYLogging.h in Headers */,
+				1A9083ED287EE014006B1885 /* CBLConflict+Swift.h in Headers */,
 				93EC42E31FB387AB00D54BB4 /* CBLQueryJSONEncoding.h in Headers */,
 				9308F4041E64B22200F53EE4 /* ExceptionUtils.h in Headers */,
 				1AAFB670284A260A00878453 /* CBLCollectionChangeObservable.h in Headers */,
@@ -4422,6 +4427,7 @@
 				9343F0F3207D61AB00F19A89 /* CBLQueryVariableExpression.h in Headers */,
 				69774C4D28361E5B00B1C793 /* CBLIndexable.h in Headers */,
 				9343F0F4207D61AB00F19A89 /* CBLQueryLimit.h in Headers */,
+				1A9083EE287EE016006B1885 /* CBLConflict+Swift.h in Headers */,
 				9343F0F5207D61AB00F19A89 /* CBLDatabase.h in Headers */,
 				9343F0F6207D61AB00F19A89 /* CBLDocumentChange.h in Headers */,
 				1AAFB66E284A260A00878453 /* CBLCollectionChange.h in Headers */,

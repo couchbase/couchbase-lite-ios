@@ -59,5 +59,5 @@ public final class Scope {
     }
     
     let _impl: CBLScope
-    weak var _db: Database?
+    let _db: Database?
 }

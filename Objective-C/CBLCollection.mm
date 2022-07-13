@@ -752,9 +752,10 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
             if (localDoc.isDeleted && remoteDoc.isDeleted) {
                 resolvedDoc = remoteDoc;
             } else {
-                CBLConflict* conflict = [[CBLConflict alloc] initWithID: docID
-                                                          localDocument: localDoc.isDeleted ? nil : localDoc
-                                                         remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
+                CBLConflict* conflict = [[CBLConflict alloc] initWithCollection: self
+                                                                          docID: docID
+                                                                  localDocument: localDoc.isDeleted ? nil : localDoc
+                                                                 remoteDocument: remoteDoc.isDeleted ? nil : remoteDoc];
                 
                 resolvedDoc = [conflictResolver resolve: conflict];
             }

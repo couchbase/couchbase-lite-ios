@@ -1,8 +1,8 @@
 //
-//  CBLConflict+Internal.h
+//  CBLConflict+Swift.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,16 +18,12 @@
 //
 
 #import "CBLConflict.h"
-#import "CBLCollection.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLConflict ()
+@interface CBLConflict (Swift)
 
-- (instancetype) initWithCollection: (CBLCollection*) collection
-                              docID: (NSString*)documentID
-                      localDocument: (CBLDocument *)localDoc
-                     remoteDocument: (CBLDocument *)remoteDoc;
+@property (nonatomic, readonly) CBLCollection* collection;
 
 @end
 

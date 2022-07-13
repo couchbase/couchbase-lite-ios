@@ -322,7 +322,7 @@ public struct ReplicatorConfiguration {
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in
-                return resolver.resolve(conflict: Conflict(impl: conflict))?._impl
+                return resolver.resolve(conflict: Conflict(impl: conflict, db: self.database))?._impl
             }
         }
         

@@ -32,8 +32,8 @@ public struct Conflict {
         guard let doc = toImpl().localDocument else {
             return nil
         }
-        // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
-        return Document(doc,collection: nil)
+        
+        return Document(doc,collection: col)
     }
     
     /// The document replicated from the remote database. If nil, document is deleted.
@@ -41,17 +41,20 @@ public struct Conflict {
         guard let doc = toImpl().remoteDocument else {
             return nil
         }
-        // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
-        return Document(doc, collection: nil)
+        
+        return Document(doc, collection: col)
     }
     
     // MARK: Internal
     
     // Use Any to workaround
     private var impl: Any
+    private var col: Collection
     
-    init(impl: Any) {
+    init(impl: Any, db: Database) {
         self.impl = impl
+        let c = (impl as! CBLConflict).collection
+        self.col = Collection(c, db: db)
     }
     
     func toImpl() -> CBLConflict {
