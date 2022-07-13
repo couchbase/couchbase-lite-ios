@@ -93,6 +93,13 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return [self.name hash] ^ [self.scope.name hash];
 }
 
+- (uint64_t) count {
+    CBL_LOCK(_mutex) {
+        _count = c4coll_isValid(_c4col) ? c4coll_getDocumentCount(_c4col) : 0;
+    }
+    
+    return _count;
+}
 
 #pragma mark - Indexable
 
