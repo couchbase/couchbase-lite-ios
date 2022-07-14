@@ -523,7 +523,8 @@
     id token1 = [col1 addChangeListener: ^(CBLCollectionChange* change) {
         changeListenerFired++;
         if ([change.collection.name isEqualToString: @"colA"]) {
-            if (++count1 == 10)
+            count1 += change.documentIDs.count;
+            if (count1 == 10)
                 [exp1 fulfill];
         } else {
             Assert(NO, @"CollectionB shouldn't receive any listener");
@@ -534,7 +535,8 @@
     id token2 = [col1 addChangeListener: ^(CBLCollectionChange* change) {
         changeListenerFired++;
         if ([change.collection.name isEqualToString: @"colA"]) {
-            if (++count2 == 10)
+            count2 += change.documentIDs.count;
+            if (count2 == 10)
                 [exp2 fulfill];
         } else {
             Assert(NO, @"CollectionB shouldn't receive any listener");
@@ -547,7 +549,8 @@
     id token3 = [col1 addChangeListenerWithQueue: q1 listener: ^(CBLCollectionChange* change) {
         changeListenerFired++;
         if ([change.collection.name isEqualToString: @"colA"]) {
-            if (++count3 == 10)
+            count3 += change.documentIDs.count;
+            if (count3 == 10)
                 [exp3 fulfill];
         } else {
             Assert(NO, @"CollectionB shouldn't receive any listener");
@@ -558,7 +561,8 @@
     id token4 = [col1 addChangeListenerWithQueue: q2 listener: ^(CBLCollectionChange* change) {
         changeListenerFired++;
         if ([change.collection.name isEqualToString: @"colA"]) {
-            if (++count4 == 10)
+            count4 += change.documentIDs.count;
+            if (count4 == 10)
                 [exp4 fulfill];
         } else {
             Assert(NO, @"CollectionB shouldn't receive any listener");
