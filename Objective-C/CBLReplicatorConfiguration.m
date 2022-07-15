@@ -251,7 +251,7 @@
                  config: (nullable CBLCollectionConfiguration*)config {
     Assert(collections.count > 0);
     
-    CBLDatabase* db = _collections[0].db;
+    CBLDatabase* db = collections[0].db;
     for (CBLCollection* col in collections) {
         if (!col.isValid) {
             [NSException raise: NSInvalidArgumentException

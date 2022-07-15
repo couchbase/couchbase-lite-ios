@@ -265,6 +265,213 @@
     Assert(config2.conflictResolver == resolver);
 }
 
+- (void) testAddUpdateCollection {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    NSURL* url = [NSURL URLWithString: @"wss://foo"];
+    CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: endpoint];
+    
+    // add collection 1 with empty config
+    [config addCollection: col1a config: nil];
+    
+    // Create and add Collection config for collection 2.
+    CBLCollectionConfiguration* colconfig = [[CBLCollectionConfiguration alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    colconfig.conflictResolver = resolver;
+    id filter1 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    id filter2 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    colconfig.pushFilter = filter1;
+    colconfig.pullFilter = filter2;
+    colconfig.channels = @[@"channel1", @"channel2", @"channel3"];
+    colconfig.documentIDs = @[@"docID1", @"docID2"];
+    [config addCollection: col1b config: colconfig];
+    
+    AssertEqual(config.collections.count, 2);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[0].name]);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[1].name]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+    Assert([config.collections[1].scope.name isEqualToString: @"scopeA"]);
+    
+    // validate the config1 for NULL values
+    CBLCollectionConfiguration* config1 = [config collectionConfig: col1a];
+    AssertNil(config1.conflictResolver);
+    AssertNil(config1.channels);
+    AssertNil(config1.pushFilter);
+    AssertNil(config1.pullFilter);
+    AssertNil(config1.documentIDs);
+    
+    // vlaidate the config2 for valid values
+    CBLCollectionConfiguration* config2 = [config collectionConfig: col1b];
+    Assert(config2.pushFilter == filter1);
+    Assert(config2.pullFilter == filter2);
+    AssertEqualObjects(config2.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config2.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config2.conflictResolver == resolver);
+    
+    // Update in reverse
+    [config addCollection: col1a config: colconfig];
+    [config addCollection: col1b config: nil];
+    
+    // validate the config1 for valid values
+    config1 = [config collectionConfig: col1a];
+    Assert(config1.pushFilter == filter1);
+    Assert(config1.pullFilter == filter2);
+    AssertEqualObjects(config1.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config1.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config1.conflictResolver == resolver);
+    
+    // vlaidate the config2 for NULL
+    config2 = [config collectionConfig: col1b];
+    AssertNil(config2.conflictResolver);
+    AssertNil(config2.channels);
+    AssertNil(config2.pushFilter);
+    AssertNil(config2.pullFilter);
+    AssertNil(config2.documentIDs);
+}
+
+- (void) testRemoveCollection {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    NSURL* url = [NSURL URLWithString: @"wss://foo"];
+    CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: endpoint];
+    
+    // Create and add Collection config for both collections.
+    CBLCollectionConfiguration* colconfig = [[CBLCollectionConfiguration alloc] init];
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    colconfig.conflictResolver = resolver;
+    id filter1 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    id filter2 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    colconfig.pushFilter = filter1;
+    colconfig.pullFilter = filter2;
+    colconfig.channels = @[@"channel1", @"channel2", @"channel3"];
+    colconfig.documentIDs = @[@"docID1", @"docID2"];
+    
+    [config addCollection: col1a config: colconfig];
+    [config addCollection: col1b config: colconfig];
+    
+    AssertEqual(config.collections.count, 2);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[0].name]);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[1].name]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+    Assert([config.collections[1].scope.name isEqualToString: @"scopeA"]);
+    
+    CBLCollectionConfiguration* config1 = [config collectionConfig: col1a];
+    Assert(config1.pushFilter == filter1);
+    Assert(config1.pullFilter == filter2);
+    AssertEqualObjects(config1.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config1.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config1.conflictResolver == resolver);
+    
+    CBLCollectionConfiguration* config2 = [config collectionConfig: col1b];
+    Assert(config2.pushFilter == filter1);
+    Assert(config2.pullFilter == filter2);
+    AssertEqualObjects(config2.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config2.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config2.conflictResolver == resolver);
+    
+    [config removeCollection: col1b];
+    
+    AssertEqual(config.collections.count, 1);
+    Assert([config.collections[0].name isEqualToString: @"colA"]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+    
+    AssertNil([config collectionConfig: col1b]);
+}
+
+// exception causiung the memory leak!
+- (void) _testAddCollectionsFromDifferentDatabaseInstances {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    CBLCollection* col1b = [db2 createCollectionWithName: @"colB"
+                                                   scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    NSURL* url = [NSURL URLWithString: @"wss://foo"];
+    CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: endpoint];
+    
+    [self expectException: NSInvalidArgumentException in:^{
+        [config addCollections: @[col1a, col1b] config: nil];
+    }];
+    
+    AssertEqual(config.collections.count, 0);
+
+    [config addCollection: col1a config: nil];
+    AssertEqual(config.collections.count, 1);
+    Assert([config.collections[0].name isEqualToString: @"colA"]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+
+    [self expectException: NSInvalidArgumentException in:^{
+        [config addCollection: col1b config: nil];
+    }];
+}
+
+// memory leak with NSException
+- (void) _testAddDeletedCollections {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    CBLCollection* col1b = [db2 createCollectionWithName: @"colB"
+                                                   scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    Assert([db2 deleteCollectionWithName: @"colB" scope: @"scopeA" error: &error]);
+    AssertNil(error);
+    
+    NSURL* url = [NSURL URLWithString: @"wss://foo"];
+    CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: endpoint];
+    
+    [self expectException: NSInvalidArgumentException in:^{
+        [config addCollections: @[col1a, col1b] config: nil];
+    }];
+    
+    [config addCollection: col1a config: nil];
+    AssertEqual(config.collections.count, 1);
+    Assert([config.collections[0].name isEqualToString: @"colA"]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+    
+    [self expectException: NSInvalidArgumentException in:^{
+        [config addCollection: col1b config: nil];
+    }];
+}
+
 #pragma clang diagnostic pop
 
 @end
