@@ -23,7 +23,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLVersion.h"
-#import "CBLCollection.h"
+#import "CBLCollection+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -220,6 +220,18 @@
 
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config {
+    if (!collection.isValid) {
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Attempt to add an invalid collection"];
+    }
+    
+    if (_collections.count > 0) {
+        if (_collections[0].db != collection.db) {
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Attempt to add collection from different databases"];
+        }
+    }
+    
     CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
     if (collection == defaultCollection)
         [self checkAndUpdateConfig: config];
@@ -235,8 +247,23 @@
     _collections = _collectionConfigs.allKeys;
 }
 
-- (void) addCollections: (NSArray*)collections
+- (void) addCollections: (NSArray<CBLCollection*>*)collections
                  config: (nullable CBLCollectionConfiguration*)config {
+    Assert(collections.count > 0);
+    
+    CBLDatabase* db = _collections[0].db;
+    for (CBLCollection* col in collections) {
+        if (!col.isValid) {
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Attempt to add an invalid collection"];
+        }
+        
+        if (db != col.db) {
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Attempt to add collections from different databases"];
+        }
+    }
+    
     CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
     for (CBLCollection* col in collections) {
         if (col == defaultCollection)
@@ -374,6 +401,7 @@
 
 - (void) dealloc {
     cfrelease(_pinnedServerCertificate);
+    [_collectionConfigs removeAllObjects];
 }
 
 @end
