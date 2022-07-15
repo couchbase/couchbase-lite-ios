@@ -211,13 +211,23 @@
     _enableAutoPurge = enableAutoPurge;
 }
 
+- (CBLDatabase*) database {
+    if (!_database)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to access database property, with initWithTarget:"];
+    return _database;
+}
+
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config {
     CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
     if (collection == defaultCollection)
         [self checkAndUpdateConfig: config];
     
-    [_collectionConfigs setObject: config forKey: collection];
+    [_collectionConfigs setObject: config ?: [[CBLCollectionConfiguration alloc] init]
+                           forKey: collection];
+    
+    _collections = _collectionConfigs.allKeys;
 }
 
 - (void) addCollections: (NSArray*)collections
@@ -227,8 +237,10 @@
         if (col == defaultCollection)
             [self checkAndUpdateConfig: config];
         
-        [_collectionConfigs setObject: config forKey: col];
+        [_collectionConfigs setObject: config ?: [[CBLCollectionConfiguration alloc] init]
+                               forKey: col];
     }
+    _collections = _collectionConfigs.allKeys;
 }
 
 - (void) checkAndUpdateConfig: (CBLCollectionConfiguration*)config {
