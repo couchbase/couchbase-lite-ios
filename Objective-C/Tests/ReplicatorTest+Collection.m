@@ -209,6 +209,62 @@
     AssertNil(config2.documentIDs);
 }
 
+- (void) testAddCollectionsWithCollectionConfig {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    NSURL* url = [NSURL URLWithString: @"wss://foo"];
+    CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: endpoint];
+    
+    
+    CBLCollectionConfiguration* colconfig = [[CBLCollectionConfiguration alloc] init];
+    
+    TestConflictResolver* resolver;
+    resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    colconfig.conflictResolver = resolver;
+    id filter1 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    id filter2 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
+    colconfig.pushFilter = filter1;
+    colconfig.pullFilter = filter2;
+    colconfig.channels = @[@"channel1", @"channel2", @"channel3"];
+    colconfig.documentIDs = @[@"docID1", @"docID2"];
+    
+    [config addCollections: @[col1a, col1b] config: colconfig];
+    
+    AssertEqual(config.collections.count, 2);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[0].name]);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[1].name]);
+    Assert([config.collections[0].scope.name isEqualToString: @"scopeA"]);
+    Assert([config.collections[1].scope.name isEqualToString: @"scopeA"]);
+    
+    CBLCollectionConfiguration* config1 = [config collectionConfig: col1a];
+    CBLCollectionConfiguration* config2 = [config collectionConfig: col1b];
+    Assert(config1 != config2);
+    
+    Assert(config1.pushFilter == filter1);
+    Assert(config1.pullFilter == filter2);
+    AssertEqualObjects(config1.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config1.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config1.conflictResolver == resolver);
+    
+    Assert(config2.pushFilter == filter1);
+    Assert(config2.pullFilter == filter2);
+    AssertEqualObjects(config2.channels, (@[@"channel1", @"channel2", @"channel3"]));
+    AssertEqualObjects(config2.documentIDs, (@[@"docID1", @"docID2"]));
+    Assert(config2.conflictResolver == resolver);
+}
+
 #pragma clang diagnostic pop
 
 @end

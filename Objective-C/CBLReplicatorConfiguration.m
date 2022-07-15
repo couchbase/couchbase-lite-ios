@@ -24,7 +24,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLVersion.h"
 #import "CBLCollection.h"
-#import "CBLCollectionConfiguration.h"
+#import "CBLCollectionConfiguration+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -224,8 +224,13 @@
     if (collection == defaultCollection)
         [self checkAndUpdateConfig: config];
     
-    [_collectionConfigs setObject: config ?: [[CBLCollectionConfiguration alloc] init]
-                           forKey: collection];
+    CBLCollectionConfiguration* colConfig = nil;
+    if (config)
+        colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];
+    else
+        colConfig = [[CBLCollectionConfiguration alloc] init];
+    
+    [_collectionConfigs setObject: colConfig forKey: collection];
     
     _collections = _collectionConfigs.allKeys;
 }
@@ -237,8 +242,13 @@
         if (col == defaultCollection)
             [self checkAndUpdateConfig: config];
         
-        [_collectionConfigs setObject: config ?: [[CBLCollectionConfiguration alloc] init]
-                               forKey: col];
+        CBLCollectionConfiguration* colConfig = nil;
+        if (config)
+            colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];
+        else
+            colConfig = [[CBLCollectionConfiguration alloc] init];
+        
+        [_collectionConfigs setObject: colConfig forKey: col];
     }
     _collections = _collectionConfigs.allKeys;
 }
