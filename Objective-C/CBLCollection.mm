@@ -101,6 +101,10 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return _count;
 }
 
+- (id) copyWithZone: (nullable NSZone*)zone {
+    return [[[self class] alloc] initWithDB: _db c4collection: _c4col];
+}
+
 #pragma mark - Indexable
 
 - (BOOL) createIndexWithName: (NSString*)name

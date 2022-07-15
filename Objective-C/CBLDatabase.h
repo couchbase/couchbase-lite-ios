@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLLogger.h"
 #import "CBLQueryFactory.h"
+#import "CBLCollectionTypes.h"
 @class CBLBlob;
 @class CBLCollection;
 @class CBLDatabaseChange;
@@ -37,14 +38,6 @@
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
-
-/**
-Concurruncy control type used when saving or deleting a document.
-*/
-typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
-    kCBLConcurrencyControlLastWriteWins,    ///< The last write operation will win if there is a conflict.
-    kCBLConcurrencyControlFailOnConflict    ///< The operation will fail if there is a conflict.
-};
 
 /**
 Maintenance Type used when performing database maintenance .

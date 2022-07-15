@@ -25,6 +25,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface TestConflictResolver: NSObject<CBLConflictResolver>
+
+@property(nonatomic, nullable) CBLDocument* winner;
+
+- (instancetype) init NS_UNAVAILABLE;
+
+// set this resolver, which will be used while resolving the conflict
+- (instancetype) initWithResolver: (CBLDocument* (^)(CBLConflict*))resolver;
+
+@end
+
 @interface ReplicatorTest : CBLTestCase {
     CBLReplicator* repl;
     NSTimeInterval timeout;

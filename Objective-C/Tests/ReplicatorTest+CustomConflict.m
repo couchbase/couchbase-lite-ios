@@ -24,17 +24,6 @@
 #import "CBLErrorMessage.h"
 #import "CBLDocument+Internal.h"
 
-@interface TestConflictResolver: NSObject<CBLConflictResolver>
-
-@property(nonatomic, nullable) CBLDocument* winner;
-
-- (instancetype) init NS_UNAVAILABLE;
-
-// set this resolver, which will be used while resolving the conflict
-- (instancetype) initWithResolver: (CBLDocument* (^)(CBLConflict*))resolver;
-
-@end
-
 @interface ReplicatorTest_CustomConflict : ReplicatorTest
 @end
 
@@ -1062,29 +1051,5 @@
 
 #endif
 #pragma clang diagnostic pop
-
-@end
-
-#pragma mark - Helper class
-
-@implementation TestConflictResolver {
-    CBLDocument* (^_resolver)(CBLConflict*);
-}
-
-@synthesize winner=_winner;
-
-// set this resolver, which will be used while resolving the conflict
-- (instancetype) initWithResolver: (CBLDocument* (^)(CBLConflict*))resolver {
-    self = [super init];
-    if (self) {
-        _resolver = resolver;
-    }
-    return self;
-}
-
-- (CBLDocument *) resolve:(CBLConflict *)conflict {
-    _winner = _resolver(conflict);
-    return _winner;
-}
 
 @end

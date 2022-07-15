@@ -23,6 +23,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLVersion.h"
+#import "CBLCollection.h"
 #import "CBLCollectionConfiguration.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -32,6 +33,7 @@
 
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
+    CBLCollectionConfiguration* _defaultCollectionConfig;
 }
 
 @synthesize database=_database, target=_target;
@@ -47,6 +49,7 @@
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
 @synthesize collections=_collections;
+@synthesize collectionConfigs=_collectionConfigs;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -74,6 +77,13 @@
         _maxAttempts = 0;
         _maxAttemptWaitTime = 0;
         _enableAutoPurge = YES;
+        
+        CBLCollection* defaultCollection = [database defaultCollectionOrThrow];
+        _collectionConfigs = [NSMutableDictionary dictionary];
+        _defaultCollectionConfig = [[CBLCollectionConfiguration alloc] init];
+        [_collectionConfigs setObject: _defaultCollectionConfig forKey: defaultCollection];
+        _collections = [NSArray arrayWithObject: defaultCollection];
+        
     }
     return self;
 }
@@ -89,8 +99,7 @@
     self = [super init];
     if (self) {
         _target = target;
-        
-        // TODO: Add implementation
+        _collectionConfigs = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -139,16 +148,29 @@
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
     _documentIDs = documentIDs;
+    _defaultCollectionConfig.documentIDs = documentIDs;
 }
 
 - (void) setChannels: (NSArray<NSString *>*)channels {
     [self checkReadonly];
     _channels = channels;
+    _defaultCollectionConfig.channels = channels;
 }
 
 - (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
     [self checkReadonly];
     _conflictResolver = conflictResolver;
+    _defaultCollectionConfig.conflictResolver = conflictResolver;
+}
+
+- (void) setPullFilter: (CBLReplicationFilter)pullFilter {
+    _pullFilter = pullFilter;
+    _defaultCollectionConfig.pullFilter = pullFilter;
+}
+
+- (void) setPushFilter: (CBLReplicationFilter)pushFilter {
+    _pushFilter = pushFilter;
+    _defaultCollectionConfig.pushFilter = pushFilter;
 }
 
 #if TARGET_OS_IPHONE
@@ -191,29 +213,43 @@
 
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config {
+    CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
+    if (collection == defaultCollection)
+        [self checkAndUpdateConfig: config];
     
-    // TODO: Add implementation
-
+    [_collectionConfigs setObject: config forKey: collection];
 }
 
 - (void) addCollections: (NSArray*)collections
                  config: (nullable CBLCollectionConfiguration*)config {
+    CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
+    for (CBLCollection* col in collections) {
+        if (col == defaultCollection)
+            [self checkAndUpdateConfig: config];
+        
+        [_collectionConfigs setObject: config forKey: col];
+    }
+}
 
-    // TODO: Add implementation
-    
+- (void) checkAndUpdateConfig: (CBLCollectionConfiguration*)config {
+    if (config.conflictResolver != _conflictResolver)
+        _conflictResolver = config.conflictResolver;
+    if (config.channels != _channels)
+        _channels = config.channels;
+    if (config.documentIDs != _documentIDs)
+        _documentIDs = config.documentIDs;
+    if (config.pushFilter != _pushFilter)
+        _pushFilter = config.pushFilter;
+    if (config.pullFilter != _pullFilter)
+        _pullFilter = config.pullFilter;
 }
 
 - (void) removeCollection:(CBLCollection *)collection {
-    
-    // TODO: Add implementation
-    
+    [_collectionConfigs removeObjectForKey: collection];
 }
 
 - (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
-    
-    // TODO: Add Implementation
-    
-    return [[CBLCollectionConfiguration alloc] init];
+    return [_collectionConfigs objectForKey: collection];
 }
 
 #pragma mark - Internal

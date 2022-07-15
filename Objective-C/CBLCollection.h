@@ -18,8 +18,8 @@
 //
 
 #import "CBLCollectionChangeObservable.h"
-#import "CBLDatabase.h"
 #import "CBLIndexable.h"
+#import "CBLCollectionTypes.h"
 
 @class CBLDocument;
 @class CBLDocumentChange;
@@ -66,7 +66,7 @@ extern NSString* const kCBLDefaultCollectionName;
  collection-aware code should avoid them and use the new Collection API instead.
  These legacy functions are deprecated and will be removed eventually.
  */
-@interface CBLCollection : NSObject<CBLCollectionChangeObservable, CBLIndexable>
+@interface CBLCollection : NSObject<CBLCollectionChangeObservable, CBLIndexable, NSCopying>
 
 /** Collection name.*/
 @property (readonly, nonatomic) NSString* name;
