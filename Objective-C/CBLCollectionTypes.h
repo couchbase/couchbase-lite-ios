@@ -17,7 +17,8 @@
 //  limitations under the License.
 //
 
-#pragma once
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
 Concurruncy control type used when saving or deleting a document.
@@ -26,3 +27,5 @@ typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
     kCBLConcurrencyControlLastWriteWins,    ///< The last write operation will win if there is a conflict.
     kCBLConcurrencyControlFailOnConflict    ///< The operation will fail if there is a conflict.
 };
+
+NS_ASSUME_NONNULL_END
