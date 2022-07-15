@@ -1046,7 +1046,7 @@
             AssertNil(doc.collection); // collection inside replicatedDocument
         }
     }];
-    AssertEqual(config.collections.count, 0);
+    AssertEqual(config.collections.count, 1);
 }
 
 #endif

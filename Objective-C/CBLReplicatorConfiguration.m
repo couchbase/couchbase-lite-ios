@@ -268,6 +268,7 @@
 
 - (void) removeCollection:(CBLCollection *)collection {
     [_collectionConfigs removeObjectForKey: collection];
+    _collections = _collectionConfigs.allKeys;
 }
 
 - (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
