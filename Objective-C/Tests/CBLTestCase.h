@@ -68,6 +68,9 @@
     extern atomic_int gC4ExpectExceptions;
 #endif
 
+#define kDatabaseName @"testdb"
+#define kOtherDatabaseName @"otherdb"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLTestCase : XCTestCase {

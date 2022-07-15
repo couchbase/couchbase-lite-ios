@@ -2652,7 +2652,6 @@
 }
 
 - (void) testDBEventTrigged {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     CBLCollection* c = [self.db defaultCollection: nil];
     

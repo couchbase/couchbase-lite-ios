@@ -21,9 +21,6 @@
 #include "c4.h"
 #import "CollectionUtils.h"
 
-#define kDatabaseName @"testdb"
-#define kOtherDatabaseName @"otherdb"
-
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"
 #else
@@ -230,17 +227,13 @@
 }
 
 - (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
-    NSError *batchError;
-    BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
-        for (NSInteger i = start; i < (start+num); i++) {
-            NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
-            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
-            [doc setValue: @(i) forKey: @"number1"];
-            [doc setValue: @(num-i) forKey: @"number2"];
-            [self saveDocument: doc collection: col];
-        }
-    }];
-    Assert(ok, @"Error when inserting documents: %@", batchError);
+    for (NSInteger i = start; i < (start+num); i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
+        [doc setValue: @(i) forKey: @"number1"];
+        [doc setValue: @(num-i) forKey: @"number2"];
+        [self saveDocument: doc collection: col];
+    }
 }
 
 - (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type {
