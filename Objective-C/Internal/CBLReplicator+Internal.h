@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReplicatorConfiguration ()
 
+@property (nonatomic, nullable) CBLDatabase* database;
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
 @property (nonatomic) NSTimeInterval checkpointInterval;
 @property (nonatomic) NSMutableDictionary<CBLCollection*, CBLCollectionConfiguration*>* collectionConfigs;
