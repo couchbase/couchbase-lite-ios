@@ -65,16 +65,23 @@
     AssertEqual(ids.count, docIds.count);
     
     __block CBLReplicator* r = replicator;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &err];
+    AssertNotNil(defaultCollection);
     id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
         NSError* pendingErr = nil;
         NSSet* pendingIds = [r pendingDocumentIDs: &pendingErr];
         AssertNil(pendingErr);
+        NSSet* pendingIds2 = [r pendingDocumentIDsForCollection: defaultCollection error: &pendingErr];
+        AssertNil(pendingErr);
 
         if (change.status.activity == kCBLReplicatorConnecting) {
             Assert([pendingIds isEqualToSet: docIds]);
+            Assert([pendingIds2 isEqualToSet: docIds]);
             AssertEqual(pendingIds.count, docIds.count);
+            AssertEqual(pendingIds2.count, docIds.count);
         } else if (change.status.activity == kCBLReplicatorStopped) {
             AssertEqual(pendingIds.count, 0);
+            AssertEqual(pendingIds2.count, 0);
             [x fulfill];
         }
     }];
@@ -92,12 +99,20 @@
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
 
     // verify before starting the replicator
+    NSError* error = nil;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    AssertNotNil(defaultCollection);
     for (NSString* key in expected.keyEnumerator) {
         NSError* err = nil;
         BOOL present = [replicator isDocumentPending: key error: &err];
         AssertNil(err);
+        BOOL present2 = [replicator isDocumentPending: key
+                                           collection: defaultCollection
+                                                error: &err];
+        AssertNil(err);
 
         AssertEqual(present, [[expected objectForKey: key] isEqual: @YES]);
+        AssertEqual(present2, [[expected objectForKey: key] isEqual: @YES]);
     }
 
     __block CBLReplicator* r = replicator;
@@ -107,8 +122,11 @@
                 NSError* err = nil;
                 BOOL present = [r isDocumentPending: key error: &err];
                 AssertNil(err);
+                BOOL present2 = [r isDocumentPending: key collection: defaultCollection error: &err];
+                AssertNil(err);
 
                 AssertEqual(present, [[expected objectForKey: key] isEqual: @YES]);
+                AssertEqual(present2, [[expected objectForKey: key] isEqual: @YES]);
             }
 
         } else if (change.status.activity == kCBLReplicatorStopped) {
@@ -117,8 +135,11 @@
                 NSError* err = nil;
                 BOOL present = [r isDocumentPending: key error: &err];
                 AssertNil(err);
+                BOOL present2 = [r isDocumentPending: key collection: defaultCollection error: &err];
+                AssertNil(err);
 
                 AssertEqual(present, NO);
+                AssertEqual(present2, NO);
             }
             
             [x fulfill];
@@ -511,7 +532,7 @@
     NSError* error = nil;
     CBLCollection* c1 = [self.db createCollectionWithName: @"name1" scope: @"scope1" error: &error];
     
-    AssertNil([replicator pendingDocumentIDsForCollection: c1 error: &error]);
+    AssertEqual([replicator pendingDocumentIDsForCollection: c1 error: &error].count, 0);
     AssertFalse([replicator isDocumentPending: @"doc2" collection: c1 error: &error]);
     
     id<CBLListenerToken> token = [replicator addChangeListener:^(CBLReplicatorChange* change) { }];
