@@ -49,12 +49,11 @@ public struct Conflict {
     
     // Use Any to workaround
     private var impl: Any
-    private var col: Collection
+    internal var col: Collection
     
-    init(impl: Any, db: Database) {
+    init(impl: Any, collection: Collection) {
         self.impl = impl
-        let c = (impl as! CBLConflict).collection
-        self.col = Collection(c, db: db)
+        self.col = collection
     }
     
     func toImpl() -> CBLConflict {

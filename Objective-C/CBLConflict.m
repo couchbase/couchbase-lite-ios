@@ -18,38 +18,25 @@
 //
 
 #import "CBLConflict+Internal.h"
-#import "CBLConflict+Swift.h"
 
-@implementation CBLConflict {
-    CBLCollection* _collection;
-}
+@implementation CBLConflict
 
 @synthesize documentID=_documentID, localDocument=_localDocument, remoteDocument=_remoteDocument;
 
 # pragma mark - Internal
 
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                              docID: (NSString*)documentID
-                      localDocument: (CBLDocument*)localDoc
-                     remoteDocument: (CBLDocument*)remoteDoc {
+- (instancetype) initWithID: (NSString*)documentID
+              localDocument: (CBLDocument*)localDoc
+             remoteDocument: (CBLDocument*)remoteDoc {
     Assert(localDoc != nil || remoteDoc != nil, @"Local and remote document \
            shouldn't be empty at same time, when resolving conflict.");
     self = [super init];
     if (self) {
-        _collection = collection;
         _documentID = documentID;
         _localDocument = localDoc;
         _remoteDocument = remoteDoc;
     }
     return self;
-}
-
-@end
-
-@implementation CBLConflict (Swift)
-
-- (CBLCollection*) collection {
-    return _collection;
 }
 
 @end

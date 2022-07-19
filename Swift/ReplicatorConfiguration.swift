@@ -322,7 +322,12 @@ public struct ReplicatorConfiguration {
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in
-                return resolver.resolve(conflict: Conflict(impl: conflict, db: self.database))?._impl
+                guard let col = try? self.database.defaultCollection() else {
+                    Database.throwNotOpenEx()
+                    fatalError() // hack to avoid compiler complaining execution continues
+                }
+                
+                return resolver.resolve(conflict: Conflict(impl: conflict, collection: col))?._impl
             }
         }
         
@@ -342,8 +347,12 @@ public struct ReplicatorConfiguration {
         }
         
         return { (doc, flags) in
-            // TODO: doc empty collection : https://issues.couchbase.com/browse/CBL-3396
-            return f(Document(doc, collection: nil), DocumentFlags(rawValue: Int(flags.rawValue)))
+            guard let col = try? self.database.defaultCollection() else {
+                Database.throwNotOpenEx()
+                fatalError() // hack to avoid compiler complaining execution continues
+            }
+            
+            return f(Document(doc, collection: col), DocumentFlags(rawValue: Int(flags.rawValue)))
         }
     }
     

@@ -82,8 +82,13 @@ public final class Database {
     /// Gets a Document object with the given ID.
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
-        if let implDoc = _impl.document(withID: id), let c = try? _impl.defaultCollection() {
-            return Document(implDoc, collection: Collection(c, db: self))
+        guard let col = try? defaultCollection() else {
+            Database.throwNotOpenEx()
+            fatalError() // hack to avoid compiler complaining about execution continues
+        }
+        
+        if let implDoc = _impl.document(withID: id)  {
+            return Document(implDoc, collection: col)
         }
         
         return nil
@@ -91,7 +96,12 @@ public final class Database {
     
     /// Gets document fragment object by the given document ID.
     public subscript(key: String) -> DocumentFragment {
-        return DocumentFragment(_impl[key])
+        guard let col = try? defaultCollection() else {
+            Database.throwNotOpenEx()
+            fatalError() // hack to avoid compiler complaining about execution continues
+        }
+        
+        return DocumentFragment(_impl[key], collection: col)
     }
     
     /// Saves a document to the database. When write operations are executed
@@ -155,7 +165,10 @@ public final class Database {
             try _impl.save(
                 document._impl as! CBLMutableDocument,
                 conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    let col = try? self.defaultCollection()
+                    guard let col = try? self.defaultCollection() else {
+                        Database.throwNotOpenEx()
+                        fatalError() // hack to avoid compiler complaining execution continues
+                    }
                     return conflictHandler(document, old != nil ? Document(old!, collection: col) : nil)
                 }
             )
@@ -538,6 +551,11 @@ public final class Database {
             (query as! Query).stop()
         }
         _lock.unlock()
+    }
+    
+    static func throwNotOpenEx() {
+        NSException(name: .internalInconsistencyException,
+                    reason: "The database was closed, or the default collection was deleted.").raise()
     }
     
     private let _config: DatabaseConfiguration
