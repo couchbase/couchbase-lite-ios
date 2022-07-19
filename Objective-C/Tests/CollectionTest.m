@@ -672,7 +672,7 @@
 #pragma mark - 8.5-6 Use collection APIs on deleted/closed scenarios
 
 - (void) testUseCollectionAPIOnDeletedCollection {
-    [self testUseCollectionAPI: @"colA" onAction: ^{
+    [self testUseInvalidCollection: @"colA" onAction: ^{
         NSError* er = nil;
         Assert([self.db deleteCollectionWithName: @"colA" scope: nil error: &er]);
         AssertNil(er);
@@ -682,7 +682,7 @@
 - (void) testUseCollectionAPIOnDeletedCollectionDeletedFromDifferentDBInstance {
     NSError* error = nil;
     CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
-    [self testUseCollectionAPI: @"colA" onAction: ^{
+    [self testUseInvalidCollection: @"colA" onAction: ^{
         NSError* er = nil;
         Assert([db2 deleteCollectionWithName: @"colA" scope: nil error: &er]);
         AssertNil(er);
@@ -690,7 +690,7 @@
 }
 
 - (void) testUseCollectionAPIWhenDatabaseIsClosed {
-    [self testUseCollectionAPI: @"colA" onAction: ^{
+    [self testUseInvalidCollection: @"colA" onAction: ^{
         NSError* error = nil;
         Assert([self.db close: &error]);
         AssertNil(error);
@@ -698,14 +698,14 @@
 }
 
 - (void) testUseCollectionAPIWhenDatabaseIsDeleted {
-    [self testUseCollectionAPI: @"colA" onAction: ^{
+    [self testUseInvalidCollection: @"colA" onAction: ^{
         NSError* error = nil;
         Assert([self.db delete: &error]);
         AssertNil(error);
     }];
 }
 
-- (void) testUseCollectionAPI: (NSString*)collectionName onAction: (void (^) (void))onAction {
+- (void) testUseInvalidCollection: (NSString*)collectionName onAction: (void (^) (void))onAction {
     NSError* error = nil;
     CBLCollection* col = [self.db createCollectionWithName: collectionName
                                                      scope: nil error: &error];
@@ -779,7 +779,7 @@
 #pragma mark - 8.7 Use Scope APIs on deleted/closed scenarios
 
 - (void) testUseScopeWhenDatabaseIsClosed {
-    [self testUseScope: ^{
+    [self testUseInvalidScope: ^{
         NSError* error = nil;
         [self.db close: &error];
         AssertNil(error);
@@ -787,14 +787,14 @@
 }
 
 - (void) testUseScopeWhenDatabaseIsDeleted {
-    [self testUseScope: ^{
+    [self testUseInvalidScope: ^{
         NSError* error = nil;
         [self.db delete: &error];
         AssertNil(error);
     }];
 }
 
-- (void) testUseScope: (void (^) (void))onAction {
+- (void) testUseInvalidScope: (void (^) (void))onAction {
     NSError* error = nil;
     CBLCollection* col = [self.db createCollectionWithName: @"colA"
                                                      scope: nil error: &error];
