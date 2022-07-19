@@ -237,7 +237,7 @@ public final class Replicator {
     /// - Returns: true if the document has one or more revisions pending, false otherwise
     public func isDocumentPending(_ documentID: String, collection: Collection) throws -> Bool {
         var error: NSError?
-        let result = _impl.isDocumentPending(documentID, collection: collection._impl error: &error)
+        let result = _impl.isDocumentPending(documentID, collection: collection._impl, error: &error)
         if let err = error {
             throw err
         }
