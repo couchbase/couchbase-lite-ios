@@ -157,7 +157,7 @@
     CBLCollectionConfiguration* config = [self defaultCollectionConfig];
     if (!config) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to perform action with empty default collection config"];
+                    format: @"No default collection added to the configuration"];
     }
     return config;
 }
@@ -325,18 +325,12 @@
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
         _headers = config.headers;
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        [self initCollectionConfigs];
-        
-        CBLCollectionConfiguration* colConfig = [self defaultCollectionConfigOrThrow];
-        colConfig.documentIDs = config.documentIDs;
-        colConfig.channels = config.channels;
-        colConfig.pushFilter = config.pushFilter;
-        colConfig.pullFilter = config.pullFilter;
-        colConfig.conflictResolver = config.conflictResolver;
-#pragma clang diagnostic pop
+        _collectionConfigs = [NSMutableDictionary dictionaryWithCapacity: config.collectionConfigs.count];
+        for (CBLCollection* col in config.collectionConfigs) {
+            if (col.isValid) {
+                [_collectionConfigs setObject: [config.collectionConfigs objectForKey: col] forKey: col];
+            }
+        }
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _maxAttempts = config.maxAttempts;
