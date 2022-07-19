@@ -623,6 +623,9 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (nullable NSArray*) scopes: (NSError**)error {
     CBL_LOCK(_mutex) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
         C4Error c4err = {};
         FLMutableArray list = c4db_scopeNames(_c4db, &c4err);
         if (c4err.code != 0) {
@@ -660,6 +663,9 @@ static const C4DatabaseConfig2 kDBConfig = {
     NSString* scopeName = name ?: kCBLDefaultScopeName;
     
     CBL_LOCK(_mutex) {
+        if (![self mustBeOpen: error])
+            return nil;
+        
         CBLStringBytes sname(scopeName);
         BOOL exists = c4db_hasScope(_c4db, sname);
         if (!exists)
@@ -676,15 +682,22 @@ static const C4DatabaseConfig2 kDBConfig = {
         if (![self mustBeOpen: error])
             return nil;
         
-        return _defaultCollection.isValid ? _defaultCollection : nil;
+        BOOL isValid = _defaultCollection.isValid;
+        if (!isValid)
+            _defaultCollection = nil;
+        
+        return _defaultCollection;
     }
 }
 
 - (CBLCollection*) defaultCollectionOrThrow {
-    if (!_defaultCollection)
-        throwNotOpen();
-    
-    return _defaultCollection;
+    CBL_LOCK(_mutex) {
+        CBLCollection* col = [self defaultCollection: nil];
+        if (!col)
+            throwNotOpen();
+        
+        return _defaultCollection;
+    }
 }
 
 static void throwNotOpen() {
