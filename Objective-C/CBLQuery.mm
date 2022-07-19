@@ -32,6 +32,7 @@
 #import "CBLStringBytes.h"
 #import "CBLChangeNotifier.h"
 #import "CBLQueryObserver.h"
+#import "CBLCollection+Internal.h"
 
 using namespace fleece;
 
@@ -75,21 +76,6 @@ using namespace fleece;
             [NSException raise: NSInvalidArgumentException
                         format: @"Invalid query args, failed to compile %@", error];
         }
-    }
-    return self;
-}
-
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                 JSONRepresentation: (NSData*)json
-{
-    Assert(collection);
-    Assert(json);
-    self = [super init];
-    if (self) {
-        _json = json;
-        _language = kC4JSONQuery;
-        
-        // TODO: Add implementation
     }
     return self;
 }
@@ -197,12 +183,8 @@ using namespace fleece;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
     }
-     
-    if ([from.source isKindOfClass: [CBLDatabase class]]) {
-        // TODO: use [.. initWithCollections: JSONRepresentation] & [database defaultCollection]
-        return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
-    } else
-        return [self initWithCollection: (CBLCollection*)from.source JSONRepresentation: json];
+    
+    return [self initWithDatabase: ((CBLCollection*)from.source).db JSONRepresentation: json];
 }
 
 - (void) dealloc {    

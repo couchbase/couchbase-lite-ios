@@ -42,16 +42,9 @@
     if (_alias)
         return _alias;
     else {
-        // TODO: Clean this! 
-        if ([_source isKindOfClass: [CBLDatabase class]]) {
-            CBLDatabase* db = $castIf(CBLDatabase, _source);
-            if (db)
-                return db.name;
-        } else if ([_source isKindOfClass: [CBLCollection class]]) {
-            CBLCollection* c = $castIf(CBLCollection, _source);
-            if (c)
-                return c.name;
-        }
+        CBLCollection* c = $castIf(CBLCollection, _source);
+        if (c)
+            return c.name;
     }
     return nil;
 }
@@ -65,7 +58,8 @@
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
     CBLAssertNotNil(database);
     
-    return [[CBLQueryDataSource alloc] initWithDataSource: database as: alias];
+    return [[CBLQueryDataSource alloc] initWithDataSource: [database defaultCollectionOrThrow]
+                                                       as: alias];
 }
 
 + (instancetype) collection:(CBLCollection *)collection {

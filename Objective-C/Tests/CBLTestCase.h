@@ -132,6 +132,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Save a document in the database. */
 - (void) saveDocument: (CBLMutableDocument*)document;
 
+/** Save document in the specified collection. */
+- (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col;
+
 /** Save a document in the database. The eval block
     will be called three times, before save, after save with the given document
     object and after save with a new document objct getting from the database. */
@@ -159,6 +162,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** Loads the database with documents read from a JSON resource file in the test bundle,
     using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName;
+
+/** Loads the database with documents read from a JSON resource file in the test bundle,
+    using -loadJSONString:named:.*/
+- (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection;
 
 /** Creates blob object from string. */
 - (CBLBlob*) blobForString: (NSString*)string;

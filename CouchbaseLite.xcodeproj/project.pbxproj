@@ -202,6 +202,10 @@
 		1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
 		1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
 		1AC16CF5287D4D9C0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		1AC3ABC32886CB8B00CCA583 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */; };
+		1AC3ABCF2886CC0B00CCA583 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */; };
+		1AC3ABD02886CC0C00CCA583 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */; };
+		1AC3ABD12886CC0E00CCA583 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */; };
 		1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
@@ -2031,6 +2035,7 @@
 		1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLCollectionTypes.h; sourceTree = "<group>"; };
 		1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCollectionConfiguration+Internal.h"; sourceTree = "<group>"; };
 		1AC16CE6287D4D820041728F /* CollectionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CollectionTest.m; sourceTree = "<group>"; };
+		1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Collection.m"; sourceTree = "<group>"; };
 		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
 		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -3760,6 +3765,7 @@
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
 				1AA6744E227925D20018CC6D /* QueryTest.h */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
+				1AC3ABC22886CB8B00CCA583 /* QueryTest+Collection.m */,
 				1AF555C322946ED90077DF6D /* QueryTest+Main.m */,
 				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
 				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,
@@ -6126,6 +6132,7 @@
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
+				1AC3ABD02886CC0C00CCA583 /* QueryTest+Collection.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				939260B120A0FF0C00E5748C /* MessageEndpointTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
@@ -6195,6 +6202,7 @@
 				9343F17D207D633300F19A89 /* MiscTest.m in Sources */,
 				930C7F9320FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				9343F17F207D633300F19A89 /* CBLTestCase.m in Sources */,
+				1AC3ABD12886CC0E00CCA583 /* QueryTest+Collection.m in Sources */,
 				1A4160E02283759A0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6278,6 +6286,7 @@
 				1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
+				1AC3ABCF2886CC0B00CCA583 /* QueryTest+Collection.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
 				1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
@@ -6422,6 +6431,7 @@
 				1AC16CE7287D4D820041728F /* CollectionTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
 				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
+				1AC3ABC32886CB8B00CCA583 /* QueryTest+Collection.m in Sources */,
 				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
 				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
