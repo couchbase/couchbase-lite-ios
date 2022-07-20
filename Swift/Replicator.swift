@@ -226,7 +226,7 @@ public final class Replicator {
     /// - Parameter collection The collection where the document belongs
     /// - Returns: A  set of document Ids, each of which has one or more pending revisions
     public func pendingDocumentIds(collection: Collection) throws -> Set<String> {
-        return try _impl.pendingDocumentIDs()
+        return try _impl.pendingDocumentIDs(for: collection._impl)
     }
 
     /// Check whether the document in the given collection is pending to push or not. If the given collection
@@ -237,7 +237,7 @@ public final class Replicator {
     /// - Returns: true if the document has one or more revisions pending, false otherwise
     public func isDocumentPending(_ documentID: String, collection: Collection) throws -> Bool {
         var error: NSError?
-        let result = _impl.isDocumentPending(documentID, error: &error)
+        let result = _impl.isDocumentPending(documentID, collection: collection._impl, error: &error)
         if let err = error {
             throw err
         }

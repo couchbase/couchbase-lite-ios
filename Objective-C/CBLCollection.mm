@@ -436,6 +436,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return valid;
 }
 
+- (C4CollectionSpec) c4spec {
+    CBLStringBytes name(_name);
+    CBLStringBytes scopeName(_scope.name);
+    return { .name = name, .scope = scopeName };
+}
+
 - (BOOL) isEqual: (id)object {
     if (self == object)
         return YES;
