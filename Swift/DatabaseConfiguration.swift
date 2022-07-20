@@ -56,5 +56,4 @@ public struct DatabaseConfiguration {
         #endif
         return config
     }
-    
 }

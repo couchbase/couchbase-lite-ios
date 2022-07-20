@@ -298,7 +298,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     // MARK: Internal
     
     init(_ impl: CBLMutableDocument) {
-        super.init(impl)
+        super.init(impl, collection: nil)
     }
     
     // MARK: Private

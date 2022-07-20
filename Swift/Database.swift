@@ -82,15 +82,26 @@ public final class Database {
     /// Gets a Document object with the given ID.
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
-        if let implDoc = _impl.document(withID: id) {
-            return Document(implDoc)
+        guard let col = try? defaultCollection() else {
+            Database.throwNotOpenEx()
+            fatalError() // hack to avoid compiler complaining about execution continues
         }
-        return nil;
+        
+        if let implDoc = _impl.document(withID: id)  {
+            return Document(implDoc, collection: col)
+        }
+        
+        return nil
     }
     
     /// Gets document fragment object by the given document ID.
     public subscript(key: String) -> DocumentFragment {
-        return DocumentFragment(_impl[key])
+        guard let col = try? defaultCollection() else {
+            Database.throwNotOpenEx()
+            fatalError() // hack to avoid compiler complaining about execution continues
+        }
+        
+        return DocumentFragment(_impl[key], collection: col)
     }
     
     /// Saves a document to the database. When write operations are executed
@@ -118,10 +129,11 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:concurrencyControl:) instead.")
     @discardableResult public func saveDocument(
-        _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool
+    {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
+            CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
             try _impl.save(document._impl as! CBLMutableDocument, concurrencyControl: cc)
             return true
         } catch let err as NSError {
@@ -148,12 +160,16 @@ public final class Database {
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
-        ) throws -> Bool {
+    ) throws -> Bool {
         do {
             try _impl.save(
                 document._impl as! CBLMutableDocument,
                 conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    return conflictHandler(document, old != nil ? Document(old!) : nil)
+                    guard let col = try? self.defaultCollection() else {
+                        Database.throwNotOpenEx()
+                        fatalError() // hack to avoid compiler complaining execution continues
+                    }
+                    return conflictHandler(document, old != nil ? Document(old!, collection: col) : nil)
                 }
             )
             return true
@@ -190,10 +206,11 @@ public final class Database {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:concurrencyControl:) instead.")
     @discardableResult public func deleteDocument(
-        _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool
+    {
         do {
             let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
+            CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
             try _impl.delete(document._impl, concurrencyControl: cc)
             return true
         } catch let err as NSError {
@@ -345,14 +362,13 @@ public final class Database {
     /// - Returns: An opaque listener token object for removing the listener.
     @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(withID:queue:listener:) instead.")
     @discardableResult public func addDocumentChangeListener(withID id: String,
-        queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
+                                                             queue: DispatchQueue?,
+                                                             listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) {
-            [unowned self] (change) in
-            
-            // TODO: update implementation!
-            
-            listener(DocumentChange(database: self, documentID: change.documentID, collection: try? defaultCollection()))
+        let token = _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
+            listener(DocumentChange(database: self,
+                                    documentID: change.documentID,
+                                    collection: Collection(change.collection, db: self)))
         }
         return ListenerToken(token)
     }
@@ -440,7 +456,7 @@ public final class Database {
     /// Get the default scope.
     public func defaultScope() throws -> Scope {
         let s = try _impl.defaultScope()
-        return Scope(s)
+        return Scope(s, db: self)
     }
     
     /// Get scope names that have at least one collection.
@@ -450,7 +466,7 @@ public final class Database {
         var scopes = [Scope]()
         let res = try _impl.scopes()
         for s in res {
-            scopes.append(Scope(s))
+            scopes.append(Scope(s, db: self))
         }
         return scopes
     }
@@ -460,7 +476,7 @@ public final class Database {
     /// Note: The default scope is exceptional, and it will always be returned.
     public func scope(name: String) throws -> Scope? {
         let s = try _impl.scope(withName: name)
-        return Scope(s)
+        return Scope(s, db: self)
     }
     
     // MARK: Collections
@@ -468,7 +484,7 @@ public final class Database {
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
         let c = try _impl.defaultCollection()
-        return Collection(impl: c)
+        return Collection(c, db: self)
     }
     
     /// Get all collections in the specified scope.
@@ -477,7 +493,7 @@ public final class Database {
         let res = try _impl.collections(scope)
         
         for c in res {
-            collections.append(Collection(impl: c))
+            collections.append(Collection(c, db: self))
         }
         return collections
     }
@@ -486,14 +502,14 @@ public final class Database {
     /// If the collection already exists, the existing collection will be returned.
     public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
         let result = try _impl.createCollection(withName: name, scope: scope)
-        return Collection(impl: result)
+        return Collection(result, db: self)
     }
 
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
         let c = try _impl.collection(withName: name, scope: scope)
-        return Collection(impl: c)
+        return Collection(c, db: self)
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
@@ -535,6 +551,11 @@ public final class Database {
             (query as! Query).stop()
         }
         _lock.unlock()
+    }
+    
+    static func throwNotOpenEx() {
+        NSException(name: .internalInconsistencyException,
+                    reason: "The database was closed, or the default collection was deleted.").raise()
     }
     
     private let _config: DatabaseConfiguration

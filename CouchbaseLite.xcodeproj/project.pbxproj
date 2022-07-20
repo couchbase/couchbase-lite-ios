@@ -104,6 +104,10 @@
 		1A41912B2475DB3B008122BE /* URLEndpointListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4191292475DB3B008122BE /* URLEndpointListener.swift */; };
 		1A4191482475ED3D008122BE /* URLEndpointListenerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
+		1A6084F728758ADF0037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
+		1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
+		1A6084FA28758AE20037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
+		1A6084FB28758AE90037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
 		1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
@@ -1977,6 +1981,7 @@
 		1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEndpointListenerConfiguration.swift; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
+		1A6084EB2875842A0037C66F /* CollectionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTest.swift; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
@@ -2801,6 +2806,7 @@
 				934C2CDA1F4FC0610010316F /* Bridge */,
 				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
+				1A6084EB2875842A0037C66F /* CollectionTest.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				9369A6B6207DEB5F009B5B83 /* DatabaseEncryptionTest.swift */,
 				1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */,
@@ -5636,6 +5642,7 @@
 				1AA3D6C122A1A41E0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
+				1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */,
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
 				9388CC5521C25CC7005CA66D /* LogTest.swift in Sources */,
 				1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
@@ -5676,6 +5683,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93BB1CB4246BB2ED004FFA00 /* ReplicatorTest.swift in Sources */,
+				1A6084FA28758AE20037C66F /* CollectionTest.swift in Sources */,
 				93BB1CB1246BB2E4004FFA00 /* PredictiveQueryTest.swift in Sources */,
 				93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
@@ -6168,6 +6176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93EB25A421CDCC160006FB88 /* PredictiveQueryTest.swift in Sources */,
+				1A6084FB28758AE90037C66F /* CollectionTest.swift in Sources */,
 				9343F18E207D636300F19A89 /* DocumentTest.swift in Sources */,
 				93E8FEBD20A3E4600061347F /* MessageEndpointTest.swift in Sources */,
 				9343F18F207D636300F19A89 /* ArrayTest.swift in Sources */,
@@ -6401,6 +6410,7 @@
 				93BB1CA5246BB2D3004FFA00 /* FragmentTest.swift in Sources */,
 				93BB1CAE246BB2DC004FFA00 /* QueryTest.swift in Sources */,
 				93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */,
+				1A6084F728758ADF0037C66F /* CollectionTest.swift in Sources */,
 				93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */,
 				93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */,
 				1A93FB0A24F737330015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,

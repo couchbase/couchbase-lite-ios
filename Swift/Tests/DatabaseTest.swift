@@ -597,14 +597,16 @@ class DatabaseTest: CBLTestCase {
         try db.purgeDocument(db.document(withID: doc.id)!)
         
         doc1a.setString("Scotty", forKey: "nickName")
-        do {
-            try db.saveDocument(doc1a) { (doc, old) -> Bool in
-                return true
+        ignoreException {
+            do {
+                try self.db.saveDocument(doc1a) { (doc, old) -> Bool in
+                    return true
+                }
+                XCTFail("Shouldn't reach here, it should throw an exception when saving")
+            } catch {
+                XCTAssertNotNil(error)
+                XCTAssertEqual((error as NSError?)?.code, CBLError.notFound)
             }
-            XCTFail("Shouldn't reach here, it should throw an exception when saving")
-        } catch {
-            XCTAssertNotNil(error)
-            XCTAssertEqual((error as NSError?)?.code, CBLError.notFound)
         }
     }
     
@@ -1099,30 +1101,30 @@ class DatabaseTest: CBLTestCase {
     func testCreateIndex() throws {
         // Precheck:
         XCTAssertEqual(db.indexes.count, 0)
-        
+
         // Create value index:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
-        
+
         let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
         try db.createIndex(index1, withName: "index1")
-        
+
         let index2 = IndexBuilder.valueIndex(items: [fNameItem, lNameItem])
         try db.createIndex(index2, withName: "index2")
-        
+
         // Create FTS index:
         let detailItem = FullTextIndexItem.property("detail")
         let index3 = IndexBuilder.fullTextIndex(items: detailItem)
         try db.createIndex(index3, withName: "index3")
-        
+
         let detailItem2 = FullTextIndexItem.property("es-detail")
         let index4 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
         try db.createIndex(index4, withName: "index4")
-        
+
         let nameItem = FullTextIndexItem.property("name")
         let index5 = IndexBuilder.fullTextIndex(items: [nameItem, detailItem])
         try db.createIndex(index5, withName: "index5")
-        
+
         XCTAssertEqual(db.indexes.count, 5)
         XCTAssertEqual(db.indexes, ["index1", "index2", "index3", "index4", "index5"])
     }

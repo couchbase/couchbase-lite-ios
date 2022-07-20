@@ -22,8 +22,8 @@ import Foundation
 /// The collection change event
 public struct CollectionChange {
     /// The collection
-    let collection: Collection
+    public let collection: Collection
  
     /// The IDs of the documents that changed.
-    let documentIDs: Array<String>
+    public let documentIDs: Array<String>
 }

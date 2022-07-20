@@ -42,23 +42,19 @@ public final class Scope {
     
     /// Get all collections in the scope.
     public func collections() throws -> [Collection] {
-        var collections = [Collection]()
-        for c in try _impl.collections() {
-            collections.append(Collection(impl: c))
-        }
-        
-        return collections
+        return try _db.collections()
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String) throws -> Collection? {
-        let c = try _impl.collection(withName: name)
-        return Collection(impl: c)
+        return try _db.collection(name: name)
     }
     
-    init(_ scope: CBLScope) {
+    init(_ scope: CBLScope, db: Database) {
         _impl = scope
+        _db = db
     }
     
     let _impl: CBLScope
+    let _db: Database
 }

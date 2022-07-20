@@ -18,6 +18,7 @@
 //
 
 #import "CBLConflict.h"
+#import "CBLCollection.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

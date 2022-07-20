@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLCollection ()
 
-@property (nonatomic, readonly) CBLDatabase* _db;
+@property (nonatomic, readonly) CBLDatabase* db;
 
 @end
 

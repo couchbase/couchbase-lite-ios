@@ -32,7 +32,7 @@ public final class DocumentFragment: DictionaryFragment {
     /// Gets the document from the document fragment object.
     public var document: Document? {
         if let docImpl = _impl.document {
-            return Document(docImpl)
+            return Document(docImpl, collection: _col)
         }
         return nil
     }
@@ -48,10 +48,12 @@ public final class DocumentFragment: DictionaryFragment {
     
     // MARK: Internal
     
-    init(_ impl: CBLDocumentFragment) {
+    init(_ impl: CBLDocumentFragment, collection: Collection) {
         _impl = impl
+        _col = collection
     }
     
     let _impl: CBLDocumentFragment
+    let _col: Collection
     
 }

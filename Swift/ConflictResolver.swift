@@ -53,7 +53,7 @@ public final class ConflictResolver {
             return nil
         }
         
-        return Document(doc)
+        return Document(doc, collection: conflict.col)
     }
     
 }
