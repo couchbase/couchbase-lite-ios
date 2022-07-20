@@ -33,7 +33,7 @@ public struct Conflict {
             return nil
         }
         
-        return Document(doc,collection: col)
+        return Document(doc, collection: col)
     }
     
     /// The document replicated from the remote database. If nil, document is deleted.
