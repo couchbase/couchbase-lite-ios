@@ -21,6 +21,7 @@
 #import "CBLDatabase.h"
 #import "CBLQuery+Internal.h"
 #import "CBLCollection.h"
+#import "CBLScope.h"
 
 @implementation CBLQueryDataSource
 
@@ -33,27 +34,14 @@
 }
 
 - (id) asJSON {
-    NSString* columnName = [self columnName];
-    assert(columnName);
-    return @{ @"AS" : columnName };
-}
-
-- (nullable NSString*) columnName {
-    if (_alias)
-        return _alias;
-    else {
-        // TODO: Clean this! 
-        if ([_source isKindOfClass: [CBLDatabase class]]) {
-            CBLDatabase* db = $castIf(CBLDatabase, _source);
-            if (db)
-                return db.name;
-        } else if ([_source isKindOfClass: [CBLCollection class]]) {
-            CBLCollection* c = $castIf(CBLCollection, _source);
-            if (c)
-                return c.name;
-        }
+    CBLCollection* c = $castIf(CBLCollection, _source);
+    Assert(c);
+    NSString* collectionName = [NSString stringWithFormat: @"%@.%@", c.scope.name, c.name];
+    if (_alias) {
+        return @{ @"COLLECTION": collectionName, @"AS" : _alias };
     }
-    return nil;
+    
+    return @{ @"COLLECTION": collectionName };
 }
 
 + (instancetype) database: (CBLDatabase*)database {
@@ -65,7 +53,8 @@
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
     CBLAssertNotNil(database);
     
-    return [[CBLQueryDataSource alloc] initWithDataSource: database as: alias];
+    return [[CBLQueryDataSource alloc] initWithDataSource: [database defaultCollectionOrThrow]
+                                                       as: alias];
 }
 
 + (instancetype) collection:(CBLCollection *)collection {

@@ -151,4 +151,48 @@
     AssertEqualObjects([allObjects[1] stringForKey: @"color"], @"red");
 }
 
+- (void) testQueryBuilderWithDefaultCollectionAsDataSource {
+     NSError* error = nil;
+     CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+     AssertNil(error);
+
+     [self loadJSONResource: @"names_100" toCollection: defaultCollection];
+
+     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"name.first"]]
+                                      from: [CBLQueryDataSource collection: defaultCollection]
+                                     where: nil
+                                   groupBy: nil
+                                    having: nil
+                                   orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]
+                                     limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 1]]];
+     CBLQueryResultSet* rs = [q execute: &error];
+     NSArray* allObjects = rs.allObjects;
+
+     AssertEqual(allObjects.count, 1);
+     CBLQueryResult* result = allObjects.firstObject;
+     AssertEqualObjects([result stringForKey: @"first"], @"Abe");
+ }
+
+- (void) testQueryBuilderWithCollectionAsDataSource {
+    NSError* error = nil;
+    CBLCollection* col = [self.db createCollectionWithName: @"names" scope: @"people" error: &error];
+    AssertNil(error);
+    
+    [self loadJSONResource: @"names_100" toCollection: col];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"name.first"]]
+                                     from: [CBLQueryDataSource collection: col]
+                                    where: nil
+                                  groupBy: nil
+                                   having: nil
+                                  orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]
+                                    limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 1]]];
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allObjects;
+
+    AssertEqual(allObjects.count, 1);
+    CBLQueryResult* result = allObjects.firstObject;
+    AssertEqualObjects([result stringForKey: @"first"], @"Abe");
+}
+
 @end
