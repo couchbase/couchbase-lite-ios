@@ -426,19 +426,6 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
                                                 error: (NSError**)error {
     CBLAssertNotNil(collection);
     
-    CBLStringBytes name(collection.name);
-    CBLStringBytes scopeName(collection.scope.name);
-    C4CollectionSpec c4spec = { .name = name, .scope = scopeName };
-    
-    return [self pendingDocumentIDsForCollectionSpec: c4spec error: error];
-}
-
-- (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
-    return [self pendingDocumentIDsForCollectionSpec: kC4DefaultCollectionSpec error: error];
-}
-
-// internal
-- (NSSet<NSString*>*) pendingDocumentIDsForCollectionSpec: (C4CollectionSpec)spec error: (NSError**)error {
     if (_config.replicatorType > 1) {
         if (error)
             *error = [NSError errorWithDomain: CBLErrorDomain
@@ -457,7 +444,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
     
     C4Error err = {};
-    C4SliceResult result = c4repl_getPendingDocIDs(_repl, spec, &err);
+    C4SliceResult result = c4repl_getPendingDocIDs(_repl, collection.c4spec, &err);
     if (err.code > 0) {
         convertError(err, error);
         CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", err.domain, err.code);
@@ -476,30 +463,17 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     return [NSSet setWithArray: list];
 }
 
+- (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
+    return [self pendingDocumentIDsForCollection: [_config.database defaultCollectionOrThrow]
+                                           error: error];
+}
+
 - (BOOL) isDocumentPending: (NSString *)documentID
                 collection: (CBLCollection *)collection
                      error: (NSError**)error {
+    CBLAssertNotNil(documentID);
     CBLAssertNotNil(collection);
     
-    CBLStringBytes name(collection.name);
-    CBLStringBytes scopeName(collection.scope.name);
-    C4CollectionSpec c4spec = { .name = name, .scope = scopeName };
-    
-    return [self isDocumentPending: documentID c4Spec: c4spec error: error];
-}
-
-- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-    
-    return [self isDocumentPending: documentID c4Spec: kC4DefaultCollectionSpec error: error];
-}
-
-// internal
-- (BOOL) isDocumentPending:(NSString *)documentID
-                    c4Spec: (C4CollectionSpec)c4spec
-                     error: (NSError**)error {
-    CBLAssertNotNil(documentID);
-
     if (_config.replicatorType > 1) {
         if (error)
             *error = [NSError errorWithDomain: CBLErrorDomain
@@ -519,8 +493,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     C4Error err = {};
     CBLStringBytes docID(documentID);
-    // TODO: https://issues.couchbase.com/browse/CBL-3370
-    BOOL isPending = c4repl_isDocumentPending(_repl, docID, kC4DefaultCollectionSpec, &err);
+    BOOL isPending = c4repl_isDocumentPending(_repl, docID, collection.c4spec, &err);
     if (err.code > 0) {
         convertError(err, error);
         CBLWarnError(Sync, @"Error getting document pending status: %d/%d", err.domain, err.code);
@@ -528,6 +501,14 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 
     return isPending;
+}
+
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    return [self isDocumentPending: documentID
+                        collection: [_config.database defaultCollectionOrThrow]
+                             error: error];
 }
 
 #pragma mark - REACHABILITY:
