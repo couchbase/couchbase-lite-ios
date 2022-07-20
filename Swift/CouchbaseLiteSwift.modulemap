@@ -99,6 +99,7 @@ framework module CouchbaseLiteSwift {
         header "CBLURLEndpoint.h"
         header "CBLValueIndex.h"
         header "CBLValueIndexConfiguration.h"
+        header "CBLCollectionTypes.h"
         
         // Swift Extensions:
         header "CBLArray+Swift.h"

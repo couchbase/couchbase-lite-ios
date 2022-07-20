@@ -23,7 +23,8 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLVersion.h"
-#import "CBLCollectionConfiguration.h"
+#import "CBLCollection+Internal.h"
+#import "CBLCollectionConfiguration+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -40,13 +41,10 @@
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize networkInterface=_networkInterface;
-@synthesize documentIDs=_documentIDs, channels=_channels;
-@synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
-@synthesize conflictResolver=_conflictResolver;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
-@synthesize collections=_collections;
+@synthesize collectionConfigs=_collectionConfigs;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -74,6 +72,9 @@
         _maxAttempts = 0;
         _maxAttemptWaitTime = 0;
         _enableAutoPurge = YES;
+        
+        [self initCollectionConfigs];
+        
     }
     return self;
 }
@@ -90,9 +91,19 @@
     if (self) {
         _target = target;
         
-        // TODO: Add implementation
+        [self initCollectionConfigs];
     }
     return self;
+}
+
+- (void) initCollectionConfigs {
+    _collectionConfigs = [NSMutableDictionary dictionary];
+    
+    if (_database) {
+        CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
+        CBLCollectionConfiguration* defaultCollectionConfig = [[CBLCollectionConfiguration alloc] init];
+        [self addCollection: defaultCollection config: defaultCollectionConfig];
+    }
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -136,19 +147,61 @@
     _networkInterface = networkInterface;
 }
 
+- (CBLCollectionConfiguration*) defaultCollectionConfig {
+    CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
+    return _collectionConfigs[defaultCollection];
+}
+
+- (CBLCollectionConfiguration*) defaultCollectionConfigOrThrow {
+    CBLCollectionConfiguration* config = [self defaultCollectionConfig];
+    if (!config) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"No default collection added to the configuration"];
+    }
+    return config;
+}
+
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
-    _documentIDs = documentIDs;
+    [self defaultCollectionConfigOrThrow].documentIDs = documentIDs;
+}
+
+- (NSArray<NSString*>*) documentIDs {
+    return [self defaultCollectionConfig].documentIDs;
 }
 
 - (void) setChannels: (NSArray<NSString *>*)channels {
     [self checkReadonly];
-    _channels = channels;
+    [self defaultCollectionConfigOrThrow].channels = channels;
+}
+
+- (NSArray<NSString*>*) channels {
+    return [self defaultCollectionConfig].channels;
 }
 
 - (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
     [self checkReadonly];
-    _conflictResolver = conflictResolver;
+    [self defaultCollectionConfigOrThrow].conflictResolver = conflictResolver;
+}
+
+- (id<CBLConflictResolver>) conflictResolver {
+    return [self defaultCollectionConfig].conflictResolver;
+}
+
+- (void) setPullFilter: (CBLReplicationFilter)pullFilter {
+    [self defaultCollectionConfigOrThrow].pullFilter = pullFilter;
+}
+
+- (CBLReplicationFilter) pullFilter {
+    return [self defaultCollectionConfig].pullFilter;
+}
+
+- (void) setPushFilter: (CBLReplicationFilter)pushFilter {
+    [self defaultCollectionConfigOrThrow].pushFilter = pushFilter;
+}
+
+- (CBLReplicationFilter) pushFilter {
+    return [self defaultCollectionConfig].pushFilter;
 }
 
 #if TARGET_OS_IPHONE
@@ -189,31 +242,66 @@
     _enableAutoPurge = enableAutoPurge;
 }
 
-- (void) addCollection: (CBLCollection*)collection
-                config: (nullable CBLCollectionConfiguration*)config {
-    
-    // TODO: Add implementation
-
+- (CBLDatabase*) database {
+    if (!_database)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to access database property but no collections added"];
+    return _database;
 }
 
-- (void) addCollections: (NSArray*)collections
-                 config: (nullable CBLCollectionConfiguration*)config {
-
-    // TODO: Add implementation
+- (void) addCollection: (CBLCollection*)collection
+                config: (nullable CBLCollectionConfiguration*)config {
+    CBLDatabase* colDB = collection.db;
+    if (!collection.isValid || !colDB) {
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Attempt to add an invalid collection"];
+    }
     
+    if (_database) {
+        if (_database != colDB) {
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Attempt to add collection from different databases"];
+        }
+    } else {
+        _database = colDB;
+    }
+    
+    CBLCollectionConfiguration* colConfig = nil;
+    if (config)
+        colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];
+    else
+        colConfig = [[CBLCollectionConfiguration alloc] init];
+    
+    [_collectionConfigs setObject: colConfig forKey: collection];
+}
+
+- (void) addCollections: (NSArray<CBLCollection*>*)collections
+                 config: (nullable CBLCollectionConfiguration*)config {
+    if (collections.count <= 0) {
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Attempt to add empty collection array"];
+    }
+    
+    for (CBLCollection* col in collections) {
+        [self addCollection: col config: config];
+    }
+}
+
+- (NSArray<CBLCollection*>*) collections {
+    return _collectionConfigs.allKeys;
 }
 
 - (void) removeCollection:(CBLCollection *)collection {
+    [_collectionConfigs removeObjectForKey: collection];
     
-    // TODO: Add implementation
-    
+    // reset the database, when all collections are removed
+    if (_collectionConfigs.count == 0) {
+        _database = nil;
+    }
 }
 
 - (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
-    
-    // TODO: Add Implementation
-    
-    return [[CBLCollectionConfiguration alloc] init];
+    return [_collectionConfigs objectForKey: collection];
 }
 
 #pragma mark - Internal
@@ -222,6 +310,7 @@
                        readonly: (BOOL)readonly {
     self = [super init];
     if (self) {
+        _database = config.database;
         _readonly = readonly;
         _target = config.target;
         _replicatorType = config.replicatorType;
@@ -234,16 +323,12 @@
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
         _headers = config.headers;
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        _database = config.database;
-        _documentIDs = config.documentIDs;
-        _channels = config.channels;
-        _pushFilter = config.pushFilter;
-        _pullFilter = config.pullFilter;
-        _conflictResolver = config.conflictResolver;
-#pragma clang diagnostic pop
+        _collectionConfigs = [NSMutableDictionary dictionaryWithCapacity: config.collectionConfigs.count];
+        for (CBLCollection* col in config.collectionConfigs) {
+            if (col.isValid) {
+                [_collectionConfigs setObject: [config.collectionConfigs objectForKey: col] forKey: col];
+            }
+        }
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _maxAttempts = config.maxAttempts;
@@ -282,9 +367,15 @@
         [httpHeaders addEntriesFromDictionary: self.headers];
     options[@kC4ReplicatorOptionExtraHeaders] = httpHeaders;
     
+    // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     // Filters:
-    options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
-    options[@kC4ReplicatorOptionChannels] = _channels;
+    options[@kC4ReplicatorOptionDocIDs] = self.documentIDs;
+    options[@kC4ReplicatorOptionChannels] = self.channels;
+    
+#pragma clang diagnostic pop
     
     // Checkpoint intervals (no public api now):
     if (_checkpointInterval > 0)
@@ -315,6 +406,7 @@
 
 - (void) dealloc {
     cfrelease(_pinnedServerCertificate);
+    [_collectionConfigs removeAllObjects];
 }
 
 @end

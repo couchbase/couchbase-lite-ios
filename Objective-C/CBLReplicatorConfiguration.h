@@ -175,7 +175,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
 @property (nonatomic) BOOL enableAutoPurge;
 
 /** The collections used for the replication. */
-@property (nonatomic) NSArray<CBLCollection*>* collections;
+@property (nonatomic, readonly) NSArray<CBLCollection*>* collections;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

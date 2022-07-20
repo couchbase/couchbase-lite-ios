@@ -1,5 +1,5 @@
 //
-//  CBLCollectionConfiguration.m
+//  CBLCollectionTypes.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -16,24 +16,16 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-#import "CBLCollectionConfiguration.h"
 
-@implementation CBLCollectionConfiguration
 
-@synthesize documentIDs=_documentIDs, channels=_channels;
-@synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
-@synthesize conflictResolver=_conflictResolver;
+NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype) initWithConfig: (CBLCollectionConfiguration*)config {
-    self = [super init];
-    if (self) {
-        _documentIDs = config.documentIDs;
-        _channels = config.channels;
-        _pushFilter = config.pushFilter;
-        _pullFilter = config.pullFilter;
-        _conflictResolver = config.conflictResolver;
-    }
-    return self;
-}
+/**
+Concurruncy control type used when saving or deleting a document.
+*/
+typedef NS_ENUM(uint32_t, CBLConcurrencyControl) {
+    kCBLConcurrencyControlLastWriteWins,    ///< The last write operation will win if there is a conflict.
+    kCBLConcurrencyControlFailOnConflict    ///< The operation will fail if there is a conflict.
+};
 
-@end
+NS_ASSUME_NONNULL_END

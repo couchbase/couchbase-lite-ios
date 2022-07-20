@@ -506,3 +506,25 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
 #pragma clang diagnostic pop
 
 @end
+
+@implementation TestConflictResolver {
+    CBLDocument* (^_resolver)(CBLConflict*);
+}
+
+@synthesize winner=_winner;
+
+// set this resolver, which will be used while resolving the conflict
+- (instancetype) initWithResolver: (CBLDocument* (^)(CBLConflict*))resolver {
+    self = [super init];
+    if (self) {
+        _resolver = resolver;
+    }
+    return self;
+}
+
+- (CBLDocument *) resolve:(CBLConflict *)conflict {
+    _winner = _resolver(conflict);
+    return _winner;
+}
+
+@end

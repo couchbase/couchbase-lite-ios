@@ -1,5 +1,5 @@
 //
-//  CBLCollectionConfiguration.m
+//  CBLCollectionConfiguration+Internal.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2022 Couchbase, Inc All rights reserved.
@@ -16,24 +16,16 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+
+#pragma once
 #import "CBLCollectionConfiguration.h"
 
-@implementation CBLCollectionConfiguration
+NS_ASSUME_NONNULL_BEGIN
 
-@synthesize documentIDs=_documentIDs, channels=_channels;
-@synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
-@synthesize conflictResolver=_conflictResolver;
+@interface CBLCollectionConfiguration ()
 
-- (instancetype) initWithConfig: (CBLCollectionConfiguration*)config {
-    self = [super init];
-    if (self) {
-        _documentIDs = config.documentIDs;
-        _channels = config.channels;
-        _pushFilter = config.pushFilter;
-        _pullFilter = config.pullFilter;
-        _conflictResolver = config.conflictResolver;
-    }
-    return self;
-}
+- (instancetype) initWithConfig: (CBLCollectionConfiguration*)config;
 
 @end
+
+NS_ASSUME_NONNULL_END
