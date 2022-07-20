@@ -251,11 +251,12 @@
 
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config {
-    if (!collection.isValid) {
+    CBLDatabase* colDB = collection.db;
+    if (!collection.isValid || !colDB) {
         [NSException raise: NSInvalidArgumentException
                     format: @"Attempt to add an invalid collection"];
     }
-    CBLDatabase* colDB = collection.db;
+    
     if (_database) {
         if (_database != colDB) {
             [NSException raise: NSInvalidArgumentException
@@ -294,7 +295,7 @@
     [_collectionConfigs removeObjectForKey: collection];
     
     // reset the database, when all collections are removed
-    if (self.collections.count == 0) {
+    if (_collectionConfigs.count == 0) {
         _database = nil;
     }
 }
