@@ -44,7 +44,6 @@
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
-@synthesize collections=_collections;
 @synthesize collectionConfigs=_collectionConfigs;
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -256,16 +255,15 @@
         [NSException raise: NSInvalidArgumentException
                     format: @"Attempt to add an invalid collection"];
     }
-    
-    if (_collections.count > 0) {
-        if (_collections[0].db != collection.db) {
+    CBLDatabase* colDB = collection.db;
+    if (_database) {
+        if (_database != colDB) {
             [NSException raise: NSInvalidArgumentException
                         format: @"Attempt to add collection from different databases"];
         }
+    } else {
+        _database = colDB;
     }
-    
-    if (!_database)
-        _database = collection.db;
     
     CBLCollectionConfiguration* colConfig = nil;
     if (config)
@@ -289,15 +287,14 @@
 }
 
 - (NSArray<CBLCollection*>*) collections {
-    _collections = _collectionConfigs.allKeys;
-    return _collections;
+    return _collectionConfigs.allKeys;
 }
 
 - (void) removeCollection:(CBLCollection *)collection {
     [_collectionConfigs removeObjectForKey: collection];
     
     // reset the database, when all collections are removed
-    if (_collections.count == 0) {
+    if (self.collections.count == 0) {
         _database = nil;
     }
 }
