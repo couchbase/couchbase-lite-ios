@@ -108,6 +108,10 @@
 		1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
 		1A6084FA28758AE20037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
 		1A6084FB28758AE90037C66F /* CollectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6084EB2875842A0037C66F /* CollectionTest.swift */; };
+		1A621D6D2887DCE70017F905 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
+		1A621D792887DCFC0017F905 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
+		1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
+		1A621D7B2887DCFE0017F905 /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
 		1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
@@ -1994,6 +1998,7 @@
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
 		1A6084EB2875842A0037C66F /* CollectionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTest.swift; sourceTree = "<group>"; };
+		1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Collection.m"; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
@@ -3760,6 +3765,7 @@
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
 				1AA6744E227925D20018CC6D /* QueryTest.h */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
+				1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */,
 				1AF555C322946ED90077DF6D /* QueryTest+Main.m */,
 				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
 				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,
@@ -6123,6 +6129,7 @@
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1ABA63B028813A8C005835E7 /* ReplicatorTest+Collection.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
+				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
@@ -6180,6 +6187,7 @@
 				9343F178207D633300F19A89 /* ConcurrentTest.m in Sources */,
 				930C7F9520FE4F7500C74A12 /* CBLMockConnection.m in Sources */,
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
+				1A621D7B2887DCFE0017F905 /* QueryTest+Collection.m in Sources */,
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78822AB07D80098E16B /* CustomLogger.m in Sources */,
 				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
@@ -6274,6 +6282,7 @@
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				1ABA63AF28813A8A005835E7 /* ReplicatorTest+Collection.m in Sources */,
+				1A621D792887DCFC0017F905 /* QueryTest+Collection.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
 				1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
@@ -6423,6 +6432,7 @@
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
 				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
 				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
+				1A621D6D2887DCE70017F905 /* QueryTest+Collection.m in Sources */,
 				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,

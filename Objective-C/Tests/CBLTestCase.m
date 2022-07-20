@@ -272,25 +272,40 @@
 }
 
 - (void) loadJSONResource: (NSString*)resourceName {
+    NSError* error = nil;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    [self loadJSONResource: resourceName toCollection: defaultCollection];
+    
+}
+
+- (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection {
     @autoreleasepool {
         NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
-        return [self loadJSONString: contents named: resourceName];
+        return [self loadJSONString: contents named: resourceName toCollection: collection];
     }
 }
 
 - (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName {
+    NSError* error = nil;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    [self loadJSONString: contents named: resourceName toCollection: defaultCollection];
+}
+
+- (void) loadJSONString: (NSString*)contents
+                  named: (NSString*)resourceName
+           toCollection: (CBLCollection*)collection {
     @autoreleasepool {
         __block uint64_t n = 0;
-        NSError *batchError;
-        BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
-            [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
-                NSError* err;
-                CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: $sprintf(@"doc-%03llu", ++n)
-                                                                            json: line error: &err];
-                Assert([_db saveDocument: doc error: &err], @"Couldn't save document: %@", err);
-            }];
+        [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
+            NSError* err;
+            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: $sprintf(@"doc-%03llu", ++n)
+                                                                        json: line error: &err];
+            Assert([collection saveDocument: doc error: &err], @"Couldn't save document: %@", err);
         }];
-        Assert(ok, @"loadJSONString failed: %@", batchError);
     }
 }
 

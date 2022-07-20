@@ -137,6 +137,9 @@ NS_ASSUME_NONNULL_BEGIN
     object and after save with a new document objct getting from the database. */
 - (void) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
 
+/** Save document in the specified collection. */
+- (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col;
+
 - (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num;
 
 /** URL for a resource. */
@@ -153,11 +156,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Loads the database with documents read from a multiline JSON string.
     Each line of the string should be a complete JSON object, which will become a document.
-    The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
+ The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
 - (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName;
 
 /** Loads the database with documents read from a JSON resource file in the test bundle,
-    using -loadJSONString:named:.*/
+ using -loadJSONString:named:.*/
+- (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection;
+
+/** Loads the database with documents read from a JSON resource file in the test bundle,
+ using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName;
 
 /** Creates blob object from string. */
