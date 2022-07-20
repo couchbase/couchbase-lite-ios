@@ -47,7 +47,7 @@
 + (instancetype) database: (CBLDatabase*)database {
     CBLAssertNotNil(database);
     
-    return [CBLQueryDataSource database: database as: nil];
+    return [CBLQueryDataSource database: database as: database.name];
 }
 
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
