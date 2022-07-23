@@ -55,7 +55,7 @@ import Foundation
 public final class Collection : CollectionChangeObservable, Indexable {
     
     /// The default scope name constant
-    public static let defaultCollectionName: String = "_default"
+    public static let defaultCollectionName: String = kCBLDefaultCollectionName
     
     /// Collection name.
     public var name: String { _impl.name }

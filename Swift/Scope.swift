@@ -31,7 +31,7 @@ import Foundation
 public final class Scope {
     
     /// The default scope name constant
-    public static let defaultScopeName: String = "_default"
+    public static let defaultScopeName: String = kCBLDefaultScopeName
     
     /// Scope name
     public var name: String {

@@ -83,8 +83,7 @@ public final class Database {
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
         guard let col = try? defaultCollection() else {
-            Database.throwNotOpenEx()
-            fatalError() // hack to avoid compiler complaining about execution continues
+            Database.throwNotOpenError()
         }
         
         if let implDoc = _impl.document(withID: id)  {
@@ -97,8 +96,7 @@ public final class Database {
     /// Gets document fragment object by the given document ID.
     public subscript(key: String) -> DocumentFragment {
         guard let col = try? defaultCollection() else {
-            Database.throwNotOpenEx()
-            fatalError() // hack to avoid compiler complaining about execution continues
+            Database.throwNotOpenError()
         }
         
         return DocumentFragment(_impl[key], collection: col)
@@ -166,8 +164,7 @@ public final class Database {
                 document._impl as! CBLMutableDocument,
                 conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
                     guard let col = try? self.defaultCollection() else {
-                        Database.throwNotOpenEx()
-                        fatalError() // hack to avoid compiler complaining execution continues
+                        Database.throwNotOpenError()
                     }
                     return conflictHandler(document, old != nil ? Document(old!, collection: col) : nil)
                 }
@@ -475,16 +472,18 @@ public final class Database {
     /// value will be returned if there are no collections under the given scope’s name.
     /// Note: The default scope is exceptional, and it will always be returned.
     public func scope(name: String) throws -> Scope? {
-        let s = try _impl.scope(withName: name)
-        return Scope(s, db: self)
+        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
+        let s: CBLScope? = try _impl.scope(withName: name)
+        return s != nil ? Scope(s!, db: self) : nil
     }
     
     // MARK: Collections
     
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
-        let c = try _impl.defaultCollection()
-        return Collection(c, db: self)
+        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
+        let c: CBLCollection? = try _impl.defaultCollection()
+        return c != nil ? Collection(c!, db: self) : nil
     }
     
     /// Get all collections in the specified scope.
@@ -508,8 +507,9 @@ public final class Database {
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
-        let c = try _impl.collection(withName: name, scope: scope)
-        return Collection(c, db: self)
+        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
+        let c: CBLCollection? = try _impl.collection(withName: name, scope: scope)
+        return c != nil ? Collection(c!, db: self) : nil
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
@@ -553,10 +553,11 @@ public final class Database {
         _lock.unlock()
     }
     
-    static func throwNotOpenEx() {
-        NSException(name: .internalInconsistencyException,
-                    reason: "The database was closed, or the default collection was deleted.").raise()
+    static func throwNotOpenError() -> Never {
+        fatalError("The database was closed or released, or the default collection was deleted.");
     }
+    
+    let _impl: CBLDatabase
     
     private let _config: DatabaseConfiguration
     
@@ -565,8 +566,6 @@ public final class Database {
     private let _activeReplicators = NSMutableSet()
     
     private let _activeQueries = NSMutableSet()
-
-    let _impl: CBLDatabase
     
     // MARK: Debug
     
