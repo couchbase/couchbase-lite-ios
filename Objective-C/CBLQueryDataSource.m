@@ -34,26 +34,38 @@
 }
 
 - (id) asJSON {
-    CBLCollection* c = $castIf(CBLCollection, _source);
-    Assert(c);
-    NSString* collectionName = [NSString stringWithFormat: @"%@.%@", c.scope.name, c.name];
-    if (_alias) {
-        return @{ @"COLLECTION": collectionName, @"AS" : _alias };
+    if ([_source isKindOfClass: [CBLDatabase class]]) {
+        if (_alias) {
+            return @{ @"AS" : _alias };
+        } else {
+            CBLDatabase* db = $castIf(CBLDatabase, _source);
+            return @{ @"AS" : db.name };
+        }
+        
+    } else if ([_source isKindOfClass: [CBLCollection class]]) {
+        CBLCollection* c = $castIf(CBLCollection, _source);
+        Assert(c);
+        NSString* collectionName = [NSString stringWithFormat: @"%@.%@", c.scope.name, c.name];
+        if (_alias) {
+            return @{ @"COLLECTION": collectionName, @"AS" : _alias };
+        }
+        
+        return @{ @"COLLECTION": collectionName };
     }
     
-    return @{ @"COLLECTION": collectionName };
+    return nil;
 }
 
 + (instancetype) database: (CBLDatabase*)database {
     CBLAssertNotNil(database);
     
-    return [CBLQueryDataSource database: database as: database.name];
+    return [CBLQueryDataSource database: database as: nil];
 }
 
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
     CBLAssertNotNil(database);
     
-    return [[CBLQueryDataSource alloc] initWithDataSource: [database defaultCollectionOrThrow]
+    return [[CBLQueryDataSource alloc] initWithDataSource: database
                                                        as: alias];
 }
 

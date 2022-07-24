@@ -199,7 +199,13 @@ using namespace fleece;
         Assert(json, @"Failed to encode query as JSON: %@", error);
     }
     
-    CBLDatabase* db = ((CBLCollection*)from.source).db;
+    CBLDatabase* db = nil;
+    if ([from.source isKindOfClass: [CBLDatabase class]]) {
+        db = ((CBLDatabase*)from.source);
+    } else if ([from.source isKindOfClass: [CBLCollection class]]) {
+        db = ((CBLCollection*)from.source).db;
+    }
+     
     if (!db) {
         [NSException raise: NSInternalInconsistencyException
                     format: @"Attempt to query from an invalid database"];
