@@ -2762,6 +2762,7 @@
 			children = (
 				1AECFF7A24AE988F0015C9F8 /* CBLStoppable.h */,
 				937F01E51EFB280000060D64 /* CBLAuthenticator+Internal.h */,
+				1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */,
 				1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */,
 				935A58CD21AFAD31009A29CB /* CBLDocumentReplication+Internal.h */,
 				2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */,
@@ -3069,7 +3070,6 @@
 		933F1AC31F3D015A00338C6A /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */,
 				1A16129C283DDE8000AA4987 /* CBLCollection+Internal.h */,
 				1AAFB69F284A293700878453 /* CBLCollection+Swift.h */,
 				9369A6A5207DC7CB009B5B83 /* CBLDatabase+EncryptionInternal.h */,

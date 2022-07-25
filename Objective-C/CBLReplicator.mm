@@ -18,6 +18,7 @@
 //
 
 #import "CBLReplicator+Backgrounding.h"
+#import "CBLCollectionConfiguration+Internal.h"
 #import "CBLCollection+Internal.h"
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Internal.h"
@@ -190,7 +191,7 @@ typedef enum {
 - (bool) _setupC4Replicator: (C4Error*)outErr {
     if (_repl) {
         // If _repl exists, just update the options dict, in case -resetCheckpoint has been called:
-        c4repl_setOptions(_repl, self._encodedOptions);
+        c4repl_setOptions(_repl, [self encodedOptions: _config.effectiveOptions]);
         return true;
     }
 
@@ -242,7 +243,7 @@ typedef enum {
     socketFactory.context = (__bridge void*)self;
 
     // Parameters:
-    alloc_slice optionsFleece = self._encodedOptions;
+    alloc_slice optionsFleece = [self encodedOptions: _config.effectiveOptions];
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
@@ -260,6 +261,30 @@ typedef enum {
         .callbackContext = (__bridge void*)self,
         .socketFactory = &socketFactory,
     };
+    
+    NSUInteger collectionCount = _config.collectionConfigs.count;
+    C4ReplicationCollection cols[collectionCount];
+    if (collectionCount > 0) {
+        NSUInteger i = 0;
+        for (CBLCollection* col in _config.collectionConfigs) {
+            CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
+            CBLStringBytes name(col.name);
+            CBLStringBytes scope(col.scope.name);
+            C4ReplicationCollection c = {
+                .collection = col.c4spec,
+                .push = mkmode(isPush(_config.replicatorType), _config.continuous),
+                .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+                .pushFilter = filter(_config.pushFilter, true),
+                .pullFilter = filter(_config.pullFilter, false),
+                .callbackContext    = (__bridge void*)self,
+                .optionsDictFleece  = [self encodedOptions: colConfig.effectiveOptions],
+            };
+            cols[i++] = c;
+        }
+        
+        params.collectionCount = collectionCount;
+        params.collections = cols;
+    }
     
     [self initReachability: _reachabilityURL];
 
@@ -287,8 +312,8 @@ typedef enum {
     return (_repl != nullptr);
 }
 
-- (alloc_slice) _encodedOptions {
-    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+- (alloc_slice) encodedOptions: (NSDictionary*)dict {
+    NSMutableDictionary* options = [dict mutableCopy];
     Encoder enc;
     enc << options;
     return enc.finish();
