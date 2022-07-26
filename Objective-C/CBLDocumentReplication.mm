@@ -67,6 +67,10 @@
         }
         
         _isTransientError = docEnded->errorIsTransient;
+        
+        _collection = slice2string(docEnded->collectionSpec.name);
+        
+        _scope = slice2string(docEnded->collectionSpec.scope);
     }
     return self;
 }

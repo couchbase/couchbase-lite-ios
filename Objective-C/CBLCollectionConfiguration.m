@@ -38,13 +38,8 @@
 
 - (NSDictionary*) effectiveOptions {
     NSMutableDictionary* options = [NSMutableDictionary dictionary];
-    
-    if (_channels.count > 0)
-        options[@kC4ReplicatorOptionDocIDs] = _channels;
-
-    if (_documentIDs.count > 0)
-        options[@kC4ReplicatorOptionChannels] = _documentIDs;
-
+    options[@kC4ReplicatorOptionDocIDs] = self.channels;
+    options[@kC4ReplicatorOptionChannels] = self.documentIDs;
     return options;
 }
 

@@ -24,7 +24,9 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+#import "CBLScope.h"
 #import "CBLURLEndpoint.h"
+#import "fleece/Expert.hh"              // for AllocedDict
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLDatabaseEndpoint.h"
@@ -191,7 +193,7 @@ typedef enum {
 - (bool) _setupC4Replicator: (C4Error*)outErr {
     if (_repl) {
         // If _repl exists, just update the options dict, in case -resetCheckpoint has been called:
-        c4repl_setOptions(_repl, [self encodedOptions: _config.effectiveOptions]);
+        c4repl_setOptions(_repl, self._encodedOptions);
         return true;
     }
 
@@ -243,7 +245,7 @@ typedef enum {
     socketFactory.context = (__bridge void*)self;
 
     // Parameters:
-    alloc_slice optionsFleece = [self encodedOptions: _config.effectiveOptions];
+    alloc_slice optionsFleece = self._encodedOptions;
     C4ReplicatorParameters params = {
         .push = mkmode(isPush(_config.replicatorType), _config.continuous),
         .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
@@ -264,27 +266,23 @@ typedef enum {
     
     NSUInteger collectionCount = _config.collectionConfigs.count;
     C4ReplicationCollection cols[collectionCount];
-    if (collectionCount > 0) {
-        NSUInteger i = 0;
-        for (CBLCollection* col in _config.collectionConfigs) {
-            CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
-            CBLStringBytes name(col.name);
-            CBLStringBytes scope(col.scope.name);
-            C4ReplicationCollection c = {
-                .collection = col.c4spec,
-                .push = mkmode(isPush(_config.replicatorType), _config.continuous),
-                .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-                .pushFilter = filter(_config.pushFilter, true),
-                .pullFilter = filter(_config.pullFilter, false),
-                .callbackContext    = (__bridge void*)self,
-                .optionsDictFleece  = [self encodedOptions: colConfig.effectiveOptions],
-            };
-            cols[i++] = c;
-        }
-        
-        params.collectionCount = collectionCount;
-        params.collections = cols;
+    NSUInteger i = 0;
+    for (CBLCollection* col in _config.collectionConfigs) {
+        CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
+        AllocedDict dict = [self encodedCollectionOptions: colConfig];
+        C4ReplicationCollection c = {
+            .collection = col.c4spec,
+            .push = mkmode(isPush(_config.replicatorType), _config.continuous),
+            .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+            .pushFilter = filter(_config.pushFilter, true),
+            .pullFilter = filter(_config.pullFilter, false),
+            .callbackContext    = (__bridge void*)self,
+            .optionsDictFleece  = dict.toString(),
+        };
+        cols[i++] = c;
     }
+    params.collectionCount = collectionCount;
+    params.collections = cols;
     
     [self initReachability: _reachabilityURL];
 
@@ -312,8 +310,15 @@ typedef enum {
     return (_repl != nullptr);
 }
 
-- (alloc_slice) encodedOptions: (NSDictionary*)dict {
-    NSMutableDictionary* options = [dict mutableCopy];
+- (AllocedDict) encodedCollectionOptions: (CBLCollectionConfiguration*)config {
+    NSMutableDictionary* mdict = [config.effectiveOptions mutableCopy];
+    Encoder enc;
+    enc << mdict;
+    return AllocedDict(enc.finish());
+}
+
+- (alloc_slice) _encodedOptions {
+    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
     Encoder enc;
     enc << options;
     return enc.finish();
@@ -724,9 +729,21 @@ static void onDocsEnded(C4Replicator* repl,
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     NSError* error = nil;
-    if (![[_config.database defaultCollectionOrThrow] resolveConflictInDocument: doc.id
-                                                           withConflictResolver: _config.conflictResolver
-                                                                          error: &error]) {
+    CBLCollection* collection = nil;
+    if (doc.collection) {
+        collection = [_config.database collectionWithName: doc.collection scope: doc.scope error: &error];
+        if (!collection) {
+            CBLWarn(Sync, @"%@ Cannot retrieve collection=%@.%@ error=%@ docID=%@", self,
+                    doc.scope, doc.collection, error, doc.id);
+            return;
+        }
+    } else {
+        collection = [_config.database defaultCollectionOrThrow];
+    }
+    
+    if (![collection resolveConflictInDocument: doc.id
+                          withConflictResolver: _config.conflictResolver
+                                         error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
     
@@ -755,26 +772,43 @@ static bool pushFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
-    return [replicator filterDocument: docID revID: revID flags: flags
-                                 body: flbody pushing: true];
+    return [replicator filterDocument: collectionSpec docID: docID revID: revID
+                                flags: flags body: flbody pushing: true];
 }
 
 static bool pullFilter(C4CollectionSpec collectionSpec,
                        C4String docID, C4String revID, C4RevisionFlags flags,
                        FLDict flbody, void *context) {
     auto replicator = (__bridge CBLReplicator*)context;
-    return [replicator filterDocument: docID revID: revID flags: flags
-                                 body: flbody pushing: false];
+    return [replicator filterDocument: collectionSpec docID: docID revID: revID
+                                flags: flags body: flbody pushing: false];
 }
 
-- (bool) filterDocument: (C4String)docID
+- (bool) filterDocument: (C4CollectionSpec)c4spec
+                  docID: (C4String)docID
                   revID: (C4String)revID
                   flags: (C4RevisionFlags)flags
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
-    CBLCollection* c = [_config.database defaultCollectionOrThrow];
-    auto doc = [[CBLDocument alloc] initWithCollection: c
+    CBLCollection* collection = nil;
+    if (c4spec.name.buf) {
+        NSError* error = nil;
+        NSString* name = slice2string(c4spec.name);
+        NSString* scopeName = slice2string(c4spec.scope);
+        collection = [_config.database collectionWithName: name
+                                                    scope: scopeName
+                                                    error: &error];
+        if (!collection) {
+            CBLWarn(Sync, @"%@ Filter(push=%d) cannot retrieve collection=%@.%@ error=%@ doc=%@",
+                    self, pushing, scopeName, name, error, slice2string(docID));
+            return NO;
+        }
+    } else {
+        collection = [_config.database defaultCollectionOrThrow];
+    }
+    
+    auto doc = [[CBLDocument alloc] initWithCollection: collection
                                             documentID: slice2string(docID)
                                             revisionID: slice2string(revID)
                                                   body: body];

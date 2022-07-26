@@ -441,8 +441,11 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (C4CollectionSpec) c4spec {
-    CBLStringBytes name(_name);
-    CBLStringBytes scopeName(_scope.name);
+    // Convert to cString directly instead of using CBLStringBytes to avoid
+    // stack-use-after-scope problem when a small string is kept in the
+    // _local stack based buffer of the CBLStringBytes
+    C4Slice name = c4str([_name cStringUsingEncoding: NSUTF8StringEncoding]);
+    C4Slice scopeName = c4str([_scope.name cStringUsingEncoding: NSUTF8StringEncoding]);
     return { .name = name, .scope = scopeName };
 }
 
