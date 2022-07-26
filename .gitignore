@@ -12,6 +12,8 @@ xcuserdata/
 DerivedData/
 obj/
 derived_src/
+frameworks/
+*-build.log
 
 # CBL files:
 vendor/couchbase-lite-core-EE
@@ -19,3 +21,6 @@ vendor/couchbase-lite-core-EE
 
 # spm 
 .swiftpm/*
+
+# AppCode
+.idea
