@@ -81,7 +81,6 @@ static NSDictionary* domainDictionary = nil;
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
         domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
-                              @"SQL": @(kCBLLogDomainDatabase),
                               @"Query": @(kCBLLogDomainQuery),
                               @"Sync": @(kCBLLogDomainReplicator),
                               @"SyncBusy": @(kCBLLogDomainReplicator),
@@ -173,7 +172,6 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         setNamedLogDomainLevel("SyncBusy", kC4LogDebug);
         setNamedLogDomainLevel("TLS", kC4LogDebug);
         setNamedLogDomainLevel("Changes", kC4LogDebug);
-        setNamedLogDomainLevel("SQL", kC4LogDebug);
         setNamedLogDomainLevel("Zip", kC4LogDebug);
         setNamedLogDomainLevel("BLIPMessages", kC4LogDebug);
         

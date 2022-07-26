@@ -472,6 +472,711 @@
     }];
 }
 
+#pragma mark - 8.14 Replicator
+
+#ifdef COUCHBASE_ENTERPRISE
+
+- (void) testCollectionSingleShotPushReplication {
+    [self testCollectionPushReplication: NO];
+}
+
+- (void) testCollectionContinuousPushReplication {
+    [self testCollectionPushReplication: YES];
+}
+
+- (void) testCollectionPushReplication: (BOOL)continous {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    [self createDocNumbered: col1a start: 0 num: 10];
+    [self createDocNumbered: col1b start: 10 num: 10];
+    AssertEqual(col2a.count, 0);
+    AssertEqual(col2b.count, 0);
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col1b.count, 10);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: continous];
+    [config addCollections: @[col1a, col1b] config: nil];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col2b.count, 10);
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col1b.count, 10);
+}
+
+- (void) testCollectionSingleShotPullReplication {
+    [self testCollectionPullReplication: NO];
+}
+
+- (void) testCollectionContinuousPullReplication {
+    [self testCollectionPullReplication: YES];
+}
+
+- (void) testCollectionPullReplication: (BOOL)continous {
+    NSUInteger totalDocs = 10;
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    [self createDocNumbered: col2a start: 0 num: totalDocs];
+    [self createDocNumbered: col2b start: 10 num: totalDocs];
+    AssertEqual(col2a.count, totalDocs);
+    AssertEqual(col2b.count, totalDocs);
+    AssertEqual(col1a.count, 0);
+    AssertEqual(col1b.count, 0);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: continous];
+    [config addCollections: @[col1a, col1b] config: nil];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col2a.count, totalDocs);
+    AssertEqual(col2b.count, totalDocs);
+    AssertEqual(col1a.count, totalDocs);
+    AssertEqual(col1b.count, totalDocs);
+}
+
+- (void) testCollectionSingleShotPushPullReplication {
+    [self testCollectionPushPullReplication: NO];
+}
+
+- (void) testCollectionContinuousPushPullReplication {
+    [self testCollectionPushPullReplication: YES];
+}
+
+- (void) testCollectionPushPullReplication: (BOOL)continous {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    [self createDocNumbered: col1a start: 0 num: 2];
+    [self createDocNumbered: col2a start: 10 num: 5];
+    
+    [self createDocNumbered: col1b start: 5 num: 3];
+    [self createDocNumbered: col2b start: 15 num: 8];
+    
+    AssertEqual(col1a.count, 2);
+    AssertEqual(col2a.count, 5);
+    
+    AssertEqual(col1b.count, 3);
+    AssertEqual(col2b.count, 8);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    [config addCollections: @[col1a, col1b] config: nil];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col1a.count, 7);
+    AssertEqual(col2a.count, 7);
+    AssertEqual(col1b.count, 11);
+    AssertEqual(col2b.count, 11);
+}
+
+- (void) testCollectionResetReplication {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    [self createDocNumbered: col2a start: 0 num: 10];
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col1a.count, 0);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [config addCollection: col1a config: nil];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col1a.count, 10);
+    
+    // Purge all documents from the colA of the database A.
+    for (NSInteger i = 0; i < 10; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        [col1a purgeDocumentWithID: docID error: &error];
+    }
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(col1a.count, 0);
+    AssertEqual(col2a.count, 10);
+    
+    [self run: config reset: YES errorCode: 0 errorDomain: nil];
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col1a.count, 10);
+}
+
+// memory leak!
+- (void) _testMismatchedCollectionReplication {
+    NSError* error = nil;
+    CBLCollection* cola = [self.db createCollectionWithName: @"colA"
+                                                      scope: @"scopeA" error: &error];
+    AssertNotNil(cola);
+    AssertNil(error);
+    
+    CBLCollection* colb = [self.otherDB createCollectionWithName: @"colB"
+                                                           scope: @"scopeA" error: &error];
+    AssertNotNil(colb);
+    AssertNil(error);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    [config addCollection: colb config: nil];
+    
+    [self run: config errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
+}
+
+- (void) testCollectionDefaultConflictResolver {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLMutableDocument* doc1 = [CBLMutableDocument documentWithID: @"doc1"];
+    [col1a saveDocument: doc1 error: &error];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: NO];
+    [config addCollection: col1a config: nil];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    CBLMutableDocument* mdoc = [[col1a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1" forKey: @"update"];
+    [col1a saveDocument: mdoc error: &error];
+    
+    mdoc = [[col2a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1" forKey: @"update"];
+    [col2a saveDocument: mdoc error: &error];
+    
+    mdoc = [[col2a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update2" forKey: @"update"];
+    [col2a saveDocument: mdoc error: &error];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    CBLDocument* doc = [col1a documentWithID: @"doc1" error: &error];
+    AssertEqualObjects([doc stringForKey: @"update"], @"update2");
+}
+
+- (void) testCollectionConflictResolver {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create a document with id "doc1" in colA and colB of the database A.
+    CBLMutableDocument* doc1 = [CBLMutableDocument documentWithID: @"doc1"];
+    [doc1 setString: @"update0" forKey: @"update"];
+    [col1a saveDocument: doc1 error: &error];
+    Assert([col1a documentWithID: @"doc1" error: &error]);
+    
+    doc1 = [CBLMutableDocument documentWithID: @"doc1"];
+    [doc1 setString: @"update0" forKey: @"update"];
+    [col1b saveDocument: doc1 error: &error];
+    Assert([col1b documentWithID: @"doc1" error: &error]);
+
+    TestConflictResolver *resolver1, *resolver2;
+    resolver1 = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.localDocument;
+    }];
+    resolver2 = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
+        return con.remoteDocument;
+    }];
+    
+    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
+    colConfig1.conflictResolver = resolver1;
+    
+    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
+    colConfig2.conflictResolver = resolver2;
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: NO];
+    [config addCollection: col1a config: colConfig1];
+    [config addCollection: col1b config: colConfig2];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    // Update "doc1" in colA and colB of database A.
+    CBLMutableDocument* mdoc = [[col1a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1a" forKey: @"update"];
+    [col1a saveDocument: mdoc error: &error];
+    mdoc = [[col2a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update2a" forKey: @"update"];
+    [col2a saveDocument: mdoc error: &error];
+    
+    // Update "doc1" in colA and colB of database B.
+    mdoc = [[col1b documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1b" forKey: @"update"];
+    [col1b saveDocument: mdoc error: &error];
+    mdoc = [[col2b documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update2b" forKey: @"update"];
+    [col2b saveDocument: mdoc error: &error];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    CBLDocument* doc = [col1a documentWithID: @"doc1" error: &error];
+    AssertEqualObjects([doc stringForKey: @"update"], @"update1a");
+    doc = [col2a documentWithID: @"doc1" error: &error];
+    AssertEqualObjects([doc stringForKey: @"update"], @"update2a");
+    
+    doc = [col1b documentWithID: @"doc1" error: &error];
+    AssertEqualObjects([doc stringForKey: @"update"], @"update2b");
+    doc = [col2b documentWithID: @"doc1" error: &error];
+    AssertEqualObjects([doc stringForKey: @"update"], @"update2b");
+}
+
+- (void) testCollectionPushFilter {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col1a start: 0 num: 10];
+    [self createDocNumbered: col1b start: 10 num: 10];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
+    colConfig.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        if ([document.collection.name isEqualToString: @"colA"])
+            return [document integerForKey: @"number1"] < 5;
+        else
+            return [document integerForKey: @"number1"] >= 15;
+    };
+    
+    [config addCollections: @[col1a, col1b] config: colConfig];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col1b.count, 10);
+    AssertEqual(col2a.count, 5);
+    AssertEqual(col2b.count, 5);
+}
+
+- (void) testCollectionPullFilter {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col2a start: 0 num: 10];
+    [self createDocNumbered: col2b start: 10 num: 10];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: NO];
+    
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
+    colConfig.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+        if ([document.collection.name isEqualToString: @"colA"])
+            return [document integerForKey: @"number1"] < 5;
+        else
+            return [document integerForKey: @"number1"] >= 15;
+    };
+    
+    [config addCollections: @[col1a, col1b] config: colConfig];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col1a.count, 5);
+    AssertEqual(col1b.count, 5);
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col2b.count, 10);
+}
+
+- (void) testCollectionDocumentIDsPushFilter {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col1a start: 0 num: 5];
+    [self createDocNumbered: col1b start: 10 num: 5];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    
+    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
+    colConfig1.documentIDs = @[@"doc1", @"doc2"];
+    
+    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
+    colConfig2.documentIDs = @[@"doc10", @"doc11", @"doc13"];
+    
+    [config addCollection: col1a config: colConfig1];
+    [config addCollection: col1b config: colConfig2];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col1a.count, 5);
+    AssertEqual(col1b.count, 5);
+    
+    AssertEqual(col2a.count, 2);
+    AssertEqual(col2b.count, 3);
+}
+
+- (void) testCollectionDocumentIDsPullFilter {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col2a start: 0 num: 5];
+    [self createDocNumbered: col2b start: 10 num: 5];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: NO];
+    
+    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
+    colConfig1.documentIDs = @[@"doc1", @"doc2"];
+    
+    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
+    colConfig2.documentIDs = @[@"doc11", @"doc13", @"doc14"];
+    
+    [config addCollection: col1a config: colConfig1];
+    [config addCollection: col1b config: colConfig2];
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(col1a.count, 2); // only 2 docs sync
+    AssertEqual(col1b.count, 3); // only 3 docs sync
+    
+    AssertEqual(col2a.count, 5);
+    AssertEqual(col2b.count, 5);
+}
+
+// TODO: https://issues.couchbase.com/browse/CBL-3524
+- (void) _testCollectionGetPendingDocumentIDs {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col1a start: 0 num: 10];
+    [self createDocNumbered: col1b start: 10 num: 5];
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col1b.count, 5);
+    AssertEqual(col2a.count, 0);
+    AssertEqual(col2b.count, 0);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    NSSet* docIds1a = [r pendingDocumentIDsForCollection: col1a error: &error];
+    AssertNil(error);
+    NSSet* docIds1b = [r pendingDocumentIDsForCollection: col1b error: &error];
+    AssertNil(error);
+    AssertEqual(docIds1a.count, 10);
+    AssertEqual(docIds1b.count, 5);
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col1b.count, 5);
+    AssertEqual(col2a.count, 10);
+    AssertEqual(col2b.count, 5);
+    
+    docIds1a = [r pendingDocumentIDsForCollection: col1a error: &error];
+    AssertNil(error);
+    docIds1b = [r pendingDocumentIDsForCollection: col1b error: &error];
+    AssertNil(error);
+    AssertEqual(docIds1a.count, 0);
+    AssertEqual(docIds1b.count, 0);
+    
+    CBLMutableDocument* mdoc = [[col1a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1a" forKey: @"update"];
+    [col1a saveDocument: mdoc error: &error];
+    
+    docIds1a = [r pendingDocumentIDsForCollection: col1a error: &error];
+    AssertNil(error);
+    AssertEqual(docIds1a.count, 1);
+    Assert([docIds1a containsObject: @"doc1"]);
+    
+    CBLDocument* doc = [col1b documentWithID: @"doc2" error: &error];
+    [col1b deleteDocument: doc error: &error];
+    AssertNil(error);
+    docIds1b = [r pendingDocumentIDsForCollection: col1b error: &error];
+    AssertNil(error);
+    AssertEqual(docIds1b.count, 1);
+    Assert([docIds1b containsObject: @"doc2"]);
+}
+
+// TODO: https://issues.couchbase.com/browse/CBL-3524
+- (void) _testCollectionIsDocumentPending {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    // Create some documents in colA and colB of the database A.
+    [self createDocNumbered: col1a start: 0 num: 10];
+    [self createDocNumbered: col1b start: 10 num: 5];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        Assert([r isDocumentPending: docID collection: col1a error: &error]);
+        AssertNil(error);
+    }
+    
+    for (NSUInteger i = 10; i < 15; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        Assert([r isDocumentPending: docID collection: col1b error: &error]);
+        AssertNil(error);
+    }
+    
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        AssertFalse([r isDocumentPending: docID collection: col1a error: &error]);
+        AssertNil(error);
+    }
+    
+    for (NSUInteger i = 10; i < 15; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
+        AssertFalse([r isDocumentPending: docID collection: col1b error: &error]);
+        AssertNil(error);
+    }
+    
+    // Update a document in colA.
+    CBLMutableDocument* mdoc = [[col1a documentWithID: @"doc1" error: &error] toMutable];
+    [mdoc setString: @"update1a" forKey: @"update"];
+    [col1a saveDocument: mdoc error: &error];
+    
+    Assert([r isDocumentPending: @"doc1" collection: col1a error: &error]);
+    AssertNil(error);
+    
+    // Delete a document in colB.
+    CBLDocument* doc = [col1b documentWithID: @"doc2" error: &error];
+    [col1b deleteDocument: doc error: &error];
+    AssertNil(error);
+    
+    Assert([r isDocumentPending: @"doc2" collection: col1b error: &error]);
+    AssertNil(error);
+}
+
+#endif // COUCHBASE_ENTERPRISE
+
 #pragma clang diagnostic pop
 
 @end
