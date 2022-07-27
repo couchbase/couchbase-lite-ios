@@ -52,7 +52,7 @@ import Foundation
 /// collection-aware code should avoid them and use the new Collection API instead.
 /// These legacy functions are deprecated and will be removed eventually.
 ///
-public final class Collection : CollectionChangeObservable, Indexable {
+public final class Collection : CollectionChangeObservable, Indexable, Equatable {
     
     /// The default scope name constant
     public static let defaultCollectionName: String = kCBLDefaultCollectionName
@@ -281,6 +281,11 @@ public final class Collection : CollectionChangeObservable, Indexable {
         try _impl.deleteIndex(withName: name)
     }
     
+    // MARK: Equatable
+    
+    public static func == (lhs: Collection, rhs: Collection) -> Bool {
+        return lhs._impl == rhs._impl
+    }
     
     // MARK: Internal
     

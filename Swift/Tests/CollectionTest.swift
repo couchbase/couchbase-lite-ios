@@ -30,55 +30,315 @@ class CollectionTest: CBLTestCase {
         try super.tearDownWithError()
     }
     
-    // MARK: Collection Management
+    // MARK: Default Scope/Collection
     
-    func testCreateCollection() throws {
-        var collections = try self.db.collections(scope: Scope.defaultScopeName)
-        XCTAssertEqual(collections.count, 1)
-        guard let d = collections.first else {
-            XCTFail()
+    func testDefaultCollectionExists() throws {
+        guard let collection = try self.db.defaultCollection() else {
+            XCTFail("Collection shouldn't be empty!")
             return
         }
-        XCTAssertEqual(d.name, Collection.defaultCollectionName)
-        XCTAssertEqual(d.scope.name, Scope.defaultScopeName)
+        XCTAssertEqual(collection.name, Database.defaultCollectionName)
         
-        let c2 = try self.db.createCollection(name: "collection1")
-        XCTAssertNotNil(c2)
+        let cols = try self.db.collections()
+        XCTAssertTrue(cols.contains(where: { $0 == collection }))
         
-        collections = try self.db.collections(scope: Scope.defaultScopeName)
-        XCTAssertEqual(collections.count, 2)
-        let names = collections.map({ $0.name }).sorted()
-        XCTAssertEqual(names, ["_default", "collection1"])
+        let scope = collection.scope
+        XCTAssertNotNil(scope)
+        XCTAssertEqual(scope.name, Scope.defaultScopeName)
         
-        let _ = try self.db.createCollection(name: "collection2", scope: "scope2")
-        collections = try self.db.collections(scope: "scope2")
-        XCTAssertEqual(collections.count, 1)
-        guard let c3 = collections.first else {
-            XCTFail()
+        let col1 = try self.db.collection(name: Database.defaultCollectionName)
+        XCTAssertEqual(collection, col1)
+    }
+    
+    func testDefaultScopeExists() throws {
+        let scope = try self.db.defaultScope()
+        XCTAssertNotNil(scope)
+        XCTAssertEqual(scope.name, Scope.defaultScopeName)
+        
+        let scopes = try self.db.scopes()
+        XCTAssertEqual(scopes.count, 1)
+        XCTAssertEqual(scopes[0].name, Scope.defaultScopeName)
+        
+        guard let scope1 = try self.db.scope(name: Scope.defaultScopeName) else {
+            XCTFail("default scope shouldn't be empty!")
             return
         }
-        XCTAssertEqual(c3.name, "collection2")
-        XCTAssertEqual(c3.scope.name, "scope2")
+        XCTAssertEqual(scope1.name, Scope.defaultScopeName)
+    }
+    
+    func testDeleteDefaultCollection() throws {
+        try self.db.deleteCollection(name: Database.defaultCollectionName)
+        
+        var collection = try self.db.defaultCollection()
+        XCTAssertNil(collection)
+        
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try? self.db.createCollection(name: Database.defaultCollectionName)
+        }
+        
+        collection = try self.db.defaultCollection()
+        XCTAssertNil(collection)
+    }
+    
+    func testGetDefaultScopeAfterDeleteDefaultCollection() throws {
+        try self.db.deleteCollection(name: Database.defaultCollectionName)
+        
+        let scope = try self.db.defaultScope()
+        XCTAssertEqual(scope.name, Scope.defaultScopeName)
+        
+        let scopes = try self.db.scopes()
+        XCTAssertEqual(scopes.count, 1)
+        XCTAssertEqual(scopes[0].name, Scope.defaultScopeName)
+    }
+    
+    // MARK: 8.2 Collections
+    
+    func testCreateAndGetCollectionsInDefaultScope() throws {
+        let colA = try self.db.createCollection(name: "colA")
+        let colB = try self.db.createCollection(name: "colB", scope: Scope.defaultScopeName)
+        
+        XCTAssertEqual(colA.name, "colA")
+        XCTAssertEqual(colA.scope.name, Scope.defaultScopeName)
+        XCTAssertEqual(colB.name, "colB")
+        XCTAssertEqual(colB.scope.name, Scope.defaultScopeName)
+        
+        // created collections exist when calling database.collectionWithName:
+        guard let colAa = try self.db.collection(name: "colA") else {
+            XCTFail("Collection A is empty")
+            return
+        }
+        XCTAssertEqual(colA.name, colAa.name)
+        XCTAssertEqual(colA.scope.name, colAa.scope.name)
+        
+        guard let colBa = try self.db.collection(name: "colB") else {
+            XCTFail("Collection B is empty")
+            return
+        }
+        XCTAssertEqual(colB.name, colBa.name)
+        XCTAssertEqual(colB.scope.name, colBa.scope.name)
+        
+        let collections = try self.db.collections()
+        XCTAssertEqual(collections.count, 3)
+        XCTAssert(collections.contains(where: { $0.name == "colA" }))
+        XCTAssert(collections.contains(where: { $0.name == "colB" }))
+        XCTAssert(collections.contains(where: { $0.name == Database.defaultCollectionName }))
+    }
+    
+    func testCreateAndGetCollectionsInNamedScope() throws {
+        let noScope = try self.db.scope(name: "scopeA")
+        XCTAssertNil(noScope)
+        
+        let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertEqual(colA.name, "colA")
+        XCTAssertEqual(colA.scope.name, "scopeA")
+        
+        guard let scopeA = try self.db.scope(name: "scopeA") else {
+            XCTFail("scopeA is missing!")
+            return
+        }
+        XCTAssertEqual(scopeA.name, "scopeA")
+        
+        guard let colAa = try self.db.collection(name: "colA", scope: "scopeA") else {
+            XCTFail("Collection is missing!")
+            return
+        }
+        XCTAssertEqual(colAa.name, "colA")
+        XCTAssertEqual(colAa.scope.name, "scopeA")
+        
+        let scopes = try self.db.scopes()
+        XCTAssertEqual(scopes.count, 2)
+        XCTAssert(scopes.contains(where: { $0.name == "scopeA" }))
+        XCTAssert(scopes.contains(where: { $0.name == Scope.defaultScopeName }))
+    }
+    
+    func testCreateAnExistingCollection() throws {
+        let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        let mdoc = MutableDocument(id: "doc1")
+        mdoc.setString("string", forKey: "somekey")
+        try colA.save(document: mdoc)
+        
+        let colB = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let doc1 = try colB.document(id: "doc1")
+        XCTAssertNotNil(doc1)
+    }
+    
+    func testGetNonExistingCollection() throws {
+        XCTAssertNil(try self.db.collection(name: "colA", scope: "scopeA"))
     }
     
     func testDeleteCollection() throws {
-        let _ = try self.db.createCollection(name: "collection1")
-        let _ = try self.db.createCollection(name: "collection2")
+        let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
         
-        var collections = try self.db.collections()
-        XCTAssertEqual(collections.count, 3)
+        let mdoc1 = MutableDocument(id: "doc1")
+        mdoc1.setString("str", forKey: "str")
+        try colA.save(document: mdoc1)
         
-        // delete without scope
-        try self.db.deleteCollection(name: "collection1")
-        collections = try self.db.collections()
-        XCTAssertEqual(collections.count, 2)
+        let mdoc2 = MutableDocument(id: "doc2")
+        mdoc2.setString("str2", forKey: "str")
+        try colA.save(document: mdoc2)
         
-        // delete without scope
-        try self.db.deleteCollection(name: "collection2", scope: Scope.defaultScopeName)
-        collections = try self.db.collections()
-        XCTAssertEqual(collections.count, 1)
-        XCTAssertEqual(collections.first!.name, Collection.defaultCollectionName)
+        let mdoc3 = MutableDocument(id: "doc3")
+        mdoc3.setString("str3", forKey: "str")
+        try colA.save(document: mdoc3)
+        
+        XCTAssertEqual(colA.count, 3)
+        
+        try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        XCTAssertNil(try self.db.collection(name: "colA", scope: "scopeA"))
+        
+        let cols = try self.db.collections(scope: "scopeA")
+        XCTAssertEqual(cols.count, 0)
+        
+        let colAa = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(colAa)
+        XCTAssertEqual(colAa.count, 0)
     }
+    
+    func testGetCollectionsFromScope() throws {
+        let _ = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let _ = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        guard let scopeA = try self.db.scope(name: "scopeA") else {
+            XCTFail("ScopeA missing!")
+            return
+        }
+        
+        XCTAssertNotNil(try scopeA.collection(name: "colA"))
+        XCTAssertNotNil(try scopeA.collection(name: "colB"))
+        
+        let cols = try self.db.collections(scope: "scopeA")
+        XCTAssertEqual(cols.count, 2)
+        XCTAssert(cols.contains(where: { $0.name == "colA" }))
+        XCTAssert(cols.contains(where: { $0.name == "colB" }))
+    }
+    
+    func testDeleteAllCollectionsInScope() throws {
+        let _ = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let _ = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        guard let scopeA = try self.db.scope(name: "scopeA") else {
+            XCTFail("scopeA is missing")
+            return
+        }
+        var collectionsInScopeA = try scopeA.collections()
+        XCTAssertEqual(collectionsInScopeA.count, 2)
+        XCTAssert(collectionsInScopeA.contains(where: { $0.name == "colA" }))
+        XCTAssert(collectionsInScopeA.contains(where: { $0.name == "colB" }))
+        
+        try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        collectionsInScopeA = try scopeA.collections()
+        XCTAssertEqual(collectionsInScopeA.count, 1)
+        try self.db.deleteCollection(name: "colB", scope: "scopeA")
+        
+        XCTAssertNil(try self.db.scope(name: "scopeA"))
+        XCTAssertNil(try self.db.collection(name: "colA", scope: "scopeA"))
+        XCTAssertNil(try self.db.collection(name: "colB", scope: "scopeA"))
+    }
+    
+    func testScopeCollectionNameWithValidChars() throws {
+        let names = ["a",
+                     /* TODO: https://issues.couchbase.com/browse/CBL-3195 "A", */
+                     "0", "-",
+                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_%"]
+        
+        for name in names {
+            let col = try self.db.createCollection(name: name, scope: name)
+            XCTAssertNotNil(col)
+            
+            guard let col2 = try self.db.collection(name: name, scope: name) else {
+                XCTFail("Get collection not returning collection!")
+                return
+            }
+            XCTAssertEqual(col.name, col2.name)
+            XCTAssertEqual(col.scope.name, col2.scope.name)
+        }
+    }
+    
+    func testScopeCollectionNameWithIllegalChars() throws {
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: "_")
+        }
+        
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: "a", scope: "_")
+        }
+        
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: "%")
+        }
+        
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: "b", scope: "%")
+        }
+        
+        for char in "!@#$^&*()+={}[]<>,.?/:;\"'\\|`~" {
+            self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+                let _ = try self.db.createCollection(name: "a\(char)z")
+            }
+            
+            self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+                let _ = try self.db.createCollection(name: "colA", scope: "a\(char)z")
+            }
+        }
+    }
+    
+    func testScopeCollectionNameLength() throws {
+        var names = [String]()
+        var name = ""
+        for i in 0..<251 {
+            name.append("a")
+            if i%4 == 0 {
+                names.append(name)
+            }
+        }
+        names.append(name)
+        
+        for name in names {
+            let col = try self.db.createCollection(name: name, scope: name)
+            XCTAssertNotNil(col)
+            XCTAssertEqual(col.name, name)
+            XCTAssertEqual(col.scope.name, name)
+        }
+        
+        name.append("a")
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: name, scope: "scopeA")
+        }
+        
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            let _ = try self.db.createCollection(name: "colA", scope: name)
+        }
+    }
+    
+    // TODO: CBL-3195
+    func _testCollectionNameCaseSensitive() throws {
+        let col1a = try self.db.createCollection(name: "COLLECTION1", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "collection1", scope: "scopeA")
+        
+        XCTAssertEqual(col1a.name, "COLLECTION1")
+        XCTAssertEqual(col1b.name, "collection1")
+        
+        let cols = self.db.collections(scope: "scopeA")
+        XCTAssertEqual(cols.count, 2)
+        XCTAssert(cols.contains(where: { $0.name == "COLLECTION1" }))
+        XCTAssert(cols.contains(where: { $0.name == "collection1" }))
+    }
+    
+    func _testScopeNameCaseSensitive() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colA", scope: "SCOPEa")
+        
+        XCTAssertEqual(col1a.scope.name, "scopeA")
+        XCTAssertEqual(col1b.scope.name, "SCOPEa")
+        
+        let scopes = self.db.scopes()
+        XCTAssertEqual(scopes.count, 2)
+        XCTAssert(scopes.contains(where: { $0.name == "scopeA" }))
+        XCTAssert(scopes.contains(where: { $0.name == "SCOPEa" }))
+    }
+    
+    // MARK: Others
     
     func testCreateDuplicateCollection() throws {
         // Create in Default Scope
