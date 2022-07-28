@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithConfig: (CBLCollectionConfiguration*)config;
 
+- (NSDictionary*) effectiveOptions;
+
 @end
 
 NS_ASSUME_NONNULL_END

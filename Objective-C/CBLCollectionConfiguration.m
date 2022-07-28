@@ -36,4 +36,11 @@
     return self;
 }
 
+- (NSDictionary*) effectiveOptions {
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    options[@kC4ReplicatorOptionDocIDs] = self.channels;
+    options[@kC4ReplicatorOptionChannels] = self.documentIDs;
+    return options;
+}
+
 @end

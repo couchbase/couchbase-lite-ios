@@ -2207,6 +2207,7 @@
     end.flags = kRevDeleted;
     end.error = c4error_make(1, kC4ErrorBusy, c4str("error"));
     end.errorIsTransient = true;
+    end.collectionSpec = kC4DefaultCollectionSpec;
     
     CBLReplicatedDocument* replicatedDoc = [[CBLReplicatedDocument alloc] initWithC4DocumentEnded: &end];
     AssertEqualObjects(replicatedDoc.id, @"docID");
@@ -2214,6 +2215,8 @@
     AssertEqual(replicatedDoc.c4Error.code, kC4ErrorBusy);
     AssertEqual(replicatedDoc.c4Error.domain, 1);
     AssertEqual(replicatedDoc.error.code, kC4ErrorBusy);
+    AssertEqualObjects(replicatedDoc.collection, kCBLDefaultCollectionName);
+    AssertEqualObjects(replicatedDoc.scope, kCBLDefaultScopeName);
     
     [replicatedDoc updateError: nil];
     AssertEqual(replicatedDoc.c4Error.code, 0);
