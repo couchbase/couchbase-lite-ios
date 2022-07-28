@@ -274,7 +274,7 @@ typedef enum {
             .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
             .pushFilter = filter(_config.pushFilter, true),
             .pullFilter = filter(_config.pullFilter, false),
-            .callbackContext    = (__bridge void*)col,
+            .callbackContext    = (__bridge void*)self,
             .optionsDictFleece  = dict.toString(),
         };
         cols[i++] = c;
