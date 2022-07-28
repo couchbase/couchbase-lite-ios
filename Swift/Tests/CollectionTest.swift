@@ -73,7 +73,7 @@ class CollectionTest: CBLTestCase {
         XCTAssertNil(collection)
         
         self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
-            let _ = try? self.db.createCollection(name: Database.defaultCollectionName)
+            let _ = try self.db.createCollection(name: Database.defaultCollectionName)
         }
         
         collection = try self.db.defaultCollection()
@@ -288,7 +288,7 @@ class CollectionTest: CBLTestCase {
         var name = ""
         for i in 0..<251 {
             name.append("a")
-            if i%4 == 0 {
+            if i%4 == 0 { // without this, test might take ~20secs to finish
                 names.append(name)
             }
         }
@@ -319,7 +319,7 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col1a.name, "COLLECTION1")
         XCTAssertEqual(col1b.name, "collection1")
         
-        let cols = self.db.collections(scope: "scopeA")
+        let cols = try self.db.collections(scope: "scopeA")
         XCTAssertEqual(cols.count, 2)
         XCTAssert(cols.contains(where: { $0.name == "COLLECTION1" }))
         XCTAssert(cols.contains(where: { $0.name == "collection1" }))
@@ -332,7 +332,7 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col1a.scope.name, "scopeA")
         XCTAssertEqual(col1b.scope.name, "SCOPEa")
         
-        let scopes = self.db.scopes()
+        let scopes = try self.db.scopes()
         XCTAssertEqual(scopes.count, 2)
         XCTAssert(scopes.contains(where: { $0.name == "scopeA" }))
         XCTAssert(scopes.contains(where: { $0.name == "SCOPEa" }))

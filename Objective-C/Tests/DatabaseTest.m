@@ -2507,13 +2507,15 @@
 - (void) testEmptyCollection {
     NSError* error = nil;
     AssertNil([self.db collectionWithName: @"dummy" scope: nil error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
+    error = nil;
     AssertNil([self.db collectionWithName: @"dummy" scope: kCBLDefaultScopeName error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
+    error = nil;
     AssertNil([self.db collectionWithName: @"dummy" scope: @"scope1" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 #pragma mark - Collection Indexable

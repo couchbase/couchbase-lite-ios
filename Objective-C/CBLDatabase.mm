@@ -668,8 +668,10 @@ static const C4DatabaseConfig2 kDBConfig = {
         
         CBLStringBytes sname(scopeName);
         BOOL exists = c4db_hasScope(_c4db, sname);
-        if (!exists)
+        if (!exists) {
+            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
             return nil;
+        }
         
         return [[CBLScope alloc] initWithDB: self name: scopeName];
     }
@@ -679,12 +681,16 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(_mutex) {
+        // db closed or deleted
         if (![self mustBeOpen: error])
             return nil;
         
+        // collection removed
         BOOL isValid = _defaultCollection.isValid;
-        if (!isValid)
+        if (!isValid) {
             _defaultCollection = nil;
+            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
+        }
         
         return _defaultCollection;
     }
@@ -802,8 +808,10 @@ static void throwIfNotOpenError(NSError* error) {
             return nil;
         }
         
-        if (!c)
+        if (!c) {
+            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
             return nil;
+        }
         
         return [[CBLCollection alloc] initWithDB: self c4collection: c];
     }

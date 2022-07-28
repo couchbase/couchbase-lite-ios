@@ -81,7 +81,8 @@
     
     CBLCollection* dCol = [self.db defaultCollection: &error];
     AssertNil(dCol);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
+    AssertEqual(error.domain, CBLErrorDomain);
     
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
         return [self.db createCollectionWithName: kCBLDefaultCollectionName
@@ -90,7 +91,8 @@
     
     dCol = [self.db defaultCollection: &error];
     AssertNil(dCol);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
+    AssertEqual(error.domain, CBLErrorDomain);
 }
 
 - (void) testGetDefaultScopeAfterDeleteDefaultCollection {
@@ -149,8 +151,9 @@
 - (void) testCreateAndGetCollectionsInNamedScope {
     NSError* error = nil;
     AssertNil([self.db scopeWithName: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
+    error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
     AssertEqualObjects(colA.name, @"colA");
@@ -198,7 +201,7 @@
     NSError* error = nil;
     AssertNil([self.db collectionWithName: @"colA"
                                     scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testDeleteCollection {
@@ -289,11 +292,15 @@
     AssertNil(error);
     
     AssertNil([self.db scopeWithName: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
+    
+    error = nil;
     AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
+    
+    error = nil;
     AssertNil([self.db collectionWithName: @"colB" scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testScopeCollectionNameWithValidChars {
@@ -350,16 +357,27 @@
 }
 
 - (void) testScopeCollectionNameLength {
+    NSMutableArray* names = [NSMutableArray array];
     NSMutableString* name = [NSMutableString string];
     for (NSUInteger i = 0; i < 251; i++) {
         [name appendString: @"a"];
-        
-        NSError* error = nil;
-        CBLCollection* col = [self.db createCollectionWithName: name scope: name error: &error];
-        AssertNotNil(col);
-        AssertEqualObjects(col.name, name);
-        AssertEqualObjects(col.scope.name, name);
+        if (i%4==0) // without this, test might take ~20secs to finish
+            [names addObject: name];
     }
+    
+    NSError* error = nil;
+    for (NSString* n in names) {
+        CBLCollection* col = [self.db createCollectionWithName: n scope: n error: &error];
+        AssertNotNil(col);
+        AssertEqualObjects(col.name, n);
+        AssertEqualObjects(col.scope.name, n);
+        AssertNil(error);
+    }
+    
+    CBLCollection* col = [self.db createCollectionWithName: name scope: name error: &error];
+    AssertNotNil(col);
+    AssertEqualObjects(col.name, name);
+    AssertEqualObjects(col.scope.name, name);
     
     [name appendString: @"a"];
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** er) {
@@ -464,9 +482,9 @@
     AssertNil(error);
     
     AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 - (void) testDeleteAndRecreateThenGetCollectionFromDifferentDatabaseInstance {
@@ -486,10 +504,17 @@
     
     // Delete the collection from db:
     Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertNil(error);
+    
     AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertEqual(error.code, CBLErrorNotFound);
+    
+    error = nil;
     AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+    AssertEqual(error.code, CBLErrorNotFound);
     
     // Recreate:
+    error = nil;
     CBLCollection* col3 = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
     AssertEqual(col3.count, 0);
