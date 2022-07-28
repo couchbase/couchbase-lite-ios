@@ -92,6 +92,7 @@ typedef enum {
     unsigned _conflictCount;        // Current number of conflict resolving tasks
     BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
     SecCertificateRef _serverCertificate;
+    NSDictionary* _collectionMap;   // [scopeName.collectionName : CBLCollection]
 }
 
 @synthesize config=_config;
@@ -137,12 +138,12 @@ typedef enum {
 
 - (NSString*) description {
     if (!_desc)
-        _desc = [NSString stringWithFormat: @"%@[%s%s%s %@]",
-                 self.class,
-                 (isPull(_config.replicatorType) ? "<" : ""),
-                 (_config.continuous ? "*" : "-"),
-                 (isPush(_config.replicatorType)  ? ">" : ""),
-                 _config.target];
+        _desc = $sprintf(@"%@[%s%s%s %@]",
+                         self.class,
+                         (isPull(_config.replicatorType) ? "<" : ""),
+                         (_config.continuous ? "*" : "-"),
+                         (isPush(_config.replicatorType)  ? ">" : ""),
+                         _config.target);
     return _desc;
 }
 
@@ -247,9 +248,6 @@ typedef enum {
     // Parameters:
     alloc_slice optionsFleece = self._encodedOptions;
     C4ReplicatorParameters params = {
-        .push = mkmode(isPush(_config.replicatorType), _config.continuous),
-        .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-        
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -276,7 +274,7 @@ typedef enum {
             .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
             .pushFilter = filter(_config.pushFilter, true),
             .pullFilter = filter(_config.pullFilter, false),
-            .callbackContext    = (__bridge void*)self,
+            .callbackContext    = (__bridge void*)col,
             .optionsDictFleece  = dict.toString(),
         };
         cols[i++] = c;
@@ -285,6 +283,8 @@ typedef enum {
     params.collections = cols;
     
     [self initReachability: _reachabilityURL];
+    
+    [self createCollectionMap];
 
     // Create a C4Replicator:
     [_config.database safeBlock: ^{
@@ -322,6 +322,15 @@ typedef enum {
     Encoder enc;
     enc << options;
     return enc.finish();
+}
+
+- (void) createCollectionMap {
+    NSArray* collections = _config.collections;
+    NSMutableDictionary* mdict = [NSMutableDictionary dictionaryWithCapacity: collections.count];
+    for (CBLCollection* col in collections)
+        [mdict setObject: col forKey: $sprintf(@"%@.%@", col.scope.name, col.name)];
+    
+    _collectionMap = [NSDictionary dictionaryWithDictionary: mdict];
 }
 
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
@@ -731,7 +740,7 @@ static void onDocsEnded(C4Replicator* repl,
     NSError* error = nil;
     CBLCollection* collection = nil;
     if (doc.collection) {
-        collection = [_config.database collectionWithName: doc.collection scope: doc.scope error: &error];
+        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
         if (!collection) {
             CBLWarn(Sync, @"%@ Cannot retrieve collection=%@.%@ error=%@ docID=%@", self,
                     doc.scope, doc.collection, error, doc.id);
@@ -796,9 +805,7 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
         NSError* error = nil;
         NSString* name = slice2string(c4spec.name);
         NSString* scopeName = slice2string(c4spec.scope);
-        collection = [_config.database collectionWithName: name
-                                                    scope: scopeName
-                                                    error: &error];
+        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
         if (!collection) {
             CBLWarn(Sync, @"%@ Filter(push=%d) cannot retrieve collection=%@.%@ error=%@ doc=%@",
                     self, pushing, scopeName, name, error, slice2string(docID));
