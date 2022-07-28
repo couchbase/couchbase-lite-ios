@@ -626,6 +626,199 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(try collection.indexes(), ["index1", "index2", "index3", "index4", "index5"])
     }
     
+    // MARK: 8.5-6 Use collection APIs on deleted/closed scenarios
+    
+    func testUseCollectionAPIOnDeletedCollection() throws {
+        try testUseInvalidCollection("colA") {
+            try self.db.deleteCollection(name: "colA")
+        }
+    }
+    
+    func testUseCollectionAPIOnDeletedCollectionDeletedFromDifferentDBInstance() throws {
+        let db2 = try openDB(name: databaseName)
+        try testUseInvalidCollection("colA") {
+            try db2.deleteCollection(name: "colA")
+        }
+    }
+    
+    func testUseCollectionAPIWhenDatabaseIsClosed() throws {
+        try testUseInvalidCollection("colA") {
+            try self.db.close()
+        }
+    }
+    
+    func testUseCollectionAPIWhenDatabaseIsDeleted() throws {
+        try testUseInvalidCollection("colA") {
+            try self.db.delete()
+        }
+    }
+    
+    func testUseInvalidCollection(_ collectionName: String, onAction: () throws -> Void) throws {
+        let col = try self.db.createCollection(name: collectionName)
+        
+        try createDocNumbered(col, start: 0, num: 10)
+        
+        guard let doc = try col.document(id: "doc4") else {
+            XCTFail("Doc doesn't exist!")
+            return
+        }
+        
+        try onAction()
+        
+        // document(id:)
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.document(id: "doc2")
+        }
+        
+        // save document
+        let mdoc = MutableDocument()
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.save(document: mdoc)
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.save(document: mdoc, conflictHandler: { doc, doc2 in
+                return true
+            })
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.save(document: mdoc, concurrencyControl: .lastWriteWins)
+        }
+        
+        // delete functions
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.delete(document: doc)
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.delete(document: doc, concurrencyControl: .lastWriteWins)
+        }
+        
+        // purge functions
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.purge(document: doc)
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.purge(id: "doc2")
+        }
+        
+        // doc expiry
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.setDocumentExpiration(id: "doc6", expiration: Date())
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.getDocumentExpiration(id: "doc6")
+        }
+        
+        // indexes
+        let config = ValueIndexConfiguration.init(["firstName"])
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.createIndex(withName: "index1", config: config)
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.indexes()
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try col.deleteIndex(forName: "index2")
+        }
+    }
+    
+    // MARK: 8.7 Use Scope APIs on deleted/closed scenarios
+    
+    func testUseScopeWhenDatabaseIsClosed() throws {
+        try testUseInvalidScope() {
+            try self.db.close()
+        }
+    }
+    
+    func testUseScopeWhenDatabaseIsDeleted() throws {
+        try testUseInvalidScope() {
+            try self.db.delete()
+        }
+    }
+    
+    func testUseInvalidScope(_ onAction: () throws -> Void) throws {
+        let colA = try self.db.createCollection(name: "colA")
+        let scope = colA.scope
+        
+        try onAction()
+        
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try scope.collection(name: "colA")
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try scope.collections()
+        }
+    }
+    
+    // MARK: 8.8 Get Scopes/Collections
+    
+    func testGetScopesOrCollectionsWhenDatabaseIsClosed() throws {
+        try self.db.close()
+    }
+    
+    func testGetScopesOrCollectionsWhenDatabaseIsDeleted() throws {
+        try self.db.delete()
+    }
+    
+    func getScopesOrCollectionsTest() throws {
+        // default collection/scope
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.defaultCollection()
+        }
+        
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.defaultScope()
+        }
+        
+        // collection(s)
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.collection(name: "colA", scope: "scopeA")
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.collections()
+        }
+        
+        // scope(s)
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.scope(name: "scopeA")
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.scopes()
+        }
+        
+        // create/delete collections
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.createCollection(name: "colA", scope: "scopeA")
+        }
+        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+            let _ = try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        }
+    }
+    
+    /// Note: 8.9 Default collection deleted test: Can't test, since it will return fatalError
+    
+    // MARK: 8.10 all collections deleted under scope
+    
+    func testUseScopeAPIAfterDeletingAllCollections() throws {
+        try testUseScopeAPIAfterDeletingAllCollectionsFrom(self.db)
+    }
+    
+    func testUseScopeAPIAfterDeletingAllCollectionsFromDifferentDBInstance() throws {
+        let db2 = try openDB(name: databaseName)
+        
+        try testUseScopeAPIAfterDeletingAllCollectionsFrom(db2)
+    }
+    
+    func testUseScopeAPIAfterDeletingAllCollectionsFrom(_ db: Database) throws {
+        let col = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        let scope = col.scope
+        
+        try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        
+        XCTAssertNil(try scope.collection(name: "colA"))
+        XCTAssertEqual(try scope.collections().count, 0)
+    }
+    
     // MARK: change observer
     
     func testCollectionChangeEvent() throws {
