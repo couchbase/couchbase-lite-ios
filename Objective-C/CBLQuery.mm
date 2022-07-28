@@ -18,6 +18,7 @@
 //
 
 #import "CBLQuery.h"
+#import "CBLCollection+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLPropertyExpression.h"
@@ -197,12 +198,20 @@ using namespace fleece;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
     }
-     
+    
+    CBLDatabase* db = nil;
     if ([from.source isKindOfClass: [CBLDatabase class]]) {
-        // TODO: use [.. initWithCollections: JSONRepresentation] & [database defaultCollection]
-        return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
-    } else
-        return [self initWithCollection: (CBLCollection*)from.source JSONRepresentation: json];
+        db = ((CBLDatabase*)from.source);
+    } else if ([from.source isKindOfClass: [CBLCollection class]]) {
+        db = ((CBLCollection*)from.source).db;
+    }
+     
+    if (!db) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Attempt to query from an invalid database"];
+    }
+    
+    return [self initWithDatabase: db JSONRepresentation: json];
 }
 
 - (void) dealloc {    
