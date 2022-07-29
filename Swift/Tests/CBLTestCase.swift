@@ -184,21 +184,28 @@ class CBLTestCase: XCTestCase {
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
     
-    func loadJSONResource(name: String) throws {
+    func loadJSONResource(_ name: String, collection: Collection) throws {
         try autoreleasepool {
             let contents = try stringFromResource(name: name, ofType: "json")
             var n = 0
-            try db.inBatch {
-                contents.enumerateLines(invoking: { (line: String, stop: inout Bool) in
-                    n += 1
-                    let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
-                    let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
-                    let docID = String(format: "doc-%03llu", n)
-                    let doc = MutableDocument(id: docID, data: dict)
-                    try! self.db.saveDocument(doc)
-                })
-            }
+            contents.enumerateLines(invoking: { (line: String, stop: inout Bool) in
+                n += 1
+                let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
+                let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
+                let docID = String(format: "doc-%03llu", n)
+                let doc = MutableDocument(id: docID, data: dict)
+                try! collection.save(document: doc)
+            })
         }
+    }
+    
+    func loadJSONResource(name: String) throws {
+        guard let col = try self.db.defaultCollection() else {
+            XCTFail("Failed to load resource")
+            return
+        }
+        
+        try loadJSONResource(name, collection: col)
     }
     
     func jsonFromDate(_ date: Date) -> String {

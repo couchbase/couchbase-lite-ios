@@ -119,6 +119,10 @@
 		1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1A8F85082893F317008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
+		1A8F85092893F318008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
+		1A8F850A2893F32F008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
+		1A8F850B2893F330008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
 		1A908401288027EE006B1885 /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
 		1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
@@ -2003,6 +2007,7 @@
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QueryTest+Collection.swift"; sourceTree = "<group>"; };
 		1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+Collection.m"; sourceTree = "<group>"; };
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
 		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
@@ -2839,6 +2844,7 @@
 				93E8FEBB20A3E4280061347F /* MessageEndpointTest.swift */,
 				93E17F141ED4ED4000671CA1 /* NotificationTest.swift */,
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
+				1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */,
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93EB25A321CDCC160006FB88 /* PredictiveQueryTest.swift */,
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
@@ -5114,7 +5120,7 @@
 					9398D91A1E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1340;
 						ProvisioningStyle = Automatic;
 					};
 					93BB1C7D246BB1DB004FFA00 = {
@@ -5672,6 +5678,7 @@
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				93DB80031ED8FE5100C4F845 /* ReplicatorTest.swift in Sources */,
 				1AA3D6C122A1A41E0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
+				1A8F85092893F318008C4333 /* QueryTest+Collection.swift in Sources */,
 				93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */,
@@ -5724,6 +5731,7 @@
 				93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CAA246BB2D4004FFA00 /* FragmentTest.swift in Sources */,
 				1A93FB0924F737320015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				1A8F850A2893F32F008C4333 /* QueryTest+Collection.swift in Sources */,
 				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
@@ -6221,6 +6229,7 @@
 				9343F191207D636300F19A89 /* NotificationTest.swift in Sources */,
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
 				9343F193207D636300F19A89 /* CBLTestHelper.m in Sources */,
+				1A8F850B2893F330008C4333 /* QueryTest+Collection.swift in Sources */,
 				93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
@@ -6448,6 +6457,7 @@
 				93BB1CA2246BB2D3004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93BB1CA5246BB2D3004FFA00 /* FragmentTest.swift in Sources */,
+				1A8F85082893F317008C4333 /* QueryTest+Collection.swift in Sources */,
 				93BB1CAE246BB2DC004FFA00 /* QueryTest.swift in Sources */,
 				93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */,
 				1A6084F728758ADF0037C66F /* CollectionTest.swift in Sources */,
