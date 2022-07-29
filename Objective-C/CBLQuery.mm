@@ -80,21 +80,6 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                 JSONRepresentation: (NSData*)json
-{
-    Assert(collection);
-    Assert(json);
-    self = [super init];
-    if (self) {
-        _json = json;
-        _language = kC4JSONQuery;
-        
-        // TODO: Add implementation
-    }
-    return self;
-}
-
 - (nullable instancetype) initWithDatabase: (CBLDatabase*)database
                                expressions: (NSString*)expressions
                                      error: (NSError**)error
