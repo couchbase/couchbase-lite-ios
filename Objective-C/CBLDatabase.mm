@@ -681,12 +681,12 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(_mutex) {
-        // db closed or deleted
+        // db closed
         if (![self mustBeOpen: error])
             return nil;
         
-        // collection removed
-        BOOL isValid = _defaultCollection.isValid;
+        // if collection is invalid (deleted or LC marked as invalid)
+        BOOL isValid = [_defaultCollection collectionIsValid: error];
         if (!isValid) {
             _defaultCollection = nil;
             convertError({LiteCoreDomain, kC4ErrorNotFound}, error);

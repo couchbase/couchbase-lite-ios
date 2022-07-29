@@ -57,6 +57,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool) resolveConflictInDocument: (NSString*)docID
               withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
                              error: (NSError**)outError;
+
+- (BOOL) collectionIsValid: (NSError**)error;
+
 @end
 
 @interface CBLCollectionChange ()
