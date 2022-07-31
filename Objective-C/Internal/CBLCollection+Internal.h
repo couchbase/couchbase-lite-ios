@@ -58,8 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
               withConflictResolver: (nullable id<CBLConflictResolver>)conflictResolver
                              error: (NSError**)outError;
 
-- (BOOL) collectionIsValid: (NSError**)error;
-
 @end
 
 @interface CBLCollectionChange ()

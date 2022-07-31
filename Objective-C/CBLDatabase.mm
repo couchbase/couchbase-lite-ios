@@ -686,7 +686,7 @@ static const C4DatabaseConfig2 kDBConfig = {
             return nil;
         
         // if collection is invalid (deleted or LC marked as invalid)
-        BOOL isValid = [_defaultCollection collectionIsValid: error];
+        BOOL isValid = _defaultCollection.isValid;
         if (!isValid) {
             _defaultCollection = nil;
             convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
