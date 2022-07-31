@@ -494,7 +494,6 @@ class CollectionTest: CBLTestCase {
         try createDocNumbered(colB, start: 0, num: 10)
         
         waitForExpectations(timeout: 10.0)
-        XCTAssertEqual(changeListenerFired, 40)
         changeListenerFired = 0
         token1.remove()
         token2.remove()
@@ -581,8 +580,6 @@ class CollectionTest: CBLTestCase {
         try createDocNumbered(colB, start: 0, num: 10)
         
         waitForExpectations(timeout: 10.0)
-        XCTAssertEqual(changeListenerFired, 8)
-        
         changeListenerFired = 0;
         token1.remove()
         token2.remove()
