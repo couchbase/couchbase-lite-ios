@@ -512,7 +512,8 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  
  @param name Scope name, if empty, it will use default scope name.
  @param error On return, the error if any. CBLErrorNotOpen code will be returned
-        if the database is closed.
+        if the database is closed. CBLErrorNotFound code will be returned if the
+        scope doesn't exist.
  @return Scope object, or nil if an error occurred.
  */
 - (nullable CBLScope*) scopeWithName: (nullable NSString*)name
@@ -549,7 +550,8 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @param name Name of the collection to be fetched.
  @param scope Name of the scope the collection resides, if not specified uses the default scope.
  @param error On return, the error if any. CBLErrorNotOpen code will be returned
-        if the database is closed.
+        if the database is closed. CBLErrorNotFound code will be returned if the
+        scope doesn't exist.
  @return collection instance or If the collection doesn't exist, a nil value will be returned.
  */
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
@@ -583,7 +585,8 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /**
  Get the default collection. If the default collection is deleted, nil will be returned.
  
- @param error On return, the error if any.
+ @param error On return, the error if any. CBLErrorNotFound code will be returned if the
+        default collection is deleted.
  @return Default collection, or nil if an error occurred.
  */
 - (nullable CBLCollection*) defaultCollection: (NSError**)error;

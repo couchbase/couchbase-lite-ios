@@ -472,18 +472,32 @@ public final class Database {
     /// value will be returned if there are no collections under the given scope’s name.
     /// Note: The default scope is exceptional, and it will always be returned.
     public func scope(name: String) throws -> Scope? {
-        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
-        let s: CBLScope? = try _impl.scope(withName: name)
-        return s != nil ? Scope(s!, db: self) : nil
+        do {
+            let s = try _impl.scope(withName: name)
+            return Scope(s, db: self)
+        } catch let err as NSError {
+            if err.code == CBLErrorNotFound {
+                return nil
+            }
+            
+            throw err
+        }
     }
     
     // MARK: Collections
     
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
-        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
-        let c: CBLCollection? = try _impl.defaultCollection()
-        return c != nil ? Collection(c!, db: self) : nil
+        do {
+            let c = try _impl.defaultCollection()
+            return Collection(c, db: self)
+        } catch let err as NSError {
+            if err.code == CBLErrorNotFound {
+                return nil
+            }
+            
+            throw err
+        }
     }
     
     /// Get all collections in the specified scope.
@@ -507,9 +521,16 @@ public final class Database {
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
-        // Note: Swift cannot detect nullable when objective-c return nullable value with out error
-        let c: CBLCollection? = try _impl.collection(withName: name, scope: scope)
-        return c != nil ? Collection(c!, db: self) : nil
+        do {
+            let c = try _impl.collection(withName: name, scope: scope)
+            return Collection(c, db: self)
+        } catch let err as NSError {
+            if err.code == CBLErrorNotFound {
+                return nil
+            }
+            
+            throw err
+        }
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
