@@ -139,6 +139,14 @@ class CBLTestCase: XCTestCase {
         return MutableDocument(id: id, data: data)
     }
     
+    func createDocNumbered(_ col: Collection, start: Int, num: Int) throws {
+        for i in start..<start+num {
+            let mdoc = createDocument("doc\(i)")
+            mdoc.setString("\(i)", forKey: "number1")
+            try col.save(document: mdoc)
+        }
+    }
+    
     @discardableResult
     func generateDocument(withID id: String?) throws -> MutableDocument {
         let doc = createDocument(id);

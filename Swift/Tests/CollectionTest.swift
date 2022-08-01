@@ -358,6 +358,242 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(collections.count, 1)
     }
     
+    // MARK: 8.3 Collections and Cross Database Instance
+    
+    func testCreateThenGetCollectionFromDifferentDatabaseInstance() throws {
+        let col = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        try createDocNumbered(col, start: 0, num: 10)
+        
+        let db2 = try openDB(name: databaseName)
+        let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
+        
+        XCTAssertEqual(col.name, col2.name)
+        XCTAssertEqual(col.scope.name, col2.scope.name)
+        XCTAssertEqual(col2.count, 10)
+        
+        let cols1 = try self.db.collections(scope: "scopeA")
+        XCTAssertEqual(cols1.count, 1)
+        let cols2 = try db2.collections(scope: "scopeA")
+        XCTAssertEqual(cols2.count, 1)
+        
+        try createDocNumbered(col, start: 10, num: 10)
+        XCTAssertEqual(col.count, 20)
+        XCTAssertEqual(col2.count, 20)
+    }
+    
+    func testDeleteThenGetCollectionFromDifferentDatabaseInstance() throws {
+        let col = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        try createDocNumbered(col, start: 0, num: 10)
+        
+        let db2 = try openDB(name: databaseName)
+        let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
+        
+        try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        XCTAssertEqual(col.count, 0)
+        XCTAssertEqual(col2.count, 0)
+        
+        XCTAssertNil(try self.db.collection(name: "colA", scope: "scopeA"))
+        XCTAssertNil(try db2.collection(name: "colA", scope: "scopeA"))
+    }
+    
+    func testDeleteAndRecreateThenGetCollectionFromDifferentDatabaseInstance() throws {
+        let col = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        try createDocNumbered(col, start: 0, num: 10)
+        XCTAssertEqual(col.count, 10)
+        
+        let db2 = try openDB(name: databaseName)
+        let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertEqual(col2.count, 10)
+        
+        // Delete the collection from db
+        try self.db.deleteCollection(name: "colA", scope: "scopeA")
+        
+        XCTAssertNil(try self.db.collection(name: "colA", scope: "scopeA"))
+        XCTAssertNil(try db2.collection(name: "colA", scope: "scopeA"))
+        
+        // Recreate
+        let col3 = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertEqual(col3.count, 0)
+        
+        try createDocNumbered(col3, start: 0, num: 3)
+        let col4 = try db2.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertEqual(col3.count, 3)
+        XCTAssertEqual(col4.count, 3)
+    }
+    
+    // MARK: 8.4 Listeners
+    
+    func testCollectionChangeListener() throws {
+        let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let colB = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let exp1 = expectation(description: "change listener 1")
+        let exp2 = expectation(description: "change listener 2")
+        let exp3 = expectation(description: "change listener 3")
+        let exp4 = expectation(description: "change listener 4")
+        
+        var count1 = 0;
+        var changeListenerFired = 0;
+        let token1 = colA.addChangeListener { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count1 += change.documentIDs.count
+                if count1 == 10 {
+                    exp1.fulfill()
+                }
+            } else {
+                XCTFail("CollectionB shouldn't receive any listener")
+            }
+        }
+        
+        var count2 = 0
+        let token2 = colA.addChangeListener { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count2 += change.documentIDs.count
+                if count2 == 10 {
+                    exp2.fulfill()
+                }
+            } else {
+                XCTFail("CollectionB shouldn't receive any listener")
+            }
+        }
+        
+        let q1 = DispatchQueue(label: "dispatch-queue-1")
+        let q2 = DispatchQueue(label: "dispatch-queue-2")
+        var count3 = 0
+        let token3 = colA.addChangeListener(queue: q1) { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count3 += change.documentIDs.count
+                if count3 == 10 {
+                    exp3.fulfill()
+                }
+            } else {
+                XCTFail("CollectionB shouldn't receive any listener")
+            }
+        }
+        
+        var count4 = 0
+        let token4 = colA.addChangeListener(queue: q2) { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count4 += change.documentIDs.count
+                if count4 == 10 {
+                    exp4.fulfill()
+                }
+            } else {
+                XCTFail("CollectionB shouldn't receive any listener")
+            }
+        }
+        
+        try createDocNumbered(colA, start: 0, num: 10)
+        try createDocNumbered(colB, start: 0, num: 10)
+        
+        waitForExpectations(timeout: 10.0)
+        changeListenerFired = 0
+        token1.remove()
+        token2.remove()
+        token3.remove()
+        token4.remove()
+        
+        try createDocNumbered(colA, start: 10, num: 10)
+        try createDocNumbered(colB, start: 10, num: 10)
+        XCTAssertEqual(changeListenerFired, 0)
+    }
+    
+    func testCollectionDocumentChangeListener() throws {
+        let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let colB = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let exp1 = expectation(description: "doc change listener 1")
+        let exp2 = expectation(description: "doc change listener 2")
+        let exp3 = expectation(description: "doc change listener 3")
+        let exp4 = expectation(description: "doc change listener 4")
+        
+        var count1 = 0;
+        var changeListenerFired = 0;
+        let token1 = colA.addDocumentChangeListener(id: "doc-1") { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count1 += 1
+                if count1 == 2 {
+                    exp1.fulfill()
+                }
+            } else {
+                XCTFail("Collection-B shouldn't receive any listener")
+            }
+        }
+        
+        var count2 = 0
+        let token2 = colA.addDocumentChangeListener(id: "doc-1") { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count2 += 1
+                if count2 == 2 {
+                    exp2.fulfill()
+                }
+            } else {
+                XCTFail("Collection-B shouldn't receive any listener")
+            }
+        }
+        
+        let q1 = DispatchQueue(label: "dispatch-queue-1")
+        let q2 = DispatchQueue(label: "dispatch-queue-2")
+        var count3 = 0
+        let token3 = colA.addDocumentChangeListener(id: "doc-1", queue: q1) { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count3 += 1
+                if count3 == 2 {
+                    exp3.fulfill()
+                }
+            } else {
+                XCTFail("Collection-B shouldn't receive any listener")
+            }
+        }
+        
+        var count4 = 0
+        let token4 = colA.addDocumentChangeListener(id: "doc-1", queue: q2) { change in
+            changeListenerFired += 1
+            if change.collection.name == "colA" {
+                count4 += 1
+                if count4 == 2 {
+                    exp4.fulfill()
+                }
+            } else {
+                XCTFail("Collection-B shouldn't receive any listener")
+            }
+        }
+        
+        var doc = MutableDocument(id: "doc-1")
+        doc.setString("str", forKey: "key")
+        try colA.save(document: doc)
+        
+        doc = try colA.document(id: "doc-1")!.toMutable()
+        doc.setString("str2", forKey: "key")
+        try colA.save(document: doc)
+        
+        try createDocNumbered(colB, start: 0, num: 10)
+        
+        waitForExpectations(timeout: 10.0)
+        changeListenerFired = 0;
+        token1.remove()
+        token2.remove()
+        token3.remove()
+        token4.remove()
+        
+        doc = try colA.document(id: "doc-1")!.toMutable()
+        doc.setString("str3", forKey: "key")
+        try colA.save(document: doc)
+        
+        try createDocNumbered(colB, start: 10, num: 10)
+        XCTAssertEqual(changeListenerFired, 0)
+    }
+    
     // MARK: Index
     
     func testCollectionIndex() throws {
