@@ -27,17 +27,9 @@ public final class Select: Query, FromRouter {
     /// - Parameter dataSource: The DataSource object.
     /// - Returns: The From object that represent the FROM clause of the query.
     public func from(_ dataSource: DataSourceProtocol) -> From {
-        
-        var db: Database!
-        if let colSource = dataSource.source() as? Collection {
-            db = colSource._db
-        } else if let s = dataSource.source() as? Database {
-            db = s
-        }
-        
         return From(query: self,
                     impl: dataSource.toImpl(),
-                    database: db);
+                    database: dataSource.database);
     }
     
     // MARK: Internal
