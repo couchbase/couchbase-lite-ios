@@ -29,7 +29,7 @@ public final class Select: Query, FromRouter {
     public func from(_ dataSource: DataSourceProtocol) -> From {
         return From(query: self,
                     impl: dataSource.toImpl(),
-                    database: dataSource.source() as! Database);
+                    database: dataSource.database);
     }
     
     // MARK: Internal

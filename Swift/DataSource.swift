@@ -116,11 +116,17 @@ extension DataSourceProtocol {
         fatalError("Unsupported Data Source");
     }
     
-    func source() -> Any {
-        if let o = self as? DatabaseSource {
-            return o.source()
+    var database: Database {
+        guard let o = self as? DatabaseSource else {
+            fatalError("Unsupported data source.");
         }
-        fatalError("Unsupported data source.");
+        
+        if let colSource = o.source() as? Collection {
+            return colSource._db
+        } else if let s = o.source() as? Database {
+            return s
+        }
+        
+        fatalError("Unsupported data source.")
     }
-    
 }
