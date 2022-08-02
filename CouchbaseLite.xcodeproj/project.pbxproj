@@ -210,6 +210,10 @@
 		1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
 		1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
 		1AC16CF5287D4D9C0041728F /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		1AC7546E2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
+		1AC7546F2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
+		1AC754702897ADA2006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
+		1AC754712897ADA3006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
 		1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
 		1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
@@ -2041,6 +2045,7 @@
 		1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLCollectionTypes.h; sourceTree = "<group>"; };
 		1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCollectionConfiguration+Internal.h"; sourceTree = "<group>"; };
 		1AC16CE6287D4D820041728F /* CollectionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CollectionTest.m; sourceTree = "<group>"; };
+		1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+Collection.swift"; sourceTree = "<group>"; };
 		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
 		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
@@ -2849,6 +2854,7 @@
 				93EB25A321CDCC160006FB88 /* PredictiveQueryTest.swift */,
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
+				1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
 				1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */,
 				93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */,
@@ -5674,6 +5680,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1AC7546F2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				93DB80031ED8FE5100C4F845 /* ReplicatorTest.swift in Sources */,
@@ -5727,6 +5734,7 @@
 				93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93BB1C9F246BB2C5004FFA00 /* DatabaseEncryptionTest.swift in Sources */,
+				1AC754702897ADA2006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				93BB1CA9246BB2D4004FFA00 /* DocumentExpirationTest.swift in Sources */,
 				93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CAA246BB2D4004FFA00 /* FragmentTest.swift in Sources */,
@@ -6225,6 +6233,7 @@
 				93E8FEBD20A3E4600061347F /* MessageEndpointTest.swift in Sources */,
 				9343F18F207D636300F19A89 /* ArrayTest.swift in Sources */,
 				1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				1AC754712897ADA3006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				9343F190207D636300F19A89 /* ReplicatorTest.swift in Sources */,
 				9343F191207D636300F19A89 /* NotificationTest.swift in Sources */,
 				9343F192207D636300F19A89 /* DatabaseTest.swift in Sources */,
@@ -6453,6 +6462,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1AC7546E2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				93BB1CA4246BB2D3004FFA00 /* DocumentExpirationTest.swift in Sources */,
 				93BB1CA2246BB2D3004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,

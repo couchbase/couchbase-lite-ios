@@ -22,7 +22,7 @@ import Foundation
 /// The collection configuration that can be configured specifically for the replication.
 public struct CollectionConfiguration {
     /// The custom conflict resolver function. If this value is nil, the default conflict resolver will be used..
-    public var conflictResolver: ConflictResolver?
+    public var conflictResolver: ConflictResolverProtocol?
     
     /// Filter function for validating whether the documents can be pushed to the remote endpoint.
     /// Only documents of which the function returns true are replicated.
@@ -40,5 +40,21 @@ public struct CollectionConfiguration {
     /// Document IDs filter to limit the documents in the collection to be replicated with the remote endpoint.
     /// If not specified, all docs in the collection will be replicated.
     public var documentIDs: Array<String>?
+    
+    public init() {
+        self.init(config: nil)
+    }
+    
+    // MARK: internal
+    
+    init(config: CollectionConfiguration?) {
+        if let config = config {
+            self.conflictResolver = config.conflictResolver
+            self.pushFilter = config.pushFilter
+            self.pullFilter = config.pullFilter
+            self.channels = config.channels
+            self.documentIDs = config.documentIDs
+        }
+    }
 }
  

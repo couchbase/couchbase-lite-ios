@@ -695,21 +695,3 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     #endif
     
 }
-
-
-class TestConflictResolver: ConflictResolverProtocol {
-    
-    var winner: Document? = nil
-    let _resolver: (Conflict) -> Document?
-    
-    // set this resolver, which will be used while resolving the conflict
-    init(_ resolver: @escaping (Conflict) -> Document?) {
-        _resolver = resolver
-    }
-    
-    func resolve(conflict: Conflict) -> Document? {
-        winner = _resolver(conflict)
-        return winner
-    }
-    
-}

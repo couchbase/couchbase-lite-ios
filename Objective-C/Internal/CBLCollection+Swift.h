@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) CBLDatabase* db;
 
+@property (nonatomic, readonly) BOOL isValid;
+
 @end
 
 NS_ASSUME_NONNULL_END
