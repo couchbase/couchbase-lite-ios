@@ -753,10 +753,14 @@ class CollectionTest: CBLTestCase {
     
     func testGetScopesOrCollectionsWhenDatabaseIsClosed() throws {
         try self.db.close()
+        
+        try getScopesOrCollectionsTest()
     }
     
     func testGetScopesOrCollectionsWhenDatabaseIsDeleted() throws {
         try self.db.delete()
+        
+        try getScopesOrCollectionsTest()
     }
     
     func getScopesOrCollectionsTest() throws {
