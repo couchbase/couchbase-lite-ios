@@ -59,11 +59,8 @@ public struct ReplicatorConfiguration {
     /// The local database to replicate with the replication target.
     @available(*, deprecated, message: "Use config.collections instead.")
     public var database: Database {
-        guard let db = _db else {
-            NSException(name: .internalInconsistencyException,
-                        reason: "Attempt to access database property but no collections added",
-                        userInfo: nil).raise()
-            fatalError()
+        guard let db = self.db else {
+            fatalError("Attempt to access database property but no collections added")
         }
         return db
     }
@@ -250,7 +247,7 @@ public struct ReplicatorConfiguration {
     
     /// The collections used for the replication.
     public var collections: [Collection] {
-        return Array(_collectionConfigs.keys)
+        return Array(self.collectionConfigs.keys)
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given
@@ -261,7 +258,7 @@ public struct ReplicatorConfiguration {
     ///   - target: The replication target.
     @available(*, deprecated, message: " Use init(target:) instead. ")
     public init(database: Database, target: Endpoint) {
-        self._db = database
+        self.db = database
         self.target = target
         
         initCollectionConfigs()
@@ -285,21 +282,16 @@ public struct ReplicatorConfiguration {
                               config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
         
         if !collection._impl.isValid {
-            NSException(name: .invalidArgumentException,
-                        reason: "Attempt to add an invalid collection.",
-                        userInfo: nil).raise()
-            fatalError()
+            fatalError("Attempt to add an invalid collection.")
         }
         
         let db = collection._db
-        if let db1 = _db {
+        if let db1 = self.db {
             if db1._impl != db._impl {
-                NSException(name: .invalidArgumentException,
-                            reason: "Attempt to add collection from different databases.",
-                            userInfo: nil).raise()
+                fatalError("Attempt to add collection from different databases.")
             }
         } else {
-            _db = db
+            self.db = db
         }
         
         var colConfig: CollectionConfiguration!
@@ -309,7 +301,7 @@ public struct ReplicatorConfiguration {
             colConfig = CollectionConfiguration()
         }
         
-        _collectionConfigs[collection] = colConfig
+        self.collectionConfigs[collection] = colConfig
         
         return self
     }
@@ -324,10 +316,7 @@ public struct ReplicatorConfiguration {
                                         config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
         
         if collections.count == 0 {
-            NSException(name: .invalidArgumentException,
-                        reason: "Attempt to add empty collection array",
-                        userInfo: nil).raise()
-            fatalError()
+            fatalError("Attempt to add empty collection array.")
         }
         
         for col in collections {
@@ -340,10 +329,10 @@ public struct ReplicatorConfiguration {
     /// Remove the collection. If the collection doesn’t exist, this operation will be no ops.
     @discardableResult
     public mutating func removeCollection(_ collection: Collection) -> ReplicatorConfiguration {
-        _collectionConfigs.removeValue(forKey: collection)
+        self.collectionConfigs.removeValue(forKey: collection)
         
-        if _collectionConfigs.isEmpty {
-            _db = nil
+        if self.collectionConfigs.isEmpty {
+            self.db = nil
         }
         
         return self
@@ -355,7 +344,7 @@ public struct ReplicatorConfiguration {
     /// - Parameter collection The collection whose config is needed.
     /// - Returns The collection config if exists.
     public func collectionConfig(_ collection: Collection) -> CollectionConfiguration? {
-        return _collectionConfigs[collection]
+        return self.collectionConfigs[collection]
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given
@@ -363,7 +352,7 @@ public struct ReplicatorConfiguration {
     ///
     /// - Parameter config: The configuration object.
     public init(config: ReplicatorConfiguration) {
-        self._db = config.database
+        self.db = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
@@ -376,10 +365,12 @@ public struct ReplicatorConfiguration {
         self.maxAttemptWaitTime = config.maxAttemptWaitTime
         self.enableAutoPurge = config.enableAutoPurge
         
-        for (col, config) in config._collectionConfigs {
-            if col.isValid {
-                _collectionConfigs[col] = config
+        for (col, config) in config.collectionConfigs {
+            if !col.isValid {
+                fatalError("Tries to add invalid collection")
             }
+            
+            self.collectionConfigs[col] = config
         }
         
         #if os(iOS)
@@ -395,10 +386,10 @@ public struct ReplicatorConfiguration {
     
     var defaultCollectionConfig: CollectionConfiguration {
         guard let col = try? self.database.defaultCollection() else {
-            Database.throwNotOpenError()
+            fatalError("Default collection is missing!")
         }
         
-        guard let colConfig = _collectionConfigs[col] else {
+        guard let colConfig = self.collectionConfigs[col] else {
             fatalError("default collection config missing")
         }
         
@@ -407,10 +398,10 @@ public struct ReplicatorConfiguration {
     
     mutating func setDefaultCollectionConfig(_ config: CollectionConfiguration) {
         guard let col = try? self.database.defaultCollection() else {
-            Database.throwNotOpenError()
+            fatalError("Default collection is missing!")
         }
         
-        _collectionConfigs[col] = config
+        self.collectionConfigs[col] = config
     }
     
     func toImpl() -> CBLReplicatorConfiguration {
@@ -466,7 +457,7 @@ public struct ReplicatorConfiguration {
     }
     
     mutating func initCollectionConfigs() {
-        if let db = _db {
+        if let db = self.db {
             guard let col = try? db.defaultCollection() else {
                 Database.throwNotOpenError()
             }
@@ -476,6 +467,6 @@ public struct ReplicatorConfiguration {
         }
     }
     
-    var _collectionConfigs = [Collection: CollectionConfiguration]()
-    var _db: Database?
+    var collectionConfigs = [Collection: CollectionConfiguration]()
+    var db: Database?
 }

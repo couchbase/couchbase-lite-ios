@@ -1280,11 +1280,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
 }
 
-class TestConflictResolver: ConflictResolverProtocol {
-    
+class TestConflictResolver: ConflictResolverProtocol, Equatable {
     var winner: Document? = nil
     let _resolver: (Conflict) -> Document?
-    let uid: UUID!
+    fileprivate let uid: UUID!
     
     // set this resolver, which will be used while resolving the conflict
     init(_ resolver: @escaping (Conflict) -> Document?) {
@@ -1297,4 +1296,7 @@ class TestConflictResolver: ConflictResolverProtocol {
         return winner
     }
     
+    static func == (lhs: TestConflictResolver, rhs: TestConflictResolver) -> Bool {
+        return lhs.uid == rhs.uid
+    }
 }
