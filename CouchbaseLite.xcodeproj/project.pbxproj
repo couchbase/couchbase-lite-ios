@@ -136,6 +136,8 @@
 		1AA2EE0328A682A800DEB47E /* CBLCollectionConfiguration+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AA2EDE428A6704900DEB47E /* CBLCollectionConfiguration+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1AA2EE0428A682AE00DEB47E /* CBLCollectionConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AA2EDF028A671AD00DEB47E /* CBLCollectionConfiguration+Swift.m */; };
 		1AA2EE0528A682AF00DEB47E /* CBLCollectionConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AA2EDF028A671AD00DEB47E /* CBLCollectionConfiguration+Swift.m */; };
+		1A961800289BF7F80037E78E /* URLEndpointListenerTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */; };
+		1A961801289BF7F90037E78E /* URLEndpointListenerTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */; };
 		1AA3D6C122A1A41E0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
 		1AA3D6C222A1A41F0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
 		1AA3D78422AB07C50098E16B /* CustomLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D77222AB06E10098E16B /* CustomLogger.m */; };
@@ -2026,6 +2028,8 @@
 		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
 		1A93FAE424F0E6E60015D54D /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = pull_request_build.sh; path = ../Scripts/pull_request_build.sh; sourceTree = "<group>"; };
 		1A93FAE524F0E6E60015D54D /* loc.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = loc.sh; path = ../Scripts/loc.sh; sourceTree = "<group>"; };
+		1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "URLEndpointListenerTest+Collection.m"; sourceTree = "<group>"; };
+		1A9617FF289BF6940037E78E /* URLEndpointListenerTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = URLEndpointListenerTest.h; sourceTree = "<group>"; };
 		1A967A5F251BF78400B70945 /* generate_package_manifest.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_package_manifest.sh; sourceTree = "<group>"; };
 		1AA2EDE428A6704900DEB47E /* CBLCollectionConfiguration+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCollectionConfiguration+Swift.h"; sourceTree = "<group>"; };
 		1AA2EDF028A671AD00DEB47E /* CBLCollectionConfiguration+Swift.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLCollectionConfiguration+Swift.m"; sourceTree = "<group>"; };
@@ -3806,7 +3810,9 @@
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
 				934EF80B2453770E0053A47C /* TLSIdentityTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
+				1A9617FF289BF6940037E78E /* URLEndpointListenerTest.h */,
 				1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */,
+				1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
@@ -6178,6 +6184,7 @@
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
 				1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
+				1A961800289BF7F80037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
 				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */,
@@ -6231,6 +6238,7 @@
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78822AB07D80098E16B /* CustomLogger.m in Sources */,
 				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
+				1A961801289BF7F90037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
 				1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
