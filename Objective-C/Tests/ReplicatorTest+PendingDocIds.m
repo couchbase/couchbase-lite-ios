@@ -524,7 +524,8 @@
 
 #pragma clang diagnostic pop
 
-- (void) testCollection {
+// TODO: https://issues.couchbase.com/browse/CBL-3524
+- (void) _testCollection {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"wss://foo"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];

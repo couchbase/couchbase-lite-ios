@@ -194,7 +194,7 @@ typedef enum {
 - (bool) _setupC4Replicator: (C4Error*)outErr {
     if (_repl) {
         // If _repl exists, just update the options dict, in case -resetCheckpoint has been called:
-        c4repl_setOptions(_repl, self._encodedOptions);
+        c4repl_setOptions(_repl, [self encodedOptions: _config.effectiveOptions]);
         return true;
     }
 
@@ -246,15 +246,8 @@ typedef enum {
     socketFactory.context = (__bridge void*)self;
 
     // Parameters:
-    alloc_slice optionsFleece = self._encodedOptions;
+    alloc_slice optionsFleece = [self encodedOptions: _config.effectiveOptions];
     C4ReplicatorParameters params = {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        .pushFilter = filter(_config.pushFilter, true),
-        .validationFunc = filter(_config.pullFilter, false),
-#pragma clang diagnostic pop
-        
         .optionsDictFleece = optionsFleece,
         .onStatusChanged = &statusChanged,
         .onDocumentsEnded = &onDocsEnded,
@@ -264,10 +257,12 @@ typedef enum {
     
     NSUInteger collectionCount = _config.collectionConfigs.count;
     C4ReplicationCollection cols[collectionCount];
+    alloc_slice optionDicts[collectionCount];
     NSUInteger i = 0;
     for (CBLCollection* col in _config.collectionConfigs) {
         CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
-        AllocedDict dict = [self encodedCollectionOptions: colConfig];
+        alloc_slice dict = [self encodedOptions: colConfig.effectiveOptions];
+        
         C4ReplicationCollection c = {
             .collection = col.c4spec,
             .push = mkmode(isPush(_config.replicatorType), _config.continuous),
@@ -275,8 +270,9 @@ typedef enum {
             .pushFilter = filter(_config.pushFilter, true),
             .pullFilter = filter(_config.pullFilter, false),
             .callbackContext    = (__bridge void*)self,
-            .optionsDictFleece  = dict.toString(),
+            .optionsDictFleece  = dict,
         };
+        optionDicts[i] = dict;
         cols[i++] = c;
     }
     params.collectionCount = collectionCount;
@@ -310,20 +306,20 @@ typedef enum {
     return (_repl != nullptr);
 }
 
-- (AllocedDict) encodedCollectionOptions: (CBLCollectionConfiguration*)config {
-    NSMutableDictionary* mdict = [config.effectiveOptions mutableCopy];
+- (alloc_slice) encodedOptions: (NSDictionary*)config {
+    NSMutableDictionary* mdict = [config mutableCopy];
     Encoder enc;
     enc << mdict;
-    return AllocedDict(enc.finish());
-}
-
-- (alloc_slice) _encodedOptions {
-    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-    Encoder enc;
-    enc << options;
     return enc.finish();
 }
 
+//- (alloc_slice) _encodedOptions {
+//    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
+//    Encoder enc;
+//    enc << options;
+//    return enc.finish();
+//}
+//
 - (void) createCollectionMap {
     NSArray* collections = _config.collections;
     NSMutableDictionary* mdict = [NSMutableDictionary dictionaryWithCapacity: collections.count];
