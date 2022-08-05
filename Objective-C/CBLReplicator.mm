@@ -726,24 +726,14 @@ static void onDocsEnded(C4Replicator* repl,
 
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
-    NSError* error = nil;
-    CBLCollection* collection = nil;
-    if (doc.collection) {
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
-        if (!collection) {
-            CBLWarn(Sync, @"%@ Cannot retrieve collection=%@.%@ error=%@ docID=%@", self,
-                    doc.scope, doc.collection, error, doc.id);
-            return;
-        }
-    } else {
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@",
-                                                            kCBLDefaultScopeName,
-                                                            kCBLDefaultCollectionName)];
-    }
     
-    if (![collection resolveConflictInDocument: doc.id
-                          withConflictResolver: _config.conflictResolver
-                                         error: &error]) {
+    CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
+    Assert(c, @"Collection not found in replicator config when resolving a conflict");
+    
+    NSError* error = nil;
+    if (![c resolveConflictInDocument: doc.id
+                 withConflictResolver: _config.conflictResolver
+                                error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
     
@@ -808,7 +798,12 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
                                                             kCBLDefaultCollectionName)];
     }
     
-    auto doc = [[CBLDocument alloc] initWithCollection: collection
+    NSString* name = slice2string(c4spec.name);
+    NSString* scopeName = slice2string(c4spec.scope);
+    CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
+    Assert(c, @"Collection is not found in the replicator config when calling the filter function.");
+    
+    auto doc = [[CBLDocument alloc] initWithCollection: c
                                             documentID: slice2string(docID)
                                             revisionID: slice2string(revID)
                                                   body: body];
