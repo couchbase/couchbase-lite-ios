@@ -1258,7 +1258,8 @@ class DatabaseTest: CBLTestCase {
     
     #if COUCHBASE_ENTERPRISE
     
-    func testCloseWithActiveReplicators() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-3526
+    func _testCloseWithActiveReplicators() throws {
         // Live Queries:
         
         let change1 = expectation(description: "changes 1")
@@ -1309,7 +1310,8 @@ class DatabaseTest: CBLTestCase {
         replicator.start()
     }
     
-    func testCloseWithActiveLiveQueriesAndReplicators() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-3526
+    func _testCloseWithActiveLiveQueriesAndReplicators() throws {
         try! openOtherDB()
               
         let target = DatabaseEndpoint(database: otherDB!)

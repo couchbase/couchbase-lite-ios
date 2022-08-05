@@ -194,7 +194,7 @@ typedef enum {
 - (bool) _setupC4Replicator: (C4Error*)outErr {
     if (_repl) {
         // If _repl exists, just update the options dict, in case -resetCheckpoint has been called:
-        c4repl_setOptions(_repl, self._encodedOptions);
+        c4repl_setOptions(_repl, [self encodedOptions: _config.effectiveOptions]);
         return true;
     }
 
@@ -246,15 +246,8 @@ typedef enum {
     socketFactory.context = (__bridge void*)self;
 
     // Parameters:
-    alloc_slice optionsFleece = self._encodedOptions;
+    alloc_slice optionsFleece = [self encodedOptions: _config.effectiveOptions];
     C4ReplicatorParameters params = {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        .pushFilter = filter(_config.pushFilter, true),
-        .validationFunc = filter(_config.pullFilter, false),
-#pragma clang diagnostic pop
-        
         .optionsDictFleece = optionsFleece,
         .onStatusChanged = &statusChanged,
         .onDocumentsEnded = &onDocsEnded,
@@ -264,19 +257,22 @@ typedef enum {
     
     NSUInteger collectionCount = _config.collectionConfigs.count;
     C4ReplicationCollection cols[collectionCount];
+    alloc_slice optionDicts[collectionCount];
     NSUInteger i = 0;
     for (CBLCollection* col in _config.collectionConfigs) {
         CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
-        AllocedDict dict = [self encodedCollectionOptions: colConfig];
+        alloc_slice dict = [self encodedOptions: colConfig.effectiveOptions];
+        
         C4ReplicationCollection c = {
             .collection = col.c4spec,
             .push = mkmode(isPush(_config.replicatorType), _config.continuous),
             .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-            .pushFilter = filter(_config.pushFilter, true),
-            .pullFilter = filter(_config.pullFilter, false),
+            .pushFilter = filter(colConfig.pushFilter, true),
+            .pullFilter = filter(colConfig.pullFilter, false),
             .callbackContext    = (__bridge void*)self,
-            .optionsDictFleece  = dict.toString(),
+            .optionsDictFleece  = dict,
         };
+        optionDicts[i] = dict;
         cols[i++] = c;
     }
     params.collectionCount = collectionCount;
@@ -310,17 +306,10 @@ typedef enum {
     return (_repl != nullptr);
 }
 
-- (AllocedDict) encodedCollectionOptions: (CBLCollectionConfiguration*)config {
-    NSMutableDictionary* mdict = [config.effectiveOptions mutableCopy];
+- (alloc_slice) encodedOptions: (NSDictionary*)config {
+    NSMutableDictionary* mdict = [config mutableCopy];
     Encoder enc;
     enc << mdict;
-    return AllocedDict(enc.finish());
-}
-
-- (alloc_slice) _encodedOptions {
-    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-    Encoder enc;
-    enc << options;
     return enc.finish();
 }
 
@@ -737,22 +726,14 @@ static void onDocsEnded(C4Replicator* repl,
 
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
-    NSError* error = nil;
-    CBLCollection* collection = nil;
-    if (doc.collection) {
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
-        if (!collection) {
-            CBLWarn(Sync, @"%@ Cannot retrieve collection=%@.%@ error=%@ docID=%@", self,
-                    doc.scope, doc.collection, error, doc.id);
-            return;
-        }
-    } else {
-        collection = [_config.database defaultCollectionOrThrow];
-    }
     
-    if (![collection resolveConflictInDocument: doc.id
-                          withConflictResolver: _config.conflictResolver
-                                         error: &error]) {
+    CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
+    Assert(c, @"Collection not found in replicator config when resolving a conflict");
+    
+    NSError* error = nil;
+    if (![c resolveConflictInDocument: doc.id
+                 withConflictResolver: _config.conflictResolver
+                                error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
     
@@ -800,22 +781,12 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
-    CBLCollection* collection = nil;
-    if (c4spec.name.buf) {
-        NSError* error = nil;
-        NSString* name = slice2string(c4spec.name);
-        NSString* scopeName = slice2string(c4spec.scope);
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
-        if (!collection) {
-            CBLWarn(Sync, @"%@ Filter(push=%d) cannot retrieve collection=%@.%@ error=%@ doc=%@",
-                    self, pushing, scopeName, name, error, slice2string(docID));
-            return NO;
-        }
-    } else {
-        collection = [_config.database defaultCollectionOrThrow];
-    }
+    NSString* name = slice2string(c4spec.name);
+    NSString* scopeName = slice2string(c4spec.scope);
+    CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
+    Assert(c, @"Collection is not found in the replicator config when calling the filter function.");
     
-    auto doc = [[CBLDocument alloc] initWithCollection: collection
+    auto doc = [[CBLDocument alloc] initWithCollection: c
                                             documentID: slice2string(docID)
                                             revisionID: slice2string(revID)
                                                   body: body];
