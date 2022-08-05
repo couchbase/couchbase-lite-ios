@@ -1310,6 +1310,7 @@ class DatabaseTest: CBLTestCase {
         replicator.start()
     }
     
+    // TODO: https://issues.couchbase.com/browse/CBL-3526
     func _testCloseWithActiveLiveQueriesAndReplicators() throws {
         try! openOtherDB()
               

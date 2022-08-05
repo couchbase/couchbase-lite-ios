@@ -267,8 +267,8 @@ typedef enum {
             .collection = col.c4spec,
             .push = mkmode(isPush(_config.replicatorType), _config.continuous),
             .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
-            .pushFilter = filter(_config.pushFilter, true),
-            .pullFilter = filter(_config.pullFilter, false),
+            .pushFilter = filter(colConfig.pushFilter, true),
+            .pullFilter = filter(colConfig.pullFilter, false),
             .callbackContext    = (__bridge void*)self,
             .optionsDictFleece  = dict,
         };
@@ -313,13 +313,6 @@ typedef enum {
     return enc.finish();
 }
 
-//- (alloc_slice) _encodedOptions {
-//    NSMutableDictionary* options = [_config.effectiveOptions mutableCopy];
-//    Encoder enc;
-//    enc << options;
-//    return enc.finish();
-//}
-//
 - (void) createCollectionMap {
     NSArray* collections = _config.collections;
     NSMutableDictionary* mdict = [NSMutableDictionary dictionaryWithCapacity: collections.count];
@@ -743,7 +736,9 @@ static void onDocsEnded(C4Replicator* repl,
             return;
         }
     } else {
-        collection = [_config.database defaultCollectionOrThrow];
+        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@",
+                                                            kCBLDefaultScopeName,
+                                                            kCBLDefaultCollectionName)];
     }
     
     if (![collection resolveConflictInDocument: doc.id
@@ -808,7 +803,9 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
             return NO;
         }
     } else {
-        collection = [_config.database defaultCollectionOrThrow];
+        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@",
+                                                            kCBLDefaultScopeName,
+                                                            kCBLDefaultCollectionName)];
     }
     
     auto doc = [[CBLDocument alloc] initWithCollection: collection
