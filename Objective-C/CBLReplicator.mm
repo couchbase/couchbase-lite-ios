@@ -781,23 +781,6 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
                    body: (FLDict)body
                 pushing: (bool)pushing
 {
-    CBLCollection* collection = nil;
-    if (c4spec.name.buf) {
-        NSError* error = nil;
-        NSString* name = slice2string(c4spec.name);
-        NSString* scopeName = slice2string(c4spec.scope);
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
-        if (!collection) {
-            CBLWarn(Sync, @"%@ Filter(push=%d) cannot retrieve collection=%@.%@ error=%@ doc=%@",
-                    self, pushing, scopeName, name, error, slice2string(docID));
-            return NO;
-        }
-    } else {
-        collection = [_collectionMap objectForKey: $sprintf(@"%@.%@",
-                                                            kCBLDefaultScopeName,
-                                                            kCBLDefaultCollectionName)];
-    }
-    
     NSString* name = slice2string(c4spec.name);
     NSString* scopeName = slice2string(c4spec.scope);
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
