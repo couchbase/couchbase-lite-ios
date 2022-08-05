@@ -52,7 +52,7 @@ import Foundation
 /// collection-aware code should avoid them and use the new Collection API instead.
 /// These legacy functions are deprecated and will be removed eventually.
 ///
-public final class Collection : CollectionChangeObservable, Indexable, Equatable {
+public final class Collection : CollectionChangeObservable, Indexable, Equatable, Hashable {
     
     /// The default scope name constant
     public static let defaultCollectionName: String = kCBLDefaultCollectionName
@@ -287,6 +287,12 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         return lhs._impl == rhs._impl
     }
     
+    // MARK: Hashable
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(_impl.hash)
+    }
+    
     // MARK: Internal
     
     init(_ impl: CBLCollection, db: Database) {
@@ -294,6 +300,8 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         _db = db
         _scope = Scope(_impl.scope, db: db)
     }
+    
+    var isValid: Bool { _impl.isValid }
     
     let _impl: CBLCollection
     let _db: Database
