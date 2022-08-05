@@ -767,15 +767,10 @@
     
     // Create a document with id "doc1" in colA and colB of the database A.
     CBLMutableDocument* doc1 = [CBLMutableDocument documentWithID: @"doc1"];
-    [doc1 setString: @"update0" forKey: @"update"];
     [col1a saveDocument: doc1 error: &error];
-    Assert([col1a documentWithID: @"doc1" error: &error]);
-    
     doc1 = [CBLMutableDocument documentWithID: @"doc1"];
-    [doc1 setString: @"update0" forKey: @"update"];
     [col1b saveDocument: doc1 error: &error];
-    Assert([col1b documentWithID: @"doc1" error: &error]);
-
+    
     TestConflictResolver *resolver1, *resolver2;
     resolver1 = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.localDocument;
