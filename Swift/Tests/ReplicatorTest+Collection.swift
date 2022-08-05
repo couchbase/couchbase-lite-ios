@@ -84,38 +84,38 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         var config = ReplicatorConfiguration(database: self.db, target: target)
         
-        let conflictResolver: TestConflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
             return con.remoteDocument
         })
         config.conflictResolver = conflictResolver
         XCTAssertNotNil(conflictResolver)
         
         var colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssertEqual(conflictResolver, (config.conflictResolver as! TestConflictResolver))
-        XCTAssertEqual(conflictResolver, (colConfig.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver === (colConfig.conflictResolver as! TestConflictResolver))
         
         // Update replicator.conflictResolver
-        let conflictResolver2: TestConflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+        let conflictResolver2 = TestConflictResolver({ (con: Conflict) -> Document? in
             return con.localDocument
         })
-        XCTAssertNotEqual(conflictResolver, conflictResolver2)
+        XCTAssert(conflictResolver !== conflictResolver2)
         config.conflictResolver = conflictResolver2
         
-        XCTAssertEqual(conflictResolver2, (config.conflictResolver as! TestConflictResolver))
         colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssertEqual(conflictResolver2, (colConfig.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver2 === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver2 === (colConfig.conflictResolver as! TestConflictResolver))
         
         // Update collectionConfig.conflictResolver
-        let conflictResolver3: TestConflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+        let conflictResolver3 = TestConflictResolver({ (con: Conflict) -> Document? in
             return nil
         })
-        XCTAssertNotEqual(conflictResolver2, conflictResolver3)
+        XCTAssert(conflictResolver2 !== conflictResolver3)
         colConfig = collectionConfig(config, col: try defaultCollection())
         colConfig.conflictResolver = conflictResolver3
         config.addCollection(try defaultCollection(), config: colConfig)
         
-        XCTAssertEqual(conflictResolver3, (config.conflictResolver as! TestConflictResolver))
-        XCTAssertEqual(conflictResolver3, (colConfig.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver3 === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver3 === (colConfig.conflictResolver as! TestConflictResolver))
     }
     
     func testConfigWithDatabaseAndFilters() throws {
@@ -162,17 +162,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNotNil(colConfig.pullFilter)
     }
     
-    func _testCreateConfigWithEndpointOnly() {
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        
-        var config = ReplicatorConfiguration(target: target)
-        XCTAssertEqual(config.collections.count, 0)
-        
-        expectExcepion(exception: .internalInconsistencyException) {
-            print(config.database)
-        }
-    }
+    // Note: testCreateConfigWithEndpointOnly:  can't test due to fatalError
     
     func testAddCollectionsWithoutCollectionConfig() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
@@ -236,13 +226,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNotNil(config1.pullFilter)
         XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config1.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
         
         XCTAssertNotNil(config2.pushFilter)
         XCTAssertNotNil(config2.pullFilter)
         XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config2.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
     }
     
     func testAddUpdateCollection() throws {
@@ -288,7 +278,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNotNil(config2.pullFilter)
         XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config2.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
         
         // Update in reverse
         config.addCollection(col1a, config: colConfig)
@@ -300,7 +290,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNotNil(config1.pullFilter)
         XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config1.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
         
         // vlaidate the config2 for NULL
         config2 = collectionConfig(config, col: col1b)
@@ -346,14 +336,14 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNotNil(config1.pullFilter)
         XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config1.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
         
         let config2 = collectionConfig(config, col: col1b)
         XCTAssertNotNil(config2.pushFilter)
         XCTAssertNotNil(config2.pullFilter)
         XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
         XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssertEqual((config2.conflictResolver as! TestConflictResolver), conflictResolver)
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
         
         config.removeCollection(col1b)
         
