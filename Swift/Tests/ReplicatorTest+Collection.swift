@@ -354,6 +354,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
     // exception causiung the memory leak
+    // TODO: https://issues.couchbase.com/browse/CBL-3576
     func _testAddCollectionsFromDifferentDatabaseInstances() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
@@ -380,6 +381,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         }
     }
     
+    // memory leak with NSException
+    // TODO: https://issues.couchbase.com/browse/CBL-3576
     func _testAddDeletedCollections() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
@@ -406,5 +409,116 @@ class ReplicatorTest_Collection: ReplicatorTest {
         expectExcepion(exception: .invalidArgumentException) {
             config.addCollection(col1b)
         }
+    }
+    
+    // MARK: 8.14 Replicator
+#if COUCHBASE_ENTERPRISE
+    
+    func testCollectionSingleShotPushReplication() throws {
+        try testCollectionPushReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPushReplication() throws {
+        try testCollectionPushReplication(continous: true)
+    }
+    
+    func testCollectionPushReplication(continous: Bool) throws {
+        Database.log.console.level = .verbose
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 5)
+        try createDocNumbered(col1b, start: 10, num: 3)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2a.count, 0)
+        XCTAssertEqual(col2b.count, 0)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: continous)
+        config.addCollections([col1a, col1b])
+        
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2a.count, 5)
+        XCTAssertEqual(col2b.count, 3)
+    }
+    
+    #endif
+    
+    func testCollectionSingleShotPullReplication() throws {
+        try testCollectionPullReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPullReplication() throws {
+        try testCollectionPullReplication(continous: true)
+    }
+    
+    func testCollectionPullReplication(continous: Bool) throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col2a, start: 0, num: 10)
+        try createDocNumbered(col2b, start: 10, num: 10)
+        XCTAssertEqual(col1a.count, 0)
+        XCTAssertEqual(col1b.count, 0)
+        XCTAssertEqual(col2a.count, 10)
+        XCTAssertEqual(col2b.count, 10)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pull, continuous: continous)
+        config.addCollections([col1a, col1b])
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 10)
+        XCTAssertEqual(col1b.count, 10)
+        XCTAssertEqual(col2a.count, 10)
+        XCTAssertEqual(col2b.count, 10)
+    }
+    
+    func testCollectionSingleShotPushPullReplication() throws {
+        try testCollectionPushPullReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPushPullReplication() throws {
+        try testCollectionPushPullReplication(continous: true)
+    }
+    
+    func testCollectionPushPullReplication(continous: Bool) throws {
+        Database.log.console.level = .verbose
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 2)
+        try createDocNumbered(col2a, start: 10, num: 5)
+        
+        try createDocNumbered(col1b, start: 5, num: 3)
+        try createDocNumbered(col2b, start: 15, num: 8)
+        
+        XCTAssertEqual(col1a.count, 2)
+        XCTAssertEqual(col2a.count, 5)
+        
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2b.count, 8)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pushAndPull, continuous: continous)
+        config.addCollections([col1a, col1b])
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 7)
+        XCTAssertEqual(col2a.count, 7)
+        XCTAssertEqual(col1b.count, 11)
+        XCTAssertEqual(col2b.count, 11)
     }
 }

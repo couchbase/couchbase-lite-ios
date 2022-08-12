@@ -1,8 +1,8 @@
 //
-//  CBLReplicatorConfiguration+Swift.m
+//  CBLConflictResolverBridge.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,21 +17,22 @@
 //  limitations under the License.
 //
 
-#import "CBLReplicatorConfiguration+Swift.h"
 #import "CBLConflictResolverBridge.h"
 
-@implementation CBLReplicatorConfiguration (Swift)
+@implementation CBLConflictResolverBridge {
+    CBLConflictResolverBlock _resolver;
+}
 
-- (void) setConflictResolverUsingBlock: (CBLConflictResolverBlock)block {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+- (instancetype) initWithResolverBlock: (CBLConflictResolverBlock)resolver {
+    self = [super init];
+    if (self) {
+        _resolver = resolver;
+    }
+    return self;
+}
 
-    if (block)
-        self.conflictResolver = [[CBLConflictResolverBridge alloc] initWithResolverBlock: block];
-    else
-        self.conflictResolver = nil;
-#pragma clang diagnostic pop
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
+    return _resolver(conflict);
 }
 
 @end

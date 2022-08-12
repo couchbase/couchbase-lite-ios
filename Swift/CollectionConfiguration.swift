@@ -56,5 +56,36 @@ public struct CollectionConfiguration {
             self.documentIDs = config.documentIDs
         }
     }
+    
+    func toImpl(_ collection: Collection) -> CBLCollectionConfiguration {
+        let c = CBLCollectionConfiguration()
+        c.channels = self.channels
+        c.documentIDs = self.documentIDs
+        if let pushFilter = self.filter(push: true, collection: collection) {
+            c.pushFilter = pushFilter
+        }
+        
+        if let pullFilter = self.filter(push: false, collection: collection) {
+            c.pullFilter = pullFilter
+        }
+        
+        if let resolver = self.conflictResolver {
+            c.setConflictResolverUsing { (conflict) -> CBLDocument? in
+                return resolver.resolve(conflict: Conflict(impl: conflict, collection: collection))?._impl
+            }
+        }
+
+        return c
+    }
+    
+    func filter(push: Bool, collection: Collection) -> ((CBLDocument, CBLDocumentFlags) -> Bool)? {
+        guard let f = push ? self.pushFilter : self.pullFilter else {
+            return nil
+        }
+        
+        return { (doc, flags) in
+            return f(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
+        }
+    }
 }
  

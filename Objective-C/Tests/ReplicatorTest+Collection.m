@@ -627,7 +627,9 @@
     AssertEqual(col2b.count, 8);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: continous];
     [config addCollections: @[col1a, col1b] config: nil];
     
     [self run: config errorCode: 0 errorDomain: nil];
@@ -655,7 +657,9 @@
     AssertEqual(col1a.count, 0);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePull
+                                                     continuous: NO];
     [config addCollection: col1a config: nil];
     
     [self run: config errorCode: 0 errorDomain: nil];

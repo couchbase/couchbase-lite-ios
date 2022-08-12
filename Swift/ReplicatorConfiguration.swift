@@ -422,6 +422,14 @@ public struct ReplicatorConfiguration {
         c.maxAttemptWaitTime = self.maxAttemptWaitTime
         c.enableAutoPurge = self.enableAutoPurge
         
+        for (col, config) in self.collectionConfigs {
+            if !col.isValid {
+                fatalError("Tries to add invalid collection")
+            }
+            
+            c.addCollection(col._impl, config: config.toImpl(col))
+        }
+        
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in
                 guard let col = try? self.database.defaultCollection() else {

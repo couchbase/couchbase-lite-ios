@@ -110,6 +110,8 @@ framework module CouchbaseLiteSwift {
         header "CBLDictionary+Swift.h"
         header "CBLLog+Swift.h"
         header "CBLReplicatorConfiguration+Swift.h"
+        header "CBLConflictResolverBridge.h"
+        header "CBLCollectionConfiguration+Swift.h"
         
         // Enterprise:
         header "CBLClientCertificateAuthenticator.h"
