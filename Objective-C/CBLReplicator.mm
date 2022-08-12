@@ -730,9 +730,12 @@ static void onDocsEnded(C4Replicator* repl,
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
     Assert(c, @"Collection not found in replicator config when resolving a conflict");
     
+    CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
+    Assert(colConfig, @"Collection config not found in replicator config when resolving a conflict");
+    
     NSError* error = nil;
     if (![c resolveConflictInDocument: doc.id
-                 withConflictResolver: _config.conflictResolver
+                 withConflictResolver: colConfig.conflictResolver
                                 error: &error]) {
         CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
@@ -796,13 +799,11 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
     
     if ((flags & kRevPurged) == kRevPurged)
         docFlags |= kCBLDocumentFlagsAccessRemoved;
-
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return pushing ? _config.pushFilter(doc, docFlags) : _config.pullFilter(doc, docFlags);
-#pragma clang diagnostic pop
-
+    
+    CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
+    Assert(colConfig, @"Collection config is not found in the replicator config when " \
+           "calling the filter function.");
+    return pushing ? colConfig.pushFilter(doc, docFlags) : colConfig.pullFilter(doc, docFlags);
 }
 
 #pragma mark - BACKGROUNDING SUPPORT:
