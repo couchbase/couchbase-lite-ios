@@ -405,6 +405,7 @@
 }
 
 // exception causiung the memory leak!
+// TODO: https://issues.couchbase.com/browse/CBL-3576
 - (void) _testAddCollectionsFromDifferentDatabaseInstances {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
@@ -439,6 +440,7 @@
 }
 
 // memory leak with NSException
+// TODO: https://issues.couchbase.com/browse/CBL-3576
 - (void) _testAddDeletedCollections {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
@@ -675,7 +677,7 @@
     AssertEqual(col1a.count, 10);
 }
 
-// memory leak!
+// TODO: https://issues.couchbase.com/browse/CBL-3576
 - (void) _testMismatchedCollectionReplication {
     NSError* error = nil;
     CBLCollection* cola = [self.db createCollectionWithName: @"colA"
@@ -1022,8 +1024,7 @@
     AssertEqual(col2b.count, 5);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3524
-- (void) _testCollectionGetPendingDocumentIDs {
+- (void) testCollectionGetPendingDocumentIDs {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -1058,6 +1059,7 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
+    [config addCollections: @[col1a, col1b] config: nil];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     NSSet* docIds1a = [r pendingDocumentIDsForCollection: col1a error: &error];
@@ -1089,17 +1091,16 @@
     AssertEqual(docIds1a.count, 1);
     Assert([docIds1a containsObject: @"doc1"]);
     
-    CBLDocument* doc = [col1b documentWithID: @"doc2" error: &error];
+    CBLDocument* doc = [col1b documentWithID: @"doc12" error: &error];
     [col1b deleteDocument: doc error: &error];
     AssertNil(error);
     docIds1b = [r pendingDocumentIDsForCollection: col1b error: &error];
     AssertNil(error);
     AssertEqual(docIds1b.count, 1);
-    Assert([docIds1b containsObject: @"doc2"]);
+    Assert([docIds1b containsObject: @"doc12"]);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3524
-- (void) _testCollectionIsDocumentPending {
+- (void) testCollectionIsDocumentPending {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -1130,6 +1131,7 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: target
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
+    [config addCollections: @[col1a, col1b] config: nil];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     for (NSUInteger i = 0; i < 10; i++) {
@@ -1167,11 +1169,11 @@
     AssertNil(error);
     
     // Delete a document in colB.
-    CBLDocument* doc = [col1b documentWithID: @"doc2" error: &error];
+    CBLDocument* doc = [col1b documentWithID: @"doc12" error: &error];
     [col1b deleteDocument: doc error: &error];
     AssertNil(error);
     
-    Assert([r isDocumentPending: @"doc2" collection: col1b error: &error]);
+    Assert([r isDocumentPending: @"doc12" collection: col1b error: &error]);
     AssertNil(error);
 }
 

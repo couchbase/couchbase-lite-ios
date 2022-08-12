@@ -731,6 +731,7 @@ static void onDocsEnded(C4Replicator* repl,
     Assert(c, @"Collection not found in replicator config when resolving a conflict");
     
     CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
+    Assert(colConfig, @"Collection config not found in replicator config when resolving a conflict");
     
     NSError* error = nil;
     if (![c resolveConflictInDocument: doc.id
@@ -800,6 +801,8 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
         docFlags |= kCBLDocumentFlagsAccessRemoved;
     
     CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
+    Assert(colConfig, @"Collection config is not found in the replicator config when " \
+           "calling the filter function.");
     return pushing ? colConfig.pushFilter(doc, docFlags) : colConfig.pullFilter(doc, docFlags);
 }
 
