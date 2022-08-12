@@ -33,11 +33,8 @@
     [super tearDown];
 }
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-- (void) testCollectionsSingleShotPushPullReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3577
+- (void) _testCollectionsSingleShotPushPullReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -59,33 +56,34 @@
     AssertNotNil(col2b);
     AssertNil(error);
     
-    [self createDocNumbered: col2a start: 0 num: 10];
-    [self createDocNumbered: col2b start: 10 num: 10];
+    [self createDocNumbered: col2a start: 0 num: 3];
+    [self createDocNumbered: col2b start: 10 num: 5];
     AssertEqual(col1a.count, 0);
     AssertEqual(col1b.count, 0);
-    AssertEqual(col2a.count, 10);
-    AssertEqual(col2b.count, 10);
+    AssertEqual(col2a.count, 3);
+    AssertEqual(col2b.count, 5);
     
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
-    config.port = 2209;
     [self listen: config];
     
     CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
                                                             type: kCBLReplicatorTypePushAndPull
                                                       continuous: NO];
+    rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[col1a, col1b] config: nil];
     
     [self run: rConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(col1a.count, 10);
-    AssertEqual(col1b.count, 10);
-    AssertEqual(col2a.count, 10);
-    AssertEqual(col2b.count, 10);
+    AssertEqual(col1a.count, 3);
+    AssertEqual(col1b.count, 5);
+    AssertEqual(col2a.count, 3);
+    AssertEqual(col2b.count, 5);
     
     [_listener stop];
     _listener = nil;
 }
 
-- (void) testCollectionsContinuousPushPullReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3577
+- (void) _testCollectionsContinuousPushPullReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -111,12 +109,12 @@
     [self createDocNumbered: col2b start: 10 num: 10];
     
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
-    config.port = 2209;
     [self listen: config];
     
     CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
                                                             type: kCBLReplicatorTypePushAndPull
                                                       continuous: YES];
+    rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[col1a, col1b] config: nil];
     
     [self run: rConfig errorCode: 0 errorDomain: nil];
@@ -129,12 +127,15 @@
     _listener = nil;
 }
 
-- (void) testMismatchedCollectionReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3578
+- (void) _testMismatchedCollectionReplication {
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
     AssertNotNil(colA);
     AssertNil(error);
+    
+    [self createDocNumbered: colA start: 0 num: 10];
     
     CBLCollection* colB = [self.otherDB createCollectionWithName: @"colB"
                                                            scope: @"scopeA" error: &error];
@@ -142,12 +143,12 @@
     AssertNil(error);
     
     Config* config = [[Config alloc] initWithCollections: @[colB]];
-    config.port = 2209;
     [self listen: config];
     
     CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
                                                             type: kCBLReplicatorTypePushAndPull
                                                       continuous: YES];
+    rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[colA] config: nil];
     
     [self run: rConfig errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
@@ -159,7 +160,5 @@
         NSLog(@"%@", config);
     }];
 }
-
-#pragma clang diagnostic pop
 
 @end
