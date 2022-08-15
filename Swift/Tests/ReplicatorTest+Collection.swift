@@ -410,9 +410,10 @@ class ReplicatorTest_Collection: ReplicatorTest {
             config.addCollection(col1b)
         }
     }
+
+#if COUCHBASE_ENTERPRISE
     
     // MARK: 8.14 Replicator
-#if COUCHBASE_ENTERPRISE
     
     func testCollectionSingleShotPushReplication() throws {
         try testCollectionPushReplication(continous: false)
@@ -446,8 +447,6 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 5)
         XCTAssertEqual(col2b.count, 3)
     }
-    
-    #endif
     
     func testCollectionSingleShotPullReplication() throws {
         try testCollectionPullReplication(continous: false)
@@ -855,4 +854,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         XCTAssert(try r.isDocumentPending("doc12", collection: col1b))
     }
+    
+#endif
+
 }
