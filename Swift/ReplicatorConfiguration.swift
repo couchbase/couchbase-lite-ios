@@ -424,7 +424,7 @@ public struct ReplicatorConfiguration {
         
         for (col, config) in self.collectionConfigs {
             if !col.isValid {
-                fatalError("Tries to add invalid collection")
+                fatalError("Attempt to add an invalid collection")
             }
             
             c.addCollection(col._impl, config: config.toImpl(col))
