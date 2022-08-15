@@ -34,6 +34,8 @@
 }
 
 - (void) testCollectionsSingleShotPushPullReplication {
+    if (!self.keyChainAccessAllowed) return;
+    
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -75,11 +77,13 @@
     AssertEqual(col2a.count, 3);
     AssertEqual(col2b.count, 5);
     
-    [_listener stop];
+    [self stopListener: _listener];
     _listener = nil;
 }
 
 - (void) testCollectionsContinuousPushPullReplication {
+    if (!self.keyChainAccessAllowed) return;
+    
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -118,11 +122,13 @@
     AssertEqual(col2a.count, 10);
     AssertEqual(col2b.count, 10);
     
-    [_listener stop];
+    [self stopListener: _listener];
     _listener = nil;
 }
 
 - (void) testMismatchedCollectionReplication {
+    if (!self.keyChainAccessAllowed) return;
+    
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
@@ -144,6 +150,9 @@
     [rConfig addCollections: @[colA] config: nil];
     
     [self run: rConfig errorCode: CBLErrorHTTPNotFound errorDomain: CBLErrorDomain];
+    
+    [self stopListener: _listener];
+    _listener = nil;
 }
 
 - (void) testCreateListenerConfigWithEmptyCollection {

@@ -39,6 +39,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (Listener*) listenWithTLS: (BOOL)tls auth: (nullable id<CBLListenerAuthenticator>)auth;
 - (Listener*) listen: (Config*)config errorCode: (NSInteger)code errorDomain: (nullable NSString*)domain;
 
+- (void) stopListener: (CBLURLEndpointListener*)listener;
+
 @end
 
 @interface CBLURLEndpointListener (Test)
