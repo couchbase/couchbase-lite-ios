@@ -142,7 +142,11 @@
     AssertNotNil(colB);
     AssertNil(error);
     
-    Config* config = [[Config alloc] initWithCollections: @[colB]];
+    CBLCollection* defaultCollection = [self.otherDB defaultCollection: &error];
+    AssertNotNil(defaultCollection);
+    AssertNil(error);
+    
+    Config* config = [[Config alloc] initWithCollections: @[colB, defaultCollection]];
     [self listen: config];
     
     CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
@@ -151,7 +155,7 @@
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[colA] config: nil];
     
-    [self run: rConfig errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
+    [self run: rConfig errorCode: CBLErrorHTTPNotFound errorDomain: CBLErrorDomain];
 }
 
 - (void) testCreateListenerConfigWithEmptyCollection {

@@ -546,11 +546,13 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 
 #pragma mark - 8.16 MessageEndpointListener tests
 
-- (void) testCollectionsSingleShotPushPullReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3577
+- (void) _testCollectionsSingleShotPushPullReplication {
     [self testCollectionsPushPullReplication: NO];
 }
 
-- (void) testCollectionsContinuousPushPullReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3577
+- (void) _testCollectionsContinuousPushPullReplication {
     [self testCollectionsPushPullReplication: YES];
 }
 
@@ -603,16 +605,21 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqual(col2b.count, 7);
 }
 
-- (void) testMismatchedCollectionReplication {
+// TODO: https://issues.couchbase.com/browse/CBL-3578
+- (void) _testMismatchedCollectionReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
     AssertNotNil(col1a);
     AssertNil(error);
     
-    CBLCollection* col2a = [_otherDB createCollectionWithName: @"colA"
+    CBLCollection* col2a = [_otherDB createCollectionWithName: @"colB"
                                                         scope: @"scopeA" error: &error];
     AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* defaultCollection = [_otherDB defaultCollection: &error];
+    AssertNotNil(defaultCollection);
     AssertNil(error);
     
     id target = [[CBLMessageEndpoint alloc] initWithUID: @"UID:123"
@@ -626,7 +633,9 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     
     [config addCollections: @[col1a] config: nil];
     
-    [self run: config collection: @[col2a] errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
+    [self run: config collection: @[col2a, defaultCollection]
+    errorCode: CBLErrorHTTPNotFound
+  errorDomain: CBLErrorDomain];
 }
 
 - (void) testCreateListenerConfigWithEmptyCollection {

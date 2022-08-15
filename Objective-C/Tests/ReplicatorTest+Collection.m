@@ -681,26 +681,6 @@
     AssertEqual(col1a.count, 10);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3576
-- (void) _testMismatchedCollectionReplication {
-    NSError* error = nil;
-    CBLCollection* cola = [self.db createCollectionWithName: @"colA"
-                                                      scope: @"scopeA" error: &error];
-    AssertNotNil(cola);
-    AssertNil(error);
-    
-    CBLCollection* colb = [self.otherDB createCollectionWithName: @"colB"
-                                                           scope: @"scopeA" error: &error];
-    AssertNotNil(colb);
-    AssertNil(error);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [config addCollection: colb config: nil];
-    
-    [self run: config errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
-}
-
 - (void) testCollectionDefaultConflictResolver {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
