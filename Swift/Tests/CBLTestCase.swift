@@ -142,7 +142,7 @@ class CBLTestCase: XCTestCase {
     func createDocNumbered(_ col: Collection, start: Int, num: Int) throws {
         for i in start..<start+num {
             let mdoc = createDocument("doc\(i)")
-            mdoc.setString("\(i)", forKey: "number1")
+            mdoc.setInt(i, forKey: "number1")
             try col.save(document: mdoc)
         }
     }
