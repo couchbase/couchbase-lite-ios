@@ -546,13 +546,11 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
 
 #pragma mark - 8.16 MessageEndpointListener tests
 
-// TODO: https://issues.couchbase.com/browse/CBL-3577
-- (void) _testCollectionsSingleShotPushPullReplication {
+- (void) testCollectionsSingleShotPushPullReplication {
     [self testCollectionsPushPullReplication: NO];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3577
-- (void) _testCollectionsContinuousPushPullReplication {
+- (void) testCollectionsContinuousPushPullReplication {
     [self testCollectionsPushPullReplication: YES];
 }
 
@@ -591,11 +589,8 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                                  target: nil
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
-    
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: isContinous];
-    
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    config.continuous = isContinous;
     [config addCollections: @[col1a, col1b] config: nil];
     
     [self run: config collection: @[col2a, col2b] errorCode: 0 errorDomain: nil];
@@ -605,8 +600,7 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqual(col2b.count, 7);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3578
-- (void) _testMismatchedCollectionReplication {
+- (void) testMismatchedCollectionReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -627,15 +621,10 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
                                            protocolType: kCBLProtocolTypeMessageStream
                                                delegate: self];
     
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: NO];
-    
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
     [config addCollections: @[col1a] config: nil];
     
-    [self run: config collection: @[col2a, defaultCollection]
-    errorCode: CBLErrorHTTPNotFound
-  errorDomain: CBLErrorDomain];
+    [self run: config collection: @[col2a] errorCode: CBLErrorHTTPNotFound errorDomain: CBLErrorDomain];
 }
 
 - (void) testCreateListenerConfigWithEmptyCollection {

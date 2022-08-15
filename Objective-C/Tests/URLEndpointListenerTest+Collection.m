@@ -33,8 +33,7 @@
     [super tearDown];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3577
-- (void) _testCollectionsSingleShotPushPullReplication {
+- (void) testCollectionsSingleShotPushPullReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -66,9 +65,7 @@
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
-                                                            type: kCBLReplicatorTypePushAndPull
-                                                      continuous: NO];
+    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[col1a, col1b] config: nil];
     
@@ -82,8 +79,7 @@
     _listener = nil;
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3577
-- (void) _testCollectionsContinuousPushPullReplication {
+- (void) testCollectionsContinuousPushPullReplication {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -111,9 +107,8 @@
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
-                                                            type: kCBLReplicatorTypePushAndPull
-                                                      continuous: YES];
+    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
+    rConfig.continuous = YES;
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[col1a, col1b] config: nil];
     
@@ -127,8 +122,7 @@
     _listener = nil;
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3578
-- (void) _testMismatchedCollectionReplication {
+- (void) testMismatchedCollectionReplication {
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
@@ -142,16 +136,10 @@
     AssertNotNil(colB);
     AssertNil(error);
     
-    CBLCollection* defaultCollection = [self.otherDB defaultCollection: &error];
-    AssertNotNil(defaultCollection);
-    AssertNil(error);
-    
-    Config* config = [[Config alloc] initWithCollections: @[colB, defaultCollection]];
+    Config* config = [[Config alloc] initWithCollections: @[colB]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
-                                                            type: kCBLReplicatorTypePushAndPull
-                                                      continuous: YES];
+    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     [rConfig addCollections: @[colA] config: nil];
     
