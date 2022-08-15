@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The custom conflict resolver function.
  If this value is nil, the default conflict resolver will be used. */
-@property (nonatomic) id<CBLConflictResolver> conflictResolver;
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 /**
  Filter function for validating whether the documents can be pushed to the remote endpoint.

@@ -354,6 +354,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
     // exception causiung the memory leak
+    // TODO: https://issues.couchbase.com/browse/CBL-3576
     func _testAddCollectionsFromDifferentDatabaseInstances() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
@@ -380,6 +381,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         }
     }
     
+    // memory leak with NSException
+    // TODO: https://issues.couchbase.com/browse/CBL-3576
     func _testAddDeletedCollections() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
@@ -407,4 +410,451 @@ class ReplicatorTest_Collection: ReplicatorTest {
             config.addCollection(col1b)
         }
     }
+
+#if COUCHBASE_ENTERPRISE
+    
+    // MARK: 8.14 Replicator
+    
+    func testCollectionSingleShotPushReplication() throws {
+        try testCollectionPushReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPushReplication() throws {
+        try testCollectionPushReplication(continous: true)
+    }
+    
+    func testCollectionPushReplication(continous: Bool) throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 5)
+        try createDocNumbered(col1b, start: 10, num: 3)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2a.count, 0)
+        XCTAssertEqual(col2b.count, 0)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: continous)
+        config.addCollections([col1a, col1b])
+        
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2a.count, 5)
+        XCTAssertEqual(col2b.count, 3)
+    }
+    
+    func testCollectionSingleShotPullReplication() throws {
+        try testCollectionPullReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPullReplication() throws {
+        try testCollectionPullReplication(continous: true)
+    }
+    
+    func testCollectionPullReplication(continous: Bool) throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col2a, start: 0, num: 10)
+        try createDocNumbered(col2b, start: 10, num: 10)
+        XCTAssertEqual(col1a.count, 0)
+        XCTAssertEqual(col1b.count, 0)
+        XCTAssertEqual(col2a.count, 10)
+        XCTAssertEqual(col2b.count, 10)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pull, continuous: continous)
+        config.addCollections([col1a, col1b])
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 10)
+        XCTAssertEqual(col1b.count, 10)
+        XCTAssertEqual(col2a.count, 10)
+        XCTAssertEqual(col2b.count, 10)
+    }
+    
+    func testCollectionSingleShotPushPullReplication() throws {
+        try testCollectionPushPullReplication(continous: false)
+    }
+    
+    func testCollectionContinuousPushPullReplication() throws {
+        try testCollectionPushPullReplication(continous: true)
+    }
+    
+    func testCollectionPushPullReplication(continous: Bool) throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 2)
+        try createDocNumbered(col2a, start: 10, num: 5)
+        
+        try createDocNumbered(col1b, start: 5, num: 3)
+        try createDocNumbered(col2b, start: 15, num: 8)
+        
+        XCTAssertEqual(col1a.count, 2)
+        XCTAssertEqual(col2a.count, 5)
+        
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2b.count, 8)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pushAndPull, continuous: continous)
+        config.addCollections([col1a, col1b])
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 7)
+        XCTAssertEqual(col2a.count, 7)
+        XCTAssertEqual(col1b.count, 11)
+        XCTAssertEqual(col2b.count, 11)
+    }
+    
+    func testCollectionResetReplication() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        
+        try createDocNumbered(col2a, start: 0, num: 5)
+        XCTAssertEqual(col1a.count, 0)
+        XCTAssertEqual(col2a.count, 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollections([col1a])
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col2a.count, 5)
+        
+        // Purge all documents from the colA of the database A.
+        for i in 0..<5 {
+            try col1a.purge(id: "doc\(i)")
+        }
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 0)
+        XCTAssertEqual(col2a.count, 5)
+        
+        run(config: config, reset: true, expectedError: nil)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col2a.count, 5)
+    }
+    
+    func testCollectionDefaultConflictResolver() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        
+        let doc1 = try createDocument("doc1")
+        try col1a.save(document: doc1)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pushAndPull, continuous: false)
+        config.addCollections([col1a])
+        run(config: config, expectedError: nil)
+        
+        let mdoc1 = try col1a.document(id: "doc1")!.toMutable()
+        mdoc1.setString("update1", forKey: "update")
+        try col1a.save(document: mdoc1)
+        
+        var mdoc2 = try col2a.document(id: "doc1")!.toMutable()
+        mdoc2.setString("update2.1", forKey: "update")
+        try col2a.save(document: mdoc2)
+        
+        mdoc2 = try col2a.document(id: "doc1")!.toMutable()
+        mdoc2.setString("update2.2", forKey: "update")
+        try col2a.save(document: mdoc2)
+        
+        run(config: config, expectedError: nil)
+        
+        let doc = try col1a.document(id: "doc1")
+        XCTAssertEqual(doc!.string(forKey: "update"), "update2.2")
+    }
+    
+    func testCollectionConflictResolver() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        // Create a document with id "doc1" in colA and colB of the database A.
+        let doc1a = try createDocument("doc1")
+        doc1a.setString("update0", forKey: "update")
+        try col1a.save(document: doc1a)
+        
+        let doc1b = try createDocument("doc1")
+        doc1b.setString("update0", forKey: "update")
+        try col1b.save(document: doc1b)
+        
+        let conflictResolver1 = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.localDocument
+        })
+        let conflictResolver2 = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.remoteDocument
+        })
+        
+        var colConfig1 = CollectionConfiguration()
+        colConfig1.conflictResolver = conflictResolver1
+        
+        var colConfig2 = CollectionConfiguration()
+        colConfig2.conflictResolver = conflictResolver2
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pushAndPull, continuous: false)
+        config.addCollection(col1a, config: colConfig1)
+        config.addCollection(col1b, config: colConfig2)
+        run(config: config, expectedError: nil)
+        
+        // Update "doc1" in colA and colB of database A.
+        let mdoc1a = try col1a.document(id: "doc1")!.toMutable()
+        mdoc1a.setString("update1a", forKey: "update")
+        try col1a.save(document: mdoc1a)
+        
+        var mdoc2a = try col2a.document(id: "doc1")!.toMutable()
+        mdoc2a.setString("update2a", forKey: "update")
+        try col2a.save(document: mdoc2a)
+        
+        // Update "doc1" in colA and colB of database B.
+        let mdoc1b = try col1b.document(id: "doc1")!.toMutable()
+        mdoc1b.setString("update1b", forKey: "update")
+        try col1b.save(document: mdoc1b)
+        
+        var mdoc2b = try col2b.document(id: "doc1")!.toMutable()
+        mdoc2b.setString("update2b", forKey: "update")
+        try col2b.save(document: mdoc2b)
+        
+        run(config: config, expectedError: nil)
+        
+        // verify the results
+        var docA = try col1a.document(id: "doc1")
+        XCTAssertEqual(docA!.string(forKey: "update"), "update1a")
+        docA = try col2a.document(id: "doc1")
+        XCTAssertEqual(docA!.string(forKey: "update"), "update2a")
+        
+        var docB = try col1b.document(id: "doc1")
+        XCTAssertEqual(docB!.string(forKey: "update"), "update2b")
+        docB = try col2b.document(id: "doc1")
+        XCTAssertEqual(docB!.string(forKey: "update"), "update2b")
+    }
+    
+    func testCollectionPushFilter() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        // Create some documents in colA and colB of the database A.
+        try createDocNumbered(col1a, start: 0, num: 10)
+        try createDocNumbered(col1b, start: 10, num: 10)
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pushFilter = { (doc: Document, flags: DocumentFlags) in
+            if doc.collection!.name == "colA" {
+                return doc.int(forKey: "number1") < 5
+            } else {
+                return doc.int(forKey: "number1") >= 15
+            }
+        }
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollections([col1a, col1b], config: colConfig)
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 10)
+        XCTAssertEqual(col1b.count, 10)
+        XCTAssertEqual(col2a.count, 5)
+        XCTAssertEqual(col2b.count, 5)
+    }
+    
+    func testCollectionPullFilter() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        // Create some documents in colA and colB of the database A.
+        try createDocNumbered(col2a, start: 0, num: 10)
+        try createDocNumbered(col2b, start: 10, num: 10)
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc: Document, flags: DocumentFlags) in
+            if doc.collection!.name == "colA" {
+                return doc.int(forKey: "number1") < 5
+            } else {
+                return doc.int(forKey: "number1") >= 15
+            }
+        }
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollections([col1a, col1b], config: colConfig)
+        run(config: config, expectedError: nil)
+        
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 5)
+        XCTAssertEqual(col2a.count, 10)
+        XCTAssertEqual(col2b.count, 10)
+    }
+    
+    func testCollectionDocumentIDsPushFilter() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 5)
+        try createDocNumbered(col1b, start: 10, num: 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        
+        var colConfig1 = CollectionConfiguration()
+        colConfig1.documentIDs = ["doc1", "doc2"]
+        
+        var colConfig2 = CollectionConfiguration()
+        colConfig2.documentIDs = ["doc10", "doc11", "doc13"]
+        
+        config.addCollection(col1a, config: colConfig1)
+        config.addCollection(col1b, config: colConfig2)
+        
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 5)
+        XCTAssertEqual(col1b.count, 5)
+        XCTAssertEqual(col2a.count, 2)
+        XCTAssertEqual(col2b.count, 3)
+    }
+    
+    func testCollectionDocumentIDsPullFilter() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col2a, start: 0, num: 5)
+        try createDocNumbered(col2b, start: 10, num: 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        
+        var colConfig1 = CollectionConfiguration()
+        colConfig1.documentIDs = ["doc1", "doc2"]
+        
+        var colConfig2 = CollectionConfiguration()
+        colConfig2.documentIDs = ["doc10", "doc11", "doc13"]
+        
+        config.addCollection(col1a, config: colConfig1)
+        config.addCollection(col1b, config: colConfig2)
+        
+        run(config: config, expectedError: nil)
+        XCTAssertEqual(col1a.count, 2)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2a.count, 5)
+        XCTAssertEqual(col2b.count, 5)
+    }
+    
+    func testCollectionGetPendingDocumentIDs() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 10)
+        try createDocNumbered(col1b, start: 10, num: 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollections([col1a, col1b])
+        let r = Replicator(config: config)
+        
+        var docIds1a = try r.pendingDocumentIds(collection: col1a)
+        var docIds1b = try r.pendingDocumentIds(collection: col1b)
+        XCTAssertEqual(docIds1a.count, 10)
+        XCTAssertEqual(docIds1b.count, 5)
+        
+        run(replicator: r, expectedError: nil)
+        
+        docIds1a = try r.pendingDocumentIds(collection: col1a)
+        docIds1b = try r.pendingDocumentIds(collection: col1b)
+        XCTAssertEqual(docIds1a.count, 0)
+        XCTAssertEqual(docIds1b.count, 0)
+        
+        let mdoc1a = try col1a.document(id: "doc1")!.toMutable()
+        mdoc1a.setString("update1", forKey: "update")
+        try col1a.save(document: mdoc1a)
+        
+        docIds1a = try r.pendingDocumentIds(collection: col1a)
+        XCTAssertEqual(docIds1a.count, 1)
+        XCTAssert(docIds1a.contains(where: { $0 == "doc1" }))
+        
+        let mdoc1b = try col1b.document(id: "doc12")!.toMutable()
+        mdoc1b.setString("update2", forKey: "update")
+        try col1b.save(document: mdoc1b)
+        
+        docIds1b = try r.pendingDocumentIds(collection: col1b)
+        XCTAssertEqual(docIds1b.count, 1)
+        XCTAssert(docIds1b.contains(where: { $0 == "doc12" }))
+    }
+    
+    func testCollectionIsDocumentPending() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let _ = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let _ = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 10)
+        try createDocNumbered(col1b, start: 10, num: 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollections([col1a, col1b])
+        let r = Replicator(config: config)
+        
+        // make sure all docs are pending
+        for i in 0..<10 {
+            XCTAssert(try r.isDocumentPending("doc\(i)", collection: col1a))
+        }
+        for i in 10..<15 {
+            XCTAssert(try r.isDocumentPending("doc\(i)", collection: col1b))
+        }
+        
+        run(replicator: r, expectedError: nil)
+        
+        // make sure, no document is pending
+        for i in 0..<10 {
+            XCTAssertFalse(try r.isDocumentPending("doc\(i)", collection: col1a))
+        }
+        for i in 10..<15 {
+            XCTAssertFalse(try r.isDocumentPending("doc\(i)", collection: col1b))
+        }
+        
+        // Update a document in colA.
+        let mdoc1a = try col1a.document(id: "doc1")!.toMutable()
+        mdoc1a.setString("update1", forKey: "update")
+        try col1a.save(document: mdoc1a)
+        
+        XCTAssert(try r.isDocumentPending("doc1", collection: col1a))
+        
+        // Delete a document in colB.
+        let mdoc1b = try col1b.document(id: "doc12")!.toMutable()
+        try col1b.delete(document: mdoc1b)
+        
+        XCTAssert(try r.isDocumentPending("doc12", collection: col1b))
+    }
+    
+#endif
+
 }
