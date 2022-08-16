@@ -681,26 +681,6 @@
     AssertEqual(col1a.count, 10);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3576
-- (void) _testMismatchedCollectionReplication {
-    NSError* error = nil;
-    CBLCollection* cola = [self.db createCollectionWithName: @"colA"
-                                                      scope: @"scopeA" error: &error];
-    AssertNotNil(cola);
-    AssertNil(error);
-    
-    CBLCollection* colb = [self.otherDB createCollectionWithName: @"colB"
-                                                           scope: @"scopeA" error: &error];
-    AssertNotNil(colb);
-    AssertNil(error);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [config addCollection: colb config: nil];
-    
-    [self run: config errorCode: CBLErrorInvalidParameter errorDomain: CBLErrorDomain];
-}
-
 - (void) testCollectionDefaultConflictResolver {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
@@ -767,15 +747,10 @@
     
     // Create a document with id "doc1" in colA and colB of the database A.
     CBLMutableDocument* doc1 = [CBLMutableDocument documentWithID: @"doc1"];
-    [doc1 setString: @"update0" forKey: @"update"];
     [col1a saveDocument: doc1 error: &error];
-    Assert([col1a documentWithID: @"doc1" error: &error]);
-    
     doc1 = [CBLMutableDocument documentWithID: @"doc1"];
-    [doc1 setString: @"update0" forKey: @"update"];
     [col1b saveDocument: doc1 error: &error];
-    Assert([col1b documentWithID: @"doc1" error: &error]);
-
+    
     TestConflictResolver *resolver1, *resolver2;
     resolver1 = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         return con.localDocument;

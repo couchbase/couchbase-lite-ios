@@ -203,15 +203,30 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
    errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 {
+    [self run: config collection: nil errorCode: errorCode errorDomain: errorDomain];
+}
+
+- (void) run: (CBLReplicatorConfiguration*)config
+  collection: (nullable NSArray*) cols
+   errorCode: (NSInteger)errorCode
+ errorDomain: (NSString*)errorDomain
+{
     // Start discovery:
     [self startDiscovery];
     
     // Start listener:
     XCTestExpectation* x1 = [self expectationWithDescription: @"Listener Connecting"];
     XCTestExpectation* x2 = [self expectationWithDescription: @"Listener Stopped"];
-    CBLMessageEndpointListenerConfiguration* listenerConfig =
-    [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: _otherDB
-                                                         protocolType: kCBLProtocolTypeMessageStream];
+    CBLMessageEndpointListenerConfiguration* listenerConfig = nil;
+    
+    if (cols) {
+        listenerConfig = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: cols
+                                                                                 protocolType: kCBLProtocolTypeMessageStream];
+    } else {
+        listenerConfig = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: _otherDB
+                                                                              protocolType: kCBLProtocolTypeMessageStream];
+    }
+    
     _listener = [[CBLMessageEndpointListener alloc] initWithConfig: listenerConfig];
     id token1 = [_listener addChangeListener: ^(CBLMessageEndpointListenerChange *change) {
         if (change.status.activity == kCBLReplicatorStopped)
@@ -527,6 +542,97 @@ didStartReceivingResourceWithName: (nonnull NSString*)resourceName
     AssertEqual(_db.count, 2u);
     CBLDocument* savedDoc2 = [_db documentWithID: @"doc2"];
     AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
+}
+
+#pragma mark - 8.16 MessageEndpointListener tests
+
+- (void) testCollectionsSingleShotPushPullReplication {
+    [self testCollectionsPushPullReplication: NO];
+}
+
+- (void) testCollectionsContinuousPushPullReplication {
+    [self testCollectionsPushPullReplication: YES];
+}
+
+- (void) testCollectionsPushPullReplication: (BOOL)isContinous {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    CBLCollection* col2a = [_otherDB createCollectionWithName: @"colA"
+                                                        scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [_otherDB createCollectionWithName: @"colB"
+                                                        scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    [self createDocNumbered: col1a start: 0 num: 1];
+    [self createDocNumbered: col1b start: 5 num: 2];
+    [self createDocNumbered: col2a start: 10 num: 3];
+    [self createDocNumbered: col2b start: 15 num: 5];
+    AssertEqual(col1a.count, 1);
+    AssertEqual(col1b.count, 2);
+    AssertEqual(col2a.count, 3);
+    AssertEqual(col2b.count, 5);
+    
+    id target = [[CBLMessageEndpoint alloc] initWithUID: @"UID:123"
+                                                 target: nil
+                                           protocolType: kCBLProtocolTypeMessageStream
+                                               delegate: self];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    config.continuous = isContinous;
+    [config addCollections: @[col1a, col1b] config: nil];
+    
+    [self run: config collection: @[col2a, col2b] errorCode: 0 errorDomain: nil];
+    AssertEqual(col1a.count, 4);
+    AssertEqual(col1b.count, 7);
+    AssertEqual(col2a.count, 4);
+    AssertEqual(col2b.count, 7);
+}
+
+- (void) testMismatchedCollectionReplication {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col2a = [_otherDB createCollectionWithName: @"colB"
+                                                        scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* defaultCollection = [_otherDB defaultCollection: &error];
+    AssertNotNil(defaultCollection);
+    AssertNil(error);
+    
+    id target = [[CBLMessageEndpoint alloc] initWithUID: @"UID:123"
+                                                 target: nil
+                                           protocolType: kCBLProtocolTypeMessageStream
+                                               delegate: self];
+    
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    [config addCollections: @[col1a] config: nil];
+    
+    [self run: config collection: @[col2a] errorCode: CBLErrorHTTPNotFound errorDomain: CBLErrorDomain];
+}
+
+- (void) testCreateListenerConfigWithEmptyCollection {
+    [self expectException: NSInvalidArgumentException in:^{
+        id config = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[]
+                                                                            protocolType: kCBLProtocolTypeMessageStream];
+        NSLog(@"%@", config);
+    }];
 }
 
 #pragma clang diagnostic pop

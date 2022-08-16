@@ -22,6 +22,7 @@
 #import "CBLURLEndpointListener+Internal.h"
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CollectionUtils.h"
+#import "URLEndpointListenerTest.h"
 
 #define kWsPort 4984
 #define kWssPort 4985
@@ -44,7 +45,6 @@ NS_ASSUME_NONNULL_END
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-
 - (NSURL*) localURL {
     assert(self.port > 0);
     NSURLComponents* comps = [[NSURLComponents alloc] init];
@@ -61,20 +61,7 @@ NS_ASSUME_NONNULL_END
 
 @end
 
-API_AVAILABLE(macos(10.12), ios(10.0))
-@interface URLEndpointListenerTest : ReplicatorTest
-
-API_AVAILABLE(macos(10.12), ios(10.0))
-typedef CBLURLEndpointListenerConfiguration Config;
-
-API_AVAILABLE(macos(10.12), ios(10.0))
-typedef CBLURLEndpointListener Listener;
-
-@end
-
-@implementation URLEndpointListenerTest {
-    CBLURLEndpointListener* _listener;
-}
+@implementation URLEndpointListenerTest
 
 #pragma mark - Helper methods
 
@@ -423,6 +410,9 @@ typedef CBLURLEndpointListener Listener;
 
 - (void) setUp {
     [super setUp];
+    
+    timeout = 15.0;
+    
     [self cleanUpIdentities];
 }
 

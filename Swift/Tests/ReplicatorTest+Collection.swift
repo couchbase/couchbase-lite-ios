@@ -24,7 +24,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
     override func setUpWithError() throws {
         try super.setUpWithError()
     }
-
+    
     override func tearDownWithError() throws {
         try super.tearDownWithError()
     }
@@ -410,7 +410,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
             config.addCollection(col1b)
         }
     }
-
+    
 #if COUCHBASE_ENTERPRISE
     
     // MARK: 8.14 Replicator
@@ -856,5 +856,5 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
 #endif
-
+    
 }
