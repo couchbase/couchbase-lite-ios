@@ -240,7 +240,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(["docType": "new-with-same-ID"] == db.document(withID: docID)!.toDictionary())
     }
     
-    func testDocumentReplicationEventForConflictedDocs() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-3625
+    func _testDocumentReplicationEventForConflictedDocs() throws {
         var resolver: TestConflictResolver!
         
         // when resolution is skipped: here doc from oDB throws an exception & skips it
@@ -347,7 +348,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         Database.log.custom = nil
     }
     
-    func testConflictResolverDifferentDBDoc() throws {
+    // TODO: testConflictResolverDifferentDBDoc
+    func _testConflictResolverDifferentDBDoc() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]

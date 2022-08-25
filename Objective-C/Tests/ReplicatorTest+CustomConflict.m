@@ -349,7 +349,8 @@
     Assert(sequenceBeforePush < [self.otherDB documentWithID: docId].sequence);
 }
 
-- (void) testDocumentReplicationEventForConflictedDocs {
+// TODO: https://issues.couchbase.com/browse/CBL-3625
+- (void) _testDocumentReplicationEventForConflictedDocs {
     TestConflictResolver* resolver;
     
     // when resolution is skipped: here doc from otherDB throws an exception & skips it
@@ -499,7 +500,8 @@
     CBLDatabase.log.custom = nil;
 }
 
-- (void) testConflictResolverDifferentDBDoc {
+// TODO: https://issues.couchbase.com/browse/CBL-3625
+- (void) _testConflictResolverDifferentDBDoc {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
