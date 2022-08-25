@@ -824,6 +824,7 @@
  7. once the first CCR tries again, conflict is already been resolved.
  */
 // CBL-1710: Update to use setProgressLevel API in Replicator
+// TODO: https://issues.couchbase.com/browse/CBL-3625
 - (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
