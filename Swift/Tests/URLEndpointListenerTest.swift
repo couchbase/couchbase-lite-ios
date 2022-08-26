@@ -1,5 +1,5 @@
 //
-//  URLEndpontListenerTest.swift
+//  URLEndpointListenerTest.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2020 Couchbase, Inc. All rights reserved.
@@ -20,7 +20,7 @@ import XCTest
 @testable import CouchbaseLiteSwift
 
 @available(macOS 10.12, iOS 10.3, *)
-class URLEndpontListenerTest: ReplicatorTest {
+class URLEndpointListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4984
     let wssPort: UInt16 = 4985
     let serverCertLabel = "CBL-Server-Cert"
@@ -112,10 +112,32 @@ class URLEndpontListenerTest: ReplicatorTest {
         return Replicator(config: config)
     }
     
+    override func setUp() {
+        super.setUp()
+        try! cleanUpIdentities()
+    }
+    
+    override func tearDown() {
+        try! stopListener()
+        try! cleanUpIdentities()
+        super.tearDown()
+    }
+}
+
+@available(macOS 10.12, iOS 10.3, *)
+class URLEndpointListenerTest_Main: URLEndpointListenerTest {
+    override func setUp() {
+        super.setUp()
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+    }
+    
     // MARK: Reusable helper methods
     
     /// Two replicators, replicates docs to the self.listener;
-    /// pushAndPull 
+    /// pushAndPull
     func validateMultipleReplicationsTo(_ listener: URLEndpointListener, type: ReplicatorType) throws {
         let exp1 = expectation(description: "replicator#1 stop")
         let exp2 = expectation(description: "replicator#2 stop")
@@ -298,16 +320,7 @@ class URLEndpontListenerTest: ReplicatorTest {
     
     // MARK: -- Tests
     
-    override func setUp() {
-        super.setUp()
-        try! cleanUpIdentities()
-    }
     
-    override func tearDown() {
-        try! stopListener()
-        try! cleanUpIdentities()
-        super.tearDown()
-    }
     
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
@@ -1404,6 +1417,7 @@ class URLEndpontListenerTest: ReplicatorTest {
             try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         }
     }
+
 }
 
 @available(macOS 10.12, iOS 10.3, *)
