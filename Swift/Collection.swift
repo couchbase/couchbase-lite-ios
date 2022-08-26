@@ -298,11 +298,19 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     init(_ impl: CBLCollection, db: Database) {
         self.impl = impl
         self.db = db
-        self.scope = Scope(impl.scope, db: db)
+        self.scope = Scope(_impl.scope, db: db)
+        fullName = "\(_impl.scope.name).\(_impl.name)"
     }
     
     var isValid: Bool { impl.isValid }
     
     let impl: CBLCollection
     let db: Database
+    let _scope: Scope
+    
+    // The collection name prefixed with scope name. e.g., "scopeA.collectionA"
+    let fullName: String
+    
+    // The default collection name prefixed with default scope name. "_default._default"
+    static let defaultCollectionFullName: String = "\(kCBLDefaultScopeName).\(kCBLDefaultCollectionName)"
 } 
