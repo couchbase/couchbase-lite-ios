@@ -352,7 +352,10 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         XCTAssertNil(config.collectionConfig(col1b))
         
-        // TODO: remove unxisting collection from RConfig
+        // remove a non-existing collection
+        config.removeCollection(col1b)
+        XCTAssertEqual(config.collections.count, 1)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
     }
     
     // exception causiung the memory leak
