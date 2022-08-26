@@ -348,7 +348,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         Database.log.custom = nil
     }
     
-    // TODO: testConflictResolverDifferentDBDoc
+    // TODO: https://issues.couchbase.com/browse/CBL-3625
     func _testConflictResolverDifferentDBDoc() throws {
         let docID = "doc"
         let localData = ["key1": "value1"]

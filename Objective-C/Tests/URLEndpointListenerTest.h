@@ -21,6 +21,12 @@
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CBLURLEndpointListener+Internal.h"
 
+#define kWsPort 4984
+#define kWssPort 4985
+
+#define kServerCertLabel @"CBL-Server-Cert"
+#define kClientCertLabel @"CBL-Client-Cert"
+
 API_AVAILABLE(macos(10.12), ios(10.0))
 typedef CBLURLEndpointListenerConfiguration Config;
 
@@ -33,13 +39,30 @@ NS_ASSUME_NONNULL_BEGIN
     CBLURLEndpointListener* _listener;
 }
 
+// listener management methods
 - (Listener*) listen;
 - (Listener*) listen: (Config*)config;
 - (Listener*) listenWithTLS: (BOOL)tls;
 - (Listener*) listenWithTLS: (BOOL)tls auth: (nullable id<CBLListenerAuthenticator>)auth;
 - (Listener*) listen: (Config*)config errorCode: (NSInteger)code errorDomain: (nullable NSString*)domain;
 
+- (void) stopListen;
 - (void) stopListener: (CBLURLEndpointListener*)listener;
+
+// TLS Identity management
+- (CBLTLSIdentity*) tlsIdentity: (BOOL)isServer;
+- (void) cleanupTLSIdentity: (BOOL)isServer;
+- (void) deleteFromKeyChain: (CBLTLSIdentity*)identity;
+
+// replicator methods
+- (CBLReplicator*) replicator: (CBLDatabase*)db
+                    continous: (BOOL)continous
+                       target: (id<CBLEndpoint>)target
+                   serverCert: (nullable SecCertificateRef)cert;
+
+// helpers
+- (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2;
+- (void) releaseCF: (CFTypeRef)ref;
 
 @end
 
