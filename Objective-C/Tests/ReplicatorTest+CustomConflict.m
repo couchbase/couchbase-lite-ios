@@ -825,7 +825,7 @@
  */
 // CBL-1710: Update to use setProgressLevel API in Replicator
 // TODO: https://issues.couchbase.com/browse/CBL-3625
-- (void) testDoubleConflictResolutionOnSameConflicts {
+- (void) _testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;
