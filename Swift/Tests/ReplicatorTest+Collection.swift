@@ -855,6 +855,72 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssert(try r.isDocumentPending("doc12", collection: col1b))
     }
     
+    func testCollectionDocumentReplicationEvents() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 4)
+        try createDocNumbered(col1b, start: 5, num: 5)
+        
+        let target = DatabaseEndpoint(database: oDB)
+        var config = self.config(target: target, type: .pushAndPull, continuous: false)
+        config.addCollections([col1a, col1b])
+        let r = Replicator(config: config)
+        var docCount = 0;
+        var docs = [String]()
+        let token = r.addDocumentReplicationListener { docReplication in
+            docCount = docCount + docReplication.documents.count
+            for doc in docReplication.documents {
+                docs.append(doc.id)
+            }
+        }
+        run(replicator: r, expectedError: nil)
+        XCTAssertEqual(col1a.count, 4)
+        XCTAssertEqual(col2a.count, 4)
+        XCTAssertEqual(col1b.count, 5)
+        XCTAssertEqual(col2b.count, 5)
+        XCTAssertEqual(docCount, 9)
+        XCTAssertEqual(docs.sorted(), ["doc0", "doc1", "doc2", "doc3", "doc5", "doc6", "doc7", "doc8", "doc9"])
+        
+        // colA & colB - db1
+        guard
+            let doc1 = try col1a.document(id: "doc0"),
+            let doc2 = try col1b.document(id: "doc6")
+        else {
+            XCTFail("Doc either doesn't exist or can't delete")
+            return
+        }
+        try col1a.delete(document: doc1)
+        try col1b.delete(document: doc2)
+        
+        // colA & colB - db2
+        guard
+            let doc3 = try col2a.document(id: "doc1"),
+            let doc4 = try col2b.document(id: "doc7")
+            
+        else {
+            XCTFail("Doc either doesn't exist or can't delete")
+            return
+        }
+        try col2a.delete(document: doc3)
+        try col2b.delete(document: doc4)
+        
+        docCount = 0;
+        docs.removeAll()
+        run(replicator: r, expectedError: nil)
+        XCTAssertEqual(col1a.count, 2)
+        XCTAssertEqual(col2a.count, 2)
+        XCTAssertEqual(col1b.count, 3)
+        XCTAssertEqual(col2b.count, 3)
+        XCTAssertEqual(docCount, 4)
+        XCTAssertEqual(docs.sorted(), ["doc0", "doc1", "doc6", "doc7"])
+        
+        token.remove()
+    }
+    
 #endif
     
 }

@@ -1156,6 +1156,84 @@
     AssertNil(error);
 }
 
+- (void) testCollectionDocumentReplicationEvents {
+    NSError* error = nil;
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    AssertNil(error);
+    
+    CBLCollection* col1b = [self.db createCollectionWithName: @"colB"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1b);
+    AssertNil(error);
+    
+    CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2a);
+    AssertNil(error);
+    
+    CBLCollection* col2b = [self.otherDB createCollectionWithName: @"colB"
+                                                            scope: @"scopeA" error: &error];
+    AssertNotNil(col2b);
+    AssertNil(error);
+    
+    [self createDocNumbered: col1a start: 0 num: 4];
+    [self createDocNumbered: col1b start: 5 num: 5];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: NO];
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
+    [config addCollections: @[col1a, col1b] config: colConfig];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    __block int docsCount = 0;
+    __block NSMutableArray* docs = [[NSMutableArray alloc] init];
+    id token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docReplication) {
+        docsCount += docReplication.documents.count;
+        for (CBLReplicatedDocument* doc in docReplication.documents) {
+            [docs addObject: doc.id];
+        }
+    }];
+    
+    [self runWithReplicator: r errorCode: 0 errorDomain: nil];
+    AssertEqual(col1a.count, 4);
+    AssertEqual(col2a.count, 4);
+    AssertEqual(col1b.count, 5);
+    AssertEqual(col2b.count, 5);
+    
+    AssertEqual(docsCount, 9);
+    NSArray* sortedDocs = [docs sortedArrayUsingSelector: @selector(compare:)];
+    AssertEqualObjects(sortedDocs, (@[@"doc0", @"doc1", @"doc2", @"doc3", @"doc5", @"doc6", @"doc7", @"doc8", @"doc9"]));
+
+    // colA & colB - db1
+    Assert([col1a deleteDocument: [col1a documentWithID: @"doc0" error: &error]
+                           error: &error]);
+    Assert([col1b deleteDocument: [col1b documentWithID: @"doc6" error: &error]
+                           error: &error]);
+
+    // colA & colB - db2
+    Assert([col2a deleteDocument: [col2a documentWithID: @"doc1" error: &error]
+                           error: &error]);
+    Assert([col2b deleteDocument: [col2b documentWithID: @"doc7" error: &error]
+                           error: &error]);
+
+    docsCount = 0;
+    [docs removeAllObjects];
+    [self runWithReplicator: r errorCode: 0 errorDomain: nil];
+
+    AssertEqual(docsCount, 4);
+    sortedDocs = [docs sortedArrayUsingSelector: @selector(compare:)];
+    AssertEqualObjects(sortedDocs, (@[@"doc0", @"doc1", @"doc6", @"doc7"]));
+    AssertEqual(col1a.count, 2);
+    AssertEqual(col2a.count, 2);
+    AssertEqual(col1b.count, 3);
+    AssertEqual(col2b.count, 3);
+
+    [token remove];
+}
+
 #endif // COUCHBASE_ENTERPRISE
 
 #pragma clang diagnostic pop
