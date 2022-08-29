@@ -147,6 +147,18 @@ typedef enum {
     return _desc;
 }
 
+- (NSString*) fullDescription {
+    if (!_desc)
+        _desc = $sprintf(@"%p %@[%s%s%s %@] cols=%@",
+                         self, self.class,
+                         (isPull(_config.replicatorType) ? "<" : ""),
+                         (_config.continuous ? "*" : "-"),
+                         (isPush(_config.replicatorType)  ? ">" : ""),
+                         _config.target, _config.collections);
+    return _desc;
+}
+
+
 - (void) start {
     [self startWithReset: NO];
 }
@@ -154,8 +166,9 @@ typedef enum {
 - (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
         CBLLogInfo(Sync, @"%@: Starting ...", self);
+        CBLLogVerbose(Sync, @"%@", self.fullDescription);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
-            CBLWarn(Sync, @"%@: Replicaator has already been started (state = %d, status = %d); ignored.",
+            CBLWarn(Sync, @"%@: Replicator has already been started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
         }

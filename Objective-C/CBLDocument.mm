@@ -50,7 +50,10 @@ using namespace fleece;
         _collection = collection;
         _id = documentID;
         _revID = nil;
+        
         [self setC4Doc: c4Doc];
+        
+        CBLLogVerbose(Database, @"%@ init doc", self.fullDescription);
     }
     return self;
 }
@@ -127,6 +130,11 @@ using namespace fleece;
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@]", self.class, self.id];
+}
+
+- (NSString*) fullDescription {
+    return [NSString stringWithFormat: @"%p %@[%@] c4doc=%p col=%@",
+            self, self.class, self.id, _c4Doc, _collection];
 }
 
 - (uint64_t) sequence {
