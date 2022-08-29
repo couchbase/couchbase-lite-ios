@@ -190,6 +190,10 @@ static const C4DatabaseConfig2 kDBConfig = {
     return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
 }
 
+- (NSString*) fullDescription {
+    return [NSString stringWithFormat: @"%p %@[%@] c4db=%p", self, self.class, _name, _c4db];
+}
+
 - (NSString*) path {
     CBL_LOCK(_mutex) {
         return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
@@ -780,7 +784,8 @@ static void throwIfNotOpenError(NSError* error) {
             convertError(c4err, error);
             return nil;
         }
-        CBLLogVerbose(Database, @"%@ Created collection %@.%@", self, scopeName, name);
+        CBLLogVerbose(Database, @"%@ Created c4collection[%@.%@] c4col=%p",
+                      self.fullDescription, scopeName, name, c4collection);
         
         return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
     }
@@ -808,6 +813,7 @@ static void throwIfNotOpenError(NSError* error) {
             return nil;
         }
         
+        CBLLogVerbose(Database, @"%@ Got c4collection[%@.%@] c4col=%p", self.fullDescription, scopeName, name, c);
         if (!c) {
             convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
             return nil;
@@ -828,7 +834,7 @@ static void throwIfNotOpenError(NSError* error) {
         if (![self mustBeOpen: error])
             return NO;
         
-        CBLLogVerbose(Database, @"%@ Deleting collection %@.%@", self, scopeName, name);
+        CBLLogVerbose(Database, @"%@ Deleting c4collection[%@.%@]", self.fullDescription, scopeName, name);
         C4Error c4err = {};
         return c4db_deleteCollection(_c4db, spec, &c4err) || convertError(c4err, error);
     }

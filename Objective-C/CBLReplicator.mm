@@ -153,9 +153,9 @@ typedef enum {
 
 - (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: Starting ...", self);
+        CBLLogInfo(Sync, @"%@: cols=%@ Starting...", self, _config.collections);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
-            CBLWarn(Sync, @"%@: Replicaator has already been started (state = %d, status = %d); ignored.",
+            CBLWarn(Sync, @"%@: Replicator has already been started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
         }

@@ -70,9 +70,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         NSString* qName = $sprintf(@"Collection <%@: %@>", self, _name);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        CBLLogVerbose(Database, @"%@ Creating collection:%@ db=%@ scope=%@",
-                      self, _name, db, _scope);
-        
+        CBLLogVerbose(Database, @"%@ init collection", self.fullDescription);
         _mutex = db.mutex;
     }
     
@@ -86,7 +84,13 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@.%@]%@", self.class, _scope.name, _name, _db];
+    return [NSString stringWithFormat: @"%@[%@.%@] db[%@]",
+            self.class, _scope.name, _name, _db];
+}
+
+- (NSString*) fullDescription {
+    return [NSString stringWithFormat: @"%p:%p:%p %@[%@.%@] db[%@]",
+            self, _scope, _c4col, self.class, _scope.name, _name, _db];
 }
 
 - (NSUInteger) hash {

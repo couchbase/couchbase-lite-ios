@@ -34,7 +34,7 @@ NSString* const kCBLDefaultScopeName = @"_default";
     if (self) {
         _scopeName = name;
         _db = db;
-        CBLLogVerbose(Database, @"%@ Creating scope %@ db=%@", self, name, db);
+        CBLLogVerbose(Database, @"%@ Creating scope", self.fullDescription);
     }
     return self;
 }
@@ -45,6 +45,14 @@ NSString* const kCBLDefaultScopeName = @"_default";
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {
     return [_db collections: _scopeName error: error];
+}
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _scopeName];
+}
+
+- (NSString*) fullDescription {
+    return [NSString stringWithFormat: @"%p %@[%@] db[%@]", self, self.class, _scopeName, _db];
 }
 
 @end
