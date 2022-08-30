@@ -427,9 +427,9 @@
     AssertEqualObjects(col1b.scope.name, @"SCOPEa");
     
     NSArray<CBLScope*>* scopes = [self.db scopes: &error];
-    AssertEqual(scopes.count, 2);
-    Assert([(@[@"scopeA", @"SCOPEa"]) containsObject: scopes[0].name]);
-    Assert([(@[@"scopeA", @"SCOPEa"]) containsObject: scopes[1].name]);
+    AssertEqual(scopes.count, 3);
+    Assert([(@[@"scopeA", @"SCOPEa", kCBLDefaultScopeName]) containsObject: scopes[0].name]);
+    Assert([(@[@"scopeA", @"SCOPEa", kCBLDefaultScopeName]) containsObject: scopes[1].name]);
 }
 
 #pragma mark - 8.3 Collections and Cross Database Instance

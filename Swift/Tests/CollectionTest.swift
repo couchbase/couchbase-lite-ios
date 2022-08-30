@@ -324,7 +324,7 @@ class CollectionTest: CBLTestCase {
         XCTAssert(cols.contains(where: { $0.name == "collection1" }))
     }
     
-    func _testScopeNameCaseSensitive() throws {
+    func testScopeNameCaseSensitive() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colA", scope: "SCOPEa")
         
@@ -332,7 +332,7 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col1b.scope.name, "SCOPEa")
         
         let scopes = try self.db.scopes()
-        XCTAssertEqual(scopes.count, 2)
+        XCTAssertEqual(scopes.count, 3)
         XCTAssert(scopes.contains(where: { $0.name == "scopeA" }))
         XCTAssert(scopes.contains(where: { $0.name == "SCOPEa" }))
     }
