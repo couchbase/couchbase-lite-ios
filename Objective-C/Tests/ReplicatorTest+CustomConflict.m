@@ -349,8 +349,7 @@
     Assert(sequenceBeforePush < [self.otherDB documentWithID: docId].sequence);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3625
-- (void) _testDocumentReplicationEventForConflictedDocs {
+- (void) testDocumentReplicationEventForConflictedDocs {
     TestConflictResolver* resolver;
     
     // when resolution is skipped: here doc from otherDB throws an exception & skips it
@@ -500,8 +499,7 @@
     CBLDatabase.log.custom = nil;
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3625
-- (void) _testConflictResolverDifferentDBDoc {
+- (void) testConflictResolverDifferentDBDoc {
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -824,8 +822,7 @@
  7. once the first CCR tries again, conflict is already been resolved.
  */
 // CBL-1710: Update to use setProgressLevel API in Replicator
-// TODO: https://issues.couchbase.com/browse/CBL-3625
-- (void) _testDoubleConflictResolutionOnSameConflicts {
+- (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
     custom.level = kCBLLogLevelWarning;

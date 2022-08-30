@@ -37,10 +37,16 @@
         _col = collection;
         _docID = documentID;
         CBLStringBytes bDocID(documentID);
+        C4Error c4err = {};
         _obs = c4docobs_createWithCollection(collection.c4col,
                                              bDocID,
                                              docObserverCallback,
-                                             (__bridge void *)self);
+                                             (__bridge void *)self,
+                                             &c4err);
+        if (!_obs) {
+            CBLWarn(Database, @"%@ Failed to create collection doc-obs col=%@ err=%d/%d",
+                    self, collection, c4err.domain, c4err.code);
+        }
     }
     return self;
 }
