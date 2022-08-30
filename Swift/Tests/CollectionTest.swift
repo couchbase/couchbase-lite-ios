@@ -238,7 +238,7 @@ class CollectionTest: CBLTestCase {
     
     func testScopeCollectionNameWithValidChars() throws {
         let names = ["a",
-                     /* TODO: https://issues.couchbase.com/browse/CBL-3195 "A", */
+                     "A",
                      "0", "-",
                      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_%"]
         
@@ -311,8 +311,7 @@ class CollectionTest: CBLTestCase {
         }
     }
     
-    // TODO: CBL-3195
-    func _testCollectionNameCaseSensitive() throws {
+    func testCollectionNameCaseSensitive() throws {
         let col1a = try self.db.createCollection(name: "COLLECTION1", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "collection1", scope: "scopeA")
         
