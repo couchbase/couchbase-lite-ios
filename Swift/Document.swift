@@ -24,12 +24,12 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     
     /// The document's ID.
     public var id: String {
-        return _impl.id
+        return impl.id
     }
     
     /// The ID representing a document’s revision.
     public var revisionID: String? {
-        return _impl.revisionID
+        return impl.revisionID
     }
     
     /// Sequence number of the document in the database.
@@ -38,11 +38,11 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// property changes that means it's been changed (on-disk); and if one document's `sequence`
     /// is greater than another's, that means it was changed more recently.
     public var sequence: UInt64 {
-        return _impl.sequence
+        return impl.sequence
     }
     
     /// The collection that the document belongs to.
-    public var collection: Collection? { _collection }
+    public let collection: Collection?
     
     // MARK: Edit
     
@@ -50,19 +50,19 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Returns: The MutableDocument object.
     public func toMutable() -> MutableDocument {
-        return MutableDocument(_impl.toMutable())
+        return MutableDocument(impl.toMutable())
     }
 
     // MARK: DictionaryProtocol
 
     /// The number of properties in the document.
     public var count: Int {
-        return Int(_impl.count)
+        return Int(impl.count)
     }
 
     /// An array containing all keys, or an empty array if the document has no properties.
     public var keys: Array<String> {
-        return _impl.keys
+        return impl.keys
     }
     
     /// Gets a property's value. The value types are Blob, ArrayObject,
@@ -72,7 +72,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The value or nil.
     public func value(forKey key: String) -> Any? {
-        return DataConverter.convertGETValue(_impl.value(forKey: key))
+        return DataConverter.convertGETValue(impl.value(forKey: key))
     }
 
     ///  Gets a property's value as a string.
@@ -81,7 +81,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The String object or nil.
     public func string(forKey key: String) -> String? {
-        return _impl.string(forKey: key)
+        return impl.string(forKey: key)
     }
     
     /// Get a property's value as an NSNumber object.
@@ -89,7 +89,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The NSNumber object.
     public func number(forKey key: String) -> NSNumber? {
-        return _impl.number(forKey: key)
+        return impl.number(forKey: key)
     }
     
     /// Gets a property's value as an int value.
@@ -99,7 +99,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Int value.
     public func int(forKey key: String) -> Int {
-        return _impl.integer(forKey: key)
+        return impl.integer(forKey: key)
     }
     
     /// Gets a property's value as an int64 value.
@@ -109,7 +109,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Int64 value.
     public func int64(forKey key: String) -> Int64 {
-        return _impl.longLong(forKey: key)
+        return impl.longLong(forKey: key)
     }
     
     /// Gets a property's value as a float value.
@@ -119,7 +119,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Float value.
     public func float(forKey key: String) -> Float {
-        return _impl.float(forKey: key)
+        return impl.float(forKey: key)
     }
     
     /// Gets a property's value as a double value.
@@ -129,7 +129,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Double value.
     public func double(forKey key: String) -> Double {
-        return _impl.double(forKey: key)
+        return impl.double(forKey: key)
     }
     
     // TODO: Review the behavior of getting boolean value
@@ -139,7 +139,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Bool value.
     public func boolean(forKey key: String) -> Bool {
-        return _impl.boolean(forKey: key)
+        return impl.boolean(forKey: key)
     }
     
     /// Get a property's value as a Blob object.
@@ -161,7 +161,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: The Date value or nil
     public func date(forKey key: String) -> Date? {
-        return _impl.date(forKey: key)
+        return impl.date(forKey: key)
     }
     
     /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
@@ -190,7 +190,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// - Parameter key: The key.
     /// - Returns: True of the property exists, otherwise false.
     public func contains(key: String) -> Bool {
-        return _impl.containsValue(forKey: key)
+        return impl.containsValue(forKey: key)
     }
     
     // MARK: Data
@@ -222,7 +222,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Returns: The key iterator.
     public func makeIterator() -> IndexingIterator<[String]> {
-        return _impl.keys.makeIterator();
+        return impl.keys.makeIterator();
     }
 
     // MARK: Subscript
@@ -231,38 +231,37 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment((_impl as CBLDictionaryFragment)[key])
+        return Fragment((impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Equality
     
     /// Equal to operator for comparing two Document objects.
     public static func == (doc1: Document, doc2: Document) -> Bool {
-        return doc1._impl == doc2._impl
+        return doc1.impl == doc2.impl
     }
     
     // MARK: Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(_impl.hash)
+        hasher.combine(impl.hash)
     }
     
     // MARK: toJSON
     
     /// Return document data as JSON String
     public func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
     
     init(_ impl: CBLDocument, collection: Collection?) {
-        _impl = impl
-        _collection = collection
+        self.impl = impl
+        self.collection = collection
     }
     
     // MARK: Private
     
-    let _impl: CBLDocument
-    let _collection: Collection?
+    let impl: CBLDocument
 }

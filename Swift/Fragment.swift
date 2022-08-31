@@ -69,54 +69,54 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment {
     /// The value types are Blob, Array, Dictionary, Number, or String
     /// based on the underlying data type; or nil if the value is nil.
     public var value: Any? {
-        return DataConverter.convertGETValue(_impl.value)
+        return DataConverter.convertGETValue(impl.value)
     }
     
     /// Gets the value as a string.
     /// Returns nil if the value is nil, or the value is not a string.
     public var string: String? {
-        return _impl.string
+        return impl.string
     }
     
     /// Gets the value as an int.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
     /// Returns 0 if the value is nil or is not a numeric value.
     public var int: Int {
-        return _impl.integerValue
+        return impl.integerValue
     }
     
     /// Gets the value as an int64.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
     /// Returns 0 if the value is nil or is not a numeric value.
     public var int64: Int64 {
-        return _impl.longLongValue
+        return impl.longLongValue
     }
     
     /// Gets the value as a float.
     /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
     /// Returns 0.0 if the value is nil or is not a numeric value.
     public var float: Float {
-        return _impl.floatValue
+        return impl.floatValue
     }
     
     /// Gets the value as a double.
     /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
     /// Returns 0.0 if the value is nil or is not a numeric value.
     public var double: Double {
-        return _impl.doubleValue
+        return impl.doubleValue
     }
     
     /// Gets the value as a Number.
     /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
     /// Returns nil if the value is nil, or the value is not a Number.
     public var number: NSNumber? {
-        return _impl.number
+        return impl.number
     }
     
     /// Gets the value as a boolean.
     /// Returns true if the value is not nil nor NSNull, and is either `true` or a nonzero number.
     public var boolean: Bool {
-        return _impl.booleanValue
+        return impl.booleanValue
     }
     
     /// Gets the value as an Date.
@@ -126,30 +126,30 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment {
     /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
     /// without milliseconds.
     public var date: Date? {
-        return _impl.date
+        return impl.date
     }
     
     /// Get the value as a Blob.
     /// Returns nil if the value is nil, or the value is not a Blob.
     public var blob: Blob? {
-        return DataConverter.convertGETValue(_impl.blob) as? Blob
+        return DataConverter.convertGETValue(impl.blob) as? Blob
     }
     
     /// Get the value as a ArrayObject, a mapping object of an array value.
     /// Returns nil if the value is nil, or the value is not an array.
     public var array: ArrayObject? {
-        return DataConverter.convertGETValue(_impl.array) as? ArrayObject
+        return DataConverter.convertGETValue(impl.array) as? ArrayObject
     }
     
     /// Get a property's value as a DictionaryObject, a mapping object of a dictionary value.
     /// Returns nil if the value is nil, or the value is not a dictionary.
     public var dictionary: DictionaryObject? {
-        return DataConverter.convertGETValue(_impl.dictionary) as? DictionaryObject
+        return DataConverter.convertGETValue(impl.dictionary) as? DictionaryObject
     }
     
     /// Checks whether the value held by the fragment object exists or is nil value or not.
     public var exists: Bool {
-        return _impl.exists
+        return impl.exists
     }
     
     // MARK: Subscript
@@ -158,23 +158,23 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment {
     ///
     /// - Parameter index: The index
     public subscript(index: Int) -> Fragment {
-        return Fragment((_impl as CBLArrayFragment)[UInt(index)])
+        return Fragment((impl as CBLArrayFragment)[UInt(index)])
     }
     
     /// Subscript access to a Fragment object by key.
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment((_impl as CBLDictionaryFragment)[key])
+        return Fragment((impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Internal
     
     init(_ impl: CBLFragment?) {
-        _impl = impl ?? Fragment.kNonexistentRO
+        self.impl = impl ?? Fragment.kNonexistentRO
     }
     
-    let _impl: CBLFragment
+    let impl: CBLFragment
 
     static let kNonexistentRO = CBLFragment()
     

@@ -62,11 +62,11 @@ import Foundation
     static func convertSETValue(_ value: Any?) -> Any? {
         switch value {
         case let dict as DictionaryObject:
-            return dict._impl
+            return dict.impl
         case let array as ArrayObject:
-            return array._impl
+            return array.impl
         case let blob as Blob:
-            return blob._impl
+            return blob.impl
         case let dict as Dictionary<String, Any>:
             return convertSETDictionary(dict)
         case let array as Array<Any>:

@@ -126,7 +126,7 @@ public class Query {
     public func removeChangeListener(withToken token: ListenerToken) {
         lock.lock()
         prepareQuery()
-        queryImpl!.removeChangeListener(with: token._impl)
+        queryImpl!.removeChangeListener(with: token.impl)
         tokens.remove(token)
         
         if tokens.count == 0 {
@@ -149,7 +149,7 @@ public class Query {
     //            JSONRepresentation property.
     init(database: Database, JSONRepresentation json: Data) {
         self.database = database
-        queryImpl = CBLQuery(database: database._impl, jsonRepresentation: json)
+        queryImpl = CBLQuery(database: database.impl, jsonRepresentation: json)
     }
     
     /// Creates a query, given the query string, as from the expression property.
@@ -158,7 +158,7 @@ public class Query {
     ///     - expressions  String representing the query expression.
     init(database: Database, expressions: String) throws {
         self.database = database
-        queryImpl = try database._impl.createQuery(expressions)
+        queryImpl = try database.impl.createQuery(expressions)
     }
 
     // MARK: Internal

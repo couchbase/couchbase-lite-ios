@@ -559,7 +559,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     
     /// Mutable Objects will throw an exception, when called toJSON
     public override func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
@@ -571,7 +571,7 @@ public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     // MARK: Private
     
     private var arrayImpl: CBLMutableArray {
-        return _impl as! CBLMutableArray
+        return impl as! CBLMutableArray
     }
     
 }

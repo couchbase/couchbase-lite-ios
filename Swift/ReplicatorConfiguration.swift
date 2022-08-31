@@ -281,13 +281,13 @@ public struct ReplicatorConfiguration {
     public mutating func addCollection(_ collection: Collection,
                               config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
         
-        if !collection._impl.isValid {
+        if !collection.impl.isValid {
             fatalError("Attempt to add an invalid collection.")
         }
         
-        let db = collection._db
+        let db = collection.db
         if let db1 = self.db {
-            if db1._impl != db._impl {
+            if db1.impl != db.impl {
                 fatalError("Attempt to add collection from different databases.")
             }
         } else {
@@ -406,7 +406,7 @@ public struct ReplicatorConfiguration {
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
-        let c = CBLReplicatorConfiguration(database: self.database._impl, target: target.toImpl())
+        let c = CBLReplicatorConfiguration(database: self.database.impl, target: target.toImpl())
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
@@ -427,7 +427,7 @@ public struct ReplicatorConfiguration {
                 fatalError("Attempt to add an invalid collection")
             }
             
-            c.addCollection(col._impl, config: config.toImpl(col))
+            c.addCollection(col.impl, config: config.toImpl(col))
         }
         
         if let resolver = self.conflictResolver {
@@ -436,7 +436,7 @@ public struct ReplicatorConfiguration {
                     Database.throwNotOpenError()
                 }
                 
-                return resolver.resolve(conflict: Conflict(impl: conflict, collection: col))?._impl
+                return resolver.resolve(conflict: Conflict(impl: conflict, collection: col))?.impl
             }
         }
         

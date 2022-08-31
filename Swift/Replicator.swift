@@ -77,30 +77,28 @@ public final class Replicator {
     ///
     /// - Parameter config: The configuration.
     public init(config: ReplicatorConfiguration) {
-        _config = ReplicatorConfiguration(config: config)
-        _impl = CBLReplicator(config: config.toImpl());
+        self.config = ReplicatorConfiguration(config: config)
+        impl = CBLReplicator(config: config.toImpl());
     }
     
     /// The replicator's configuration.
-    public var config: ReplicatorConfiguration {
-        return _config
-    }
+    public let config: ReplicatorConfiguration
     
     /// The replicator's current status: its activity level and progress. Observable.
     public var status: Status {
-        return Status(withStatus: _impl.status)
+        return Status(withStatus: impl.status)
     }
     
     /// The SSL/TLS certificate received when connecting to the server.
     public var serverCertificate: SecCertificate? {
-        return _impl.serverCertificate
+        return impl.serverCertificate
     }
     
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress through the replicator change notification.
     public func start() {
         registerActiveReplicator()
-        _impl.start()
+        impl.start()
     }
     
     /// Starts the replicator with an option to reset the local checkpoint of the replicator. When the local checkpoint
@@ -112,14 +110,14 @@ public final class Replicator {
     ///   - reset: Resets the local checkpoint before starting the replicator.
     public func start(reset: Bool) {
         registerActiveReplicator()
-        _impl.start(withReset: reset);
+        impl.start(withReset: reset);
     }
     
     /// Stops a running replicator. This method returns immediately; when the replicator actually
     /// stops, the replicator will change its status's activity level to `.stopped`
     /// and the replicator change notification will be notified accordingly.
     public func stop() {
-        _impl.stop()
+        impl.stop()
     }
     
     /// Adds a replicator change listener. Changes will be posted on the main queue.
@@ -141,7 +139,7 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
-        let token = _impl.addChangeListener(with: queue, listener: { (change) in
+        let token = impl.addChangeListener(with: queue, listener: { (change) in
             listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
         return ListenerToken(token)
@@ -175,7 +173,7 @@ public final class Replicator {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addDocumentReplicationListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (DocumentReplication) -> Void) -> ListenerToken {
-        let token = _impl.addDocumentReplicationListener(with: queue, listener: { (replication) in
+        let token = impl.addDocumentReplicationListener(with: queue, listener: { (replication) in
             let docs = replication.documents.map {
                 return ReplicatedDocument(id: $0.id,
                                           flags: DocumentFlags(rawValue: Int($0.flags.rawValue)),
@@ -192,7 +190,7 @@ public final class Replicator {
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
-        _impl.removeChangeListener(with: token._impl)
+        impl.removeChangeListener(with: token.impl)
     }
     
     /// Get pending document ids for default collection. If the default collection is not part of
@@ -201,7 +199,7 @@ public final class Replicator {
     /// - Returns: A  set of document Ids, each of which has one or more pending revisions
     @available(*, deprecated, message: "Use pendingDocumentIds(collection:) instead.")
     public func pendingDocumentIds() throws -> Set<String> {
-        return try _impl.pendingDocumentIDs()
+        return try impl.pendingDocumentIDs()
     }
 
     /// Check whether the document in the default collection is pending to push or not. If the
@@ -212,7 +210,7 @@ public final class Replicator {
     @available(*, deprecated, message: "Use isDocumentPending(_ documentID:collection:) instead.")
     public func isDocumentPending(_ documentID: String) throws -> Bool {
         var error: NSError?
-        let result = _impl.isDocumentPending(documentID, error: &error)
+        let result = impl.isDocumentPending(documentID, error: &error)
         if let err = error {
             throw err
         }
@@ -226,7 +224,7 @@ public final class Replicator {
     /// - Parameter collection The collection where the document belongs
     /// - Returns: A  set of document Ids, each of which has one or more pending revisions
     public func pendingDocumentIds(collection: Collection) throws -> Set<String> {
-        return try _impl.pendingDocumentIDs(for: collection._impl)
+        return try impl.pendingDocumentIDs(for: collection.impl)
     }
 
     /// Check whether the document in the given collection is pending to push or not. If the given collection
@@ -237,7 +235,7 @@ public final class Replicator {
     /// - Returns: true if the document has one or more revisions pending, false otherwise
     public func isDocumentPending(_ documentID: String, collection: Collection) throws -> Bool {
         var error: NSError?
-        let result = _impl.isDocumentPending(documentID, collection: collection._impl, error: &error)
+        let result = impl.isDocumentPending(documentID, collection: collection.impl, error: &error)
         if let err = error {
             throw err
         }
@@ -248,34 +246,32 @@ public final class Replicator {
     // MARK: Internal
     
     func registerActiveReplicator() {
-        _lock.lock()
-        if _listenerToken == nil {
-            _config.database.addReplicator(self)
-            _listenerToken = _impl.addChangeListener({ [unowned self] (change) in
+        lock.lock()
+        if listenerToken == nil {
+            config.database.addReplicator(self)
+            listenerToken = impl.addChangeListener({ [unowned self] (change) in
                 if change.status.activity == kCBLReplicatorStopped {
                     self.unregisterActiveReplicator()
                 }
             })
         }
-        _lock.unlock()
+        lock.unlock()
     }
     
     func unregisterActiveReplicator() {
-        _lock.lock()
-        if let token = _listenerToken {
-            _impl.removeChangeListener(with: token)
-            _config.database.removeReplicator(self)
-            _listenerToken = nil
+        lock.lock()
+        if let token = listenerToken {
+            impl.removeChangeListener(with: token)
+            config.database.removeReplicator(self)
+            listenerToken = nil
         }
-        _lock.unlock()
+        lock.unlock()
     }
     
-    private let _impl: CBLReplicator
+    private let impl: CBLReplicator
     
-    private let _config: ReplicatorConfiguration
+    private var listenerToken: CBLListenerToken?
     
-    private var _listenerToken: CBLListenerToken?
-    
-    private let _lock = NSLock()
+    private let lock = NSLock()
     
 }

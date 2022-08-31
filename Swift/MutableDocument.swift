@@ -292,7 +292,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     
     /// Mutable Objects will throw an exception, when called toJSON
     public override func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
@@ -304,7 +304,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     // MARK: Private
     
     private var docImpl: CBLMutableDocument {
-        return _impl as! CBLMutableDocument
+        return impl as! CBLMutableDocument
     }
     
 }

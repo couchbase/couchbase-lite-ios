@@ -26,13 +26,13 @@ public final class DocumentFragment: DictionaryFragment {
     
     /// Checks whether the document exists in the database or not.
     public var exists: Bool {
-        return _impl.exists
+        return impl.exists
     }
     
     /// Gets the document from the document fragment object.
     public var document: Document? {
-        if let docImpl = _impl.document {
-            return Document(docImpl, collection: _col)
+        if let docImpl = impl.document {
+            return Document(docImpl, collection: collection)
         }
         return nil
     }
@@ -43,17 +43,17 @@ public final class DocumentFragment: DictionaryFragment {
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment((_impl as CBLDictionaryFragment)[key])
+        return Fragment((impl as CBLDictionaryFragment)[key])
     }
     
     // MARK: Internal
     
     init(_ impl: CBLDocumentFragment, collection: Collection) {
-        _impl = impl
-        _col = collection
+        self.impl = impl
+        self.collection = collection
     }
     
-    let _impl: CBLDocumentFragment
-    let _col: Collection
+    let impl: CBLDocumentFragment
+    let collection: Collection
     
 }
