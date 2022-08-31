@@ -238,7 +238,7 @@ class CollectionTest: CBLTestCase {
     
     func testScopeCollectionNameWithValidChars() throws {
         let names = ["a",
-                     /* TODO: https://issues.couchbase.com/browse/CBL-3195 "A", */
+                     "A",
                      "0", "-",
                      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_%"]
         
@@ -311,8 +311,7 @@ class CollectionTest: CBLTestCase {
         }
     }
     
-    // TODO: CBL-3195
-    func _testCollectionNameCaseSensitive() throws {
+    func testCollectionNameCaseSensitive() throws {
         let col1a = try self.db.createCollection(name: "COLLECTION1", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "collection1", scope: "scopeA")
         
@@ -325,7 +324,7 @@ class CollectionTest: CBLTestCase {
         XCTAssert(cols.contains(where: { $0.name == "collection1" }))
     }
     
-    func _testScopeNameCaseSensitive() throws {
+    func testScopeNameCaseSensitive() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colA", scope: "SCOPEa")
         
@@ -333,7 +332,7 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col1b.scope.name, "SCOPEa")
         
         let scopes = try self.db.scopes()
-        XCTAssertEqual(scopes.count, 2)
+        XCTAssertEqual(scopes.count, 3)
         XCTAssert(scopes.contains(where: { $0.name == "scopeA" }))
         XCTAssert(scopes.contains(where: { $0.name == "SCOPEa" }))
     }

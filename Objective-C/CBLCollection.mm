@@ -477,7 +477,12 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                                queue: (dispatch_queue_t)queue {
     if (!_colChangeNotifier) {
         _colChangeNotifier = [CBLChangeNotifier new];
-        _colObs = c4dbobs_createOnCollection(_c4col, colObserverCallback, (__bridge void *)self);
+        C4Error c4err = {};
+        _colObs = c4dbobs_createOnCollection(_c4col, colObserverCallback, (__bridge void *)self, &c4err);
+        if (!_colObs) {
+            CBLWarn(Database, @"%@ Failed to create collection obs c4col=%p err=%d/%d",
+                    self, _c4col, c4err.domain, c4err.code);
+        }
     }
     
     return [_colChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];

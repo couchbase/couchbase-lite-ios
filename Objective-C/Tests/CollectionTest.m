@@ -305,7 +305,7 @@
 
 - (void) testScopeCollectionNameWithValidChars {
     NSArray* names = @[@"a",
-    /* TODO: https://issues.couchbase.com/browse/CBL-3195 @"A", */
+                       @"A",
                        @"0", @"-",
                        @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_%"];
     
@@ -390,8 +390,7 @@
     
 }
 
-// TODO: CBL-3195
-- (void) _testCollectionNameCaseSensitive {
+- (void) testCollectionNameCaseSensitive {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"COLLECTION1"
                                                        scope: @"scopeA" error: &error];
@@ -412,8 +411,7 @@
     Assert([(@[@"COLLECTION1", @"collection1"]) containsObject: cols[1].name]);
 }
 
-// TODO: CBL-3195
-- (void) _testScopeNameCaseSensitive {
+- (void) testScopeNameCaseSensitive {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -429,9 +427,9 @@
     AssertEqualObjects(col1b.scope.name, @"SCOPEa");
     
     NSArray<CBLScope*>* scopes = [self.db scopes: &error];
-    AssertEqual(scopes.count, 2);
-    Assert([(@[@"scopeA", @"SCOPEa"]) containsObject: scopes[0].name]);
-    Assert([(@[@"scopeA", @"SCOPEa"]) containsObject: scopes[1].name]);
+    AssertEqual(scopes.count, 3);
+    Assert([(@[@"scopeA", @"SCOPEa", kCBLDefaultScopeName]) containsObject: scopes[0].name]);
+    Assert([(@[@"scopeA", @"SCOPEa", kCBLDefaultScopeName]) containsObject: scopes[1].name]);
 }
 
 #pragma mark - 8.3 Collections and Cross Database Instance
