@@ -23,9 +23,9 @@ CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
 CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
 CBL_COPYRIGHT_YEAR                 = 2021
 
-IPHONEOS_DEPLOYMENT_TARGET         = 10.0
+IPHONEOS_DEPLOYMENT_TARGET         = 11.0
 MACOSX_DEPLOYMENT_TARGET           = 10.12
-TVOS_DEPLOYMENT_TARGET             = 10.0
+TVOS_DEPLOYMENT_TARGET             = 11.0
 
 CODE_SIGN_IDENTITY                 =
 
@@ -34,11 +34,11 @@ SKIP_INSTALL                       = YES
 SUPPORTED_PLATFORMS                = macosx iphoneos iphonesimulator appletvos appletvsimulator
 TARGETED_DEVICE_FAMILY             = 1,2
 
-VALID_ARCHS                        = x86_64 arm64 armv7 armv7s  i386
+VALID_ARCHS                        = x86_64 arm64
 VALID_ARCHS[sdk=macosx*]           = x86_64 arm64
-VALID_ARCHS[sdk=iphonesimulator*]  = x86_64 arm64               i386
-VALID_ARCHS[sdk=appletvsimulator*] = x86_64 arm64               i386
-VALID_ARCHS[sdk=iphoneos*]         =        arm64 armv7 armv7s
+VALID_ARCHS[sdk=iphonesimulator*]  = x86_64 arm64
+VALID_ARCHS[sdk=appletvsimulator*] = x86_64 arm64
+VALID_ARCHS[sdk=iphoneos*]         =        arm64
 VALID_ARCHS[sdk=appletvos*]        =        arm64
 
 ALWAYS_SEARCH_USER_PATHS           = NO
