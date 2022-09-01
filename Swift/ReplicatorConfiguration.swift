@@ -260,7 +260,6 @@ public struct ReplicatorConfiguration {
     public init(database: Database, target: Endpoint) {
         self.db = database
         self.target = target
-        self.legacyConstructor = true
         
         initCollectionConfigs()
     }
@@ -303,7 +302,6 @@ public struct ReplicatorConfiguration {
         }
         
         self.collectionConfigs[collection] = colConfig
-        self.collectionMap[collection.fullName] = collection
         
         return self
     }
@@ -331,10 +329,7 @@ public struct ReplicatorConfiguration {
     /// Remove the collection. If the collection doesn’t exist, this operation will be no ops.
     @discardableResult
     public mutating func removeCollection(_ collection: Collection) -> ReplicatorConfiguration {
-        if let col = self.collectionMap[collection.fullName] {
-            self.collectionConfigs.removeValue(forKey: col)
-        }
-        self.collectionMap.removeValue(forKey: collection.fullName)
+        self.collectionConfigs.removeValue(forKey: collection)
         
         if self.collectionConfigs.isEmpty {
             self.db = nil
@@ -349,11 +344,7 @@ public struct ReplicatorConfiguration {
     /// - Parameter collection The collection whose config is needed.
     /// - Returns The collection config if exists.
     public func collectionConfig(_ collection: Collection) -> CollectionConfiguration? {
-        if let col = self.collectionMap[collection.fullName] {
-            return self.collectionConfigs[col]
-        }
-        
-        return nil
+        return self.collectionConfigs[collection]
     }
     
     /// Initializes a ReplicatorConfiguration's builder with the given
@@ -373,7 +364,6 @@ public struct ReplicatorConfiguration {
         self.maxAttempts = config.maxAttempts
         self.maxAttemptWaitTime = config.maxAttemptWaitTime
         self.enableAutoPurge = config.enableAutoPurge
-        self.legacyConstructor = config.legacyConstructor
         
         for (col, config) in config.collectionConfigs {
             if !col.isValid {
@@ -381,7 +371,6 @@ public struct ReplicatorConfiguration {
             }
             
             self.collectionConfigs[col] = config
-            self.collectionMap[col.fullName] = col
         }
         
         #if os(iOS)
@@ -396,11 +385,14 @@ public struct ReplicatorConfiguration {
     // MARK: Internal
     
     var defaultCollectionConfig: CollectionConfiguration? {
-        if let c = self.collectionMap[Collection.defaultCollectionFullName] {
-            if let config = self.collectionConfigs[c] {
-                return config
-            }
+        guard let col = try? self.database.defaultCollection() else {
+            fatalError("Default collection is missing!")
         }
+        
+        if let config = self.collectionConfigs[col] {
+            return config
+        }
+        
         return nil
     }
     
@@ -423,16 +415,7 @@ public struct ReplicatorConfiguration {
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         var c: CBLReplicatorConfiguration!
-        if legacyConstructor {
-            c = CBLReplicatorConfiguration(database: self.database.impl, target: target.toImpl())
-            c.channels = channels
-            c.documentIDs = documentIDs
-            c.pushFilter = self.filter(push: true)
-            c.pullFilter = self.filter(push: false)
-            
-        } else {
-            c = CBLReplicatorConfiguration(target: target.toImpl())
-        }
+        c = CBLReplicatorConfiguration(target: target.toImpl())
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
@@ -499,10 +482,5 @@ public struct ReplicatorConfiguration {
     
     var collectionConfigs = [Collection: CollectionConfiguration]()
     
-    // [collection.fullName : collection]
-    var collectionMap = [String: Collection]()
     var db: Database?
-    
-    // Indicates whether config is created via deprecated constructor or not
-    var legacyConstructor: Bool = false
 }
