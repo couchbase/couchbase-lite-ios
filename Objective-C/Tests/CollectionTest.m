@@ -37,30 +37,34 @@
 
 - (void) testDefaultCollectionExists {
     NSError* error = nil;
-    CBLCollection* dCol = [self.db defaultCollection: &error];
-    AssertNotNil(dCol, @"default collection shouldn't be empty");
-    AssertEqualObjects(dCol.name, kCBLDefaultCollectionName);
+    CBLCollection* col = [self.db defaultCollection: &error];
+    AssertNotNil(col, @"default collection shouldn't be empty");
+    AssertEqualObjects(col.name, kCBLDefaultCollectionName);
     AssertNil(error);
     
     NSArray* cols = [self.db collections: nil error: &error];
-    Assert([cols containsObject: dCol]);
+    Assert([cols containsObject: col]);
     AssertNil(error);
     
-    CBLScope* dScope = dCol.scope;
-    AssertNotNil(dScope, @"default scope shouldn't be empty");
-    AssertEqualObjects(dScope.name, kCBLDefaultScopeName);
+    CBLScope* scope = col.scope;
+    AssertNotNil(scope, @"default scope shouldn't be empty");
+    AssertEqualObjects(scope.name, kCBLDefaultScopeName);
     
     CBLCollection* col1 = [self.db collectionWithName: kCBLDefaultCollectionName
                                                 scope: nil error: &error];
-    AssertEqualObjects(dCol, col1);
+    AssertEqualObjects(col, col1);
     AssertNil(error);
+    
+    scope = col1.scope;
+    AssertNotNil(scope, @"default scope shouldn't be empty");
+    AssertEqualObjects(scope.name, kCBLDefaultScopeName);
 }
 
 - (void) testDefaultScopeExists {
     NSError* error = nil;
-    CBLScope* dScope = [self.db defaultScope: &error];
-    AssertNotNil(dScope, @"Default scope shouldn't be empty");
-    AssertEqualObjects(dScope.name, kCBLDefaultScopeName);
+    CBLScope* scope = [self.db defaultScope: &error];
+    AssertNotNil(scope, @"Default scope shouldn't be empty");
+    AssertEqualObjects(scope.name, kCBLDefaultScopeName);
     AssertNil(error);
     
     NSArray<CBLScope*>* scopes = [self.db scopes: &error];
@@ -75,39 +79,51 @@
 }
 
 - (void) testDeleteDefaultCollection {
+    // delete
     NSError* error = nil;
     Assert([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error]);
     AssertNil(error);
     
-    CBLCollection* dCol = [self.db defaultCollection: &error];
-    AssertNil(dCol);
+    CBLCollection* col = [self.db defaultCollection: &error];
+    AssertNil(col);
     AssertEqual(error.code, CBLErrorNotFound);
     AssertEqual(error.domain, CBLErrorDomain);
     
+    // try to recreate the default collection
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
         return [self.db createCollectionWithName: kCBLDefaultCollectionName
                                            scope: nil error: e] != nil;
     }];
     
-    dCol = [self.db defaultCollection: &error];
-    AssertNil(dCol);
+    col = [self.db defaultCollection: &error];
+    AssertNil(col);
     AssertEqual(error.code, CBLErrorNotFound);
     AssertEqual(error.domain, CBLErrorDomain);
 }
 
 - (void) testGetDefaultScopeAfterDeleteDefaultCollection {
+    // delete the default collection
     NSError* error = nil;
     Assert([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error]);
     AssertNil(error);
     
-    CBLScope* dScope = [self.db defaultScope: &error];
-    AssertNotNil(dScope, @"Default scope shouldn't be empty");
-    AssertEqualObjects(dScope.name, kCBLDefaultScopeName);
+    // make sure scope exists
+    CBLScope* scope = [self.db defaultScope: &error];
+    AssertNotNil(scope, @"Default scope shouldn't be empty");
+    AssertEqualObjects(scope.name, kCBLDefaultScopeName);
+    AssertNil(error);
+    
+    NSArray* cols = [scope collections: &error];
+    AssertEqual(cols.count, 0);
     AssertNil(error);
     
     NSArray<CBLScope*>* scopes = [self.db scopes: &error];
     AssertEqual(scopes.count, 1);
     AssertEqualObjects(scopes[0].name, kCBLDefaultScopeName);
+    AssertNil(error);
+    
+    cols = [self.db collections: kCBLDefaultScopeName error: &error];
+    AssertEqual(cols.count, 0);
     AssertNil(error);
 }
 
@@ -135,7 +151,9 @@
     AssertEqualObjects(colA.scope.name, colAa.scope.name);
     AssertNil(error);
     
-    CBLCollection* colBa = [self.db collectionWithName: @"colB" scope: nil error: &error];
+    CBLCollection* colBa = [self.db collectionWithName: @"colB"
+                                                 scope: kCBLDefaultScopeName
+                                                 error: &error];
     AssertEqualObjects(colB.name, colBa.name);
     AssertEqualObjects(colB.scope.name, colBa.scope.name);
     AssertNil(error);
@@ -162,12 +180,14 @@
     
     CBLScope* scopeA = [self.db scopeWithName: @"scopeA" error: &error];
     AssertNotNil(scopeA);
+    AssertEqualObjects(colA.scope, scopeA);
     AssertEqualObjects(scopeA.name, @"scopeA");
     AssertNil(error);
     
     colA = [self.db collectionWithName: @"colA"
                                  scope: @"scopeA" error: &error];
     AssertEqualObjects(colA.name, @"colA");
+    AssertEqualObjects(colA.scope, scopeA);
     AssertEqualObjects(colA.scope.name, @"scopeA");
     AssertNil(error);
     
@@ -182,17 +202,21 @@
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(colA);
     AssertNil(error);
+    
     CBLMutableDocument* d = [CBLMutableDocument documentWithID: @"doc1"];
     [d setString: @"string" forKey: @"someKey"];
     [colA saveDocument: d error: &error];
     AssertNil(error);
     
-    CBLCollection* colB = [self.db createCollectionWithName: @"colA"
+    CBLCollection* colA2 = [self.db createCollectionWithName: @"colA"
                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(colA2);
+    AssertEqualObjects(colA, colA2);
     AssertNil(error);
     
-    CBLDocument* doc1 = [colB documentWithID: @"doc1" error: &error];
+    CBLDocument* doc1 = [colA2 documentWithID: @"doc1" error: &error];
     AssertNotNil(doc1);
     AssertNil(error);
 }
@@ -211,33 +235,26 @@
     AssertNotNil(colA);
     AssertNil(error);
     
-    CBLMutableDocument* doc1 = [CBLMutableDocument documentWithID: @"doc1"];
-    [doc1 setString: @"str" forKey: @"str"];
-    [colA saveDocument: doc1 error: &error];
-    AssertNil(error);
+    // create some docs
+    [self createDocNumbered: colA start: 0 num: 10];
+    AssertEqual(colA.count, 10);
     
-    CBLMutableDocument* doc2 = [CBLMutableDocument documentWithID: @"doc2"];
-    [doc2 setString: @"str2" forKey: @"str2"];
-    [colA saveDocument: doc2 error: &error];
-    AssertNil(error);
-    
-    CBLMutableDocument* doc3 = [CBLMutableDocument documentWithID: @"doc3"];
-    [doc3 setString: @"str3" forKey: @"str3"];
-    [colA saveDocument: doc3 error: &error];
-    AssertNil(error);
-    AssertEqual(colA.count, 3);
-    
+    // delete & verify its deleted
     Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    
     AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    
     NSArray* cols = [self.db collections: @"scopeA" error: &error];
     AssertEqual(cols.count, 0);
     
-    colA = [self.db createCollectionWithName: @"colA"
+    // recreate
+    CBLCollection* colA2 = [self.db createCollectionWithName: @"colA"
                                        scope: @"scopeA" error: &error];
-    AssertNotNil(colA);
-    AssertEqual(colA.count, 0);
+    AssertNotNil(colA2);
+    AssertEqualObjects(colA2.name, @"colA");
+    AssertEqualObjects(colA2.scope.name, @"scopeA");
+    
+    // make sure, new collection is empty and not equal
+    AssertEqual(colA2.count, 0);
+    AssertNotEqualObjects(colA2, colA);
 }
 
 - (void) testGetCollectionsFromScope {

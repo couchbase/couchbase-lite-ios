@@ -26,12 +26,13 @@
 #import <stdatomic.h>
 #endif
 
-#define Assert             XCTAssert
-#define AssertNil          XCTAssertNil
-#define AssertNotNil       XCTAssertNotNil
-#define AssertEqual        XCTAssertEqual
-#define AssertEqualObjects XCTAssertEqualObjects
-#define AssertFalse        XCTAssertFalse
+#define Assert                  XCTAssert
+#define AssertNil               XCTAssertNil
+#define AssertNotNil            XCTAssertNotNil
+#define AssertEqual             XCTAssertEqual
+#define AssertEqualObjects      XCTAssertEqualObjects
+#define AssertNotEqualObjects   XCTAssertNotEqualObjects
+#define AssertFalse             XCTAssertFalse
 
 #define Log                NSLog
 #define Warn(FMT, ...)     NSLog(@"WARNING: " FMT, ##__VA_ARGS__)

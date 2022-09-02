@@ -55,4 +55,24 @@ NSString* const kCBLDefaultScopeName = @"_default";
     return [NSString stringWithFormat: @"%p %@[%@] db[%@]", self, self.class, _scopeName, _db];
 }
 
+- (NSUInteger) hash {
+    return [self.name hash] ^ [self.db.path hash];
+}
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLScope* other = $castIf(CBLScope, object);
+    if (!other)
+        return NO;
+    
+    if (!(other && [self.name isEqual: other.name] &&
+          [self.db.path isEqual: other.db.path])) {
+        return NO;
+    }
+    
+    return YES;
+}
+
 @end
