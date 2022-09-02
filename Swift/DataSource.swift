@@ -47,12 +47,12 @@ public final class DataSource {
     @available(*, deprecated,
                 message: "Use DataSource.collection(database.defaultCollection()) instead.")
     public static func database(_ database: Database) -> DataSourceAs {
-        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl),
+        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database.impl),
                                 source: database)
     }
     
     public static func collection(_ collection: Collection) -> DataSourceAs {
-        return DatabaseSourceAs(impl: CBLQueryDataSource.collection(collection._impl),
+        return DatabaseSourceAs(impl: CBLQueryDataSource.collection(collection.impl),
                                 source: collection)
     }
     
@@ -95,11 +95,11 @@ public final class DataSource {
         switch dataSource.self {
         case is Database:
             let db = dataSource as! Database
-            return DatabaseSource(impl: CBLQueryDataSource.database(db._impl, as: alias),
+            return DatabaseSource(impl: CBLQueryDataSource.database(db.impl, as: alias),
                                   source: db)
         case is Collection:
             let collection = dataSource as! Collection
-            return DatabaseSource(impl: CBLQueryDataSource.collection(collection._impl, as: alias),
+            return DatabaseSource(impl: CBLQueryDataSource.collection(collection.impl, as: alias),
                                   source: collection)
         default:
             fatalError("Unknown datasource type!")
@@ -122,7 +122,7 @@ extension DataSourceProtocol {
         }
         
         if let colSource = o.source() as? Collection {
-            return colSource._db
+            return colSource.db
         } else if let s = o.source() as? Database {
             return s
         }

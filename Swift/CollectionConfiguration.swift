@@ -71,7 +71,7 @@ public struct CollectionConfiguration {
         
         if let resolver = self.conflictResolver {
             c.setConflictResolverUsing { (conflict) -> CBLDocument? in
-                return resolver.resolve(conflict: Conflict(impl: conflict, collection: collection))?._impl
+                return resolver.resolve(conflict: Conflict(impl: conflict, collection: collection))?.impl
             }
         }
 

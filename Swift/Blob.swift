@@ -73,46 +73,46 @@ public final class Blob: Equatable, Hashable {
     /// Gets the contents of a Blob as a block of memory.
     /// Not recommended for very large blobs, as it may be slow and use up lots of RAM.
     public var content: Data? {
-        return _impl.content
+        return impl.content
     }
     
     /// A stream of the content of a Blob.
     /// The caller is responsible for opening the stream, and closing it when finished.
     public var contentStream: InputStream? {
-        return _impl.contentStream
+        return impl.contentStream
     }
     
     /// The type of content this Blob represents; by convention this is a MIME type.
     public var contentType: String? {
-        return _impl.contentType
+        return impl.contentType
     }
     
     /// The binary length of this Blob.
     public var length: UInt64 {
-        return _impl.length
+        return impl.length
     }
     
     /// The cryptographic digest of this Blob's contents, which uniquely identifies it.
     public var digest: String? {
-        return _impl.digest
+        return impl.digest
     }
     
     /// The metadata associated with this Blob
     public var properties: [String: Any] {
-        return _impl.properties
+        return impl.properties
     }
     
     // MARK: Equality
     
     /// Equal to operator for comparing two Blob objects.
     public static func == (blob1: Blob, blob2: Blob) -> Bool {
-        return blob1._impl == blob2._impl
+        return blob1.impl == blob2.impl
     }
     
     // MARK: Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(_impl.hash)
+        hasher.combine(impl.hash)
     }
     
     // MARK: toJSON
@@ -123,7 +123,7 @@ public final class Blob: Equatable, Hashable {
     /// If Blob is not saved in the database which means that it doesn’t have digest information,
     /// calling toJSON() will not be allowed and it will throw an NSInternalInconsistencyException.
     public func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     /// Return whether the given dictionary represents Blob or not
@@ -134,15 +134,15 @@ public final class Blob: Equatable, Hashable {
     // MARK: Internal
     
     init(_ impl: CBLBlob) {
-        _impl = impl
-        _impl.swiftObject = self
+        self.impl = impl
+        impl.swiftObject = self
     }
     
     deinit {
-        _impl.swiftObject = nil
+        impl.swiftObject = nil
     }
     
-    let _impl: CBLBlob
+    let impl: CBLBlob
     
 }
 

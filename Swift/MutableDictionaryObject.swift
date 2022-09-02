@@ -293,7 +293,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     
     /// Mutable Objects will throw an exception, when called toJSON
     public override func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
@@ -305,7 +305,7 @@ public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryP
     // MARK: Private
     
     private var dictImpl: CBLMutableDictionary {
-        return _impl as! CBLMutableDictionary
+        return impl as! CBLMutableDictionary
     }
     
 }

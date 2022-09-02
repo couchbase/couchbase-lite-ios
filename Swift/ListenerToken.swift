@@ -25,15 +25,15 @@ public class ListenerToken {
     
     /// Remove the listener associated with the token.
     public func remove() {
-        _impl.remove()
+        impl.remove()
     }
     
     // MARK: Internal
     
     init(_ impl: CBLListenerToken) {
-        _impl = impl
+        self.impl = impl
     }
     
-    let _impl: CBLListenerToken
+    let impl: CBLListenerToken
     
 }

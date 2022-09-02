@@ -35,26 +35,26 @@ public final class Scope {
     
     /// Scope name
     public var name: String {
-        return _impl.name
+        return impl.name
     }
     
     // MARK: Collections
     
     /// Get all collections in the scope.
     public func collections() throws -> [Collection] {
-        return try _db.collections(scope: _impl.name)
+        return try db.collections(scope: impl.name)
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String) throws -> Collection? {
-        return try _db.collection(name: name, scope: _impl.name)
+        return try db.collection(name: name, scope: impl.name)
     }
     
     init(_ scope: CBLScope, db: Database) {
-        _impl = scope
-        _db = db
+        self.impl = scope
+        self.db = db
     }
     
-    let _impl: CBLScope
-    let _db: Database
+    let impl: CBLScope
+    let db: Database
 }

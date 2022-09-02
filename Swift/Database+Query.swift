@@ -33,7 +33,7 @@ extension Database : QueryFactory {
     
     /// All index names.
     @available(*, deprecated, message: "Use database.defaultCollection().indexes() instead.")
-    public var indexes: Array<String> { return _impl.indexes }
+    public var indexes: Array<String> { return impl.indexes }
     
     /// Creates an index which could be a value index or a full-text search index with the given
     /// name. The name can be used for deleting the index. Creating a new different index with an
@@ -45,7 +45,7 @@ extension Database : QueryFactory {
     ///   - name: The index name.
     /// - Throws: An error on a failure.
     public func createIndex(_ index: Index, withName name: String) throws {
-        try _impl.createIndex(index.toImpl(), withName: name)
+        try impl.createIndex(index.toImpl(), withName: name)
     }
     
     /// Creates an index using IndexConfiguration, which could be a value index or a full-text
@@ -59,7 +59,7 @@ extension Database : QueryFactory {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().createIndex(:name:) instead.")
     public func createIndex(_ config: IndexConfiguration, name: String) throws {
-        try _impl.createIndex(withConfig: config.toImpl(), name: name)
+        try impl.createIndex(withConfig: config.toImpl(), name: name)
     }
     
     /// Deletes the index of the given index name.
@@ -68,7 +68,7 @@ extension Database : QueryFactory {
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteIndex(forName:) instead.")
     public func deleteIndex(forName name: String) throws {
-        try _impl.deleteIndex(forName: name)
+        try impl.deleteIndex(forName: name)
     }
     
 }

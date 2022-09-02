@@ -63,12 +63,12 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     
     /// The number of entries in the dictionary.
     public var count: Int {
-        return Int(_impl.count)
+        return Int(impl.count)
     }
     
     /// An array containing all keys, or an empty array if the dictionary has no entries.
     public var keys: Array<String> {
-        return _impl.keys
+        return impl.keys
     }
     
     /// Gets a property's value. The value types are Blob, ArrayObject,
@@ -78,7 +78,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The value or nil.
     public func value(forKey key: String) -> Any? {
-        return DataConverter.convertGETValue(_impl.value(forKey: key))
+        return DataConverter.convertGETValue(impl.value(forKey: key))
     }
     
     ///  Gets a property's value as a string.
@@ -87,7 +87,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The String object or nil.
     public func string(forKey key: String) -> String? {
-        return _impl.string(forKey: key)
+        return impl.string(forKey: key)
     }
     
     ///  Gets a property's value as a Number.
@@ -96,7 +96,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The String object or nil.
     public func number(forKey key: String) -> NSNumber? {
-        return _impl.number(forKey: key)
+        return impl.number(forKey: key)
     }
     
     /// Gets a property's value as an int value.
@@ -106,7 +106,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Int value.
     public func int(forKey key: String) -> Int {
-        return _impl.integer(forKey: key)
+        return impl.integer(forKey: key)
     }
     
     /// Gets a property's value as an int64 value.
@@ -116,7 +116,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Int64 value.
     public func int64(forKey key: String) -> Int64 {
-        return _impl.longLong(forKey: key)
+        return impl.longLong(forKey: key)
     }
     
     /// Gets a property's value as a float value.
@@ -126,7 +126,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Float value.
     public func float(forKey key: String) -> Float {
-        return _impl.float(forKey: key)
+        return impl.float(forKey: key)
     }
     
     /// Gets a property's value as a double value.
@@ -136,7 +136,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Double value.
     public func double(forKey key: String) -> Double {
-        return _impl.double(forKey: key)
+        return impl.double(forKey: key)
     }
     
     /// Gets a property's value as a boolean value.
@@ -145,7 +145,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Bool value.
     public func boolean(forKey key: String) -> Bool {
-        return _impl.boolean(forKey: key)
+        return impl.boolean(forKey: key)
     }
     
     /// Gets a property's value as a Date value.
@@ -158,7 +158,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: The Date value or nil
     public func date(forKey key: String) -> Date? {
-        return _impl.date(forKey: key)
+        return impl.date(forKey: key)
     }
     
     /// Get a property's value as a Blob object.
@@ -196,7 +196,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     /// - Parameter key: The key.
     /// - Returns: True of the property exists, otherwise false.
     public func contains(key: String) -> Bool {
-        return _impl.containsValue(forKey: key)
+        return impl.containsValue(forKey: key)
     }
     
     // MARK: Data
@@ -228,7 +228,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     ///
     /// - Returns: The MutableDocument object.
     public func toMutable() -> MutableDictionaryObject {
-        switch _impl {
+        switch impl {
         case let impl as CBLDictionary:
             return MutableDictionaryObject(impl.toMutable())
         case let impl as CBLNewDictionary:
@@ -244,7 +244,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     ///
     /// - Returns: The key iterator.
     public func makeIterator() -> IndexingIterator<[String]> {
-        return _impl.keys.makeIterator();
+        return impl.keys.makeIterator();
     }
     
     // MARK: Subscript
@@ -253,35 +253,35 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     ///
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
-        return Fragment(_impl[key])
+        return Fragment(impl[key])
     }
     
     // MARK: Equality
     
     /// Equal to operator for comparing two Dictionary objects.
     public static func == (dict1: DictionaryObject, dict2: DictionaryObject) -> Bool {
-        return (dict1._impl as! NSObject) == (dict2._impl as! NSObject)
+        return (dict1.impl as! NSObject) == (dict2.impl as! NSObject)
     }
     
     // MARK: Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(_impl.hash)
+        hasher.combine(impl.hash)
     }
     
     // MARK: toJSON
     
     /// Return dictionary data as JSON String
     public func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
     
     init(_ impl: CBLDictionaryProtocol) {
-        _impl = impl
+        self.impl = impl
         
-        switch _impl {
+        switch impl {
         case let dict as CBLDictionary:
             dict.swiftObject = self
         case let dict as CBLNewDictionary:
@@ -292,7 +292,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     }
     
     deinit {
-        switch _impl {
+        switch impl {
         case let dict as CBLDictionary:
             dict.swiftObject = nil
         case let dict as CBLNewDictionary:
@@ -302,6 +302,6 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         }
     }
     
-    let _impl: CBLDictionaryProtocol
+    let impl: CBLDictionaryProtocol
     
 }

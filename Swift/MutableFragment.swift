@@ -213,7 +213,7 @@ public final class MutableFragment: Fragment, MutableDictionaryFragment, Mutable
     // MARK: Private
     
     private var fragmentImpl: CBLMutableFragment {
-        return _impl as! CBLMutableFragment
+        return impl as! CBLMutableFragment
     }
 
     static let kNonexistent = CBLMutableFragment()

@@ -59,7 +59,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     
     /// Gets a number of the items in the array.
     public var count: Int {
-        return Int(_impl.count)
+        return Int(impl.count)
     }
     
     /// Gets the value at the given index. The value types are Blob, ArrayObject,
@@ -68,7 +68,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The value located at the index.
     public func value(at index: Int) -> Any? {
-        return DataConverter.convertGETValue(_impl.value(at: UInt(index)))
+        return DataConverter.convertGETValue(impl.value(at: UInt(index)))
     }
     
     /// Gets the value at the given index as a string.
@@ -77,7 +77,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The String object.
     public func string(at index: Int) -> String? {
-        return _impl.string(at: UInt(index))
+        return impl.string(at: UInt(index))
     }
     
     /// Gets value at the given index as a Number value.
@@ -85,7 +85,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The number value located at the index.
     public func number(at index: Int) -> NSNumber? {
-        return _impl.number(at: UInt(index))
+        return impl.number(at: UInt(index))
     }
     
     /// Gets value at the given index as an int value.
@@ -95,7 +95,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The int value located at the index.
     public func int(at index: Int) -> Int {
-        return _impl.integer(at: UInt(index))
+        return impl.integer(at: UInt(index))
     }
     
     /// Gets value at the given index as an int64 value.
@@ -105,7 +105,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The int64 value located at the index.
     public func int64(at index: Int) -> Int64 {
-        return _impl.longLong(at: UInt(index))
+        return impl.longLong(at: UInt(index))
     }
     
     /// Gets the value at the given index as a float value.
@@ -115,7 +115,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The Float value located at the index.
     public func float(at index: Int) -> Float {
-        return _impl.float(at: UInt(index))
+        return impl.float(at: UInt(index))
     }
     
     /// Gets the value at the given index as a double value.
@@ -125,7 +125,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The Double value located at the index.
     public func double(at index: Int) -> Double {
-        return _impl.double(at: UInt(index))
+        return impl.double(at: UInt(index))
     }
     
     /// Gets the value at the given index as a boolean value.
@@ -134,7 +134,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The Bool value located at the index.
     public func boolean(at index: Int) -> Bool {
-        return _impl.boolean(at: UInt(index))
+        return impl.boolean(at: UInt(index))
     }
     
     /// Gets value at the given index as an Date.
@@ -147,7 +147,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     /// - Parameter index: The index.
     /// - Returns: The Date value at the given index.
     public func date(at index: Int) -> Date? {
-        return _impl.date(at: UInt(index))
+        return impl.date(at: UInt(index))
     }
     
     /// Get the Blob value at the given index.
@@ -205,7 +205,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Returns: The MutableDocument object.
     public func toMutable() -> MutableArrayObject {
-        return MutableArrayObject(_impl.toMutable())
+        return MutableArrayObject(impl.toMutable())
     }
     
     // MARK: Sequence
@@ -232,38 +232,38 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     ///
     /// - Parameter index: The Index.
     public subscript(index: Int) -> Fragment {
-        return Fragment((_impl as CBLArrayFragment)[UInt(index)])
+        return Fragment((impl as CBLArrayFragment)[UInt(index)])
     }
     
     // MARK: Equality
     
     /// Equal to operator for comparing two Array objects.
     public static func == (array1: ArrayObject, array2: ArrayObject) -> Bool {
-        return array1._impl == array2._impl
+        return array1.impl == array2.impl
     }
     
     // MARK: Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(_impl.hash)
+        hasher.combine(impl.hash)
     }
     
     /// Return array data as JSON String
     public func toJSON() -> String {
-        return _impl.toJSON()
+        return impl.toJSON()
     }
     
     // MARK: Internal
     
     init(_ impl: CBLArray) {
-        _impl = impl
-        _impl.swiftObject = self
+        self.impl = impl
+        impl.swiftObject = self
     }
     
     deinit {
-        _impl.swiftObject = nil
+        impl.swiftObject = nil
     }
     
-    let _impl: CBLArray
+    let impl: CBLArray
     
 }
