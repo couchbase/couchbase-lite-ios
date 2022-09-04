@@ -791,7 +791,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try stopListener()
     }
     
-    func _testEmptyNetworkInterface() throws {
+    func testEmptyNetworkInterface() throws {
         if !self.keyChainAccessAllowed { return }
         
         try startListener()

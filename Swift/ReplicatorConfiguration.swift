@@ -414,8 +414,7 @@ public struct ReplicatorConfiguration {
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
-        var c: CBLReplicatorConfiguration!
-        c = CBLReplicatorConfiguration(target: target.toImpl())
+        var c = CBLReplicatorConfiguration(target: target.toImpl())
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
