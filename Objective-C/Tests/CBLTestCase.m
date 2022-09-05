@@ -226,7 +226,7 @@
     block([_db documentWithID: document.id]);
 }
 
-- (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
+- (void) createDocNumbered: (nullable CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
     for (NSInteger i = start; i < (start+num); i++) {
         NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
         CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];

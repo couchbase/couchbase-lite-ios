@@ -141,7 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Save document in the specified collection. */
 - (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col;
 
-- (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num;
+- (void) createDocNumbered: (nullable CBLCollection*)col start: (NSInteger)start num: (NSInteger)num;
 
 /** URL for a resource. */
 - (NSURL*) urlForResource: (NSString*)resourceName ofType: (NSString*)type;
