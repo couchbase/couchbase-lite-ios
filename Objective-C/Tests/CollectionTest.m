@@ -278,8 +278,9 @@
     AssertNil(error);
     
     AssertNil([scope collectionWithName: @"colC" error: &error]);
-    AssertNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
     
+    error = nil;
     NSArray<CBLCollection*>* cols = [self.db collections: @"scopeA" error: &error];
     AssertEqual(cols.count, 2);
     Assert([(@[@"colA", @"colB"]) containsObject: cols[0].name]);
