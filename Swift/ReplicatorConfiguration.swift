@@ -103,12 +103,12 @@ public struct ReplicatorConfiguration {
                 """)
     public var channels: [String]? {
         set {
-            var colConfig = defaultCollectionConfig
+            var colConfig = defaultCollectionConfigOrNever
             colConfig.channels = newValue
             setDefaultCollectionConfig(colConfig)
         }
         
-        get { defaultCollectionConfig.channels }
+        get { defaultCollectionConfig?.channels }
     }
     
     /// A set of document IDs to filter by: if given, only documents with
@@ -119,12 +119,12 @@ public struct ReplicatorConfiguration {
                 """)
     public var documentIDs: [String]? {
         set {
-            var colConfig = defaultCollectionConfig
+            var colConfig = defaultCollectionConfigOrNever
             colConfig.documentIDs = newValue
             setDefaultCollectionConfig(colConfig)
         }
         
-        get { defaultCollectionConfig.documentIDs }
+        get { defaultCollectionConfig?.documentIDs }
     }
     
     
@@ -136,12 +136,12 @@ public struct ReplicatorConfiguration {
                 """)
     public var pushFilter: ReplicationFilter? {
         set {
-            var colConfig = defaultCollectionConfig
+            var colConfig = defaultCollectionConfigOrNever
             colConfig.pushFilter = newValue
             setDefaultCollectionConfig(colConfig)
         }
         
-        get { defaultCollectionConfig.pushFilter }
+        get { defaultCollectionConfig?.pushFilter }
     }
     
     /// Filter closure for validating whether the documents can be pulled from the remote endpoint.
@@ -152,12 +152,12 @@ public struct ReplicatorConfiguration {
                 """)
     public var pullFilter: ReplicationFilter? {
         set {
-            var colConfig = defaultCollectionConfig
+            var colConfig = defaultCollectionConfigOrNever
             colConfig.pullFilter = newValue
             setDefaultCollectionConfig(colConfig)
         }
         
-        get { defaultCollectionConfig.pullFilter }
+        get { defaultCollectionConfig?.pullFilter }
     }
     
     /// The custom conflict resolver object can be set here. If this value is not set, or set to nil,
@@ -168,12 +168,12 @@ public struct ReplicatorConfiguration {
                 """)
     public var conflictResolver: ConflictResolverProtocol? {
         set {
-            var colConfig = defaultCollectionConfig
+            var colConfig = defaultCollectionConfigOrNever
             colConfig.conflictResolver = newValue
             setDefaultCollectionConfig(colConfig)
         }
         
-        get { defaultCollectionConfig.conflictResolver }
+        get { defaultCollectionConfig?.conflictResolver }
     }
     
     #if os(iOS)
@@ -384,13 +384,21 @@ public struct ReplicatorConfiguration {
     
     // MARK: Internal
     
-    var defaultCollectionConfig: CollectionConfiguration {
+    var defaultCollectionConfig: CollectionConfiguration? {
         guard let col = try? self.database.defaultCollection() else {
             fatalError("Default collection is missing!")
         }
         
-        guard let colConfig = self.collectionConfigs[col] else {
-            fatalError("default collection config missing")
+        if let config = self.collectionConfigs[col] {
+            return config
+        }
+        
+        return nil
+    }
+    
+    var defaultCollectionConfigOrNever: CollectionConfiguration {
+        guard let colConfig = defaultCollectionConfig else {
+            fatalError("No default collection added to the configuration")
         }
         
         return colConfig
@@ -406,17 +414,13 @@ public struct ReplicatorConfiguration {
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
-        let c = CBLReplicatorConfiguration(database: self.database.impl, target: target.toImpl())
+        var c = CBLReplicatorConfiguration(target: target.toImpl())
         c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.networkInterface = self.networkInterface;
-        c.channels = self.channels
-        c.documentIDs = self.documentIDs
-        c.pushFilter = self.filter(push: true)
-        c.pullFilter = self.filter(push: false)
         c.heartbeat = self.heartbeat
         c.maxAttempts = self.maxAttempts
         c.maxAttemptWaitTime = self.maxAttemptWaitTime
@@ -476,5 +480,6 @@ public struct ReplicatorConfiguration {
     }
     
     var collectionConfigs = [Collection: CollectionConfiguration]()
+    
     var db: Database?
 }

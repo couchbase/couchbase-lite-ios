@@ -139,15 +139,21 @@ MultipeerConnectionDelegate {
         self.wait(for: [clientConnected!, serverConnected!], timeout: 10.0)
     }
     
-    func run(config: ReplicatorConfiguration, expectedError: Int?) {
+    func run(config: ReplicatorConfiguration, collections: [Collection]? = nil, expectedError: Int? = nil) {
         // Start discovery:
         startDiscovery()
         
         // Start listener
         let x1 = self.expectation(description: "Listener Connecting")
         let x2 = self.expectation(description: "Listener Stopped")
-        let listenerConfig = MessageEndpointListenerConfiguration(
-            database: oDB, protocolType: .messageStream)
+        
+        var listenerConfig: MessageEndpointListenerConfiguration!
+        if let cols = collections {
+            listenerConfig = MessageEndpointListenerConfiguration(collections: cols, protocolType: .messageStream)
+        } else {
+            listenerConfig = MessageEndpointListenerConfiguration(database: oDB, protocolType: .messageStream)
+        }
+        
         listener = MessageEndpointListener(config: listenerConfig)
         let token1 = listener!.addChangeListener({ (change) in
             let status = change.status
@@ -188,6 +194,10 @@ MultipeerConnectionDelegate {
         listener!.closeAll()
         wait(for: [x2], timeout: 10.0)
         listener!.removeChangeListener(token: token1)
+    }
+    
+    func run(config: ReplicatorConfiguration, expectedError: Int?) {
+        run(config: config, expectedError: expectedError)
     }
     
     func config(target: Endpoint, type: ReplicatorType, continuous: Bool) -> ReplicatorConfiguration {
@@ -420,6 +430,62 @@ MultipeerConnectionDelegate {
         XCTAssertEqual(self.db.count, 2)
         let savedDoc2 = self.db.document(withID: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
+    }
+    
+    // MARK: 8.16 MessageEndpointListener tests
+    
+    func testCollectionsSingleShotPushPullReplication() throws {
+        try testCollectionsPushPullReplication(continuous: false)
+    }
+    
+    func testCollectionsContinuousPushPullReplication() throws {
+        try testCollectionsPushPullReplication(continuous: true)
+    }
+    
+    func testCollectionsPushPullReplication(continuous: Bool) throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
+        
+        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        try createDocNumbered(col1a, start: 0, num: 1)
+        try createDocNumbered(col1b, start: 5, num: 2)
+        try createDocNumbered(col2a, start: 10, num: 3)
+        try createDocNumbered(col2b, start: 15, num: 5)
+        XCTAssertEqual(col1a.count, 1)
+        XCTAssertEqual(col1b.count, 2)
+        XCTAssertEqual(col2a.count, 3)
+        XCTAssertEqual(col2b.count, 5)
+        
+        let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
+        var config = ReplicatorConfiguration(target: target)
+        config.continuous = continuous
+        config.addCollections([col1a, col1b])
+        
+        run(config: config, collections: [col2a, col2b])
+        XCTAssertEqual(col1a.count, 4)
+        XCTAssertEqual(col1b.count, 7)
+        XCTAssertEqual(col2a.count, 4)
+        XCTAssertEqual(col2b.count, 7)
+    }
+    
+    func testMismatchedCollectionReplication() throws {
+        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        
+        let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
+        var config = ReplicatorConfiguration(target: target)
+        config.addCollections([col1a])
+        
+        run(config: config, collections: [col2b], expectedError: CBLErrorHTTPNotFound)
+    }
+    
+    // Note: fatalError with this test
+    func _testCreateListenerConfigWithEmptyCollection() throws {
+        expectExcepion(exception: .invalidArgumentException) {
+            let _ = MessageEndpointListenerConfiguration(collections: [], protocolType: .messageStream)
+        }
     }
     
 }
