@@ -2,7 +2,7 @@
 //  CBLErrorMessage.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@ NSString* const kCBLErrorMessageBlobContentNull = @"No data available to write f
 NSString* const kCBLErrorMessageResolvedDocContainsNull = @"Resolved document has a null body.";
 NSString* const kCBLErrorMessageResolvedDocFailedLiteCore = @"LiteCore failed resolving conflict.";
 NSString* const kCBLErrorMessageResolvedDocWrongDb = @"Resolved document's database %1$@ is different from expected database %2$@.";
-NSString* const kCBLErrorMessageDBClosed = @"Attempt to perform an operation on a closed database.";
+NSString* const kCBLErrorMessageDBClosedOrCollectionDeleted = @"Attempt to perform an operation on a closed database or a deleted collection.";
 NSString* const kCBLErrorMessageNoDocumentRevision = @"No revision data on the document!";
 NSString* const kCBLErrorMessageFragmentPathNotExist = @"Specified fragment path does not exist in object; cannot set value.";
-NSString* const kCBLErrorMessageInvalidCouchbaseObjType = @"%1$@ is not a valid type. You may only pass %2$@, Blob, a one-dimensional array or a dictionary whose members are one of the preceding types.";
+NSString* const kCBLErrorMessageInvalidCouchbaseObjType = @"%1$@ is not a valid type. Valid types are simple types and dictionaries and one-dimensional arrays of those types, including %2$@";
 NSString* const kCBLErrorMessageInvalidValueToBeDeserialized = @"Non-string or null key in data to be deserialized.";
 NSString* const kCBLErrorMessageBlobContainsNoData = @"Blob has no data available.";
 NSString* const kCBLErrorMessageNotFileBasedURL = @"%1$@ must be a file-based URL.";
@@ -64,6 +64,21 @@ NSString* const kCBLErrorMessageFailToConvertC4Cert = @"Couldn't convert from C4
 NSString* const kCBLErrorMessageDuplicateCertificate = @"Certificate already exists with the label";
 NSString* const kCBLErrorMessageMissingCommonName = @"The Common Name attribute is required";
 NSString* const kCBLErrorMessageFailToRemoveKeyPair = @"Couldn't remove a keypair with error: %1$@";
+NSString* const kCBLErrorMessageDocumentNotFoundInCollection = @"The document doesn't exist in the collection.";
+NSString* const kCBLErrorMessageDocumentAnotherCollection = @"Cannot operate on a document from another collection.";
+NSString* const kCBLErrorMessageInvalidBlob = @"The given blob's metadata might be missing the digest / @type key or containing invalid values.";
+NSString* const kCBLErrorMessageCollectionNotFoundDuringConflict = @"Collection not found in replicator config when resolving a conflict.";
+NSString* const kCBLErrorMessageConfigNotFoundDuringConflict = @"Collection config not found in replicator config when resolving a conflict.";
+NSString* const kCBLErrorMessageCollectionNotFoundInFilter = @"Collection is not found in the replicator config when calling the filter function.";
+NSString* const kCBLErrorMessageQueryFromInvalidDB = @"Attempt to query from an invalid database.";
+NSString* const kCBLErrorMessageEncodeFailureInvalidQuery = @"Invalid query parameter, failed to encode.";
+NSString* const kCBLErrorMessageNoDefaultCollectionInConfig = @"No default collection added to the configuration.";
+NSString* const kCBLErrorMessageNegativeHeartBeat = @"Attempt to store negative value in heartbeat.";
+NSString* const kCBLErrorMessageNegativeMaxAttemptWaitTime = @"Attempt to store negative value in maxAttemptWaitTime.";
+NSString* const kCBLErrorMessageAccessDBWithoutCollection = @"Attempt to access database property but no collections added.";
+NSString* const kCBLErrorMessageAddInvalidCollection = @"Attempt to add an invalid collection.";
+NSString* const kCBLErrorMessageAddCollectionFromAnotherDB = @"Attempt to add collection from different databases.";
+NSString* const kCBLErrorMessageAddEmptyCollectionArray = @"Attempt to add empty collection array.";
 
 @end
 
