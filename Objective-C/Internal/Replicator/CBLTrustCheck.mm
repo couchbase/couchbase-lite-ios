@@ -186,7 +186,7 @@ static BOOL sOnlyTrustAnchorCerts;
             NSData* certData = nil;
             for (CFIndex i = 0; i < count; i++) {
                 CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
-                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, i);
                 certData = CFBridgingRelease(SecCertificateCopyData(cert));
                 CFRelease(certs);
                 if ([_pinnedCertData isEqual: certData]) {
