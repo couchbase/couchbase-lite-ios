@@ -30,8 +30,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-// TODO: https://issues.couchbase.com/browse/CBL-3369
-- (void) _testDatabaseChange {
+- (void) testDatabaseChange {
     XCTestExpectation* x = [self expectationWithDescription:@"change"];
     id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
         AssertEqual(change.documentIDs.count, 10ul);

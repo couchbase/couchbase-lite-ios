@@ -358,8 +358,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
     }
     
-    // exception causiung the memory leak
-    // TODO: https://issues.couchbase.com/browse/CBL-3576
+    // fatal error! can't be unit tested.
     func _testAddCollectionsFromDifferentDatabaseInstances() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
@@ -386,8 +385,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         }
     }
     
-    // memory leak with NSException
-    // TODO: https://issues.couchbase.com/browse/CBL-3576
+    // fatal error! can't be unit tested.
     func _testAddDeletedCollections() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
