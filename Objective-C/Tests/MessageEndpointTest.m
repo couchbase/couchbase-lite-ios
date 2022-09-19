@@ -171,7 +171,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 }
 
 - (void) startDiscovery {
-    _serverConnected = [self expectationWithDescription: @"Server Connected"];
+    _serverConnected = [self allowOverfillExpectationWithDescription: @"Server Connected"];
     _serverPeer = [[MCPeerID alloc] initWithDisplayName: @"server"];
     _serverSession = [[MCSession alloc] initWithPeer:_serverPeer
                                     securityIdentity: nil
@@ -184,7 +184,7 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _advertiser.delegate = self;
     [_advertiser startAdvertisingPeer];
     
-    _clientConnected = [self expectationWithDescription: @"Client Connected"];
+    _clientConnected = [self allowOverfillExpectationWithDescription: @"Client Connected"];
     _clientPeer = [[MCPeerID alloc] initWithDisplayName: @"client"];
     _clientSession = [[MCSession alloc] initWithPeer: _clientPeer
                                     securityIdentity: nil
