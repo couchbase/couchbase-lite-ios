@@ -1917,26 +1917,28 @@ class QueryTest: CBLTestCase {
         
         let x1 = expectation(description: "wait-for-live-query-changes")
         var count = 0;
+        var docCount = 0;
         let token = query.addChangeListener { (change) in
-            count = count + 1
             let rows =  Array(change.results!)
-            if count == 1 {
-                // initial notification about already existing result set!
-                XCTAssertEqual(rows.count, 9)
-                XCTAssertEqual(rows[0].int(at: 0), 1)
-            } else {
-                // deleted the doc should return empty result set!
-                XCTAssertEqual(rows.count, 8)
+            count = count + rows.count
+            if count >= 17 {
                 x1.fulfill()
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             try! self.db.purgeDocument(withID: "doc1")
         }
-        
         wait(for: [x1], timeout: 10.0)
+        
+        // wait for another second to make sure, there is no more change listener got fired
+        let x2 = expectation(description: "wait-for-extra-time")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            XCTAssertEqual(count, 17)
+            x2.fulfill()
+        }
+        wait(for: [x2], timeout: 10.0)
+        
         query.removeChangeListener(withToken: token)
-        XCTAssertEqual(count, 2)
     }
     
     /// When having more than one listeners, each listener should have independent result sets.

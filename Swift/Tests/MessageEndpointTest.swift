@@ -120,7 +120,7 @@ MultipeerConnectionDelegate {
     }
     
     func startDiscovery() {
-        serverConnected = self.expectation(description: "Server Connected")
+        serverConnected = self.allowOverfillExpectation(description: "Server Connected")
         serverPeer = MCPeerID(displayName: "server")
         serverSession = MCSession(peer: serverPeer!, securityIdentity: nil, encryptionPreference: .none)
         serverSession!.delegate = self
@@ -128,7 +128,7 @@ MultipeerConnectionDelegate {
         advertiser!.delegate = self
         advertiser!.startAdvertisingPeer()
         
-        clientConnected = self.expectation(description: "Client Connected")
+        clientConnected = self.allowOverfillExpectation(description: "Client Connected")
         clientPeer = MCPeerID(displayName: "client")
         clientSession = MCSession.init(peer: clientPeer!, securityIdentity: nil, encryptionPreference: .none)
         clientSession!.delegate = self
