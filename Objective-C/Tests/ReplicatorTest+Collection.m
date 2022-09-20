@@ -404,8 +404,8 @@
     AssertNil([config collectionConfig: col1b]);
 }
 
-// exception causiung the memory leak!
-// TODO: https://issues.couchbase.com/browse/CBL-3576
+// exception causes memory leak!
+// https://clang.llvm.org/docs/AutomaticReferenceCounting.html#exceptions
 - (void) _testAddCollectionsFromDifferentDatabaseInstances {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
@@ -439,8 +439,8 @@
     }];
 }
 
-// memory leak with NSException
-// TODO: https://issues.couchbase.com/browse/CBL-3576
+// exception causes memory leak!
+// https://clang.llvm.org/docs/AutomaticReferenceCounting.html#exceptions
 - (void) _testAddDeletedCollections {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
