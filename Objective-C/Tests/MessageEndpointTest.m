@@ -171,6 +171,8 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
 }
 
 - (void) startDiscovery {
+    // TODO: check whether this is a new issue introduced?
+    // https://issues.couchbase.com/browse/CBL-3699
     _serverConnected = [self allowOverfillExpectationWithDescription: @"Server Connected"];
     _serverPeer = [[MCPeerID alloc] initWithDisplayName: @"server"];
     _serverSession = [[MCSession alloc] initWithPeer:_serverPeer
@@ -184,6 +186,8 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _advertiser.delegate = self;
     [_advertiser startAdvertisingPeer];
     
+    // TODO: check whether this is a new issue introduced?
+    // https://issues.couchbase.com/browse/CBL-3699
     _clientConnected = [self allowOverfillExpectationWithDescription: @"Client Connected"];
     _clientPeer = [[MCPeerID alloc] initWithDisplayName: @"client"];
     _clientSession = [[MCSession alloc] initWithPeer: _clientPeer
