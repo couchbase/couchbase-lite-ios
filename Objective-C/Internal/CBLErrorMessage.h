@@ -36,7 +36,7 @@ extern NSString* const kCBLErrorMessageBlobContentNull;
 extern NSString* const kCBLErrorMessageResolvedDocContainsNull;
 extern NSString* const kCBLErrorMessageResolvedDocFailedLiteCore;
 extern NSString* const kCBLErrorMessageResolvedDocWrongDb;
-extern NSString* const kCBLErrorMessageDBClosed;
+extern NSString* const kCBLErrorMessageDBClosedOrCollectionDeleted;
 extern NSString* const kCBLErrorMessageNoDocumentRevision;
 extern NSString* const kCBLErrorMessageFragmentPathNotExist;
 extern NSString* const kCBLErrorMessageInvalidCouchbaseObjType;
@@ -66,6 +66,21 @@ extern NSString* const kCBLErrorMessageFailToConvertC4Cert;
 extern NSString* const kCBLErrorMessageDuplicateCertificate;
 extern NSString* const kCBLErrorMessageMissingCommonName;
 extern NSString* const kCBLErrorMessageFailToRemoveKeyPair;
+extern NSString* const kCBLErrorMessageDocumentNotFoundInCollection;
+extern NSString* const kCBLErrorMessageDocumentAnotherCollection;
+extern NSString* const kCBLErrorMessageInvalidBlob;
+extern NSString* const kCBLErrorMessageCollectionNotFoundDuringConflict;
+extern NSString* const kCBLErrorMessageConfigNotFoundDuringConflict;
+extern NSString* const kCBLErrorMessageCollectionNotFoundInFilter;
+extern NSString* const kCBLErrorMessageQueryFromInvalidDB;
+extern NSString* const kCBLErrorMessageEncodeFailureInvalidQuery;
+extern NSString* const kCBLErrorMessageNoDefaultCollectionInConfig;
+extern NSString* const kCBLErrorMessageNegativeHeartBeat;
+extern NSString* const kCBLErrorMessageNegativeMaxAttemptWaitTime;
+extern NSString* const kCBLErrorMessageAccessDBWithoutCollection;
+extern NSString* const kCBLErrorMessageAddInvalidCollection;
+extern NSString* const kCBLErrorMessageAddCollectionFromAnotherDB;
+extern NSString* const kCBLErrorMessageAddEmptyCollectionArray;
 
 @end
 

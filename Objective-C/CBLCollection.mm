@@ -222,7 +222,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         
         if (!document.revisionID)
             return createError(CBLErrorNotFound,
-                               @"Document doesn't exist in the collection.", error);
+                               kCBLErrorMessageDocumentNotFoundInCollection, error);
         
         if ([self purgeDocumentWithID: document.id error: error]) {
             [document replaceC4Doc: nil];
@@ -721,7 +721,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         document.collection = self;
     } else if (document.collection != self) {
         return createError(CBLErrorInvalidParameter,
-                           @"Cannot operate on a document from another collection.", error);
+                           kCBLErrorMessageDocumentAnotherCollection, error);
     }
     return YES;
 }

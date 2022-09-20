@@ -21,6 +21,7 @@
 #import "CBLCollection+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLErrorMessage.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
@@ -193,7 +194,7 @@ using namespace fleece;
      
     if (!db) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to query from an invalid database"];
+                    format: @"%@", kCBLErrorMessageQueryFromInvalidDB];
     }
     
     return [self initWithDatabase: db JSONRepresentation: json];
@@ -228,9 +229,9 @@ using namespace fleece;
             NSError* error = nil;
             NSData* params = [parameters encode: &error];
             if (!params) {
-                CBLWarnError(Query, @"Query parameters failed to encode %@", error);
+                CBLWarnError(Query, @"%@ %@", kCBLErrorMessageEncodeFailureInvalidQuery, error);
                 [NSException raise: NSInvalidArgumentException
-                            format: @"Invalid query parameter, failed to encode"];
+                            format: @"%@", kCBLErrorMessageEncodeFailureInvalidQuery];
             }
             
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];

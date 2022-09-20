@@ -728,10 +728,10 @@ static void onDocsEnded(C4Replicator* repl,
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
-    Assert(c, @"Collection not found in replicator config when resolving a conflict");
+    Assert(c, kCBLErrorMessageCollectionNotFoundDuringConflict);
     
     CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
-    Assert(colConfig, @"Collection config not found in replicator config when resolving a conflict");
+    Assert(colConfig, kCBLErrorMessageConfigNotFoundDuringConflict);
     
     NSError* error = nil;
     if (![c resolveConflictInDocument: doc.id
@@ -787,7 +787,7 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
     NSString* name = slice2string(c4spec.name);
     NSString* scopeName = slice2string(c4spec.scope);
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", scopeName, name)];
-    Assert(c, @"Collection is not found in the replicator config when calling the filter function.");
+    Assert(c, kCBLErrorMessageCollectionNotFoundInFilter);
     
     auto doc = [[CBLDocument alloc] initWithCollection: c
                                             documentID: slice2string(docID)

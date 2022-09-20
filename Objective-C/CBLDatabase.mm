@@ -315,8 +315,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (CBLBlob*) getBlob: (NSDictionary*)properties {
     if (![CBLBlob isBlob: properties])
         [NSException raise: NSInvalidArgumentException
-                    format: @"The given blob's metadata might be missing the digest / @type key "
-                                "or containing invalid values"];
+                    format: @"%@", kCBLErrorMessageInvalidBlob];
     C4BlobKey expectedKey;
     CBLStringBytes key(properties[kCBLBlobDigestProperty]);
     if (!c4blob_keyFromString(key, &expectedKey))
@@ -846,7 +845,7 @@ static void throwIfNotOpenError(NSError* error) {
 - (void) mustBeOpen {
     if ([self isClosed])
         [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageDBClosed];
+                    format: @"%@", kCBLErrorMessageDBClosedOrCollectionDeleted];
 }
 
 - (BOOL) mustBeOpen: (NSError**)outError {
@@ -863,7 +862,7 @@ static void throwIfNotOpenError(NSError* error) {
 - (void) mustBeOpenAndNotClosing {
     if (_state < kCBLDatabaseStateOpened)
         [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageDBClosed];
+                    format: @"%@", kCBLErrorMessageDBClosedOrCollectionDeleted];
 }
 
 // Must be called inside self lock

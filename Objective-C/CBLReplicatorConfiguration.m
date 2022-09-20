@@ -22,6 +22,7 @@
 #import "CBLAuthenticator+Internal.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLErrorMessage.h"
 #import "CBLVersion.h"
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
@@ -156,7 +157,7 @@
     CBLCollectionConfiguration* config = [self defaultCollectionConfig];
     if (!config) {
         [NSException raise: NSInternalInconsistencyException
-                    format: @"No default collection added to the configuration"];
+                    format: @"%@", kCBLErrorMessageNoDefaultCollectionInConfig];
     }
     return config;
 }
@@ -216,7 +217,7 @@
     
     if (heartbeat < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store negative value in heartbeat"];
+                    format: @"%@", kCBLErrorMessageNegativeHeartBeat];
     
     _heartbeat = heartbeat;
 }
@@ -232,7 +233,7 @@
     
     if (maxAttemptWaitTime < 0)
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to store negative value in maxAttemptWaitTime"];
+                    format: @"%@", kCBLErrorMessageNegativeMaxAttemptWaitTime];
     
     _maxAttemptWaitTime = maxAttemptWaitTime;
 }
@@ -245,7 +246,7 @@
 - (CBLDatabase*) database {
     if (!_database)
         [NSException raise: NSInternalInconsistencyException
-                    format: @"Attempt to access database property but no collections added"];
+                    format: @"%@", kCBLErrorMessageAccessDBWithoutCollection];
     return _database;
 }
 
@@ -254,13 +255,13 @@
     CBLDatabase* colDB = collection.db;
     if (!collection.isValid || !colDB) {
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to add an invalid collection"];
+                    format: @"%@", kCBLErrorMessageAddInvalidCollection];
     }
     
     if (_database) {
         if (_database != colDB) {
             [NSException raise: NSInvalidArgumentException
-                        format: @"Attempt to add collection from different databases"];
+                        format: @"%@", kCBLErrorMessageAddCollectionFromAnotherDB];
         }
     } else {
         _database = colDB;
@@ -279,7 +280,7 @@
                  config: (nullable CBLCollectionConfiguration*)config {
     if (collections.count <= 0) {
         [NSException raise: NSInvalidArgumentException
-                    format: @"Attempt to add empty collection array"];
+                    format: @"%@", kCBLErrorMessageAddEmptyCollectionArray];
     }
     
     for (CBLCollection* col in collections) {
