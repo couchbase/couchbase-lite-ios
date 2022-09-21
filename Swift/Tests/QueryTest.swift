@@ -1933,7 +1933,6 @@ class QueryTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             try! self.db.purgeDocument(withID: "doc1")
         }
-        
         wait(for: [x1], timeout: 10.0)
         query.removeChangeListener(withToken: token)
         XCTAssertEqual(count, 2)
