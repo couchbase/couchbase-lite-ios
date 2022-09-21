@@ -1930,7 +1930,7 @@ class QueryTest: CBLTestCase {
                 x1.fulfill()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.db.purgeDocument(withID: "doc1")
         }
         wait(for: [x1], timeout: 10.0)
