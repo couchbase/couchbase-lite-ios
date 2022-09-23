@@ -66,15 +66,7 @@
         _database = database;
         _target = target;
         
-        _replicatorType = kCBLReplicatorTypePushAndPull;
-#ifdef COUCHBASE_ENTERPRISE
-        _acceptOnlySelfSignedServerCertificate = NO;
-#endif
-        _heartbeat = 0;
-        _maxAttempts = 0;
-        _maxAttemptWaitTime = 0;
-        _enableAutoPurge = YES;
-        _collectionConfigs = [NSMutableDictionary dictionary];
+        [self initializeProperties];
         
         // add default collection
         CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
@@ -97,17 +89,21 @@
     if (self) {
         _target = target;
         
-        _replicatorType = kCBLReplicatorTypePushAndPull;
-#ifdef COUCHBASE_ENTERPRISE
-        _acceptOnlySelfSignedServerCertificate = NO;
-#endif
-        _heartbeat = 0;
-        _maxAttempts = 0;
-        _maxAttemptWaitTime = 0;
-        _enableAutoPurge = YES;
-        _collectionConfigs = [NSMutableDictionary dictionary];
+        [self initializeProperties];
     }
     return self;
+}
+
+- (void) initializeProperties {
+    _replicatorType = kCBLReplicatorTypePushAndPull;
+#ifdef COUCHBASE_ENTERPRISE
+    _acceptOnlySelfSignedServerCertificate = NO;
+#endif
+    _heartbeat = 0;
+    _maxAttempts = 0;
+    _maxAttemptWaitTime = 0;
+    _enableAutoPurge = YES;
+    _collectionConfigs = [NSMutableDictionary dictionary];
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
