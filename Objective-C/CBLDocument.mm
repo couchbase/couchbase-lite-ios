@@ -58,19 +58,6 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithCollection: (nullable CBLCollection*)collection
-                         documentID: (NSString*)documentID
-                               body: (nullable FLDict)body {
-    NSParameterAssert(documentID != nil);
-    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
-    if (self) {
-        _fleeceData = body;
-        _revID = nil;
-        [self updateDictionary];
-    }
-    return self;
-}
-
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
                          revisionID: (NSString*)revisionID
