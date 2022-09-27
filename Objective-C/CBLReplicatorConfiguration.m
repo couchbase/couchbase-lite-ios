@@ -65,16 +65,13 @@
     if (self) {
         _database = database;
         _target = target;
-        _replicatorType = kCBLReplicatorTypePushAndPull;
-#ifdef COUCHBASE_ENTERPRISE
-        _acceptOnlySelfSignedServerCertificate = NO;
-#endif
-        _heartbeat = 0;
-        _maxAttempts = 0;
-        _maxAttemptWaitTime = 0;
-        _enableAutoPurge = YES;
         
-        [self initCollectionConfigs];
+        [self initializeProperties];
+        
+        // add default collection
+        CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
+        CBLCollectionConfiguration* defaultCollectionConfig = [[CBLCollectionConfiguration alloc] init];
+        [self addCollection: defaultCollection config: defaultCollectionConfig];
         
     }
     return self;
@@ -92,19 +89,21 @@
     if (self) {
         _target = target;
         
-        [self initCollectionConfigs];
+        [self initializeProperties];
     }
     return self;
 }
 
-- (void) initCollectionConfigs {
+- (void) initializeProperties {
+    _replicatorType = kCBLReplicatorTypePushAndPull;
+#ifdef COUCHBASE_ENTERPRISE
+    _acceptOnlySelfSignedServerCertificate = NO;
+#endif
+    _heartbeat = 0;
+    _maxAttempts = 0;
+    _maxAttemptWaitTime = 0;
+    _enableAutoPurge = YES;
     _collectionConfigs = [NSMutableDictionary dictionary];
-    
-    if (_database) {
-        CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
-        CBLCollectionConfiguration* defaultCollectionConfig = [[CBLCollectionConfiguration alloc] init];
-        [self addCollection: defaultCollection config: defaultCollectionConfig];
-    }
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -251,7 +250,7 @@
 }
 
 - (void) addCollection: (CBLCollection*)collection
-                config: (nullable CBLCollectionConfiguration*)config {
+                config: (nullable CBLCollectionConfiguration*)config {    
     CBLDatabase* colDB = collection.db;
     if (!collection.isValid || !colDB) {
         [NSException raise: NSInvalidArgumentException
@@ -267,6 +266,7 @@
         _database = colDB;
     }
     
+    // collection config is copied
     CBLCollectionConfiguration* colConfig = nil;
     if (config)
         colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];

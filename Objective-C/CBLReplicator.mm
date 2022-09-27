@@ -110,7 +110,12 @@ typedef enum {
     
     self = [super init];
     if (self) {
-        NSParameterAssert(config.database != nil && config.target != nil);
+        NSParameterAssert(config.target != nil);
+        
+        if (config.collections.count == 0)
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Attempt to initiate replicator with empty collection"];
+        
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
         _progressLevel = kCBLProgressLevelOverall;
         _changeNotifier = [CBLChangeNotifier new];

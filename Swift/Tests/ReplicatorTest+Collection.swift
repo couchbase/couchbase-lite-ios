@@ -574,7 +574,21 @@ class ReplicatorTest_Collection: ReplicatorTest {
         mdoc2.setString("update2.2", forKey: "update")
         try col2a.save(document: mdoc2)
         
-        run(config: config, expectedError: nil)
+        let r = Replicator(config: config)
+        var count = 0
+        r.addDocumentReplicationListener { docReplication in
+            count = count + 1
+            
+            XCTAssertEqual(docReplication.documents.count, 1)
+            let doc = docReplication.documents[0]
+            if count == 1 {
+                XCTAssertNil(doc.error)
+            } else {
+                XCTAssertEqual((doc.error as? NSError)?.code, CBLError.httpConflict)
+            }
+            
+        }
+        run(replicator: r, expectedError: nil)
         
         let doc = try col1a.document(id: "doc1")
         XCTAssertEqual(doc!.string(forKey: "update"), "update2.2")
@@ -592,7 +606,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         doc1a.setString("update0", forKey: "update")
         try col1a.save(document: doc1a)
         
-        let doc1b = try createDocument("doc1")
+        let doc1b = try createDocument("doc2")
         doc1b.setString("update0", forKey: "update")
         try col1b.save(document: doc1b)
         
@@ -625,15 +639,36 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try col2a.save(document: mdoc2a)
         
         // Update "doc1" in colA and colB of database B.
-        let mdoc1b = try col1b.document(id: "doc1")!.toMutable()
+        let mdoc1b = try col1b.document(id: "doc2")!.toMutable()
         mdoc1b.setString("update1b", forKey: "update")
         try col1b.save(document: mdoc1b)
         
-        var mdoc2b = try col2b.document(id: "doc1")!.toMutable()
+        var mdoc2b = try col2b.document(id: "doc2")!.toMutable()
         mdoc2b.setString("update2b", forKey: "update")
         try col2b.save(document: mdoc2b)
         
-        run(config: config, expectedError: nil)
+        let r = Replicator(config: config)
+        var count = 0
+        r.addDocumentReplicationListener { docReplication in
+            count = count + 1
+            
+            if count <= 2 {
+                // 1, 2 change will be update revisions from colA & colB collections.
+                XCTAssertEqual(docReplication.documents.count, 1)
+                let doc = docReplication.documents[0]
+                XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
+                XCTAssertNil(doc.error)
+                
+            } else {
+                // 3rd will be the conflict change
+                XCTAssertEqual(docReplication.documents.count, 2)
+                for doc in docReplication.documents {
+                    XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
+                    XCTAssertEqual((doc.error as? NSError)?.code, CBLError.httpConflict)
+                }
+            }
+        }
+        run(replicator: r, expectedError: nil)
         
         // verify the results
         var docA = try col1a.document(id: "doc1")
@@ -641,9 +676,9 @@ class ReplicatorTest_Collection: ReplicatorTest {
         docA = try col2a.document(id: "doc1")
         XCTAssertEqual(docA!.string(forKey: "update"), "update2a")
         
-        var docB = try col1b.document(id: "doc1")
+        var docB = try col1b.document(id: "doc2")
         XCTAssertEqual(docB!.string(forKey: "update"), "update2b")
-        docB = try col2b.document(id: "doc1")
+        docB = try col2b.document(id: "doc2")
         XCTAssertEqual(docB!.string(forKey: "update"), "update2b")
     }
     

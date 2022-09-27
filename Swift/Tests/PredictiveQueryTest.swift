@@ -127,7 +127,8 @@ class PredictiveQueryTest: CBLTestCase {
             "float_min": Float.leastNormalMagnitude,
             "float_max": Float.greatestFiniteMagnitude,
             "double_min": Double.leastNormalMagnitude,
-            "double_max": Double.greatestFiniteMagnitude,
+            // rounding error: https://issues.couchbase.com/browse/CBL-1363
+            // "double_max": Double.greatestFiniteMagnitude,
             "boolean_true": true,
             "boolean_false": false,
             "string": "hello",
@@ -168,7 +169,6 @@ class PredictiveQueryTest: CBLTestCase {
             XCTAssertEqual(pred.float(forKey: "float_min"), Float.leastNormalMagnitude)
             XCTAssertEqual(pred.float(forKey: "float_max"), Float.greatestFiniteMagnitude)
             XCTAssertEqual(pred.double(forKey: "double_min"), Double.leastNormalMagnitude)
-            XCTAssertEqual(pred.double(forKey: "double_max"), Double.greatestFiniteMagnitude)
             XCTAssertEqual(pred.boolean(forKey: "boolean_true"), true)
             XCTAssertEqual(pred.boolean(forKey: "boolean_false"), false)
             XCTAssertEqual(pred.string(forKey: "string"), "hello")
