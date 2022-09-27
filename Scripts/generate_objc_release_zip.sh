@@ -66,7 +66,7 @@ then
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="coverage"
   EDITION="community"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
 else
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
@@ -74,7 +74,7 @@ else
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
   OPTS="--EE"
 fi
 
@@ -128,6 +128,7 @@ then
     echo "Generate coverage report for ObjC ..."
     slather coverage --html \
         --scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
+        --binary-basename "CouchbaseLite" \
         --configuration "$CONFIGURATION_TEST" \
         --ignore "vendor/*" --ignore "Swift/*" \
         --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
