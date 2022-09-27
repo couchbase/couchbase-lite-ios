@@ -66,14 +66,14 @@ then
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="coverage"
   EDITION="community"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
 else
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
   OPTS="--EE"
 fi
 
@@ -124,6 +124,7 @@ then
     echo "Generate coverage report for Swift ..."
     slather coverage --html \
         --scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
+        --binary-basename "CouchbaseLiteSwift" \
         --configuration "$CONFIGURATION_TEST"  \
         --ignore "vendor/*" --ignore "Objective-C/*" \
         --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" \
@@ -176,7 +177,7 @@ sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-sw
 if [[ -z $NO_API_DOCS ]]; then
   # Generate API docs:
   echo "Generate API docs ..."
-  jazzy --clean --xcodebuild-arguments "clean,build,-scheme,${SCHEME_PREFIX}_Swift,-sdk,iphonesimulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLiteSwift
+  jazzy --clean --xcodebuild-arguments "clean,build,-scheme,${SCHEME_PREFIX}_Swift,-sdk,iphonesimulator,-destination,generic/platform=iOS Simulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLiteSwift
   
   # >> Swift API docs
   pushd "$OUTPUT_SWIFT_DOCS_DIR" > /dev/null
