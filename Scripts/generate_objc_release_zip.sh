@@ -66,7 +66,7 @@ then
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="coverage"
   EDITION="community"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
@@ -74,7 +74,7 @@ else
   COVERAGE_NAME="coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 14"
+  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
   OPTS="--EE"
 fi
 
