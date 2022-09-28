@@ -64,8 +64,10 @@ __deprecated_msg(" Use config.collections instead");
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
 /**
- If this property is non-null, the server is required to have this exact SSL/TLS certificate,
- or the connection will fail.
+ The remote target's SSL certificate.
+ 
+ @Note: The pinned cert will be evaluated against any certs in a cert chain,
+ and the cert chain will be valid only if the cert chain contains the pinned cert.
  */
 @property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 

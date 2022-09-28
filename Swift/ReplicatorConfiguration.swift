@@ -85,6 +85,9 @@ public struct ReplicatorConfiguration {
     #endif
     
     /// The remote target's SSL certificate.
+    ///
+    /// - Note: The pinned cert will be evaluated against any certs in a cert chain,
+    /// and the cert chain will be valid only if the cert chain contains the pinned cert.
     public var pinnedServerCertificate: SecCertificate?
     
     /// Extra HTTP headers to send in all requests to the remote target.
