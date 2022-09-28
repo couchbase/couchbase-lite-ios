@@ -64,16 +64,14 @@ then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
-  COVERAGE_NAME="coverage"
+  COVERAGE_NAME="swift_coverage"
   EDITION="community"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
-  COVERAGE_NAME="coverage-ee"
+  COVERAGE_NAME="swift_coverage-ee"
   EDITION="enterprise"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
   OPTS="--EE"
 fi
 
@@ -108,13 +106,16 @@ then
     -configuration "$CONFIGURATION_TEST" \
     -sdk macosx
 
-  echo "Run iOS tests ..."
+  # get the latest simulator
+  TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
+  echo "Run Swift iOS tests on ${TEST_SIMULATOR}..."
+  
   xcodebuild clean test \
     -project CouchbaseLite.xcodeproj \
     -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
     -configuration "$CONFIGURATION_TEST" \
     -sdk iphonesimulator \
-    -destination "$TEST_SIMULATOR" \
+    -destination "platform=iOS Simulator,name=$TEST_SIMULATOR" \
     -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
@@ -128,7 +129,7 @@ then
         --configuration "$CONFIGURATION_TEST"  \
         --ignore "vendor/*" --ignore "Objective-C/*" \
         --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" \
-        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" \
+        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME" \
         CouchbaseLite.xcodeproj > /dev/null
     
     # Zip reports:
