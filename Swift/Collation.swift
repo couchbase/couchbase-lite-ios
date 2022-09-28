@@ -39,9 +39,7 @@ public final class Collation {
     }
     
     /// Creates a Unicode collation that will compare two strings by using Unicode Collation
-    /// Algorithm. If the locale is not specified, the collation is Unicode-aware but
-    /// not localized; for example, accented Roman letters sort right after the base letter
-    /// (This is implemented by using the "en_US" locale.).
+    /// Algorithm. If the locale is not specified, the current system locale will be used by default.
     ///
     /// - Returns: The Unicode collation.
     static public func unicode() -> Unicode {
@@ -73,9 +71,8 @@ public final class Collation {
     }
     
     /// [Unicode Collation](http://userguide.icu-project.org/collation) that will compare two strings
-    /// by using Unicode collation algorithm. If the locale is not specified, the collation is
-    /// Unicode-aware but not localized; for example, accented Roman letters sort right after
-    /// the base letter (This is implemented by using the "en_US" locale).
+    /// by using Unicode collation algorithm. If the locale is not specified,
+    /// the current system locale will be used by default.
     public final class Unicode: CollationProtocol {
         
         /// Specifies whether the collation is case-insenstive or not. Case-insensitive
@@ -107,8 +104,8 @@ public final class Collation {
         ///                     [ISO-3166](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
         ///                     country code: "en", "en_US", "fr_CA", etc.
         ///                     Specifing the locale will allow the collation to compare strings
-        ///                     appropriately base on the locale. If not specified, the 'en_US'
-        ///                     will be used by default.
+        ///                     appropriately base on the locale. If not specified,
+        ///                     the current system locale will be used by default.
         /// - Returns: The Unicode Collation object.
         public func locale(_ locale: String?) -> Self {
             self.locale = locale

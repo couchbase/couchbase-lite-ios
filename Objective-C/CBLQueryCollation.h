@@ -43,14 +43,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Creates a Unicode Collation that compares strings by using Unicode Collation Algorithm.
- If the locale is not specified, the collation is Unicode-aware but not localized; for example,
- accented Roman letters sort right after the base letter
- (This is implemented by using the "en_US" locale).
+ If the locale is not specified, the current system locale will be used by default.
  
  @param locale The locale code which is an ISO-639 language code plus, optionally,
                an underscore and an ISO-3166 country code: "en", "en_US", "fr_CA", etc.
                Specifing the locale will allow the collation to compare strings appropriately
-               base on the locale. If not specified, the 'en_US' will be used by default.
+               base on the locale. If not specified, the current system locale will be used
+               by default.
  @param ignoreCase True for case-insensitive; false for case sensitive.
  @param ignoreAccents True for accent-insensitive; false for accent-sensitive.
  @return The Unicode Collation.
