@@ -1697,7 +1697,7 @@ class QueryTest: CBLTestCase {
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .where(Meta.expiration
-                .lessThan(Expression.double(expiry.addingTimeInterval(1).timeIntervalSince1970 * 1000)))
+                .lessThan(Expression.double(expiry.addingTimeInterval(2).timeIntervalSince1970 * 1000)))
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 1)
@@ -1713,7 +1713,7 @@ class QueryTest: CBLTestCase {
             .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(db))
             .where(Meta.expiration
-                .lessThan(Expression.double(expiry.addingTimeInterval(-1).timeIntervalSince1970 * 1000)))
+                .lessThan(Expression.double(expiry.addingTimeInterval(-2).timeIntervalSince1970 * 1000)))
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 0)
@@ -1730,7 +1730,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(Meta.expiration
                 .greaterThan(Expression
-                    .double(expiry.addingTimeInterval(-1).timeIntervalSince1970 * 1000)))
+                    .double(expiry.addingTimeInterval(-2).timeIntervalSince1970 * 1000)))
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 1)
@@ -1747,7 +1747,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(Meta.expiration
                 .greaterThan(Expression
-                    .double(expiry.addingTimeInterval(1).timeIntervalSince1970 * 1000)))
+                    .double(expiry.addingTimeInterval(2).timeIntervalSince1970 * 1000)))
         let rs = try q.execute()
         
         XCTAssertEqual(rs.allResults().count, 0)

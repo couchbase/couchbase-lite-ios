@@ -205,7 +205,7 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(error);
     
-    NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970 * 1000;
+    NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 2].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
@@ -230,7 +230,7 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
+    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
@@ -255,7 +255,7 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
+    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
