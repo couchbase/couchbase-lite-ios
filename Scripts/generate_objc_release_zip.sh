@@ -64,17 +64,15 @@ then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
-  COVERAGE_NAME="coverage"
+  COVERAGE_NAME="objc_coverage"
   EDITION="community"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
 else
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
-  COVERAGE_NAME="coverage-ee"
+  COVERAGE_NAME="objc_coverage-ee"
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
-  TEST_SIMULATOR="platform=iOS Simulator,name=iPhone 11"
   OPTS="--EE"
 fi
 
@@ -110,7 +108,10 @@ then
     -configuration "$CONFIGURATION_TEST" \
     -sdk macosx || checkCrashLogs
   
-  echo "Run ObjC iOS tests ..."
+  # get the latest simulator
+  TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
+  
+  echo "Run ObjC iOS tests on ${TEST_SIMULATOR}..."
   # iOS-App target runs Keychain-Accessing tests
   sh Scripts/xctest_crash_log.sh --delete-all
   xcodebuild clean test \
@@ -118,7 +119,7 @@ then
     -scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
     -configuration "$CONFIGURATION_TEST" \
     -sdk iphonesimulator \
-    -destination "$TEST_SIMULATOR" \
+    -destination "platform=iOS Simulator,name=$TEST_SIMULATOR" \
     -enableCodeCoverage YES || checkCrashLogs
   
   
@@ -132,10 +133,16 @@ then
         --configuration "$CONFIGURATION_TEST" \
         --ignore "vendor/*" --ignore "Swift/*" \
         --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
-        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" \
+        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME" \
         --binary-basename "CouchbaseLite.framework"  \
         --binary-basename "CBL_EE_Tests" \
         CouchbaseLite.xcodeproj > /dev/null
+        
+        # Zip reports:
+        pushd "$OUTPUT_DIR" > /dev/null
+        zip -ry $COVERAGE_NAME.zip $COVERAGE_NAME/*
+        popd > /dev/null
+        rm -rf "$OUTPUT_DIR/$COVERAGE_NAME"
   fi
 fi
 
