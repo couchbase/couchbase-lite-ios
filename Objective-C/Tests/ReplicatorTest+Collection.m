@@ -919,22 +919,20 @@
     [col2b saveDocument: mdoc error: &error];
     
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
-    __block int count = 0;
     id token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docReplication) {
-        count = count + 1;
-        // 1, 2 change will be update revisions from colA & colB collections. 
-        if (count <= 2) {
-            AssertEqual(docReplication.documents.count, 1);
+        // change with single document are the update revisions from colA & colB collections.
+        if (docReplication.documents.count == 1) {
             CBLReplicatedDocument* doc = docReplication.documents[0];
             AssertEqualObjects(doc.id, [doc.collection isEqualToString: @"colA"] ?  @"doc1" : @"doc2");
             AssertEqual(doc.error.code, 0);
-        } else {
-            // 3rd will be the conflict change
-            AssertEqual(docReplication.documents.count, 2);
+        } else if (docReplication.documents.count == 2) {
+            // change with 2 docs, will be the conflict
             for (CBLReplicatedDocument* doc in docReplication.documents) {
                 AssertEqualObjects(doc.id, [doc.collection isEqualToString: @"colA"] ?  @"doc1" : @"doc2");
                 AssertEqual(doc.error.code, CBLErrorHTTPConflict);
             }
+        } else {
+            AssertFalse(true, @"Unexpected document change listener");
         }
     }];
     [self runWithReplicator: r errorCode: 0 errorDomain: nil];

@@ -648,24 +648,21 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try col2b.save(document: mdoc2b)
         
         let r = Replicator(config: config)
-        var count = 0
         r.addDocumentReplicationListener { docReplication in
-            count = count + 1
-            
-            if count <= 2 {
-                // 1, 2 change will be update revisions from colA & colB collections.
-                XCTAssertEqual(docReplication.documents.count, 1)
+            if docReplication.documents.count == 1 {
+                // change with single doc, will be update revisions from colA & colB collections.
                 let doc = docReplication.documents[0]
                 XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
                 XCTAssertNil(doc.error)
                 
-            } else {
-                // 3rd will be the conflict change
-                XCTAssertEqual(docReplication.documents.count, 2)
+            } else if docReplication.documents.count == 2 {
+                // change with 2 docs, will be the conflict change
                 for doc in docReplication.documents {
                     XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
                     XCTAssertEqual((doc.error as? NSError)?.code, CBLError.httpConflict)
                 }
+            } else {
+                XCTFail("Unexpected document change listener")
             }
         }
         run(replicator: r, expectedError: nil)
