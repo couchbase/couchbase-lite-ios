@@ -57,6 +57,8 @@
                @"Error deleting CouchbaseLite folder: %@", error);
     }
     [self openDB];
+    
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
 }
 
 - (void) tearDown {
