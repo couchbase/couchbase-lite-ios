@@ -25,8 +25,7 @@
 // TODO: Add to CBLErrorMessage : CBL-3296
 #define CBLCollectionErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
                                     code: CBLErrorNotOpen \
-                                    userInfo: @{ NSLocalizedDescriptionKey: \
-                                        @"Collection has been deleted, or its database closed." }]
+                                    userInfo: @{ NSLocalizedDescriptionKey: kCBLErrorMessageDBClosedOrCollectionDeleted }]
 
 #define CBLDatabaseErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
                                     code: CBLErrorNotOpen \
