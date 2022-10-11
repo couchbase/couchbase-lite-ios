@@ -328,6 +328,16 @@ static const C4DatabaseConfig2 kDBConfig = {
     if (size == -1)
         return nil;
     
+    if (properties[kCBLBlobLengthProperty]) {
+        NSInteger num = asNumber(properties[kCBLBlobLengthProperty]).unsignedLongLongValue;
+        Assert(num == size, @"Given length property and retrieved blob length mismatch");
+    } else {
+        // if length property is missing, will include it
+        NSMutableDictionary* dict = [properties mutableCopy];
+        dict[kCBLBlobLengthProperty] = @(size);
+        properties = [dict copy];
+    }
+    
     return [[CBLBlob alloc] initWithDatabase: self properties: properties];
 }
 

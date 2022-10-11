@@ -1627,7 +1627,8 @@
     
     // expected = without @type
     NSDictionary* expectedDict = @{kCBLBlobDigestProperty: blob.digest,
-                                   kCBLBlobContentTypeProperty: blob.contentType};
+                                   kCBLBlobContentTypeProperty: blob.contentType,
+                                   kCBLBlobLengthProperty: @(blob.length)};
     CBLBlob* retrivedBlob = [self.db getBlob: dict];
     AssertEqual(retrivedBlob.properties.count, expectedDict.count);
     AssertEqualObjects(retrivedBlob.properties, expectedDict);
@@ -2150,6 +2151,7 @@
     AssertNotNil(blob);
     AssertEqualObjects(blob.digest, data.digest);
     AssertEqualObjects(blob.content, content);
+    AssertEqual(blob.length, data.length);
 }
 
 - (void) testUnsavedBlob {
@@ -2217,12 +2219,14 @@
     CBLBlob* blob;
     NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
     blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
+    NSUInteger size = blob.length;
     [self.db saveBlob: blob error: &error];
     AssertNil(error);
     
     blob = [self.db getBlob: (@{kCBLTypeProperty: kCBLBlobType, kCBLBlobDigestProperty: blob.digest})];
     AssertNotNil(blob);
     AssertEqualObjects(blob.content, content);
+    AssertEqual(blob.length, size);
     
     Assert([self.db performMaintenance: kCBLMaintenanceTypeCompact error: &error]);
     AssertNil(error);
