@@ -1666,11 +1666,7 @@
     CBLBlob* retrivedBlob = [self.db getBlob: @{kCBLTypeProperty: kCBLBlobType,
                                                 kCBLBlobDigestProperty: blob.digest,
                                                 kCBLBlobContentTypeProperty: @"text/plain",
-                                                kCBLBlobLengthProperty: @25,
                                                 @"dummy": @"no-op"}];
-    
-    // this doesn't seems right at first look. since retrived blob has length 25, whereas the original blob has length 8.
-    // it will be correct once we access the content of the blob.
     AssertEqualObjects(retrivedBlob, blob);
 }
 
