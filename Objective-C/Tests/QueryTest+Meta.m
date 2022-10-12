@@ -255,14 +255,24 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
+    CBLQuery* q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
+    AssertNotNil(q);
+    NSEnumerator* rs = [q execute: &error];
+    AssertNil(error);
+    NSArray<CBLQueryResult*>* objs = [rs allObjects];
+    AssertEqual([objs count], 1u);
+    NSLog(@">>>----- %@ ", [objs[0] toJSON]);
+    double exp = [objs[0] doubleForKey: @"expiration"];
+    
     NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryMeta expiration]
-                                            greaterThan: [CBLQueryExpression double: earlier]]];
+    Assert(exp > earlier);
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [[CBLQueryMeta expiration]
+                                  greaterThan: [CBLQueryExpression double: earlier]]];
     
     AssertNotNil(q);
-    NSEnumerator* rs = [q execute:&error];
+    rs = [q execute: &error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], 1u);
 }
