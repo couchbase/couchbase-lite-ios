@@ -59,6 +59,8 @@
 - (void) setUp {
     [super setUp];
     timeout = 20.0;
+    
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
 }
 
 - (void) tearDown {
