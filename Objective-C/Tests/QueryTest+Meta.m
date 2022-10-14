@@ -304,7 +304,7 @@
     exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
     NSLog(@">>>----- query expiration II %@, %lu, %f", [objs[0] toJSON], c, exp);
     
-    q = [self.db createQuery: @"select meta().expiration from _default where meta().expiration > 1.123" error: &error];
+    q = [self.db createQuery: @"select meta(testdb).expiration from _default as testdb where meta(testdb).expiration > 1.123" error: &error];
     AssertNotNil(q);
     rs = [q execute: &error];
     AssertNil(error);
@@ -313,7 +313,7 @@
     exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
     NSLog(@">>>----- query expiration III %@, %lu, %f", [objs[0] toJSON], c, exp);
     
-    q = [self.db createQuery: @"select meta().expiration from _default where 1234 > 1.123" error: &error];
+    q = [self.db createQuery: @"select meta(testdb).expiration from _default as testdb where 1234 > 1.123" error: &error];
     AssertNotNil(q);
     rs = [q execute: &error];
     AssertNil(error);
@@ -322,7 +322,7 @@
     exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
     NSLog(@">>>----- query expiration IV %@, %lu, %f", [objs[0] toJSON], c, exp);
     
-    q = [self.db createQuery: @"select meta().expiration from _default where 1665777517006 > 1.123" error: &error];
+    q = [self.db createQuery: @"select meta(testdb).expiration from _default as testdb where 1665777517006 > 1.123" error: &error];
     AssertNotNil(q);
     rs = [q execute: &error];
     AssertNil(error);
