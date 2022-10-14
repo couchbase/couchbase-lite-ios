@@ -274,7 +274,28 @@
     AssertNotNil(q);
     rs = [q execute: &error];
     AssertNil(error);
-    AssertEqual([[rs allObjects] count], 1u);
+//    AssertEqual([[rs allObjects] count], 1u);
+    NSLog(@">>>----- query result count %lu", [[rs allObjects] count]);
+    
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [[CBLQueryMeta expiration]
+                                  greaterThan: [CBLQueryExpression longLong: (long long)earlier]]];
+    
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+
+    NSLog(@">>>----- query (long) result count %lu", [[rs allObjects] count]);
+    
+    q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+    objs = [rs allObjects];
+    NSUInteger c = [objs count];
+    exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
+    NSLog(@">>>----- query expiration at end%@, %lu, %f", [objs[0] toJSON], c, exp);
 }
 
 - (void) testExpiryNoGreaterThanDate {
