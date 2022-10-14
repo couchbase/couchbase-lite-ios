@@ -266,10 +266,17 @@
     
     NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
     Assert(exp > earlier);
+#if 0
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]
                           where: [[CBLQueryMeta expiration]
                                   greaterThan: [CBLQueryExpression double: earlier]]];
+#else
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [[CBLQueryMeta expiration]
+                                  greaterThan: [CBLQueryExpression double: 1.123]]];
+#endif
     
     AssertNotNil(q);
     rs = [q execute: &error];
@@ -296,6 +303,7 @@
     NSUInteger c = [objs count];
     exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
     NSLog(@">>>----- query expiration at end%@, %lu, %f", [objs[0] toJSON], c, exp);
+    AssertEqual(0, 1u);
 }
 
 - (void) testExpiryNoGreaterThanDate {
