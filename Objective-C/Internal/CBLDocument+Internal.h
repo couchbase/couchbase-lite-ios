@@ -31,7 +31,7 @@
 #import "CBLDictionary.h"
 #import "CBLFragment.h"
 #import "fleece/Fleece.h"
-
+#import "CBLRemoteDocument.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -70,9 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-// Used by ConnectedClient API
-// if the document is remoteDoc, this contains the document body
-@property (nonatomic, readonly) FLSliceResult remoteDocBody;
+@property (nonatomic, nullable, readonly) CBLRemoteDocument* remoteDoc;
 
 // Document is from remote-DB or a regular-DB
 @property (nonatomic, readonly) BOOL isRemoteDoc;
