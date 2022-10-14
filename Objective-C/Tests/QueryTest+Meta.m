@@ -282,7 +282,7 @@
     rs = [q execute: &error];
     AssertNil(error);
 //    AssertEqual([[rs allObjects] count], 1u);
-    NSLog(@">>>----- query result count %lu", [[rs allObjects] count]);
+    NSLog(@">>>----- query compare INTEGER and double %lu", [[rs allObjects] count]);
     
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]
@@ -293,7 +293,7 @@
     rs = [q execute: &error];
     AssertNil(error);
 
-    NSLog(@">>>----- query (long) result count %lu", [[rs allObjects] count]);
+    NSLog(@">>>----- query INTEGER and long long %lu", [[rs allObjects] count]);
     
     q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
     AssertNotNil(q);
@@ -302,8 +302,36 @@
     objs = [rs allObjects];
     NSUInteger c = [objs count];
     exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
-    NSLog(@">>>----- query expiration at end%@, %lu, %f", [objs[0] toJSON], c, exp);
-    AssertEqual(0, 1u);
+    NSLog(@">>>----- query expiration II %@, %lu, %f", [objs[0] toJSON], c, exp);
+    
+    q = [self.db createQuery: @"select meta().expiration from _default where meta().expiration > 1.123" error: &error];
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+    objs = [rs allObjects];
+    c = [objs count];
+    exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
+    NSLog(@">>>----- query expiration III %@, %lu, %f", [objs[0] toJSON], c, exp);
+    
+    q = [self.db createQuery: @"select meta().expiration from _default where 1234 > 1.123" error: &error];
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+    objs = [rs allObjects];
+    c = [objs count];
+    exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
+    NSLog(@">>>----- query expiration IV %@, %lu, %f", [objs[0] toJSON], c, exp);
+    
+    q = [self.db createQuery: @"select meta().expiration from _default where 1665777517006 > 1.123" error: &error];
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+    objs = [rs allObjects];
+    c = [objs count];
+    exp = c > 0 ? [objs[0] doubleForKey: @"expiration"] : 0;
+    NSLog(@">>>----- query expiration V %@, %lu, %f", [objs[0] toJSON], c, exp);
+
+    AssertNotNil(nil);
 }
 
 - (void) testExpiryNoGreaterThanDate {
