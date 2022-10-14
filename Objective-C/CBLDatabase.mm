@@ -666,9 +666,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     CBL_LOCK(self) {
         UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
+        NSDate* c4Now = [[NSDate alloc] initWithTimeIntervalSince1970: c4_now()/1000.0];
+        NSTimeInterval delta = c4Now.timeIntervalSinceNow;
+        UInt64 adjustedTimestamp = date ? (UInt64)((date.timeIntervalSince1970 + delta)*msec) : 0;
+        NSLog(@">>>----- delta=%f timestamp=%llu adjustedTimestamp=%llu\n", delta, timestamp, adjustedTimestamp);
+        
         C4Error err;
         CBLStringBytes docID(documentID);
-        return c4doc_setExpiration(_c4db, docID, timestamp, &err) || convertError(err, error);
+        return c4doc_setExpiration(_c4db, docID, adjustedTimestamp, &err) || convertError(err, error);
+        
+//         TODO: only for validating!
+//        return c4doc_setExpiration(_c4db, docID, timestamp, &err) || convertError(err, error);
     }
 }
 
