@@ -73,6 +73,7 @@
 .objc_class_name_CBLIndexConfiguration
 .objc_class_name_CBLFullTextIndexConfiguration
 .objc_class_name_CBLValueIndexConfiguration
+.objc_class_name_CBLRemoteDatabase
 
 # NSString constants:
 _CBLErrorDomain
