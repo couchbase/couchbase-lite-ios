@@ -109,6 +109,12 @@
 		1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1A8E2F9628FBD30B00E141A8 /* RemoteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9428FBD2F800E141A8 /* RemoteDatabase.swift */; };
+		1A8E2F9828FBD30F00E141A8 /* RemoteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9428FBD2F800E141A8 /* RemoteDatabase.swift */; };
+		1A8E2F9A28FBE65E00E141A8 /* RemoteDatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */; };
+		1A8E2F9B28FBE65E00E141A8 /* RemoteDatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */; };
+		1A8E2F9C28FBE66300E141A8 /* RemoteDatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */; };
+		1A8E2F9D28FBE66300E141A8 /* RemoteDatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */; };
 		1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0924F737320015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
@@ -1927,6 +1933,8 @@
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1A8E2F9428FBD2F800E141A8 /* RemoteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDatabase.swift; sourceTree = "<group>"; };
+		1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDatabaseTest.swift; sourceTree = "<group>"; };
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
 		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
 		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
@@ -2655,6 +2663,14 @@
 			name = ConflictResolution;
 			sourceTree = "<group>";
 		};
+		1A8E2F8828FBD2E100E141A8 /* RemoteDatabase */ = {
+			isa = PBXGroup;
+			children = (
+				1A8E2F9428FBD2F800E141A8 /* RemoteDatabase.swift */,
+			);
+			name = RemoteDatabase;
+			sourceTree = "<group>";
+		};
 		1A93FAE024F0E6C50015D54D /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
@@ -2757,6 +2773,7 @@
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93EB25A321CDCC160006FB88 /* PredictiveQueryTest.swift */,
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
+				1A8E2F9928FBDDD400E141A8 /* RemoteDatabaseTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
 				1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */,
@@ -2944,6 +2961,7 @@
 		9338BEE21ED5475200634873 /* Replication */ = {
 			isa = PBXGroup;
 			children = (
+				1A8E2F8828FBD2E100E141A8 /* RemoteDatabase */,
 				1A41601A227D084A0061A567 /* ConflictResolution */,
 				93CED8D020488C9500E6F0A4 /* Authenticator.swift */,
 				93248DE72005E72A00C15B00 /* Endpoint.swift */,
@@ -4964,7 +4982,7 @@
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 1250;
+						LastSwiftMigration = 1400;
 						ProvisioningStyle = Automatic;
 					};
 					9398D91A1E03434200464432 = {
@@ -5348,6 +5366,7 @@
 				937A693F1F1065610058277F /* CBLQueryMeta.m in Sources */,
 				9388CC4721C250D1005CA66D /* Log.swift in Sources */,
 				93248DE82005E72A00C15B00 /* Endpoint.swift in Sources */,
+				1A8E2F9628FBD30B00E141A8 /* RemoteDatabase.swift in Sources */,
 				9380D2641F0D7BD6007DD84A /* GroupBy.swift in Sources */,
 				27D7219C1F8E97F400AA4458 /* CBLFleece.mm in Sources */,
 				1A3F5556274345AA0088ECF1 /* Errors.swift in Sources */,
@@ -5520,6 +5539,7 @@
 				93DB80031ED8FE5100C4F845 /* ReplicatorTest.swift in Sources */,
 				1AA3D6C122A1A41E0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */,
+				1A8E2F9B28FBE65E00E141A8 /* RemoteDatabaseTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
 				9388CC5521C25CC7005CA66D /* LogTest.swift in Sources */,
@@ -5561,6 +5581,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93BB1CB4246BB2ED004FFA00 /* ReplicatorTest.swift in Sources */,
+				1A8E2F9C28FBE66300E141A8 /* RemoteDatabaseTest.swift in Sources */,
 				93BB1CB1246BB2E4004FFA00 /* PredictiveQueryTest.swift in Sources */,
 				93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
@@ -5931,6 +5952,7 @@
 				9343F0A9207D61AB00F19A89 /* CBLFullTextIndex.m in Sources */,
 				9343F0AA207D61AB00F19A89 /* Document.swift in Sources */,
 				9343F0AB207D61AB00F19A89 /* SelectResult.swift in Sources */,
+				1A8E2F9828FBD30F00E141A8 /* RemoteDatabase.swift in Sources */,
 				932E913220A3F10F00FB8EF0 /* MessageEndpoint.swift in Sources */,
 				9343F0AC207D61AB00F19A89 /* CBLStringBytes.mm in Sources */,
 				9343F0AD207D61AB00F19A89 /* CBLCompoundExpression.m in Sources */,
@@ -6044,6 +6066,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93EB25A421CDCC160006FB88 /* PredictiveQueryTest.swift in Sources */,
+				1A8E2F9D28FBE66300E141A8 /* RemoteDatabaseTest.swift in Sources */,
 				9343F18E207D636300F19A89 /* DocumentTest.swift in Sources */,
 				93E8FEBD20A3E4600061347F /* MessageEndpointTest.swift in Sources */,
 				9343F18F207D636300F19A89 /* ArrayTest.swift in Sources */,
@@ -6272,6 +6295,7 @@
 				93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93BB1CA5246BB2D3004FFA00 /* FragmentTest.swift in Sources */,
 				93BB1CAE246BB2DC004FFA00 /* QueryTest.swift in Sources */,
+				1A8E2F9A28FBE65E00E141A8 /* RemoteDatabaseTest.swift in Sources */,
 				93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */,
 				93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */,
 				93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */,
