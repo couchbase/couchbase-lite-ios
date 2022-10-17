@@ -59,6 +59,8 @@
 - (void) setUp {
     [super setUp];
     timeout = 20.0;
+    
+    CBLDatabase.log.console.level = kCBLLogLevelDebug;
 }
 
 - (void) tearDown {
@@ -70,9 +72,22 @@
     [super tearDown];
 }
 
+- (void) start {
+    // start the listener
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    config.disableTLS = YES;
+    config.allowConnectedClient = YES;
+    [self listen: config errorCode: 0 errorDomain: nil];
+    
+    // start the connected client
+    [self startConnectedClient: _listener.localEndpoint.url];
+}
+
 #pragma mark - Tests
 
 - (void) testConnectedClient {
+    [self start];
+    
     XCTestExpectation* e = [self expectationWithDescription: @"expectation"];
     
     // create a doc in server (listener)
@@ -80,14 +95,6 @@
     CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
     [doc1 setString: @"someString" forKey: @"someKeyString"];
     Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
-    
-    // start the listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    [self listen: config errorCode: 0 errorDomain: nil];
-    
-    // start the connected client
-    [self startConnectedClient: _listener.localEndpoint.url];
     
     // get the document with ID
     [_client documentWithID: @"doc-1" completion: ^(CBLDocument* doc, NSError* error) {
@@ -121,15 +128,9 @@
 }
 
 - (void) testSaveDocument {
+    [self start];
+    
     XCTestExpectation* e = [self expectationWithDescription: @"save document exp"];
-    
-    // start the listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    [self listen: config errorCode: 0 errorDomain: nil];
-    
-    // start the connected client
-    [self startConnectedClient: _listener.localEndpoint.url];
     
     CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
     [doc1 setString: @"someString" forKey: @"someKeyString"];
@@ -148,6 +149,8 @@
 }
 
 - (void) testDeleteDocument {
+    [self start];
+    
     XCTestExpectation* e = [self expectationWithDescription: @"delete document exp"];
     
     // create a doc in server (listener)
@@ -155,14 +158,6 @@
     CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
     [doc1 setString: @"someString" forKey: @"someKeyString"];
     Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
-    
-    // start the listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    [self listen: config errorCode: 0 errorDomain: nil];
-    
-    // start the connected client
-    [self startConnectedClient: _listener.localEndpoint.url];
     
     XCTestExpectation* getDocExp = [self expectationWithDescription: @"get doc exp"];
     __block CBLDocument* doc = nil;
@@ -172,6 +167,10 @@
     }];
     
     [self waitForExpectations: @[getDocExp] timeout: timeout];
+    
+    Assert(doc, @"document fetch failed!");
+    if (!doc)
+        return;
     
     [_client deleteDocument: doc completion:^(CBLDocument* d, NSError *error) {
         AssertNil(error);       // make sure no error
@@ -184,6 +183,8 @@
 }
 
 - (void) testSaveUpdatedDocument {
+    [self start];
+    
     // ---
     // CREATE A DOC & Save to remote-db & GET IT BACK
     // ---
@@ -196,10 +197,6 @@
     
     // start the listener & get it to 'doc'
     __block CBLDocument* doc = nil;
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
-    config.disableTLS = YES;
-    [self listen: config errorCode: 0 errorDomain: nil];
-    [self startConnectedClient: _listener.localEndpoint.url];
     XCTestExpectation* eGet = [self expectationWithDescription: @"get document exp"];
     [_client documentWithID: @"doc-1" completion: ^(CBLDocument* d, NSError* error) {
         AssertNil(error);

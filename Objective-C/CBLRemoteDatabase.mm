@@ -70,7 +70,7 @@ using namespace fleece;
 }
 
 - (void) dealloc {
-    c4client_free(_client);
+    c4client_release(_client);
     
     _client = nil;
 }

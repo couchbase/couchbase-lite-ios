@@ -135,7 +135,6 @@ using namespace fleece;
                          revisionID: (NSString*)revisionID
                                body: (FLSliceResult)body {
     NSParameterAssert(documentID != nil);
-    NSParameterAssert(revisionID != nil);
     self = [self init];
     if (self) {
         _id = documentID;
