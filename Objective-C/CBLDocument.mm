@@ -28,6 +28,7 @@
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
 #import "CBLData.h"
+#import "CBLRemoteDocument.h"
 
 using namespace fleece;
 
@@ -38,7 +39,7 @@ using namespace fleece;
 }
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
-@synthesize remoteDocBody=_remoteDocBody, isRemoteDoc=_isRemoteDoc;
+@synthesize remoteDoc=_remoteDoc, isRemoteDoc=_isRemoteDoc;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -139,25 +140,14 @@ using namespace fleece;
     if (self) {
         _id = documentID;
         
-        // keeps a retained copy of body for CBLDocument & releases in dealloc
-        _remoteDocBody = FLSliceResult_Retain(body);
+        _remoteDoc = [[CBLRemoteDocument alloc] initWithBody: body];
+        _fleeceData = _remoteDoc.data;
         
-        FLDict dict = kFLEmptyDict;
-        if (body.buf) {
-            FLValue docBodyVal = FLValue_FromData(slice(_remoteDocBody), kFLTrusted);
-            dict = FLValue_AsDict(docBodyVal);
-        }
-        _fleeceData = dict;
         _revID = revisionID;
         _isRemoteDoc = true;
         [self updateDictionary];
     }
     return self;
-}
-
-- (void) dealloc {
-    if (_remoteDocBody)
-        FLSliceResult_Release(_remoteDocBody); // releases the retained copy
 }
 
 #pragma mark - Public
