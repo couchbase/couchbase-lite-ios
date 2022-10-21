@@ -1370,7 +1370,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         XCTAssertFalse(config.readOnly)
         XCTAssertNil(config.authenticator)
         XCTAssertNil(config.networkInterface)
-        XCTAssertNil(config.port)
+        XCTAssertEqual(config.port, Defaults.defaultListenerPort)
         XCTAssertNil(config.tlsIdentity)
     }
     

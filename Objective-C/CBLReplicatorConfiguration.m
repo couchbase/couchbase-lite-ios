@@ -26,6 +26,7 @@
 #import "CBLVersion.h"
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
+#import "CBLDefaults.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -95,15 +96,19 @@
 }
 
 - (void) initializeProperties {
-    _replicatorType = kCBLReplicatorTypePushAndPull;
+    _replicatorType = kCBLDefaultReplicatorType;
 #ifdef COUCHBASE_ENTERPRISE
     _acceptOnlySelfSignedServerCertificate = NO;
 #endif
-    _heartbeat = 0;
-    _maxAttempts = 0;
-    _maxAttemptWaitTime = 0;
-    _enableAutoPurge = YES;
+    _continuous = kCBLDefaultReplicatorContinuous;
+    _heartbeat = kCBLDefaultReplicatorHeartbeat;
+    _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
+    _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptWaitTime;
+    _enableAutoPurge = kCBLDefaultReplicatorEnableAutoPurge;
     _collectionConfigs = [NSMutableDictionary dictionary];
+#if TARGET_OS_IPHONE
+    _allowReplicatingInBackground = kCBLDefaultReplicatorAllowReplicatingInBackground;
+#endif
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -113,7 +118,18 @@
 
 - (void) setContinuous: (BOOL)continuous {
     [self checkReadonly];
+    
     _continuous = continuous;
+    if (continuous) {
+        // if default max attempts saved, update it.
+        if (_maxAttempts == kCBLDefaultReplicatorMaxAttemptsSingleShot) {
+            _maxAttempts = kCBLDefaultReplicatorMaxAttemptsContinuous;
+        }
+    } else {
+        if (_maxAttempts == kCBLDefaultReplicatorMaxAttemptsContinuous) {
+            _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
+        }
+    }
 }
 
 - (void) setAuthenticator: (CBLAuthenticator*)authenticator {

@@ -123,6 +123,16 @@
 		1A84E900268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */; };
 		1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		1A8E2FB328FF756600E141A8 /* Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FA728FF756500E141A8 /* Defaults.swift */; };
+		1A8E2FB428FF756600E141A8 /* Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FA728FF756500E141A8 /* Defaults.swift */; };
+		1A8E2FB728FF75D500E141A8 /* CBLDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */; };
+		1A8E2FB828FF75D500E141A8 /* CBLDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */; };
+		1A8E2FB928FF75D500E141A8 /* CBLDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */; };
+		1A8E2FBA28FF75D500E141A8 /* CBLDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */; };
+		1A8E2FBB28FF75D500E141A8 /* CBLDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A8E2FBC28FF75D500E141A8 /* CBLDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		1A8E2FBD28FF75D500E141A8 /* CBLDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A8E2FBE28FF75D500E141A8 /* CBLDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1A8F85082893F317008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
 		1A8F85092893F318008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
 		1A8F850A2893F32F008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
@@ -2027,6 +2037,9 @@
 		1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = URLEndpointListenerTest.m; sourceTree = "<group>"; };
 		1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IndexConfiguration.swift; sourceTree = "<group>"; };
 		1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeQueryFunctionTest.swift; sourceTree = "<group>"; };
+		1A8E2FA728FF756500E141A8 /* Defaults.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Defaults.swift; sourceTree = "<group>"; };
+		1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDefaults.m; sourceTree = "<group>"; };
+		1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDefaults.h; sourceTree = "<group>"; };
 		1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QueryTest+Collection.swift"; sourceTree = "<group>"; };
 		1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+Collection.m"; sourceTree = "<group>"; };
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
@@ -3054,6 +3067,7 @@
 		9338BED21ED5473300634873 /* Database */ = {
 			isa = PBXGroup;
 			children = (
+				1A8E2FA728FF756500E141A8 /* Defaults.swift */,
 				1AAFB67B284A266F00878453 /* Collection.swift */,
 				1AAFB679284A266F00878453 /* CollectionChange.swift */,
 				1AAFB67A284A266F00878453 /* CollectionChangeObservable.swift */,
@@ -3088,6 +3102,8 @@
 		933A42E81EA6CB8200AE9084 /* Database */ = {
 			isa = PBXGroup;
 			children = (
+				1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */,
+				1A8E2FB528FF75D400E141A8 /* CBLDefaults.m */,
 				1AEF0598283380F800D5DDEA /* CBLCollection.h */,
 				1AEF0599283380F800D5DDEA /* CBLCollection.mm */,
 				1AAFB665284A260900878453 /* CBLCollectionChange.h */,
@@ -4170,6 +4186,7 @@
 				93EC42E31FB387AB00D54BB4 /* CBLQueryJSONEncoding.h in Headers */,
 				9308F4041E64B22200F53EE4 /* ExceptionUtils.h in Headers */,
 				1AAFB670284A260A00878453 /* CBLCollectionChangeObservable.h in Headers */,
+				1A8E2FBC28FF75D500E141A8 /* CBLDefaults.h in Headers */,
 				939B1B2D200990FB00FAA3CB /* CBLValueExpression.h in Headers */,
 				937F01E71EFB280000060D64 /* CBLAuthenticator+Internal.h in Headers */,
 				93B41CCA1F04730500A7F114 /* CBLReplicatorChange+Internal.h in Headers */,
@@ -4291,6 +4308,7 @@
 				9343EFCB207D611600F19A89 /* CBLCoreBridge.h in Headers */,
 				931713D422C182F500F1B5BF /* CBLQueryFunction+Prediction.h in Headers */,
 				9343EFCC207D611600F19A89 /* CBLQueryArrayFunction.h in Headers */,
+				1A8E2FBD28FF75D500E141A8 /* CBLDefaults.h in Headers */,
 				939C5E6D244FD3DF007CEBAC /* CBLListenerAuthenticator.h in Headers */,
 				9343EFCD207D611600F19A89 /* CBLMutableDictionaryFragment.h in Headers */,
 				9388CC0721BF750E005CA66D /* CBLFileLogger.h in Headers */,
@@ -4544,6 +4562,7 @@
 				9343F114207D61AB00F19A89 /* CBLChangeListenerToken.h in Headers */,
 				9343F115207D61AB00F19A89 /* CBLPropertyExpression.h in Headers */,
 				937DDC292487561A00CECA9D /* CBLReplicatorConfiguration+ServerCert.h in Headers */,
+				1A8E2FBE28FF75D500E141A8 /* CBLDefaults.h in Headers */,
 				9343F116207D61AB00F19A89 /* CBLReplicator+Internal.h in Headers */,
 				9343F117207D61AB00F19A89 /* CBLC4Document.h in Headers */,
 				9343F118207D61AB00F19A89 /* CBLJSON.h in Headers */,
@@ -4672,6 +4691,7 @@
 				9388CBE821BF7195005CA66D /* CBLLog.h in Headers */,
 				934A27991F30E5FA003946A7 /* CBLCompoundExpression.h in Headers */,
 				939B1B5A2009C04100FAA3CB /* CBLQueryVariableExpression.h in Headers */,
+				1A8E2FBB28FF75D500E141A8 /* CBLDefaults.h in Headers */,
 				1AAFB6A0284A293700878453 /* CBLCollection+Swift.h in Headers */,
 				934A278C1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */,
 				93900CFE1EA197F000745D4F /* CBLDocument+Internal.h in Headers */,
@@ -5593,6 +5613,7 @@
 				93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */,
 				1AEF059F283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
+				1A8E2FB828FF75D500E141A8 /* CBLDefaults.m in Sources */,
 				1AAFB668284A260A00878453 /* CBLCollectionChange.m in Sources */,
 				934A27AE1F30E641003946A7 /* CBLParameterExpression.m in Sources */,
 				9380D2681F0D7C04007DD84A /* HavingRouter.swift in Sources */,
@@ -5653,6 +5674,7 @@
 				938B36A7200745FF004485D8 /* CBLQueryResultArray.m in Sources */,
 				9384D8631FC4163D00FE89D8 /* FullTextFunction.swift in Sources */,
 				930B367B24AAAB3F000DF2B3 /* CBLDatabase+Debug.mm in Sources */,
+				1A8E2FB328FF756600E141A8 /* Defaults.swift in Sources */,
 				9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */,
 				1A3471632671C9230042C6BA /* CBLValueIndexConfiguration.m in Sources */,
 				93AF51C71E80A70900E200F0 /* CBLQuery.mm in Sources */,
@@ -5828,6 +5850,7 @@
 				9343EF45207D611600F19A89 /* CBLMutableDocument.mm in Sources */,
 				9343EF46207D611600F19A89 /* CBLReachability.m in Sources */,
 				9343EF47207D611600F19A89 /* CBLNewDictionary.mm in Sources */,
+				1A8E2FB928FF75D500E141A8 /* CBLDefaults.m in Sources */,
 				9343EF49207D611600F19A89 /* CBLCollationExpression.m in Sources */,
 				9343EF4A207D611600F19A89 /* CBLQueryDataSource.m in Sources */,
 				9343EF4B207D611600F19A89 /* CBLHTTPLogic.m in Sources */,
@@ -6045,6 +6068,7 @@
 				9317140222C1842400F1B5BF /* Function+Vector.swift in Sources */,
 				9343F05C207D61AB00F19A89 /* CBLMutableArray.mm in Sources */,
 				9343F05E207D61AB00F19A89 /* CBLReachability.m in Sources */,
+				1A8E2FB428FF756600E141A8 /* Defaults.swift in Sources */,
 				9343F05F207D61AB00F19A89 /* FullTextExpression.swift in Sources */,
 				9343F060207D61AB00F19A89 /* CBLData.mm in Sources */,
 				93292DA122BD448400A0862A /* CBLReplicatorConfiguration+Swift.m in Sources */,
@@ -6157,6 +6181,7 @@
 				9343F0AD207D61AB00F19A89 /* CBLCompoundExpression.m in Sources */,
 				9343F0AE207D61AB00F19A89 /* Meta.swift in Sources */,
 				93E8FEA420A366E10061347F /* CBLMessage.m in Sources */,
+				1A8E2FBA28FF75D500E141A8 /* CBLDefaults.m in Sources */,
 				9343F0AF207D61AB00F19A89 /* CBLPropertyExpression.m in Sources */,
 				93E8FEA920A366F40061347F /* CBLMessageEndpointListener.mm in Sources */,
 				9388CC4821C250D1005CA66D /* Log.swift in Sources */,
@@ -6389,6 +6414,7 @@
 				933208171E77415E000D9993 /* CBLQueryOrdering.m in Sources */,
 				931C14541EAABCE70094F9B2 /* CBLFragment.m in Sources */,
 				9380C6F01E15B8C20011E8CB /* CBLMutableDocument.mm in Sources */,
+				1A8E2FB728FF75D500E141A8 /* CBLDefaults.m in Sources */,
 				27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */,
 				27D721BC1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */,
 				938E389F1F3A7A47006806C7 /* CBLCollationExpression.m in Sources */,

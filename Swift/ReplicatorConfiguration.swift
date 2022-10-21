@@ -69,11 +69,21 @@ public struct ReplicatorConfiguration {
     public let target: Endpoint
     
     /// Replicator type indicating the direction of the replicator.
-    public var replicatorType: ReplicatorType = .pushAndPull
+    public var replicatorType: ReplicatorType = Defaults.defaultReplicatorType
     
     /// The continuous flag indicating whether the replicator should stay
     /// active indefinitely to replicate changed documents.
-    public var continuous: Bool = false
+    public var continuous: Bool = Defaults.defaultReplicatorContinuous {
+        willSet(newValue) {
+            if newValue /* continuous */ &&
+                maxAttempts == Defaults.defaultReplicatorMaxAttemptsSingleShot {
+                maxAttempts = Defaults.defaultReplicatorMaxAttemptsContinuous
+            } else if !newValue /* single shot */ &&
+                        maxAttempts == Defaults.defaultReplicatorMaxAttemptsContinuous {
+                maxAttempts = Defaults.defaultReplicatorMaxAttemptsSingleShot
+            }
+        }
+    }
     
     /// The Authenticator to authenticate with a remote target.
     public var authenticator: Authenticator?
@@ -186,7 +196,7 @@ public struct ReplicatorConfiguration {
     ///
     /// If setting the value to YES, please ensure that the application requests
     /// for extending the background task properly.
-    public var allowReplicatingInBackground: Bool = false
+    public var allowReplicatingInBackground: Bool = Defaults.defaultReplicatorAllowReplicatingInBackground
     #endif
     
     /// The heartbeat interval in second.
@@ -196,7 +206,7 @@ public struct ReplicatorConfiguration {
     ///
     /// - Note: Setting the heartbeat to negative value will result in InvalidArgumentException
     ///         being thrown.
-    public var heartbeat: TimeInterval = 0 {
+    public var heartbeat: TimeInterval = Defaults.defaultReplicatorHeartbeat {
         willSet(newValue) {
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
@@ -215,7 +225,7 @@ public struct ReplicatorConfiguration {
     /// users.
     /// Settings the value to 1, will perform an initial request and if there is a transient error
     /// occurs, will stop without retry.
-    public var maxAttempts: UInt = 0
+    public var maxAttempts: UInt = UInt(Defaults.defaultReplicatorMaxAttemptsSingleShot)
     
     /// Max wait time for the next attempt(retry).
     ///
@@ -225,7 +235,7 @@ public struct ReplicatorConfiguration {
      
     /// Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
     /// being thrown.
-    public var maxAttemptWaitTime: TimeInterval = 0 {
+    public var maxAttemptWaitTime: TimeInterval = Defaults.defaultReplicatorMaxAttemptWaitTime {
         willSet(newValue) {
             
             guard newValue >= 0 else {
@@ -246,7 +256,7 @@ public struct ReplicatorConfiguration {
     /// will be sent to any document listeners that are active on the replicator. For performance
     /// reasons, the document listeners must be added **before** the replicator is started or
     /// they will not receive the events.
-    public var enableAutoPurge: Bool = true
+    public var enableAutoPurge: Bool = Defaults.defaultReplicatorEnableAutoPurge
     
     /// The collections used for the replication.
     public var collections: [Collection] {
@@ -418,7 +428,7 @@ public struct ReplicatorConfiguration {
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         var c = CBLReplicatorConfiguration(target: target.toImpl())
-        c.replicatorType = CBLReplicatorType(rawValue: UInt(self.replicatorType.rawValue))!
+        c.replicatorType = CBLReplicatorType(rawValue: UInt8(self.replicatorType.rawValue))!
         c.continuous = self.continuous
         c.authenticator = (self.authenticator as? IAuthenticator)?.toImpl()
         c.pinnedServerCertificate = self.pinnedServerCertificate

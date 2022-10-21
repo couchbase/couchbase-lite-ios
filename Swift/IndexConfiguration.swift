@@ -42,9 +42,11 @@ public class FullTextIndexConfiguration: IndexConfiguration, IndexConfigConverta
     }
     
     /// Constructor for creating a full-text index by using an array of N1QL expression strings
-    public init(_ expressions: [String], ignoreAccents: Bool? = false, language: String? = nil) {
+    public init(_ expressions: [String],
+                ignoreAccents: Bool? = Defaults.defaultFullTextIndexIgnoreAccents,
+                language: String? = nil) {
         self.impl = CBLFullTextIndexConfiguration(expression: expressions,
-                                                  ignoreAccents: ignoreAccents ?? false,
+                                                  ignoreAccents: ignoreAccents ?? Defaults.defaultFullTextIndexIgnoreAccents,
                                                   language: language)
     }
     
