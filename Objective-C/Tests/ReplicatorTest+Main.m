@@ -2014,6 +2014,27 @@
     AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
 }
 
+- (void) testReplicatorConfigDefaultValues {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cb.com/db"]];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    
+    AssertEqual(config.replicatorType, kCBLDefaultReplicatorType);
+    AssertEqual(config.continuous, kCBLDefaultReplicatorContinuous);
+    
+#if TARGET_OS_IPHONE
+    AssertEqual(config.allowReplicatingInBackground, kCBLDefaultReplicatorAllowReplicatingInBackground);
+#endif
+    
+    AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsSingleShot);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(config.enableAutoPurge, kCBLDefaultReplicatorEnableAutoPurge);
+    
+    config.continuous = YES;
+    Assert(config.continuous);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsContinuous);
+}
+
 #pragma mark - HeartBeat
 
 - (void) testHeartbeatWithInvalidValue {
@@ -2034,6 +2055,7 @@
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     
+    AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
     config.heartbeat = 60;
     repl = [[CBLReplicator alloc] initWithConfig: config];
     

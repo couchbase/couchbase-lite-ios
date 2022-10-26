@@ -29,6 +29,7 @@
                            language: (NSString* __nullable)language {
     self = [super initWithIndexType: kC4FullTextIndex expressions: expressions];
     if (self) {
+        // there is no default 'ignoreAccents', since its NOT an optional argument.
         _ignoreAccents = ignoreAccents;
         _language = language;
     }

@@ -75,12 +75,10 @@ public struct ReplicatorConfiguration {
     /// active indefinitely to replicate changed documents.
     public var continuous: Bool = Defaults.defaultReplicatorContinuous {
         willSet(newValue) {
-            if newValue /* continuous */ &&
-                maxAttempts == Defaults.defaultReplicatorMaxAttemptsSingleShot {
-                maxAttempts = Defaults.defaultReplicatorMaxAttemptsContinuous
-            } else if !newValue /* single shot */ &&
-                        maxAttempts == Defaults.defaultReplicatorMaxAttemptsContinuous {
-                maxAttempts = Defaults.defaultReplicatorMaxAttemptsSingleShot
+            if !didMaxAttemptUpdate {
+                maxAttempts = newValue
+                ? Defaults.defaultReplicatorMaxAttemptsContinuous
+                : Defaults.defaultReplicatorMaxAttemptsSingleShot
             }
         }
     }
@@ -202,10 +200,11 @@ public struct ReplicatorConfiguration {
     /// The heartbeat interval in second.
     ///
     /// The interval when the replicator sends the ping message to check whether the other peer is
-    /// still alive. Set the value to zero(by default) means using the default heartbeat of 300 secs.
+    /// still alive. Default heartbeat is 300 secs.
     ///
     /// - Note: Setting the heartbeat to negative value will result in InvalidArgumentException
-    ///         being thrown.
+    ///         being thrown. For backward compatibility, setting it to zero will result in
+    ///         default 300 secs internally.
     public var heartbeat: TimeInterval = Defaults.defaultReplicatorHeartbeat {
         willSet(newValue) {
             guard newValue >= 0 else {
@@ -220,21 +219,26 @@ public struct ReplicatorConfiguration {
     /// The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
     /// able to connect and replicate with the remote server again.
     ///
-    /// When setting the  _maxAttempts_ to zero(default), the default _maxAttempts_ of 10 times for single
-    /// shot replicators and infinite times for continuous replicators will be applied and present to
-    /// users.
+    /// Default _maxAttempts_ is 10 times for single shot replicators and
+    /// unsigned int max times for continuous replicators.
+    ///
     /// Settings the value to 1, will perform an initial request and if there is a transient error
     /// occurs, will stop without retry.
-    public var maxAttempts: UInt = UInt(Defaults.defaultReplicatorMaxAttemptsSingleShot)
+    ///
+    /// - Note: For backward compatibility, setting it to zero will result in default 10 internally.
+    public var maxAttempts: UInt = UInt(Defaults.defaultReplicatorMaxAttemptsSingleShot) {
+        didSet { didMaxAttemptUpdate = true }
+    }
     
     /// Max wait time for the next attempt(retry).
     ///
     /// The exponential backoff for calculating the wait time will be used by default and cannot be
-    /// customized. Set the value to zero(by default) means using the default max attempts of
-    /// 300 seconds.
-     
+    /// customized. Default max attempts is 300 seconds.
+    ///
     /// Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
     /// being thrown.
+    ///
+    /// - Note: For backward compatibility, setting it to zero will result in default 300 secs internally.
     public var maxAttemptWaitTime: TimeInterval = Defaults.defaultReplicatorMaxAttemptWaitTime {
         willSet(newValue) {
             
@@ -495,4 +499,6 @@ public struct ReplicatorConfiguration {
     var collectionConfigs = [Collection: CollectionConfiguration]()
     
     var db: Database?
+    
+    fileprivate var didMaxAttemptUpdate: Bool = false
 }

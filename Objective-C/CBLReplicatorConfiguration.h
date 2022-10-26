@@ -136,30 +136,36 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
 /**
  The heartbeat interval in second.
 
- The interval when the replicator sends the ping message to check whether the other peer is still alive. Set the value to zero(by default)
- means using the default heartbeat of 300 seconds.
+ The interval when the replicator sends the ping message to check whether the other peer is still alive.
+ Default heartbeat is 300 seconds.
  
- Note: Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
+ @Note:
+ Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
+ For backward compatibility, setting to zero will result in default heartbeat internally.
  */
 @property (nonatomic) NSTimeInterval heartbeat;
 
 /**
- The maximum attempts to perform retry. The retry attempt will be reset when the replicator is able to connect and replicate with
- the remote server again.
+ The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
+ able to connect and replicate with the remote server again.
  
- Setting the maxAttempts to zero(by default), the default maxAttempts of 10 times for single shot replicators and max-int times for
- continuous replicators will be applied and present to users. Settings the value to 1, will perform an initial request and
+ Default maxAttempts is 10 times for single shot replicators and
+ max-int times for continuous replicators. It will be applied and present to users.
+ Settings the value to 1, will perform an initial request and
  if there is a transient error occurs, will stop without retry.
+ 
+ @Note: For backward compatibility, setting it to zero will result in default maxAttempt internally.
  */
 @property (nonatomic) NSUInteger maxAttempts;
 
 /**
  Max wait time for the next attempt(retry).
  
- The exponential backoff for calculating the wait time will be used by default and cannot be customized. Set the value to zero(by default)
- means using the default max attempts of 300 seconds.
+ The exponential backoff for calculating the wait time will be used by default and cannot be customized.
+ Default max attempts is 300 seconds.
  
- Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException being thrown.
+ @Note: Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException being thrown.
+ For backward compatibility, setting it to zero will result in default maxAttemptWaitTime internally.
  */
 @property (nonatomic) NSTimeInterval maxAttemptWaitTime;
 

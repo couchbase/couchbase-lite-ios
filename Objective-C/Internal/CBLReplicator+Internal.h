@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL acceptOnlySelfSignedServerCertificate;
 #endif
 
+- (instancetype) initWithDefaults NS_DESIGNATED_INITIALIZER;
+
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
                        readonly: (BOOL)readonly;
 

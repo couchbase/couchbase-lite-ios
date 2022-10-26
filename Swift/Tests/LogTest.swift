@@ -206,7 +206,9 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingUsePlainText() throws {
         let config = self.logFileConfig()
+        XCTAssertEqual(config.usePlainText, Defaults.defaultLogFileUsePlainText)
         config.usePlainText = true
+        XCTAssert(config.usePlainText)
         Database.log.file.config = config
         Database.log.file.level = .info
         
@@ -275,18 +277,26 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingMaxSize() throws {
         let config = self.logFileConfig()
+        XCTAssertEqual(config.maxSize, Defaults.defaultLogFileMaxSize)
+        XCTAssertEqual(config.maxRotateCount, Defaults.defaultLogFileMaxRotateCount)
         config.usePlainText = true
         config.maxSize = 1024
+        config.maxRotateCount = 2
+        XCTAssertEqual(config.maxSize, 1024)
+        XCTAssertEqual(config.maxRotateCount, 2)
         Database.log.file.config = config
         Database.log.file.level = .debug
+        XCTAssertEqual(Database.log.file.config?.maxSize, 1024)
+        XCTAssertEqual(Database.log.file.config?.maxRotateCount, 2)
         
-        // this should create two files, as the 1KB logs + extra ~400Bytes
+        // this should create three files(per level) => 2KB logs + extra
+        writeOneKiloByteOfLog()
         writeOneKiloByteOfLog()
         
         guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
             fatalError("Config should be present!!")
         }
-        var totalFilesShouldBeInDirectory = (maxRotateCount + 1) * 5
+        var totalFilesShouldBeInDirectory = 15 /* (maxRotateCount + 1) * 5(levels) */
         
         #if !DEBUG
         totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1

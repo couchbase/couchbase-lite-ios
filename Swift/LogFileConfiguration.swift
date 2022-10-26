@@ -41,7 +41,7 @@ public class LogFileConfiguration {
     
     /// The Max number of rotated log files to keep. The default value is 1 which means
     /// one backup for a total of 2 log files.
-    public var maxRotateCount: Int = Int(Defaults.defaultLogFileMaxRotateCount) {
+    public var maxRotateCount: Int = Defaults.defaultLogFileMaxRotateCount {
         willSet(newValue) {
             checkReadOnly()
         }
