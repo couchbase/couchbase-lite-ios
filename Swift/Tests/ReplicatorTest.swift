@@ -948,7 +948,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptCount() {
         // single shot
-        var config = ReplicatorConfiguration(database: self.db, target: kConnRefusedTarget)
+        var config = ReplicatorConfiguration(target: kConnRefusedTarget)
         XCTAssertEqual(config.maxAttempts, Defaults.defaultReplicatorMaxAttemptsSingleShot)
         
         // continous
@@ -958,13 +958,14 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testCustomMaxAttemptCount() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        var config: ReplicatorConfiguration = ReplicatorConfiguration(target: kConnRefusedTarget)
         XCTAssertEqual(config.maxAttempts, Defaults.defaultReplicatorMaxAttemptsSingleShot)
         config.maxAttempts = 22
         XCTAssertEqual(config.maxAttempts, 22)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config = ReplicatorConfiguration(target: kConnRefusedTarget)
+        config.continuous = true
         XCTAssertEqual(config.maxAttempts, Defaults.defaultReplicatorMaxAttemptsContinuous)
         config.maxAttempts = 11
         XCTAssertEqual(config.maxAttempts, 11)
