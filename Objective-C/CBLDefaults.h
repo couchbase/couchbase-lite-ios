@@ -22,6 +22,8 @@
 
 #import "CBLReplicatorTypes.h"
 
+#pragma mark - CBLLogFileConfiguration
+
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
 extern const BOOL kCBLDefaultLogFileUsePlainText;
 
@@ -31,8 +33,12 @@ extern const uint64_t kCBLDefaultLogFileMaxSize;
 /** [1] 1 rotated file present (2 total, including the currently active log file) */
 extern const NSInteger kCBLDefaultLogFileMaxRotateCount;
 
+#pragma mark - CBLFullTextIndexConfiguration
+
 /** [NO] Accents and ligatures are not ignored when indexing via full text search */
 extern const BOOL kCBLDefaultFullTextIndexIgnoreAccents;
+
+#pragma mark - CBLReplicatorConfiguration
 
 /** [kCBLReplicatorTypePushAndPull] Perform bidirectional replication */
 extern const CBLReplicatorType kCBLDefaultReplicatorType;
@@ -46,17 +52,19 @@ extern const BOOL kCBLDefaultReplicatorAllowReplicatingInBackground;
 /** [300] A heartbeat messages is sent every 300 seconds to keep the connection alive */
 extern const NSTimeInterval kCBLDefaultReplicatorHeartbeat;
 
-/** [9] When replicator is not continuous, after 9 failed attempts give up on the replication */
+/** [10] When replicator is not continuous, after 10 failed attempts give up on the replication */
 extern const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot;
 
 /** [NSUIntegerMax] When replicator is continuous, never give up unless explicitly stopped */
 extern const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous;
 
-/** [300] One-shot replication is used, and will stop once all initial changes are processed */
+/** [300] Max wait time between retry attempts in seconds */
 extern const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime;
 
 /** [YES] Purge documents when a user loses access */
 extern const BOOL kCBLDefaultReplicatorEnableAutoPurge;
+
+#pragma mark - CBLURLEndpointListenerConfiguration
 
 /** [0] No port specified, the OS will assign one */
 extern const unsigned short kCBLDefaultListenerPort;

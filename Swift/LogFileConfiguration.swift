@@ -26,22 +26,23 @@ public class LogFileConfiguration {
     public let directory: String
     
     /// To use plain text file format instead of the default binary format.
-    public var usePlainText: Bool = Defaults.defaultLogFileUsePlainText  {
+    public var usePlainText: Bool = LogFileConfiguration.defaultUsePlainText  {
         willSet(newValue) {
             checkReadOnly()
         }
     }
     
-    /// The maximum size of a log file before being rotated in bytes. The default is 500 Kilobytes.
-    public var maxSize: UInt64 = Defaults.defaultLogFileMaxSize {
+    /// The maximum size of a log file before being rotated in bytes.
+    /// The default is ``LogFileConfiguration.defaultMaxSize``
+    public var maxSize: UInt64 = LogFileConfiguration.defaultMaxSize {
         willSet(newValue) {
             checkReadOnly()
         }
     }
     
-    /// The Max number of rotated log files to keep. The default value is 1 which means
-    /// one backup for a total of 2 log files.
-    public var maxRotateCount: Int = Defaults.defaultLogFileMaxRotateCount {
+    /// The Max number of rotated log files to keep.
+    /// The default value is ``LogFileConfiguration.defaultMaxRotateCount``
+    public var maxRotateCount: Int = LogFileConfiguration.defaultMaxRotateCount {
         willSet(newValue) {
             checkReadOnly()
         }

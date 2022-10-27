@@ -206,7 +206,7 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingUsePlainText() throws {
         let config = self.logFileConfig()
-        XCTAssertEqual(config.usePlainText, Defaults.defaultLogFileUsePlainText)
+        XCTAssertEqual(config.usePlainText, LogFileConfiguration.defaultUsePlainText)
         config.usePlainText = true
         XCTAssert(config.usePlainText)
         Database.log.file.config = config
@@ -277,8 +277,8 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingMaxSize() throws {
         let config = self.logFileConfig()
-        XCTAssertEqual(config.maxSize, Defaults.defaultLogFileMaxSize)
-        XCTAssertEqual(config.maxRotateCount, Defaults.defaultLogFileMaxRotateCount)
+        XCTAssertEqual(config.maxSize, LogFileConfiguration.defaultMaxSize)
+        XCTAssertEqual(config.maxRotateCount, LogFileConfiguration.defaultMaxRotateCount)
         config.usePlainText = true
         config.maxSize = 1024
         config.maxRotateCount = 2

@@ -37,13 +37,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL usePlainText;
 
 /**
- The maximum size of a log file before being rotated in bytes. The default is 500 Kilobytes.
+ The maximum size of a log file before being rotated in bytes.
+ The default is ``kCBLDefaultLogFileMaxSize``
  */
 @property (nonatomic) uint64_t maxSize;
 
 /**
- The Max number of rotated log files to keep. The default value is 1 which means
- one backup for a total of 2 log files.
+ The Max number of rotated log files to keep.
+ The default value is ``kCBLDefaultLogFileMaxRotateCount`` which means
  */
 @property (nonatomic) NSInteger maxRotateCount;
 

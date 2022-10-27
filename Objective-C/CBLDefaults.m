@@ -22,18 +22,30 @@
 
 #import "CBLDefaults.h"
 
+
+#pragma mark - CBLLogFileConfiguration
+
 const BOOL kCBLDefaultLogFileUsePlainText = NO;
 const uint64_t kCBLDefaultLogFileMaxSize = 524288;
 const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
+
+#pragma mark - CBLFullTextIndexConfiguration
+
 const BOOL kCBLDefaultFullTextIndexIgnoreAccents = NO;
+
+#pragma mark - CBLReplicatorConfiguration
+
 const CBLReplicatorType kCBLDefaultReplicatorType = kCBLReplicatorTypePushAndPull;
 const BOOL kCBLDefaultReplicatorContinuous = NO;
 const BOOL kCBLDefaultReplicatorAllowReplicatingInBackground = NO;
 const NSTimeInterval kCBLDefaultReplicatorHeartbeat = 300;
-const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot = 9;
+const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot = 10;
 const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous = NSUIntegerMax;
 const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime = 300;
 const BOOL kCBLDefaultReplicatorEnableAutoPurge = YES;
+
+#pragma mark - CBLURLEndpointListenerConfiguration
+
 const unsigned short kCBLDefaultListenerPort = 0;
 const BOOL kCBLDefaultListenerDisableTls = NO;
 const BOOL kCBLDefaultListenerReadOnly = NO;
