@@ -137,7 +137,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  The heartbeat interval in second.
 
  The interval when the replicator sends the ping message to check whether the other peer is still alive.
- Default heartbeat is 300 seconds.
+ Default heartbeat is ``kCBLDefaultReplicatorHeartbeat`` seconds.
  
  @Note:
  Setting the heartbeat to negative value will result in InvalidArgumentException being thrown.
@@ -149,8 +149,10 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
  able to connect and replicate with the remote server again.
  
- Default maxAttempts is 10 times for single shot replicators and
- max-int times for continuous replicators. It will be applied and present to users.
+ Default maxAttempts is ``kCBLDefaultReplicatorMaxAttemptsSingleShot`` times
+ for single shot replicators and ``kCBLDefaultReplicatorMaxAttemptsContinuous`` times
+ for continuous replicators.
+ 
  Settings the value to 1, will perform an initial request and
  if there is a transient error occurs, will stop without retry.
  
@@ -162,7 +164,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  Max wait time for the next attempt(retry).
  
  The exponential backoff for calculating the wait time will be used by default and cannot be customized.
- Default max attempts is 300 seconds.
+ Default max attempts is ``kCBLDefaultReplicatorMaxAttemptWaitTime`` seconds.
  
  @Note: Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException being thrown.
  For backward compatibility, setting it to zero will result in default maxAttemptWaitTime internally.

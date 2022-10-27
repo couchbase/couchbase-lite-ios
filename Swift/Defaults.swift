@@ -22,54 +22,64 @@
 
 import Foundation
 
-public struct Defaults {
+public extension LogFileConfiguration {
 	/// [false] Plaintext is not used, and instead binary encoding is used in log files
-	public static let defaultLogFileUsePlainText: Bool = kCBLDefaultLogFileUsePlainText.boolValue
+	static let defaultUsePlainText: Bool = kCBLDefaultLogFileUsePlainText.boolValue
 
 	/// [524288] 512 KiB for the size of a log file
-	public static let defaultLogFileMaxSize: UInt64 = kCBLDefaultLogFileMaxSize
+	static let defaultMaxSize: UInt64 = kCBLDefaultLogFileMaxSize
 
 	/// [1] 1 rotated file present (2 total, including the currently active log file)
-	public static let defaultLogFileMaxRotateCount: Int = kCBLDefaultLogFileMaxRotateCount
-
-	/// [false] Accents and ligatures are not ignored when indexing via full text search
-	public static let defaultFullTextIndexIgnoreAccents: Bool = kCBLDefaultFullTextIndexIgnoreAccents.boolValue
-
-	/// [ReplicatorType.pushAndPull] Perform bidirectional replication
-	public static let defaultReplicatorType: ReplicatorType = ReplicatorType.pushAndPull
-
-	/// [false] One-shot replication is used, and will stop once all initial changes are processed
-	public static let defaultReplicatorContinuous: Bool = kCBLDefaultReplicatorContinuous.boolValue
-
-	/// [false] Replication stops when an application enters background mode
-	public static let defaultReplicatorAllowReplicatingInBackground: Bool = kCBLDefaultReplicatorAllowReplicatingInBackground.boolValue
-
-	/// [300seconds] A heartbeat messages is sent every 300 seconds to keep the connection alive
-	public static let defaultReplicatorHeartbeat: TimeInterval = kCBLDefaultReplicatorHeartbeat
-
-	/// [9] When replicator is not continuous, after 9 failed attempts give up on the replication
-	public static let defaultReplicatorMaxAttemptsSingleShot: UInt = kCBLDefaultReplicatorMaxAttemptsSingleShot
-
-	/// [UInt.max] When replicator is continuous, never give up unless explicitly stopped
-	public static let defaultReplicatorMaxAttemptsContinuous: UInt = kCBLDefaultReplicatorMaxAttemptsContinuous
-
-	/// [300seconds] One-shot replication is used, and will stop once all initial changes are processed
-	public static let defaultReplicatorMaxAttemptWaitTime: TimeInterval = kCBLDefaultReplicatorMaxAttemptWaitTime
-
-	/// [true] Purge documents when a user loses access
-	public static let defaultReplicatorEnableAutoPurge: Bool = kCBLDefaultReplicatorEnableAutoPurge.boolValue
-
-	/// [0] No port specified, the OS will assign one
-	public static let defaultListenerPort: UInt16 = kCBLDefaultListenerPort
-
-	/// [false] TLS is enabled on the connection
-	public static let defaultListenerDisableTls: Bool = kCBLDefaultListenerDisableTls.boolValue
-
-	/// [false] The listener will allow database writes
-	public static let defaultListenerReadOnly: Bool = kCBLDefaultListenerReadOnly.boolValue
-
-	/// [false] Delta sync is disabled for the listener
-	public static let defaultListenerEnableDeltaSync: Bool = kCBLDefaultListenerEnableDeltaSync.boolValue
-
+	static let defaultMaxRotateCount: Int = kCBLDefaultLogFileMaxRotateCount
 
 }
+
+public extension FullTextIndexConfiguration {
+	/// [false] Accents and ligatures are not ignored when indexing via full text search
+	static let defaultIgnoreAccents: Bool = kCBLDefaultFullTextIndexIgnoreAccents.boolValue
+
+}
+
+public extension ReplicatorConfiguration {
+	/// [ReplicatorType.pushAndPull] Perform bidirectional replication
+	static let defaultType: ReplicatorType = ReplicatorType.pushAndPull
+
+	/// [false] One-shot replication is used, and will stop once all initial changes are processed
+	static let defaultContinuous: Bool = kCBLDefaultReplicatorContinuous.boolValue
+
+	/// [false] Replication stops when an application enters background mode
+	static let defaultAllowReplicatingInBackground: Bool = kCBLDefaultReplicatorAllowReplicatingInBackground.boolValue
+
+	/// [300 seconds] A heartbeat messages is sent every 300 seconds to keep the connection alive
+	static let defaultHeartbeat: TimeInterval = kCBLDefaultReplicatorHeartbeat
+
+	/// [10] When replicator is not continuous, after 10 failed attempts give up on the replication
+	static let defaultMaxAttemptsSingleShot: UInt = kCBLDefaultReplicatorMaxAttemptsSingleShot
+
+	/// [UInt.max] When replicator is continuous, never give up unless explicitly stopped
+	static let defaultMaxAttemptsContinuous: UInt = kCBLDefaultReplicatorMaxAttemptsContinuous
+
+	/// [300 seconds] Max wait time between retry attempts in seconds
+	static let defaultMaxAttemptWaitTime: TimeInterval = kCBLDefaultReplicatorMaxAttemptWaitTime
+
+	/// [true] Purge documents when a user loses access
+	static let defaultEnableAutoPurge: Bool = kCBLDefaultReplicatorEnableAutoPurge.boolValue
+
+}
+
+public extension URLEndpointListenerConfiguration {
+	/// [0] No port specified, the OS will assign one
+	static let defaultPort: UInt16 = kCBLDefaultListenerPort
+
+	/// [false] TLS is enabled on the connection
+	static let defaultDisableTls: Bool = kCBLDefaultListenerDisableTls.boolValue
+
+	/// [false] The listener will allow database writes
+	static let defaultReadOnly: Bool = kCBLDefaultListenerReadOnly.boolValue
+
+	/// [false] Delta sync is disabled for the listener
+	static let defaultEnableDeltaSync: Bool = kCBLDefaultListenerEnableDeltaSync.boolValue
+
+}
+
+

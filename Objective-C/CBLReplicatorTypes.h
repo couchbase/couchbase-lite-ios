@@ -42,7 +42,7 @@ typedef struct {
 } CBLReplicatorProgress;
 
 /** Replicator type. */
-typedef NS_ENUM(uint8_t, CBLReplicatorType) {
+typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
     kCBLReplicatorTypePushAndPull = 0,              ///< Bidirectional; both push and pull
     kCBLReplicatorTypePush,                         ///< Pushing changes to the target
     kCBLReplicatorTypePull                          ///< Pulling changes from the target
