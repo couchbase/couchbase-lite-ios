@@ -67,6 +67,8 @@ public extension ReplicatorConfiguration {
 
 }
 
+#if COUCHBASE_ENTERPRISE
+
 public extension URLEndpointListenerConfiguration {
 	/// [0] No port specified, the OS will assign one
 	static let defaultPort: UInt16 = kCBLDefaultListenerPort
@@ -82,4 +84,5 @@ public extension URLEndpointListenerConfiguration {
 
 }
 
+#endif 
 
