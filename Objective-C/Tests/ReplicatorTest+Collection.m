@@ -1393,6 +1393,142 @@
     [token remove];
 }
 
+- (void) testPullConflictWithCollection {
+    NSError* error = nil;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    
+    // Create a document and push it to otherDB:
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLReplicatorConfiguration* pushConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
+    pushConfig.replicatorType = kCBLReplicatorTypePush;
+    [pushConfig addCollection: defaultCollection config: nil];
+    CBLCollectionConfiguration* colConfig = [pushConfig collectionConfig: defaultCollection];
+    AssertNil(colConfig.conflictResolver);
+    
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Now make different changes in db and otherDB:
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: @"doc"] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    
+    // Pull from otherDB, creating a conflict to resolve:
+    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
+    pullConfig.replicatorType = kCBLReplicatorTypePull;
+    [pullConfig addCollection: defaultCollection config: nil];
+    colConfig = [pullConfig collectionConfig: defaultCollection];
+    AssertNil(colConfig.conflictResolver);
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 1u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    
+    // Most-Active Win:
+    NSDictionary* expectedResult = @{@"species": @"Tiger",
+                                     @"pattern": @"striped",
+                                     @"color": @"black-yellow"};
+    AssertEqualObjects(savedDoc.toDictionary, expectedResult);
+    
+    // Push to otherDB again to verify there is no replication conflict now,
+    // and that otherDB ends up with the same resolved document:
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.otherDB.count, 1u);
+    CBLDocument* otherSavedDoc = [self.otherDB documentWithID: @"doc"];
+    AssertEqualObjects(otherSavedDoc.toDictionary, expectedResult);
+}
+
+- (void) testPullConflictNoBaseRevisionWithCollection {
+    NSError* error;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    
+    // Create the conflicting docs separately in each database. They have the same base revID
+    // because the contents are identical, but because the db never pushed revision 1, it doesn't
+    // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
+    // revision for the resolver.
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [doc2 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    
+    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
+    pullConfig.replicatorType = kCBLReplicatorTypePull;
+    [pullConfig addCollection: defaultCollection config: nil];
+    CBLCollectionConfiguration* colConfig = [pullConfig collectionConfig: defaultCollection];
+    AssertNil(colConfig.conflictResolver);
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.db.count, 1u);
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
+                                                 @"pattern": @"striped",
+                                                 @"color": @"black-yellow"}));
+}
+
+- (void) testPullConflictDeleteWinsWithCollection {
+    NSError* error;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
+    
+    // Create a document and push it to otherDB:
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    CBLReplicatorConfiguration* pushConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
+    pushConfig.replicatorType = kCBLReplicatorTypePush;
+    [pushConfig addCollection: defaultCollection config: nil];
+    [self run: pushConfig errorCode: 0 errorDomain: nil];
+    
+    // Delete the document from db:
+    Assert([self.db deleteDocument: doc1 error: &error]);
+    AssertNil([self.db documentWithID: doc1.id]);
+    
+    // Update the document in otherDB:
+    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: doc1.id] toMutable];
+    Assert(doc2);
+    [doc2 setValue: @"striped" forKey: @"pattern"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    
+    [doc2 setValue: @"black-yellow" forKey: @"color"];
+    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    
+    // Pull from otherDB, creating a conflict to resolve:
+    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
+    pullConfig.replicatorType = kCBLReplicatorTypePull;
+    [pullConfig addCollection: defaultCollection config: nil];
+    CBLCollectionConfiguration* colConfig = [pullConfig collectionConfig: defaultCollection];
+    AssertNil(colConfig.conflictResolver);
+    
+    [self run: pullConfig errorCode: 0 errorDomain: nil];
+    
+    // Check that it was resolved as delete wins:
+    AssertEqual(self.db.count, 0u);
+    AssertNil([self.db documentWithID: doc1.id]);
+}
+
 #pragma clang diagnostic pop
 
 @end

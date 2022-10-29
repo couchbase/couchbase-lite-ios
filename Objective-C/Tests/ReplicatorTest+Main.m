@@ -136,7 +136,7 @@
     Assert([self.db saveDocument: doc1 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
+    CBLReplicatorConfiguration* pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
     // Now make different changes in db and otherDB:
@@ -165,6 +165,8 @@
                                      @"pattern": @"striped",
                                      @"color": @"black-yellow"};
     AssertEqualObjects(savedDoc.toDictionary, expectedResult);
+    
+    AssertNil(pushConfig.conflictResolver);
     
     // Push to otherDB again to verify there is no replication conflict now,
     // and that otherDB ends up with the same resolved document:
@@ -196,7 +198,8 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
+    AssertNil(config.conflictResolver);
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 1u);
@@ -231,7 +234,8 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     // Pull from otherDB, creating a conflict to resolve:
-    id pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    AssertNil(pullConfig.conflictResolver);
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved as delete wins:
