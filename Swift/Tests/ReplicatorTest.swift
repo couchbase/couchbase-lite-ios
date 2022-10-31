@@ -60,7 +60,8 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false, auth: Authenticator? = nil,
                 acceptSelfSignedOnly: Bool = false,
-                serverCert: SecCertificate? = nil, maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
+                serverCert: SecCertificate? = nil,
+                maxAttempts: UInt? = ReplicatorConfiguration.defaultMaxAttemptsSingleShot) -> ReplicatorConfiguration {
         var config = self.config(target: target, type: type, continuous: continuous, auth: auth,
                             serverCert: serverCert, maxAttempts: maxAttempts)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
@@ -894,6 +895,25 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     #endif
     
+    func testReplicatorConfigDefaultValues() {
+        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
+        var config = ReplicatorConfiguration(target: target)
+        
+        XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
+        XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
+        
+#if os(iOS)
+        XCTAssertEqual(config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
+#endif
+        XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
+        
+        config.continuous = true
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsContinuous)
+    }
+    
     func testHeartbeatWithInvalidValue() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         func expectExceptionFor(_ val: TimeInterval) throws {
@@ -915,6 +935,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testCustomHeartbeat() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         var config = self.config(target: target, type: .pushAndPull, continuous: true)
+        XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         config.heartbeat = 60
         repl = Replicator(config: config)
         
@@ -927,22 +948,25 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptCount() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxAttempts, 0)
+        var config = ReplicatorConfiguration(target: kConnRefusedTarget)
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true, maxAttempts: nil)
-        XCTAssertEqual(config.maxAttempts, 0)
+        config.continuous = true
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsContinuous)
     }
     
     func testCustomMaxAttemptCount() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        var config: ReplicatorConfiguration = ReplicatorConfiguration(target: kConnRefusedTarget)
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
         config.maxAttempts = 22
         XCTAssertEqual(config.maxAttempts, 22)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config = ReplicatorConfiguration(target: kConnRefusedTarget)
+        config.continuous = true
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsContinuous)
         config.maxAttempts = 11
         XCTAssertEqual(config.maxAttempts, 11)
     }
@@ -989,14 +1013,14 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testMaxAttemptWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxAttemptWaitTime, 0)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
-        XCTAssertEqual(config.maxAttemptWaitTime, 0)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
         
         repl = Replicator(config: config)
-        XCTAssertEqual(repl.config.maxAttemptWaitTime, 0)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
     }
     
     func testCustomMaxAttemptWaitTime() {
@@ -1270,9 +1294,9 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertFalse(config.continuous)
         XCTAssertNil(config.documentIDs)
         XCTAssertNil(config.headers)
-        XCTAssertEqual(config.heartbeat, 0)
-        XCTAssertEqual(config.maxAttempts, 0)
-        XCTAssertEqual(config.maxAttemptWaitTime, 0)
+        XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
         XCTAssertNil(config.pinnedServerCertificate)
         XCTAssertNil(config.pullFilter)
         XCTAssertNil(config.pushFilter)

@@ -1677,7 +1677,8 @@
 }
 
 // https://issues.couchbase.com/browse/CBL-1054
-- (void) testStopReplicatorAfterOffline_SG {
+// TODO: https://issues.couchbase.com/browse/CBL-3826
+- (void) _testStopReplicatorAfterOffline_SG {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.couchbase.com/db"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
@@ -1983,7 +1984,7 @@
     CBLReplicatorConfiguration* temp = [self configWithTarget: target
                                                          type: kCBLReplicatorTypePush
                                                    continuous: YES];
-    AssertEqual(temp.heartbeat, 0);
+    AssertEqual(temp.heartbeat, kCBLDefaultReplicatorHeartbeat);
     
     [temp setContinuous: YES];
     [temp setAuthenticator: basic];
@@ -2010,7 +2011,28 @@
     AssertEqualObjects(headers, config.headers);
     AssertEqualObjects(docIds, config.documentIDs);
     AssertEqualObjects(channels, config.channels);
-    AssertEqual(config.heartbeat, 0);
+    AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
+}
+
+- (void) testReplicatorConfigDefaultValues {
+    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cb.com/db"]];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    
+    AssertEqual(config.replicatorType, kCBLDefaultReplicatorType);
+    AssertEqual(config.continuous, kCBLDefaultReplicatorContinuous);
+    
+#if TARGET_OS_IPHONE
+    AssertEqual(config.allowReplicatingInBackground, kCBLDefaultReplicatorAllowReplicatingInBackground);
+#endif
+    
+    AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsSingleShot);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(config.enableAutoPurge, kCBLDefaultReplicatorEnableAutoPurge);
+    
+    config.continuous = YES;
+    Assert(config.continuous);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsContinuous);
 }
 
 #pragma mark - HeartBeat
@@ -2033,6 +2055,7 @@
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
     
+    AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
     config.heartbeat = 60;
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
@@ -2050,13 +2073,13 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: YES];
-    AssertEqual(config.maxAttempts, 0);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsContinuous);
     
     // single shot
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: NO];
-    AssertEqual(config.maxAttempts, 0);
+    AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsSingleShot);
 }
 
 - (void) testCustomMaxAttemptCount {
@@ -2118,17 +2141,17 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    AssertEqual(config.maxAttemptWaitTime, 0);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, 0);
+    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
     
     // continuous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: YES];
-    AssertEqual(config.maxAttemptWaitTime, 0);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, 0);
+    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
     
     repl = nil;
 }

@@ -28,7 +28,8 @@ public class FullTextIndexConfiguration: IndexConfiguration, IndexConfigConverta
         return self.impl.expressions
     }
     
-    /// Set the true value to ignore accents/diacritical marks. The default value is false.
+    /// Set the true value to ignore accents/diacritical marks.
+    /// The default value is ``FullTextIndexConfiguration.defaultIgnoreAccents``.
     public var ignoreAccents: Bool {
         return self.impl.ignoreAccents
     }
@@ -42,9 +43,11 @@ public class FullTextIndexConfiguration: IndexConfiguration, IndexConfigConverta
     }
     
     /// Constructor for creating a full-text index by using an array of N1QL expression strings
-    public init(_ expressions: [String], ignoreAccents: Bool? = false, language: String? = nil) {
+    public init(_ expressions: [String],
+                ignoreAccents: Bool? = FullTextIndexConfiguration.defaultIgnoreAccents,
+                language: String? = nil) {
         self.impl = CBLFullTextIndexConfiguration(expression: expressions,
-                                                  ignoreAccents: ignoreAccents ?? false,
+                                                  ignoreAccents: ignoreAccents ?? FullTextIndexConfiguration.defaultIgnoreAccents,
                                                   language: language)
     }
     
