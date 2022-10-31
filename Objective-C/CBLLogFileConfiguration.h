@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  The Max number of rotated log files to keep.
- The default value is ``kCBLDefaultLogFileMaxRotateCount`` which means
+ The default value is ``kCBLDefaultLogFileMaxRotateCount``
  */
 @property (nonatomic) NSInteger maxRotateCount;
 

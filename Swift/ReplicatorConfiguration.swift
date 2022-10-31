@@ -194,7 +194,7 @@ public struct ReplicatorConfiguration {
     ///
     /// If setting the value to YES, please ensure that the application requests
     /// for extending the background task properly.
-    public var allowReplicatingInBackground: Bool = Defaults.defaultReplicatorAllowReplicatingInBackground
+    public var allowReplicatingInBackground: Bool = ReplicatorConfiguration.defaultAllowReplicatingInBackground
     #endif
     
     /// The heartbeat interval in second.
