@@ -33,6 +33,7 @@
 #import <dispatch/dispatch.h>
 #import <memory>
 #import <net/if.h>
+#import <arpa/inet.h>
 #import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
@@ -440,6 +441,9 @@ static void doDispose(C4Socket* s) {
             return; // Already disconnected
         }
         
+        struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
+        char *ip = inet_ntoa((struct in_addr)addr->sin_addr);
+        CBLLogVerbose(WebSocket, @"%@: Going to connect to IP: %s", self, ip);
         int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
         
         if (status == 0) {
