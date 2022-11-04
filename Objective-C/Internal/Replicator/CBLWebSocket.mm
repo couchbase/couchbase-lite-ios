@@ -411,6 +411,8 @@ static void doDispose(C4Socket* s) {
             [self closeWithError: posixError(errNo, msg)];
             return;
         }
+        
+        CBLLogVerbose(WebSocket, @"%@: name(%@) converted to index %u", self, interface, index);
         int result = -1;
         switch (_addr->ai_family) {
             case AF_INET:
@@ -432,6 +434,8 @@ static void doDispose(C4Socket* s) {
             [self closeWithError: posixError(errNo, msg)];
             return;
         }
+        
+        CBLLogVerbose(WebSocket, @"%@: setsockopt: %d %@", self, result, addrInfo(_addr));
     }
     
     // Connect:
@@ -545,6 +549,12 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
                        forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
             CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
         }
+        
+        if (![_in setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
+                       forKey: NSStreamSocketSecurityLevelKey]) {
+            CBLWarnError(WebSocket, @"%@ failed to set SSL Security level", self);
+        }
+        
         _checkSSLCert = true;
         
         // When using client proxy, the stream will be reset after setting
