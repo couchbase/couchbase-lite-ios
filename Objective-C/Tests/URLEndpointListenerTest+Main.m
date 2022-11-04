@@ -247,6 +247,29 @@
 
 #pragma mark - Tests
 
+- (void) testDefaultProperties {
+    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    
+    // disable TLS
+    AssertEqual(config.disableTLS, kCBLDefaultListenerDisableTls);
+    config.disableTLS = YES;
+    AssertEqual(config.disableTLS, YES);
+    
+    // Port
+    AssertEqual(config.port, kCBLDefaultListenerPort);
+    config.port = kWsPort;
+    AssertEqual(config.port, kWsPort);
+    
+    // enable delta sync
+    AssertEqual(config.enableDeltaSync, kCBLDefaultListenerEnableDeltaSync);
+    config.enableDeltaSync = YES;
+    AssertEqual(config.enableDeltaSync, YES);
+    
+    AssertEqual(config.readOnly, kCBLDefaultListenerReadOnly);
+    config.readOnly = YES;
+    AssertEqual(config.readOnly, YES);
+}
+
 - (void) testPort {
     // initialize a listener
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
