@@ -979,6 +979,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void)stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
+    CBLLogVerbose(WebSocket, @"event code: %lx - stream: %@", (unsigned long)eventCode, stream);
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
             CBLLogVerbose(WebSocket, @"%@: OpenCompleted on %@", self, stream);
