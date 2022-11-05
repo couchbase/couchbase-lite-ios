@@ -446,8 +446,19 @@ static void doDispose(C4Socket* s) {
         }
         
         struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
-        char *ip = inet_ntoa((struct in_addr)addr->sin_addr);
-        CBLLogVerbose(WebSocket, @"%@: Going to connect to IP: %s", self, ip);
+        char addrBuf[MAX(INET_ADDRSTRLEN, INET6_ADDRSTRLEN)];
+        if(addr->sin_family == AF_INET) {
+            if(inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN)) {
+                CBLLogVerbose(WebSocket, @"Successfully got IPv4 address");
+            }
+        } else {
+            const struct sockaddr_in6 *addr6 = (const struct sockaddr_in6*)_addr->ai_addr;
+            if(inet_ntop(AF_INET6, &addr6->sin6_addr, addrBuf, INET6_ADDRSTRLEN)) {
+                CBLLogVerbose(WebSocket, @"Successfully got IPv6 address");
+            }
+        }
+        
+        CBLLogVerbose(WebSocket, @"%@: Going to connect to IPv4 addr: %@", self, [NSString stringWithUTF8String: addrBuf]);
         int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
         
         if (status == 0) {
