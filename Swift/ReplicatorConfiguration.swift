@@ -69,11 +69,19 @@ public struct ReplicatorConfiguration {
     public let target: Endpoint
     
     /// Replicator type indicating the direction of the replicator.
-    public var replicatorType: ReplicatorType = .pushAndPull
+    public var replicatorType: ReplicatorType = ReplicatorConfiguration.defaultType
     
     /// The continuous flag indicating whether the replicator should stay
     /// active indefinitely to replicate changed documents.
-    public var continuous: Bool = false
+    public var continuous: Bool = ReplicatorConfiguration.defaultContinuous {
+        willSet(newValue) {
+            if !didMaxAttemptUpdate {
+                maxAttempts = newValue
+                ? ReplicatorConfiguration.defaultMaxAttemptsContinuous
+                : ReplicatorConfiguration.defaultMaxAttemptsSingleShot
+            }
+        }
+    }
     
     /// The Authenticator to authenticate with a remote target.
     public var authenticator: Authenticator?
@@ -186,17 +194,18 @@ public struct ReplicatorConfiguration {
     ///
     /// If setting the value to YES, please ensure that the application requests
     /// for extending the background task properly.
-    public var allowReplicatingInBackground: Bool = false
+    public var allowReplicatingInBackground: Bool = ReplicatorConfiguration.defaultAllowReplicatingInBackground
     #endif
     
     /// The heartbeat interval in second.
     ///
     /// The interval when the replicator sends the ping message to check whether the other peer is
-    /// still alive. Set the value to zero(by default) means using the default heartbeat of 300 secs.
+    /// still alive. Default heartbeat is ``ReplicatorConfiguration.defaultHeartbeat`` secs.
     ///
     /// - Note: Setting the heartbeat to negative value will result in InvalidArgumentException
-    ///         being thrown.
-    public var heartbeat: TimeInterval = 0 {
+    ///         being thrown. For backward compatibility, setting it to zero will result in
+    ///         default 300 secs internally.
+    public var heartbeat: TimeInterval = ReplicatorConfiguration.defaultHeartbeat {
         willSet(newValue) {
             guard newValue >= 0 else {
                 NSException(name: .invalidArgumentException,
@@ -210,22 +219,28 @@ public struct ReplicatorConfiguration {
     /// The maximum attempts to perform retry. The retry attempt will be reset when the replicator is
     /// able to connect and replicate with the remote server again.
     ///
-    /// When setting the  _maxAttempts_ to zero(default), the default _maxAttempts_ of 10 times for single
-    /// shot replicators and infinite times for continuous replicators will be applied and present to
-    /// users.
+    /// Default _maxAttempts_ is ``ReplicatorConfiguration.defaultMaxAttemptsSingleShot`` times
+    /// for single shot replicators and ``ReplicatorConfiguration.defaultMaxAttemptsContinuous`` times
+    /// for continuous replicators.
+    ///
     /// Settings the value to 1, will perform an initial request and if there is a transient error
     /// occurs, will stop without retry.
-    public var maxAttempts: UInt = 0
+    ///
+    /// - Note: For backward compatibility, setting it to zero will result in default 10 internally.
+    public var maxAttempts: UInt = UInt(ReplicatorConfiguration.defaultMaxAttemptsSingleShot) {
+        didSet { didMaxAttemptUpdate = true }
+    }
     
     /// Max wait time for the next attempt(retry).
     ///
     /// The exponential backoff for calculating the wait time will be used by default and cannot be
-    /// customized. Set the value to zero(by default) means using the default max attempts of
-    /// 300 seconds.
-     
+    /// customized. Default max attempts is ``ReplicatorConfiguration.defaultMaxAttemptWaitTime`` secs.
+    ///
     /// Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
     /// being thrown.
-    public var maxAttemptWaitTime: TimeInterval = 0 {
+    ///
+    /// - Note: For backward compatibility, setting it to zero will result in default secs internally.
+    public var maxAttemptWaitTime: TimeInterval = ReplicatorConfiguration.defaultMaxAttemptWaitTime {
         willSet(newValue) {
             
             guard newValue >= 0 else {
@@ -246,7 +261,7 @@ public struct ReplicatorConfiguration {
     /// will be sent to any document listeners that are active on the replicator. For performance
     /// reasons, the document listeners must be added **before** the replicator is started or
     /// they will not receive the events.
-    public var enableAutoPurge: Bool = true
+    public var enableAutoPurge: Bool = ReplicatorConfiguration.defaultEnableAutoPurge
     
     /// The collections used for the replication.
     public var collections: [Collection] {
@@ -485,4 +500,6 @@ public struct ReplicatorConfiguration {
     var collectionConfigs = [Collection: CollectionConfiguration]()
     
     var db: Database?
+    
+    fileprivate var didMaxAttemptUpdate: Bool = false
 }

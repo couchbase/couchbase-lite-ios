@@ -228,9 +228,12 @@
 
 - (void) testFileLoggingUsePlainText {
     CBLLogFileConfiguration* config = [self logFileConfig];
+    AssertEqual(config.usePlainText, kCBLDefaultLogFileUsePlainText);
     config.usePlainText = YES;
+    Assert(config.usePlainText);
     CBLDatabase.log.file.config = config;
     CBLDatabase.log.file.level = kCBLLogLevelInfo;
+    Assert(CBLDatabase.log.file.config.usePlainText);
     
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
@@ -300,10 +303,16 @@
 - (void) testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
+    AssertEqual(config.maxSize, kCBLDefaultLogFileMaxSize);
+    AssertEqual(config.maxRotateCount, kCBLDefaultLogFileMaxRotateCount);
     config.maxSize = 1024;
+    AssertEqual(config.maxSize, 1024);
     config.maxRotateCount = 2;
+    AssertEqual(config.maxRotateCount, 2);
     CBLDatabase.log.file.config = config;
     CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    AssertEqual(CBLDatabase.log.file.config.maxSize, 1024);
+    AssertEqual(CBLDatabase.log.file.config.maxRotateCount, 2);
     
     // this should create three files, as the 1KB + 1KB + extra ~400-500Bytes.
     [self writeOneKiloByteOfLog];

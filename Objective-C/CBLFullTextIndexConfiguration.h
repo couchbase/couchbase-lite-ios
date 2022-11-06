@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLFullTextIndexConfiguration : CBLIndexConfiguration
 
 /**
- Set the true value to ignore accents/diacritical marks. The default value is false.
+ Set the true value to ignore accents/diacritical marks. 
  */
 @property (nonatomic, readonly) BOOL ignoreAccents;
 

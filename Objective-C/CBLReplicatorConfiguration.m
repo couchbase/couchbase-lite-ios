@@ -26,6 +26,7 @@
 #import "CBLVersion.h"
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
+#import "CBLDefaults.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -34,6 +35,7 @@
 
 @implementation CBLReplicatorConfiguration {
     BOOL _readonly;
+    BOOL _isMaxAttemptUpdated;
 }
 
 @synthesize database=_database, target=_target;
@@ -55,18 +57,37 @@
 @synthesize allowReplicatingInBackground=_allowReplicatingInBackground;
 #endif
 
+- (instancetype) initWithDefaults {
+    self = [super init];
+    if (self) {
+        _replicatorType = kCBLDefaultReplicatorType;
+    #ifdef COUCHBASE_ENTERPRISE
+        _acceptOnlySelfSignedServerCertificate = NO;
+    #endif
+        _continuous = kCBLDefaultReplicatorContinuous;
+        _heartbeat = kCBLDefaultReplicatorHeartbeat;
+        _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
+        _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptWaitTime;
+        _enableAutoPurge = kCBLDefaultReplicatorEnableAutoPurge;
+        _collectionConfigs = [NSMutableDictionary dictionary];
+    #if TARGET_OS_IPHONE
+        _allowReplicatingInBackground = kCBLDefaultReplicatorAllowReplicatingInBackground;
+    #endif
+    }
+    
+    return self;
+}
+
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            target: (id<CBLEndpoint>)target
 {
     CBLAssertNotNil(database);
     CBLAssertNotNil(target);
     
-    self = [super init];
+    self = [self initWithDefaults];
     if (self) {
         _database = database;
         _target = target;
-        
-        [self initializeProperties];
         
         // add default collection
         CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
@@ -85,25 +106,11 @@
 
 - (instancetype) initWithTarget:(id<CBLEndpoint>)target {
     CBLAssertNotNil(target);
-    self = [super init];
+    self = [self initWithDefaults];
     if (self) {
         _target = target;
-        
-        [self initializeProperties];
     }
     return self;
-}
-
-- (void) initializeProperties {
-    _replicatorType = kCBLReplicatorTypePushAndPull;
-#ifdef COUCHBASE_ENTERPRISE
-    _acceptOnlySelfSignedServerCertificate = NO;
-#endif
-    _heartbeat = 0;
-    _maxAttempts = 0;
-    _maxAttemptWaitTime = 0;
-    _enableAutoPurge = YES;
-    _collectionConfigs = [NSMutableDictionary dictionary];
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -113,7 +120,13 @@
 
 - (void) setContinuous: (BOOL)continuous {
     [self checkReadonly];
+    
     _continuous = continuous;
+    
+    if (!_isMaxAttemptUpdated)
+        _maxAttempts = continuous
+        ? kCBLDefaultReplicatorMaxAttemptsContinuous
+        : kCBLDefaultReplicatorMaxAttemptsSingleShot;
 }
 
 - (void) setAuthenticator: (CBLAuthenticator*)authenticator {
@@ -223,7 +236,7 @@
 
 - (void) setMaxAttempts: (NSUInteger)maxAttempts {
     [self checkReadonly];
-    
+    _isMaxAttemptUpdated = YES;
     _maxAttempts = maxAttempts;
 }
 
@@ -309,7 +322,7 @@
 
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config
                        readonly: (BOOL)readonly {
-    self = [super init];
+    self = [self initWithDefaults];
     if (self) {
         _database = config.database;
         _readonly = readonly;
@@ -382,14 +395,20 @@
     if (_checkpointInterval > 0)
         options[@kC4ReplicatorCheckpointInterval] = @(_checkpointInterval);
     
-    if (_heartbeat > 0)
-        options[@kC4ReplicatorHeartbeatInterval] = @(_heartbeat);
+    options[@kC4ReplicatorHeartbeatInterval] = _heartbeat > 0
+    ? @(_heartbeat)
+    : @(kCBLDefaultReplicatorHeartbeat) /*backward compatibility*/;
     
-    if (_maxAttemptWaitTime > 0)
-        options[@kC4ReplicatorOptionMaxRetryInterval] = @(_maxAttemptWaitTime);
+    options[@kC4ReplicatorOptionMaxRetryInterval] = _maxAttemptWaitTime > 0
+    ? @(_maxAttemptWaitTime)
+    : @(kCBLDefaultReplicatorMaxAttemptWaitTime) /*backward compatibility*/;
     
-    if (_maxAttempts > 0)
-        options[@kC4ReplicatorOptionMaxRetries] = @(_maxAttempts - 1);
+    if (_maxAttempts > 0) {
+        options[@kC4ReplicatorOptionMaxRetries] =  @(_maxAttempts - 1);
+    } else {
+        // backward compatibility support 0
+        options[@kC4ReplicatorOptionMaxRetries] = _continuous ? @(kCBLDefaultReplicatorMaxAttemptsContinuous) : @(kCBLDefaultReplicatorMaxAttemptsSingleShot);
+    }
     
     if (!_enableAutoPurge)
         options[@kC4ReplicatorOptionAutoPurge] = @(NO);

@@ -18,8 +18,7 @@
 //
 
 #import "CBLLogFileConfiguration+Internal.h"
-
-#define kCBLLogFileConfigurationDefaultMaxSize 500*1024
+#import "CBLDefaults.h"
 
 @implementation CBLLogFileConfiguration {
     BOOL _readonly;
@@ -34,8 +33,9 @@
         CBLAssertNotNil(directory);
         _readonly = NO;
         _directory = directory;
-        _maxSize = kCBLLogFileConfigurationDefaultMaxSize;
-        _maxRotateCount = 1;
+        _maxSize = kCBLDefaultLogFileMaxSize;
+        _maxRotateCount = kCBLDefaultLogFileMaxRotateCount;
+        _usePlainText = kCBLDefaultLogFileUsePlainText;
     }
     return self;
 }
