@@ -162,7 +162,7 @@ then
     -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
     -configuration "$CONFIGURATION_TEST" \
     -sdk iphonesimulator \
-    -destination "$TEST_SIMULATOR" \
+    -destination "platform=iOS Simulator,name=$TEST_SIMULATOR" \
     -enableCodeCoverage YES
   
   # Generage Code Coverage Reports:
