@@ -32,6 +32,7 @@
 #import <dispatch/dispatch.h>
 #import <memory>
 #import <net/if.h>
+#import <arpa/inet.h>
 #import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
@@ -405,6 +406,8 @@ static void doDispose(C4Socket* s) {
             [self closeWithError: posixError(errNo, msg)];
             return;
         }
+        
+        CBLLogVerbose(WebSocket, @"%@: name(%@) converted to index %u", self, interface, index);
         int result = -1;
         switch (_addr->ai_family) {
             case AF_INET:
@@ -426,6 +429,8 @@ static void doDispose(C4Socket* s) {
             [self closeWithError: posixError(errNo, msg)];
             return;
         }
+        
+        CBLLogVerbose(WebSocket, @"%@: setsockopt: %d %@", self, result, addrInfo(_addr));
     }
     
     // Connect:
@@ -433,6 +438,17 @@ static void doDispose(C4Socket* s) {
         int sockfd = self.sockfd;
         if (sockfd < 0) {
             return; // Already disconnected
+        }
+        
+        struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
+        char addrBuf[INET_ADDRSTRLEN];
+        if(addr->sin_family == AF_INET) {
+            if (inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN) != NULL) {
+                CBLLogVerbose(WebSocket, @"%@: Going to connect to IPv4 addr: %@",
+                              self, [NSString stringWithUTF8String: addrBuf]);
+            } else {
+                CBLWarnError(WebSocket, @"%@: inet_ntop(..) failed %@", self, addrInfo(_addr));
+            }
         }
         
         int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
@@ -536,6 +552,12 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
                        forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
             CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
         }
+        
+        if (![_in setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
+                       forKey: NSStreamSocketSecurityLevelKey]) {
+            CBLWarnError(WebSocket, @"%@ failed to set SSL Security level", self);
+        }
+        
         _checkSSLCert = true;
         
         // When using client proxy, the stream will be reset after setting
