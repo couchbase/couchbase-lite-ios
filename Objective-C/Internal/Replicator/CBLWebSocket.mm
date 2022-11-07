@@ -446,7 +446,7 @@ static void doDispose(C4Socket* s) {
         }
         
         struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
-        char addrBuf[MAX(INET_ADDRSTRLEN, INET6_ADDRSTRLEN)];
+        char addrBuf[INET_ADDRSTRLEN];
         if(addr->sin_family == AF_INET) {
             if (inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN) != NULL) {
                 CBLLogVerbose(WebSocket, @"%@: Going to connect to IPv4 addr: %@",
@@ -987,7 +987,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void)stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
-    CBLLogVerbose(WebSocket, @"event code: %lx - stream: %@", (unsigned long)eventCode, stream);
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
             CBLLogVerbose(WebSocket, @"%@: OpenCompleted on %@", self, stream);
