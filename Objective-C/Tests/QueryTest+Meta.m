@@ -269,12 +269,31 @@
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]
                           where: [[CBLQueryMeta expiration]
-                                  greaterThan: [CBLQueryExpression double: earlier]]];
-    
+                                  greaterThan: [CBLQueryExpression longLong: (long long)earlier]]];
     AssertNotNil(q);
     rs = [q execute: &error];
     AssertNil(error);
-    AssertEqual([[rs allObjects] count], 1u);
+    NSLog(@">>> (DEBUG TMP) -- greaterThan longLong --- %lu ", (unsigned long)[[rs allObjects] count]);
+
+    q = [CBLQueryBuilder select: @[kDOCID]
+                           from: [CBLQueryDataSource database: self.db]
+                          where: [[CBLQueryMeta expiration]
+                                  greaterThan: [CBLQueryExpression double: earlier]]];
+
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+//    AssertEqual([[rs allObjects] count], 1u);
+    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[[rs allObjects] count]);
+    
+    NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where meta().expiration > %f", earlier];
+    q = [self.db createQuery: n1ql error: &error];
+    AssertNotNil(q);
+    rs = [q execute: &error];
+    AssertNil(error);
+    NSLog(@">>> (DEBUG TMP) -- greaterThan N1QL --- %lu ", (unsigned long)[[rs allObjects] count]);
+    
+    AssertNotNil(nil);
 }
 
 - (void) testExpiryNoGreaterThanDate {
