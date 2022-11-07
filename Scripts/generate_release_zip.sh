@@ -109,7 +109,7 @@ then
   echo "Running unit tests ..."
 
   echo "Check devices ..."
-  instruments -s devices
+  xcrun xctrace list devices
 
   echo "Run ObjC macOS tests ..."
   sh Scripts/xctest_crash_log.sh --delete-all
