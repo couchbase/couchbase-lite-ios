@@ -47,6 +47,7 @@
 #import "c4Replicator.h"
 #import "c4Socket.h"
 #import "CBLWebSocket.h"
+#import "CBLNWWebSocket.h"
 #import "fleece/Fleece.hh"
 #import <algorithm>
 
@@ -240,7 +241,11 @@ typedef enum {
 #endif
     {
         if (remoteURL) {
-            socketFactory = CBLWebSocket.socketFactory;
+            IF_NW_API_AVAILAVLE {
+                socketFactory = CBLNWWebSocket.socketFactory;
+            } else {
+                socketFactory = CBLWebSocket.socketFactory;
+            }
             NSString* hostname = remoteURL.host;
             if (hostname.length > 0 && ![hostname isEqualToString: @"localhost"]
                                     && ![hostname isEqualToString: @"127.0.0.1"]) {
