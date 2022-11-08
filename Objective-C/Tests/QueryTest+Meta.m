@@ -191,8 +191,7 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3715
-- (void) _testExpiryLessThanDate {
+- (void) testExpiryLessThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -218,8 +217,7 @@
     AssertEqual([[rs allObjects] count], 1u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3715
-- (void) _testExpiryNoLessThanDate {
+- (void) testExpiryNoLessThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -244,8 +242,7 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3715
-- (void) _testExpiryGreaterThanDate {
+- (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -270,8 +267,7 @@
     AssertEqual([[rs allObjects] count], 1u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3715
-- (void) _testExpiryNoGreaterThanDate {
+- (void) testExpiryNoGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;

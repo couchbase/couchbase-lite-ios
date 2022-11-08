@@ -712,8 +712,7 @@
 
 #pragma mark - Query Params
 
-// TODO: https://issues.couchbase.com/browse/CBL-3871
-- (void) _testQueryParameters {
+- (void) testQueryParameters {
     [self loadStudents];
     
     CBLQueryExpression* PARAM_CITY = [CBLQueryExpression parameterNamed: @"city"];
