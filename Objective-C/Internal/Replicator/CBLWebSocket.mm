@@ -553,11 +553,6 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
             CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
         }
         
-        if (![_in setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
-                       forKey: NSStreamSocketSecurityLevelKey]) {
-            CBLWarnError(WebSocket, @"%@ failed to set SSL Security level", self);
-        }
-        
         _checkSSLCert = true;
         
         // When using client proxy, the stream will be reset after setting
