@@ -1881,6 +1881,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A1CEC73291A573E003231EF /* generate_objc_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_objc_release_zip.sh; sourceTree = "<group>"; };
+		1A1CEC7F291A573E003231EF /* generate_swift_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_swift_release_zip.sh; sourceTree = "<group>"; };
 		1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexConfiguration.h; sourceTree = "<group>"; };
 		1A3470C0266F3E7C0042C6BA /* CBLIndexConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndexConfiguration.m; sourceTree = "<group>"; };
@@ -3218,6 +3220,8 @@
 				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9388CB9621BCDF8B005CA66D /* generate_release_zip.sh */,
+				1A1CEC73291A573E003231EF /* generate_objc_release_zip.sh */,
+				1A1CEC7F291A573E003231EF /* generate_swift_release_zip.sh */,
 				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
 				1A967A5F251BF78400B70945 /* generate_package_manifest.sh */,
 			);

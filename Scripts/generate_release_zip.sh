@@ -6,8 +6,8 @@ function usage
 {
   echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]"
   echo "\nOptions:"
-  echo "  --xcframework\t create a release package with .xcframework"
-  echo "  --combined\t\t create a release package with .xcframework and .framework"
+  echo "  --xcframework\t [Not used, will be XCFramework by default] create a release package with .xcframework"
+  echo "  --combined\t\t [Not used, will be XCFramework by default] create a release package with .xcframework and .framework"
   echo "  --notest\t create a release package but no tests needs to be run"
   echo "  --nocov\t create a release package, run tests but no code coverage zip"
   echo "  --testonly\t run tests but no release package"
@@ -67,240 +67,46 @@ then
   exit 4
 fi
 
-# TODO: refactor for Lithium - only create xcframeworks binaries
-COMBINED=YES
-
-if [ -z "$EE" ]
+if [ -n "$NO_TEST" ]
 then
-  SCHEME_PREFIX="CBL"
-  CONFIGURATION="Release"
-  CONFIGURATION_TEST="Debug"
-  COVERAGE_NAME="coverage"
-  EDITION="community"
-  EXTRA_CMD_OPTIONS=""
-else
-  SCHEME_PREFIX="CBL_EE"
-  CONFIGURATION="Release_EE"
-  CONFIGURATION_TEST="Debug_EE"
-  COVERAGE_NAME="coverage-ee"
-  EDITION="enterprise"
-  EXTRA_CMD_OPTIONS="--EE"
+  OPTS="--notest"
 fi
 
-if [ -z "$PRETTY" ]
+if [ -n "$NO_COV" ]
 then
-  XCPRETTY="cat"
-else
-  # Allow non-ascii text in output:
-  export LC_CTYPE=en_US.UTF-8
-  XCPRETTY="xcpretty"
+  OPTS="$OPTS --nocov"
 fi
 
-# Clean output directory:
-echo "Clean output directory: $OUTPUT_DIR"
-rm -rf "$OUTPUT_DIR"
-
-# Check xcodebuild version:
-echo "Check xcodebuild version ..."
-xcodebuild -version
-
-if [ -z "$NO_TEST" ] || [ -n "$TEST_ONLY" ]
+if [ -n "$TEST_ONLY" ]
 then
-  echo "Running unit tests ..."
-
-  echo "Check devices ..."
-  xcrun xctrace list devices
-
-  echo "Run ObjC macOS tests ..."
-  sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild test \
-    -project CouchbaseLite.xcodeproj \
-    -scheme "${SCHEME_PREFIX}_ObjC" \
-    -configuration "$CONFIGURATION_TEST" \
-    -sdk macosx || checkCrashLogs
-  
-  # get the latest simulator
-  TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
-
-   echo "Run ObjC iOS tests on ${TEST_SIMULATOR}..."
-  # iOS-App target runs Keychain-Accessing tests
-  sh Scripts/xctest_crash_log.sh --delete-all
-  xcodebuild clean test \
-    -project CouchbaseLite.xcodeproj \
-    -scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
-    -configuration "$CONFIGURATION_TEST" \
-    -sdk iphonesimulator \
-    -destination "platform=iOS Simulator,name=$TEST_SIMULATOR" \
-    -enableCodeCoverage YES || checkCrashLogs
-  
-  
-  if [ -z "$NO_COV" ]
-  then
-    # Objective-C:
-    echo "Generate coverage report for ObjC ..."
-    slather coverage --html \
-        --scheme "${SCHEME_PREFIX}_ObjC_Tests_iOS_App" \
-        --configuration "$CONFIGURATION_TEST" \
-        --ignore "vendor/*" --ignore "Swift/*" \
-        --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
-        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Objective-C" \
-        --binary-basename "CouchbaseLite.framework"  \
-        --binary-basename "CBL_EE_Tests" \
-        CouchbaseLite.xcodeproj > /dev/null
-  fi
-
-  echo "Run Swift macOS tests ..."
-  xcodebuild test \
-    -project CouchbaseLite.xcodeproj \
-    -scheme "${SCHEME_PREFIX}_Swift" \
-    -configuration "$CONFIGURATION_TEST" \
-    -sdk macosx
-
-  echo "Run Swift iOS tests ..."
-  xcodebuild clean test \
-    -project CouchbaseLite.xcodeproj \
-    -scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
-    -configuration "$CONFIGURATION_TEST" \
-    -sdk iphonesimulator \
-    -destination "platform=iOS Simulator,name=$TEST_SIMULATOR" \
-    -enableCodeCoverage YES
-  
-  # Generage Code Coverage Reports:
-  if [ -z "$NO_COV" ]
-  then
-    # Swift:
-    echo "Generate coverage report for Swift ..."
-    slather coverage --html \
-        --scheme "${SCHEME_PREFIX}_Swift_Tests_iOS_App" \
-        --configuration "$CONFIGURATION_TEST"  \
-        --ignore "vendor/*" --ignore "Objective-C/*" \
-        --ignore "Swift/Tests/*" --ignore "../Sources/Objective-C/*" \
-        --output-directory "$OUTPUT_DIR/$COVERAGE_NAME/Swift" \
-        CouchbaseLite.xcodeproj > /dev/null
-    
-    # Zip reports:
-    pushd "$OUTPUT_DIR" > /dev/null
-    zip -ry $COVERAGE_NAME.zip $COVERAGE_NAME/*
-    popd > /dev/null
-    rm -rf "$OUTPUT_DIR/$COVERAGE_NAME"
-  fi
-fi
-if [  -n "$TEST_ONLY" ]
-then
-    echo "--testonly is specified."
-    echo "skipping the rest of build."
-    exit
+  OPTS="$OPTS --testonly"
 fi
 
-
-VERSION_SUFFIX=""
-if [ ! -z "$VERSION" ]
+if [ -n "$EE" ]
 then
-  VERSION_SUFFIX="_$VERSION"
+  OPTS="$OPTS --EE"
 fi
 
-# Build frameworks:
-echo "Build CouchbaseLite release package..."
-
-BUILD_DIR=$OUTPUT_DIR/build
-
-OUTPUT_OBJC_DIR=$OUTPUT_DIR/objc_$EDITION
-OUTPUT_OBJC_ZIP=../couchbase-lite-objc_$EDITION$VERSION_SUFFIX.zip
-
-OUTPUT_SWIFT_DIR=$OUTPUT_DIR/swift_$EDITION
-OUTPUT_SWIFT_ZIP=../couchbase-lite-swift_$EDITION$VERSION_SUFFIX.zip
-
-OUTPUT_SWIFT_XC_DIR=$OUTPUT_DIR/swift_xc_$EDITION
-OUTPUT_SWIFT_XC_ZIP=../couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip
-OUTPUT_OBJC_XC_DIR=$OUTPUT_DIR/objc_xc_$EDITION
-OUTPUT_OBJC_XC_ZIP=../couchbase-lite-objc_xc_$EDITION$VERSION_SUFFIX.zip
-
-OUTPUT_DOCS_DIR=$OUTPUT_DIR/docs
-OUTPUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
-OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation_$EDITION$VERSION_SUFFIX.zip
-OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
-OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation_$EDITION$VERSION_SUFFIX.zip
-
-if [[ ! -z $COMBINED ]] || [[ -z $XCFRAMEWORK ]]
+if [ -n "$VERSION" ]
 then
-  echo "Building framework..."
-  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p iOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  set -o pipefail && sh Scripts/build_framework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -p macOS -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-
-  # Objective-C
-  echo "Make Objective-C framework zip file ..."
-  mkdir -p "$OUTPUT_OBJC_DIR"
-  cp -R "$BUILD_DIR/${SCHEME_PREFIX}_ObjC"/* "$OUTPUT_OBJC_DIR"
-  if [[ -n $WORKSPACE ]]; then
-      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_DIR"/LICENSE.txt
-  fi
-  pushd "$OUTPUT_OBJC_DIR"
-  zip -ry "$OUTPUT_OBJC_ZIP" *
-  popd
-
-  # Swift
-  echo "Make Swift framework zip file ..."
-  mkdir -p "$OUTPUT_SWIFT_DIR"
-  cp -R "$BUILD_DIR/${SCHEME_PREFIX}_Swift"/* "$OUTPUT_SWIFT_DIR"
-  if [[ -n $WORKSPACE ]]; then
-      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_DIR"/LICENSE.txt
-  fi
-  pushd "$OUTPUT_SWIFT_DIR" > /dev/null
-  zip -ry "$OUTPUT_SWIFT_ZIP" *
-  popd > /dev/null
-
-  # Generate API docs:
-  echo "Generate API docs ..."
-  OBJC_UMBRELLA_HEADER=`find $OUTPUT_OBJC_DIR -name "CouchbaseLite.h"`
-  sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR" -h "$OBJC_UMBRELLA_HEADER" $EXTRA_CMD_OPTIONS
-  # >> Objective-C API
-  pushd "$OUTPUT_OBJC_DOCS_DIR" > /dev/null
-  zip -ry "$OUTPUT_OBJC_DOCS_ZIP" *
-  popd > /dev/null
-  # >> Swift API docs
-  pushd "$OUTPUT_SWIFT_DOCS_DIR" > /dev/null
-  zip -ry "$OUTPUT_SWIFT_DOCS_ZIP" *
-  popd > /dev/null
+  OPTS="$OPTS -v ${VERSION}"
 fi
 
-if [[ ! -z $COMBINED ]] || [[ ! -z $XCFRAMEWORK ]]
+if [ -n "$PRETTY" ]
 then
-  echo "Building xcframework..."
-  set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_Swift" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-  set -o pipefail && sh Scripts/build_xcframework.sh -s "${SCHEME_PREFIX}_ObjC" -c "$CONFIGURATION" -o "$BUILD_DIR" -v "$VERSION" | $XCPRETTY
-
-  echo "Make Swift xcframework zip file ..."
-  mkdir -p "$OUTPUT_SWIFT_XC_DIR"
-  cp -R "$BUILD_DIR/xc/${SCHEME_PREFIX}_Swift"/* "$OUTPUT_SWIFT_XC_DIR"
-  if [[ -n $WORKSPACE ]]; then
-      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_SWIFT_XC_DIR"/LICENSE.txt
-  fi
-  pushd "$OUTPUT_SWIFT_XC_DIR" > /dev/null
-  zip -ry "$OUTPUT_SWIFT_XC_ZIP" *
-  popd > /dev/null
-  
-  echo "Make ObjC XCFramework zip file ..."
-  mkdir -p "$OUTPUT_OBJC_XC_DIR"
-  cp -R "$BUILD_DIR/xc/${SCHEME_PREFIX}_ObjC"/* "$OUTPUT_OBJC_XC_DIR"
-  if [[ -n $WORKSPACE ]]; then
-      cp ${WORKSPACE}/product-texts/mobile/couchbase-lite/license/LICENSE_${EDITION}.txt "$OUTPUT_OBJC_XC_DIR"/LICENSE.txt
-  fi
-  pushd "$OUTPUT_OBJC_XC_DIR" > /dev/null
-  zip -ry "$OUTPUT_OBJC_XC_ZIP" *
-  popd > /dev/null
-
-  # Generate swift checksum file:
-  echo "Generate swift package checksum..."
-  sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-swift_xc_$EDITION$VERSION_SUFFIX.zip" -o $OUTPUT_DIR $EXTRA_CMD_OPTIONS
-  sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-objc_xc_$EDITION$VERSION_SUFFIX.zip" -o $OUTPUT_DIR $EXTRA_CMD_OPTIONS
+  OPTS="$OPTS --pretty"
 fi
 
-# Cleanup
-rm -rf "$BUILD_DIR"
-rm -rf "$OUTPUT_OBJC_DIR"
-rm -rf "$OUTPUT_SWIFT_DIR"
-rm -rf "$OUTPUT_SWIFT_XC_DIR"
-rm -rf "$OUTPUT_OBJC_XC_DIR"
-rm -rf "$OUTPUT_DOCS_DIR"
+echo "Building xcframework for ObjC..."
+sh Scripts/generate_objc_release_zip.sh -o "${OUTPUT_DIR}/ObjC"  ${OPTS}
+
+echo "Building xcframework for Swift..."
+sh Scripts/generate_swift_release_zip.sh -o "${OUTPUT_DIR}/Swift"  ${OPTS}
+
+# copy everything to single folder
+mv ${OUTPUT_DIR}/ObjC/* ${OUTPUT_DIR}/
+mv ${OUTPUT_DIR}/Swift/* ${OUTPUT_DIR}/
+
+# remove the empty folders!
+rm -rf ${OUTPUT_DIR}/ObjC
+rm -rf ${OUTPUT_DIR}/Swift
