@@ -87,6 +87,11 @@ public struct ReplicatorConfiguration {
     /// Specific network interface for connecting to the remote target.
     public var networkInterface: String?
     
+    /// (Volatile API : Will be removed in the release version)
+    /// Experiment to use bind() function to bind socket to the specified network interface
+    /// instead of setting the socket option.
+    public var experimentNetworkInterfaceUseBindFunction: Bool = false
+    
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
@@ -214,6 +219,7 @@ public struct ReplicatorConfiguration {
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
         self.networkInterface = config.networkInterface
+        self.experimentNetworkInterfaceUseBindFunction = config.experimentNetworkInterfaceUseBindFunction
         self.channels = config.channels
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
@@ -244,6 +250,7 @@ public struct ReplicatorConfiguration {
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.networkInterface = self.networkInterface;
+        c.experimentNetworkInterfaceUseBindFunction = self.experimentNetworkInterfaceUseBindFunction;
         c.channels = self.channels
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)

@@ -83,6 +83,13 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  */
 @property (nonatomic, nullable) NSString* networkInterface;
 
+/*
+ (Volatile API : Will be removed in the release version)
+ Experiment to use bind() function to bind socket to the specified network interface
+ instead of setting the socket option.
+ */
+@property (nonatomic) bool experimentNetworkInterfaceUseBindFunction;
+
 /**
  A set of Sync Gateway channel names to pull from. Ignored for push replication.
  The default value is nil, meaning that all accessible channels will be pulled.
