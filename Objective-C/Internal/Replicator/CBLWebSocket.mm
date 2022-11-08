@@ -33,6 +33,7 @@
 #import <memory>
 #import <net/if.h>
 #import <arpa/inet.h>
+#import <ifaddrs.h>
 #import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
@@ -105,6 +106,8 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
+    BOOL _experimentNetworkInterfaceUseBindFunction;
+    
     struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
 }
@@ -207,6 +210,7 @@ static void doDispose(C4Socket* s) {
         _sockfd = -1;
         _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
+        _experimentNetworkInterfaceUseBindFunction = _replicator.config.experimentNetworkInterfaceUseBindFunction;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
@@ -385,6 +389,13 @@ static void doDispose(C4Socket* s) {
     CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info as %@",
                   self, hostname, (long)port, interface, addrInfo(_addr));
     
+    if (_addr->ai_family != AF_INET && _addr->ai_family != AF_INET6) {
+        NSString* msg = $sprintf(@"Address family %d is not supported", _addr->ai_family);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        [self closeWithError: posixError(EPERM, msg)];
+        return;
+    }
+        
     // Create socket:
     Assert(_sockfd < 0);
     _sockfd = socket(_addr->ai_family, _addr->ai_socktype, _addr->ai_protocol);
@@ -398,39 +409,17 @@ static void doDispose(C4Socket* s) {
     
     // Set network interface:
     if (interface) {
-        unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
-        if (index == 0) {
-            int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(errNo, msg)];
+        bool result = false;
+        NSError* err;
+        bool useIPv4 = (_addr->ai_family == AF_INET);
+        if (_experimentNetworkInterfaceUseBindFunction)
+            result = [self bindToInterface: interface useIPv4: useIPv4 error: &err];
+        else
+            result = [self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err];
+        if (!result) {
+            [self closeWithError: err];
             return;
         }
-        
-        CBLLogVerbose(WebSocket, @"%@: name(%@) converted to index %u", self, interface, index);
-        int result = -1;
-        switch (_addr->ai_family) {
-            case AF_INET:
-                result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                break;
-            case AF_INET6:
-                result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
-                break;
-            default:
-                CBLWarnError(WebSocket, @"%@: Address family %d is not supported", self, _addr->ai_family);
-                result = -1;
-                break;
-        }
-        if (result < 0) {
-            int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
-                                     interface, errNo, addrInfo(_addr));
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(errNo, msg)];
-            return;
-        }
-        
-        CBLLogVerbose(WebSocket, @"%@: setsockopt: %d %@", self, result, addrInfo(_addr));
     }
     
     // Connect:
@@ -442,7 +431,7 @@ static void doDispose(C4Socket* s) {
         
         struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
         char addrBuf[INET_ADDRSTRLEN];
-        if(addr->sin_family == AF_INET) {
+        if (addr->sin_family == AF_INET) {
             if (inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN) != NULL) {
                 CBLLogVerbose(WebSocket, @"%@: Going to connect to IPv4 addr: %@",
                               self, [NSString stringWithUTF8String: addrBuf]);
@@ -494,6 +483,92 @@ static void doDispose(C4Socket* s) {
             });
         }
     });
+}
+
+- (bool) setSocketOptForInterface: (NSString*)interface useIPv4: (BOOL)useIPv4 error: (NSError**)outError {
+    unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+    if (index == 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        if (outError) *outError = posixError(errNo, msg);
+        return false;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: name(%@) converted to index %u", self, interface, index);
+    int result = -1;
+    if (useIPv4) {
+        result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+    } else {
+        result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
+    }
+    
+    if (result < 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
+                                 interface, errNo, addrInfo(_addr));
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        if (outError) *outError = posixError(errNo, msg);
+        return false;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: setsockopt: %d %@", self, result, addrInfo(_addr));
+    return true;
+}
+
+- (bool) bindToInterface: (NSString*)interface useIPv4: (BOOL)useIPv4 error: (NSError**)outError {
+    struct ifaddrs *ifaddrs;
+    
+    if ((getifaddrs(&ifaddrs) != 0)) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
+        if (outError) *outError = posixError(errNo, msg);
+        return false;
+    }
+    
+    NSMutableData *addrData;
+    const char *cInterface = [interface UTF8String];
+    for (struct ifaddrs *ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+        sockaddr* addr = ifa->ifa_addr;
+        if (!addr)
+            continue;
+        
+        if (addr->sa_family == AF_INET && useIPv4) {
+            if (strcmp(ifa->ifa_name, cInterface) == 0) {
+                sockaddr_in* addrIn = reinterpret_cast<sockaddr_in*>(addr);
+                addrData = [NSMutableData dataWithBytes: addrIn length: sizeof(struct sockaddr_in)];
+            }
+        } else if (addr->sa_family == AF_INET6 && !useIPv4) {
+            if (strcmp(ifa->ifa_name, cInterface) == 0) {
+                sockaddr_in6* addrIn = reinterpret_cast<sockaddr_in6*>(addr);
+                addrData = [NSMutableData dataWithBytes: addrIn length: sizeof(struct sockaddr_in6)];
+            }
+        }
+        
+        if (addrData)
+            break;
+    }
+    
+    freeifaddrs(ifaddrs);
+    
+    if (!addrData) {
+        NSString* msg = $sprintf(@"Failed to find network interface %@", interface);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        if (outError) *outError = posixError(ENODEV, msg);
+        return false;
+    }
+    
+    const struct sockaddr *addr = (const struct sockaddr *)[addrData bytes];
+    if (bind(_sockfd, addr, (socklen_t) addrData.length) != 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to bind network interface %@ with errno %d", interface, errNo);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        if (outError) *outError = posixError(errNo, msg);
+        return false;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: Successfully bind network interface %@", self, interface);
+    return true;
 }
 
 static inline NSError* posixError(int errNo, NSString* msg) {
