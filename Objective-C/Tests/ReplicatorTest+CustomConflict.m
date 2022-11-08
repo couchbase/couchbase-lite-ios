@@ -893,8 +893,8 @@
     AssertEqualObjects([doc toDictionary], localData);
     
     // 7
-    AssertEqualObjects(custom.lines.lastObject, @"Unable to select conflicting revision for doc1, "
-            "the conflict may have been resolved...");
+    Assert([custom.lines containsObject: @"Unable to select conflicting revision for doc1, "
+            "the conflict may have been resolved..."]);
     
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
