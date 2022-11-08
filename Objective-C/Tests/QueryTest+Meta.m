@@ -276,7 +276,7 @@
     NSLog(@">>> (DEBUG TMP) -- greaterThan longLong --- %lu ", (unsigned long)[[rs allObjects] count]);
 
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: [CBLQueryDataSource database: self.db as: @"cbl-3715"]
                           where: [[CBLQueryMeta expiration]
                                   greaterThan: [CBLQueryExpression double: earlier]]];
 

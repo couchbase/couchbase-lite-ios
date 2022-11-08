@@ -34,6 +34,12 @@
 - (id) asJSON {
     NSString* columnName = [self columnName];
     assert(columnName);
+    
+    if ([columnName isEqualToString: @"cbl-3715"]) {
+//        "{\"FROM\":[{\"COLLECTION\":\"_default\"}],\"WHAT\":[[\"_.\",[\"meta()\"],\".id\"]],\"WHERE\":[\">\",[\"_.\",[\"meta()\"],\".expiration\"],1667854405597.2249]}"
+        return @{ @"COLLECTION" : @"_default" };
+    }
+    
     return @{ @"AS" : columnName };
 }
 

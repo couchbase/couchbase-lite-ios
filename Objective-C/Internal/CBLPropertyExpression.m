@@ -44,8 +44,18 @@ NSString* const kCBLAllPropertiesName = @"";
     NSMutableArray* json = [NSMutableArray array];
     if (_from)
         [json addObject: [NSString stringWithFormat: @".%@.%@", _from, _keyPath]];
-    else
-        [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
+    else {
+        if ([_keyPath isEqualToString: @"_expiration"]) {
+//            [\">\",[\"_.\",[\"meta()\"],\".expiration\"]
+            [json addObject: @"_."];
+            NSMutableArray* meta = [NSMutableArray array];
+            [meta addObject: @"meta()"];
+            [json addObject: meta];
+            [json addObject: @".expiration"];
+        } else {
+            [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
+        }
+    }
     return json;
 }
 
