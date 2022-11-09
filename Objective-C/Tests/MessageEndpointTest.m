@@ -184,7 +184,8 @@ MCSessionDelegate, CBLMessageEndpointDelegate, MultipeerConnectionDelegate>
     _browser.delegate = self;
     [_browser startBrowsingForPeers];
     
-    [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 10.0];
+    // cool down period(disconnected to next connected state), is taking around 4-10secs
+    [self waitForExpectations: @[_clientConnected, _serverConnected] timeout: 30.0];
 }
 
 - (void) run: (CBLReplicatorConfiguration*)config

@@ -136,7 +136,8 @@ MultipeerConnectionDelegate {
         browser!.delegate = self
         browser!.startBrowsingForPeers()
         
-        self.wait(for: [clientConnected!, serverConnected!], timeout: 10.0)
+        // cool down period(disconnected to next connected state), is taking around 4-10secs
+        self.wait(for: [clientConnected!, serverConnected!], timeout: 30.0)
     }
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {

@@ -235,7 +235,8 @@
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
-- (void) testStopContinuousReplicator {
+// TODO: https://issues.couchbase.com/browse/CBL-3878
+- (void) _testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
@@ -264,23 +265,6 @@
         [r removeChangeListenerWithToken: token];
     }
     r = nil;
-}
-
-// Runs -testStopContinuousReplicator over and over again indefinitely. (Disabled, obviously)
-- (void) _testStopContinuousReplicatorForever {
-    for (int i = 0; true; i++) {
-        @autoreleasepool {
-            Log(@"**** Begin iteration %d ****", i);
-            @autoreleasepool {
-                [self testStopContinuousReplicator];
-            }
-            Log(@"**** End iteration %d ****", i);
-            fprintf(stderr, "\n\n");
-            [self tearDown];
-            [NSThread sleepForTimeInterval: 1.0];
-            [self setUp];
-        }
-    }
 }
 
 - (void) testPushBlob {
