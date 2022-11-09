@@ -1681,7 +1681,8 @@ typedef CBLURLEndpointListener Listener;
     [self validateActiveReplicatorAndURLEndpointListeners: NO];
 }
 
-- (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
+// TODO: https://issues.couchbase.com/browse/CBL-3877
+- (void) _testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
 
