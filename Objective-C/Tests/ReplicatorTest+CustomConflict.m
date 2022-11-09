@@ -842,7 +842,8 @@
     __block int ccrCount = 0;
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
         int c = ccrCount;
-        if (ccrCount++ == 0) {
+        ccrCount++;
+        if (c == 0) {
             // 2
             [expCCR fulfill];
             [self waitForExpectations: @[expFirstDocResolve] timeout: 5.0];

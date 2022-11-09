@@ -235,7 +235,8 @@
     AssertNil([self.db documentWithID: doc1.id]);
 }
 
-- (void) testStopContinuousReplicator {
+// TODO: https://issues.couchbase.com/browse/CBL-3878
+- (void) _testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
