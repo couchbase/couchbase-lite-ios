@@ -1281,7 +1281,8 @@ class URLEndpontListenerTest: ReplicatorTest {
         try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: false)
     }
     
-    func testDeleteWithActiveReplicatorAndURLEndpointListeners() throws {
+    // TODO: https://issues.couchbase.com/browse/CBL-3877
+    func _testDeleteWithActiveReplicatorAndURLEndpointListeners() throws {
         try validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: true)
     }
     
