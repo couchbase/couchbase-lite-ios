@@ -267,23 +267,6 @@
     r = nil;
 }
 
-// Runs -testStopContinuousReplicator over and over again indefinitely. (Disabled, obviously)
-- (void) _testStopContinuousReplicatorForever {
-    for (int i = 0; true; i++) {
-        @autoreleasepool {
-            Log(@"**** Begin iteration %d ****", i);
-            @autoreleasepool {
-                [self testStopContinuousReplicator];
-            }
-            Log(@"**** End iteration %d ****", i);
-            fprintf(stderr, "\n\n");
-            [self tearDown];
-            [NSThread sleepForTimeInterval: 1.0];
-            [self setUp];
-        }
-    }
-}
-
 - (void) testPushBlob {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
