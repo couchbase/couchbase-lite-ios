@@ -53,6 +53,8 @@ using namespace fleece;
 
 #pragma mark - JSON representation
 
+#define SPLAT(S)    (int)(S).size, (char *)(S).buf
+
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                JSONRepresentation: (NSData*)json
 {
@@ -100,7 +102,7 @@ using namespace fleece;
     NSData* json;
     @autoreleasepool {
         NSMutableDictionary *root = [NSMutableDictionary dictionary];
-
+        bool cbl_3715 = false;
         // DISTINCT:
         if (distinct)
             root[@"DISTINCT"] = @(YES);
@@ -109,6 +111,11 @@ using namespace fleece;
         _from = from;
         NSMutableArray* fromArray;
         NSDictionary* as = [from asJSON];
+
+        if ([as[@"AS"] isEqualToString: @"cbl-3715"]) {
+            cbl_3715 = true;
+        }
+        
         if (as.count > 0) {
             if (!fromArray)
                 fromArray = [NSMutableArray array];
@@ -169,6 +176,24 @@ using namespace fleece;
         NSError* error;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
+        
+        if (cbl_3715) {
+            // const char* c_str = R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],"WHERE":[">",["_.",["meta()"],".expiration"],1667952670887.845]})--";
+            NSString* ns_str = [NSString stringWithUTF8String:
+                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],)--"
+                                R"--(WHERE":[">",["_.",["meta()"],".expiration"],1667952670887.845]})--"];
+
+            NSString* orig = [[NSString alloc] initWithData: json encoding:NSUTF8StringEncoding];
+            
+            NSMutableArray *wh = (NSMutableArray*)root[@"WHERE"];
+            NSString* s = @"{\"FROM\":[{\"COLLECTION\":\"_default\"}],\"WHAT\":[[\"_.\",[\"meta()\"],\".id\"]],\"WHERE\":[\">\",[\"_.\",[\"meta()\"],\".expiration\"],";
+            s = [s stringByAppendingFormat:@"%f]}", [wh[2] doubleValue]];
+            NSLog(@"s         = %@\n", s);
+            NSLog(@"ns_str    = %@\n", ns_str);
+            NSLog(@"orig json = %@\n", orig);
+
+            json = [s dataUsingEncoding: NSUTF8StringEncoding];
+        }
     }
     return [self initWithDatabase: (CBLDatabase*)from.source JSONRepresentation: json];
 }
@@ -301,6 +326,11 @@ using namespace fleece;
         CBL_LOCK(self.database) {
             if (_language == kC4JSONQuery) {
                 assert(_json);
+                slice json_sl {_json.bytes, _json.length};
+                if (json_sl.containsBytes("COLLECTION"_sl)) {
+                    NSString* json = [[NSString alloc] initWithData:_json encoding:NSUTF8StringEncoding];
+                    NSLog(@"CBLQuery compile JSON %@\n", json);
+                }
                 query = c4query_new2(self.database.c4db,
                                      kC4JSONQuery, {_json.bytes, _json.length}, nullptr, &c4Err);
             } else {
@@ -315,6 +345,14 @@ using namespace fleece;
             return NO;
         }
         
+        C4StringResult expln = c4query_explain(query);
+        slice json_sl {expln};
+        std::string explns {json_sl};
+        auto nn = explns.rfind("\n\n");
+        json_sl.moveStart(nn + 2);
+        json_sl.shorten(json_sl.size - 1);
+        CBLLogInfo(Query, @"CBLQuery JSON: %.*s\n", SPLAT(json_sl));
+
         Assert(!_c4Query);
         _c4Query = query;
 

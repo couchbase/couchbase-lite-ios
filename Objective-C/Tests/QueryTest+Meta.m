@@ -252,20 +252,24 @@
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
+    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
-    
-    CBLQuery* q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
-    AssertNotNil(q);
-    NSEnumerator* rs = [q execute: &error];
-    AssertNil(error);
-    NSArray<CBLQueryResult*>* objs = [rs allObjects];
-    AssertEqual([objs count], 1u);
-    NSLog(@">>>----- %@ ", [objs[0] toJSON]);
-    double exp = [objs[0] doubleForKey: @"expiration"];
-    
-    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
-    Assert(exp > earlier);
+
+    CBLQuery* q = nil;
+    NSEnumerator* rs = nil;
+
+//    q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
+//    AssertNotNil(q);
+//    rs = [q execute: &error];
+//    AssertNil(error);
+//    NSArray<CBLQueryResult*>* objs = [rs allObjects];
+//    AssertEqual([objs count], 1u);
+//    NSLog(@">>>----- %@ ", [objs[0] toJSON]);
+//    double exp = [objs[0] doubleForKey: @"expiration"];
+//    Assert(exp > earlier);
+//    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
+
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]
                           where: [[CBLQueryMeta expiration]
@@ -285,7 +289,8 @@
     AssertNil(error);
 //    AssertEqual([[rs allObjects] count], 1u);
     NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[[rs allObjects] count]);
-    
+
+
     double rounded = (long long)earlier;
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]
@@ -297,7 +302,6 @@
     AssertNil(error);
     NSLog(@">>> (DEBUG TMP) -- greaterThan rounded double --- %lu ", (unsigned long)[[rs allObjects] count]);
 
-    
     
     NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where meta().expiration > %f", earlier];
     q = [self.db createQuery: n1ql error: &error];
