@@ -18,6 +18,7 @@
 //
 
 #import "QueryTest.h"
+#include "c4Log.h"
 
 @interface QueryTestWithMeta: QueryTest
 
@@ -242,7 +243,16 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
+static C4LogDomain kC4SQLLog;
+static const char* const SQLLog = "cbl-3715";
+
 - (void) testExpiryGreaterThanDate {
+
+    kC4SQLLog = (C4LogDomain)SQLLog;
+    c4log_setLevel(kC4DatabaseLog, kC4LogDebug);
+    c4log_setLevel(kC4QueryLog, kC4LogDebug);
+    c4log_setLevel(kC4SQLLog, kC4LogDebug);
+    
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -258,17 +268,6 @@
 
     CBLQuery* q = nil;
     NSEnumerator* rs = nil;
-
-//    q = [self.db createQuery: @"select meta().expiration from _default" error: &error];
-//    AssertNotNil(q);
-//    rs = [q execute: &error];
-//    AssertNil(error);
-//    NSArray<CBLQueryResult*>* objs = [rs allObjects];
-//    AssertEqual([objs count], 1u);
-//    NSLog(@">>>----- %@ ", [objs[0] toJSON]);
-//    double exp = [objs[0] doubleForKey: @"expiration"];
-//    Assert(exp > earlier);
-//    NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -2].timeIntervalSince1970 * 1000;
 
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db]

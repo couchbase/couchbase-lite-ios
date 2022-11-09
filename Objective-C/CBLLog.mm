@@ -87,8 +87,9 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"BLIP": @(kCBLLogDomainNetwork),
                               @"WS": @(kCBLLogDomainNetwork),
 #ifdef COUCHBASE_ENTERPRISE
-                              @"Listener": @(kCBLLogDomainListener)
+                              @"Listener": @(kCBLLogDomainListener),
 #endif
+                              @"SQL": @(kCBLLogDomainSQL)
         };
     }
     
@@ -292,6 +293,9 @@ NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
             return @"Listener";
             break;
 #endif
+        case kCBLLogDomainSQL:
+            return @"SQL";
+            break;
         default:
             return @"Database";
     }
