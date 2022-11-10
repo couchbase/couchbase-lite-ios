@@ -278,6 +278,7 @@ static const char* const SQLLog = "cbl-3715";
 //    AssertNil(error);
 //    NSLog(@">>> (DEBUG TMP) -- greaterThan longLong --- %lu ", (unsigned long)[[rs allObjects] count]);
 
+    NSLog(@">>> (DEBUG TMP) BEGIN >>> ");
     NSTimeInterval earlier2 = 0.1;
     q = [CBLQueryBuilder select: @[kDOCID]
                            from: [CBLQueryDataSource database: self.db as: @"cbl-3715"]
