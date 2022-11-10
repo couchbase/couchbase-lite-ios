@@ -288,8 +288,11 @@ static const char* const SQLLog = "cbl-3715";
     rs = [q execute: &error];
     AssertNil(error);
 //    AssertEqual([[rs allObjects] count], 1u);
-    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[[rs allObjects] count]);
-
+//    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[[rs allObjects] count]);
+    NSArray<CBLQueryResult*>* results = [(CBLQueryResultSet*)rs allResults];
+    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[results count]);
+    CBLQueryResult* res = results[0];
+    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %@, %f", [res toJSON], earlier);
 
     double rounded = (long long)earlier;
     q = [CBLQueryBuilder select: @[kDOCID]

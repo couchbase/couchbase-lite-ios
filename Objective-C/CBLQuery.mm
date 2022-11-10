@@ -178,20 +178,25 @@ using namespace fleece;
         Assert(json, @"Failed to encode query as JSON: %@", error);
         
         if (cbl_3715) {
+#if 0
             // const char* c_str = R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],"WHERE":[">",["_.",["meta()"],".expiration"],1667952670887.845]})--";
             NSString* ns_str = [NSString stringWithUTF8String:
                                 R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],)--"
-                                R"--(WHERE":[">",["_.",["meta()"],".expiration"],1667952670887.845]})--"];
+                                R"--("WHERE":[">",["_.",["meta()"],".expiration"],1667952670887.845]})--"];
 
             NSString* orig = [[NSString alloc] initWithData: json encoding:NSUTF8StringEncoding];
-            
             NSMutableArray *wh = (NSMutableArray*)root[@"WHERE"];
             NSString* s = @"{\"FROM\":[{\"COLLECTION\":\"_default\"}],\"WHAT\":[[\"_.\",[\"meta()\"],\".id\"]],\"WHERE\":[\">\",[\"_.\",[\"meta()\"],\".expiration\"],";
             s = [s stringByAppendingFormat:@"%f]}", [wh[2] doubleValue]];
             NSLog(@"s         = %@\n", s);
             NSLog(@"ns_str    = %@\n", ns_str);
             NSLog(@"orig json = %@\n", orig);
-
+#else
+            NSString* s = [NSString stringWithUTF8String:
+                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
+                                R"--("WHERE":[">",1667952670887.845,1.1]})--"];
+            
+#endif
             json = [s dataUsingEncoding: NSUTF8StringEncoding];
         }
     }
