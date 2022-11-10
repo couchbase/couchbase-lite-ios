@@ -195,9 +195,13 @@ using namespace fleece;
 //            NSString* s = [NSString stringWithUTF8String:
 //                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
 //                                R"--("WHERE":[">",1667952670887.845,1.1]})--"];
+//            NSString* s = [NSString stringWithUTF8String:
+//                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
+//                                R"--("WHERE":["toboolean()",[">",1.6,1.2]]})--"];
+//
             NSString* s = [NSString stringWithUTF8String:
-                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
-                                R"--("WHERE":["toboolean()",[">",1.6,1.2]]})--"];
+                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],"WHERE":["toboolean()",[">",1.6,1.2]]})--"];
+
 //            NSString* s = [NSString stringWithUTF8String:
 //                           R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]]})--"];
             

@@ -269,14 +269,14 @@ static const char* const SQLLog = "cbl-3715";
     CBLQuery* q = nil;
     NSEnumerator* rs = nil;
 
-    q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [[CBLQueryMeta expiration]
-                                  greaterThan: [CBLQueryExpression longLong: (long long)earlier]]];
-    AssertNotNil(q);
-    rs = [q execute: &error];
-    AssertNil(error);
-    NSLog(@">>> (DEBUG TMP) -- greaterThan longLong --- %lu ", (unsigned long)[[rs allObjects] count]);
+//    q = [CBLQueryBuilder select: @[kDOCID]
+//                           from: [CBLQueryDataSource database: self.db]
+//                          where: [[CBLQueryMeta expiration]
+//                                  greaterThan: [CBLQueryExpression longLong: (long long)earlier]]];
+//    AssertNotNil(q);
+//    rs = [q execute: &error];
+//    AssertNil(error);
+//    NSLog(@">>> (DEBUG TMP) -- greaterThan longLong --- %lu ", (unsigned long)[[rs allObjects] count]);
 
     NSTimeInterval earlier2 = 0.1;
     q = [CBLQueryBuilder select: @[kDOCID]
@@ -297,20 +297,20 @@ static const char* const SQLLog = "cbl-3715";
         NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %@, %f", [res toJSON], earlier);
     }
 
-    double rounded = (long long)earlier;
-    q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [[CBLQueryMeta expiration]
-                                  greaterThan: [CBLQueryExpression double: rounded]]];
-
-    AssertNotNil(q);
-    rs = [q execute: &error];
-    AssertNil(error);
-    NSLog(@">>> (DEBUG TMP) -- greaterThan rounded double --- %lu ", (unsigned long)[[rs allObjects] count]);
+//    double rounded = (long long)earlier;
+//    q = [CBLQueryBuilder select: @[kDOCID]
+//                           from: [CBLQueryDataSource database: self.db]
+//                          where: [[CBLQueryMeta expiration]
+//                                  greaterThan: [CBLQueryExpression double: rounded]]];
+//
+//    AssertNotNil(q);
+//    rs = [q execute: &error];
+//    AssertNil(error);
+//    NSLog(@">>> (DEBUG TMP) -- greaterThan rounded double --- %lu ", (unsigned long)[[rs allObjects] count]);
 
     
 //    NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where meta().expiration > %f", earlier];
-    NSString* n1ql = [NSString stringWithFormat:@"select toboolean(1.6 > 1.2) from _default where meta().expiration > %f", earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where toboolean(1.6 > 1.2)"];
     q = [self.db createQuery: n1ql error: &error];
     AssertNotNil(q);
 //    rs = [q execute: &error];
