@@ -291,8 +291,11 @@ static const char* const SQLLog = "cbl-3715";
 //    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[[rs allObjects] count]);
     NSArray<CBLQueryResult*>* results = [(CBLQueryResultSet*)rs allResults];
     NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %lu ", (unsigned long)[results count]);
-    CBLQueryResult* res = results[0];
-    NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %@, %f", [res toJSON], earlier);
+    CBLQueryResult* res = nil;
+    if ([results count] > 0) {
+        res = results[0];
+        NSLog(@">>> (DEBUG TMP) -- greaterThan double --- %@, %f", [res toJSON], earlier);
+    }
 
     double rounded = (long long)earlier;
     q = [CBLQueryBuilder select: @[kDOCID]
