@@ -196,7 +196,10 @@ using namespace fleece;
 //                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
 //                                R"--("WHERE":[">",1667952670887.845,1.1]})--"];
             NSString* s = [NSString stringWithUTF8String:
-                           R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]]})--"];
+                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
+                                R"--("WHERE":[">",1.6,1.1]})--"];
+//            NSString* s = [NSString stringWithUTF8String:
+//                           R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]]})--"];
             
 #endif
             json = [s dataUsingEncoding: NSUTF8StringEncoding];
