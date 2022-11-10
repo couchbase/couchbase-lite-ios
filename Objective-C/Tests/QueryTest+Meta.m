@@ -306,12 +306,17 @@ static const char* const SQLLog = "cbl-3715";
     NSLog(@">>> (DEBUG TMP) -- greaterThan rounded double --- %lu ", (unsigned long)[[rs allObjects] count]);
 
     
-    NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where meta().expiration > %f", earlier];
+//    NSString* n1ql = [NSString stringWithFormat:@"select meta().id from _default where meta().expiration > %f", earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select toboolean(1.6 > 1.2) from _default where meta().expiration > %f", earlier];
     q = [self.db createQuery: n1ql error: &error];
     AssertNotNil(q);
-    rs = [q execute: &error];
+//    rs = [q execute: &error];
+    CBLQueryResultSet* qrs = [q execute: &error];
     AssertNil(error);
-    NSLog(@">>> (DEBUG TMP) -- greaterThan N1QL --- %lu ", (unsigned long)[[rs allObjects] count]);
+    results = [qrs allResults];
+    NSLog(@">>> (DEBUG TMP) -- greaterThan N1QL --- %lu ", (unsigned long)[results count]);
+    res = results[0];
+    NSLog(@">>> (DEBUG TMP) -- greaterThan N1QL --- %@", [res toJSON]);
     
     AssertNotNil(nil);
 }
