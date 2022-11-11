@@ -199,8 +199,17 @@ using namespace fleece;
 //                                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]],)--"
 //                                R"--("WHERE":["toboolean()",[">",1.6,1.2]]})--"];
 //
-            NSString* s = [NSString stringWithUTF8String:
-                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],"WHERE":["toboolean()",[">",1.6,1.2]]})--"];
+
+            const char* const q = "{"
+                R"--("FROM":[{"COLLECTION":"_default"}],"WHAT":[)--"
+                R"--(["toboolean()",[">",1.6,1.2]],["toboolean()",["<",1.6,1.2]],["or",[">",1.6,1.2],["<",1.6,1.2]])--"
+                R"--(,["toboolean()",["<",1.2,1.6]],["toboolean()",["=",1.2,1.2]])--"
+                R"--(,["toboolean()",[">",2,1]],["+",1.6,1.2])--"
+                     "]"
+                     "}";
+            NSString* s = [NSString stringWithUTF8String:q];
+//            NSString* s = [NSString stringWithUTF8String:
+//                R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".id"]],"WHERE":["toboolean()",[">",1.6,1.2]]})--"];
 
 //            NSString* s = [NSString stringWithUTF8String:
 //                           R"--({"FROM":[{"COLLECTION":"_default"}],"WHAT":[["_.",["meta()"],".expiration"]]})--"];
