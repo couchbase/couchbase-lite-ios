@@ -712,8 +712,17 @@
 
 #pragma mark - Query Params
 
+
+static C4LogDomain kC4SQLLog;
+static const char* const SQLLog = "cbl-3715";
+
 - (void) testQueryParameters {
     [self loadStudents];
+    
+    kC4SQLLog = (C4LogDomain)SQLLog;
+    c4log_setLevel(kC4DatabaseLog, kC4LogDebug);
+    c4log_setLevel(kC4QueryLog, kC4LogDebug);
+    c4log_setLevel(kC4SQLLog, kC4LogDebug);
     
     CBLQueryExpression* PARAM_CITY = [CBLQueryExpression parameterNamed: @"city"];
     CBLQueryExpression* PARAM_CODE = [CBLQueryExpression parameterNamed: @"code"];
@@ -757,7 +766,7 @@
     [params setDate: twoWeeksBack forName: @"startDate"];
     
     q.parameters = params;
-    
+    NSLog(@">>> testQueryParameters");
     NSError* error;
     NSArray<CBLQueryResult*>* allObjects = [[q execute: &error] allObjects];
     AssertEqual(allObjects.count, 1u);
