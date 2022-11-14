@@ -202,9 +202,12 @@ using namespace fleece;
 
             const char* const q = "{"
                 R"--("FROM":[{"COLLECTION":"_default"}],"WHAT":[)--"
-                R"--(["toboolean()",[">",1.6,1.2]],["toboolean()",["<",1.6,1.2]],["or",["toboolean()",[">",1.6,1.2]],["toboolean()",["<",1.6,1.2]]])--"
-                R"--(,["toboolean()",["<",1.2,1.6]],["toboolean()",["=",1.2,1.2]])--"
-                R"--(,["toboolean()",[">",2,1]],["+",1.6,1.2])--"
+                R"--(["toboolean()",[">",1.6,1.2]])--"
+//                R"--(["or",["toboolean()",[">",1.6,1.2]],["toboolean()",["<",1.6,1.2]]])--"
+//                R"--(,["toboolean()",["<",1.6,1.2]])--"
+//                R"--(,["or",["toboolean()",[">",1.6,1.2]],["toboolean()",["<",1.6,1.2]]])--"
+//                R"--(,["toboolean()",["<",1.2,1.6]],["toboolean()",["=",1.2,1.2]])--"
+//                R"--(,["toboolean()",[">",2,1]],["+",1.6,1.2])--"
                      "]"
                      "}";
             NSString* s = [NSString stringWithUTF8String:q];
