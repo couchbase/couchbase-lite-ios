@@ -294,7 +294,7 @@
                           where: [ [ [CBLQueryMeta expiration]
                                      greaterThan: [CBLQueryExpression double: earlier]
                                    ]
-                                   orExpression: [CBLQueryExpression boolean: true]
+                                   orExpression: [CBLQueryExpression boolean: false]
                                 ]];
     AssertNotNil(q);
     rs = [q execute: &error];
