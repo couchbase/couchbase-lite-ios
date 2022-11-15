@@ -39,6 +39,7 @@
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
 #import "CBLStringBytes.h"
+#import "NetworkInterfaces.hh"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
@@ -50,6 +51,7 @@ extern "C" {
 }
 
 using namespace fleece;
+using namespace litecore::net;
 
 // Number of bytes to read from the socket at a time
 static constexpr size_t kReadBufferSize = 32 * 1024;
@@ -403,6 +405,34 @@ static void doDispose(C4Socket* s) {
     
     // Set network interface:
     if (interface) {
+        const char *cInterface = [interface UTF8String];
+        std::optional<IPAddress> ipAddr = IPAddress::parse(cInterface);
+        Interface* _intf = nullptr;
+        if (ipAddr) {
+            CBLLogVerbose(WebSocket, @"%@: Given network interface(%@) parsed as an IPAddress %s",
+                          self, interface, std::string(*ipAddr).c_str());
+            std::optional<Interface> oInterface = Interface::withAddress(*ipAddr);
+            if (oInterface) {
+                _intf = &(*oInterface); // get the value of optional, and then pass the address.
+            }
+        } else {
+            for (auto &intf : Interface::all()) {
+                if (intf.name == cInterface) {
+                    _intf = &intf;
+                    break;
+                }
+            }
+        }
+        
+        if (!_intf) {
+            NSString* msg = $sprintf(@"Failed to find network interface %@ for the IPAddress",
+                                     interface);
+            CBLWarnError(WebSocket, @"%@: %@", self, msg);
+            [self closeWithError: posixError(ENXIO, msg)];
+            return;
+        }
+        CBLLogVerbose(WebSocket, @"%@: Selected network interface %s", self, _intf->name.c_str());
+        
         unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
         if (index == 0) {
             int errNo = errno;
