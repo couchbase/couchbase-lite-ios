@@ -39,7 +39,6 @@
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
 #import "CBLStringBytes.h"
-#import "NetworkInterfaces.hh"
 #import <ifaddrs.h>
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -52,7 +51,6 @@ extern "C" {
 }
 
 using namespace fleece;
-using namespace litecore::net;
 
 // Number of bytes to read from the socket at a time
 static constexpr size_t kReadBufferSize = 32 * 1024;
