@@ -181,6 +181,8 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  will be sent to any document listeners that are active on the replicator. For performance
  reasons, the document listeners must be added *before* the replicator is started or
  they will not receive the events.
+ 
+ @Note: Auto purge will not be performed when documentIDs filter is specified.
  */
 @property (nonatomic) BOOL enableAutoPurge;
 

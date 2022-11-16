@@ -261,6 +261,8 @@ public struct ReplicatorConfiguration {
     /// will be sent to any document listeners that are active on the replicator. For performance
     /// reasons, the document listeners must be added **before** the replicator is started or
     /// they will not receive the events.
+    ///
+    /// - Note: Auto purge will not be performed when documentIDs filter is specified.
     public var enableAutoPurge: Bool = ReplicatorConfiguration.defaultEnableAutoPurge
     
     /// The collections used for the replication.
