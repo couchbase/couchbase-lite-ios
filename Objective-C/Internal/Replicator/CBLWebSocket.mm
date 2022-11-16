@@ -40,6 +40,7 @@
 #import "CBLURLEndpoint.h"
 #import "CBLStringBytes.h"
 #import "NetworkInterfaces.hh"
+#import <ifaddrs.h>
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
@@ -405,35 +406,19 @@ static void doDispose(C4Socket* s) {
     
     // Set network interface:
     if (interface) {
-        const char *cInterface = [interface UTF8String];
-        std::optional<IPAddress> ipAddr = IPAddress::parse(cInterface);
-        Interface* _intf = nullptr;
-        if (ipAddr) {
-            CBLLogVerbose(WebSocket, @"%@: Given network interface(%@) parsed as an IPAddress %s",
-                          self, interface, std::string(*ipAddr).c_str());
-            std::optional<Interface> oInterface = Interface::withAddress(*ipAddr);
-            if (oInterface) {
-                _intf = &(*oInterface); // get the value of optional, and then pass the address.
-            }
-        } else {
-            for (auto &intf : Interface::all()) {
-                if (intf.name == cInterface) {
-                    _intf = &intf;
-                    break;
-                }
-            }
-        }
+        NSError* outError = nil;
+        NSString* intfName = [self getNetworkInterfaceName: interface error: &outError];
         
-        if (!_intf) {
-            NSString* msg = $sprintf(@"Failed to find network interface %@ for the IPAddress",
-                                     interface);
+        if (!intfName) {
+            NSString* msg = $sprintf(@"Failed to find network interface(%@) err: %@",
+                                     interface, outError);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(ENXIO, msg)];
+            [self closeWithError: outError];
             return;
         }
-        CBLLogVerbose(WebSocket, @"%@: Selected network interface %s", self, _intf->name.c_str());
+        CBLLogVerbose(WebSocket, @"%@: Selected network interface %@", self, intfName);
         
-        unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+        unsigned int index = if_nametoindex([intfName cStringUsingEncoding: NSUTF8StringEncoding]);
         if (index == 0) {
             int errNo = errno;
             NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
@@ -529,6 +514,51 @@ static void doDispose(C4Socket* s) {
             });
         }
     });
+}
+
+- (nullable NSString*) getNetworkInterfaceName: (NSString*)name error: (NSError**)outError {
+    const char *cName = [name UTF8String];
+    in_addr* ipv4Addr = nullptr;
+    in6_addr* ipv6Addr = nullptr;
+    sa_family_t family = AF_UNSPEC;
+    if (::inet_pton(AF_INET, cName, &ipv4Addr) == 1) {
+        family = AF_INET;
+    } else if (::inet_pton(AF_INET6, cName, &ipv6Addr) == 1) {
+        family = AF_INET6;
+    }
+    BOOL isIPAddress = family > AF_UNSPEC;
+    CBLLogVerbose(WebSocket, @"%@: Network interface(%@) isIP=%d, family=%d",
+                  self, name, isIPAddress, family);
+    
+    struct ifaddrs *ifaddrs;
+    if ((getifaddrs(&ifaddrs) != 0)) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to find network interfaces with errno %d", errNo);
+        if (outError) *outError = posixError(errNo, msg);
+        return nil;
+    }
+    
+    NSString* networkInterface = nil;
+    for (struct ifaddrs *ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+        sockaddr* addr = ifa->ifa_addr;
+        if (!addr)
+            continue;
+        
+        if (isIPAddress) {
+            const void *ipAddr = family == AF_INET ? (void*)(in_addr*)ipv4Addr : (void*)(in6_addr*)ipv6Addr;
+            if (ipAddr && addr == ipAddr) {
+                networkInterface = [NSString stringWithUTF8String: ifa->ifa_name];
+                break;
+            }
+        } else if (strcmp(ifa->ifa_name, cName) == 0) {
+            networkInterface = name;
+            break;
+        }
+    }
+    
+    freeifaddrs(ifaddrs);
+    
+    return networkInterface;
 }
 
 static inline NSError* posixError(int errNo, NSString* msg) {
