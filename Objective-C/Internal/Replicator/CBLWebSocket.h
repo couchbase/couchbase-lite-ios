@@ -31,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 // for testing purpose only:
 + (NSArray*) parseCookies: (NSString*) cookie;
 
+// for testing purpose, we exposing this function;
++ (nullable NSString*) getNetworkInterfaceName: (NSString*)name error: (NSError**)outError;
+
 @end
 
 
