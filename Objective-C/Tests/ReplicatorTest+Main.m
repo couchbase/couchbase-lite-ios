@@ -23,6 +23,9 @@
 #import "CBLReplicator+Backgrounding.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLWebSocket.h"
+#import <ifaddrs.h>
+#import <arpa/inet.h>
+#import <netdb.h>
 
 #define kDummyTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]]
 
@@ -1544,6 +1547,51 @@
     for (NSArray* input in inputs) {
         AssertEqualObjects([CBLWebSocket parseCookies: input[0]], input[1]);
     }
+}
+
+- (void) testNetworkInterfaceName {
+    AssertEqualObjects([CBLWebSocket getNetworkInterfaceName: @"en0" error: nil], @"en0");
+    
+    struct ifaddrs *ifaddrs;
+    Assert(getifaddrs(&ifaddrs) == 0);
+    
+    NSString* networkInterface = nil;
+    for (struct ifaddrs *ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+        struct sockaddr* addr = ifa->ifa_addr;
+        if (!addr)
+            continue;
+        
+        int family = ifa->ifa_addr->sa_family;
+        char host[NI_MAXHOST];
+        int s = getnameinfo(ifa->ifa_addr,
+                            (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
+                            host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+        
+        if (strcmp(host, "") == 0)
+            continue;
+        
+        AssertEqual(s, 0);
+        networkInterface = [NSString stringWithUTF8String: ifa->ifa_name];
+        if (family == AF_INET) {
+            AssertEqualObjects([CBLWebSocket getNetworkInterfaceName: [NSString stringWithUTF8String: host] error: nil], networkInterface);
+        } else if (family == AF_INET6) {
+            // only checks 'en' series
+            if (![networkInterface hasPrefix: @"en"]) {
+                continue;
+            }
+            
+            NSString* hostStr = [NSString stringWithUTF8String: host];
+            NSString* localSuffix = [NSString stringWithFormat: @"%%%@", networkInterface];
+            NSRange range = [hostStr rangeOfString: localSuffix];
+            if (range.length > 0 ) {
+                NSString* subString = [hostStr substringToIndex: range.location];
+                AssertEqualObjects([CBLWebSocket getNetworkInterfaceName: subString error: nil], networkInterface);
+            }
+        }
+        AssertEqualObjects([CBLWebSocket getNetworkInterfaceName: networkInterface error: nil], networkInterface);
+    }
+    
+    freeifaddrs(ifaddrs);
 }
 
 #endif // COUCHBASE_ENTERPRISE

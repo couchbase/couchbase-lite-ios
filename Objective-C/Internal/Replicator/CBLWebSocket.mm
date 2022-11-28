@@ -405,7 +405,7 @@ static void doDispose(C4Socket* s) {
     // Set network interface:
     if (interface) {
         NSError* outError = nil;
-        NSString* intfName = [self getNetworkInterfaceName: interface error: &outError];
+        NSString* intfName = [CBLWebSocket getNetworkInterfaceName: interface error: &outError];
         
         if (!intfName) {
             NSString* msg = $sprintf(@"Failed to find network interface(%@) err: %@",
@@ -514,19 +514,30 @@ static void doDispose(C4Socket* s) {
     });
 }
 
-- (nullable NSString*) getNetworkInterfaceName: (NSString*)name error: (NSError**)outError {
++ (nullable NSString*) getNetworkInterfaceName: (NSString*)name error: (NSError**)outError {
     const char *cName = [name UTF8String];
-    in_addr* ipv4Addr = nullptr;
-    in6_addr* ipv6Addr = nullptr;
-    sa_family_t family = AF_UNSPEC;
-    if (::inet_pton(AF_INET, cName, &ipv4Addr) == 1) {
-        family = AF_INET;
-    } else if (::inet_pton(AF_INET6, cName, &ipv6Addr) == 1) {
-        family = AF_INET6;
+    sa_family_t inFamily = AF_UNSPEC; // input family
+    unsigned char inIPBuf[sizeof(struct in6_addr)]; // input IP buffer
+    
+    // check for IPv4
+    int s = inet_pton(AF_INET, cName, inIPBuf);
+    if (s == 1) {
+        inFamily = AF_INET;
+    } else {
+        CBLLogVerbose(WebSocket, @"%@: NI=%@ => inet_pton(%d) failed for IPv4. Looking for IPV6...",
+                      self, name, s);
+        
+        // check for IPv6
+        s = inet_pton(AF_INET6, cName, inIPBuf);
+        if (s == 1) {
+            inFamily = AF_INET6;
+        } else {
+            CBLLogVerbose(WebSocket, @"%@: NI=%@ => inet_pton(%d) failed for IPv6Address",
+                          self, name, s);
+        }
     }
-    BOOL isIPAddress = family > AF_UNSPEC;
     CBLLogVerbose(WebSocket, @"%@: Network interface(%@) isIP=%d, family=%d",
-                  self, name, isIPAddress, family);
+                  self, name, inFamily > AF_UNSPEC, inFamily);
     
     struct ifaddrs *ifaddrs;
     if ((getifaddrs(&ifaddrs) != 0)) {
@@ -542,11 +553,26 @@ static void doDispose(C4Socket* s) {
         if (!addr)
             continue;
         
-        if (isIPAddress) {
-            const void *ipAddr = family == AF_INET ? (void*)(in_addr*)ipv4Addr : (void*)(in6_addr*)ipv6Addr;
-            if (ipAddr && addr == ipAddr) {
-                networkInterface = [NSString stringWithUTF8String: ifa->ifa_name];
-                break;
+        int fam = ifa->ifa_addr->sa_family;
+        if (inFamily > AF_UNSPEC) {
+            if (inFamily == AF_INET && fam == AF_INET) {
+                in_addr sa = ((sockaddr_in*)addr)->sin_addr;
+                if (IN_ARE_ADDR_EQUAL(&sa, (in_addr*)inIPBuf)) {
+                    networkInterface = [NSString stringWithUTF8String: ifa->ifa_name];
+                    break;
+                }
+            } else if (inFamily == AF_INET6 && fam == AF_INET6) {
+                /*
+                 * With IPv6 address structures, assume a non-hostile implementation that
+                 * stores the address as a contiguous sequence of bits. Any holes in the
+                 * sequence would invalidate the use of memcmp().
+                 * reference: https://opensource.apple.com/source/postfix/postfix-197/postfix/src/util/sock_addr.c
+                 */
+                in6_addr sa = ((sockaddr_in6*)addr)->sin6_addr;
+                if (memcmp(&sa, (in6_addr*)inIPBuf, sizeof(in6_addr)) == 0) {
+                    networkInterface = [NSString stringWithUTF8String: ifa->ifa_name];
+                    break;
+                }
             }
         } else if (strcmp(ifa->ifa_name, cName) == 0) {
             networkInterface = name;
