@@ -739,7 +739,6 @@
 }
 
 - (void) testIndexCompoundPredictionValuesUsingPredictiveIndex {
-    CBLDatabase.log.console.level = kCBLLogLevelDebug;
     [self createDocumentWithNumbers: @[@1, @2, @3, @4, @5]];
     [self createDocumentWithNumbers: @[@6, @7, @8, @9, @10]];
     
