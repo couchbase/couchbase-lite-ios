@@ -1140,7 +1140,7 @@ class DatabaseTest: CBLTestCase {
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
 
         let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
-        try colA.createIndex(withName: "index1", config: index1 as! IndexConfiguration!)
+        try colA.createIndex(withName: "index1", config: index1 as! IndexConfiguration)
 
         let index2 = IndexBuilder.valueIndex(items: [fNameItem, lNameItem])
         try colA.createIndex(withName: "index2", config: index2 as! IndexConfiguration)
