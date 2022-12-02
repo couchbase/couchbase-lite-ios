@@ -18,6 +18,7 @@
 //
 
 #import "CBLIndex+Internal.h"
+#import "CBLIndexConfiguration+Internal.h"
 #import "CBLJSON.h"
 
 @implementation CBLIndex
@@ -26,7 +27,8 @@
 
 - (instancetype) initWithIndexType: (C4IndexType)indexType
                      queryLanguage: (C4QueryLanguage)language {
-    self = [super init];
+    // since [super init] is unavailable, we use this constructor(which is unnecessary but harmless)
+    self = [super initWithIndexType: indexType queryLanguage: language];
     if (self) {
         _indexType = indexType;
         _queryLanguage = language;

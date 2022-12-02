@@ -92,8 +92,10 @@ extension IndexConfiguration {
     func toImpl() -> CBLIndexConfiguration {
         if let index = self as? IndexConfigConvertable {
             return index.toImpl()
+        } else if let index = self as? CBLIndexConvertible { // Index is inherited from IndexConfig
+            return index.toImpl()
         }
+        
         fatalError("Unsupported index.")
     }
-    
 }

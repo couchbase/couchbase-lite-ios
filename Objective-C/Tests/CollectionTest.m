@@ -842,7 +842,7 @@
         return [col deleteIndexWithName: @"index1" error: err];
     }];
     
-    // add change listeners
+    // add change listeners;
     id<CBLListenerToken> token = [col addChangeListener: ^(CBLCollectionChange *change) { }];
     [token remove];
     
