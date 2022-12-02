@@ -2290,6 +2290,48 @@
     AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
 }
 
+- (void) testCreateCollectionIndex {
+    NSError* error = nil;
+    CBLCollection* colA = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    // Precheck:
+    NSArray* indexes = [colA indexes: &error];
+    Assert(indexes);
+    AssertNil(error);
+    AssertEqual(indexes.count, 0u);
+    
+    // Create value index:
+    CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
+    CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
+    
+    CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
+    CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
+    
+    CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
+    Assert([colA createIndexWithName: @"index1" config: index1 error: &error],
+           @"Error when creating value index: %@", error);
+    
+    // Create FTS index:
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
+    Assert([colA createIndexWithName: @"index2" config: index2 error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
+    CBLFullTextIndex* index3 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem2]];
+    index3.language = @"es";
+    index3.ignoreAccents = YES;
+    
+    Assert([colA createIndexWithName: @"index3" config: index3 error: &error],
+           @"Error when creating FTS index with options: %@", error);
+    
+    NSArray* names = [colA indexes: &error];
+    AssertNil(error);
+    AssertEqual(names.count, 3u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+}
+
 - (void) testN1QLCreateIndexSanity {
     // Precheck:
     Assert(self.db.indexes);

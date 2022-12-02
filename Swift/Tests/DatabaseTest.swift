@@ -1129,6 +1129,39 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(db.indexes, ["index1", "index2", "index3", "index4", "index5"])
     }
     
+    func testCreateCollectionIndex() throws {
+        let colA = try self.db.createCollection(name: "colA")
+        
+        // Precheck:
+        XCTAssertEqual(try colA.indexes().count, 0)
+
+        // Create value index:
+        let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
+        let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
+
+        let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
+        try colA.createIndex(withName: "index1", config: index1 as! IndexConfiguration)
+
+        let index2 = IndexBuilder.valueIndex(items: [fNameItem, lNameItem])
+        try colA.createIndex(withName: "index2", config: index2 as! IndexConfiguration)
+
+        // Create FTS index:
+        let detailItem = FullTextIndexItem.property("detail")
+        let index3 = IndexBuilder.fullTextIndex(items: detailItem)
+        try colA.createIndex(withName: "index3", config: index3 as! IndexConfiguration)
+
+        let detailItem2 = FullTextIndexItem.property("es-detail")
+        let index4 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
+        try colA.createIndex(withName: "index4", config: index4 as! IndexConfiguration)
+
+        let nameItem = FullTextIndexItem.property("name")
+        let index5 = IndexBuilder.fullTextIndex(items: [nameItem, detailItem])
+        try colA.createIndex(withName: "index5", config: index5 as! IndexConfiguration)
+
+        XCTAssertEqual(try colA.indexes().count, 5)
+        XCTAssertEqual(try colA.indexes(), ["index1", "index2", "index3", "index4", "index5"])
+    }
+    
     func testN1QLCreateIndexSanity() throws {
         XCTAssertEqual(db.indexes.count, 0)
         

@@ -27,7 +27,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLIndex () <CBLIndexSpec>
+@interface CBLIndex ()
 
 - (instancetype) initWithIndexType: (C4IndexType)indexType;
 
