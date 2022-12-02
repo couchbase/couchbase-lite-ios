@@ -843,20 +843,12 @@
     }];
     
     // add change listeners;
-    // to avoid stopping c4exception break point, we use ignoreException
-    [self ignoreException: ^{
-        id<CBLListenerToken> token = [col addChangeListener: ^(CBLCollectionChange *change) { }];
-        [token remove];
-    }];
-    
+    id<CBLListenerToken> token = [col addChangeListener: ^(CBLCollectionChange *change) { }];
+    [token remove];
     
     // doc change listener
-    // to avoid stopping c4exception break point, we use ignoreException
-    [self ignoreException: ^{
-        id<CBLListenerToken> token = [col addDocumentChangeListenerWithID: @"doc1"
-                                                                 listener: ^(CBLDocumentChange *change) { }];
-        [token remove];
-    }];
+    token = [col addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange *change) { }];
+    [token remove];
 }
 
 #pragma mark - 8.7 Use Scope APIs on deleted/closed scenarios
