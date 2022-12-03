@@ -842,13 +842,21 @@
         return [col deleteIndexWithName: @"index1" error: err];
     }];
     
-    // add change listeners;
-    id<CBLListenerToken> token = [col addChangeListener: ^(CBLCollectionChange *change) { }];
-    [token remove];
+    // add change listeners:
+    // to avoid stopping c4exception break point, we use ignoreException
+    __block id<CBLListenerToken> token;
+    [self ignoreException: ^{
+        token = [col addChangeListener: ^(CBLCollectionChange *change) { }];
+        [token remove];
+    }];
     
-    // doc change listener
-    token = [col addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange *change) { }];
-    [token remove];
+    // doc change listener:
+    // to avoid stopping c4exception break point, we use ignoreException
+    [self ignoreException: ^{
+        token = [col addDocumentChangeListenerWithID: @"doc1"
+                                            listener: ^(CBLDocumentChange *change) { }];
+        [token remove];
+    }];
 }
 
 #pragma mark - 8.7 Use Scope APIs on deleted/closed scenarios
