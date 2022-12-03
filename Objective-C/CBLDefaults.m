@@ -43,6 +43,7 @@ const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot = 10;
 const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous = NSUIntegerMax;
 const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime = 300;
 const BOOL kCBLDefaultReplicatorEnableAutoPurge = YES;
+const BOOL kCBLDefaultReplicatorSelfSignedCertificateOnly = NO;
 
 #pragma mark - CBLURLEndpointListenerConfiguration
 

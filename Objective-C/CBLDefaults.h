@@ -64,6 +64,9 @@ extern const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime;
 /** [YES] Purge documents when a user loses access */
 extern const BOOL kCBLDefaultReplicatorEnableAutoPurge;
 
+/** [NO] Whether or not a replicator only accepts self-signed certificates from the remote */
+extern const BOOL kCBLDefaultReplicatorSelfSignedCertificateOnly;
+
 #pragma mark - CBLURLEndpointListenerConfiguration
 
 /** [0] No port specified, the OS will assign one */

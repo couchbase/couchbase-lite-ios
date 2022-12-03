@@ -2037,6 +2037,9 @@
                                                          type: kCBLReplicatorTypePush
                                                    continuous: YES];
     AssertEqual(temp.heartbeat, kCBLDefaultReplicatorHeartbeat);
+#ifdef COUCHBASE_ENTERPRISE
+    AssertEqual(temp.acceptOnlySelfSignedServerCertificate, kCBLDefaultReplicatorSelfSignedCertificateOnly);
+#endif
     
     [temp setContinuous: YES];
     [temp setAuthenticator: basic];
@@ -2051,6 +2054,10 @@
                              @"someObject", @"someKey", nil];
     [temp setHeaders: headers];
     
+#ifdef COUCHBASE_ENTERPRISE
+    [temp setAcceptOnlySelfSignedServerCertificate: true];
+#endif
+    
     SecCertificateRef cert = [self defaultServerCert];
     [temp setPinnedServerCertificate: cert];
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithConfig: temp];
@@ -2064,6 +2071,10 @@
     AssertEqualObjects(docIds, config.documentIDs);
     AssertEqualObjects(channels, config.channels);
     AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
+#ifdef COUCHBASE_ENTERPRISE
+    AssertEqual(temp.acceptOnlySelfSignedServerCertificate, YES);
+#endif
+
 }
 
 - (void) testReplicatorConfigDefaultValues {

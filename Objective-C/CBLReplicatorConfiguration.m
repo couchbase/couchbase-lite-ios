@@ -62,7 +62,7 @@
     if (self) {
         _replicatorType = kCBLDefaultReplicatorType;
     #ifdef COUCHBASE_ENTERPRISE
-        _acceptOnlySelfSignedServerCertificate = NO;
+        _acceptOnlySelfSignedServerCertificate = kCBLDefaultReplicatorSelfSignedCertificateOnly;
     #endif
         _continuous = kCBLDefaultReplicatorContinuous;
         _heartbeat = kCBLDefaultReplicatorHeartbeat;
