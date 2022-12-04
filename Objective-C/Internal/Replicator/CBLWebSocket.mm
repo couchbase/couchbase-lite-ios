@@ -579,12 +579,6 @@ static void doDispose(C4Socket* s) {
     return true;
 }
 
-- (bool) useNetworkFramework: (NSString*)interface
-                     useIPv4: (BOOL)useIPv4
-                       error: (NSError**)outError {
-    return NO;
-}
-
 static inline NSError* posixError(int errNo, NSString* msg) {
     return [NSError errorWithDomain: NSPOSIXErrorDomain
                                code: errNo
