@@ -106,7 +106,7 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
-    BOOL _experimentNetworkInterfaceUseBindFunction;
+    CBLNetworkInterfaceExperimentalType _experimentalType;
     
     struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
@@ -210,7 +210,7 @@ static void doDispose(C4Socket* s) {
         _sockfd = -1;
         _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
-        _experimentNetworkInterfaceUseBindFunction = _replicator.config.experimentNetworkInterfaceUseBindFunction;
+        _experimentalType = _replicator.config.experimentalType;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
@@ -412,10 +412,18 @@ static void doDispose(C4Socket* s) {
         bool result = false;
         NSError* err;
         bool useIPv4 = (_addr->ai_family == AF_INET);
-        if (_experimentNetworkInterfaceUseBindFunction)
-            result = [self bindToInterface: interface useIPv4: useIPv4 error: &err];
-        else
-            result = [self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err];
+        
+        switch (_experimentalType) {
+            case kCBLNetworkInterfaceExperimentalTypeUseBindFunction:
+                result = [self bindToInterface: interface useIPv4: useIPv4 error: &err];
+                break;
+            case kCBLNetworkInterfaceExperimentalTypeUseGetAddrInfo:
+                result = [self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err];
+                break;
+            default:
+                CBLWarnError(WebSocket, @"%@: Wrong websocket class! use CBLNWWebsocket class", self);
+        }
+        
         if (!result) {
             [self closeWithError: err];
             return;
@@ -569,6 +577,12 @@ static void doDispose(C4Socket* s) {
     
     CBLLogVerbose(WebSocket, @"%@: Successfully bind network interface %@", self, interface);
     return true;
+}
+
+- (bool) useNetworkFramework: (NSString*)interface
+                     useIPv4: (BOOL)useIPv4
+                       error: (NSError**)outError {
+    return NO;
 }
 
 static inline NSError* posixError(int errNo, NSString* msg) {

@@ -27,6 +27,20 @@
 		1A2AB75622BBFDB6000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75722BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
 		1A2AB75822BBFDB7000B9325 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */; };
+		1A2C776A293C998400C5B7E1 /* CBLNWWebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A2C7769293C997700C5B7E1 /* CBLNWWebSocket.h */; };
+		1A2C776B293C998500C5B7E1 /* CBLNWWebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A2C7769293C997700C5B7E1 /* CBLNWWebSocket.h */; };
+		1A2C776C293C998800C5B7E1 /* CBLNWWebSocket.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */; };
+		1A2C776D293C998A00C5B7E1 /* CBLNWWebSocket.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */; };
+		1A2C776E293C998B00C5B7E1 /* CBLNWWebSocket.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */; };
+		1A2C776F293C998B00C5B7E1 /* CBLNWWebSocket.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */; };
+		1A2C7772293C9E3F00C5B7E1 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
+		1A2C7773293C9E3F00C5B7E1 /* Network.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1A2C7778293C9ED100C5B7E1 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
+		1A2C7779293C9ED100C5B7E1 /* Network.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1A2C777B293C9ED500C5B7E1 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
+		1A2C777C293C9ED500C5B7E1 /* Network.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1A2C777E293C9ED900C5B7E1 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
+		1A2C777F293C9ED900C5B7E1 /* Network.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1A2F2C3727FD5B3300084B3C /* TrustCheckTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACEB9662256B74A00DED54C /* TrustCheckTest.m */; };
 		1A3470C1266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1816,6 +1830,50 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1A2C7774293C9E4000C5B7E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A2C7773293C9E3F00C5B7E1 /* Network.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A2C777A293C9ED200C5B7E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A2C7779293C9ED100C5B7E1 /* Network.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A2C777D293C9ED600C5B7E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A2C777C293C9ED500C5B7E1 /* Network.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A2C7780293C9EDA00C5B7E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A2C777F293C9ED900C5B7E1 /* Network.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275FF6111E3FE9DB005F90DD /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -1884,6 +1942,9 @@
 		1A1CEC73291A573E003231EF /* generate_objc_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_objc_release_zip.sh; sourceTree = "<group>"; };
 		1A1CEC7F291A573E003231EF /* generate_swift_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_swift_release_zip.sh; sourceTree = "<group>"; };
 		1A2AB74522BBFD50000B9325 /* CBLConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
+		1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLNWWebSocket.mm; sourceTree = "<group>"; };
+		1A2C7769293C997700C5B7E1 /* CBLNWWebSocket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLNWWebSocket.h; sourceTree = "<group>"; };
+		1A2C7770293C9E3A00C5B7E1 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/PrivateFrameworks/Network.framework; sourceTree = SDKROOT; };
 		1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexConfiguration.h; sourceTree = "<group>"; };
 		1A3470C0266F3E7C0042C6BA /* CBLIndexConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIndexConfiguration.m; sourceTree = "<group>"; };
 		1A3470DE266F415E0042C6BA /* CBLIndexSpec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexSpec.h; sourceTree = "<group>"; };
@@ -2469,6 +2530,7 @@
 			files = (
 				9399E4B41E932FDB00B57600 /* libz.tbd in Frameworks */,
 				9308F40F1E64B28800F53EE4 /* libLiteCore-static.a in Frameworks */,
+				1A2C777E293C9ED900C5B7E1 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2512,6 +2574,7 @@
 				939C5E67244FC7DE007CEBAC /* libLiteCoreREST-static.a in Frameworks */,
 				939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */,
 				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
+				1A2C7778293C9ED100C5B7E1 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2524,6 +2587,7 @@
 				93249D7B246B6EB0000A8A6E /* libLiteCoreWebSocket.a in Frameworks */,
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
 				93A4F2462221059500257423 /* CoreImage.framework in Frameworks */,
+				1A2C777B293C9ED500C5B7E1 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2587,6 +2651,7 @@
 			files = (
 				9399E4B31E932F4700B57600 /* libz.tbd in Frameworks */,
 				9399E4B01E932EF200B57600 /* libLiteCore-static.a in Frameworks */,
+				1A2C7772293C9E3F00C5B7E1 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2666,6 +2731,8 @@
 				276740B51EE7381E0036DE42 /* CBLTrustCheck.h */,
 				276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */,
 				9374A851201165AE00BA0D9E /* CBLURLEndpoint+Internal.h */,
+				1A2C7769293C997700C5B7E1 /* CBLNWWebSocket.h */,
+				1A2C775D293C997700C5B7E1 /* CBLNWWebSocket.mm */,
 				2753AFF31EC39CA200C12E98 /* CBLWebSocket.h */,
 				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
 				93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */,
@@ -2754,6 +2821,7 @@
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1A2C7770293C9E3A00C5B7E1 /* Network.framework */,
 				93A4F2352221058500257423 /* CoreImage.framework */,
 				9399E4B21E932F4700B57600 /* libz.tbd */,
 			);
@@ -3949,6 +4017,7 @@
 				938E38821F3A5BB4006806C7 /* CBLQueryCollation.h in Headers */,
 				93FD618C2020757500E7F6A1 /* CBLIndex.h in Headers */,
 				9388CBFC21BF74FD005CA66D /* CBLConsoleLogger.h in Headers */,
+				1A2C776A293C998400C5B7E1 /* CBLNWWebSocket.h in Headers */,
 				93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */,
 				937A69041F0731230058277F /* CBLQueryFunction.h in Headers */,
 				9381960F1EC1121B0032CC51 /* CBLDictionary.h in Headers */,
@@ -4240,6 +4309,7 @@
 				9343F0DE207D61AB00F19A89 /* CBLListenerToken.h in Headers */,
 				9343F0DF207D61AB00F19A89 /* CBLQueryOrdering.h in Headers */,
 				9343F0E0207D61AB00F19A89 /* CBLBasicAuthenticator.h in Headers */,
+				1A2C776B293C998500C5B7E1 /* CBLNWWebSocket.h in Headers */,
 				93EB264421DF1AE20006FB88 /* CBLDocumentFlags.h in Headers */,
 				9369A699207DB50F009B5B83 /* CBLDatabaseConfiguration+Encryption.h in Headers */,
 				932565BF21ED16BF0092F4E0 /* CBLLogFileConfiguration+Internal.h in Headers */,
@@ -4518,6 +4588,7 @@
 				275F92701E4D30A4007FD5A2 /* Frameworks */,
 				275F92711E4D30A4007FD5A2 /* Headers */,
 				93CED8D52048B3D600E6F0A4 /* Remove private headers */,
+				1A2C7780293C9EDA00C5B7E1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -4610,6 +4681,7 @@
 				9343EF2E207D611600F19A89 /* Sources */,
 				9343EF8D207D611600F19A89 /* Frameworks */,
 				9343EF90207D611600F19A89 /* Headers */,
+				1A2C777A293C9ED200C5B7E1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -4632,6 +4704,7 @@
 				9343F0B1207D61AB00F19A89 /* Frameworks */,
 				9343F0B4207D61AB00F19A89 /* Headers */,
 				9343F12D207D61AB00F19A89 /* Remove private headers */,
+				1A2C777D293C9ED600C5B7E1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -4781,6 +4854,7 @@
 				9398D90D1E03434200464432 /* Sources */,
 				9398D90E1E03434200464432 /* Frameworks */,
 				9398D90F1E03434200464432 /* Headers */,
+				1A2C7774293C9E4000C5B7E1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -5368,6 +5442,7 @@
 				270AB2BF2073EF57009A4596 /* CBLChangeNotifier.m in Sources */,
 				932565A921ED13290092F4E0 /* CBLLogFileConfiguration.m in Sources */,
 				27CDE763207407280082D458 /* CBLDocumentChangeNotifier.mm in Sources */,
+				1A2C776D293C998A00C5B7E1 /* CBLNWWebSocket.mm in Sources */,
 				93B41D671F0580E700A7F114 /* CBLQueryJoin.m in Sources */,
 				9308F40C1E64B23800F53EE4 /* Test_Assertions.m in Sources */,
 				9308F40B1E64B23600F53EE4 /* Test.m in Sources */,
@@ -5628,6 +5703,7 @@
 				1A3470C7266F3E7C0042C6BA /* CBLIndexConfiguration.m in Sources */,
 				9343EF6C207D611600F19A89 /* CBLMutableArray.mm in Sources */,
 				931713D922C182F500F1B5BF /* CBLCoreMLPredictiveModel.m in Sources */,
+				1A2C776E293C998B00C5B7E1 /* CBLNWWebSocket.mm in Sources */,
 				932CC55B207D9ED2000B4B78 /* CBLDatabaseEndpoint.m in Sources */,
 				9343EF6E207D611600F19A89 /* CBLQueryChange.m in Sources */,
 				69002EBE234E695600776107 /* CBLErrorMessage.m in Sources */,
@@ -5788,6 +5864,7 @@
 				9343F05C207D61AB00F19A89 /* CBLMutableArray.mm in Sources */,
 				9343F05E207D61AB00F19A89 /* CBLReachability.m in Sources */,
 				9343F05F207D61AB00F19A89 /* FullTextExpression.swift in Sources */,
+				1A2C776F293C998B00C5B7E1 /* CBLNWWebSocket.mm in Sources */,
 				9343F060207D61AB00F19A89 /* CBLData.mm in Sources */,
 				93292DA122BD448400A0862A /* CBLReplicatorConfiguration+Swift.m in Sources */,
 				9343F062207D61AB00F19A89 /* ArrayExpressionIn.swift in Sources */,
@@ -6106,6 +6183,7 @@
 				933208171E77415E000D9993 /* CBLQueryOrdering.m in Sources */,
 				931C14541EAABCE70094F9B2 /* CBLFragment.m in Sources */,
 				9380C6F01E15B8C20011E8CB /* CBLMutableDocument.mm in Sources */,
+				1A2C776C293C998800C5B7E1 /* CBLNWWebSocket.mm in Sources */,
 				27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */,
 				27D721BC1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */,
 				938E389F1F3A7A47006806C7 /* CBLCollationExpression.m in Sources */,
@@ -6415,6 +6493,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug;
 		};
@@ -6422,6 +6501,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release;
 		};
@@ -6640,6 +6720,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug_EE;
 		};
@@ -6647,6 +6728,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug_EE;
 		};
@@ -6817,6 +6899,7 @@
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release_EE;
 		};
@@ -6824,6 +6907,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release_EE;
 		};
@@ -7515,6 +7599,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug;
 		};
@@ -7528,6 +7613,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug_EE;
 		};
@@ -7540,6 +7626,7 @@
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release;
 		};
@@ -7552,6 +7639,7 @@
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release_EE;
 		};
@@ -7559,6 +7647,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug;
 		};
@@ -7566,6 +7655,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug_EE;
 		};
@@ -7573,6 +7663,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release;
 		};
@@ -7580,6 +7671,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
 			buildSettings = {
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release_EE;
 		};
@@ -8195,6 +8287,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Debug;
 		};
@@ -8207,6 +8300,7 @@
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(inherited) $(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
 			};
 			name = Release;
 		};
