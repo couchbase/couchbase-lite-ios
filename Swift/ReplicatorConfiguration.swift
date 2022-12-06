@@ -32,13 +32,14 @@ public enum ReplicatorType: UInt8 {
 
 /// Network Interface Experimental type
 ///
-/// - useGetAddrInfo: use the POSIX function getAddrInfo to specify the network interface.
 /// - useBindFunction: use bind() function to bind socket to the specified network interface.
 /// - useNetworkFramework: use network framework to specify the network interface.
+/// - useDNSService: use the DNSServiceGetAddrInfo function to resolve the DNS.
 public enum NetworkInterfaceExperimentalType: UInt8 {
-    case useGetAddrInfo = 0
+    case none = 0
     case useBindFunction
     case useNetworkFramework
+    case useDNSService
 }
 
 /// Document flags describing a replicated document.
@@ -102,7 +103,7 @@ public struct ReplicatorConfiguration {
     /// Experiment to use different types instead of setting the socket option alone.
     ///
     /// More info ``NetworkInterfaceExperimentalType``
-    public var experimentType: NetworkInterfaceExperimentalType = .useGetAddrInfo
+    public var experimentType: NetworkInterfaceExperimentalType = .useBindFunction
     
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
