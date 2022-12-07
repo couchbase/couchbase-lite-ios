@@ -38,9 +38,9 @@ typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
 /** Network Interface experimental type. */
 typedef NS_ENUM(NSUInteger, CBLNetworkInterfaceExperimentalType) {
     kCBLNetworkInterfaceExperimentalTypeNone = 0,
-    kCBLNetworkInterfaceExperimentalTypeUseBindFunction,        /// use bind() function to bind socket to the specified network interface.
+    kCBLNetworkInterfaceExperimentalTypeUseDNSService,          /// use the DNSServiceGetAddrInfo function to resolve the DNS
     kCBLNetworkInterfaceExperimentalTypeUseNetworkFramework,    /// use network framework to specify the network interface.
-    kCBLNetworkInterfaceExperimentalTypeUseDNSService           /// use the DNSServiceGetAddrInfo function to resolve the DNS
+    kCBLNetworkInterfaceExperimentalTypeUseBindFunction         /// use bind() function to bind socket to the specified network interface.
 };
 
 /** Replication Filter */
