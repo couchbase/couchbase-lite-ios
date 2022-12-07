@@ -411,6 +411,10 @@ static void doDispose(C4Socket* s) {
             NSString* msg = $sprintf(@"Failed to find network interface(%@) err: %@",
                                      interface, outError);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
+            
+            if (!outError)
+                outError = unknownInterfaceError(msg);
+            
             [self closeWithError: outError];
             return;
         }
@@ -421,7 +425,7 @@ static void doDispose(C4Socket* s) {
             int errNo = errno;
             NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(errNo, msg)];
+            [self closeWithError: unknownInterfaceError(msg)];
             return;
         }
         
@@ -441,7 +445,7 @@ static void doDispose(C4Socket* s) {
         }
         if (result < 0) {
             int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
+            NSString* msg = $sprintf(@"Failed to set-opts network interface %@ with errno %d (%@)",
                                      interface, errNo, addrInfo(_addr));
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             [self closeWithError: posixError(errNo, msg)];
@@ -583,6 +587,12 @@ static void doDispose(C4Socket* s) {
     freeifaddrs(ifaddrs);
     
     return networkInterface;
+}
+
+static inline NSError* unknownInterfaceError(NSString* msg) {
+    return [NSError errorWithDomain: CBLErrorDomain
+                               code: CBLErrorUnknownInterface
+                           userInfo: @{NSLocalizedDescriptionKey : msg}];
 }
 
 static inline NSError* posixError(int errNo, NSString* msg) {

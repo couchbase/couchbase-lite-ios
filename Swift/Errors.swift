@@ -156,6 +156,9 @@ public struct CBLError {
     /// Attempted redirect to invalid replication endpoint by server
     public static let invalidRedirect             = 5012
     
+    /// The specified network interface is not valid or unknown.
+    public static let unknownInterface            = 5027
+    
     // MARK: -- HTTP status codes start here
     
     /// HTTP status codes start here

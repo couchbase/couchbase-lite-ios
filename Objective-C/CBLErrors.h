@@ -156,6 +156,9 @@ NS_ERROR_ENUM(CBLErrorDomain) {
     /** Attempted redirect to invalid replication endpoint by server */
     CBLErrorInvalidRedirect             = 5012,
     
+    /** The specified network interface is not valid or unknown. */
+    CBLErrorUnknownInterface            = 5027,
+    
 #pragma mark -- HTTP status codes start here
     /** HTTP status codes start here*/
     CBLErrorHTTPBase                    = 10000,
