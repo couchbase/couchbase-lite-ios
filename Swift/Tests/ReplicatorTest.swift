@@ -1304,7 +1304,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
 #if os(iOS)
-        XCTAssertEqual(config.defaultAllowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
+        XCTAssertEqual(config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
 #endif
         
         repl = Replicator(config: config)
@@ -1319,7 +1319,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(repl.config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(repl.config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
 #if os(iOS)
-        XCTAssertEqual(repl.config.defaultAllowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
+        XCTAssertEqual(repl.config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
 #endif
     }
 }
