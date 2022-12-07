@@ -83,6 +83,10 @@
     return reinterpret_cast<const struct sockaddr_in6*>(self.addr);
 }
 
+- (socklen_t) length {
+    return _type == kIPv4 ? sizeof(*self.addrIn) : sizeof(*self.addrIn6);
+}
+
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@ (%@, %d, %d, %lu)",
             _addrstr, _host, _port, _interface, (unsigned long)_type];

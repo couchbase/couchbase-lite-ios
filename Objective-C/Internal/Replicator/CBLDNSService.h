@@ -38,6 +38,7 @@ typedef NS_ENUM(NSUInteger, IPType) {
 @property (nonatomic, readonly) NSString* host;
 @property (nonatomic, readonly) UInt16 port;
 @property (nonatomic, readonly) UInt32 interface;
+@property (nonatomic, readonly) unsigned int length;
 
 @end
 

@@ -31,15 +31,15 @@ public enum ReplicatorType: UInt8 {
 }
 
 /// Network Interface Experimental type
-///
-/// - useBindFunction: use bind() function to bind socket to the specified network interface.
-/// - useNetworkFramework: use network framework to specify the network interface.
+/// 
 /// - useDNSService: use the DNSServiceGetAddrInfo function to resolve the DNS.
+/// - useNetworkFramework: use network framework to specify the network interface.
+/// - useBindFunction: use bind() function to bind socket to the specified network interface.
 public enum NetworkInterfaceExperimentalType: UInt8 {
     case none = 0
-    case useBindFunction
-    case useNetworkFramework
     case useDNSService
+    case useNetworkFramework
+    case useBindFunction
 }
 
 /// Document flags describing a replicated document.
