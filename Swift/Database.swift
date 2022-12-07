@@ -583,12 +583,6 @@ public final class Database {
     private let activeReplicators = NSMutableSet()
     
     private let activeQueries = NSMutableSet()
-    
-    // MARK: Debug
-    
-    func printRevs(documentID: String) {
-        impl.printRevs(forDocumentID: documentID)
-    }
 }
 
 extension CBLDatabase {
