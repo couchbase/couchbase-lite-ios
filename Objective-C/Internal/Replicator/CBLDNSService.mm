@@ -89,7 +89,7 @@
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@ (%@, %d, %d, %lu)",
-            _addrstr, _host, _port, _interface, (unsigned long)_type];
+            _addrstr, _host, _port, (unsigned int)_interface, (unsigned long)_type];
 }
 
 @end
@@ -152,7 +152,7 @@
         _ipV6 = nil;
         _ipV6err = kDNSServiceErr_NoError;
         
-        CBLLogVerbose(WebSocket, @"%@: Looking up '%@' on interface index '%d'", self, _host, _interface);
+        CBLLogVerbose(WebSocket, @"%@: Looking up '%@' on interface index '%d'", self, _host, (unsigned int)_interface);
         
         const char* cHost = [_host cStringUsingEncoding: NSUTF8StringEncoding];
         DNSServiceFlags flags = kDNSServiceFlagsReturnIntermediates;
@@ -397,7 +397,7 @@ static void getAddrInfoCallback(DNSServiceRef sdref,
     }
     
     NSString* msg = [NSString stringWithFormat: @"Failed to resolve address for %@ via interface %d",
-                     _host, _interface];
+                     _host, (unsigned int)_interface];
     NSError* error;
     if (errorCode == kDNSServiceErr_NoSuchRecord) {
         error = addrInfoError(EAI_NONAME, msg);
