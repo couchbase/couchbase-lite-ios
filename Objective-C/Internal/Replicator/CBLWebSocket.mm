@@ -590,7 +590,7 @@ static void doDispose(C4Socket* s) {
 }
 
 static inline NSError* unknownInterfaceError(NSString* msg) {
-    return [NSError errorWithDomain: CBLErrorDomain
+    return [NSError errorWithDomain: (__bridge id)kCFErrorDomainCFNetwork
                                code: CBLErrorUnknownInterface
                            userInfo: @{NSLocalizedDescriptionKey : msg}];
 }
