@@ -244,7 +244,7 @@ static void getAddrInfoCallback(DNSServiceRef sdref,
             return; // Already stopped
         }
         
-        BOOL moreComing = flags & kDNSServiceFlagsMoreComing;
+        BOOL moreComing = (flags & kDNSServiceFlagsMoreComing) == kDNSServiceFlagsMoreComing;
         
         if (errorCode != kDNSServiceErr_NoError) {
             if (address->sa_family != AF_INET && address->sa_family != AF_INET6 && !moreComing) {
@@ -273,7 +273,7 @@ static void getAddrInfoCallback(DNSServiceRef sdref,
             return;
         }
         
-        BOOL isValid = flags & kDNSServiceFlagsAdd;
+        BOOL isValid = (flags & kDNSServiceFlagsAdd) == kDNSServiceFlagsAdd;
         if (!isValid) {
             return;
         }
