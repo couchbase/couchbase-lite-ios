@@ -89,7 +89,8 @@ public struct ReplicatorConfiguration {
     #if COUCHBASE_ENTERPRISE
     /// Specify the replicator to accept any and only self-signed certs. Any non-self-signed certs will be rejected
     /// to avoid accidentally using this mode with the non-self-signed certs in production.
-    public var acceptOnlySelfSignedServerCertificate: Bool = false
+    /// Default value is ``ReplicatorConfiguration.defaultSelfSignedCertificateOnly``
+    public var acceptOnlySelfSignedServerCertificate: Bool = ReplicatorConfiguration.defaultSelfSignedCertificateOnly
     #endif
     
     /// The remote target's SSL certificate.

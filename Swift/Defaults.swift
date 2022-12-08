@@ -65,6 +65,9 @@ public extension ReplicatorConfiguration {
 	/// [true] Purge documents when a user loses access
 	static let defaultEnableAutoPurge: Bool = kCBLDefaultReplicatorEnableAutoPurge.boolValue
 
+	/// [false] Whether or not a replicator only accepts self-signed certificates from the remote
+	static let defaultSelfSignedCertificateOnly: Bool = kCBLDefaultReplicatorSelfSignedCertificateOnly.boolValue
+
 }
 
 #if COUCHBASE_ENTERPRISE
@@ -84,5 +87,6 @@ public extension URLEndpointListenerConfiguration {
 
 }
 
-#endif 
+#endif
+
 

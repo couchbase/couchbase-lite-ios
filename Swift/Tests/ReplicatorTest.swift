@@ -1285,22 +1285,42 @@ class ReplicatorTest_Main: ReplicatorTest {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         let config = ReplicatorConfiguration(database: oDB, target: target)
         
-        #if COUCHBASE_ENTERPRISE
-        XCTAssertFalse(config.acceptOnlySelfSignedServerCertificate)
-        #endif
+#if COUCHBASE_ENTERPRISE
+        XCTAssertEqual(config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
+#endif
         XCTAssertNil(config.authenticator)
         XCTAssertNil(config.channels)
         XCTAssertNil(config.conflictResolver)
-        XCTAssertFalse(config.continuous)
         XCTAssertNil(config.documentIDs)
         XCTAssertNil(config.headers)
-        XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
-        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
-        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
         XCTAssertNil(config.pinnedServerCertificate)
         XCTAssertNil(config.pullFilter)
         XCTAssertNil(config.pushFilter)
-        XCTAssertEqual(config.replicatorType, .pushAndPull)
+        
+        XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
+        XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
+        XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
+        XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
+#if os(iOS)
+        XCTAssertEqual(config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
+#endif
+        
+        repl = Replicator(config: config)
+        
+#if COUCHBASE_ENTERPRISE
+        XCTAssertEqual(repl.config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
+#endif
+        XCTAssertEqual(repl.config.continuous, ReplicatorConfiguration.defaultContinuous)
+        XCTAssertEqual(repl.config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
+        XCTAssertEqual(repl.config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(repl.config.replicatorType, ReplicatorConfiguration.defaultType)
+        XCTAssertEqual(repl.config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
+#if os(iOS)
+        XCTAssertEqual(repl.config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
+#endif
     }
 }
 
