@@ -201,9 +201,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (uint64_t) count {
-    CBL_LOCK(_mutex) {
-        return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
-    }
+    return [self defaultCollection: nil].count;
 }
 
 - (CBLDatabaseConfiguration*) config {

@@ -106,7 +106,6 @@ framework module CouchbaseLiteSwift {
         header "CBLArray+Swift.h"
         header "CBLBlob+Swift.h"
         header "CBLCollection+Swift.h"
-        header "CBLDatabase+Debug.h"
         header "CBLDatabase+Swift.h"
         header "CBLDictionary+Swift.h"
         header "CBLLog+Swift.h"
