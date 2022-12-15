@@ -67,21 +67,25 @@ class CollectionTest: CBLTestCase {
     }
     
     func testDeleteDefaultCollection() throws {
-        try self.db.deleteCollection(name: Database.defaultCollectionName)
-        
-        var collection = try self.db.defaultCollection()
-        XCTAssertNil(collection)
-        
         self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
-            let _ = try self.db.createCollection(name: Database.defaultCollectionName)
+            try self.db.deleteCollection(name: Database.defaultCollectionName)
         }
         
-        collection = try self.db.defaultCollection()
-        XCTAssertNil(collection)
+        var collection = try self.db.defaultCollection()
+        XCTAssertNotNil(collection)
+        XCTAssertEqual(collection!.name, Database.defaultCollectionName)
+        XCTAssertEqual(collection!.scope.name, Scope.defaultScopeName)
+        
+        collection = try self.db.createCollection(name: Database.defaultCollectionName)
+        XCTAssertNotNil(collection)
+        XCTAssertEqual(collection!.name, Database.defaultCollectionName)
+        XCTAssertEqual(collection!.scope.name, Scope.defaultScopeName)
     }
     
     func testGetDefaultScopeAfterDeleteDefaultCollection() throws {
-        try self.db.deleteCollection(name: Database.defaultCollectionName)
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            try self.db.deleteCollection(name: Database.defaultCollectionName)
+        }
         
         let scope = try self.db.defaultScope()
         XCTAssertEqual(scope.name, Scope.defaultScopeName)
