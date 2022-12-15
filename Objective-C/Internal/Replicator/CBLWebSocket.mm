@@ -19,7 +19,6 @@
 
 #import "CBLWebSocket.h"
 
-#import "CBLDNSService.h"
 #import "CBLHTTPLogic.h"
 #import "CBLTrustCheck.h"
 
@@ -41,7 +40,6 @@
 
 #import <arpa/inet.h>
 #import <ifaddrs.h>
-#import <memory>
 #import <net/if.h>
 #import <netdb.h>
 #import <vector>
@@ -75,7 +73,7 @@ struct PendingWrite {
     void (^completionHandler)();
 };
 
-@interface CBLWebSocket () <NSStreamDelegate, DNSServiceDelegate>
+@interface CBLWebSocket () <NSStreamDelegate>
 
 // Socket descriptor for openning connection when a network interface is specified
 @property (atomic) int sockfd;
@@ -112,12 +110,9 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
-    CBLNetworkInterfaceExperimentalType _experimentalType;
     
     struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
-    
-    CBLDNSService* _dnsService;
 }
 
 @synthesize sockfd=_sockfd;
@@ -218,7 +213,6 @@ static void doDispose(C4Socket* s) {
         _sockfd = -1;
         _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
-        _experimentalType = _replicator.config.experimentalType;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
@@ -376,13 +370,9 @@ static void doDispose(C4Socket* s) {
 - (void) connectToHostWithName: (NSString*)hostname
                           port: (NSInteger)port
               networkInterface: (NSString*)interface {
-    CBLLogInfo(WebSocket, @"%@: Connect to host '%@' port '%ld' interface '%@' (exp mode '%lu')",
-               self, hostname, (long)port, interface, (unsigned long)_experimentalType);
-    if (_experimentalType == kCBLNetworkInterfaceExperimentalTypeUseDNSService) {
-        [self resolveAndConnectViaDNSService: hostname port: port interface: interface];
-    } else {
-        [self resolveAndConnect: hostname port: port networkInterface: interface];
-    }
+    CBLLogInfo(WebSocket, @"%@: Connect to host '%@' port '%ld' interface '%@'",
+               self, hostname, (long)port, interface);
+    [self resolveAndConnect: hostname port: port networkInterface: interface];
 }
 
 - (void) resolveAndConnect: (NSString*)hostname
@@ -414,59 +404,17 @@ static void doDispose(C4Socket* s) {
     }
     
     // Create socket:
-    [self _socketConnect: interface addrInfo: nil];
-}
-
-#pragma mark - Experimental DNSService
-
-- (void) resolveAndConnectViaDNSService: (NSString*)host port: (NSInteger)port interface: (NSString*)interface {
-    unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
-    if (index == 0) {
-        int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        [self closeWithError: posixError(errNo, msg)];
-        return;
-    }
-    
-    _dnsService = [[CBLDNSService alloc] initWithHost: host interface: index port: (UInt16)port delegate: self];
-    [_dnsService start];
-}
-
-#pragma mark DNSServiceDelegate
-
-- (void) didResolveSuccessWithAddress: (AddressInfo*)info {
-    dispatch_async(_queue, ^{
-        if (_dnsService) {
-            CBLLogVerbose(WebSocket, @"%@: Host '%@' was resolved as ip=%@, family=%d",
-                          self, info.host, info.addrstr, info.addr->sa_family);
-            [self _socketConnect: _networkInterface addrInfo: info];
-        }
-    });
-}
-
-- (void) didResolveFailWithError: (NSError*)error {
-    dispatch_async(_queue, ^{
-        if (_dnsService) {
-            CBLWarnError(WebSocket, @"%@: Host was failed to resolve with error '%@'",
-                          self, error.my_compactDescription);
-            [self closeWithError: error];
-        }
-    });
+    [self _socketConnect: interface];
 }
 
 #pragma mark - Socket connect
 
-- (void) _socketConnect: (NSString*)interface addrInfo: (nullable AddressInfo*)info {
-    int family = info ? info.addr->sa_family : _addr->ai_family;
-    int socktype = info ? SOCK_STREAM : _addr->ai_socktype;
-    int protocol = info ? 0 : _addr->ai_protocol;
-    
+- (void) _socketConnect: (NSString*)interface {
     Assert(_sockfd < 0);
-    _sockfd = socket(family, socktype, protocol);
+    _sockfd = socket(_addr->ai_family, _addr->ai_socktype, _addr->ai_protocol);
     if (_sockfd < 0) {
         int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, info ?: addrInfo(_addr));
+        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(_addr));
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
         [self closeWithError: posixError(errNo, msg)];
         return;
@@ -474,17 +422,10 @@ static void doDispose(C4Socket* s) {
     
     // Set network interface:
     if (interface) {
-        bool result = false;
         NSError* err;
-        bool useIPv4 = (family == AF_INET);
+        bool useIPv4 = (_addr->ai_family == AF_INET);
         
-        if (_experimentalType == kCBLNetworkInterfaceExperimentalTypeUseBindFunction) {
-            result = [self bindToInterface: interface useIPv4: useIPv4 error: &err];
-        } else  {
-            result = [self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err];
-        }
-        
-        if (!result) {
+        if (![self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err]) {
             [self closeWithError: err];
             return;
         }
@@ -497,12 +438,9 @@ static void doDispose(C4Socket* s) {
             return; // Already disconnected
         }
         
-        NSString* ip = info ? info.addrstr : getIPAddress(_addr->ai_addr);
-        const sockaddr* sockAddr = info ? info.addr : _addr->ai_addr;
-        socklen_t sockAddrLen = info ? info.length : _addr->ai_addrlen;
-        CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, ip);
+        CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, getIPAddress(_addr->ai_addr));
         
-        int status = connect(sockfd, sockAddr, sockAddrLen);
+        int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
         if (status == 0) {
             dispatch_async(_queue, ^{
                 if (_sockfd < 0)
@@ -576,61 +514,6 @@ static void doDispose(C4Socket* s) {
     }
     
     CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %@ to socket option", self, interface);
-    return true;
-}
-
-- (bool) bindToInterface: (NSString*)interface useIPv4: (BOOL)useIPv4 error: (NSError**)outError {
-    struct ifaddrs *ifaddrs;
-    
-    if ((getifaddrs(&ifaddrs) != 0)) {
-        int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
-        if (outError) *outError = posixError(errNo, msg);
-        return false;
-    }
-    
-    NSMutableData *addrData;
-    const char *cInterface = [interface UTF8String];
-    for (struct ifaddrs *ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
-        sockaddr* addr = ifa->ifa_addr;
-        if (!addr)
-            continue;
-        
-        if (addr->sa_family == AF_INET && useIPv4) {
-            if (strcmp(ifa->ifa_name, cInterface) == 0) {
-                sockaddr_in* addrIn = reinterpret_cast<sockaddr_in*>(addr);
-                addrData = [NSMutableData dataWithBytes: addrIn length: sizeof(struct sockaddr_in)];
-            }
-        } else if (addr->sa_family == AF_INET6 && !useIPv4) {
-            if (strcmp(ifa->ifa_name, cInterface) == 0) {
-                sockaddr_in6* addrIn = reinterpret_cast<sockaddr_in6*>(addr);
-                addrData = [NSMutableData dataWithBytes: addrIn length: sizeof(struct sockaddr_in6)];
-            }
-        }
-        
-        if (addrData)
-            break;
-    }
-    
-    freeifaddrs(ifaddrs);
-    
-    if (!addrData) {
-        NSString* msg = $sprintf(@"Failed to find network interface %@", interface);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        if (outError) *outError = posixError(ENODEV, msg);
-        return false;
-    }
-    
-    const struct sockaddr *addr = (const struct sockaddr *)[addrData bytes];
-    if (bind(_sockfd, addr, (socklen_t) addrData.length) != 0) {
-        int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to bind network interface %@ with errno %d", interface, errNo);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        if (outError) *outError = posixError(errNo, msg);
-        return false;
-    }
-    
-    CBLLogVerbose(WebSocket, @"%@: Successfully bind network interface %@", self, interface);
     return true;
 }
 
@@ -1138,11 +1021,6 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     if (_sockfd >= 0) {
         close(_sockfd);
         self.sockfd = -1;
-    }
-    
-    if (_dnsService) {
-        [_dnsService stop];
-        _dnsService = nil;
     }
 }
 
