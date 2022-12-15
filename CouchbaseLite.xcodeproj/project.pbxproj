@@ -82,10 +82,6 @@
 		1A41912B2475DB3B008122BE /* URLEndpointListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4191292475DB3B008122BE /* URLEndpointListener.swift */; };
 		1A4191482475ED3D008122BE /* URLEndpointListenerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41913B2475ED38008122BE /* URLEndpointListenerConfiguration.swift */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
-		1A5E10E8293F9A570051EAF0 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
-		1A5E10E9293F9A5E0051EAF0 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
-		1A5E10EA293F9A670051EAF0 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
-		1A5E10EB293F9A6E0051EAF0 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2C7770293C9E3A00C5B7E1 /* Network.framework */; };
 		1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
 		1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
@@ -2474,7 +2470,6 @@
 			files = (
 				9399E4B41E932FDB00B57600 /* libz.tbd in Frameworks */,
 				9308F40F1E64B28800F53EE4 /* libLiteCore-static.a in Frameworks */,
-				1A5E10E9293F9A5E0051EAF0 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2518,7 +2513,6 @@
 				939C5E67244FC7DE007CEBAC /* libLiteCoreREST-static.a in Frameworks */,
 				939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */,
 				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
-				1A5E10EA293F9A670051EAF0 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2531,7 +2525,6 @@
 				93249D7B246B6EB0000A8A6E /* libLiteCoreWebSocket.a in Frameworks */,
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
 				93A4F2462221059500257423 /* CoreImage.framework in Frameworks */,
-				1A5E10EB293F9A6E0051EAF0 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2595,7 +2588,6 @@
 			files = (
 				9399E4B31E932F4700B57600 /* libz.tbd in Frameworks */,
 				9399E4B01E932EF200B57600 /* libLiteCore-static.a in Frameworks */,
-				1A5E10E8293F9A570051EAF0 /* Network.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
