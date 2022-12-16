@@ -379,7 +379,8 @@ static void doDispose(C4Socket* s) {
         [self closeWithError: posixError(errNo, msg)];
         return;
     }
-
+    CBLLogVerbose(WebSocket, @"%@: Interface '%@' is mapped to index '%u'", self, _networkInterface, index);
+    
     _dnsService = [[CBLDNSService alloc] initWithHost: hostname
                                             interface: index
                                                  port: (UInt16)port
@@ -423,27 +424,27 @@ static void doDispose(C4Socket* s) {
     }
     
     // Set network interface:
-    if (_networkInterface) {
-        UInt32 index = info.interface;
-        CBLLogVerbose(WebSocket, @"%@: Interface '%@' is mapped to index '%u'", self, _networkInterface, index);
-        int result = -1;
-        if (info.addr->sa_family == AF_INET) {
-            result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-        } else if (info.addr->sa_family == AF_INET6 ){
-            result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
-        }
-        
-        if (result < 0) {
-            int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
-                                     _networkInterface, errNo, info);
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(errNo, msg)];
-            return;
-        }
-        
-        CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %@ to socket option", self, _networkInterface);
+    Assert(info.interface > 0);
+    
+    UInt32 index = info.interface;
+    int result = -1;
+    if (info.addr->sa_family == AF_INET) {
+        result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+    } else if (info.addr->sa_family == AF_INET6 ){
+        result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
     }
+    
+    if (result < 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to set network interface %u with errno %d (%@)",
+                                 (unsigned int)info.interface, errNo, info);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        [self closeWithError: posixError(errNo, msg)];
+        return;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %u to socket option",
+                  self, info.interface);
     
     // Connect:
     dispatch_async(_socketConnectQueue, ^{
@@ -486,9 +487,7 @@ static void doDispose(C4Socket* s) {
             });
         } else {
             int errNo = errno;
-            NSString* msg = _networkInterface ?
-            $sprintf(@"Failed to connect via the specified network interface %@ with errno %d", _networkInterface, errNo) :
-            $sprintf(@"Failed to connect with errno %d", errNo);
+            NSString* msg = $sprintf(@"Failed to connect via the specified network interface %u with errno %d", info.interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             NSError* error = posixError(errNo, msg);
             dispatch_async(_queue, ^{
