@@ -29,6 +29,7 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLURLEndpoint.h"
+#import "CBLDNSService.h"
 
 #import "c4Socket.h"
 #import "fleece/Fleece.hh"
@@ -73,7 +74,7 @@ struct PendingWrite {
     void (^completionHandler)();
 };
 
-@interface CBLWebSocket () <NSStreamDelegate>
+@interface CBLWebSocket () <NSStreamDelegate, DNSServiceDelegate>
 
 // Socket descriptor for openning connection when a network interface is specified
 @property (atomic) int sockfd;
@@ -110,9 +111,9 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
-    
-    struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
+    
+    CBLDNSService* _dnsService;
 }
 
 @synthesize sockfd=_sockfd;
@@ -211,7 +212,6 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _sockfd = -1;
-        _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
@@ -228,8 +228,6 @@ static void doDispose(C4Socket* s) {
     free(_readBuffer);
     if (_httpResponse)
         CFRelease(_httpResponse);
-    if (_addr)
-        freeaddrinfo(_addr);
 }
 
 - (void) dispose {
@@ -372,49 +370,53 @@ static void doDispose(C4Socket* s) {
               networkInterface: (NSString*)interface {
     CBLLogInfo(WebSocket, @"%@: Connect to host '%@' port '%ld' interface '%@'",
                self, hostname, (long)port, interface);
-    [self resolveAndConnect: hostname port: port networkInterface: interface];
+    
+    unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+    if (index == 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        [self closeWithError: posixError(errNo, msg)];
+        return;
+    }
+
+    _dnsService = [[CBLDNSService alloc] initWithHost: hostname
+                                            interface: index
+                                                 port: (UInt16)port
+                                             delegate: self];
+    [_dnsService start];
 }
 
-- (void) resolveAndConnect: (NSString*)hostname
-                      port: (NSInteger)port
-          networkInterface: (NSString*)interface {
-    // Get address info:
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    
-    const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
-    const char* cPort = [$sprintf(@"%ld", (long)port) cStringUsingEncoding: NSUTF8StringEncoding];
-    
-    int res = getaddrinfo(cHost, cPort, &hints, &_addr);
-    if (res) {
-        NSString* msg = $sprintf(@"Failed to get address info with error %d", res);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        [self closeWithError: addrInfoError(res, msg)];
-        return;
-    }
-    
-    CBLLogVerbose(WebSocket, @"%@: Host '%@' was resolved as %@", self, hostname, addrInfo(_addr));
-    
-    if (_addr->ai_family != AF_INET && _addr->ai_family != AF_INET6) {
-        NSString* msg = $sprintf(@"Address family %d is not supported", _addr->ai_family);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        [self closeWithError: posixError(EPERM, msg)];
-        return;
-    }
-    
-    // Create socket:
-    [self _socketConnect: interface];
-}
+#pragma mark DNSServiceDelegate
+
+ - (void) didResolveSuccessWithAddress: (AddressInfo*)info {
+     dispatch_async(_queue, ^{
+         if (_dnsService) {
+             CBLLogVerbose(WebSocket, @"%@: Host '%@' was resolved as ip=%@, family=%d",
+                           self, info.host, info.addrstr, info.addr->sa_family);
+             [self _socketConnect: _networkInterface addrInfo: info];
+         }
+     });
+ }
+
+ - (void) didResolveFailWithError: (NSError*)error {
+     dispatch_async(_queue, ^{
+         if (_dnsService) {
+             CBLWarnError(WebSocket, @"%@: Host was failed to resolve with error '%@'",
+                           self, error.my_compactDescription);
+             [self closeWithError: error];
+         }
+     });
+ }
 
 #pragma mark - Socket connect
 
-- (void) _socketConnect: (NSString*)interface {
+- (void) _socketConnect: (NSString*)interface addrInfo: (AddressInfo*)info {
     Assert(_sockfd < 0);
-    _sockfd = socket(_addr->ai_family, _addr->ai_socktype, _addr->ai_protocol);
+    _sockfd = socket(info.addr->sa_family, SOCK_STREAM, 0);
     if (_sockfd < 0) {
         int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(_addr));
+        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, info);
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
         [self closeWithError: posixError(errNo, msg)];
         return;
@@ -422,13 +424,33 @@ static void doDispose(C4Socket* s) {
     
     // Set network interface:
     if (interface) {
-        NSError* err;
-        bool useIPv4 = (_addr->ai_family == AF_INET);
-        
-        if (![self setSocketOptForInterface: interface useIPv4: useIPv4 error: &err]) {
-            [self closeWithError: err];
+        unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (index == 0) {
+            int errNo = errno;
+            NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
+            CBLWarnError(WebSocket, @"%@: %@", self, msg);
+            [self closeWithError: posixError(errNo, msg)];
             return;
         }
+        
+        CBLLogVerbose(WebSocket, @"%@: Interface '%@' is mapped to index '%u'", self, interface, index);
+        int result = -1;
+        if (info.addr->sa_family == AF_INET) {
+            result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+        } else if (info.addr->sa_family == AF_INET6 ){
+            result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
+        }
+        
+        if (result < 0) {
+            int errNo = errno;
+            NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
+                                     interface, errNo, info);
+            CBLWarnError(WebSocket, @"%@: %@", self, msg);
+            [self closeWithError: posixError(errNo, msg)];
+            return;
+        }
+        
+        CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %@ to socket option", self, interface);
     }
     
     // Connect:
@@ -438,9 +460,9 @@ static void doDispose(C4Socket* s) {
             return; // Already disconnected
         }
         
-        CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, getIPAddress(_addr->ai_addr));
+        CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, info.addrstr);
         
-        int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
+        int status = connect(sockfd, info.addr, info.length);
         if (status == 0) {
             dispatch_async(_queue, ^{
                 if (_sockfd < 0)
@@ -485,37 +507,6 @@ static void doDispose(C4Socket* s) {
 }
 
 #pragma mark configure socket & connect
-
-- (bool) setSocketOptForInterface: (NSString*)interface useIPv4: (BOOL)useIPv4 error: (NSError**)outError {
-    unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
-    if (index == 0) {
-        int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        if (outError) *outError = posixError(errNo, msg);
-        return false;
-    }
-    
-    CBLLogVerbose(WebSocket, @"%@: Interface '%@' is mapped to index '%u'", self, interface, index);
-    int result = -1;
-    if (useIPv4) {
-        result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-    } else {
-        result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
-    }
-    
-    if (result < 0) {
-        int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to set network interface %@ with errno %d (%@)",
-                                 interface, errNo, addrInfo(_addr));
-        CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        if (outError) *outError = posixError(errNo, msg);
-        return false;
-    }
-    
-    CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %@ to socket option", self, interface);
-    return true;
-}
 
 - (void) configureSOCKS {
     if (_logic.proxyType == kCBLSOCKSProxy) {
@@ -1022,6 +1013,11 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         close(_sockfd);
         self.sockfd = -1;
     }
+    
+    if (_dnsService) {
+        [_dnsService stop];
+        _dnsService = nil;
+    }
 }
 
 #pragma mark - Helper
@@ -1063,40 +1059,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     return [NSArray arrayWithArray: cookies];
 }
 
-static NSString* getIPAddress(const struct sockaddr* addr) {
-    NSString* ipaddr = @"Unknown";
-    if (addr->sa_family == AF_INET) {
-        char addrBuf[INET_ADDRSTRLEN];
-        if (inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, addrBuf, INET_ADDRSTRLEN) != NULL) {
-            ipaddr = [NSString stringWithUTF8String: addrBuf];
-        }
-    } else {
-        char addrBuf[INET6_ADDRSTRLEN];
-        if (inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, addrBuf, INET6_ADDRSTRLEN) != NULL) {
-            ipaddr = [NSString stringWithUTF8String: addrBuf];
-        }
-    }
-    return ipaddr;
-}
-
 #pragma mark - Error helper
 
 static inline NSError* posixError(int errNo, NSString* msg) {
     return [NSError errorWithDomain: NSPOSIXErrorDomain
                                code: errNo
                            userInfo: @{NSLocalizedDescriptionKey : msg}];
-}
-
-static inline NSError* addrInfoError(int res, NSString* msg) {
-    return [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
-                               code: kCFHostErrorUnknown
-                           userInfo: @{NSLocalizedDescriptionKey: msg,
-                                       (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
-}
-
-static inline NSString* addrInfo(const struct addrinfo* addr) {
-    return $sprintf(@"ip=%@, family=%d, socktype=%d, protocol=%d",
-                    getIPAddress(addr->ai_addr), addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 }
 
 @end
