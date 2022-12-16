@@ -79,42 +79,46 @@
 }
 
 - (void) testDeleteDefaultCollection {
-    // delete
-    NSError* error = nil;
-    Assert([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error]);
-    AssertNil(error);
-    
-    CBLCollection* col = [self.db defaultCollection: &error];
-    AssertNil(col);
-    AssertEqual(error.code, CBLErrorNotFound);
-    AssertEqual(error.domain, CBLErrorDomain);
-    
-    // try to recreate the default collection
-    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
-        return [self.db createCollectionWithName: kCBLDefaultCollectionName
-                                           scope: nil error: e] != nil;
+    // exception 
+    [self ignoreException: ^{
+        NSError* err = nil;
+        AssertFalse([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &err]);
+        AssertEqual(err.code, CBLErrorInvalidParameter);
+        AssertEqual(err.domain, CBLErrorDomain);
     }];
     
-    col = [self.db defaultCollection: &error];
-    AssertNil(col);
-    AssertEqual(error.code, CBLErrorNotFound);
-    AssertEqual(error.domain, CBLErrorDomain);
+    NSError* error = nil;
+    CBLCollection* col = [self.db defaultCollection: &error];
+    AssertNotNil(col);
+    AssertEqualObjects(col.name, kCBLDefaultCollectionName);
+    AssertEqualObjects(col.scope.name, kCBLDefaultScopeName);
+    
+    // try to create the default collection
+    col = [self.db createCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
+    AssertNotNil(col);
+    AssertEqualObjects(col.name, kCBLDefaultCollectionName);
+    AssertEqualObjects(col.scope.name, kCBLDefaultScopeName);
 }
 
 - (void) testGetDefaultScopeAfterDeleteDefaultCollection {
     // delete the default collection
-    NSError* error = nil;
-    Assert([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error]);
-    AssertNil(error);
+    
+    [self ignoreException: ^{
+        NSError* err = nil;
+        AssertFalse([self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &err]);
+        AssertEqual(err.code, CBLErrorInvalidParameter);
+        AssertEqual(err.domain, CBLErrorDomain);
+    }];
     
     // make sure scope exists
+    NSError* error = nil;
     CBLScope* scope = [self.db defaultScope: &error];
     AssertNotNil(scope, @"Default scope shouldn't be empty");
     AssertEqualObjects(scope.name, kCBLDefaultScopeName);
     AssertNil(error);
     
     NSArray* cols = [scope collections: &error];
-    AssertEqual(cols.count, 0);
+    AssertEqual(cols.count, 1);
     AssertNil(error);
     
     NSArray<CBLScope*>* scopes = [self.db scopes: &error];
@@ -123,7 +127,7 @@
     AssertNil(error);
     
     cols = [self.db collections: kCBLDefaultScopeName error: &error];
-    AssertEqual(cols.count, 0);
+    AssertEqual(cols.count, 1);
     AssertNil(error);
 }
 
@@ -951,102 +955,6 @@
         return [self.db deleteCollectionWithName:@"colA" scope: @"scopeA" error: error];
     }];
 }
-
-#pragma mark - 8.9 default collection deleted
-
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-- (void) testUseDatabaseAPIWhenDefaultCollectionIsDeleted {
-    NSError* error = nil;
-    CBLCollection* col = [self.db defaultCollection: &error];
-    AssertNotNil(col);
-    AssertNil(error);
-    [self createDocNumbered: col start: 0 num: 10];
-    CBLDocument* doc = [col documentWithID: @"doc4" error: nil];
-    id token = [self.db addChangeListener:^(CBLDatabaseChange *change) { }];
-    
-    [self.db deleteCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
-    
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db documentWithID: @"doc-1"];
-    }];
-    // save functions
-    CBLMutableDocument* mdoc = [CBLMutableDocument document];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db saveDocument: mdoc error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db saveDocument: mdoc
-              conflictHandler: ^BOOL(CBLMutableDocument*d1, CBLDocument*d2) { return YES; }
-                        error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db saveDocument: mdoc
-           concurrencyControl: kCBLConcurrencyControlLastWriteWins
-                        error: nil];
-    }];
-    
-    // delete functions
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db deleteDocument: doc error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db deleteDocument: doc
-             concurrencyControl: kCBLConcurrencyControlLastWriteWins
-                          error: nil];
-    }];
-    
-    // purge functions
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db purgeDocument: doc error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db purgeDocumentWithID: @"doc2" error: nil];
-    }];
-    
-    // doc expiry
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db setDocumentExpirationWithID: @"doc-1" expiration: [NSDate date] error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db getDocumentExpirationWithID: @"doc-1"];
-    }];
-    
-    // indexes
-    CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName"]];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db createIndexWithConfig: config name: @"index1" error: nil];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db indexes];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db deleteIndexForName: @"index1" error: nil];
-    }];
-    
-    // change listener
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db addChangeListener:^(CBLDatabaseChange *change) { }];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        dispatch_queue_t q1 = dispatch_queue_create(@"dispatch-queue-1".UTF8String, DISPATCH_QUEUE_SERIAL);
-        [self.db addChangeListenerWithQueue: q1 listener:^(CBLDatabaseChange *change) { }];
-    }];
-    
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange* change) { }];
-    }];
-    [self expectException: NSInternalInconsistencyException in: ^{
-        dispatch_queue_t q2 = dispatch_queue_create(@"dispatch-queue-2".UTF8String, DISPATCH_QUEUE_SERIAL);
-        [self.db addDocumentChangeListenerWithID: @"doc1" queue: q2 listener: ^(CBLDocumentChange* change) { }];
-    }];
-    
-    [self expectException: NSInternalInconsistencyException in: ^{
-        [self.db removeChangeListenerWithToken: token];
-    }];
-}
-#pragma clang diagnostic pop
 
 #pragma mark - 8.9 all collections deleted under scope
 
