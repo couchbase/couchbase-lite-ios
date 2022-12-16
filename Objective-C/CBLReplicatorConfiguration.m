@@ -39,6 +39,7 @@
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize networkInterface=_networkInterface;
+@synthesize experimentalType=_experimentalType;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
@@ -123,6 +124,11 @@
     _networkInterface = networkInterface;
 }
 
+- (void) setExperimentalType:(CBLNetworkInterfaceExperimentalType)experimentalType {
+    [self checkReadonly];
+    _experimentalType = experimentalType;
+}
+
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
     _documentIDs = documentIDs;
@@ -194,6 +200,7 @@
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
+        _experimentalType = config.experimentalType;
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
