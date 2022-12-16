@@ -30,6 +30,18 @@ public enum ReplicatorType: UInt8 {
     case pull
 }
 
+/// Network Interface Experimental type
+/// 
+/// - useDNSService: use the DNSServiceGetAddrInfo function to resolve the DNS.
+/// - useNetworkFramework: use network framework to specify the network interface.
+/// - useBindFunction: use bind() function to bind socket to the specified network interface.
+public enum NetworkInterfaceExperimentalType: UInt8 {
+    case none = 0
+    case useDNSService
+    case useNetworkFramework
+    case useBindFunction
+}
+
 /// Document flags describing a replicated document.
 public struct DocumentFlags: OptionSet {
     
@@ -86,6 +98,12 @@ public struct ReplicatorConfiguration {
     
     /// Specific network interface for connecting to the remote target.
     public var networkInterface: String?
+    
+    /// (Volatile API : Will be removed in the release version)
+    /// Experiment to use different types instead of setting the socket option alone.
+    ///
+    /// More info ``NetworkInterfaceExperimentalType``
+    public var experimentType: NetworkInterfaceExperimentalType = .useBindFunction
     
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
@@ -214,6 +232,7 @@ public struct ReplicatorConfiguration {
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
         self.networkInterface = config.networkInterface
+        self.experimentType = config.experimentType
         self.channels = config.channels
         self.documentIDs = config.documentIDs
         self.conflictResolver = config.conflictResolver
@@ -244,6 +263,7 @@ public struct ReplicatorConfiguration {
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.networkInterface = self.networkInterface;
+        c.experimentalType = CBLNetworkInterfaceExperimentalType(rawValue: UInt(self.experimentType.rawValue))!;
         c.channels = self.channels
         c.documentIDs = self.documentIDs
         c.pushFilter = self.filter(push: true)

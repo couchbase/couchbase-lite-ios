@@ -35,6 +35,14 @@ typedef NS_ENUM(NSUInteger, CBLReplicatorType) {
     kCBLReplicatorTypePull                          ///< Pulling changes from the target
 };
 
+/** Network Interface experimental type. */
+typedef NS_ENUM(NSUInteger, CBLNetworkInterfaceExperimentalType) {
+    kCBLNetworkInterfaceExperimentalTypeNone = 0,
+    kCBLNetworkInterfaceExperimentalTypeUseDNSService,          /// use the DNSServiceGetAddrInfo function to resolve the DNS
+    kCBLNetworkInterfaceExperimentalTypeUseNetworkFramework,    /// use network framework to specify the network interface.
+    kCBLNetworkInterfaceExperimentalTypeUseBindFunction         /// use bind() function to bind socket to the specified network interface.
+};
+
 /** Replication Filter */
 typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags flags);
 
@@ -82,6 +90,14 @@ typedef BOOL (^CBLReplicationFilter) (CBLDocument* document, CBLDocumentFlags fl
  Specific network interface (e.g. en0 and pdp_ip0) for connecting to the remote target.
  */
 @property (nonatomic, nullable) NSString* networkInterface;
+
+/**
+ (Volatile API : Will be removed in the release version)
+ Experiment to use different types instead of setting the socket option alone.
+ 
+ More info ``CBLNetworkInterfaceExperimentalType``
+ */
+@property (nonatomic) CBLNetworkInterfaceExperimentalType experimentalType;
 
 /**
  A set of Sync Gateway channel names to pull from. Ignored for push replication.
