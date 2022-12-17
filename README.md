@@ -25,7 +25,7 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-ios.git", 
-                 from: "3.0.2"),
+                 from: "3.0.7"),
     ],
 ```
 
@@ -35,7 +35,7 @@ dependencies: [
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-swift-ee.git", 
-                 from: "3.0.2"),
+                 from: "3.0.7"),
     ],
 ```
 
