@@ -444,7 +444,7 @@ static void doDispose(C4Socket* s) {
     }
     
     CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %u to socket option",
-                  self, info.interface);
+                  self, (unsigned int)info.interface);
     
     // Connect:
     dispatch_async(_socketConnectQueue, ^{
@@ -487,7 +487,7 @@ static void doDispose(C4Socket* s) {
             });
         } else {
             int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to connect via the specified network interface %u with errno %d", info.interface, errNo);
+            NSString* msg = $sprintf(@"Failed to connect via the specified network interface %u with errno %d", (unsigned int)info.interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             NSError* error = posixError(errNo, msg);
             dispatch_async(_queue, ^{
