@@ -95,7 +95,7 @@
 @end
 
 #define kTimeoutInterval 10.0
-#define kWaitingInterval 0.5
+#define kWaitingInterval 2.0
 
 @implementation CBLDNSService {
     NSString* _host;
