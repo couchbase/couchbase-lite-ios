@@ -87,7 +87,8 @@ extern NSString* const kCBLDefaultCollectionName;
  @param error On return, the error if any.
  @return The CBLDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID error: (NSError**)error;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID
+                                   error: (NSError**)error NS_SWIFT_NOTHROW;
 
 #pragma mark - Save, Delete, Purge
 
