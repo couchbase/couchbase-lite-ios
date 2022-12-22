@@ -1554,6 +1554,9 @@
         @[@"a1=b1;expires=Sun Nov  6 08:49:37 1994       ;Path=/",
           @[@"a1=b1;expires=Sun Nov  6 08:49:37 1994;Path=/"]],
         
+        // GCLB cookie format => removes in between spaces as well
+        @[@"GCLB=gclbValue1; path=/; HttpOnly; expires=Tue, 22-Nov-2022 07:21:38 GMT",
+          @[@"GCLB=gclbValue1;path=/;HttpOnly;expires=Tue, 22-Nov-2022 07:21:38 GMT"]],
     ];
     
     for (NSArray* input in inputs) {
