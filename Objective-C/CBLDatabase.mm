@@ -346,9 +346,8 @@ static const C4DatabaseConfig2 kDBConfig = {
     
     CBL_LOCK(_mutex) {
         NSError* exception = nil;
-        [self mustBeOpen exception];
-        if (err) {
-            transaction.abort();
+        [self mustBeOpen: &exception];
+        if (exception) {
             return createError(CBLErrorUnexpectedError,
                                [NSString stringWithFormat: @"%@", exception.localizedDescription],
                                outError);
