@@ -28,6 +28,7 @@
 #import "CBLUnaryExpression.h"
 #import "CBLValueExpression.h"
 #import "CBLJSON.h"
+#import "CBLQueryFullTextIndexExpression.h"
 
 @implementation CBLQueryExpression
 
@@ -314,6 +315,14 @@
     CBLAssertNotNil(collation);
     
     return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
+}
+
+#pragma mark - FullTextIndex
+
++ (id<CBLQueryFullTextIndexExpressionProtocol>) fullTextIndex:(NSString *)indexName {
+    CBLAssertNotNil(indexName);
+    
+    return [[CBLQueryFullTextIndexExpression alloc] init: indexName];
 }
 
 #pragma mark - Internal 
