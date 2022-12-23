@@ -437,7 +437,8 @@ __deprecated_msg("Use [[database defaultCollection] indexes] instead.");
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error;
+- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error
+__deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:error:] instead.");
 
 /**
  Creates an index using IndexConfiguration, which could be a value index or a full-text search index with the given name.

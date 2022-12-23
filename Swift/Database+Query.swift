@@ -44,6 +44,7 @@ extension Database : QueryFactory {
     ///   - index: The index.
     ///   - name: The index name.
     /// - Throws: An error on a failure.
+    @available(*, deprecated, message: "Use database.defaultCollection().createIndex(:name:) instead.")
     public func createIndex(_ index: Index, withName name: String) throws {
         try impl.createIndex(index.toImpl(), withName: name)
     }
