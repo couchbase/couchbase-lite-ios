@@ -19,6 +19,7 @@
 
 #import "CBLQueryFullTextFunction.h"
 #import "CBLFunctionExpression.h"
+#import "CBLQueryFullTextIndexExpression.h"
 
 @implementation CBLQueryFullTextFunction
 
@@ -38,6 +39,24 @@
     CBLQueryExpression* queryExpr = [CBLQueryExpression string: query];
     return [[CBLFunctionExpression alloc] initWithFunction: @"MATCH()"
                                                     params: @[indexNameExpr, queryExpr]];
+}
+
++ (CBLQueryExpression*) rankWithIndex: (id<CBLQueryIndexExpressionProtocol>)index {
+    CBLAssertNotNil(index);
+    
+    CBLQueryExpression* indexExpr = [CBLQueryExpression string: ((CBLQueryFullTextIndexExpression*)index).stringValue];
+    return [[CBLFunctionExpression alloc] initWithFunction: @"RANK()"
+                                                    params: @[indexExpr]];
+}
+
++ (CBLQueryExpression*) matchWithIndex:(id<CBLQueryIndexExpressionProtocol>)index query:(NSString *)query {
+    CBLAssertNotNil(index);
+    CBLAssertNotNil(query);
+    
+    CBLQueryExpression* indexExpr = [CBLQueryExpression string: ((CBLQueryFullTextIndexExpression*)index).stringValue];
+    CBLQueryExpression* queryExpr = [CBLQueryExpression string: query];
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MATCH()"
+                                                    params: @[indexExpr, queryExpr]];
 }
 
 @end
