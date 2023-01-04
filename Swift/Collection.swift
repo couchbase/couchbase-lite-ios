@@ -73,8 +73,17 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func document(id: String) throws -> Document? {
-        let implDoc = try impl.document(withID: id)
-        return Document(implDoc, collection: self)
+        var error: NSError?
+        let doc = impl.document(withID: id, error: &error)
+        if let err = error {
+            throw err
+        }
+
+        if let implDoc = doc {
+            return Document(implDoc, collection: self)
+        }
+        
+        return nil
     }
     
     /// Save a document into the collection. The default concurrency control, lastWriteWins,

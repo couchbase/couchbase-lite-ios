@@ -30,6 +30,18 @@ class CollectionTest: CBLTestCase {
         try super.tearDownWithError()
     }
     
+    // MARK: Get nonexisting doc
+    
+    func testGetNonExistingDoc() throws {
+        guard let collection = try self.db.defaultCollection() else {
+            XCTFail("Collection shouldn't be empty!")
+            return
+        }
+        
+        let doc = try collection.document(id: "NotExists");
+        XCTAssertNil(doc)
+    }
+    
     // MARK: Default Scope/Collection
     
     func testDefaultCollectionExists() throws {

@@ -33,6 +33,16 @@
     [super tearDown];
 }
 
+- (void) testGetNonExistingDoc {
+    NSError* error = nil;
+    CBLCollection* col = [self.db defaultCollection: &error];
+    AssertNil(error);
+    
+    CBLDocument* doc = [col documentWithID: @"nonExisting" error: &error];
+    AssertNil(error);
+    AssertNil(doc);
+}
+
 #pragma mark - Default Scope/Collection
 
 - (void) testDefaultCollectionExists {
