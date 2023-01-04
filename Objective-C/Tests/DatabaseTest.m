@@ -2309,13 +2309,13 @@
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
     
     CBLValueIndex* index1 = [CBLIndexBuilder valueIndexWithItems: @[fNameItem, lNameItem]];
-    Assert([colA createIndexWithName: @"index1" config: index1 error: &error],
+    Assert([colA createIndex: index1 name: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
     CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
-    Assert([colA createIndexWithName: @"index2" config: index2 error: &error],
+    Assert([colA createIndex: index2 name: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
@@ -2323,7 +2323,7 @@
     index3.language = @"es";
     index3.ignoreAccents = YES;
     
-    Assert([colA createIndexWithName: @"index3" config: index3 error: &error],
+    Assert([colA createIndex: index3 name: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     
     NSArray* names = [colA indexes: &error];

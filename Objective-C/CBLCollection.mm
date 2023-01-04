@@ -30,6 +30,7 @@
 #import "CBLErrorMessage.h"
 #import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
+#import "CBLIndex+Internal.h"
 #import "CBLScope.h"
 #import "CBLScope+Internal.h"
 #import "CBLStatus.h"
@@ -131,6 +132,29 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                                   c4IndexSpec,
                                   config.queryLanguage,
                                   config.indexType,
+                                  &options,
+                                  &c4err) || convertError(c4err, error);
+    }
+}
+
+- (BOOL) createIndex: (CBLIndex*)index name:(NSString*)name error: (NSError**)error {
+    CBLAssertNotNil(name);
+    CBLAssertNotNil(index);
+    
+    CBL_LOCK(_mutex) {
+        if (![self collectionIsValid: error])
+            return NO;
+
+        CBLStringBytes iName(name);
+        CBLStringBytes c4IndexSpec(index.getIndexSpecs);
+        C4IndexOptions options = index.indexOptions;
+
+        C4Error c4err = {};
+        return c4coll_createIndex(_c4col,
+                                  iName,
+                                  c4IndexSpec,
+                                  index.queryLanguage,
+                                  index.indexType,
                                   &options,
                                   &c4err) || convertError(c4err, error);
     }

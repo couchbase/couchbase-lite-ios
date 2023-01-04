@@ -18,6 +18,7 @@
 //
 
 #import "CBLIndexConfiguration.h"
+#import "CBLIndex.h"
 
 NS_ASSUME_NONNULL_BEGIN
 /** The Indexable interface defines a set of functions for managing the query indexes. */
@@ -30,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) createIndexWithName: (NSString*)name
                       config: (CBLIndexConfiguration*)config
                        error: (NSError**)error;
+
+/** Create an index with the index name and index. */
+- (BOOL) createIndex: (CBLIndex*)index name: (NSString*)name error: (NSError**)error;
 
 /** Delete an index by name. */
 - (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
