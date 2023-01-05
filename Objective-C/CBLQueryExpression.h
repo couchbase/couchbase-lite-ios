@@ -21,6 +21,7 @@
 @class CBLBlob;
 @class CBLQueryCollation;
 @class CBLVariableExpression;
+@protocol CBLQueryFullTextIndexExpressionProtocol;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -417,6 +418,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
+
+#pragma mark - FullTextIndexExpression
+
+/**
+ Create a full-text index expression referencing a full-text index with the given index name.
+ 
+ When there is a need to specify the data source in which the index has been created (e.g. in
+ multi-collection join statement, calls the from(_ alias: String) method from the returned
+ FullTextIndexExpressionProtocol object to specify the data source.
+ 
+ - Parameter indexName: The name of the full-text index.
+ - Returns: The full-text index expression referring to a full text index in the specified data source.
+ */
++ (id<CBLQueryFullTextIndexExpressionProtocol>) fullTextIndex: (NSString*)indexName;
 
 @end
 

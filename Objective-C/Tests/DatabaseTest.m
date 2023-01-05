@@ -22,6 +22,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLScope.h"
 #import "CollectionUtils.h"
+#import "CBLQueryFullTextIndexExpressionProtocol.h"
 
 @interface DatabaseTest : CBLTestCase
 @end
@@ -2330,6 +2331,102 @@
     AssertNil(error);
     AssertEqual(names.count, 3u);
     AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+}
+
+- (void) testFullTextIndexExpression {
+    NSError* error = nil;
+    CBLCollection* colA = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    // Create FTS index:
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"passage"];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
+    Assert([colA createIndexWithName: @"passageIndex" config: index2 error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setString: @"The boy said to the child, 'Mommy, I want a cat.'" forKey: @"passage"];
+    [self saveDocument: doc collection: colA];
+    
+    doc = [self createDocument: @"doc2"];
+    [doc setString: @"The mother replied 'No, you already have too many cats.'" forKey: @"passage"];
+    [self saveDocument: doc collection: colA];
+    
+    id plainIndex = [CBLQueryExpression fullTextIndex: @"passageIndex"];
+    id qualifiedIndex = [[CBLQueryExpression fullTextIndex: @"passageIndex"] from: @"colAa"];
+    
+    CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: [CBLQueryMeta id]];
+    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+                                         from: [CBLQueryDataSource collection: colA as: @"colAa"]
+                                        where: [CBLQueryFullTextFunction matchWithIndex: plainIndex query: @"cat"]];
+    
+    uint64_t numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
+        AssertEqualObjects([result stringAtIndex: 0], ($sprintf(@"doc%llu", n)));
+    }];
+    AssertEqual(numRows, 2);
+    
+    query = [CBLQueryBuilder select: @[S_DOCID]
+                               from: [CBLQueryDataSource collection: colA as: @"colAa"]
+                              where: [CBLQueryFullTextFunction matchWithIndex: qualifiedIndex query: @"cat"]];
+    numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
+        AssertEqualObjects([result stringAtIndex: 0], ($sprintf(@"doc%llu", n)));
+    }];
+    AssertEqual(numRows, 2);
+}
+
+// TODO: https://issues.couchbase.com/browse/CBL-3994
+- (void) testFTSQueryWithJoin {
+    NSError* error = nil;
+    CBLCollection* colA = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNil(error);
+    
+    // Create FTS index:
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"passage"];
+    CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
+    Assert([colA createIndexWithName: @"passageIndex" config: index2 error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [doc setString: @"The boy said to the child, 'Mommy, I want a cat.'" forKey: @"passage"];
+    [doc setString: @"en" forKey: @"lang"];
+    [self saveDocument: doc collection: colA];
+    
+    doc = [self createDocument: @"doc2"];
+    [doc setString: @"The mother replied 'No, you already have too many cats.'" forKey: @"passage"];
+    [doc setString: @"en" forKey: @"lang"];
+    [self saveDocument: doc collection: colA];
+    
+    
+    id qualifiedIndex = [[CBLQueryExpression fullTextIndex: @"passageIndex"] from: @"main"];
+    
+    CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
+    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource collection: colA as: @"secondary"]
+                                             on: [[CBLQueryExpression property: @"lang" from: @"main"] equalTo:
+                                                  [CBLQueryExpression property: @"lang" from: @"secondary"]]];
+    
+//    TODO: https://issues.couchbase.com/browse/CBL-3994
+//    id plainIndex = [CBLQueryExpression fullTextIndex: @"passageIndex"];
+//    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+//                                         from: [CBLQueryDataSource collection: colA as: @"main"]
+//                                         join: @[join]
+//                                        where: [CBLQueryFullTextFunction matchWithIndex: plainIndex query: @"cat"]
+//                                      orderBy: @[[[CBLQueryOrdering expression: [CBLQueryMeta idFrom: @"main"]] ascending]]];
+//
+//    uint64_t numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
+//        AssertEqualObjects([result stringAtIndex: 0], ($sprintf(@"doc%llu", n)));
+//    }];
+//    AssertEqual(numRows, 4);
+    
+    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
+                                         from: [CBLQueryDataSource collection: colA as: @"main"]
+                                         join: @[join]
+                                        where: [CBLQueryFullTextFunction matchWithIndex: qualifiedIndex query: @"cat"]
+                                      orderBy: @[[[CBLQueryOrdering expression: [CBLQueryMeta idFrom: @"main"]] ascending]]];
+    
+    uint64_t numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
+        Assert([[result stringAtIndex: 0] hasPrefix: @"doc"]);
+    }];
+    AssertEqual(numRows, 4);
 }
 
 - (void) testN1QLCreateIndexSanity {

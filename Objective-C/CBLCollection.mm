@@ -224,10 +224,18 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         if (![self collectionIsValid: error])
             return nil;
         
-        return [[CBLDocument alloc] initWithCollection: self
-                                            documentID: documentID
-                                        includeDeleted: NO
-                                                 error: error];
+        NSError* err = nil;
+        CBLDocument* doc = [[CBLDocument alloc] initWithCollection: self
+                                                        documentID: documentID
+                                                    includeDeleted: NO
+                                                             error: &err];
+        
+        if (!doc && err.code != CBLErrorNotFound) {
+            if (error)
+                *error = err;
+        }
+        
+        return doc;
     }
 }
 
