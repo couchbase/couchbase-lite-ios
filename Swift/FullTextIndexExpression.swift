@@ -49,7 +49,6 @@ internal class FullTextIndexExpression: FullTextIndexExpressionProtocol {
         if let alias = self.alias {
             return "\(alias).\(self.name)"
         }
-        
         return self.name
     }
     
