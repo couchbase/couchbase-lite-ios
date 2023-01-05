@@ -2341,7 +2341,7 @@
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"passage"];
     CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
-    Assert([colA createIndexWithName: @"passageIndex" config: index2 error: &error],
+    Assert([colA createIndex: index2 name: @"passageIndex" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
@@ -2383,7 +2383,7 @@
     // Create FTS index:
     CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"passage"];
     CBLFullTextIndex* index2 = [CBLIndexBuilder fullTextIndexWithItems: @[detailItem]];
-    Assert([colA createIndexWithName: @"passageIndex" config: index2 error: &error],
+    Assert([colA createIndex: index2 name: @"passageIndex" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
