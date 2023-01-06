@@ -222,7 +222,7 @@ static void doDispose(C4Socket* s) {
 }
 
 - (void) dealloc {
-    CBLLogVerbose(WebSocket, @"DEALLOC %@", self);
+    CBLLogVerbose(WebSocket, @"%@: DEALLOC...", self);
     Assert(!_in);
     Assert(_sockfd < 0);
     free(_readBuffer);
@@ -233,7 +233,7 @@ static void doDispose(C4Socket* s) {
 }
 
 - (void) dispose {
-    CBLLogVerbose(WebSocket, @"C4Socket of %@ is being disposed", self);
+    CBLLogVerbose(WebSocket, @"%@: C4Socket of is being disposed", self);
     // This has to be done synchronously, because _c4socket will be freed when this method returns
     auto socket = _c4socket.exchange(nullptr);
     if (socket)
@@ -279,21 +279,21 @@ static void doDispose(C4Socket* s) {
                         c4cert_release(c4cert);
                         return;
                     }
-                    CBLWarnError(Sync, @"Couldn't lookup the identity from the KeyChain: %@", error);
+                    CBLWarnError(Sync, @"%@: Couldn't lookup the identity from the KeyChain: %@", self, error);
                 } else {
-                    CBLWarnError(Sync, @"Client Cert Auth is not supported by macOS < 10.12 and iOS < 10.0");
+                    CBLWarnError(Sync, @"%@: Client Cert Auth is not supported by macOS < 10.12 and iOS < 10.0", self);
                 }
                 c4cert_release(c4cert);
             } else {
                 NSError* error;
                 convertError(err, &error);
-                CBLWarnError(Sync, @"Couldn't create C4Cert from the certificate data: %@", error);
+                CBLWarnError(Sync, @"%@: Couldn't create C4Cert from the certificate data: %@", self, error);
             }
         }
     }
 #endif
 
-    CBLWarn(Sync, @"Unknown auth type or missing parameters for auth");
+    CBLWarn(Sync, @"%@: Unknown auth type or missing parameters for auth", self);
 }
 
 - (void) callC4Socket: (void (^)(C4Socket*))callback {
@@ -326,7 +326,6 @@ static void doDispose(C4Socket* s) {
     _connectedThruProxy = NO;
 
     if (_networkInterface) {
-        CBLLogInfo(WebSocket, @"%@ connecting thru network interface %@", self, _networkInterface);
         [self connectToHostWithName: _logic.directHost
                                port: _logic.directPort
                    networkInterface: _networkInterface];
@@ -358,12 +357,12 @@ static void doDispose(C4Socket* s) {
     [_out open];
 
     if (_connectingToProxy) {
-        CBLLogInfo(WebSocket, @"%@ connecting to HTTP proxy %@:%d...",
+        CBLLogInfo(WebSocket, @"%@: Connecting to HTTP proxy %@:%d...",
                    self, _logic.directHost, _logic.directPort);
         _logic.useProxyCONNECT = YES;
         [self writeData: _logic.HTTPRequestData completionHandler: nil];
     } else {
-        CBLLogInfo(WebSocket, @"%@ connecting to %@:%d...", self, _logic.URL.host, _logic.port);
+        CBLLogInfo(WebSocket, @"%@: Sending WebSocket request to %@:%d...", self, _logic.URL.host, _logic.port);
         [self _sendWebSocketRequest];
     }
 }
@@ -372,6 +371,8 @@ static void doDispose(C4Socket* s) {
                           port: (NSInteger)port
               networkInterface: (NSString*)interface
 {
+    CBLLogInfo(WebSocket, @"%@: Connect to host '%@' port '%ld' interface '%@'",
+               self, hostname, (long)port, interface);
     // Get address info:
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -507,8 +508,8 @@ static void doDispose(C4Socket* s) {
         } else {
             int errNo = errno;
             NSString* msg = interface ?
-                $sprintf(@"Failed to connect via the specified network interface %@ with errno %d", interface, errNo) :
-                $sprintf(@"Failed to connect with errno %d", errNo);
+            $sprintf(@"Failed to connect via the specified network interface %@ with errno %d", interface, errNo) :
+            $sprintf(@"Failed to connect with errno %d", errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             NSError* error = posixError(errNo, msg);
             dispatch_async(_queue, ^{
@@ -627,7 +628,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
 - (void) configureTLS {
     _checkSSLCert = false;
     if (_logic.useTLS) {
-        CBLLogVerbose(WebSocket, @"%@ enabling TLS", self);
+        CBLLogVerbose(WebSocket, @"%@: Enabling TLS...", self);
         NSMutableDictionary* settings = [NSMutableDictionary dictionary];
         if (_connectedThruProxy)
             [settings setObject: _logic.directHost
@@ -649,7 +650,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
         
         if (![_in setProperty: settings
                        forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
-            CBLWarnError(WebSocket, @"%@ failed to set SSL settings", self);
+            CBLWarnError(WebSocket, @"%@: Failed to set SSL settings", self);
         }
         
         _checkSSLCert = true;
@@ -693,7 +694,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
     NSString* cookie = [_db getCookies: _remoteURL error: &error];
     if (error) {
         // in case database is not open: CBL-2657
-        CBLWarn(Sync, @"Error while fetching cookies: %@", error);
+        CBLWarn(Sync, @"%@: Error while fetching cookies: %@", self, error);
         [self closeWithError: error];
         return;
     }
@@ -718,7 +719,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
 
 // Parses the HTTP response.
 - (void) receivedHTTPResponseBytes: (const void*)bytes length: (size_t)length {
-    CBLLogVerbose(WebSocket, @"Received %zu bytes of HTTP response", length);
+    CBLLogVerbose(WebSocket, @"%@: Received %zu bytes of HTTP response", self, length);
 
     if (!CFHTTPMessageAppendBytes(_httpResponse, (const UInt8*)bytes, length)) {
         // Error reading response!
@@ -761,7 +762,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
     [self clearHTTPState];
     [self configureTLS];
 
-    CBLLogInfo(WebSocket, @"%@ Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
+    CBLLogInfo(WebSocket, @"%@: Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
     [self _sendWebSocketRequest];
 }
 
@@ -819,7 +820,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
 
 // Notifies LiteCore that the WebSocket is connected.
 - (void) connected: (NSDictionary*)responseHeaders {
-    CBLLogInfo(WebSocket, @"CBLWebSocket CONNECTED!");
+    CBLLogInfo(WebSocket, @"%@: CBLWebSocket CONNECTED!", self);
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_opened(socket);
     }];
@@ -859,12 +860,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     NSData* data = [NSData dataWithBytesNoCopy: (void*)allocatedData.buf
                                         length: allocatedData.size
                                   freeWhenDone: NO];
-    CBLLogVerbose(WebSocket, @">>> sending %zu bytes...", allocatedData.size);
+    CBLLogVerbose(WebSocket, @"%@: >>> sending %zu bytes...", self, allocatedData.size);
     dispatch_async(_queue, ^{
         [self writeData: data completionHandler: ^() {
             size_t size = allocatedData.size;
             c4slice_free(allocatedData);
-            CBLLogVerbose(WebSocket, @"    (...sent %zu bytes)", size);
+            CBLLogVerbose(WebSocket, @"%@:    (...sent %zu bytes)", self, size);
             [self callC4Socket:^(C4Socket *socket) {
                 c4socket_completedWrite(socket, size);
             }];
@@ -875,8 +876,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 // Called when WebSocket data is received (NOT necessarily an entire message.)
 - (void) receivedBytes: (const void*)bytes length: (size_t)length {
     self->_receivedBytesPending += length;
-    CBLLogVerbose(WebSocket, @"<<< received %zu bytes [now %zu pending]",
-                  (size_t)length, self->_receivedBytesPending);
+    CBLLogVerbose(WebSocket, @"%@: <<< received %zu bytes [now %zu pending]",
+                  self, (size_t)length, self->_receivedBytesPending);
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_received(socket, {bytes, length});
     }];
@@ -894,7 +895,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
 // callback from C4Socket
 - (void) closeSocket {
-    CBLLogInfo(WebSocket, @"%@ CBLWebSocket closeSocket requested", self);
+    CBLLogInfo(WebSocket, @"%@: CBLWebSocket closeSocket requested", self);
     dispatch_async(_queue, ^{
         if (_in || _out || _sockfd >= 0) {
             [self closeWithError: nil];
@@ -913,7 +914,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     if (!_in)
         return;
 
-    CBLLogInfo(WebSocket, @"CBLWebSocket CLOSING WITH STATUS %d \"%@\"", (int)code, reason);
+    CBLLogInfo(WebSocket, @"%@: CBLWebSocket CLOSING WITH STATUS %d \"%@\"", self, (int)code, reason);
     [self disconnect];
     nsstring_slice reasonSlice(reason);
     [self c4SocketClosed: c4error_make(WebSocketDomain, code, reasonSlice)];
@@ -923,7 +924,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeWithError: (NSError*)error {
     // This function is always called from queue.
     if (_closing) {
-        CBLLogVerbose(Sync, @"%@ Websocket is already closing. Ignoring the close.", self);
+        CBLLogVerbose(Sync, @"%@: Websocket is already closing. Ignoring the close.", self);
         return;
     }
     _closing = YES;
@@ -932,10 +933,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 
     C4Error c4err;
     if (error) {
-        CBLLogInfo(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@", error.my_compactDescription);
+        CBLLogInfo(WebSocket, @"%@: CBLWebSocket CLOSED WITH ERROR: %@", self, error.my_compactDescription);
         convertError(error, &c4err);
     } else {
-        CBLLogInfo(WebSocket, @"CBLWebSocket CLOSED");
+        CBLLogInfo(WebSocket, @"%@: CBLWebSocket CLOSED", self);
         c4err = {};
     }
     [self c4SocketClosed: c4err];
@@ -994,11 +995,11 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 #endif
     
     if (!credentials) {
-        CBLWarn(WebSocket, @"TLS handshake failed: %@", error.localizedDescription);
+        CBLWarn(WebSocket, @"%@: TLS handshake failed: %@", self, error.localizedDescription);
         [self closeWithError: error];
         return false;
     } else
-        CBLLogVerbose(WebSocket, @"TLS handshake succeeded");
+        CBLLogVerbose(WebSocket, @"%@: TLS handshake succeeded", self);
     
     return true;
 }
@@ -1020,7 +1021,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             }
         }
         else
-            CBLWarn(WebSocket, @"SecTrust has no certificates"); // Shouldn't happen
+            CBLWarn(WebSocket, @"%@: SecTrust has no certificates", self); // Shouldn't happen
     }
 }
 
@@ -1056,7 +1057,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void) doRead {
-    CBLLogVerbose(WebSocket, @"DoRead...");
+    CBLLogVerbose(WebSocket, @"%@: DoRead...", self);
     Assert(_hasBytes);
     _hasBytes = false;
     while (_in.hasBytesAvailable) {
@@ -1065,7 +1066,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         }
         NSInteger nBytes = [_in read: _readBuffer maxLength: kReadBufferSize];
-        CBLLogVerbose(WebSocket, @"DoRead read %zu bytes", nBytes);
+        CBLLogVerbose(WebSocket, @"%@: DoRead read %zu bytes", self, nBytes);
         if (nBytes <= 0)
             break;
         if (!_gotResponseHeaders)
@@ -1078,7 +1079,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void)stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            CBLLogVerbose(WebSocket, @"%@: OpenCompleted on %@", self, stream);
+            CBLLogVerbose(WebSocket, @"%@: Open Completed on %@", self, stream);
             break;
         case NSStreamEventHasBytesAvailable:
             Assert(stream == _in);
@@ -1095,12 +1096,12 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             [self doWrite];
             break;
         case NSStreamEventEndEncountered:
-            CBLLogVerbose(WebSocket, @"%@: EndEncountered on %s stream",
+            CBLLogVerbose(WebSocket, @"%@: End Encountered on %s stream",
                           self, ((stream == _out) ? "write" : "read"));
             [self closeWithError: nil];
             break;
         case NSStreamEventErrorOccurred:
-            CBLLogVerbose(WebSocket, @"%@: ErrorEncountered on %@", self, stream);
+            CBLLogVerbose(WebSocket, @"%@: Error Encountered on %@", self, stream);
             if (_checkSSLCert) {
                 SecTrustRef trust = [self copyTrustFromReadStream];
                 [self updateServerCertificateFromTrust:
@@ -1133,7 +1134,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 #pragma mark - Helper
 
 + (NSArray*) parseCookies: (NSString*) cookieStr {
-    Assert(cookieStr.length > 0, @"Trtying to parse empty cookie string");
+    Assert(cookieStr.length > 0, @"%@: Trying to parse empty cookie string", self);
     
     NSArray* rawAttrs = [cookieStr componentsSeparatedByString: @";"];
     
