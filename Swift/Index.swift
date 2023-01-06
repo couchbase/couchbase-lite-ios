@@ -20,7 +20,7 @@
 import Foundation
 
 /// Index protocol.
-public protocol Index : IndexConfiguration { }
+public protocol Index { }
 
 // MARK: Value Index
 

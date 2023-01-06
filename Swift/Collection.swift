@@ -285,6 +285,11 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         try impl.createIndex(withName: name, config: config.toImpl())
     }
     
+    /// Create an index with the index name and index instance.
+    public func createIndex(_ index: Index, name: String) throws {
+        try impl.createIndex(index.toImpl(), name: name)
+    }
+    
     /// Delete an index by name.
     public func deleteIndex(forName name: String) throws {
         try impl.deleteIndex(withName: name)

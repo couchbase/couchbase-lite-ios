@@ -563,7 +563,13 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
-    return [self createIndex: name withConfig: index error: error];
+    NSError *e = nil;
+    BOOL res = [[self defaultCollectionOrThrow] createIndex: index name: name error: &e];
+    throwIfNotOpenError(e);
+    
+    if (error)
+        *error = e;
+    return res;
 }
 
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
