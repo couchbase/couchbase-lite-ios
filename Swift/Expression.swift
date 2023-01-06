@@ -355,6 +355,19 @@ public final class Expression {
         return QueryExpression(CBLQueryExpression.not(expression.toImpl()))
     }
     
+    // MARK: FullTextIndexExpression
+    
+    /// Create a full-text index expression referencing a full-text index with the given index name.
+    ///
+    /// When there is a need to specify the data source in which the index has been created (e.g. in
+    /// multi-collection join statement, calls the from(_ alias: String) method from the returned
+    /// FullTextIndexExpressionProtocol object to specify the data source.
+    ///
+    /// - Parameter indexName: The name of the full-text index.
+    /// - Returns: The full-text index expression referring to a full text index in the specified data source.
+    public static func fullTextIndex(_ name: String) -> FullTextIndexExpressionProtocol {
+        return FullTextIndexExpression(alias: nil, name: name)
+    }
 }
 
 /* internal */ class QueryExpression: ExpressionProtocol, CustomStringConvertible {

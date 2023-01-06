@@ -72,5 +72,4 @@ public final class ArrayExpressionSatisfies {
             return CBLQueryArrayExpression.every(v, in: i, satisfies: s)
         }
     }
-    
 }

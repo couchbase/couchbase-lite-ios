@@ -1162,6 +1162,95 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(try colA.indexes(), ["index1", "index2", "index3", "index4", "index5"])
     }
     
+    func testFullTextIndexExpression() throws {
+        let colA = try self.db.createCollection(name: "colA")
+        
+        // Create FTS index:
+        let detailItem = FullTextIndexItem.property("passage")
+        let index2 = IndexBuilder.fullTextIndex(items: detailItem)
+        try colA.createIndex(index2, name: "passageIndex")
+        
+        var doc = createDocument("doc1")
+        doc.setString("The boy said to the child, 'Mommy, I want a cat.'", forKey: "passage")
+        try colA.save(document: doc)
+        
+        doc = createDocument("doc2")
+        doc.setString("The mother replied 'No, you already have too many cats.'", forKey: "passage")
+        try colA.save(document: doc)
+        
+        let plainIndex = Expression.fullTextIndex("passageIndex")
+        let qualifiedIndex = Expression.fullTextIndex("passageIndex").from("colAa")
+        
+        var query = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.collection(colA).as("colAa"))
+            .where(FullTextFunction.match(plainIndex, query: "cat"))
+        
+        var rows = try verifyQuery(query, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), "doc\(n)")
+        })
+        XCTAssertEqual(rows, 2);
+        
+        query = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.collection(colA).as("colAa"))
+            .where(FullTextFunction.match(qualifiedIndex, query: "cat"))
+        
+        rows = try verifyQuery(query, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), "doc\(n)")
+        })
+        XCTAssertEqual(rows, 2);
+    }
+    
+    func testFTSQueryWithJoin() throws {
+        let colA = try self.db.createCollection(name: "colA")
+        
+        // Create FTS index:
+        let detailItem = FullTextIndexItem.property("passage")
+        let index2 = IndexBuilder.fullTextIndex(items: detailItem)
+        try colA.createIndex(index2, name: "passageIndex")
+        
+        var doc = createDocument("doc1")
+        doc.setString("The boy said to the child, 'Mommy, I want a cat.'", forKey: "passage")
+        doc.setString("en", forKey: "lang")
+        try colA.save(document: doc)
+        
+        doc = createDocument("doc2")
+        doc.setString("The mother replied 'No, you already have too many cats.'", forKey: "passage")
+        doc.setString("en", forKey: "lang")
+        try colA.save(document: doc)
+        
+        let join = Join.leftJoin(DataSource.collection(colA).as("secondary")).on(
+            Expression.property("lang").from("main")
+                .equalTo(Expression.property("lang").from("secondary")))
+        
+        let plainIndex = Expression.fullTextIndex("passageIndex")
+        var query = QueryBuilder
+            .select(SelectResult.expression(Meta.id.from("main")))
+            .from(DataSource.collection(colA).as("main"))
+            .join(join)
+            .where(FullTextFunction.match(plainIndex, query: "cat"))
+            .orderBy(Ordering.expression(Meta.id.from("main")).ascending())
+        
+        var rows = try verifyQuery(query, block: { (n, r) in
+            XCTAssert(r.string(at: 0)!.hasPrefix("doc"))
+        })
+        XCTAssertEqual(rows, 4);
+        
+        let qualifiedIndex = Expression.fullTextIndex("passageIndex").from("main")
+        query = QueryBuilder
+            .select(SelectResult.expression(Meta.id.from("main")))
+            .from(DataSource.collection(colA).as("main"))
+            .join(join)
+            .where(FullTextFunction.match(qualifiedIndex, query: "cat"))
+            .orderBy(Ordering.expression(Meta.id.from("main")).ascending())
+        
+        rows = try verifyQuery(query, block: { (n, r) in
+            XCTAssert(r.string(at: 0)!.hasPrefix("doc"))
+        })
+        XCTAssertEqual(rows, 4);
+    }
+    
     func testN1QLCreateIndexSanity() throws {
         XCTAssertEqual(db.indexes.count, 0)
         

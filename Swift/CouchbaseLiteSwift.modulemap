@@ -101,6 +101,10 @@ framework module CouchbaseLiteSwift {
         header "CBLValueIndexConfiguration.h"
         header "CBLCollectionTypes.h"
         header "CBLDefaults.h"
+        header "CBLQueryFullTextIndexExpressionProtocol.h"
+        
+        // Internal
+        header "CBLQueryFullTextIndexExpression.h"
         
         // Swift Extensions:
         header "CBLArray+Swift.h"
