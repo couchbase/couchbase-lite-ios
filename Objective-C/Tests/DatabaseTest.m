@@ -2374,7 +2374,6 @@
     AssertEqual(numRows, 2);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-3994
 - (void) testFTSQueryWithJoin {
     NSError* error = nil;
     CBLCollection* colA = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
@@ -2404,26 +2403,25 @@
                                              on: [[CBLQueryExpression property: @"lang" from: @"main"] equalTo:
                                                   [CBLQueryExpression property: @"lang" from: @"secondary"]]];
     
-//    TODO: https://issues.couchbase.com/browse/CBL-3994
-//    id plainIndex = [CBLQueryExpression fullTextIndex: @"passageIndex"];
-//    CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
-//                                         from: [CBLQueryDataSource collection: colA as: @"main"]
-//                                         join: @[join]
-//                                        where: [CBLQueryFullTextFunction matchWithIndex: plainIndex query: @"cat"]
-//                                      orderBy: @[[[CBLQueryOrdering expression: [CBLQueryMeta idFrom: @"main"]] ascending]]];
-//
-//    uint64_t numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
-//        AssertEqualObjects([result stringAtIndex: 0], ($sprintf(@"doc%llu", n)));
-//    }];
-//    AssertEqual(numRows, 4);
-    
+    id plainIndex = [CBLQueryExpression fullTextIndex: @"passageIndex"];
     CBLQuery* query = [CBLQueryBuilder select: @[S_DOCID]
                                          from: [CBLQueryDataSource collection: colA as: @"main"]
                                          join: @[join]
-                                        where: [CBLQueryFullTextFunction matchWithIndex: qualifiedIndex query: @"cat"]
+                                        where: [CBLQueryFullTextFunction matchWithIndex: plainIndex query: @"cat"]
                                       orderBy: @[[[CBLQueryOrdering expression: [CBLQueryMeta idFrom: @"main"]] ascending]]];
-    
+
     uint64_t numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
+        Assert([[result stringAtIndex: 0] hasPrefix: @"doc"]);
+    }];
+    AssertEqual(numRows, 4);
+    
+    query = [CBLQueryBuilder select: @[S_DOCID]
+                               from: [CBLQueryDataSource collection: colA as: @"main"]
+                               join: @[join]
+                              where: [CBLQueryFullTextFunction matchWithIndex: qualifiedIndex query: @"cat"]
+                            orderBy: @[[[CBLQueryOrdering expression: [CBLQueryMeta idFrom: @"main"]] ascending]]];
+    
+    numRows = [self verifyQuery: query randomAccess: NO test: ^(uint64_t n, CBLQueryResult *result) {
         Assert([[result stringAtIndex: 0] hasPrefix: @"doc"]);
     }];
     AssertEqual(numRows, 4);

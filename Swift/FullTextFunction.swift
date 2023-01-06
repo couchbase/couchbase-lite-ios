@@ -30,7 +30,11 @@ public final class FullTextFunction {
     /// - Returns: The full-text rank function.
     @available(*, deprecated, message: "Use FullTextFunction.rank(withIndex:) instead.")
     public static func rank(_ indexName: String) -> ExpressionProtocol {
-        return QueryExpression(CBLQueryFullTextFunction.rank(withIndexName: indexName))
+        let index = Expression.fullTextIndex(indexName)
+        guard let i = index as? FullTextIndexExpression else {
+            fatalError("This scenario shouldn't happen! IndexExpProtocol only implemented on FullTextIndexExpression")
+        }
+        return QueryExpression(CBLQueryFullTextFunction.rank(withIndex: i.toImpl()))
     }
     
     /// Creates a full-text match expression with the given full-text index name and the query text
@@ -40,7 +44,11 @@ public final class FullTextFunction {
     /// - Returns: The full-text match function expression.
     @available(*, deprecated, message: "Use FullTextFunction.match(withIndex:query) instead.")
     public static func match(indexName: String, query: String) -> ExpressionProtocol {
-        return QueryExpression(CBLQueryFullTextFunction.match(withIndexName: indexName,
+        let index = Expression.fullTextIndex(indexName)
+        guard let i = index as? FullTextIndexExpression else {
+            fatalError("This scenario shouldn't happen! IndexExpProtocol only implemented on FullTextIndexExpression")
+        }
+        return QueryExpression(CBLQueryFullTextFunction.match(withIndex: i.toImpl(),
                                                               query: query))
     }
     

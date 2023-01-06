@@ -26,19 +26,15 @@
 + (CBLQueryExpression*) rank: (NSString*)indexName {
     CBLAssertNotNil(indexName);
     
-    CBLQueryExpression* indexNameExpr = [CBLQueryExpression string: indexName];
-    return [[CBLFunctionExpression alloc] initWithFunction: @"RANK()"
-                                                    params: @[indexNameExpr]];
+    return [self rankWithIndex: [CBLQueryExpression fullTextIndex: indexName]];
 }
 
 + (CBLQueryExpression*) matchWithIndexName: (NSString *)indexName query: (NSString *)query {
     CBLAssertNotNil(indexName);
     CBLAssertNotNil(query);
     
-    CBLQueryExpression* indexNameExpr = [CBLQueryExpression string: indexName];
-    CBLQueryExpression* queryExpr = [CBLQueryExpression string: query];
-    return [[CBLFunctionExpression alloc] initWithFunction: @"MATCH()"
-                                                    params: @[indexNameExpr, queryExpr]];
+    return [self matchWithIndex: [CBLQueryExpression fullTextIndex: indexName]
+                          query: query];
 }
 
 + (CBLQueryExpression*) rankWithIndex: (id<CBLQueryIndexExpressionProtocol>)index {

@@ -1202,7 +1202,6 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(rows, 2);
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-3994
     func testFTSQueryWithJoin() throws {
         let colA = try self.db.createCollection(name: "colA")
         
@@ -1221,20 +1220,32 @@ class DatabaseTest: CBLTestCase {
         doc.setString("en", forKey: "lang")
         try colA.save(document: doc)
         
-        let qualifiedIndex = Expression.fullTextIndex("passageIndex").from("main")
-        
         let join = Join.leftJoin(DataSource.collection(colA).as("secondary")).on(
             Expression.property("lang").from("main")
                 .equalTo(Expression.property("lang").from("secondary")))
         
-        let query = QueryBuilder
+        let plainIndex = Expression.fullTextIndex("passageIndex")
+        var query = QueryBuilder
+            .select(SelectResult.expression(Meta.id.from("main")))
+            .from(DataSource.collection(colA).as("main"))
+            .join(join)
+            .where(FullTextFunction.match(plainIndex, query: "cat"))
+            .orderBy(Ordering.expression(Meta.id.from("main")).ascending())
+        
+        var rows = try verifyQuery(query, block: { (n, r) in
+            XCTAssert(r.string(at: 0)!.hasPrefix("doc"))
+        })
+        XCTAssertEqual(rows, 4);
+        
+        let qualifiedIndex = Expression.fullTextIndex("passageIndex").from("main")
+        query = QueryBuilder
             .select(SelectResult.expression(Meta.id.from("main")))
             .from(DataSource.collection(colA).as("main"))
             .join(join)
             .where(FullTextFunction.match(qualifiedIndex, query: "cat"))
             .orderBy(Ordering.expression(Meta.id.from("main")).ascending())
         
-        let rows = try verifyQuery(query, block: { (n, r) in
+        rows = try verifyQuery(query, block: { (n, r) in
             XCTAssert(r.string(at: 0)!.hasPrefix("doc"))
         })
         XCTAssertEqual(rows, 4);
