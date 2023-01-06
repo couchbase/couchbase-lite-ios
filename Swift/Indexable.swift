@@ -27,6 +27,9 @@ public protocol Indexable {
     /// Create an index with the index name and config.
     func createIndex(withName name: String, config: IndexConfiguration) throws
     
+    /// Create an index with the index name and index. 
+    func createIndex(_ index: Index, name: String) throws;
+    
     /// Delete an index by name.
     func deleteIndex(forName name: String) throws
 
