@@ -157,8 +157,17 @@ public class Query {
     ///     - database  The database to query.
     ///     - expressions  String representing the query expression.
     init(database: Database, expressions: String) throws {
+        var error: NSError?
+        let result = database.impl.createQuery(expressions, error: &error)
+        if let err = error {
+            throw err
+        }
+        
+        if let res = result {
+            queryImpl = res
+        }
+        
         self.database = database
-        queryImpl = try database.impl.createQuery(expressions)
     }
 
     // MARK: Internal

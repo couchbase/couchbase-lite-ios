@@ -450,8 +450,17 @@ public final class Database {
     
     /// Get the default scope.
     public func defaultScope() throws -> Scope {
-        let s = try impl.defaultScope()
-        return Scope(s, db: self)
+        var error: NSError?
+        let result = impl.defaultScope(&error)
+        if let err = error {
+            throw err
+        }
+        
+        if let res = result {
+            return Scope(res, db: self)
+        }
+        
+        fatalError("Unknown error, scope shouldn't be empty")
     }
     
     /// Get scope names that have at least one collection.
@@ -470,65 +479,94 @@ public final class Database {
     /// value will be returned if there are no collections under the given scope’s name.
     /// Note: The default scope is exceptional, and it will always be returned.
     public func scope(name: String) throws -> Scope? {
-        do {
-            let s = try impl.scope(withName: name)
-            return Scope(s, db: self)
-        } catch let err as NSError {
+        var error: NSError?
+        let s = impl.scope(withName: name, error: &error)
+        if let err = error {
             if err.code == CBLErrorNotFound {
                 return nil
             }
             
             throw err
         }
+        
+        if let scope = s {
+            return Scope(scope, db: self)
+        }
+        
+        return nil
     }
     
     // MARK: Collections
     
     /// Get the default collection. If the default collection is deleted, nil will be returned.
     public func defaultCollection() throws  -> Collection? {
-        do {
-            let c = try impl.defaultCollection()
-            return Collection(c, db: self)
-        } catch let err as NSError {
+        var error: NSError?
+        let result = impl.defaultCollection(&error)
+        if let err = error {
             if err.code == CBLErrorNotFound {
                 return nil
             }
-            
             throw err
         }
+        if let res = result {
+            return Collection(res, db: self)
+        }
+        
+        return nil
     }
     
     /// Get all collections in the specified scope.
     public func collections(scope: String? = defaultScopeName) throws -> [Collection] {
         var collections = [Collection]()
-        let res = try impl.collections(scope)
-        
-        for c in res {
-            collections.append(Collection(c, db: self))
+        var error: NSError?
+        let res = impl.collections(scope, error: &error)
+        if let err = error {
+            throw err
         }
-        return collections
+        
+        if let r = res {
+            for c in r {
+                collections.append(Collection(c, db: self))
+            }
+            return collections
+        }
+        
+        return []
     }
     
     /// Create a named collection in the specified scope.
     /// If the collection already exists, the existing collection will be returned.
     public func createCollection(name: String, scope: String? = defaultScopeName) throws -> Collection {
-        let result = try impl.createCollection(withName: name, scope: scope)
-        return Collection(result, db: self)
+        var error: NSError?
+        let result = impl.createCollection(withName: name, scope: scope, error: &error)
+        if let err = error {
+            throw err
+        }
+        
+        if let res = result {
+            return Collection(res, db: self)
+        }
+        
+        fatalError("Unknown error, couldn't create collection")
     }
 
     /// Get a collection in the specified scope by name.
     /// If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String, scope: String? = defaultScopeName) throws -> Collection? {
-        do {
-            let c = try impl.collection(withName: name, scope: scope)
-            return Collection(c, db: self)
-        } catch let err as NSError {
+        var error: NSError?
+        let result = impl.collection(withName: name, scope: scope, error: &error)
+        if let err = error {
             if err.code == CBLErrorNotFound {
                 return nil
             }
-            
             throw err
         }
+        
+        if let res = result {
+            return Collection(res, db: self)
+        }
+        
+        return nil
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation

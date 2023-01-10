@@ -169,7 +169,7 @@ __deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instea
  @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
  */
 - (nullable NSSet<NSString*>*) pendingDocumentIDsForCollection: (CBLCollection*)collection
-                                                         error: (NSError**)error;
+                                                         error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  Check whether the document in the default collection is pending to push or not. If the default

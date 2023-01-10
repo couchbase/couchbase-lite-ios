@@ -78,11 +78,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         if let err = error {
             throw err
         }
-
         if let implDoc = doc {
             return Document(implDoc, collection: self)
         }
-        
         return nil
     }
     
@@ -110,17 +108,17 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func save(document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool {
-        do {
-            let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
-            try impl.save(document.impl as! CBLMutableDocument, concurrencyControl: cc)
-            return true
-        } catch let err as NSError {
+        var error: NSError?
+        let cc = concurrencyControl == .lastWriteWins ?
+            CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict
+        let result = impl.save(document.impl as! CBLMutableDocument, concurrencyControl: cc, error: &error)
+        if let err = error {
             if err.code == CBLErrorConflict {
                 return false
             }
             throw err
         }
+        return result
     }
     
     /// Save a document into the collection with a specified conflict handler. The specified conflict handler
@@ -135,20 +133,20 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
-        do {
-            try impl.save(
-                document.impl as! CBLMutableDocument,
-                conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
-                    return conflictHandler(document, old != nil ? Document(old!, collection: self) : nil)
-                }
-            )
-            return true
-        } catch let err as NSError {
+        
+        var error: NSError?
+        let result = impl.save(
+            document.impl as! CBLMutableDocument,
+            conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
+                return conflictHandler(document, old != nil ? Document(old!, collection: self) : nil)
+            }, error: &error)
+        if let err = error {
             if err.code == CBLErrorConflict {
                 return false
             }
             throw err
         }
+        return result
     }
     
     /// Delete a document from the collection. The default concurrency control, lastWriteWins, will be used
@@ -175,17 +173,18 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func delete(document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool {
-        do {
-            let cc = concurrencyControl == .lastWriteWins ?
-                CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict;
-            try impl.delete(document.impl, concurrencyControl: cc)
-            return true
-        } catch let err as NSError {
+        let cc = concurrencyControl == .lastWriteWins ?
+            CBLConcurrencyControl.lastWriteWins : CBLConcurrencyControl.failOnConflict
+        
+        var error: NSError?
+        let result = impl.delete(document.impl, concurrencyControl: cc, error: &error)
+        if let err = error {
             if err.code == CBLErrorConflict {
                 return false
             }
             throw err
         }
+        return result
     }
     
     /// When purging a document, the collection instance of the document and this collection instance
@@ -221,7 +220,12 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func getDocumentExpiration(id: String) throws -> Date? {
-        return try impl.getDocumentExpiration(withID: id)
+        var error: NSError?
+        let date = impl.getDocumentExpiration(withID: id, error: &error)
+        if let err = error {
+            throw err
+        }
+        return date
     }
     
     // MARK: Document Change Publisher
