@@ -109,6 +109,8 @@ public struct ReplicatorConfiguration {
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
     /// Sync Gateway.
+    ///
+    /// - Note:Channels are not supported in Peer-to-Peer
     @available(*, deprecated, message: """
                 Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
                 object instead

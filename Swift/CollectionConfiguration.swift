@@ -35,6 +35,8 @@ public struct CollectionConfiguration {
     /// Channels filter for specifying the channels for the pull the replicator will pull from. For any
     /// collections that do not have the channels filter specified, all accessible channels will be pulled. Push
     /// replicator will ignore this filter.
+    ///
+    /// - Note:Channels are not supported in Peer-to-Peer
     public var channels: Array<String>?
     
     /// Document IDs filter to limit the documents in the collection to be replicated with the remote endpoint.
