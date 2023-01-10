@@ -110,7 +110,7 @@ public struct ReplicatorConfiguration {
     /// Note: channels that are not accessible to the user will be ignored by
     /// Sync Gateway.
     ///
-    /// - Note:Channels are not supported in Peer-to-Peer
+    /// - Note:Channels are not supported in Peer-to-Peer and Database-to-Database replication.
     @available(*, deprecated, message: """
                 Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
                 object instead
