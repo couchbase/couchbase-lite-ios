@@ -44,7 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Channels filter for specifying the channels for the pull the replicator will pull from.
  For any collections that do not have the channels filter specified, all accessible
- channels will be pulled. Push replicator will ignore this filter. */
+ channels will be pulled. Push replicator will ignore this filter.
+ 
+ @Note: Channels are not supported in Peer-to-Peer and Database-to-Database replication.
+ */
 @property (nonatomic, nullable) NSArray<NSString*>* channels;
 
 /**

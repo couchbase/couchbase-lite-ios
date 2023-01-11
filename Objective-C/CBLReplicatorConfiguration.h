@@ -84,6 +84,8 @@ __deprecated_msg(" Use config.collections instead");
 /**
  Channels filter when using init(database:target:) to configure the default collection
  for the replication.
+ 
+ @Note: Channels are not supported in Peer-to-Peer and Database-to-Database replication.
  */
 @property (nonatomic, nullable) NSArray<NSString*>* channels
 __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]" \
