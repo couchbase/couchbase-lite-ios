@@ -111,7 +111,7 @@ __deprecated_msg("Use [database defaultCollection].count instead.");
  @return The CBLDocument object.
  */
 - (nullable CBLDocument*) documentWithID: (NSString*)id
-__deprecated_msg("Use [database defaultCollection] documentWithID:] instead.") NS_SWIFT_NOTHROW;
+__deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 #pragma mark - Subscript
