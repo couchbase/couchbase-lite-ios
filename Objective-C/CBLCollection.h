@@ -122,7 +122,7 @@ extern NSString* const kCBLDefaultCollectionName;
  */
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                error: (NSError**)error;
+                error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  Save a document into the collection with a specified conflict handler. The specified conflict handler
@@ -141,7 +141,7 @@ extern NSString* const kCBLDefaultCollectionName;
 */
 - (BOOL) saveDocument: (CBLMutableDocument*)document
       conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
-                error: (NSError**)error;
+                error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  Delete a document from the collection. The default concurrency control, lastWriteWins, will be used
@@ -173,7 +173,7 @@ extern NSString* const kCBLDefaultCollectionName;
  */
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                  error: (NSError**)error;
+                  error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  When purging a document, the collection instance of the document and this collection instance
@@ -219,7 +219,7 @@ extern NSString* const kCBLDefaultCollectionName;
  @return the expiration time of a document, if one has been set, else nil.
  */
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID
-                                           error: (NSError**)error;
+                                           error: (NSError**)error NS_SWIFT_NOTHROW;
 
 #pragma mark - Document change publisher
 

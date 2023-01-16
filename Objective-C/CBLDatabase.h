@@ -518,7 +518,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @return Scope object, or nil if an error occurred.
  */
 - (nullable CBLScope*) scopeWithName: (nullable NSString*)name
-                               error: (NSError**)error;
+                               error: (NSError**)error NS_SWIFT_NOTHROW;
 
 #pragma mark -- Collections
 
@@ -557,7 +557,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  */
 - (nullable CBLCollection*) collectionWithName: (NSString*)name
                                          scope: (nullable NSString*)scope
-                                         error: (NSError**)error;
+                                         error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
  Delete a collection by name  in the specified scope.
