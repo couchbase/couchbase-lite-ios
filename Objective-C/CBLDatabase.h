@@ -530,7 +530,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @return list of collections in the scope, or nil if an error occurred.
  */
 - (nullable NSArray<CBLCollection*>*) collections: (nullable NSString*)scope
-                                            error: (NSError**)error NS_SWIFT_NOTHROW;
+                                            error: (NSError**)error;
 
 /**
  Create a named collection in the specified scope.
@@ -543,7 +543,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  */
 - (nullable CBLCollection*) createCollectionWithName: (NSString*)name
                                                scope: (nullable NSString*)scope
-                                               error: (NSError**)error NS_SWIFT_NOTHROW;
+                                               error: (NSError**)error;
 
 /**
  Get a collection in the specified scope by name.
@@ -581,7 +581,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @param error On return, the error if any.
  @return Default Scope, or nil if an error occurred.
  */
-- (nullable CBLScope*) defaultScope: (NSError**)error NS_SWIFT_NOTHROW;
+- (nullable CBLScope*) defaultScope: (NSError**)error;
 
 /**
  Get the default collection. If the default collection is deleted, nil will be returned.
@@ -590,7 +590,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
         default collection is deleted.
  @return Default collection, or nil if an error occurred.
  */
-- (nullable CBLCollection*) defaultCollection: (NSError**)error NS_SWIFT_NOTHROW;
+- (nullable CBLCollection*) defaultCollection: (NSError**)error;
 
 @end
 

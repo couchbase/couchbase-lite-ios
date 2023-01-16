@@ -53,7 +53,7 @@ extern NSString* const kCBLDefaultScopeName;
  @param error On return, the error if any.
  @return Collections in the scope, or nil if an error occurred.
  */
-- (nullable NSArray<CBLCollection*>*) collections: (NSError**)error NS_SWIFT_NOTHROW;
+- (nullable NSArray<CBLCollection*>*) collections: (NSError**)error;
 
 /**
  Get a collection in the scope by name.

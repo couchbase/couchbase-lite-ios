@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param error On return, the error if any., the given query string is invalid(e.g., syntax error).
  @return query created using the given expression string, or nil if an error occurred.
  */
-- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error NS_SWIFT_NOTHROW;
+- (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error;
 
 @end
 
