@@ -429,6 +429,7 @@ public final class Database {
     /// original database. The encryption key specified in the given config is the encryption key
     /// used for both the original and copied database. To change or add the encryption key for
     /// the copied database, call Database.changeEncryptionKey(key) for the copy.
+    /// - Note: It is recommended to close the source database before calling this method.
     ///
     /// - Parameters:
     ///   - path: The source database path.
