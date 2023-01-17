@@ -375,6 +375,12 @@
 		69774C4C28361E5B00B1C793 /* CBLIndexable.h in Headers */ = {isa = PBXBuildFile; fileRef = 69774C4828361E5B00B1C793 /* CBLIndexable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69774C4D28361E5B00B1C793 /* CBLIndexable.h in Headers */ = {isa = PBXBuildFile; fileRef = 69774C4828361E5B00B1C793 /* CBLIndexable.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */; };
+		69ABB5E82976A5CA00DA0229 /* CBLDNSService.h in Headers */ = {isa = PBXBuildFile; fileRef = 69ABB5DB2976A5CA00DA0229 /* CBLDNSService.h */; };
+		69ABB5E92976A5CA00DA0229 /* CBLDNSService.h in Headers */ = {isa = PBXBuildFile; fileRef = 69ABB5DB2976A5CA00DA0229 /* CBLDNSService.h */; };
+		69ABB5EA2976A5CA00DA0229 /* CBLDNSService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */; };
+		69ABB5EB2976A5CA00DA0229 /* CBLDNSService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */; };
+		69ABB5EC2976A5DE00DA0229 /* CBLDNSService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */; };
+		69ABB5ED2976A5DF00DA0229 /* CBLDNSService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */; };
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A87A031E2E0E70008466FF /* CBLBlobStream.h */; };
 		72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
@@ -2162,6 +2168,8 @@
 		6932D4A529547B3700D28C18 /* CBLQueryFullTextIndexExpressionProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLQueryFullTextIndexExpressionProtocol.h; sourceTree = "<group>"; };
 		69774C4828361E5B00B1C793 /* CBLIndexable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexable.h; sourceTree = "<group>"; };
 		6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_xcframework.sh; sourceTree = "<group>"; };
+		69ABB5DB2976A5CA00DA0229 /* CBLDNSService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDNSService.h; sourceTree = "<group>"; };
+		69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDNSService.mm; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
 		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
@@ -2838,6 +2846,8 @@
 				9374A851201165AE00BA0D9E /* CBLURLEndpoint+Internal.h */,
 				2753AFF31EC39CA200C12E98 /* CBLWebSocket.h */,
 				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
+				69ABB5DB2976A5CA00DA0229 /* CBLDNSService.h */,
+				69ABB5E72976A5CA00DA0229 /* CBLDNSService.mm */,
 				93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */,
 				93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */,
 				1AA2EDF628A676E100DEB47E /* CBLConflictResolverBridge.h */,
@@ -4082,6 +4092,7 @@
 				1A3470C2266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */,
 				1AAFB6A5284A294300878453 /* CBLCollection+Internal.h in Headers */,
 				939B1B602009C0F200FAA3CB /* CBLQueryVariableExpression+Internal.h in Headers */,
+				69ABB5E82976A5CA00DA0229 /* CBLDNSService.h in Headers */,
 				938196341EC15F890032CC51 /* CBLStatus.h in Headers */,
 				93292D9E22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h in Headers */,
 				9381962D1EC15F470032CC51 /* CBLData.h in Headers */,
@@ -4460,6 +4471,7 @@
 				93E1873A211122EB001D52B9 /* MYURLUtils.h in Headers */,
 				9343F0D2207D61AB00F19A89 /* CBLQueryArrayExpression.h in Headers */,
 				1A3470C4266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */,
+				69ABB5E92976A5CA00DA0229 /* CBLDNSService.h in Headers */,
 				9343F0D3207D61AB00F19A89 /* CBLQueryFullTextFunction.h in Headers */,
 				934608F7247F85E300CF2F27 /* CBLTLSIdentity+Swift.h in Headers */,
 				9343F0D4207D61AB00F19A89 /* CBLDictionaryFragment.h in Headers */,
@@ -5558,6 +5570,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69ABB5EA2976A5CA00DA0229 /* CBLDNSService.mm in Sources */,
 				1A34714E2671C8800042C6BA /* CBLFullTextIndexConfiguration.m in Sources */,
 				9388CC4A21C25135005CA66D /* Logger.swift in Sources */,
 				93B503621E64B073002C4680 /* CBLBlob.mm in Sources */,
@@ -5887,6 +5900,7 @@
 				9343EF59207D611600F19A89 /* CBLReplicator.mm in Sources */,
 				9343EF5A207D611600F19A89 /* CBLBlobStream.mm in Sources */,
 				934EF8302460D0360053A47C /* CBLTLSIdentity.mm in Sources */,
+				69ABB5ED2976A5DF00DA0229 /* CBLDNSService.mm in Sources */,
 				937DDC3B2487644000CECA9D /* CBLCert.mm in Sources */,
 				9343EF5B207D611600F19A89 /* CBLQueryFunction.m in Sources */,
 				9343EF5C207D611600F19A89 /* CBLURLEndpoint.m in Sources */,
@@ -6038,6 +6052,7 @@
 				9343F03A207D61AB00F19A89 /* CBLDocumentChange.m in Sources */,
 				9343F03B207D61AB00F19A89 /* CBLParseDate.c in Sources */,
 				9343F03C207D61AB00F19A89 /* CBLUnaryExpression.m in Sources */,
+				69ABB5EB2976A5CA00DA0229 /* CBLDNSService.mm in Sources */,
 				9343F03D207D61AB00F19A89 /* CBLC4Document.mm in Sources */,
 				1AAFB685284A266F00878453 /* CollectionChange.swift in Sources */,
 				9343F03F207D61AB00F19A89 /* CBLReplicatorChange.m in Sources */,
@@ -6507,6 +6522,7 @@
 				939B1B2E200990FB00FAA3CB /* CBLValueExpression.m in Sources */,
 				1ACAB8C7266723AE00B4F8E5 /* main.m in Sources */,
 				9388CBE921BF7195005CA66D /* CBLLog.mm in Sources */,
+				69ABB5EC2976A5DE00DA0229 /* CBLDNSService.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
