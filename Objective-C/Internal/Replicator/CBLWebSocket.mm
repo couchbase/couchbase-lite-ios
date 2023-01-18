@@ -34,7 +34,6 @@
 #import <memory>
 #import <net/if.h>
 #import <arpa/inet.h>
-#import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
@@ -763,7 +762,6 @@ static inline NSError* posixError(int errNo, NSString* msg) {
         if (httpStatus >= 300 && httpStatus < 1000)
             closeCode = (C4WebSocketCloseCode)httpStatus;
         [self closeWithCode: closeCode reason: _logic.httpStatusMessage];
-        
     } else if (!checkHeader(headers, @"Connection", @"Upgrade", NO)) {
         [self closeWithCode: kWebSocketCloseProtocolError
                      reason: @"Invalid 'Connection' header"];
