@@ -34,12 +34,12 @@
 #import <memory>
 #import <net/if.h>
 #import <arpa/inet.h>
-#import <netdb.h>
 #import <vector>
 #import "CollectionUtils.h"
 #import "CBLURLEndpoint.h"
 #import "CBLStringBytes.h"
 #import <ifaddrs.h>
+#import "CBLDNSService.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLCert.h"
@@ -64,13 +64,13 @@ struct PendingWrite {
     :data(d)
     ,completionHandler(h)
     { }
-
+    
     NSData *data;
     size_t bytesWritten {0};
     void (^completionHandler)();
 };
 
-@interface CBLWebSocket () <NSStreamDelegate>
+@interface CBLWebSocket () <NSStreamDelegate, DNSServiceDelegate>
 
 // Socket descriptor for openning connection when a network interface is specified
 @property (atomic) int sockfd;
@@ -86,7 +86,7 @@ struct PendingWrite {
     std::atomic<C4Socket*> _c4socket;
     CFHTTPMessageRef _httpResponse;
     id _keepMeAlive;
-
+    
     NSInputStream* _in;
     NSOutputStream* _out;
     uint8_t* _readBuffer;
@@ -107,8 +107,9 @@ struct PendingWrite {
     BOOL _closing;
     
     NSString* _networkInterface;
-    struct addrinfo* _addr;
     dispatch_queue_t _socketConnectQueue;
+    
+    CBLDNSService* _dnsService;
 }
 
 @synthesize sockfd=_sockfd;
@@ -182,7 +183,7 @@ static void doDispose(C4Socket* s) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
         _replicator = (__bridge CBLReplicator*)context;
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+        // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _db = _replicator.config.database;
@@ -194,7 +195,7 @@ static void doDispose(C4Socket* s) {
         request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
-
+        
         slice proxy = _options["HTTPProxy"_sl].asString();      //TODO: Add to c4Replicator.h
         if (proxy) {
             NSURL* proxyURL = [NSURL URLWithDataRepresentation: proxy.uncopiedNSData()
@@ -204,14 +205,13 @@ static void doDispose(C4Socket* s) {
                         (int)proxy.size, (char *)proxy.buf);
             }
         }
-
+        
         [self setupAuth];
-
+        
         NSString* queueName = [NSString stringWithFormat: @"WebSocket-%@:%u", url.host, _logic.port];
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _sockfd = -1;
-        _addr = nullptr;
         _networkInterface = _replicator.config.networkInterface;
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
@@ -228,8 +228,6 @@ static void doDispose(C4Socket* s) {
     free(_readBuffer);
     if (_httpResponse)
         CFRelease(_httpResponse);
-    if (_addr)
-        freeaddrinfo(_addr);
 }
 
 - (void) dispose {
@@ -261,7 +259,7 @@ static void doDispose(C4Socket* s) {
         if (username && password) {
             _logic.credential = [NSURLCredential credentialWithUser: username
                                                            password: password
-                                                     persistence: NSURLCredentialPersistenceNone];
+                                                        persistence: NSURLCredentialPersistenceNone];
             return;
         }
     }
@@ -292,7 +290,7 @@ static void doDispose(C4Socket* s) {
         }
     }
 #endif
-
+    
     CBLWarn(Sync, @"%@: Unknown auth type or missing parameters for auth", self);
 }
 
@@ -321,10 +319,10 @@ static void doDispose(C4Socket* s) {
     _hasBytes = _hasSpace = false;
     _pendingWrites.clear();
     [self clearHTTPState];
-
+    
     _connectingToProxy = (_logic.proxyType == kCBLHTTPProxy);
     _connectedThruProxy = NO;
-
+    
     if (_networkInterface) {
         [self connectToHostWithName: _logic.directHost
                                port: _logic.directPort
@@ -355,7 +353,7 @@ static void doDispose(C4Socket* s) {
     
     [_in open];
     [_out open];
-
+    
     if (_connectingToProxy) {
         CBLLogInfo(WebSocket, @"%@: Connecting to HTTP proxy %@:%d...",
                    self, _logic.directHost, _logic.directPort);
@@ -373,88 +371,81 @@ static void doDispose(C4Socket* s) {
 {
     CBLLogInfo(WebSocket, @"%@: Connect to host '%@' port '%ld' interface '%@'",
                self, hostname, (long)port, interface);
-    // Get address info:
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
     
-    const char* cHost = [hostname cStringUsingEncoding: NSUTF8StringEncoding];
-    const char* cPort = [$sprintf(@"%ld", (long)port) cStringUsingEncoding: NSUTF8StringEncoding];
-    
-    int res = getaddrinfo(cHost, cPort, &hints, &_addr);
-    if (res) {
-        NSString* msg = $sprintf(@"Failed to get address info with error %d", res);
+    unsigned int index = if_nametoindex([interface cStringUsingEncoding: NSUTF8StringEncoding]);
+    if (index == 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
-        [self closeWithError: addrInfoError(res, msg)];
+        [self closeWithError: posixError(errNo, msg)];
         return;
     }
+    CBLLogVerbose(WebSocket, @"%@: Interface '%@' is mapped to index '%u'", self, _networkInterface, index);
     
-    CBLLogVerbose(WebSocket, @"%@: %@:%ld(%@) got address info as %@",
-                  self, hostname, (long)port, interface, addrInfo(_addr));
-    
-    // Create socket:
+    _dnsService = [[CBLDNSService alloc] initWithHost: hostname
+                                            interface: index
+                                                 port: (UInt16)port
+                                             delegate: self];
+    [_dnsService start];
+}
+
+#pragma mark DNSServiceDelegate
+
+- (void) didResolveSuccessWithAddress: (AddressInfo*)info {
+    dispatch_async(_queue, ^{
+        if (_dnsService) {
+            CBLLogVerbose(WebSocket, @"%@: Host '%@' was resolved as ip=%@, family=%d",
+                          self, info.host, info.addrstr, info.addr->sa_family);
+            [self _socketConnect: info];
+        }
+    });
+}
+
+- (void) didResolveFailWithError: (NSError*)error {
+    dispatch_async(_queue, ^{
+        if (_dnsService) {
+            CBLWarnError(WebSocket, @"%@: Host was failed to resolve with error '%@'",
+                         self, error.my_compactDescription);
+            [self closeWithError: error];
+        }
+    });
+}
+
+#pragma mark - Socket connect
+
+- (void) _socketConnect: (AddressInfo*)info {
     Assert(_sockfd < 0);
-    _sockfd = socket(_addr->ai_family, _addr->ai_socktype, _addr->ai_protocol);
+    _sockfd = socket(info.addr->sa_family, SOCK_STREAM, 0);
     if (_sockfd < 0) {
         int errNo = errno;
-        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, addrInfo(_addr));
+        NSString* msg = $sprintf(@"Failed to create socket with errno %d (%@)", errNo, info);
         CBLWarnError(WebSocket, @"%@: %@", self, msg);
         [self closeWithError: posixError(errNo, msg)];
         return;
     }
     
     // Set network interface:
-    if (interface) {
-        NSError* outError = nil;
-        NSString* intfName = [CBLWebSocket getNetworkInterfaceName: interface error: &outError];
-        
-        if (!intfName) {
-            NSString* msg = $sprintf(@"Failed to find network interface(%@) err: %@",
-                                     interface, outError);
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            
-            if (!outError)
-                outError = unknownInterfaceError(msg);
-            
-            [self closeWithError: outError];
-            return;
-        }
-        CBLLogVerbose(WebSocket, @"%@: Selected network interface %@", self, intfName);
-        
-        unsigned int index = if_nametoindex([intfName cStringUsingEncoding: NSUTF8StringEncoding]);
-        if (index == 0) {
-            int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to find network interface %@ with errno %d", interface, errNo);
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: unknownInterfaceError(msg)];
-            return;
-        }
-        
-        CBLLogVerbose(WebSocket, @"%@: name(%@) converted to index %u", self, interface, index);
-        int result = -1;
-        switch (_addr->ai_family) {
-            case AF_INET:
-                result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
-                break;
-            case AF_INET6:
-                result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
-                break;
-            default:
-                CBLWarnError(WebSocket, @"%@: Address family %d is not supported", self, _addr->ai_family);
-                result = -1;
-                break;
-        }
-        if (result < 0) {
-            int errNo = errno;
-            NSString* msg = $sprintf(@"Failed to set-opts network interface %@ with errno %d (%@)",
-                                     interface, errNo, addrInfo(_addr));
-            CBLWarnError(WebSocket, @"%@: %@", self, msg);
-            [self closeWithError: posixError(errNo, msg)];
-            return;
-        }
-        
-        CBLLogVerbose(WebSocket, @"%@: setsockopt: %d %@", self, result, addrInfo(_addr));
+    Assert(info.interface > 0);
+    
+    UInt32 index = info.interface;
+    int result = -1;
+    if (info.addr->sa_family == AF_INET) {
+        result = setsockopt(_sockfd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
+    } else if (info.addr->sa_family == AF_INET6 ){
+        result = setsockopt(_sockfd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index));
     }
+    
+    if (result < 0) {
+        int errNo = errno;
+        NSString* msg = $sprintf(@"Failed to set network interface %u with errno %d (%@)",
+                                 (unsigned int)info.interface, errNo, info);
+        CBLWarnError(WebSocket, @"%@: %@", self, msg);
+        [self closeWithError: posixError(errNo, msg)];
+        return;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: Successfully set network interface %u to socket option",
+                  self, info.interface);
     
     // Connect:
     dispatch_async(_socketConnectQueue, ^{
@@ -463,19 +454,8 @@ static void doDispose(C4Socket* s) {
             return; // Already disconnected
         }
         
-        struct sockaddr_in *addr = (struct sockaddr_in *)_addr->ai_addr;
-        char addrBuf[INET_ADDRSTRLEN];
-        if(addr->sin_family == AF_INET) {
-            if (inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN) != NULL) {
-                CBLLogVerbose(WebSocket, @"%@: Going to connect to IPv4 addr: %@",
-                              self, [NSString stringWithUTF8String: addrBuf]);
-            } else {
-                CBLWarnError(WebSocket, @"%@: inet_ntop(..) failed %@", self, addrInfo(_addr));
-            }
-        }
-        
-        int status = connect(sockfd, _addr->ai_addr, _addr->ai_addrlen);
-        
+        CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, info.addrstr);
+        int status = connect(sockfd, info.addr, info.length);
         if (status == 0) {
             dispatch_async(_queue, ^{
                 if (_sockfd < 0)
@@ -507,9 +487,8 @@ static void doDispose(C4Socket* s) {
             });
         } else {
             int errNo = errno;
-            NSString* msg = interface ?
-            $sprintf(@"Failed to connect via the specified network interface %@ with errno %d", interface, errNo) :
-            $sprintf(@"Failed to connect with errno %d", errNo);
+            NSString* msg = $sprintf(@"Failed to connect via the specified network interface %u with errno %d",
+                                     info.interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             NSError* error = posixError(errNo, msg);
             dispatch_async(_queue, ^{
@@ -590,28 +569,10 @@ static void doDispose(C4Socket* s) {
     return networkInterface;
 }
 
-static inline NSError* unknownInterfaceError(NSString* msg) {
-    return [NSError errorWithDomain: CBLErrorDomain
-                               code: CBLErrorUnknownInterface
-                           userInfo: @{NSLocalizedDescriptionKey : msg}];
-}
-
 static inline NSError* posixError(int errNo, NSString* msg) {
     return [NSError errorWithDomain: NSPOSIXErrorDomain
                                code: errNo
                            userInfo: @{NSLocalizedDescriptionKey : msg}];
-}
-
-static inline NSError* addrInfoError(int res, NSString* msg) {
-    return [NSError errorWithDomain: (id)kCFErrorDomainCFNetwork
-                               code: kCFHostErrorUnknown
-                           userInfo: @{NSLocalizedDescriptionKey: msg,
-                                       (id)kCFGetAddrInfoFailureKey: $sprintf(@"%d", res)}];
-}
-
-static inline NSString* addrInfo(const struct addrinfo* addr) {
-    return $sprintf(@"family=%d, socktype=%d, protocol=%d",
-                    addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 }
 
 - (void) configureSOCKS {
@@ -637,7 +598,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
         if (_options[kC4ReplicatorOptionPinnedServerCert])
             [settings setObject: @NO
                          forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
-      
+        
 #ifdef COUCHBASE_ENTERPRISE
         if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool())
             [settings setObject: @NO
@@ -709,22 +670,22 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
     _logic[@"Upgrade"] = @"websocket";
     _logic[@"Sec-WebSocket-Version"] = @"13";
     _logic[@"Sec-WebSocket-Key"] = nonceKey;
-
+    
     slice protocols = _options[kC4SocketOptionWSProtocols].asString();
     if (protocols)
         _logic[@"Sec-WebSocket-Protocol"] = protocols.asNSString();
-
+    
     [self writeData: _logic.HTTPRequestData completionHandler: nil];
 }
 
 // Parses the HTTP response.
 - (void) receivedHTTPResponseBytes: (const void*)bytes length: (size_t)length {
     CBLLogVerbose(WebSocket, @"%@: Received %zu bytes of HTTP response", self, length);
-
+    
     if (!CFHTTPMessageAppendBytes(_httpResponse, (const UInt8*)bytes, length)) {
         // Error reading response!
         [self closeWithCode: kWebSocketCloseProtocolError
-                        reason: @"Unparseable HTTP response"];
+                     reason: @"Unparseable HTTP response"];
         return;
     }
     if (CFHTTPMessageIsHeaderComplete(_httpResponse)) {
@@ -753,7 +714,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
                      reason: $sprintf(@"Proxy: %@", _logic.httpStatusMessage)];
         return;
     }
-
+    
     // Now send the actual WebSocket GET request, over the open stream:
     _connectedThruProxy = YES;
     _connectingToProxy = NO;
@@ -761,7 +722,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
     _logic.useProxyCONNECT = NO;
     [self clearHTTPState];
     [self configureTLS];
-
+    
     CBLLogInfo(WebSocket, @"%@: Proxy CONNECT to %@:%d...", self, _logic.URL.host, _logic.port);
     [self _sendWebSocketRequest];
 }
@@ -770,7 +731,7 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
-        
+    
     NSString* cookie = headers[@"Set-Cookie"];
     if (cookie.length > 0) {
         NSArray* cookies = [CBLWebSocket parseCookies: cookie];
@@ -794,23 +755,22 @@ static inline NSString* addrInfo(const struct addrinfo* addr) {
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_gotHTTPResponse(socket, (int)httpStatus, {headersFleece.buf, headersFleece.size});
     }];
-
+    
     if (httpStatus != 101) {
         // Unexpected HTTP status:
         C4WebSocketCloseCode closeCode = kWebSocketClosePolicyError;
         if (httpStatus >= 300 && httpStatus < 1000)
             closeCode = (C4WebSocketCloseCode)httpStatus;
         [self closeWithCode: closeCode reason: _logic.httpStatusMessage];
-
     } else if (!checkHeader(headers, @"Connection", @"Upgrade", NO)) {
         [self closeWithCode: kWebSocketCloseProtocolError
-                        reason: @"Invalid 'Connection' header"];
+                     reason: @"Invalid 'Connection' header"];
     } else if (!checkHeader(headers, @"Upgrade", @"websocket", NO)) {
         [self closeWithCode: kWebSocketCloseProtocolError
-                        reason: @"Invalid 'Upgrade' header"];
+                     reason: @"Invalid 'Upgrade' header"];
     } else if (!checkHeader(headers, @"Sec-WebSocket-Accept", _expectedAcceptHeader, YES)) {
         [self closeWithCode: kWebSocketCloseProtocolError
-                        reason: @"Invalid 'Sec-WebSocket-Accept' header"];
+                     reason: @"Invalid 'Sec-WebSocket-Accept' header"];
     } else {
         // TODO: Check Sec-WebSocket-Extensions for unknown extensions
         // Now I can start the WebSocket protocol:
@@ -913,7 +873,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     }
     if (!_in)
         return;
-
+    
     CBLLogInfo(WebSocket, @"%@: CBLWebSocket CLOSING WITH STATUS %d \"%@\"", self, (int)code, reason);
     [self disconnect];
     nsstring_slice reasonSlice(reason);
@@ -930,7 +890,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     _closing = YES;
     
     [self disconnect];
-
+    
     C4Error c4err;
     if (error) {
         CBLLogInfo(WebSocket, @"%@: CBLWebSocket CLOSED WITH ERROR: %@", self, error.my_compactDescription);
@@ -962,13 +922,13 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     Assert(trust);
     
     [self updateServerCertificateFromTrust: trust];
-
+    
     NSURL* url = _logic.URL;
     auto check = [[CBLTrustCheck alloc] initWithTrust: trust
                                                  host: url.host
                                                  port: url.port.shortValue];
     CFRelease(trust);
-
+    
 #ifdef COUCHBASE_ENTERPRISE
     BOOL acceptOnlySelfSignedCert = _options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool();
 #endif
@@ -988,8 +948,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     NSError* error;
 #ifdef COUCHBASE_ENTERPRISE
     NSURLCredential* credentials = !pin && acceptOnlySelfSignedCert ?
-        [check acceptOnlySelfSignedCert: &error] :
-        [check checkTrust: &error];
+    [check acceptOnlySelfSignedCert: &error] :
+    [check checkTrust: &error];
 #else
     NSURLCredential* credentials = [check checkTrust: &error];
 #endif
@@ -1128,6 +1088,11 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     if (_sockfd >= 0) {
         close(_sockfd);
         self.sockfd = -1;
+    }
+    
+    if (_dnsService) {
+        [_dnsService stop];
+        _dnsService = nil;
     }
 }
 
