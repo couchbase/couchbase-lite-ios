@@ -964,7 +964,7 @@ static void throwIfNotOpenError(NSError* error) {
         CBLStringBytes header(cookie);
         CBLStringBytes host(url.host);
         CBLStringBytes path(url.path.stringByDeletingLastPathComponent);
-        if (!c4db_setCookie(_c4db, header, host, path, &err)) {
+        if (!c4db_setCookie(_c4db, header, host, path, false, &err)) {
             CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
             return NO;
         }
