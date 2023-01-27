@@ -44,6 +44,7 @@
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize networkInterface=_networkInterface;
+@synthesize acceptParentDomainCookies=_acceptParentDomainCookies;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
@@ -65,6 +66,7 @@
         _acceptOnlySelfSignedServerCertificate = kCBLDefaultReplicatorSelfSignedCertificateOnly;
     #endif
         _continuous = kCBLDefaultReplicatorContinuous;
+        _acceptParentDomainCookies = kCBLDefaultReplicatorAcceptParentCookies;
         _heartbeat = kCBLDefaultReplicatorHeartbeat;
         _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
         _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptWaitTime;
@@ -158,6 +160,11 @@
 - (void) setNetworkInterface: (NSString*)networkInterface {
     [self checkReadonly];
     _networkInterface = networkInterface;
+}
+
+- (void) setAcceptParentDomainCookies: (BOOL)acceptParentDomainCookies {
+    [self checkReadonly];
+    _acceptParentDomainCookies = acceptParentDomainCookies;
 }
 
 - (CBLCollectionConfiguration*) defaultCollectionConfig {
@@ -336,6 +343,7 @@
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
+        _acceptParentDomainCookies = config.acceptParentDomainCookies;
         _headers = config.headers;
         _collectionConfigs = [NSMutableDictionary dictionaryWithCapacity: config.collectionConfigs.count];
         for (CBLCollection* col in config.collectionConfigs) {
@@ -380,6 +388,9 @@
     if (self.headers)
         [httpHeaders addEntriesFromDictionary: self.headers];
     options[@kC4ReplicatorOptionExtraHeaders] = httpHeaders;
+    
+    // Accept Parent Domain Cookies:
+    options[@kC4ReplicatorOptionAcceptParentDomainCookies] = @(_acceptParentDomainCookies);
     
     // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push

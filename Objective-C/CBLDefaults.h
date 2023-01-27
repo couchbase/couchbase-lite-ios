@@ -2,7 +2,7 @@
 //  CBLDefaults.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2022-present Couchbase, Inc All rights reserved.
+//  Copyright (c) 2023-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -67,6 +67,9 @@ extern const BOOL kCBLDefaultReplicatorEnableAutoPurge;
 /** [NO] Whether or not a replicator only accepts self-signed certificates from the remote */
 extern const BOOL kCBLDefaultReplicatorSelfSignedCertificateOnly;
 
+/** [NO] Whether or not a replicator only accepts cookies for the sender's parent domains */
+extern const BOOL kCBLDefaultReplicatorAcceptParentCookies;
+
 #pragma mark - CBLURLEndpointListenerConfiguration
 
 /** [0] No port specified, the OS will assign one */
@@ -80,5 +83,3 @@ extern const BOOL kCBLDefaultListenerReadOnly;
 
 /** [NO] Delta sync is disabled for the listener */
 extern const BOOL kCBLDefaultListenerEnableDeltaSync;
-
-
