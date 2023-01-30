@@ -2,7 +2,7 @@
 //  CBLDefaults.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2022-present Couchbase, Inc All rights reserved.
+//  Copyright (c) 2023-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous = NSUIntegerMax;
 const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime = 300;
 const BOOL kCBLDefaultReplicatorEnableAutoPurge = YES;
 const BOOL kCBLDefaultReplicatorSelfSignedCertificateOnly = NO;
+const BOOL kCBLDefaultReplicatorAcceptParentCookies = NO;
 
 #pragma mark - CBLURLEndpointListenerConfiguration
 
@@ -51,4 +52,3 @@ const unsigned short kCBLDefaultListenerPort = 0;
 const BOOL kCBLDefaultListenerDisableTls = NO;
 const BOOL kCBLDefaultListenerReadOnly = NO;
 const BOOL kCBLDefaultListenerEnableDeltaSync = NO;
-

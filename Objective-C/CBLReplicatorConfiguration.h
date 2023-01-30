@@ -76,10 +76,22 @@ __deprecated_msg(" Use config.collections instead");
  */
 @property (nonatomic, nullable) NSDictionary<NSString*, NSString*>* headers;
 
-/*
+/**
  Specific network interface (e.g. en0 and pdp_ip0) for connecting to the remote target.
  */
 @property (nonatomic, nullable) NSString* networkInterface;
+
+
+/**
+ The option to remove the restriction that does not allow the replicator to save the parent-domain
+ cookies, the cookies whose domains are the parent domain of the remote host, from the HTTP
+ response. For example, when the option is set to true, the cookies whose domain are “.foo.com”
+ returned by “bar.foo.com” host will be permitted to save.
+      
+ This option is disabled by default (See ``kCBLDefaultReplicatorAcceptParentCookies``)
+ which means that the parent-domain cookies are not permitted to save by default.
+ */
+@property (nonatomic) BOOL acceptParentDomainCookies;
 
 /**
  Channels filter when using init(database:target:) to configure the default collection

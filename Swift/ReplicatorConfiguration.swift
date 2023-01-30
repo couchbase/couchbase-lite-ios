@@ -105,6 +105,15 @@ public struct ReplicatorConfiguration {
     /// Specific network interface for connecting to the remote target.
     public var networkInterface: String?
     
+    /// The option to remove the restriction that does not allow the replicator to save the parent-domain
+    /// cookies, the cookies whose domains are the parent domain of the remote host, from the HTTP
+    /// response. For example, when the option is set to true, the cookies whose domain are “.foo.com”
+    /// returned by “bar.foo.com” host will be permitted to save.
+    ///
+    /// This option is disabled by default (See ``ReplicatorConfiguration.defaultAcceptParentCookies``)
+    /// which means that the parent-domain cookies are not permitted to save by default.
+    public var acceptParentDomainCookie: Bool = ReplicatorConfiguration.defaultAcceptParentCookies
+    
     /// A set of Sync Gateway channel names to pull from. Ignored for push
     /// replication. If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by
@@ -383,6 +392,7 @@ public struct ReplicatorConfiguration {
         self.pinnedServerCertificate = config.pinnedServerCertificate
         self.headers = config.headers
         self.networkInterface = config.networkInterface
+        self.acceptParentDomainCookie = config.acceptParentDomainCookie
         self.heartbeat = config.heartbeat
         self.maxAttempts = config.maxAttempts
         self.maxAttemptWaitTime = config.maxAttemptWaitTime
@@ -444,6 +454,7 @@ public struct ReplicatorConfiguration {
         c.pinnedServerCertificate = self.pinnedServerCertificate
         c.headers = self.headers
         c.networkInterface = self.networkInterface;
+        c.acceptParentDomainCookies = self.acceptParentDomainCookie;
         c.heartbeat = self.heartbeat
         c.maxAttempts = self.maxAttempts
         c.maxAttemptWaitTime = self.maxAttemptWaitTime
