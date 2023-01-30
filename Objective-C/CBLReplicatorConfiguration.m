@@ -41,6 +41,7 @@
 @synthesize networkInterface=_networkInterface;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
+@synthesize acceptParentDomainCookies=_acceptParentDomainCookies;
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize conflictResolver=_conflictResolver;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
@@ -68,6 +69,7 @@
 #ifdef COUCHBASE_ENTERPRISE
         _acceptOnlySelfSignedServerCertificate = NO;
 #endif
+        _acceptParentDomainCookies = NO;
         _heartbeat = 0;
         _maxAttempts = 0;
         _maxAttemptWaitTime = 0;
@@ -121,6 +123,11 @@
 - (void) setNetworkInterface: (NSString*)networkInterface {
     [self checkReadonly];
     _networkInterface = networkInterface;
+}
+
+- (void) setAcceptParentDomainCookies: (BOOL)acceptParentDomainCookies {
+    [self checkReadonly];
+    _acceptParentDomainCookies = acceptParentDomainCookies;
 }
 
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
@@ -194,6 +201,7 @@
         _pinnedServerCertificate = config.pinnedServerCertificate;
         cfretain(_pinnedServerCertificate);
         _networkInterface = config.networkInterface;
+        _acceptParentDomainCookies = config.acceptParentDomainCookies;
         _headers = config.headers;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
@@ -238,6 +246,9 @@
         [httpHeaders addEntriesFromDictionary: self.headers];
     options[@kC4ReplicatorOptionExtraHeaders] = httpHeaders;
     
+    // Accept Parent Domain Cookies:
+    options[@kC4ReplicatorOptionAcceptParentDomainCookies] = @(_acceptParentDomainCookies);
+
     // Filters:
     options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
     options[@kC4ReplicatorOptionChannels] = _channels;
