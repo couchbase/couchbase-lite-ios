@@ -195,4 +195,88 @@
     AssertEqualObjects([result stringForKey: @"first"], @"Abe");
 }
 
+- (void) testSelectAllResultKey {
+    NSError* error = nil;
+    CBLCollection* flowersCol = [self.db createCollectionWithName: @"flowers" scope: @"test" error: &error];
+    AssertNotNil(flowersCol);
+    CBLCollection* defaultCol = [self.db defaultCollection: &error];
+    AssertNotNil(defaultCol);
+    
+    CBLMutableDocument* mdoc1 = [self createDocument: @"c1"];
+    [mdoc1 setString: @"c1" forKey: @"cid"];
+    [mdoc1 setString: @"rose" forKey: @"name"];
+    [self saveDocument: mdoc1 collection: flowersCol];
+    
+    CBLMutableDocument* mdoc2 = [self createDocument: @"c1"];
+    [mdoc2 setString: @"c1" forKey: @"cid"];
+    [mdoc2 setString: @"rose" forKey: @"name"];
+    [self saveDocument: mdoc2 collection: defaultCol];
+    
+    NSArray<NSString*>* froms = @[
+        self.db.name,
+        @"_",
+        @"_default._default",
+        @"test.flowers",
+        @"test.flowers as f"
+    ];
+    
+    NSArray<NSString*>* expectedKeyNames = @[
+        self.db.name,
+        @"_",
+        @"_default",
+        @"flowers",
+        @"f"
+    ];
+    
+    NSUInteger i = 0;
+    for (NSString* from in froms) {
+        NSString* queryString = [NSString stringWithFormat: @"SELECT * FROM %@", from];
+        CBLQuery* query = [self.db createQuery: queryString error: &error];
+        AssertNotNil(query);
+        CBLQueryResultSet* rs = [query execute: &error];
+        AssertNotNil(rs);
+        AssertNotNil([rs.allResults.firstObject dictionaryForKey: expectedKeyNames[i++]]);
+    }
+}
+
+- (void) testQueryBuilderSelectAllResultKey {
+    NSError* error = nil;
+    
+    CBLCollection* flowersCol = [self.db createCollectionWithName: @"flowers" scope: @"test" error: &error];
+    AssertNotNil(flowersCol);
+    CBLCollection* defaultCol = [self.db defaultCollection: &error];
+    AssertNotNil(defaultCol);
+    
+    CBLMutableDocument* mdoc1 = [self createDocument: @"c1"];
+    [mdoc1 setString: @"c1" forKey: @"cid"];
+    [mdoc1 setString: @"rose" forKey: @"name"];
+    [self saveDocument: mdoc1 collection: flowersCol];
+    
+    CBLMutableDocument* mdoc2 = [self createDocument: @"c1"];
+    [mdoc2 setString: @"c1" forKey: @"cid"];
+    [mdoc2 setString: @"rose" forKey: @"name"];
+    [self saveDocument: mdoc2 collection: defaultCol];
+    
+    NSArray<CBLQueryDataSource*>* froms = @[
+        [CBLQueryDataSource collection: defaultCol],
+        [CBLQueryDataSource collection: flowersCol],
+        [CBLQueryDataSource collection: flowersCol as: @"f"]
+    ];
+    
+    NSArray<NSString*>* expectedKeyNames = @[
+        @"_default",
+        @"flowers",
+        @"f"
+    ];
+    
+    NSUInteger i = 0;
+    for (CBLQueryDataSource* from in froms) {
+        CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: from];
+        AssertNotNil(query);
+        CBLQueryResultSet* rs = [query execute: &error];
+        AssertNotNil(rs);
+        AssertNotNil([rs.allResults.firstObject dictionaryForKey: expectedKeyNames[i++]]);
+    }
+}
+
 @end

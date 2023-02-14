@@ -48,7 +48,7 @@ class QueryTest_Collection: QueryTest {
         let col = try self.db.createCollection(name: "names")
         
         try testQueryCollection(col, queries: [
-            // "SELECT name.first FROM _default.names ORDER BY name.first LIMIT 1", // CBL-3495
+            "SELECT name.first FROM _default.names ORDER BY name.first LIMIT 1",
             "SELECT name.first FROM names ORDER BY name.first LIMIT 1"
         ])
     }
@@ -131,6 +131,68 @@ class QueryTest_Collection: QueryTest {
         
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.string(forKey: "first"), "Abe")
+    }
+    
+    func testSelectAllResultKey() throws {
+        let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
+        let defaultCol = try self.db.defaultCollection()!;
+        
+        try flowersCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
+        try defaultCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
+        
+        let froms = [
+            db.name,
+            "_",
+            "_default._default",
+            "test.flowers",
+            "test.flowers as f"
+        ];
+        
+        let expectedKeyNames = [
+            db.name,
+            "_",
+            "_default",
+            "flowers",
+            "f"
+        ];
+        
+        var i = 0;
+        for from in froms {
+            let query = try self.db.createQuery("SELECT * FROM \(from)")
+            let results = try query.execute().allResults()
+            XCTAssertEqual(results.count, 1)
+            XCTAssertNotNil(results.first?.dictionary(forKey: expectedKeyNames[i]))
+            i = i + 1;
+        }
+    }
+    
+    func testQueryBuilderSelectAllResultKey() throws {
+        let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
+        let defaultCol = try self.db.defaultCollection()!;
+        
+        try flowersCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
+        try defaultCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
+        
+        let froms = [
+            DataSource.collection(defaultCol),
+            DataSource.collection(flowersCol),
+            DataSource.collection(flowersCol).as("f")
+        ];
+        
+        let expectedKeyNames = [
+            "_default",
+            "flowers",
+            "f"
+        ];
+        
+        var i = 0;
+        for from in froms {
+            let query = QueryBuilder.select(SelectResult.all()).from(from);
+            let results = try query.execute().allResults()
+            XCTAssertEqual(results.count, 1)
+            XCTAssertNotNil(results.first?.dictionary(forKey: expectedKeyNames[i]))
+            i = i + 1;
+        }
     }
     
     // MARK: helper method
