@@ -208,12 +208,7 @@ class CBLTestCase: XCTestCase {
     }
     
     func loadJSONResource(name: String) throws {
-        guard let col = try self.db.defaultCollection() else {
-            XCTFail("Failed to load resource")
-            return
-        }
-        
-        try loadJSONResource(name, collection: col)
+        try loadJSONResource(name, collection: self.db.defaultCollection())
     }
     
     func jsonFromDate(_ date: Date) -> String {

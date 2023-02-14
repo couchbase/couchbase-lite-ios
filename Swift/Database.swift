@@ -474,10 +474,6 @@ public final class Database {
         var error: NSError?
         let s = impl.scope(withName: name, error: &error)
         if let err = error {
-            if err.code == CBLErrorNotFound {
-                return nil
-            }
-            
             throw err
         }
         
@@ -490,17 +486,10 @@ public final class Database {
     
     // MARK: Collections
     
-    /// Get the default collection. If the default collection is deleted, nil will be returned.
-    public func defaultCollection() throws  -> Collection? {
-        do {
-            let c = try impl.defaultCollection()
-            return Collection(c, db: self)
-        } catch let err as NSError {
-            if err.code == CBLErrorNotFound {
-                return nil
-            }
-            throw err
-        }
+    /// Get the default collection.
+    public func defaultCollection() throws  -> Collection {
+        let c = try impl.defaultCollection()
+        return Collection(c, db: self)
     }
 
     /// Get all collections in the specified scope.
@@ -526,9 +515,6 @@ public final class Database {
         var error: NSError?
         let result = impl.collection(withName: name, scope: scope, error: &error)
         if let err = error {
-            if err.code == CBLErrorNotFound {
-                return nil
-            }
             throw err
         }
         
@@ -539,8 +525,7 @@ public final class Database {
         return nil
     }
     
-    /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation
-    /// will be no-ops. Note: the default collection can be deleted but cannot be recreated.
+    /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops. 
     public func deleteCollection(name: String, scope: String? = defaultScopeName) throws {
         try impl.deleteCollection(withName: name, scope: scope)
     }

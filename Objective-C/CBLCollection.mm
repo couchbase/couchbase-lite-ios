@@ -119,7 +119,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(config);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
         
         CBLStringBytes iName(name);
@@ -142,7 +142,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(index);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
 
         CBLStringBytes iName(name);
@@ -164,7 +164,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                        error: (NSError**)error {
     CBLAssertNotNil(name);
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
         
         C4Error c4err = {};
@@ -175,7 +175,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 - (nullable NSArray*) indexes: (NSError**)error {
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return nil;
         
         C4Error err = {};
@@ -221,7 +221,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(documentID);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return nil;
         
         NSError* err = nil;
@@ -246,7 +246,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(document);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
         
         if (![self prepareDocument: document error: error])
@@ -269,7 +269,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                        error: (NSError**)error {
     CBLAssertNotNil(documentID);
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
         
         CBLDatabase* db = _db;
@@ -394,7 +394,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(documentID);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return nil;
         
         CBLStringBytes docID(documentID);
@@ -418,7 +418,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     CBLAssertNotNil(documentID);
     
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: error])
+        if (![self checkIsValid: error])
             return NO;
         
         UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
@@ -440,7 +440,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     
     CBL_LOCK(_mutex) {
         NSError* error = nil;
-        if (![self collectionIsValid: &error]) {
+        if (![self checkIsValid: &error]) {
             CBLWarn(Database,
                     @"%@ Cannot add change listener. Database is closed or collection is removed.",
                     self);
@@ -452,7 +452,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 
 #pragma mark - Internal
 
-- (BOOL) collectionIsValid: (NSError**)error {
+- (BOOL) checkIsValid: (NSError**)error {
     BOOL valid = c4coll_isValid(_c4col);
     if (!valid) {
         if (error)
@@ -463,7 +463,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (BOOL) isValid {
-    return [self collectionIsValid: nil];
+    return [self checkIsValid: nil];
 }
 
 - (BOOL) database: (CBLDatabase*)db isValid: (NSError**)error {
@@ -632,7 +632,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         return createError(CBLErrorNotFound,
                            kCBLErrorMessageDeleteDocFailedNotSaved, outError);
     CBL_LOCK(_mutex) {
-        if (![self collectionIsValid: outError])
+        if (![self checkIsValid: outError])
             return NO;
         
         CBLDatabase* db = _db;
