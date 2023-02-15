@@ -39,11 +39,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(config.collections.count, 1)
         
         
-        guard let col = try self.db.defaultCollection() else {
-            XCTFail("Default collection is missing!")
-            return
-        }
-        
+        let col = try self.db.defaultCollection()
         XCTAssertEqual(col, config.collections[0])
         XCTAssertEqual(col.name, config.collections[0].name)
         XCTAssertEqual(col.scope.name, config.collections[0].scope.name)
@@ -71,17 +67,12 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
     func defaultCollection() throws -> Collection {
-        guard let col = try self.db.defaultCollection() else {
-            fatalError("Default collection is missing!")
-        }
-        
-        return col
+        return try self.db.defaultCollection()
     }
     
     func testConfigWithDatabaseAndConflictResolver() throws {
         let url = URL(string: "wss://foo")!
         let target = URLEndpoint(url: url)
-        
         var config = ReplicatorConfiguration(database: self.db, target: target)
         
         let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in

@@ -141,8 +141,6 @@ static const C4DatabaseConfig2 kDBConfig = {
         _state = kCBLDatabaseStateOpened;
         
         _mutex = [NSObject new];
-        
-        [self setDefaultCollection];
     }
     return self;
 }
@@ -159,20 +157,8 @@ static const C4DatabaseConfig2 kDBConfig = {
         _c4db = c4db;
         
         _state = kCBLDatabaseStateOpened;
-        
-        [self setDefaultCollection];
     }
     return self;
-}
-
-- (void) setDefaultCollection {
-    C4Error c4error = {};
-    C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4error);
-    if (c4error.code != 0) {
-        CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
-                self, c4error.domain, c4error.code);
-    }
-    _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
 }
 
 - (instancetype) copyWithZone: (NSZone*)zone {
@@ -686,7 +672,6 @@ static const C4DatabaseConfig2 kDBConfig = {
         CBLStringBytes sname(scopeName);
         BOOL exists = c4db_hasScope(_c4db, sname);
         if (!exists) {
-            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
             return nil;
         }
         
@@ -698,17 +683,29 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (nullable CBLCollection*) defaultCollection: (NSError**)error {
     CBL_LOCK(_mutex) {
-        // db closed
         if (![self mustBeOpen: error])
             return nil;
         
-        // if collection is invalid (deleted or LC marked as invalid)
-        BOOL isValid = _defaultCollection.isValid;
-        if (!isValid) {
-            _defaultCollection = nil;
-            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
+        if (!_defaultCollection) {
+            C4Error c4error {};
+            C4Collection* c4col = c4db_getDefaultCollection(_c4db, &c4error);
+            if (!c4col) {
+                if (c4error.code != 0) {
+                    CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
+                            self, c4error.domain, c4error.code);
+                }
+                convertError(c4error, error);
+                return nil;
+            }
+            _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
+            return _defaultCollection; // Bypass checking if collection is valid
         }
         
+        // When we allow to delete the default collection, the default collection
+        // may become invalid here.
+        if (![_defaultCollection checkIsValid: error]) {
+            return nil;
+        }
         return _defaultCollection;
     }
 }
@@ -718,7 +715,6 @@ static const C4DatabaseConfig2 kDBConfig = {
         CBLCollection* col = [self defaultCollection: nil];
         if (!col)
             throwNotOpen();
-        
         return _defaultCollection;
     }
 }
@@ -812,27 +808,21 @@ static void throwIfNotOpenError(NSError* error) {
     CBLStringBytes sName(scopeName);
     C4CollectionSpec spec = { .name = cName, .scope = sName };
     
-    __block C4Collection* c;
     CBL_LOCK(_mutex) {
         if (![self mustBeOpen: error])
             return nil;
         
         C4Error c4err = {};
-        c = c4db_getCollection(_c4db, spec, &c4err);
-        if (c4err.code != 0) {
-            CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
-                    self, scopeName, name, c4err.domain, c4err.code);
-            convertError(c4err, error);
+        C4Collection* c4col = c4db_getCollection(_c4db, spec, &c4err);
+        if (!c4col) {
+            if (c4err.code != 0) {
+                CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
+                        self, scopeName, name, c4err.domain, c4err.code);
+                convertError(c4err, error);
+            }
             return nil;
         }
-        
-        CBLLogVerbose(Database, @"%@ Got c4collection[%@.%@] c4col=%p", self.fullDescription, scopeName, name, c);
-        if (!c) {
-            convertError({LiteCoreDomain, kC4ErrorNotFound}, error);
-            return nil;
-        }
-        
-        return [[CBLCollection alloc] initWithDB: self c4collection: c];
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4col];
     }
 }
 
@@ -1114,9 +1104,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     _c4db = nil;
     
     _state = kCBLDatabaseStateClosed;
-    
-    // TODO: circular reference issue
-    // https://issues.couchbase.com/browse/CBL-3367
     _defaultCollection = nil;
 }
 

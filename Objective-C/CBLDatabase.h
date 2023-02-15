@@ -497,11 +497,9 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /**
  Get scope names that have at least one collection.
  
- @note: The default scope is exceptional as it will always be listed
- even though there are no collections under it.
+ @note: The default scope is exceptional as it will always be listed even though there are no collections under it.
  
- @param error On return, the error if any. CBLErrorNotOpen code will be returned
-        if the database is closed.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return returns the scope names, or nil if an error occurred.
  */
 - (nullable NSArray<CBLScope*>*) scopes: (NSError**)error;
@@ -513,9 +511,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  @note: The default scope is exceptional, and it will always be returned.
  
  @param name Scope name, if empty, it will use default scope name.
- @param error On return, the error if any. CBLErrorNotOpen code will be returned
-        if the database is closed. CBLErrorNotFound code will be returned if the
-        scope doesn't exist.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return Scope object, or nil if an error occurred.
  */
 - (nullable CBLScope*) scopeWithName: (nullable NSString*)name
@@ -526,8 +522,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /** Get all collections in the specified scope.
  
  @param scope Scope name
- @param error On return, the error if any. CBLErrorNotOpen code will be
- returned if the database is closed.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return list of collections in the scope, or nil if an error occurred.
  */
 - (nullable NSArray<CBLCollection*>*) collections: (nullable NSString*)scope
@@ -538,7 +533,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  
  @param name name for the new collection
  @param scope collection will be created under this scope, if not specified, use the default scope.
- @param error On return, the error if any.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return Newly created collection or if already exists, the existing collection will be returned
         , or nil if an error occurred.
  */
@@ -561,15 +556,11 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
                                          error: (NSError**)error NS_SWIFT_NOTHROW;
 
 /**
- Delete a collection by name  in the specified scope.
- If the collection doesn't exist, the operation will be no-ops.
- 
- @note: the default collection can be deleted but cannot be recreated.
+ Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops.
  
  @param name Name of the collection to be deleted
  @param scope Name of the scope the collection resides, if not specified uses the default scope.
- @param error On return, the error if any. CBLErrorNotOpen code will be returned
-        if the database is closed.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return True on success, false on failure.
  */
 - (BOOL) deleteCollectionWithName: (NSString*)name
@@ -579,16 +570,15 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /**
  Get the default scope.
  
- @param error On return, the error if any.
+ @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return Default Scope, or nil if an error occurred.
  */
 - (nullable CBLScope*) defaultScope: (NSError**)error;
 
 /**
- Get the default collection. If the default collection is deleted, nil will be returned.
+ Get the default collection.
  
- @param error On return, the error if any. CBLErrorNotFound code will be returned if the
-        default collection is deleted.
+ @param error On return, the error if any.
  @return Default collection, or nil if an error occurred.
  */
 - (nullable CBLCollection*) defaultCollection: (NSError**)error;

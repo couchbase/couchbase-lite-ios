@@ -33,11 +33,7 @@ class CollectionTest: CBLTestCase {
     // MARK: Get nonexisting doc
     
     func testGetNonExistingDoc() throws {
-        guard let collection = try self.db.defaultCollection() else {
-            XCTFail("Collection shouldn't be empty!")
-            return
-        }
-        
+        let collection = try self.db.defaultCollection()
         let doc = try collection.document(id: "NotExists");
         XCTAssertNil(doc)
     }
@@ -45,10 +41,7 @@ class CollectionTest: CBLTestCase {
     // MARK: Default Scope/Collection
     
     func testDefaultCollectionExists() throws {
-        guard let collection = try self.db.defaultCollection() else {
-            XCTFail("Collection shouldn't be empty!")
-            return
-        }
+        let collection = try self.db.defaultCollection()
         XCTAssertEqual(collection.name, Database.defaultCollectionName)
         
         let cols = try self.db.collections()
@@ -85,13 +78,13 @@ class CollectionTest: CBLTestCase {
         
         var collection = try self.db.defaultCollection()
         XCTAssertNotNil(collection)
-        XCTAssertEqual(collection!.name, Database.defaultCollectionName)
-        XCTAssertEqual(collection!.scope.name, Scope.defaultScopeName)
+        XCTAssertEqual(collection.name, Database.defaultCollectionName)
+        XCTAssertEqual(collection.scope.name, Scope.defaultScopeName)
         
         collection = try self.db.createCollection(name: Database.defaultCollectionName)
         XCTAssertNotNil(collection)
-        XCTAssertEqual(collection!.name, Database.defaultCollectionName)
-        XCTAssertEqual(collection!.scope.name, Scope.defaultScopeName)
+        XCTAssertEqual(collection.name, Database.defaultCollectionName)
+        XCTAssertEqual(collection.scope.name, Scope.defaultScopeName)
     }
     
     func testGetDefaultScopeAfterDeleteDefaultCollection() throws {
@@ -612,10 +605,7 @@ class CollectionTest: CBLTestCase {
     // MARK: Index
     
     func testCollectionIndex() throws {
-        guard let collection = try db.defaultCollection() else {
-            XCTFail("default collection is missing")
-            return
-        }
+        let collection = try db.defaultCollection()
         
         let config1 = ValueIndexConfiguration(["firstName", "lastName"])
         try collection.createIndex(withName: "index1", config: config1)
@@ -841,10 +831,8 @@ class CollectionTest: CBLTestCase {
     // MARK: change observer
     
     func testCollectionChangeEvent() throws {
-        guard let collection = try db.defaultCollection() else {
-            XCTFail("default collection is missing")
-            return
-        }
+        let collection = try db.defaultCollection()
+        
         let doc = try generateDocument(withID: "doc1")
         let x = self.expectation(description: "change")
         let token = collection.addChangeListener { (change) in

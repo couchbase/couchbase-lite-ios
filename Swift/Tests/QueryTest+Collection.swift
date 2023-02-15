@@ -32,12 +32,7 @@ class QueryTest_Collection: QueryTest {
     // MARK: 8.11 SQL++ Query
     
     func testQueryDefaultCollection() throws {
-        guard let collection = try self.db.defaultCollection() else {
-            XCTFail("Default collection should exists")
-            return
-        }
-        
-        try testQueryCollection(collection, queries: [
+        try testQueryCollection(self.db.defaultCollection(), queries: [
             "SELECT name.first FROM _ ORDER BY name.first LIMIT 1",
             "SELECT name.first FROM _default ORDER BY name.first limit 1",
             "SELECT name.first FROM testdb ORDER BY name.first limit 1"
@@ -95,12 +90,9 @@ class QueryTest_Collection: QueryTest {
     }
     
     func testQueryBuilderWithDefaultCollectionAsDataSource() throws {
-        guard let col = try self.db.defaultCollection() else {
-            XCTFail("Default collection")
-            return
-        }
+        let col = try self.db.defaultCollection();
         
-        try loadJSONResource("names_100", collection: col)
+        try loadJSONResource("names_100", collection: self.db.defaultCollection())
         
         let q = QueryBuilder
             .select([SelectResult.property("name.first")])
