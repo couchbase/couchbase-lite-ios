@@ -22,7 +22,6 @@
 #import "CBLChangeListenerToken.h"
 #import "CBLDatabase.h"
 
-// TODO: Add to CBLErrorMessage : CBL-3296
 #define CBLCollectionErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
                                     code: CBLErrorNotOpen \
                                     userInfo: @{ NSLocalizedDescriptionKey: kCBLErrorMessageDBClosedOrCollectionDeleted }]

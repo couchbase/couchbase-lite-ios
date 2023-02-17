@@ -22,8 +22,7 @@ import CouchbaseLiteSwift
 
 class NotificationTest: CBLTestCase {
     
-    // TODO: https://issues.couchbase.com/browse/CBL-3369
-    func _testDatabaseChange() throws {
+    func testDatabaseChange() throws {
         let x = self.expectation(description: "change")
         
         let token = db.addChangeListener { (change) in

@@ -1137,7 +1137,6 @@
     [replicator addChangeListener: ^(CBLReplicatorChange *change) {
         CBLReplicatorActivityLevel activity = change.status.activity;
         if (activity == kCBLReplicatorStopped && change.status.error) {
-            // TODO: https://issues.couchbase.com/browse/CBL-1471
             AssertEqual(change.status.error.code, CBLErrorTLSCertUnknownRoot);
             [x1 fulfill];
         }
