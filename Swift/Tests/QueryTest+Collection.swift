@@ -127,7 +127,7 @@ class QueryTest_Collection: QueryTest {
     
     func testSelectAllResultKey() throws {
         let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
-        let defaultCol = try self.db.defaultCollection()!;
+        let defaultCol = try self.db.defaultCollection();
         
         try flowersCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
         try defaultCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
@@ -160,7 +160,7 @@ class QueryTest_Collection: QueryTest {
     
     func testQueryBuilderSelectAllResultKey() throws {
         let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
-        let defaultCol = try self.db.defaultCollection()!;
+        let defaultCol = try self.db.defaultCollection();
         
         try flowersCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
         try defaultCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose"]))
