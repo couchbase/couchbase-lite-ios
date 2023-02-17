@@ -682,13 +682,11 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: Deleted Doc with Filter
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2771
-    func _testPushDeletedDocWithFilterSingleShot() throws {
+    func testPushDeletedDocWithFilterSingleShot() throws {
         try testPushDeletedDocWithFilter(false)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2771
-    func _testPushDeletedDocWithFilterContinuous() throws {
+    func testPushDeletedDocWithFilterContinuous() throws {
         try testPushDeletedDocWithFilter(true)
     }
     
@@ -794,8 +792,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     // MARK: stop and restart replication with filter
     
-    // https://issues.couchbase.com/browse/CBL-1061
-    func _testStopAndRestartPushReplicationWithFilter() throws {
+    func testStopAndRestartPushReplicationWithFilter() throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")

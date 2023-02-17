@@ -270,7 +270,6 @@
     pullConfig.conflictResolver = resolver;
     
     // Skip exception breakpoint thrown from c4doc_resolve
-    // https://issues.couchbase.com/browse/CBL-2167
     [self ignoreException:^{
         [self run: pullConfig errorCode: 0 errorDomain: nil];
     }];
@@ -430,7 +429,6 @@
     pullConfig.conflictResolver = resolver;
     
     // Skip exception breakpoint thrown from c4doc_resolve
-    // https://issues.couchbase.com/browse/CBL-2167
     [self ignoreException:^{
         [self run: pullConfig errorCode: 0 errorDomain: nil];
     }];
@@ -879,7 +877,6 @@
     [replicator setSuspended: YES];
     
     // Skip exception breakpoint thrown from c4doc_resolve
-    // https://issues.couchbase.com/browse/CBL-2167
     [self ignoreException:^{
         [self waitForExpectations: @[expSTOP] timeout: 15.0];
     }];
@@ -897,10 +894,6 @@
     [replicator removeChangeListenerWithToken: docReplToken];
     
     CBLDatabase.log.custom = nil;
-    
-    // Workaround:
-    // https://issues.couchbase.com/browse/CBL-1061
-    [NSThread sleepForTimeInterval: 0.5];
 }
 
 - (void) testConflictResolverReturningBlobFromDifferentDB {
@@ -977,7 +970,6 @@
     __block NSMutableArray<NSError*>* errors = [NSMutableArray array];
     
     // Skip exception breakpoint thrown from c4doc_resolve
-    // https://issues.couchbase.com/browse/CBL-2167
     [self ignoreException:^{
         [self run: pullConfig reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
             replicator = r;

@@ -1368,8 +1368,7 @@
 
 #pragma mark stop and restart the replication with filter
 
-// https://issues.couchbase.com/browse/CBL-1061
-- (void) _testStopAndRestartPushReplicationWithFilter {
+- (void) testStopAndRestartPushReplicationWithFilter {
     // Create documents
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
