@@ -248,6 +248,7 @@
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-2454
+// CBL-4209, CBL-3715
 - (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
@@ -264,9 +265,12 @@
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryMeta expiration]
-                                            greaterThan: [CBLQueryExpression double: earlier]]];
-    
+                                    where: [[[CBLQueryMeta expiration]
+                                             greaterThan: [CBLQueryExpression double: earlier]
+                                            ] orExpression: [CBLQueryExpression boolean: false]
+                                           ]
+                  ];
+
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
