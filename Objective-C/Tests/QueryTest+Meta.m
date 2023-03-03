@@ -248,7 +248,7 @@
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-2454
-- (void) _testExpiryGreaterThanDate {
+- (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
