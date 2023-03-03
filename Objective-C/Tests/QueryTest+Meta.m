@@ -261,15 +261,27 @@
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
-    
+
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
+#if 0
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [[[CBLQueryMeta expiration]
-                                             greaterThan: [CBLQueryExpression double: earlier]
-                                            ] orExpression: [CBLQueryExpression boolean: false]
-                                           ]
-                  ];
+                                    where: [[CBLQueryMeta expiration]
+                                            greaterThan: [CBLQueryExpression double: earlier]]];
+#endif
+
+//    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+//                                     from: [CBLQueryDataSource database: self.db]
+//                                    where: [[[CBLQueryMeta expiration]
+//                                             greaterThan: [CBLQueryExpression double: earlier]
+//                                            ] orExpression: [CBLQueryExpression boolean: false]
+//                                           ]
+//    ];
+
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: [CBLQueryDataSource database: self.db]
+                                    where: [[CBLQueryExpression double: earlier]
+                                            lessThanOrEqualTo: [CBLQueryMeta expiration]]];
 
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
