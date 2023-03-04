@@ -181,15 +181,20 @@
 
 - (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
-//#define CBL_4209_HACK
+#define CBL_4209_HACK
 #ifdef CBL_4209_HACK
     // On a particular Mac commisioned to Jenkins, the SQLite3 engine LiteCore
     // uses exhibits a problem dealing with float test of greather-than.
     // With this hack, we substitute a mathematical equivalent, less-than
     // with reversed opeerands.
-    return [[CBLBinaryExpression alloc] initWithLeftExpression: expression
-                                               rightExpression: self
-                                                          type: CBLLessThanBinaryExpType];
+//    return [[CBLBinaryExpression alloc] initWithLeftExpression: expression
+//                                               rightExpression: self
+//                                                          type: CBLLessThanBinaryExpType];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression:
+            [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                                rightExpression: expression                                          type: CBLSubtractBinaryExpType]
+                                               rightExpression: [CBLQueryExpression double: 0.0]
+                                                          type: CBLGreaterThanBinaryExpType];
 #else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
