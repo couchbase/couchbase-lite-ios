@@ -193,7 +193,7 @@
     return [[CBLBinaryExpression alloc] initWithLeftExpression:
             [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                 rightExpression: expression                                          type: CBLSubtractBinaryExpType]
-                                               rightExpression: [CBLQueryExpression double: 0.0]
+                                               rightExpression: [CBLQueryExpression double: DBL_MIN]
                                                           type: CBLGreaterThanBinaryExpType];
 #else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
