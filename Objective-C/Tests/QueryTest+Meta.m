@@ -269,10 +269,12 @@
                                     where: [[CBLQueryExpression double: earlier]
                                             lessThan: [CBLQueryMeta expiration]]];
 #else
+    dbgCbl4209 = 1;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
                                             greaterThan: [CBLQueryExpression double: earlier]]];
+    dbgCbl4209 = 0;
 #endif
 #undef CBL_4209_HACK
     AssertNotNil(q);

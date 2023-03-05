@@ -190,11 +190,17 @@
 //    return [[CBLBinaryExpression alloc] initWithLeftExpression: expression
 //                                               rightExpression: self
 //                                                          type: CBLLessThanBinaryExpType];
-    return [[CBLBinaryExpression alloc] initWithLeftExpression:
-            [[CBLBinaryExpression alloc] initWithLeftExpression: self
-                                                rightExpression: expression                                          type: CBLSubtractBinaryExpType]
-                                               rightExpression: [CBLQueryExpression double: DBL_MIN]
-                                                          type: CBLGreaterThanBinaryExpType];
+//    return [[CBLBinaryExpression alloc] initWithLeftExpression:
+//            [[CBLBinaryExpression alloc] initWithLeftExpression: self
+//                                                rightExpression: expression                                          type: CBLSubtractBinaryExpType]
+//                                               rightExpression: [CBLQueryExpression double: DBL_MIN]
+//                                                          type: CBLGreaterThanBinaryExpType];
+
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLGreaterThanOrEqualToBinaryExpType];
+
+
 #else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression

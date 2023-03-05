@@ -27,6 +27,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern int dbgCbl4209;
 
 /** 
  A database query.
