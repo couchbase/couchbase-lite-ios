@@ -262,12 +262,18 @@
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
-//#define CBL_4209_HACK
+#define CBL_4209_HACK
 #ifdef CBL_4209_HACK
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryExpression double: earlier]
-                                            lessThan: [CBLQueryMeta expiration]]];
+                                            lessThanOrEqualTo: [CBLQueryMeta expiration]]];
+
+//    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+//                                     from: [CBLQueryDataSource database: self.db]
+//                                    where: [[CBLQueryMeta expiration]
+//                                            greaterThanOrEqualTo: [CBLQueryExpression double: earlier]]];
+
 #else
 //    dbgCbl4209 = 1;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
