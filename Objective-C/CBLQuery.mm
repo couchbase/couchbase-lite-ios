@@ -186,8 +186,8 @@ using namespace fleece;
         json = [NSJSONSerialization dataWithJSONObject: root options: 0 error: &error];
         Assert(json, @"Failed to encode query as JSON: %@", error);
 //        if (dbgCbl4209) {
-            NSString *jsonStr = [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding];
-            NSLog(@"CBL-4209: JSON %@", jsonStr);
+//            NSString *jsonStr = [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding];
+//            NSLog(@"CBL-4209: JSON %@", jsonStr);
 //        }
     }
     
