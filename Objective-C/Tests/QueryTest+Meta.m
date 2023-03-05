@@ -266,8 +266,13 @@
 #ifdef CBL_4209_HACK
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryExpression double: earlier]
-                                            lessThanOrEqualTo: [CBLQueryMeta expiration]]];
+                                    where: [[CBLQueryMeta expiration]
+                                            greaterThanOrEqualTo: [CBLQueryExpression double: earlier]]];
+    
+//    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+//                                     from: [CBLQueryDataSource database: self.db]
+//                                    where: [[CBLQueryExpression double: earlier]
+//                                            lessThanOrEqualTo: [CBLQueryMeta expiration]]];
 
 //    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
 //                                     from: [CBLQueryDataSource database: self.db]
