@@ -248,7 +248,6 @@
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-2454
-// CBL-4209, CBL-3715
 - (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
@@ -261,37 +260,13 @@
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
+    
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
-//#define CBL_4209_HACK
-#ifdef CBL_4209_HACK
-    CBLQueryExpression* expirationExpr = [CBLQueryMeta expiration];
-    CBLQueryExpression* earlierExpr = [CBLQueryExpression double: earlier];
-    
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: [[expirationExpr greaterThanOrEqualTo: earlierExpr]
-                                            andExpression: [expirationExpr isNot: earlierExpr]]
-    ];
-    
-//    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-//                                     from: [CBLQueryDataSource database: self.db]
-//                                    where: [[CBLQueryExpression double: earlier]
-//                                            lessThanOrEqualTo: [CBLQueryMeta expiration]]];
-
-//    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-//                                     from: [CBLQueryDataSource database: self.db]
-//                                    where: [[CBLQueryMeta expiration]
-//                                            greaterThanOrEqualTo: [CBLQueryExpression double: earlier]]];
-
-#else
-//    dbgCbl4209 = 1;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
                                             greaterThan: [CBLQueryExpression double: earlier]]];
-//    dbgCbl4209 = 0;
-#endif
-#undef CBL_4209_HACK
+    
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);

@@ -187,15 +187,7 @@
     // uses exhibits a problem dealing with float test of greather-than.
     // With this hack, we substitute a mathematical equivalent, less-than
     // with reversed opeerands.
-//    return [[CBLBinaryExpression alloc] initWithLeftExpression: expression
-//                                               rightExpression: self
-//                                                          type: CBLLessThanBinaryExpType];
-//    return [[CBLBinaryExpression alloc] initWithLeftExpression:
-//            [[CBLBinaryExpression alloc] initWithLeftExpression: self
-//                                                rightExpression: expression                                          type: CBLSubtractBinaryExpType]
-//                                               rightExpression: [CBLQueryExpression double: DBL_MIN]
-//                                                          type: CBLGreaterThanBinaryExpType];
-
+    // We are turning "self > expression" into "(self >= expreesion) and (self != expression)"
     CBLQueryExpression* greaterThanOrEqual =
         [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                             rightExpression: expression
@@ -205,14 +197,6 @@
                                             rightExpression: expression
                                                        type: CBLIsNotBinaryExpType];
     return [greaterThanOrEqual andExpression: notEqual];
-
-//    [[[CBLBinaryExpression alloc] initWithLeftExpression: self
-//                                                rightExpression: expression
-//                                                           type: CBLGreaterThanOrEqualToBinaryExpType]
-//            andExpression:
-//            [[CBLBinaryExpression alloc] initWithLeftExpression: self
-//                                                rightExpression: expression
-//                                                           type: CBLIsNotBinaryExpType]];
 #else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
