@@ -163,12 +163,31 @@
 
 #pragma mark - Comparison operators:
 
+#define CBL_4209_HACK
+// On a particular Mac commisioned to Jenkins, the SQLite3 engine LiteCore
+// uses exhibits a problem dealing with float test of greather-than.
+// With this hack, we substitute a mathematical equivalent, less-than
+// with reversed opeerands.
+// We are turning "self > expression" into "(self >= expreesion) and (self != expression)"
+// and "self < expression" into "(self <= expreesion) and (self != expression)"
+
 - (CBLQueryExpression*) lessThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
-    
+#ifdef CBL_4209_HACK
+    CBLQueryExpression* lessThanOrEqual =
+        [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                            rightExpression: expression
+                                                       type: CBLLessThanOrEqualToBinaryExpType];
+    CBLQueryExpression* notEqual =
+        [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                            rightExpression: expression
+                                                       type: CBLIsNotBinaryExpType];
+    return [lessThanOrEqual andExpression: notEqual];
+#else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanBinaryExpType];
+#endif
 }
 
 - (CBLQueryExpression*) lessThanOrEqualTo: (CBLQueryExpression*)expression {
@@ -181,13 +200,7 @@
 
 - (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
-#define CBL_4209_HACK
 #ifdef CBL_4209_HACK
-    // On a particular Mac commisioned to Jenkins, the SQLite3 engine LiteCore
-    // uses exhibits a problem dealing with float test of greather-than.
-    // With this hack, we substitute a mathematical equivalent, less-than
-    // with reversed opeerands.
-    // We are turning "self > expression" into "(self >= expreesion) and (self != expression)"
     CBLQueryExpression* greaterThanOrEqual =
         [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                             rightExpression: expression
