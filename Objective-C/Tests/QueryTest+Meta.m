@@ -264,10 +264,14 @@
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
 #define CBL_4209_HACK
 #ifdef CBL_4209_HACK
+    CBLQueryExpression* expirationExpr = [CBLQueryMeta expiration];
+    CBLQueryExpression* earlierExpr = [CBLQueryExpression double: earlier];
+    
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
-                                    where: [[CBLQueryMeta expiration]
-                                            greaterThanOrEqualTo: [CBLQueryExpression double: earlier]]];
+                                    where: [[expirationExpr greaterThanOrEqualTo: earlierExpr]
+                                            andExpression: [expirationExpr isNot: earlierExpr]]
+    ];
     
 //    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
 //                                     from: [CBLQueryDataSource database: self.db]
