@@ -181,7 +181,7 @@
 
 - (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
     CBLAssertNotNil(expression);
-//#define CBL_4209_HACK
+#define CBL_4209_HACK
 #ifdef CBL_4209_HACK
     // On a particular Mac commisioned to Jenkins, the SQLite3 engine LiteCore
     // uses exhibits a problem dealing with float test of greather-than.
@@ -196,11 +196,23 @@
 //                                               rightExpression: [CBLQueryExpression double: DBL_MIN]
 //                                                          type: CBLGreaterThanBinaryExpType];
 
-    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
-                                               rightExpression: expression
-                                                          type: CBLGreaterThanOrEqualToBinaryExpType];
+    CBLQueryExpression* greaterThanOrEqual =
+        [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                            rightExpression: expression
+                                                       type: CBLGreaterThanOrEqualToBinaryExpType];
+    CBLQueryExpression* notEqual =
+        [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                            rightExpression: expression
+                                                       type: CBLIsNotBinaryExpType];
+    return [greaterThanOrEqual andExpression: notEqual];
 
-
+//    [[[CBLBinaryExpression alloc] initWithLeftExpression: self
+//                                                rightExpression: expression
+//                                                           type: CBLGreaterThanOrEqualToBinaryExpType]
+//            andExpression:
+//            [[CBLBinaryExpression alloc] initWithLeftExpression: self
+//                                                rightExpression: expression
+//                                                           type: CBLIsNotBinaryExpType]];
 #else
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
