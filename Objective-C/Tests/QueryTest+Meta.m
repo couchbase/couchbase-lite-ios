@@ -264,7 +264,7 @@
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
-    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).id from _default as db where meta(db).expiration > %f", earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).id from _default as db where meta(db).expiration >= %f AND meta(db).expiration != %f", earlier, earlier];
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
