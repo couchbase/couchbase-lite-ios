@@ -250,9 +250,12 @@
 
 // TODO: https://issues.couchbase.com/browse/CBL-2454
 - (void) testExpiryGreaterThanDate {
-//    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    C4LogLevel level1 = c4log_callbackLevel();
+    C4LogLevel level2 = c4log_getLevel(kC4QueryLog);
+    C4LogLevel level3 = c4log_getLevel((C4LogDomain)0x123);
     c4log_setCallbackLevel(kC4LogDebug);
     c4log_setLevel(kC4QueryLog, kC4LogDebug);
+    c4log_setLevel((C4LogDomain)0x123, kC4LogDebug);
     
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
@@ -267,6 +270,7 @@
     AssertNil(error);
     
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
+    NSLog(@"cbl-4209: earlier = %f", earlier);
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
     NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db", earlier, earlier, earlier, earlier];
@@ -287,6 +291,9 @@
     NSLog(@"cbl-4209: N1QL = %@", n1ql);
     NSLog(@"cbl-4209: %@", resultJson);
     
+    c4log_setCallbackLevel(level1);
+    c4log_setLevel(kC4QueryLog, level2);
+    c4log_setLevel((C4LogDomain)0x123, level3);
 }
 
 - (void) testExpiryNoGreaterThanDate {

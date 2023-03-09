@@ -422,6 +422,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
             return NO;
         
         UInt64 timestamp = date ? (UInt64)(date.timeIntervalSince1970*msec) : 0;
+        NSLog(@"cbl-4209: timestapm = %llu", timestamp);
         C4Error err;
         CBLStringBytes docID(documentID);
         return c4coll_setDocExpiration(_c4col, docID, timestamp, &err) || convertError(err, error);
