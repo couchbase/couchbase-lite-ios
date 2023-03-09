@@ -294,6 +294,7 @@
     c4log_setCallbackLevel(level1);
     c4log_setLevel(kC4QueryLog, level2);
     c4log_setLevel((C4LogDomain)0x123, level3);
+
 }
 
 - (void) testExpiryNoGreaterThanDate {
