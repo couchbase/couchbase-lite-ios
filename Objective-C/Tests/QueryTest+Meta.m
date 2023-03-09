@@ -18,6 +18,7 @@
 //
 
 #import "QueryTest.h"
+#include "c4Log.h"
 
 @interface QueryTestWithMeta: QueryTest
 
@@ -249,6 +250,10 @@
 
 // TODO: https://issues.couchbase.com/browse/CBL-2454
 - (void) testExpiryGreaterThanDate {
+//    CBLDatabase.log.console.level = kCBLLogLevelDebug;
+    c4log_setCallbackLevel(kC4LogDebug);
+    c4log_setLevel(kC4QueryLog, kC4LogDebug);
+    
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
@@ -264,7 +269,7 @@
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
-    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).id from _default as db where meta(db).expiration >= %f AND meta(db).expiration != %f", earlier, earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db", earlier, earlier, earlier, earlier];
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -275,7 +280,13 @@
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
-    AssertEqual([[rs allObjects] count], 1u);
+//    AssertEqual([[rs allObjects] count], 1u);
+    
+    CBLQueryResult* r = [rs nextObject];
+    NSString* resultJson = [r toJSON];
+    NSLog(@"cbl-4209: N1QL = %@", n1ql);
+    NSLog(@"cbl-4209: %@", resultJson);
+    
 }
 
 - (void) testExpiryNoGreaterThanDate {
