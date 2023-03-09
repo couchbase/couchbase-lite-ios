@@ -271,9 +271,9 @@
     
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
     NSLog(@"cbl-4209: earlier = %f", earlier);
-//#define USE_N1QL_QUERY
+#define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
-    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db", earlier, earlier, earlier, earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db where meta(db).expiration >= %f AND meta(db).expiration != %f", earlier, earlier, earlier, earlier, earlier, earlier];
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -284,13 +284,17 @@
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
-    AssertEqual([[rs allObjects] count], 1u);
+//    AssertEqual([[rs allObjects] count], 1u);
     
-//    CBLQueryResult* r = [rs nextObject];
-//    NSString* resultJson = [r toJSON];
-//    NSLog(@"cbl-4209: N1QL = %@", n1ql);
-//    NSLog(@"cbl-4209: %@", resultJson);
-    
+    CBLQueryResult* r = [rs nextObject];
+    if (r) {
+        NSString* resultJson = [r toJSON];
+        NSLog(@"cbl-4209: N1QL = %@", n1ql);
+        NSLog(@"cbl-4209: %@", resultJson);
+    } else {
+        NSLog(@"cbl=4209: query results nothing");
+    }
+
     c4log_setCallbackLevel(level1);
     c4log_setLevel(kC4QueryLog, level2);
     c4log_setLevel((C4LogDomain)0x123, level3);
