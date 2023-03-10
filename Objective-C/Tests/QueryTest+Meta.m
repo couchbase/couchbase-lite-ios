@@ -274,7 +274,7 @@
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
 //    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db where meta(db).expiration > %f", earlier, earlier, earlier, earlier, earlier];
-    NSString* n1ql = @"select meta(db).expiration, 2 > 1.5, 2 > 1.5 AND 2 != 1.5, 2 > 1 from _default as db";
+    NSString* n1ql = @"select 2 > 1.5, 2 > 1.5 AND 2 != 1.5, 2 > 1 from _default as db";
     NSLog(@"cbl-4209: N1QL = %@", n1ql);
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
