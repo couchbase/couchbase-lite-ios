@@ -274,6 +274,7 @@
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
     NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db where meta(db).expiration > %f", earlier, earlier, earlier, earlier, earlier];
+    NSLog(@"cbl-4209: N1QL = %@", n1ql);
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
@@ -289,10 +290,9 @@
     CBLQueryResult* r = [rs nextObject];
     if (r) {
         NSString* resultJson = [r toJSON];
-        NSLog(@"cbl-4209: N1QL = %@", n1ql);
         NSLog(@"cbl-4209: %@", resultJson);
     } else {
-        NSLog(@"cbl=4209: query results nothing");
+        NSLog(@"cbl-4209: query results nothing");
     }
 
     c4log_setCallbackLevel(level1);
