@@ -273,7 +273,7 @@
     NSLog(@"cbl-4209: earlier = %f", earlier);
 #define USE_N1QL_QUERY
 #ifdef USE_N1QL_QUERY
-    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db where meta(db).expiration >= %f AND meta(db).expiration != %f", earlier, earlier, earlier, earlier, earlier, earlier];
+    NSString* n1ql = [NSString stringWithFormat:@"select meta(db).expiration, meta(db).expiration > %f, meta(db).expiration > %.0f, meta(db).expiration >= %f AND meta(db).expiration != %f from _default as db where meta(db).expiration > %f", earlier, earlier, earlier, earlier, earlier];
     CBLQuery* q = [self.db createQuery: n1ql error: &error];
 #else
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
