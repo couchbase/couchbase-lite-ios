@@ -206,12 +206,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - SUBSCRIPTION
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
-#pragma clang diagnostic pop
-    
+    return [[self defaultCollectionOrThrow] objectForKeyedSubscript: documentID];
 }
 
 #pragma mark - SAVE

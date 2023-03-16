@@ -23,6 +23,7 @@
 
 @class CBLDocument;
 @class CBLDocumentChange;
+@class CBLDocumentFragment;
 @class CBLMutableDocument;
 @class CBLScope;
 @protocol CBLListenerToken;
@@ -89,6 +90,16 @@ extern NSString* const kCBLDefaultCollectionName;
  */
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID
                                    error: (NSError**)error NS_SWIFT_NOTHROW;
+
+#pragma mark - Subscript
+
+/**
+ Gets a document fragment with the given document ID.
+ 
+ @param documentID The document ID.
+ @return The CBLDocumentFragment object.
+ */
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
 
 #pragma mark - Save, Delete, Purge
 

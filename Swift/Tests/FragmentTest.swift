@@ -82,6 +82,30 @@ class FragmentTest: CBLTestCase {
         XCTAssertNil(doc["address"]["state"].string)
     }
     
+    func testGetDocFragmentWithIDFromCollection() throws {
+        let col = try self.db.createCollection(name: "colA", scope: "scopeA")
+        
+        // Not exist
+        var doc = col["doc1"]
+        XCTAssertNotNil(doc)
+        XCTAssertFalse(doc.exists)
+        
+        let dict: [String: Any] = ["address": [
+                                    "street": "1 Main street",
+                                    "city": "Mountain View",
+                                    "state": "CA"]]
+        try saveDocument(createDocument("doc1", data: dict), collection: col)
+        
+        // Exist
+        doc = col["doc1"]
+        XCTAssertNotNil(doc)
+        XCTAssertTrue(doc.exists)
+        XCTAssertNotNil(doc.document)
+        XCTAssertEqual(doc["address"]["street"].string!, "1 Main street")
+        XCTAssertEqual(doc["address"]["city"].string!, "Mountain View")
+        XCTAssertEqual(doc["address"]["state"].string!, "CA")
+    }
+    
     func testGetFragmentFromDictionaryValue() throws {
         let dict: [String: Any] = ["address": [
                                     "street": "1 Main street",

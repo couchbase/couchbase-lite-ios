@@ -175,6 +175,13 @@ class CBLTestCase: XCTestCase {
         eval(savedDoc)
     }
     
+    func saveDocument(_ document: MutableDocument, collection: Collection) throws {
+        try collection.save(document: document)
+        let savedDoc = try collection.document(id: document.id)
+        XCTAssertNotNil(savedDoc)
+        XCTAssertEqual(savedDoc!.id, document.id)
+    }
+    
     func urlForResource(name: String, ofType type: String) -> URL? {
         let res = ("Support" as NSString).appendingPathComponent(name)
         return Bundle(for: Swift.type(of:self)).url(forResource: res, withExtension: type)
