@@ -104,8 +104,8 @@ __deprecated_msg("Use [database defaultCollection].count instead.");
 
 
 /** 
- Gets an existing document with the given ID. If a document with the given ID
- doesn't exist in the database, the value returned will be nil.
+ Gets an existing document from the default collection by document ID.
+ If a document doesn't exist in the database, nil will be returned.
  
  @param id The document ID.
  @return The CBLDocument object.
@@ -118,7 +118,7 @@ __deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 /** 
- Gets a document fragment with the given document ID.
+ Gets a document fragment from the default collection by document ID.
  
  @param documentID The document ID.
  @return The CBLDocumentFragment object.
@@ -130,7 +130,7 @@ __deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 /**
- Saves a document to the database. When write operations are executed
+ Saves a document to the default collection. When write operations are executed
  concurrently, the last writer will overwrite all other written values.
  Calling this method is the same as calling the -saveDocument:concurrencyControl:error:
  method with kCBLConcurrencyControlLastWriteWins concurrency control.
@@ -143,7 +143,7 @@ __deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 __deprecated_msg("Use [[database defaultCollection] saveDocument:error:] instead.");
 
 /**
- Saves a document to the database. When used with kCBLConcurrencyControlLastWriteWins
+ Saves a document to the default collection. When used with kCBLConcurrencyControlLastWriteWins
  concurrency control, the last write operation will win if there is a conflict.
  When used with kCBLConcurrencyControlFailOnConflict concurrency control,
  save will fail with 'CBLErrorConflict' error code returned.
@@ -159,11 +159,11 @@ __deprecated_msg("Use [[database defaultCollection] saveDocument:error:] instead
 __deprecated_msg("Use [[database defaultCollection] saveDocument:concurrencyControl:error:] instead.");
 
 /**
- Saves a document to the database. When write operations are executed concurrently and if conflicts
- occur, the conflict handler will be called. Use the conflict handler to directly edit the document
- to resolve the conflict. When the conflict handler returns 'true', the save method will save the
- edited document as the resolved document. If the conflict handler returns 'false', the save
- operation will be canceled with 'false' value returned as the conflict wasn't resolved.
+ Saves a document to the default collection. When write operations are executed concurrently
+ and if conflicts occur, the conflict handler will be called. Use the conflict handler to directly
+ edit the document to resolve the conflict. When the conflict handler returns 'true', the save method
+ will save the edited document as the resolved document. If the conflict handler returns 'false',
+ the save operation will be canceled with 'false' value returned as the conflict wasn't resolved.
  
  @param document The document.
  @param conflictHandler The conflict handler block which can be used to resolve it.
@@ -177,7 +177,7 @@ __deprecated_msg("Use [[database defaultCollection] saveDocument:concurrencyCont
 __deprecated_msg("Use [[database defaultCollection] saveDocument:conflictHandler:error:] instead.");
 
 /**
- Deletes a document from the database. When write operations are executed
+ Deletes a document from the default collection. When write operations are executed
  concurrently, the last writer will overwrite all other written values.
  Calling this method is the same as calling the -deleteDocument:concurrencyControl:error:
  method with kCBLConcurrencyControlLastWriteWins concurrency control.
@@ -190,7 +190,7 @@ __deprecated_msg("Use [[database defaultCollection] saveDocument:conflictHandler
 __deprecated_msg("Use [[database defaultCollection] deleteDocument:error:] instead.");
 
 /**
- Deletes a document from the database. When used with kCBLConcurrencyControlLastWriteWins
+ Deletes a document from the default collection. When used with kCBLConcurrencyControlLastWriteWins
  concurrency control, the last write operation will win if there is a conflict.
  When used with kCBLConcurrencyControlFailOnConflict concurrency control,
  delete will fail with 'CBLErrorConflict' error code returned.
@@ -206,7 +206,7 @@ __deprecated_msg("Use [[database defaultCollection] deleteDocument:error:] inste
 __deprecated_msg("Use [[database defaultCollection] deleteDocument:concurrencyControl:error:] instead.");
 
 /** 
- Purges the given document from the database.
+ Purges the given document from the default collection.
  This is more drastic than deletion: it removes all traces of the document. 
  The purge will NOT be replicated to other databases.
  
@@ -219,7 +219,7 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocument:error:] instea
 
 
 /**
- Purges the document for the given documentID from the database.
+ Purges the document of the given document ID from the default collection
  This is more drastic than deletion: it removes all traces of the document.
  The purge will NOT be replicated to other databases.
  
@@ -364,7 +364,7 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] 
 
 
 /** 
- Adds a database change listener. Changes will be posted on the main queue.
+ Adds a database change listener to listen to changes in the default collection. Changes will be posted on the main queue.
  
  @param listener The listener to post the changes.
  @return An opaque listener token object for removing the listener.
@@ -373,9 +373,8 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] 
 __deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.");
 
 /**
- Adds a database change listener with the dispatch queue on which changes
- will be posted. If the dispatch queue is not specified, the changes will be
- posted on the main queue.
+ Adds a database change listener to listen to changes in the default collection with the dispatch queue on which changes
+ will be posted. If the dispatch queue is not specified, the changes will be posted on the main queue.
 
  @param queue The dispatch queue.
  @param listener The listener to post changes.
@@ -386,8 +385,8 @@ __deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.
 __deprecated_msg("Use [[database defaultCollection] addChangeListenerWithQueue:listener:] instead.");
 
 /** 
- Adds a document change listener for the document with the given ID. Changes
- will be posted on the main queue.
+ Adds a document change listener for the document of the given document ID in the default collection.
+ Changes will be posted on the main queue.
  
  @param id The document ID.
  @param listener The listener to post changes.
@@ -397,11 +396,9 @@ __deprecated_msg("Use [[database defaultCollection] addChangeListenerWithQueue:l
                                                 listener: (void (^)(CBLDocumentChange*))listener
 __deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:listener:] instead.");
 
-
 /**
- Adds a document change listener for the document with the given ID and the
- dispatch queue on which changes will be posted. If the dispatch queue
- is not specified, the changes will be posted on the main queue.
+ Adds a document change listener for the document of the given document ID in the default collection with
+ the dispatch queue on which changes will be posted. If the dispatch queue is not specified, the changes will be posted on the main queue.
  
  @param id The document ID.
  @param queue The dispatch queue.
@@ -412,6 +409,7 @@ __deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWit
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener
 __deprecated_msg("Use [[database defaultCollection] addDocumentChangeListenerWithID:queue:listener:] instead.");
+
 /** 
  Removes a change listener with the given listener token.
  
@@ -429,9 +427,10 @@ __deprecated_msg("Use [ListenerToken remove] instead.");
 __deprecated_msg("Use [[database defaultCollection] indexes] instead.");
 
 /**
- Creates an index which could be a value index or a full-text search index with the given name.
- The name can be used for deleting the index. Creating a new different index with an existing
- index name will replace the old index; creating the same index with the same name will be no-ops.
+ Creates an index with the index name in the default collection. The index could be a value index or
+ a full-text index. The index name can be used later for deleting the index. Creating a new different index
+ with an existing index name will replace the old index. Creating the same index with the same name
+ will be no-ops.
  
  @param index The index.
  @param name The index name.
@@ -442,9 +441,9 @@ __deprecated_msg("Use [[database defaultCollection] indexes] instead.");
 __deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:error:] instead.");
 
 /**
- Creates an index using IndexConfiguration, which could be a value index or a full-text search index with the given name.
- Creating a new different index with an existing index name will replace the old index;
- creating the same index with the same name will be no-ops.
+ Creates an index in the default collection with the index config and the index name. The index config could be a value index or
+ a full-text index. The index name can be used later for deleting the index. Creating a new different index with an existing index name
+ will replace the old index. Creating the same index with the same name will be no-ops.
  
  @param config The index configuration
  @param name The index name.
@@ -456,7 +455,7 @@ __deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:e
 __deprecated_msg("Use [[database defaultCollection] createIndexWithConfig:name:error:] instead.");
 
 /**
- Deletes the index of the given index name.
+ Deletes the index from the default collection by name.
 
  @param name The index name.
  @param error On return, the error if any.
@@ -469,7 +468,7 @@ __deprecated_msg("Use [[database defaultCollection] deleteIndexForName:error:] i
 #pragma mark - DOCUMENT EXPIRATION
 
 /**
- Sets an expiration date on a document.
+ Sets an expiration date on a document in the default collection.
  After this time the document will be purged from the database.
  
  @param documentID The ID of the document to set the expiration date for
@@ -483,7 +482,7 @@ __deprecated_msg("Use [[database defaultCollection] deleteIndexForName:error:] i
 __deprecated_msg("Use [[database defaultCollection] setDocumentExpirationWithID:expiration:error:] instead.");
 
 /**
- Returns the expiration time of a document, if exists, else nil.
+ Returns the expiration time of a document in the default collection, if exists, else nil.
  
  @param documentID The ID of the document to set the expiration date for
  @return the expiration time of a document, if one has been set, else nil.
