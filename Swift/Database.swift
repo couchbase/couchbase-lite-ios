@@ -91,12 +91,12 @@ public final class Database {
         return nil
     }
     
-    /// Gets document fragment object by the given document ID.
+    /// Gets document fragment object from the default collection by the given document ID.
+    @available(*, deprecated, message: "Use database.defaultCollection().subscript(key:) instead.")
     public subscript(key: String) -> DocumentFragment {
         guard let col = try? defaultCollection() else {
             Database.throwNotOpenError()
         }
-        
         return DocumentFragment(impl[key], collection: col)
     }
     

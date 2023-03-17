@@ -84,6 +84,11 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         return nil
     }
     
+    /// Gets document fragment object by the given document ID.
+    public subscript(key: String) -> DocumentFragment {
+        return DocumentFragment(impl[key], collection: self)
+    }
+    
     /// Save a document into the collection. The default concurrency control, lastWriteWins,
     /// will be used when there is conflict during  save.
     ///
