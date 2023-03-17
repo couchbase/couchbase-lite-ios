@@ -26,9 +26,10 @@ import Foundation
 ///
 /// When a new database is created, a default collection named `_default` will be automatically
 /// created. The default collection is created under the default scope named `_default`.
-/// You may decide to delete the default collection, but noted that the default collection cannot
-/// be re-created. The name of the default collection and scope can be referenced by using
+/// The name of the default collection and scope can be referenced by using
 /// `Collection.defaultCollectionName` and `Scope.defaultScopeName` constant.
+///
+/// - Note: The default collection cannot be deleted.
 ///
 /// When creating a new collection, the collection name, and the scope name are required.
 /// The naming rules of the collections and scopes are as follows:
@@ -68,7 +69,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Total number of documents in the collection.
     public var count: UInt64 { impl.count }
     
-    /// Get an existing document by id.
+    /// Get an existing document by document ID.
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
