@@ -497,7 +497,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 /**
  Get scope names that have at least one collection.
  
- @note: The default scope is exceptional as it will always be listed even though there are no collections under it.
+ @note The default scope is exceptional as it will always be listed even though there are no collections under it.
  
  @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
  @return returns the scope names, or nil if an error occurred.
@@ -508,7 +508,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
  Get a scope object by name. As the scope cannot exist by itself without having a collection,
  the nil value will be returned if there are no collections under the given scope’s name.
  
- @note: The default scope is exceptional, and it will always be returned.
+ @note The default scope is exceptional, and it will always be returned.
  
  @param name Scope name, if empty, it will use default scope name.
  @param error On return, the error if any. CBLErrorNotOpen code will be returned if the database is closed.
@@ -557,7 +557,8 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 
 /**
  Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops.
- Noted that the default collection cannot be deleted.
+ 
+ @note The default collection cannot be deleted.
  
  @param name Name of the collection to be deleted
  @param scope Name of the scope the collection resides, if not specified uses the default scope.

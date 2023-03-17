@@ -527,7 +527,8 @@ public final class Database {
     }
     
     /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops.
-    /// Noted that the default collection cannot be deleted.
+    /// 
+    /// - Note: The default collection cannot be deleted.
     public func deleteCollection(name: String, scope: String? = defaultScopeName) throws {
         try impl.deleteCollection(withName: name, scope: scope)
     }

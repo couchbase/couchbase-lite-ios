@@ -28,7 +28,8 @@ import Foundation
 /// created. The default collection is created under the default scope named `_default`.
 /// The name of the default collection and scope can be referenced by using
 /// `Collection.defaultCollectionName` and `Scope.defaultScopeName` constant.
-/// It is noted that the default collection cannot be deleted.
+///
+/// - Note: The default collection cannot be deleted.
 ///
 /// When creating a new collection, the collection name, and the scope name are required.
 /// The naming rules of the collections and scopes are as follows:

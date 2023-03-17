@@ -43,7 +43,8 @@ extern NSString* const kCBLDefaultCollectionName;
  created. The default collection is created under the default scope named "_default".
  The name of the default collection and scope can be referenced by using
  `kCBLDefaultCollectionName` and `kCBLDefaultScopeName` constant.
- It is noted that the default collection cannot be deleted.
+ 
+ @note The default collection cannot be deleted.
  
  When creating a new collection, the collection name, and the scope name are required.
  The naming rules of the collections and scopes are as follows:
