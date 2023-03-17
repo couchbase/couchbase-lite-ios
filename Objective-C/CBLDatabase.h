@@ -557,6 +557,7 @@ __deprecated_msg("Use [[database defaultCollection] getDocumentExpirationWithID:
 
 /**
  Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops.
+ Noted that the default collection cannot be deleted.
  
  @param name Name of the collection to be deleted
  @param scope Name of the scope the collection resides, if not specified uses the default scope.

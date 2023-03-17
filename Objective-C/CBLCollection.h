@@ -41,9 +41,9 @@ extern NSString* const kCBLDefaultCollectionName;
  
  When a new database is created, a default collection named "_default" will be automatically
  created. The default collection is created under the default scope named "_default".
- You may decide to delete the default collection, but noted that the default collection cannot
- be re-created. The name of the default collection and scope can be referenced by using
+ The name of the default collection and scope can be referenced by using
  `kCBLDefaultCollectionName` and `kCBLDefaultScopeName` constant.
+ It is noted that the default collection cannot be deleted.
  
  When creating a new collection, the collection name, and the scope name are required.
  The naming rules of the collections and scopes are as follows:
