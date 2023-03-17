@@ -166,14 +166,31 @@
     
 }
 
-- (void) testGetDocFragmentWithNonExistingID {
-    CBLDocumentFragment* doc = _db[@"doc1"];
+- (void) testGetDocFragmentWithIDFromCollection {
+    NSError* error;
+    CBLCollection* col = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col);
+    
+    // Not exist:
+    CBLDocumentFragment* doc = col[@"doc1"];
     AssertNotNil(doc);
     AssertFalse(doc.exists);
     AssertNil(doc.document);
-    AssertNil(doc[@"address"][@"street"].string);
-    AssertNil(doc[@"address"][@"city"].string);
-    AssertNil(doc[@"address"][@"state"].string);
+    
+    NSDictionary* dict = @{@"address": @{
+                                   @"street": @"1 Main street",
+                                   @"city": @"Mountain View",
+                                   @"state": @"CA"}};
+    [self saveDocument: [self createDocument: @"doc1" data: dict] collection: col];
+    
+    // Exist:
+    doc = col[@"doc1"];
+    AssertNotNil(doc);
+    Assert(doc.exists);
+    AssertNotNil(doc.document);
+    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main street");
+    AssertEqualObjects(doc[@"address"][@"city"].string, @"Mountain View");
+    AssertEqualObjects(doc[@"address"][@"state"].string, @"CA");
 }
 
 - (void) testGetFragmentFromDictionaryValue {

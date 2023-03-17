@@ -239,6 +239,17 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
+#pragma mark - Subscript
+
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    NSError* error;
+    CBLDocument* doc = [self documentWithID: documentID error: &error];
+    if (error) {
+        CBLWarn(Database, @"%@: Error when getting a document with ID '%@': %@", self, documentID, error.description);
+    }
+    return [[CBLDocumentFragment alloc] initWithDocument: doc];
+}
+
 #pragma mark - Purge
 
 - (BOOL) purgeDocument: (CBLDocument*)document

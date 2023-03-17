@@ -118,12 +118,13 @@ __deprecated_msg("Use [database defaultCollection] documentWithID:] instead.");
 
 
 /** 
- Gets a document fragment with the given document ID.
+ Gets a document fragment with the given document ID from the default collection.
  
  @param documentID The document ID.
  @return The CBLDocumentFragment object.
  */
-- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID
+__deprecated_msg("Use [[database defaultCollection] objectForKeyedSubscript:] instead.");
 
 
 #pragma mark - Save, Delete, Purge
