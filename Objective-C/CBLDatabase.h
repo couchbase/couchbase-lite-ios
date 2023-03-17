@@ -105,7 +105,7 @@ __deprecated_msg("Use [database defaultCollection].count instead.");
 
 /** 
  Gets an existing document from the default collection by document ID.
- If a document doesn't exist in the database, nil will be returned.
+ If the document doesn't exist in the database, nil will be returned.
  
  @param id The document ID.
  @return The CBLDocument object.
@@ -220,7 +220,7 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocument:error:] instea
 
 
 /**
- Purges the document of the given document ID from the default collection
+ Purges the document with the given document ID from the default collection
  This is more drastic than deletion: it removes all traces of the document.
  The purge will NOT be replicated to other databases.
  
@@ -365,7 +365,7 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] 
 
 
 /** 
- Adds a database change listener to listen to changes in the default collection. Changes will be posted on the main queue.
+ Adds a change listener to listen to changes in the default collection. Changes will be posted on the main queue.
  
  @param listener The listener to post the changes.
  @return An opaque listener token object for removing the listener.
@@ -374,7 +374,7 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] 
 __deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.");
 
 /**
- Adds a database change listener to listen to changes in the default collection with the dispatch queue on which changes
+ Adds a change listener to listen to changes in the default collection with the dispatch queue on which changes
  will be posted. If the dispatch queue is not specified, the changes will be posted on the main queue.
 
  @param queue The dispatch queue.
@@ -386,7 +386,7 @@ __deprecated_msg("Use [[database defaultCollection] addChangeListener:] instead.
 __deprecated_msg("Use [[database defaultCollection] addChangeListenerWithQueue:listener:] instead.");
 
 /** 
- Adds a document change listener for the document of the given document ID in the default collection.
+ Adds a document change listener for the document with the given document ID in the default collection.
  Changes will be posted on the main queue.
  
  @param id The document ID.

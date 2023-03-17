@@ -78,6 +78,7 @@ public final class Database {
     public let config: DatabaseConfiguration
     
     /// Gets a document from the default collection by document ID.
+    /// If the document doesn't exist, nil will be returned.
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
         guard let col = try? defaultCollection() else {
@@ -151,7 +152,7 @@ public final class Database {
     ///   - document: The document.
     ///   - conflictHandler: The conflict handler closure which can be used to resolve it.
     /// - Returns: True if successful. False if there is a conflict, but the conflict wasn't
-    ///             resolved as the conflict handler returns 'false' value.
+    ///            resolved as the conflict handler returns 'false' value.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
@@ -227,7 +228,7 @@ public final class Database {
         try impl.purgeDocument(document.impl)
     }
     
-    /// Purges the document for the given documentID from the default collection.
+    /// Purges the document with the given documentID from the default collection.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
     ///
@@ -304,7 +305,7 @@ public final class Database {
         return impl.getDocumentExpiration(withID: documentID)
     }
     
-    /// Adds a database change listener to listen to changes in the default collection.
+    /// Adds a change listener to listen to changes in the default collection.
     /// Changes will be posted on the main queue.
     ///
     /// - Parameter listener: The listener to post changes.
@@ -316,7 +317,7 @@ public final class Database {
         return self.addChangeListener(withQueue: nil, listener: listener)
     }
     
-    /// Adds a database change listener with the dispatch queue on which changes
+    /// Adds a change listener with the dispatch queue on which changes
     /// will be posted to listen to changes in the default collection. If the dispatch queue is not specified,
     /// the changes will be posted on the main queue.
     ///
@@ -334,7 +335,7 @@ public final class Database {
         return ListenerToken(token)
     }
     
-    /// Adds a document change listener for the document of the given document ID in the default collection.
+    /// Adds a document change listener for the document with the given document ID in the default collection.
     ///
     /// - Parameters:
     ///   - documentID: The document ID.
@@ -347,7 +348,7 @@ public final class Database {
         return self.addDocumentChangeListener(withID: id, queue: nil, listener: listener)
     }
     
-    /// Adds a document change listener for the document of the given document ID in the default collection with the dispatch queue
+    /// Adds a document change listener for the document with the given document ID in the default collection with the dispatch queue
     /// on which changes will be posted . If the dispatch queue is not specified, the changes will be posted on the main queue.
     ///
     /// - Parameters:
