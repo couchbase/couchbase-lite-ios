@@ -68,7 +68,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Total number of documents in the collection.
     public var count: UInt64 { impl.count }
     
-    /// Get an existing document by id.
+    /// Get an existing document by document ID.
     ///
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
