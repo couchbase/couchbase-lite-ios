@@ -274,13 +274,14 @@
         self.db.name,
     ];
 
-    for (NSString* index in indexs) {
+    for (NSUInteger i = 0; i < indexs.count; i++) {
         NSString* queryString= @"";
-        if (index != [indexs lastObject]) {
-            queryString = [NSString stringWithFormat: @"SELECT name FROM %1$@ WHERE match(%2$@, 'Jasper') ORDER BY rank(%2$@) ", froms[(int)[ indexs indexOfObject: index]], index];
-        }else {
-            queryString = [NSString stringWithFormat: @"SELECT name FROM _ as d WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", index];
+        if (i != indexs.count - 1){
+            queryString = [NSString stringWithFormat: @"SELECT name FROM %1$@ WHERE match(%2$@, 'Jasper') ORDER BY rank(%2$@) ", froms[i], indexs[i]];
+        }else{
+            queryString = [NSString stringWithFormat: @"SELECT name FROM _ as d WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", indexs[i]];
         }
+        
         CBLQuery* query = [self.db createQuery: queryString error: &error];
         AssertNotNil(query);
         CBLQueryResultSet* rs = [query execute: &error];
