@@ -239,6 +239,168 @@
     }
 }
 
+- (void) testFtsWithFtsIndexDefaultCollection {
+    NSError* error = nil;
+    CBLCollection* defaultCol = [self.db defaultCollection: &error];
+    AssertNotNil(defaultCol);
+    [self loadJSONResource: @"names_100" toCollection: defaultCol];
+    
+    CBLMutableDictionary* dict1 = [[CBLMutableDictionary alloc] init];
+    [dict1 setValue: @"Jasper" forKey: @"first"];
+    [dict1 setValue: @"Grebel" forKey: @"last"];
+    
+    CBLMutableDictionary* dict2 = [[CBLMutableDictionary alloc] init];
+    [dict2 setValue: @"Jasper" forKey: @"first"];
+    [dict2 setValue: @"Okorududu" forKey: @"last"];
+
+    CBLFullTextIndexItem* item = [CBLFullTextIndexItem property: @"name.first"];
+    CBLFullTextIndex* nameIndex = [CBLIndexBuilder fullTextIndexWithItems: @[item]];
+    nameIndex.ignoreAccents = YES;
+    Assert([defaultCol createIndex: nameIndex name: @"index" error: &error],
+           @"Error when creating value index: %@", error);
+
+    NSArray<NSString*>* indexs = @[
+        @"index",
+ //       @"_.index",
+ //       @"_default.index",
+ //       [NSString stringWithFormat:@"%@.index", self.db.name],
+        @"d.index"
+    ];
+
+    for (NSString* index in indexs) {
+        NSString* queryString= @"";
+        if (index != [indexs lastObject]) {
+            queryString = [NSString stringWithFormat: @"SELECT name FROM _ WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", index];
+        }else {
+            queryString = [NSString stringWithFormat: @"SELECT name FROM _ as d WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", index];
+        }
+        CBLQuery* query = [self.db createQuery: queryString error: &error];
+        AssertNotNil(query);
+        CBLQueryResultSet* rs = [query execute: &error];
+        AssertNotNil(rs);
+        NSArray* allObjects = rs.allObjects;
+        AssertEqual(allObjects.count, 2);
+        AssertEqualObjects([allObjects[0] dictionaryForKey: @"name"], dict1);
+        AssertEqualObjects([allObjects[1] dictionaryForKey: @"name"], dict2);
+    }
+}
+
+- (void) testFtsWithFtsIndexNamedCollection {
+    NSError* error = nil;
+    CBLCollection* peopleCol = [self.db createCollectionWithName: @"people" scope: @"test" error: &error];
+    AssertNil(error);
+
+    CBLMutableDocument* mdoc = [self createDocument: @"person1"];
+    CBLMutableDictionary* dict1 = [[CBLMutableDictionary alloc] init];
+    [dict1 setValue: @"Jasper" forKey: @"first"];
+    [dict1 setValue: @"Grebel" forKey: @"last"];
+    [mdoc setDictionary: dict1 forKey: @"name"];
+    [mdoc setString: @"4" forKey: @"random"];
+    [self saveDocument: mdoc collection: peopleCol];
+
+    mdoc = [self createDocument: @"person2"];
+    CBLMutableDictionary* dict2 = [[CBLMutableDictionary alloc] init];
+    [dict2 setValue: @"Jasper" forKey: @"first"];
+    [dict2 setValue: @"Okorududu" forKey: @"last"];
+    [mdoc setDictionary: dict2 forKey: @"name"];
+    [mdoc setString: @"1" forKey: @"random"];
+    [self saveDocument: mdoc collection: peopleCol];
+
+    mdoc = [self createDocument: @"person3"];
+    CBLMutableDictionary* dict3 = [[CBLMutableDictionary alloc] init];
+    [dict3 setValue: @"Monica" forKey: @"first"];
+    [dict3 setValue: @"Polina" forKey: @"last"];
+    [mdoc setDictionary: dict3 forKey: @"name"];
+    [mdoc setString: @"1" forKey: @"random"];
+    [self saveDocument: mdoc collection: peopleCol];
+
+
+    CBLFullTextIndexItem* item = [CBLFullTextIndexItem property: @"name.first"];
+    CBLFullTextIndex* nameIndex = [CBLIndexBuilder fullTextIndexWithItems: @[item]];
+    nameIndex.ignoreAccents = NO;
+    Assert([peopleCol createIndex: nameIndex name: @"index" error: &error],
+           @"Error when creating value index: %@", error);
+
+    NSArray<NSString*>* indexs = @[
+        @"index",
+        @"people.index",
+        @"p.index"
+    ];
+
+    for (NSString* index in indexs) {
+        NSString* queryString= @"";
+        if (index != [indexs lastObject]) {
+            queryString = [NSString stringWithFormat: @"SELECT name FROM test.people WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@)", index];
+        }else {
+            queryString = [NSString stringWithFormat: @"SELECT name FROM test.people as p WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@)", index];
+        }
+        CBLQuery* query = [self.db createQuery: queryString error: &error];
+        AssertNotNil(query);
+        CBLQueryResultSet* rs = [query execute: &error];
+        AssertNotNil(rs);
+        NSArray* allObjects = rs.allObjects;
+        AssertEqual(allObjects.count, 2);
+        AssertEqualObjects([allObjects[0] dictionaryForKey: @"name"], dict1);
+        AssertEqualObjects([allObjects[1] dictionaryForKey: @"name"], dict2);
+    }
+}
+
+- (void) testFtsJoinWithCollection {
+    NSError* error = nil;
+    CBLCollection* flowersCol = [self.db createCollectionWithName: @"flowers" scope: @"test" error: &error];
+    AssertNil(error);
+    CBLCollection* colorsCol = [self.db createCollectionWithName: @"colors" scope: @"test" error: &error];
+    AssertNil(error);
+    
+    // flowers
+    CBLMutableDocument* mdoc = [self createDocument: @"c1"];
+    [mdoc setString: @"c1" forKey: @"cid"];
+    [mdoc setString: @"rose" forKey: @"name"];
+    [mdoc setString: @"Red flowers" forKey: @"description"];
+    [self saveDocument: mdoc collection: flowersCol];
+    
+    mdoc = [self createDocument: @"c2"];
+    [mdoc setString: @"c2" forKey: @"cid"];
+    [mdoc setString: @"hydrangea" forKey: @"name"];
+    [mdoc setString: @"Blue flowers" forKey: @"description"];
+    [self saveDocument: mdoc collection: flowersCol];
+    
+    // colors
+    mdoc = [self createDocument: @"c1"];
+    [mdoc setString: @"c1" forKey: @"cid"];
+    [mdoc setString: @"red" forKey: @"color"];
+    [self saveDocument: mdoc collection: colorsCol];
+    
+    mdoc = [self createDocument: @"c2"];
+    [mdoc setString: @"c2" forKey: @"cid"];
+    [mdoc setString: @"blue" forKey: @"color"];
+    [self saveDocument: mdoc collection: colorsCol];
+    
+    mdoc = [self createDocument: @"c3"];
+    [mdoc setString: @"c3" forKey: @"cid"];
+    [mdoc setString: @"white" forKey: @"color"];
+    [self saveDocument: mdoc collection: colorsCol];
+
+    CBLFullTextIndexItem* desc = [CBLFullTextIndexItem property: @"description"];
+    CBLFullTextIndex* descIndex = [CBLIndexBuilder fullTextIndexWithItems: @[desc]];
+    descIndex.ignoreAccents = NO;
+    Assert([flowersCol createIndex: descIndex name: @"descIndex" error: &error],
+           @"Error when creating value index: %@", error);
+    
+
+    NSString* qStr = @"SELECT f.name, f.description, c.color FROM test.flowers as f JOIN test.colors as c ON f.cid = c.cid WHERE match(f.descIndex, 'red') ORDER BY f.name";
+    CBLQuery* q = [self.db createQuery: qStr error: &error];
+    AssertNil(error);
+    
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allObjects;
+    AssertEqual(allObjects.count, 1);
+    CBLQueryResult* result = allObjects.firstObject;
+    AssertEqualObjects([result stringForKey: @"color"], @"red");
+    AssertEqualObjects([result stringForKey: @"description"], @"Red flowers");
+    AssertEqualObjects([result stringForKey: @"name"], @"rose");
+}
+
 - (void) testQueryBuilderSelectAllResultKey {
     NSError* error = nil;
     
