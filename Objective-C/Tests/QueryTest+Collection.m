@@ -252,12 +252,10 @@
     CBLMutableDictionary* dict2 = [[CBLMutableDictionary alloc] init];
     [dict2 setValue: @"Jasper" forKey: @"first"];
     [dict2 setValue: @"Okorududu" forKey: @"last"];
-
-    CBLFullTextIndexItem* item = [CBLFullTextIndexItem property: @"name.first"];
-    CBLFullTextIndex* nameIndex = [CBLIndexBuilder fullTextIndexWithItems: @[item]];
-    nameIndex.ignoreAccents = YES;
-    Assert([defaultCol createIndex: nameIndex name: @"index" error: &error],
-           @"Error when creating value index: %@", error);
+    
+    CBLFullTextIndexConfiguration* config = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"name.first"]
+                                                                                        ignoreAccents: NO language: nil];
+    Assert([defaultCol createIndexWithName:@"index" config:config error: &error]);
 
     NSArray<NSString*>* indexs = @[
         @"index",
@@ -323,11 +321,9 @@
     [self saveDocument: mdoc collection: peopleCol];
 
 
-    CBLFullTextIndexItem* item = [CBLFullTextIndexItem property: @"name.first"];
-    CBLFullTextIndex* nameIndex = [CBLIndexBuilder fullTextIndexWithItems: @[item]];
-    nameIndex.ignoreAccents = NO;
-    Assert([peopleCol createIndex: nameIndex name: @"index" error: &error],
-           @"Error when creating value index: %@", error);
+    CBLFullTextIndexConfiguration* config = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"name.first"]
+                                                                                        ignoreAccents: NO language: nil];
+    Assert([peopleCol createIndexWithName:@"index" config:config error: &error]);
 
     NSArray<NSString*>* indexs = @[
         @"index",

@@ -160,9 +160,8 @@ class QueryTest_Collection: QueryTest {
         try peopleCol.save(document: MutableDocument(id: "person2", data: ["name": ["first": "Jasper", "last":"Okorududu"], "random": "1"] ))
         try peopleCol.save(document: MutableDocument(id: "person3", data: ["name": ["first": "Monica", "last":"Polina"], "random": "2"] ))
         
-        let nameItem = FullTextIndexItem.property("name.first")
-        let index = IndexBuilder.fullTextIndex(items: nameItem)
-        try peopleCol.createIndex(index, name: "index")
+        let config = FullTextIndexConfiguration(["name.first"])
+        try peopleCol.createIndex(withName: "index", config: config)
         
         let indexs:[String] = ["index", "people.index", "p.index"]
         for index in indexs {
