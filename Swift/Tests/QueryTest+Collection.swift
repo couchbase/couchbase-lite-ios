@@ -125,6 +125,88 @@ class QueryTest_Collection: QueryTest {
         XCTAssertEqual(results.first?.string(forKey: "first"), "Abe")
     }
     
+    func testFTSwithFTSIndexDefaultCollection() throws {
+        let defaultCol = try self.db.defaultCollection()
+        try loadJSONResource(name: "names_100")
+
+        let nameItem = FullTextIndexItem.property("name.first")
+        let index = IndexBuilder.fullTextIndex(items: nameItem)
+        try defaultCol.createIndex(index, name: "index")
+        
+        let indexs:[String] = ["index",
+//                               "_.index", "_default.index", "\(self.db.name).index",
+                               "d.index"]
+        
+        for index in indexs {
+            var qStr = "SELECT name FROM _ WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
+            
+            if(index == indexs.last){
+                qStr = "SELECT name FROM _ as d WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
+            }
+            let q = try self.db.createQuery(qStr)
+            let rs = try q.execute()
+            let results = rs.allResults()
+            XCTAssertEqual(results.count, 2)
+            XCTAssertEqual(results[0].dictionary(forKey: "name")!.string(forKey: "last"), "Grebel")
+            XCTAssertEqual(results[1].dictionary(forKey: "name")!.string(forKey: "last"), "Okorududu")
+        }
+    
+    }
+    
+    func testFTSwithFTSIndexNamedCollection() throws {
+        let peopleCol = try self.db.createCollection(name: "people", scope: "test")
+        
+        try peopleCol.save(document: MutableDocument(id: "person1", data: ["name": ["first": "Jasper", "last":"Grebel"], "random": "4"] ))
+        try peopleCol.save(document: MutableDocument(id: "person2", data: ["name": ["first": "Jasper", "last":"Okorududu"], "random": "1"] ))
+        try peopleCol.save(document: MutableDocument(id: "person3", data: ["name": ["first": "Monica", "last":"Polina"], "random": "2"] ))
+        
+        let nameItem = FullTextIndexItem.property("name.first")
+        let index = IndexBuilder.fullTextIndex(items: nameItem)
+        try peopleCol.createIndex(index, name: "index")
+        
+        let indexs:[String] = ["index", "people.index", "p.index"]
+        for index in indexs {
+            var qStr = "SELECT name FROM test.people WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
+            
+            if(index == indexs.last){
+                qStr = "SELECT name FROM test.people as p WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
+            }
+            let q = try self.db.createQuery(qStr)
+            let rs = try q.execute()
+            let results = rs.allResults()
+            XCTAssertEqual(results.count, 2)
+            let x = results[1].dictionary(forKey: "name")?.dictionary(forKey: "last")
+            XCTAssertEqual(results[0].dictionary(forKey: "name")!.string(forKey: "last"), "Grebel")
+            XCTAssertEqual(results[1].dictionary(forKey: "name")!.string(forKey: "last"), "Okorududu")
+        }
+    
+    }
+    
+    func testFtsJoinCollection() throws {
+            let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
+            let colorsCol = try self.db.createCollection(name: "colors", scope: "test")
+            
+            try flowersCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "name": "rose", "description": "Red flowers"]))
+            try flowersCol.save(document: MutableDocument(id: "c2", data: ["cid": "c2", "name": "hydrangea", "description": "Blue flowers"]))
+            
+            try colorsCol.save(document: MutableDocument(id: "c1", data: ["cid": "c1", "color": "red"]))
+            try colorsCol.save(document: MutableDocument(id: "c2", data: ["cid": "c2", "color": "blue"]))
+            try colorsCol.save(document: MutableDocument(id: "c3", data: ["cid": "c3", "color": "white"]))
+
+            let config = FullTextIndexConfiguration(["description"])
+            try flowersCol.createIndex(withName: "descIndex", config: config)
+            
+            let qStr = "SELECT f.name, f.description, c.color FROM test.flowers f JOIN test.colors c ON f.cid = c.cid WHERE match(f.descIndex, 'red') ORDER BY f.name"
+            let q = try self.db.createQuery(qStr)
+            let rs = try q.execute()
+            let results = rs.allResults()
+            
+            XCTAssertEqual(results.count, 1)
+            XCTAssertEqual(results[0].string(forKey: "color"), "red")
+            XCTAssertEqual(results[0].string(forKey: "description"), "Red flowers")
+            XCTAssertEqual(results[0].string(forKey: "name"), "rose")
+        }
+    
     func testSelectAllResultKey() throws {
         let flowersCol = try self.db.createCollection(name: "flowers", scope: "test")
         let defaultCol = try self.db.defaultCollection();
