@@ -128,21 +128,21 @@ class QueryTest_Collection: QueryTest {
     func testFTSwithFTSIndexDefaultCollection() throws {
         let defaultCol = try self.db.defaultCollection()
         try loadJSONResource(name: "names_100")
-
-        let nameItem = FullTextIndexItem.property("name.first")
-        let index = IndexBuilder.fullTextIndex(items: nameItem)
-        try defaultCol.createIndex(index, name: "index")
         
-        let indexs:[String] = ["index",
-//                               "_.index", "_default.index", "\(self.db.name).index",
-                               "d.index"]
+        let config = FullTextIndexConfiguration(["name.first"])
+        try defaultCol.createIndex(withName: "index", config: config)
         
-        for index in indexs {
-            var qStr = "SELECT name FROM _ WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
-            
-            if(index == indexs.last){
+        let indexs:[String] = ["index", "_.index", "_default.index", "\(self.db.name).index", "d.index"]
+        let froms:[String] = ["_", "_", "_default", "\(self.db.name)"]
+        
+        for (i, index) in indexs.enumerated() {
+            var qStr = ""
+            if(index != indexs.last){
+                qStr = "SELECT name FROM \(froms[i]) WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
+            }else{
                 qStr = "SELECT name FROM _ as d WHERE match(\(index), \"Jasper\") ORDER BY rank(\(index))"
             }
+            
             let q = try self.db.createQuery(qStr)
             let rs = try q.execute()
             let results = rs.allResults()
@@ -175,7 +175,6 @@ class QueryTest_Collection: QueryTest {
             let rs = try q.execute()
             let results = rs.allResults()
             XCTAssertEqual(results.count, 2)
-            let x = results[1].dictionary(forKey: "name")?.dictionary(forKey: "last")
             XCTAssertEqual(results[0].dictionary(forKey: "name")!.string(forKey: "last"), "Grebel")
             XCTAssertEqual(results[1].dictionary(forKey: "name")!.string(forKey: "last"), "Okorududu")
         }

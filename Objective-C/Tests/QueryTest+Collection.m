@@ -261,16 +261,23 @@
 
     NSArray<NSString*>* indexs = @[
         @"index",
- //       @"_.index",
- //       @"_default.index",
- //       [NSString stringWithFormat:@"%@.index", self.db.name],
+        @"_.index",
+        @"_default.index",
+        [NSString stringWithFormat:@"%@.index", self.db.name],
         @"d.index"
+    ];
+    
+    NSArray<NSString*>* froms = @[
+        @"_",
+        @"_",
+        @"_default",
+        self.db.name,
     ];
 
     for (NSString* index in indexs) {
         NSString* queryString= @"";
         if (index != [indexs lastObject]) {
-            queryString = [NSString stringWithFormat: @"SELECT name FROM _ WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", index];
+            queryString = [NSString stringWithFormat: @"SELECT name FROM %1$@ WHERE match(%2$@, 'Jasper') ORDER BY rank(%2$@) ", froms[(int)[ indexs indexOfObject: index]], index];
         }else {
             queryString = [NSString stringWithFormat: @"SELECT name FROM _ as d WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", index];
         }
