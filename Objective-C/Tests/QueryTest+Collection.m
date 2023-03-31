@@ -276,7 +276,7 @@
         NSString* queryString= @"";
         if (i != indexs.count - 1){
             queryString = [NSString stringWithFormat: @"SELECT name FROM %1$@ WHERE match(%2$@, 'Jasper') ORDER BY rank(%2$@) ", froms[i], indexs[i]];
-        }else{
+        } else {
             queryString = [NSString stringWithFormat: @"SELECT name FROM _ as d WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@) ", indexs[i]];
         }
         
@@ -335,7 +335,7 @@
         NSString* queryString= @"";
         if (index != [indexs lastObject]) {
             queryString = [NSString stringWithFormat: @"SELECT name FROM test.people WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@)", index];
-        }else {
+        } else {
             queryString = [NSString stringWithFormat: @"SELECT name FROM test.people as p WHERE match(%1$@, 'Jasper') ORDER BY rank(%1$@)", index];
         }
         CBLQuery* query = [self.db createQuery: queryString error: &error];
@@ -391,7 +391,6 @@
     Assert([flowersCol createIndex: descIndex name: @"descIndex" error: &error],
            @"Error when creating value index: %@", error);
     
-
     NSString* qStr = @"SELECT f.name, f.description, c.color FROM test.flowers as f JOIN test.colors as c ON f.cid = c.cid WHERE match(f.descIndex, 'red') ORDER BY f.name";
     CBLQuery* q = [self.db createQuery: qStr error: &error];
     AssertNil(error);
