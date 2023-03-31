@@ -35,10 +35,9 @@ extension Database : QueryFactory {
     @available(*, deprecated, message: "Use database.defaultCollection().indexes() instead.")
     public var indexes: Array<String> { return impl.indexes }
     
-    /// Creates an index which could be a value index or a full-text search index with the given
-    /// name. The name can be used for deleting the index. Creating a new different index with an
-    /// existing index name will replace the old index; creating the same index with the same name
-    /// will be no-ops.
+    /// Creates an index wih the given name in the default collection. The index could be a value index or a full-text index.
+    /// The index name can be used later for deleting the index. Creating a new different index with an existing index name will
+    /// replace the old index. Creating the same index with the same name will be no-ops.
     ///
     /// - Parameters:
     ///   - index: The index.
@@ -49,10 +48,9 @@ extension Database : QueryFactory {
         try impl.createIndex(index.toImpl(), withName: name)
     }
     
-    /// Creates an index using IndexConfiguration, which could be a value index or a full-text
-    /// search index with the given name. Creating a new different index with an existing
-    /// index name will replace the old index;
-    /// creating the same index with the same name will be no-ops.
+    /// Creates an index in the default collection with the index config and the index name. The index config could be a value index or a full-text
+    /// index config. The index name can be used later for deleting the index.  Creating a new different index with an existing index name
+    /// will replace the old index. Creating the same index with the same name will be no-ops.
     ///
     /// - Parameters:
     ///     - config: The index configuration
@@ -63,7 +61,7 @@ extension Database : QueryFactory {
         try impl.createIndex(withConfig: config.toImpl(), name: name)
     }
     
-    /// Deletes the index of the given index name.
+    /// Deletes the index from the default collection by name.
     ///
     /// - Parameter name: The index name.
     /// - Throws: An error on a failure.

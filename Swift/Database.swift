@@ -77,7 +77,8 @@ public final class Database {
     /// The database configuration.
     public let config: DatabaseConfiguration
     
-    /// Gets a Document object with the given ID.
+    /// Gets a document from the default collection by document ID.
+    /// If the document doesn't exist, nil will be returned.
     @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
     public func document(withID id: String) -> Document? {
         guard let col = try? defaultCollection() else {
@@ -91,7 +92,7 @@ public final class Database {
         return nil
     }
     
-    /// Gets document fragment object from the default collection by the given document ID.
+    /// Gets document fragment object from the default collection by document ID.
     @available(*, deprecated, message: "Use database.defaultCollection().subscript(key:) instead.")
     public subscript(key: String) -> DocumentFragment {
         guard let col = try? defaultCollection() else {
@@ -100,7 +101,7 @@ public final class Database {
         return DocumentFragment(impl[key], collection: col)
     }
     
-    /// Saves a document to the database. When write operations are executed
+    /// Saves a document to the default collection. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the saveDocument(document,
     /// concurrencyControl) function with ConcurrencyControl.lastWriteWins.
@@ -112,9 +113,9 @@ public final class Database {
         try impl.save(document.impl as! CBLMutableDocument)
     }
     
-    /// Saves a document to the database. When used with lastWriteWins concurrency
-    /// control, the last write operation will win if there is a conflict. When used
-    /// with failOnConflict concurrency control, save will fail with 'false' value
+    /// Saves a document to the default collection. When used with lastWriteWins
+    /// concurrency control, the last write operation will win if there is a conflict.
+    /// When used with failOnConflict concurrency control, save will fail with 'false' value
     /// returned.
     ///
     /// - Parameters:
@@ -140,8 +141,8 @@ public final class Database {
         }
     }
     
-    /// Saves a document to the database. When write operations are executed concurrently and if
-    /// conflicts occur, the conflict handler will be called. Use the conflict handler to directly
+    /// Saves a document to the default collection. When write operations are executed concurrently
+    /// and if conflicts occur, the conflict handler will be called. Use the conflict handler to directly
     /// edit the document to resolve the conflict. When the conflict handler returns 'true', the
     /// save method will save the edited document as the resolved document. If the conflict handler
     /// returns 'false', the save operation will be canceled with 'false' value returned as
@@ -151,7 +152,7 @@ public final class Database {
     ///   - document: The document.
     ///   - conflictHandler: The conflict handler closure which can be used to resolve it.
     /// - Returns: True if successful. False if there is a conflict, but the conflict wasn't
-    ///             resolved as the conflict handler returns 'false' value.
+    ///            resolved as the conflict handler returns 'false' value.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
@@ -176,7 +177,7 @@ public final class Database {
         }
     }
     
-    /// Deletes a document from the database. When write operations are executed
+    /// Deletes a document from the default collection. When write operations are executed
     /// concurrently, the last writer will overwrite all other written values.
     /// Calling this function is the same as calling the deleteDocument(document,
     /// concurrencyControl) function with ConcurrencyControl.lastWriteWins.
@@ -188,8 +189,8 @@ public final class Database {
         try impl.delete(document.impl)
     }
     
-    /// Deletes a document from the database. When used with lastWriteWins concurrency
-    /// control, the last write operation will win if there is a conflict.
+    /// Deletes a document from the default collection. When used with lastWriteWins
+    /// concurrency control, the last write operation will win if there is a conflict.
     /// When used with failOnConflict concurrency control, save will fail with
     /// 'false' value returned.
     ///
@@ -216,7 +217,7 @@ public final class Database {
         }
     }
     
-    /// Purges the given document from the database.
+    /// Purges the given document from the default collection.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
     ///
@@ -227,7 +228,7 @@ public final class Database {
         try impl.purgeDocument(document.impl)
     }
     
-    /// Purges the document for the given documentID from the database.
+    /// Purges the document with the given documentID from the default collection.
     /// This is more drastic than deletion: it removes all traces of the document.
     /// The purge will NOT be replicated to other databases.
     ///
@@ -238,7 +239,7 @@ public final class Database {
         try impl.purgeDocument(withID: documentID)
     }
     
-    ///  Save a blob object directly into the database without associating it with any documents.
+    /// Save a blob object directly into the database without associating it with any documents.
     ///
     /// Note: Blobs that are not associated with any documents will be removed from the database
     /// when compacting the database.
@@ -283,8 +284,8 @@ public final class Database {
         }
     }
     
-    /// Sets an expiration date on a document.
-    /// After this time the document will be purged from the database.
+    /// Sets an expiration date on a document in the default collection.
+    /// After this time the document will be purged from the default collection.
     ///
     /// - Parameters:
     ///     - documentID: The ID of the document to set the expiration date for
@@ -295,7 +296,7 @@ public final class Database {
         try impl.setDocumentExpirationWithID(documentID, expiration: expiration)
     }
     
-    /// Returns the expiration time of a document, if exists, else nil.
+    /// Returns the expiration time of a document in the default collection, if exists, else nil.
     ///
     /// - Parameter documentID: The ID of the document to set the expiration date for.
     /// - Returns: the expiration time of a document, if one has been set, else nil.
@@ -304,7 +305,8 @@ public final class Database {
         return impl.getDocumentExpiration(withID: documentID)
     }
     
-    /// Adds a database change listener. Changes will be posted on the main queue.
+    /// Adds a change listener to listen to changes in the default collection.
+    /// Changes will be posted on the main queue.
     ///
     /// - Parameter listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
@@ -315,9 +317,9 @@ public final class Database {
         return self.addChangeListener(withQueue: nil, listener: listener)
     }
     
-    /// Adds a database change listener with the dispatch queue on which changes
-    /// will be posted. If the dispatch queue is not specified, the changes will be
-    /// posted on the main queue.
+    /// Adds a change listener with the dispatch queue on which changes
+    /// will be posted to listen to changes in the default collection. If the dispatch queue is not specified,
+    /// the changes will be posted on the main queue.
     ///
     /// - Parameters:
     ///   - queue: The dispatch queue.
@@ -333,7 +335,7 @@ public final class Database {
         return ListenerToken(token)
     }
     
-    /// Adds a document change listener block for the given document ID.
+    /// Adds a document change listener for the document with the given document ID in the default collection.
     ///
     /// - Parameters:
     ///   - documentID: The document ID.
@@ -346,9 +348,8 @@ public final class Database {
         return self.addDocumentChangeListener(withID: id, queue: nil, listener: listener)
     }
     
-    /// Adds a document change listener for the document with the given ID and the
-    /// dispatch queue on which changes will be posted. If the dispatch queue
-    /// is not specified, the changes will be posted on the main queue.
+    /// Adds a document change listener for the document with the given document ID in the default collection with the dispatch queue
+    /// on which changes will be posted . If the dispatch queue is not specified, the changes will be posted on the main queue.
     ///
     /// - Parameters:
     ///   - id: The document ID.
@@ -525,7 +526,9 @@ public final class Database {
         return nil
     }
     
-    /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops. 
+    /// Delete a collection by name  in the specified scope. If the collection doesn't exist, the operation will be no-ops.
+    /// 
+    /// - Note: The default collection cannot be deleted.
     public func deleteCollection(name: String, scope: String? = defaultScopeName) throws {
         try impl.deleteCollection(withName: name, scope: scope)
     }
