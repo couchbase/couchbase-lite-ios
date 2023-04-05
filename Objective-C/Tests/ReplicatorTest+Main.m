@@ -27,6 +27,7 @@
 #import <arpa/inet.h>
 #import <netdb.h>
 
+
 #define kDummyTarget [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cbl.com/db"]]
 
 // connect to an unknown-db on same machine, for the connection refused transient error.
@@ -1239,12 +1240,12 @@
 #pragma mark Deleted Doc with Filter
 
 // TODO: https://issues.couchbase.com/browse/CBL-2771
-- (void) _testPushDeletedDocWithFilterSingleShot {
+- (void) testPushDeletedDocWithFilterSingleShot {
     [self testPushDeletedDocWithFilter: NO];
 }
 
 // TODO: https://issues.couchbase.com/browse/CBL-2771
-- (void) _testPushDeletedDocWithFilterContinuous {
+- (void) testPushDeletedDocWithFilterContinuous {
     [self testPushDeletedDocWithFilter: YES];
 }
 
@@ -1742,9 +1743,8 @@
     [self waitForExpectations: @[x] timeout: 1e9];
 }
 
-// https://issues.couchbase.com/browse/CBL-1054
-// TODO: https://issues.couchbase.com/browse/CBL-3826
-- (void) _testStopReplicatorAfterOffline_SG {
+// CBL-1054, CBL-3826
+- (void) testStopReplicatorAfterOffline_SG {
     id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.couchbase.com/db"]];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
