@@ -107,11 +107,11 @@ class ReplicatorTest: CBLTestCase {
     }
     #endif
     
-    func run(replicator: Replicator, expectedError: Int?) {
+    func run(replicator: Replicator, expectedError: Int? = nil) {
         run(replicator: replicator, reset: false, expectedError: expectedError);
     }
     
-    func run(replicator: Replicator, reset: Bool, expectedError: Int?) {
+    func run(replicator: Replicator, reset: Bool, expectedError: Int? = nil) {
         let x = self.expectation(description: "change")
         
         let token = replicator.addChangeListener { (change) in

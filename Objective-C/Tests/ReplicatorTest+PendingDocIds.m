@@ -165,12 +165,8 @@
 
 - (void) testPendingDocIdsWithFilter {
     NSSet* docIds = [self createDocs];
-
-    NSMutableSet* pushDocIds = [NSMutableSet set];
-    for (int i = 0; i < kNoOfDocument / 2; i++) {
-        int docNo = arc4random_uniform(kNoOfDocument);
-        [pushDocIds addObject: [NSString stringWithFormat: kDocIdFormat, docNo]];
-    }
+    
+    NSSet* pushDocIds = [NSSet setWithObjects: @"doc-2", @"doc-4", nil];
     [self validatePendingDocumentIDs: docIds pushOnlyDocIds: pushDocIds];
 }
 
