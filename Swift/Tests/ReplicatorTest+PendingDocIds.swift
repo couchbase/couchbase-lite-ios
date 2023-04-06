@@ -43,263 +43,122 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
         return docIds
     }
     
-    func validatePendingDocumentIDs(_ docIds: Set<String>,
-                                    config rConfig: ReplicatorConfiguration? = nil) {
-        let x = self.expectation(description: "replicator stop")
-        var replConfig: ReplicatorConfiguration!
-        if rConfig != nil {
-            replConfig = rConfig
-        } else {
-            replConfig = config(target: DatabaseEndpoint(database: oDB),
-                                type: .push, continuous: false)
+    func validatePendingDocumentIDs(_ docIds: Set<String>, pushOnlyDocIds: Set<String>? = nil) throws {
+        var replConfig = config(target: DatabaseEndpoint(database: oDB), type: .push, continuous: false)
+        if let pushOnlyDocIds = pushOnlyDocIds, pushOnlyDocIds.count > 0 {
+            replConfig.pushFilter = { (doc, flags) -> Bool in
+                return pushOnlyDocIds.contains(doc.id)
+            }
         }
         let replicator = Replicator(config: replConfig)
         
-        // verify before starting the replicator
-        XCTAssertEqual(try! replicator.pendingDocumentIds(), docIds)
-        XCTAssertEqual(try! replicator.pendingDocumentIds().count, docIds.count)
+        // Check document pending:
+        let defaultCollection = try self.db.defaultCollection()
+        var pendingIds = try replicator.pendingDocumentIds(collection: defaultCollection)
         
-        let token = replicator.addChangeListener({ (change) in
-            let pDocIds = try! change.replicator.pendingDocumentIds()
+        if let pushOnlyDocIds = pushOnlyDocIds, pushOnlyDocIds.count > 0 {
+            XCTAssertEqual(pendingIds.count, pushOnlyDocIds.count)
+        } else {
+            XCTAssertEqual(pendingIds.count, docIds.count)
+        }
+        
+        for docId in docIds {
+            var willBePush = true
+            if let pushOnlyDocIds = pushOnlyDocIds {
+                willBePush = pushOnlyDocIds.contains(docId)
+            }
             
-            if change.status.activity == .connecting {
-                XCTAssertEqual(pDocIds, docIds)
-                XCTAssertEqual(pDocIds.count, docIds.count)
-            } else if change.status.activity == .stopped {
-                XCTAssertEqual(pDocIds.count, 0)
-                x.fulfill()
+            if willBePush {
+                XCTAssertTrue(pendingIds.contains(docId))
+                XCTAssertTrue(try replicator.isDocumentPending(docId, collection: defaultCollection))
             }
-        })
-        
-        replicator.start()
-        wait(for: [x], timeout: 5.0)
-        replicator.removeChangeListener(withToken: token)
-    }
-    
-    /// expected: [docId: isPresent] e.g., @{"doc-1": true, "doc-2": false, "doc-3": false}
-    func validateIsDocumentPending(_ expected: [String: Bool],
-                                   config rConfig: ReplicatorConfiguration? = nil) throws {
-        let x = self.expectation(description: "replicator stop")
-        var replConfig: ReplicatorConfiguration!
-        if rConfig != nil {
-            replConfig = rConfig
-        } else {
-            replConfig = config(target: DatabaseEndpoint(database: oDB),
-                                type: .push, continuous: false)
-        }
-        let replicator = Replicator(config: replConfig)
-        
-        // verify before starting the replicator
-        for (docId, present) in expected {
-            XCTAssertEqual(try! replicator.isDocumentPending(docId), present)
         }
         
-        let token = replicator.addChangeListener({ (change) in
-            if change.status.activity == .connecting {
-                for (docId, present) in expected {
-                    XCTAssertEqual(try! replicator.isDocumentPending(docId), present)
-                }
-            } else if change.status.activity == .stopped {
-                for (docId, _) in expected {
-                    XCTAssertEqual(try! replicator.isDocumentPending(docId), false)
-                }
-                x.fulfill()
-            }
-        })
+        // Run replicator:
+        run(replicator: replicator)
         
-        replicator.start()
-        wait(for: [x], timeout: 5.0)
-        replicator.removeChangeListener(withToken: token)
+        // Check document pending:
+        pendingIds = try replicator.pendingDocumentIds(collection: defaultCollection)
+        XCTAssertEqual(pendingIds.count, 0)
+        
+        for docId in docIds {
+            XCTAssertFalse(try replicator.isDocumentPending(docId, collection: defaultCollection))
+        }
     }
     
     // MARK: Unit Tests
+    
     func testPendingDocIDsPullOnlyException() throws {
-        let x = self.expectation(description: "replicator stop")
         let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .pull, continuous: false)
         let replicator = Replicator(config: replConfig)
         
-        var pullOnlyError: NSError!
-        let token = replicator.addChangeListener({ (change) in
-            if change.status.activity == .connecting {
-                self.ignoreException {
-                    do {
-                        let _ = try replicator.pendingDocumentIds()
-                    } catch {
-                        pullOnlyError = error as NSError
-                    }
-                }
-            } else if change.status.activity == .stopped {
-                x.fulfill()
-            }
-        })
-        replicator.start()
-        wait(for: [x], timeout: 5.0)
-        
-        XCTAssertEqual(pullOnlyError.code, CBLErrorUnsupported)
-        replicator.removeChangeListener(withToken: token)
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIDsWithCreate() throws {
-        let docIds = try createDocs()
-        validatePendingDocumentIDs(docIds)
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIDsWithUpdate() throws {
-        let _ = try createDocs()
-        
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
-        run(config: replConfig, expectedError: nil)
-        
-        let updatedIds: Set = ["doc-2", "doc-4"]
-        for docId in updatedIds {
-            let doc = db.document(withID: docId)!.toMutable()
-            doc.setString(kUpdateActionValue, forKey: kActionKey)
-            try saveDocument(doc)
+        var pullOnlyError: NSError? = nil
+        do {
+            let defaultCollection = try self.db.defaultCollection()
+            let _ = try replicator.pendingDocumentIds(collection: defaultCollection)
+        } catch {
+            pullOnlyError = error as NSError
         }
         
-        validatePendingDocumentIDs(updatedIds)
+        XCTAssertEqual(pullOnlyError?.code, CBLErrorUnsupported)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithDelete() throws {
+    func testPendingDocIDsWithCreate() throws {
+        let docIds = try createDocs()
+        try validatePendingDocumentIDs(docIds)
+    }
+    
+    func testPendingDocIDsWithUpdate() throws {
         let _ = try createDocs()
         
         let target = DatabaseEndpoint(database: oDB)
         let replConfig = config(target: target, type: .push, continuous: false)
         run(config: replConfig, expectedError: nil)
         
-        let deletedIds: Set = ["doc-2", "doc-4"]
+        let updatedIds: Set<String> = ["doc-2", "doc-4"]
+        for docId in updatedIds {
+            let defaultCollection = try self.db.defaultCollection()
+            let doc = try defaultCollection.document(id: docId)!.toMutable()
+            doc.setString(kUpdateActionValue, forKey: kActionKey)
+            try saveDocument(doc, collection: defaultCollection)
+        }
+        
+        try validatePendingDocumentIDs(updatedIds)
+    }
+    
+    func testPendingDocIdsWithDelete() throws {
+        let _ = try createDocs()
+        
+        let target = DatabaseEndpoint(database: oDB)
+        let replConfig = config(target: target, type: .push, continuous: false)
+        run(config: replConfig, expectedError: nil)
+        
+        let deletedIds: Set<String> = ["doc-2", "doc-4"]
         for docId in deletedIds {
             let doc = db.document(withID: docId)!
             try db.deleteDocument(doc)
         }
         
-        validatePendingDocumentIDs(deletedIds)
+        try validatePendingDocumentIDs(deletedIds)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithPurge() throws {
+    func testPendingDocIdsWithPurge() throws {
         var docs = try createDocs()
         
-        try db.purgeDocument(withID: "doc-3")
+        let col = try self.db.defaultCollection()
+        try col.purge(id: "doc-3")
         docs.remove("doc-3")
         
-        validatePendingDocumentIDs(docs)
+        try validatePendingDocumentIDs(docs)
     }
     
-    // TODO: https://issues.couchbase.com/browse/CBL-2448
-    func _testPendingDocIdsWithFilter() throws {
-        let _ = try createDocs()
+    func testPendingDocIdsWithFilter() throws {
+        let docIds = try createDocs()
         
-        let target = DatabaseEndpoint(database: oDB)
-        var replConfig = config(target: target, type: .push, continuous: false)
-        replConfig.pushFilter = { (doc, flags) -> Bool in
-            return doc.id == "doc-3"
-        }
-        
-        validatePendingDocumentIDs(["doc-3"], config: replConfig)
+        let pushOnlyIds: Set<String> = ["doc-2", "doc-4"]
+        try validatePendingDocumentIDs(docIds, pushOnlyDocIds: pushOnlyIds)
     }
-    
-    // MARK: isDocumentPending
-    
-    func testIsDocumentPendingPullOnlyException() throws {
-        let x = expectation(description: "Replication stop")
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .pull, continuous: false)
-        let replicator = Replicator(config: replConfig)
-        
-        var pullOnlyError: NSError!
-        let token = replicator.addChangeListener({ (change) in
-            if change.status.activity == .connecting {
-                self.ignoreException {
-                    do {
-                        let _ = try replicator.isDocumentPending("doc-1")
-                    } catch {
-                        pullOnlyError = error as NSError
-                    }
-                }
-            } else if change.status.activity == .stopped {
-                x.fulfill()
-            }
-        })
-        
-        replicator.start()
-        wait(for: [x], timeout: 5.0)
-        
-        XCTAssertEqual(pullOnlyError.code, CBLErrorUnsupported)
-        replicator.removeChangeListener(withToken: token)
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2575
-    func _testIsDocumentPendingWithCreate() throws {
-        noOfDocument = 2
-        let _ = try createDocs()
-        
-        try validateIsDocumentPending(["doc-0": true, "doc-1": true, "doc-3": false])
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2575
-    func _testIsDocumentPendingWithUpdate() throws {
-        let _ = try createDocs()
-        
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
-        run(config: replConfig, expectedError: nil)
-        
-        let updatedIds: Set = ["doc-2", "doc-4"]
-        for docId in updatedIds {
-            let doc = db.document(withID: docId)!.toMutable()
-            doc.setString(kUpdateActionValue, forKey: kActionKey)
-            try saveDocument(doc)
-        }
-        
-        try validateIsDocumentPending(["doc-2": true, "doc-4": true, "doc-1": false])
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2575
-    func _testIsDocumentPendingWithDelete() throws {
-        let _ = try createDocs()
-        
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
-        run(config: replConfig, expectedError: nil)
-        
-        let deletedIds: Set = ["doc-2", "doc-4"]
-        for docId in deletedIds {
-            let doc = db.document(withID: docId)!
-            try db.deleteDocument(doc)
-        }
-        
-        try validateIsDocumentPending(["doc-2": true, "doc-4": true, "doc-1": false])
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2575
-    func _testIsDocumentPendingWithPurge() throws {
-        noOfDocument = 3
-        let _ = try createDocs()
-        
-        try db.purgeDocument(withID: "doc-1")
-        
-        try validateIsDocumentPending(["doc-0": true, "doc-1": false, "doc-2": true])
-    }
-    
-    // TODO: https://issues.couchbase.com/browse/CBL-2575
-    func _testIsDocumentPendingWithPushFilter() throws {
-        let _ = try createDocs()
-        
-        let target = DatabaseEndpoint(database: oDB)
-        var replConfig = config(target: target, type: .push, continuous: false)
-        replConfig.pushFilter = { (doc, flags) -> Bool in
-            return doc.id == "doc-3"
-        }
-    
-        try validateIsDocumentPending(["doc-3": true, "doc-1": false], config: replConfig)
-    }
-    
+
     #endif
-    
 }
