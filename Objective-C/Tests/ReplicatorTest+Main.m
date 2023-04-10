@@ -805,6 +805,9 @@
     [self waitForExpectations: @[xc1] timeout: 5.0];
     [r removeChangeListenerWithToken: token1];
     
+    // CBL-4391 : Add a small delay to avoid database locked issue
+    [NSThread sleepForTimeInterval: 0.5];
+    
     // --- 3. Add some documents to the database
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
