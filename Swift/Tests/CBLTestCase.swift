@@ -40,6 +40,8 @@ class CBLTestCase: XCTestCase {
     
     let otherDatabaseName = "otherdb"
     
+    var defaultCol: Collection?
+    
     #if COUCHBASE_ENTERPRISE
         let directory = NSTemporaryDirectory().appending("CouchbaseLite-EE")
     #else
@@ -87,6 +89,7 @@ class CBLTestCase: XCTestCase {
     }
     
     override func tearDown() {
+        self.defaultCol = nil
         try! db.close()
         try! otherDB?.close()
         super.tearDown()
@@ -100,6 +103,7 @@ class CBLTestCase: XCTestCase {
     
     func openDB() throws {
         db = try openDB(name: databaseName)
+        self.defaultCol = try! db.defaultCollection()
     }
     
     func reopenDB() throws {
@@ -161,8 +165,8 @@ class CBLTestCase: XCTestCase {
     }
     
     func saveDocument(_ document: MutableDocument) throws {
-        try db.saveDocument(document)
-        let savedDoc = db.document(withID: document.id)
+        try defaultCol!.save(document: document)
+        let savedDoc = try defaultCol!.document(id: document.id)
         XCTAssertNotNil(savedDoc)
         XCTAssertEqual(savedDoc!.id, document.id)
     }
@@ -171,7 +175,7 @@ class CBLTestCase: XCTestCase {
         eval(document)
         try saveDocument(document)
         eval(document)
-        let savedDoc = db.document(withID: document.id)!
+        let savedDoc = try defaultCol!.document(id: document.id)!
         eval(savedDoc)
     }
     

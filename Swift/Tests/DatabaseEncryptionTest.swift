@@ -23,7 +23,7 @@ import CouchbaseLiteSwift
 class DatabaseEncryptionTest: CBLTestCase {
     
     var seekrit: Database?
-    
+
     override func tearDown() {
         if let sk = seekrit {
             try! sk.close()
@@ -42,7 +42,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: nil)
         
         let doc = createDocument(nil, data: ["answer": 42])
-        try seekrit!.saveDocument(doc)
+        try seekrit!.defaultCollection().save(document: doc)
         try seekrit!.close()
         seekrit = nil
         
@@ -53,7 +53,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Reopen with no password:
         seekrit = try openSeekrit(password: nil)
-        XCTAssertEqual(seekrit!.count, 1)
+        XCTAssertEqual(try seekrit!.defaultCollection().count, 1)
     }
     
     func testEncryptedDatabase() throws {
@@ -61,7 +61,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: "letmein")
         
         let doc = createDocument(nil, data: ["answer": 42])
-        try seekrit!.saveDocument(doc)
+        try seekrit!.defaultCollection().save(document: doc)
         try seekrit!.close()
         seekrit = nil
         
@@ -88,13 +88,13 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Re-create database:
         seekrit = try openSeekrit(password: nil)
-        XCTAssertEqual(seekrit!.count, 0)
+        XCTAssertEqual(try seekrit!.defaultCollection().count, 0)
         try seekrit!.close()
         seekrit = nil
         
         // Make sure it doesn't need a password now:
         seekrit = try openSeekrit(password: nil)
-        XCTAssertEqual(seekrit!.count, 0)
+        XCTAssertEqual(try seekrit!.defaultCollection().count, 0)
         try seekrit!.close()
         seekrit = nil
         
@@ -117,7 +117,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         let body = "This is a blob!".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: body)
         doc.setValue(blob, forKey: "blob")
-        try seekrit!.saveDocument(doc)
+        try seekrit!.defaultCollection().save(document: doc)
         
         // Read content from the raw blob file:
         blob = doc.blob(forKey: "blob")!
@@ -135,7 +135,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
         
         // Check blob content:
-        let savedDoc = seekrit!.document(withID: "att")!
+        let savedDoc = try seekrit!.defaultCollection().document(id: "att")!
         XCTAssertNotNil(savedDoc)
         blob = savedDoc.blob(forKey: "blob")!
         XCTAssertNotNil(blob.digest)
@@ -165,7 +165,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         try seekrit!.inBatch {
             for i in 0...99 {
                 let doc = createDocument(nil, data: ["seq": i])
-                try seekrit!.saveDocument(doc)
+                try seekrit!.defaultCollection().save(document: doc)
             }
         }
         
@@ -182,7 +182,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = seekrit2
         
         // Check the document and its attachment
-        let doc = seekrit!.document(withID: "att")!
+        let doc = try seekrit!.defaultCollection().document(id: "att")!
         XCTAssertNotNil(doc)
         let blob = doc.blob(forKey: "blob")!
         XCTAssertNotNil(blob.digest)
@@ -194,8 +194,8 @@ class DatabaseEncryptionTest: CBLTestCase {
         let seq = Expression.property("seq")
         let query = QueryBuilder
             .select(SelectResult.expression(seq))
-            .from(DataSource.database(seekrit!))
-            .where(seq.notNullOrMissing())
+            .from(DataSource.collection(try seekrit!.defaultCollection()))
+            .where(seq.isNotValued())
             .orderBy(Ordering.expression(seq))
         let rs = try query.execute()
         XCTAssertEqual(Array(rs).count, 100)
