@@ -78,7 +78,7 @@ class DocumentTest: CBLTestCase {
         
         var error: NSError? = nil
         do {
-            try db.saveDocument(doc1a)
+            try defaultCol!.save(document: doc1a)
         } catch let err as NSError {
             error = err
         }
@@ -89,7 +89,7 @@ class DocumentTest: CBLTestCase {
         
         // get document with empty doc-id string; skip test exception breakpoint
         ignoreException {
-            XCTAssertNil(self.db.document(withID: ""))
+            XCTAssertNil(try? self.defaultCol!.document(id: ""))
         }
     }
     
@@ -165,7 +165,7 @@ class DocumentTest: CBLTestCase {
         
         let anotherDb = try openDB(name: db.name)
         
-        let doc1b = anotherDb.document(withID: "doc1")
+        let doc1b = try anotherDb.defaultCollection().document(id: "doc1")
         XCTAssertNotNil(doc1b)
         XCTAssertTrue(doc1b !== doc1a)
         XCTAssertEqual(doc1b!.id, doc1a.id)
@@ -179,11 +179,11 @@ class DocumentTest: CBLTestCase {
         doc1a.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1a)
         
-        let doc1b = db.document(withID: "doc1")!
-        let doc1c = db.document(withID: "doc1")!
+        let doc1b = try defaultCol!.document(id: "doc1")!
+        let doc1c = try defaultCol!.document(id: "doc1")!
         
         let anotherDb = try openDB(name: db.name)
-        let doc1d = anotherDb.document(withID: "doc1")!
+        let doc1d = try anotherDb.defaultCollection().document(id: "doc1")!
         
         XCTAssertTrue(doc1a !== doc1b)
         XCTAssertTrue(doc1a !== doc1c)
@@ -227,7 +227,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         doc.setValue("string1b", forKey: "string1")
         doc.setValue("string2b", forKey: "string2")
         try saveDocument(doc, eval: { (d) in
@@ -288,7 +288,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         doc.setValue(1, forKey: "number1")
         doc.setValue(0, forKey: "number2")
         doc.setValue(2.1, forKey: "number3")
@@ -447,7 +447,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         doc.setValue(true, forKey: "boolean1")
         doc.setValue(false, forKey: "boolean2")
         try saveDocument(doc, eval: { (d) in
@@ -499,7 +499,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         nuDate = Date(timeInterval: 120.0, since: date)
         nuDateStr = jsonFromDate(nuDate)
         doc.setValue(nuDate, forKey: "date")
@@ -550,7 +550,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         nuContent = "abcdefg".data(using: .utf8)!
         nuBlob = Blob(contentType: "text/plain", data: nuContent)
         doc.setValue(nuBlob, forKey: "blob")
@@ -600,7 +600,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         dict = doc.dictionary(forKey: "dict")!
         dict.setValue("San Francisco", forKey: "city")
         try saveDocument(doc, eval: { (d) in
@@ -617,7 +617,7 @@ class DocumentTest: CBLTestCase {
         doc1a.setDictionary(dict1, forKey: "dict1")
         try saveDocument(doc1a)
         
-        let doc1 = db.document(withID: doc1a.id)!
+        let doc1 = try defaultCol!.document(id: doc1a.id)!
         let doc1b = doc1.toMutable()
         doc1b.setDictionary(doc1.dictionary(forKey: "dict1"), forKey: "dict1b")
         
@@ -678,7 +678,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         array = doc.array(forKey: "array")!
         array.addValue("item4")
         array.addValue("item5")
@@ -697,7 +697,7 @@ class DocumentTest: CBLTestCase {
         doc1a.setArray(array1, forKey: "array1")
         try saveDocument(doc1a)
         
-        let doc1 = db.document(withID: doc1a.id)!
+        let doc1 = try defaultCol!.document(id: doc1a.id)!
         let doc1b = doc1.toMutable()
         doc1b.setArray(doc1.array(forKey: "array1"), forKey: "array1b")
         
@@ -887,7 +887,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         shipping = doc.dictionary(forKey: "addresses")!.dictionary(forKey: "shipping")!
         shipping.setValue("2 Main street", forKey: "street")
         try saveDocument(doc, eval: { (d) in
@@ -948,7 +948,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         address1 = doc.array(forKey: "addresses")!.dictionary(at: 0)!
         address1.setValue("2 Main street", forKey: "street")
         
@@ -1005,7 +1005,7 @@ class DocumentTest: CBLTestCase {
         })
         
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         group1 = doc.array(forKey: "groups")!.array(at: 0)!
         group1.setValue("g", at: 0)
         group1.setValue("h", at: 1)
@@ -1062,7 +1062,7 @@ class DocumentTest: CBLTestCase {
         })
        
         // Get and update:
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         member1 = doc.dictionary(forKey: "group1")!.array(forKey: "member")!
         member1.setValue("g", at: 0)
         member1.setValue("h", at: 1)
@@ -1105,7 +1105,7 @@ class DocumentTest: CBLTestCase {
         XCTAssert(billing === address)
         
         // After save: both shipping and billing address are now independent to each other
-        let savedDoc = db.document(withID: doc.id)!
+        let savedDoc = try defaultCol!.document(id: doc.id)!
         let savedShipping = savedDoc.dictionary(forKey: "shipping")!
         let savedBilling = savedDoc.dictionary(forKey: "billing")!
         XCTAssert(savedShipping !== address)
@@ -1143,7 +1143,7 @@ class DocumentTest: CBLTestCase {
         
         // After getting the document from the database, mobile and home
         // are now independent to each other:
-        let savedDoc = db.document(withID: doc.id)!
+        let savedDoc = try defaultCol!.document(id: doc.id)!
         let savedMobile = savedDoc.array(forKey: "mobile")!
         let savedHome = savedDoc.array(forKey: "home")!
         XCTAssert(savedMobile !== phones)
@@ -1239,13 +1239,13 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc)
         
         // Delete:
-        let savedDoc = self.db.document(withID: doc.id)!
-        try self.db.deleteDocument(savedDoc)
-        XCTAssertNil(self.db.document(withID: savedDoc.id))
+        let savedDoc = try self.defaultCol!.document(id: doc.id)!
+        try self.defaultCol!.delete(document: savedDoc)
+        XCTAssertNil(try self.defaultCol!.document(id: savedDoc.id))
         
         // Delete again:
-        try self.db.deleteDocument(savedDoc)
-        XCTAssertNil(self.db.document(withID: savedDoc.id))
+        try self.defaultCol!.delete(document: savedDoc)
+        XCTAssertNil(try self.defaultCol!.document(id: savedDoc.id))
     }
     
     
@@ -1258,14 +1258,14 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc)
         
         
-        let savedDoc = db.document(withID: doc.id)!
+        let savedDoc = try defaultCol!.document(id: doc.id)!
         let address = savedDoc.dictionary(forKey: "address")!
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
         
-        try db.deleteDocument(savedDoc)
-        XCTAssertNil(db.document(withID: savedDoc.id))
+        try defaultCol!.delete(document: savedDoc)
+        XCTAssertNil(try defaultCol!.document(id: savedDoc.id))
         
         // The dictionary still has data:
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
@@ -1280,13 +1280,13 @@ class DocumentTest: CBLTestCase {
         
         // Purge before save:
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.db.purgeDocument(doc1)
+            try self.defaultCol!.purge(document: doc1)
         }
         
         try saveDocument(doc1)
         
         // Purge:
-        try db.purgeDocument(doc1)
+        try defaultCol!.purge(document: doc1)
         
         // Get and purge:
         let doc2 = createDocument("doc2")
@@ -1294,7 +1294,7 @@ class DocumentTest: CBLTestCase {
         doc2.setValue("Scott", forKey: "name")
         try saveDocument(doc2)
         
-        try db.purgeDocument(db.document(withID: doc2.id)!)
+        try defaultCol!.purge(document: defaultCol!.document(id: doc2.id)!)
     }
     
     func testReopenDB() throws {
@@ -1305,7 +1305,7 @@ class DocumentTest: CBLTestCase {
         
         try self.reopenDB()
         
-        let savedDoc = self.db.document(withID: "doc1")!
+        let savedDoc = try self.defaultCol!.document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "string"), "str")
         XCTAssert(savedDoc.toDictionary() == ["string": "str"] as [String: Any])
     }
@@ -1321,7 +1321,7 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc)
         try reopenDB()
         
-        let savedDoc = db.document(withID: "doc1")!
+        let savedDoc = try defaultCol!.document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Jim")
         XCTAssert(savedDoc.value(forKey: "data") as? Blob != nil)
         
@@ -1347,7 +1347,7 @@ class DocumentTest: CBLTestCase {
         doc.setValue(blob, forKey: "data")
         try saveDocument(doc)
         
-        let savedDoc = db.document(withID: doc.id)!
+        let savedDoc = try defaultCol!.document(id: doc.id)!
         blob = savedDoc.blob(forKey: "data")!
         stream = blob.contentStream!
         stream.open()
@@ -1375,7 +1375,7 @@ class DocumentTest: CBLTestCase {
         }
         
         try saveDocument(doc)
-        let savedDoc = db.document(withID: doc.id)!
+        let savedDoc = try defaultCol!.document(id: doc.id)!
         blob = savedDoc.blob(forKey: "data")!
         for _ in 1...5 {
             XCTAssertEqual(blob.content!, content)
@@ -1397,17 +1397,17 @@ class DocumentTest: CBLTestCase {
         doc.setValue("Jim", forKey: "name")
         try saveDocument(doc)
         
-        var savedDoc = db.document(withID: doc.id)!
+        var savedDoc = try defaultCol!.document(id: doc.id)!
         XCTAssert(savedDoc.value(forKey: "data") as? Blob != nil)
         XCTAssertEqual(savedDoc.blob(forKey: "data")!.content!, content)
         
         try reopenDB()
         
-        doc = db.document(withID: doc.id)!.toMutable()
+        doc = try defaultCol!.document(id: doc.id)!.toMutable()
         doc.setValue("bar", forKey: "foo")
         try saveDocument(doc)
         
-        savedDoc = db.document(withID: doc.id)!
+        savedDoc = try defaultCol!.document(id: doc.id)!
         XCTAssert(savedDoc.value(forKey: "data") as? Blob != nil)
         XCTAssertEqual(savedDoc.blob(forKey: "data")!.content!, content)
     }
@@ -1481,7 +1481,7 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc1c)
         
-        let savedDoc = db.document(withID: "doc1")!
+        let savedDoc = try defaultCol!.document(id: "doc1")!
         XCTAssert(savedDoc == savedDoc)
         XCTAssert(savedDoc == doc1c)
         
@@ -1495,13 +1495,13 @@ class DocumentTest: CBLTestCase {
         let doc1 = createDocument("doc1")
         doc1.setInt(42, forKey: "answer")
         try saveDocument(doc1)
-        let sdoc1 = db.document(withID: "doc1")
+        let sdoc1 = try defaultCol!.document(id: "doc1")
         XCTAssert(sdoc1 == doc1)
         
         let doc2 = createDocument("doc2")
         doc2.setInt(42, forKey: "answer")
         try saveDocument(doc2)
-        let sdoc2 = db.document(withID: "doc2")
+        let sdoc2 = try defaultCol!.document(id: "doc2")
         XCTAssert(sdoc2 == doc2)
         
         XCTAssert(doc1 == doc1)
@@ -1527,11 +1527,11 @@ class DocumentTest: CBLTestCase {
         
         XCTAssert(doc1a == doc1b)
         
-        try db.saveDocument(doc1a)
-        try otherDb.saveDocument(doc1b)
+        try defaultCol!.save(document: doc1a)
+        try otherDb.defaultCollection().save(document: doc1b)
         
-        var sdoc1a = db.document(withID: doc1a.id)!
-        var sdoc1b = otherDb.document(withID: doc1b.id)!
+        var sdoc1a = try defaultCol!.document(id: doc1a.id)!
+        var sdoc1b = try otherDb.defaultCollection().document(id: doc1b.id)!
         
         XCTAssert(sdoc1a == doc1a)
         XCTAssert(sdoc1b == doc1b)
@@ -1539,13 +1539,13 @@ class DocumentTest: CBLTestCase {
         XCTAssert(doc1a != doc1b)
         XCTAssert(sdoc1a != sdoc1b)
         
-        sdoc1a = db.document(withID: "doc1")!
-        sdoc1b = otherDb.document(withID: "doc1")!
+        sdoc1a = try defaultCol!.document(id: "doc1")!
+        sdoc1b = try otherDb.defaultCollection().document(id: "doc1")!
         XCTAssert(sdoc1a != sdoc1b)
         try otherDb.close()
         
         let sameDB = try openDB(name: db.name)
-        let anotherDoc1a = sameDB.document(withID: "doc1")
+        let anotherDoc1a = try sameDB.defaultCollection().document(id: "doc1")
         XCTAssert(sdoc1a == anotherDoc1a)
         try sameDB.close()
     }
@@ -1563,7 +1563,7 @@ class DocumentTest: CBLTestCase {
         let _ = try generateDocument(withID: "doc")
         
         // doc from database should always have a revision-id
-        let doc = db.document(withID: "doc")
+        let doc = try defaultCol!.document(id: "doc")
         let revisionID = doc?.revisionID
         XCTAssertNotNil(revisionID)
         
@@ -1586,9 +1586,9 @@ class DocumentTest: CBLTestCase {
     func testDocumentToJSON() throws {
         let json = try getRickAndMortyJSON()
         var mDoc = try MutableDocument(id: "doc", json: json)
-        try self.db.saveDocument(mDoc)
+        try self.defaultCol!.save(document: mDoc)
         
-        var doc = self.db.document(withID: "doc")
+        var doc = try self.defaultCol!.document(id: "doc")
         var jsonObj = doc?.toJSON().toJSONObj() as! [String: Any]
         XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
         XCTAssertEqual(jsonObj["id"] as! Int, 1)
@@ -1605,9 +1605,9 @@ class DocumentTest: CBLTestCase {
         
         mDoc = doc!.toMutable()
         mDoc.setValue("newValueAppended", forKey: "newKeyAppended")
-        try self.db.saveDocument(mDoc)
+        try self.defaultCol!.save(document: mDoc)
         
-        doc = self.db.document(withID: "doc")
+        doc = try self.defaultCol!.document(id: "doc")
         jsonObj = doc!.toJSON().toJSONObj() as! [String: Any]
         XCTAssertEqual(jsonObj["newKeyAppended"] as! String, "newValueAppended")
         XCTAssertEqual(jsonObj.count, 13)
