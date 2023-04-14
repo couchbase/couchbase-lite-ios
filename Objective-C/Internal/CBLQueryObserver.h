@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) start;
 
 /** Stops and frees the observer */
-- (void) stopAndFree;
+- (void) stop;
 
 @end
 

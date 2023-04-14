@@ -25,7 +25,7 @@
 
 @interface CBLQueryObserver () <CBLStoppable>
 
-@property (nonatomic, readonly) CBLQuery* query;
+@property (readonly, nullable) CBLQuery* query;
 
 @end
 
@@ -58,45 +58,55 @@
 }
 
 - (void) dealloc {
-    if (_obs) {
-        [self stopAndFree];
-    }
+    [self stop];
 }
 
 #pragma mark - Methods
 
 - (void) start {
-    [self observerEnable: YES];
+    CBL_LOCK(self) {
+        if (!_obs) {
+            return;
+        }
+        
+        [_query.database safeBlock: ^{
+            c4queryobs_setEnabled(_obs, true);
+        }];
+    }
 }
 
-- (void) stopAndFree {
+- (void) stop {
     CBL_LOCK(self) {
-        if (_obs) {
-            [self observerEnable: NO];
+        if (!_obs)
+            return;
+        
+        [_query.database safeBlock: ^{
+            c4queryobs_setEnabled(_obs, false);
             c4queryobs_free(_obs);
-            _obs = nil;
-        }
+        }];
+        
+        _obs = nil;
+        _listenerToken = nil;
+        
+        [_query.database removeActiveStoppable: self];
+        
+        // NOTE: When database closes, the observer will be stopped without removing
+        // the listener token, which also holds this observer instance, from the query.
+        // Nulling the _query to ensure to break the circular retain cycle with the query.
+        _query = nil;
     }
-    
-    [_query.database removeActiveStoppable: self];
-    
-    _query = nil;
-    _columnNames = nil;
-    _listenerToken = nil;
 }
 
 #pragma mark - Internal
 
 - (CBLQuery*) query {
-    return _query;
+    CBL_LOCK(self) {
+        return _query;
+    }
 }
 
 - (NSString*) description {
     return [NSString stringWithFormat:@"%@[%@:%@]%@", self.class, [_query description], _obs, [_listenerToken description]];
-}
-
-- (void) stop {
-    [self stopAndFree];
 }
 
 #pragma mark - Private
@@ -114,10 +124,16 @@ static void liveQueryCallback(C4QueryObserver *obs, C4Query *query, void *contex
 
 - (void) postQueryChange: (C4QueryObserver*)obs {
     CBL_LOCK(self) {
-        C4Error c4error = {};
+        if (!_obs)
+            return;
         
         // Note: enumerator('e') will be released in ~QueryResultContext; no need to release it
-        C4QueryEnumerator* e = c4queryobs_getEnumerator(obs, true, &c4error);
+        __block C4Error c4error = {};
+        __block C4QueryEnumerator* e;
+        [_query.database safeBlock: ^{
+            e = c4queryobs_getEnumerator(obs, true, &c4error);
+        }];
+        
         if (!e) {
             CBLLogInfo(Query, @"%@: C4QueryEnumerator returns empty (%d/%d)",
                        self, c4error.domain, c4error.code);
@@ -137,12 +153,6 @@ static void liveQueryCallback(C4QueryObserver *obs, C4Query *query, void *contex
         [_listenerToken postChange: [[CBLQueryChange alloc] initWithQuery: self.query
                                                                   results: rs
                                                                     error: error]];
-    }
-}
-
-- (void) observerEnable: (BOOL)enable {
-    CBL_LOCK(self) {
-        c4queryobs_setEnabled(_obs, enable);
     }
 }
 

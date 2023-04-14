@@ -306,7 +306,7 @@ using namespace fleece;
     
     CBL_LOCK(self) {
         CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-        [(CBLQueryObserver*)t.context stopAndFree];
+        [(CBLQueryObserver*)t.context stop];
         
         [_changeNotifier removeChangeListenerWithToken: token];
     }
