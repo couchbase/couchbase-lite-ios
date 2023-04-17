@@ -40,6 +40,10 @@ class CBLTestCase: XCTestCase {
     
     let otherDatabaseName = "otherdb"
     
+    var defaultCollection: Collection?
+    
+    var otherDB_defaultCollection: Collection?
+    
     #if COUCHBASE_ENTERPRISE
         let directory = NSTemporaryDirectory().appending("CouchbaseLite-EE")
     #else
@@ -87,6 +91,7 @@ class CBLTestCase: XCTestCase {
     }
     
     override func tearDown() {
+        self.defaultCollection = nil
         try! db.close()
         try! otherDB?.close()
         super.tearDown()
@@ -100,6 +105,7 @@ class CBLTestCase: XCTestCase {
     
     func openDB() throws {
         db = try openDB(name: databaseName)
+        self.defaultCollection = try! db.defaultCollection()
     }
     
     func reopenDB() throws {
@@ -115,6 +121,7 @@ class CBLTestCase: XCTestCase {
     
     func openOtherDB() throws {
         otherDB = try openDB(name: otherDatabaseName)
+        self.otherDB_defaultCollection = try! otherDB?.defaultCollection()
     }
     
     func reopenOtherDB() throws {
@@ -161,8 +168,8 @@ class CBLTestCase: XCTestCase {
     }
     
     func saveDocument(_ document: MutableDocument) throws {
-        try db.saveDocument(document)
-        let savedDoc = db.document(withID: document.id)
+        try defaultCollection!.save(document: document)
+        let savedDoc = try defaultCollection!.document(id: document.id)
         XCTAssertNotNil(savedDoc)
         XCTAssertEqual(savedDoc!.id, document.id)
     }
@@ -171,7 +178,7 @@ class CBLTestCase: XCTestCase {
         eval(document)
         try saveDocument(document)
         eval(document)
-        let savedDoc = db.document(withID: document.id)!
+        let savedDoc = try defaultCollection!.document(id: document.id)!
         eval(savedDoc)
     }
     
@@ -215,7 +222,7 @@ class CBLTestCase: XCTestCase {
     }
     
     func loadJSONResource(name: String) throws {
-        try loadJSONResource(name, collection: self.db.defaultCollection())
+        try loadJSONResource(name, collection: self.defaultCollection!)
     }
     
     func jsonFromDate(_ date: Date) -> String {
