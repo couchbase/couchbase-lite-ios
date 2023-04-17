@@ -23,7 +23,7 @@ import CouchbaseLiteSwift
 class DatabaseTest: CBLTestCase {
 
     func verifyDocument(withID id: String, data: Dictionary<String, Any>) throws {
-        let doc = try defaultCol!.document(id: id )
+        let doc = try defaultCollection!.document(id: id )
         XCTAssertNotNil(doc)
         XCTAssertEqual(doc!.id, id)
         XCTAssertTrue(doc!.toDictionary() == data)
@@ -54,14 +54,14 @@ class DatabaseTest: CBLTestCase {
         
         var success = true
         if let cc = concurrencyControl {
-            success = try defaultCol!.save(document: document, concurrencyControl: cc)
+            success = try defaultCollection!.save(document: document, concurrencyControl: cc)
             if cc == .failOnConflict {
                 XCTAssertFalse(success)
             } else {
                 XCTAssertTrue(success)
             }
         } else {
-            try defaultCol!.save(document: document)
+            try defaultCollection!.save(document: document)
         }
         return success
     }
@@ -71,14 +71,14 @@ class DatabaseTest: CBLTestCase {
     {
         var success = true
         if let cc = concurrencyControl {
-            success = try defaultCol!.delete(document: document, concurrencyControl: cc)
+            success = try defaultCollection!.delete(document: document, concurrencyControl: cc)
             if cc == .failOnConflict {
                 XCTAssertFalse(success)
             } else {
                 XCTAssertTrue(success)
             }
         } else {
-            try defaultCol!.delete(document: document)
+            try defaultCollection!.delete(document: document)
         }
         return success
     }
@@ -96,13 +96,13 @@ class DatabaseTest: CBLTestCase {
     }
     
     func testCreateNamedDocument() throws {
-        XCTAssertNil(try defaultCol!.document(id: "doc1"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc1"))
 
         let doc = MutableDocument(id: "doc1")
         XCTAssertEqual(doc.id, "doc1")
         XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
         
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
     }
     
     
@@ -116,21 +116,21 @@ class DatabaseTest: CBLTestCase {
                 for i in 0...25{
                     let mdoc = doc.toMutable()
                     mdoc.setValue(i, forKey: "number")
-                    try defaultCol!.save(document:mdoc)
+                    try defaultCollection!.save(document:mdoc)
                 }
             }
         }
         
         // Add each doc with a blob object:
         for doc in docs {
-            let mdoc = try defaultCol!.document(id: doc.id)!.toMutable()
+            let mdoc = try defaultCollection!.document(id: doc.id)!.toMutable()
             let data = doc.id.data(using: .utf8)
             let blob = Blob.init(contentType: "text/plain", data: data!)
             mdoc.setValue(blob, forKey: "blob")
-            try defaultCol!.save(document:mdoc)
+            try defaultCollection!.save(document:mdoc)
         }
         
-        XCTAssertEqual(defaultCol!.count, 20)
+        XCTAssertEqual(defaultCollection!.count, 20)
         
         let attachmentDir = (db.path! as NSString).appendingPathComponent("Attachments")
         var attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
@@ -141,11 +141,11 @@ class DatabaseTest: CBLTestCase {
         
         // Delete all docs:
         for doc in docs {
-            let doc = try defaultCol!.document(id: doc.id)!
-            try defaultCol!.delete(document: doc)
-            XCTAssertNil(try defaultCol!.document(id: doc.id))
+            let doc = try defaultCollection!.document(id: doc.id)!
+            try defaultCollection!.delete(document: doc)
+            XCTAssertNil(try defaultCollection!.document(id: doc.id))
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         attachments = try FileManager.default.contentsOfDirectory(atPath: attachmentDir)
         XCTAssertEqual(attachments.count, 20)
@@ -168,13 +168,13 @@ class DatabaseTest: CBLTestCase {
         let key = Expression.property("key")
         let keyItem = ValueIndexItem.expression(key)
         let keyIndex = IndexBuilder.valueIndex(items: keyItem)
-        try defaultCol!.createIndex(keyIndex, name: "KeyIndex")
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
+        try defaultCollection!.createIndex(keyIndex, name: "KeyIndex")
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
         
         // Check if the index is used:
         let q = QueryBuilder
             .select(SelectResult.expression(key))
-            .from(DataSource.collection(defaultCol!))
+            .from(DataSource.collection(defaultCollection!))
             .where(key.greaterThan(Expression.int(9)))
         
         var explain = try q.explain() as NSString
@@ -184,7 +184,7 @@ class DatabaseTest: CBLTestCase {
         try db.performMaintenance(type: .reindex)
         
         // Check if the index is still there and used:
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
         explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "USING INDEX KeyIndex").location, NSNotFound)
     }
@@ -199,32 +199,32 @@ class DatabaseTest: CBLTestCase {
                 for i in 0...25{
                     let mdoc = doc.toMutable()
                     mdoc.setValue(i, forKey: "number")
-                    try defaultCol!.save(document: mdoc)
+                    try defaultCollection!.save(document: mdoc)
                 }
             }
         }
         
         // Add each doc with a blob object:
         for doc in docs {
-            let mdoc = try defaultCol!.document(id: doc.id)!.toMutable()
+            let mdoc = try defaultCollection!.document(id: doc.id)!.toMutable()
             let data = doc.id.data(using: .utf8)
             let blob = Blob.init(contentType: "text/plain", data: data!)
             mdoc.setValue(blob, forKey: "blob")
-            try defaultCol!.save(document: mdoc)
+            try defaultCollection!.save(document: mdoc)
         }
         
-        XCTAssertEqual(defaultCol!.count, 20)
+        XCTAssertEqual(defaultCollection!.count, 20)
         
         // Integrity Check:
         try db.performMaintenance(type: .integrityCheck)
         
         // Delete all docs:
         for doc in docs {
-            let doc = try defaultCol!.document(id: doc.id)!
-            try defaultCol!.delete(document: doc)
-            XCTAssertNil(try defaultCol!.document(id: doc.id))
+            let doc = try defaultCollection!.document(id: doc.id)!
+            try defaultCollection!.delete(document: doc)
+            XCTAssertNil(try defaultCollection!.document(id: doc.id))
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         // Integrity Check:
         try db.performMaintenance(type: .integrityCheck)
@@ -234,11 +234,11 @@ class DatabaseTest: CBLTestCase {
         try db.inBatch {
             for i in 0...9{
                 let doc = MutableDocument(id: "doc\(i)")
-                try defaultCol!.save(document: doc)
+                try defaultCollection!.save(document: doc)
             }
         }
         for _ in 0...9 {
-            XCTAssertNotNil(try defaultCol!.document(id: "doc1"))
+            XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
         }
     }
     
@@ -294,20 +294,20 @@ class DatabaseTest: CBLTestCase {
     
     func testSaveDocWithID() throws {
         let doc = try generateDocument(withID: "doc1")
-        XCTAssertEqual(defaultCol!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         try verifyDocument(withID: doc.id, data: doc.toDictionary())
     }
     
     func testSaveDocWithSpecialCharactersDocID() throws {
         let docID = "`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'"
         let doc = try generateDocument(withID: docID)
-        XCTAssertEqual(defaultCol!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         try verifyDocument(withID: doc.id, data: doc.toDictionary())
     }
     
     func testSaveDocWIthAutoGeneratedID() throws {
         let doc = try generateDocument(withID: nil)
-        XCTAssertEqual(defaultCol!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         try verifyDocument(withID: doc.id, data: doc.toDictionary())
     }
     
@@ -345,16 +345,16 @@ class DatabaseTest: CBLTestCase {
         let doc = try generateDocument(withID: "doc1")
         try saveDocument(doc)
         
-        let doc1 = try defaultCol!.document(id: doc.id)!
+        let doc1 = try defaultCollection!.document(id: doc.id)!
         XCTAssertEqual(doc1.sequence, 2)
-        XCTAssertEqual(defaultCol!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
     }
     
     func testSaveInBatch() throws {
         try db.inBatch {
             try createDocs(10)
         }
-        XCTAssertEqual(defaultCol!.count, 10)
+        XCTAssertEqual(defaultCollection!.count, 10)
         try validateDocs(10)
     }
     
@@ -362,19 +362,19 @@ class DatabaseTest: CBLTestCase {
         do {
             try self.db.inBatch {
                 try self.createDocs(10)
-                XCTAssertEqual(defaultCol!.count, 10)
+                XCTAssertEqual(defaultCollection!.count, 10)
                 throw NSError(domain: "someDomain", code: 500, userInfo: nil)
             }
         } catch {
             XCTAssertNotNil(error);
             XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testSaveManyDocs() throws {
         try createDocs(1000)
-        XCTAssertEqual(defaultCol!.count, 1000)
+        XCTAssertEqual(defaultCollection!.count, 1000)
         try validateDocs(1000)
         
         // Cleanup:
@@ -384,29 +384,29 @@ class DatabaseTest: CBLTestCase {
         try db.inBatch {
             try createDocs(1000)
         }
-        XCTAssertEqual(defaultCol!.count, 1000)
+        XCTAssertEqual(defaultCollection!.count, 1000)
         try validateDocs(1000)
     }
     
     func testAndUpdateMutableDoc() throws {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Update
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Update
         doc.setInt(20, forKey: "age")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         let expectedResult: [String : Any] =
             ["firstName": "Daniel", "lastName": "Tiger", "age": 20]
         XCTAssertTrue(doc.toDictionary() == expectedResult)
         XCTAssertEqual(doc.sequence, 3)
         
-        let savedDoc = try defaultCol!.document(id: doc.id)!
+        let savedDoc = try defaultCollection!.document(id: doc.id)!
         XCTAssertTrue(savedDoc.toDictionary() == expectedResult)
         XCTAssertEqual(savedDoc.sequence, 3)
     }
@@ -422,17 +422,17 @@ class DatabaseTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Get two doc1 document objects (doc1a and doc1b):
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         
         // Modify doc1a:
         doc1a.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         doc1a.setString("Scotty", forKey: "nickName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         XCTAssertTrue(doc1a.toDictionary() ==
             ["firstName": "Scott", "lastName": "Tiger", "nickName": "Scotty"])
         XCTAssertEqual(doc1a.sequence, 3)
@@ -440,7 +440,7 @@ class DatabaseTest: CBLTestCase {
         // Modify doc1b:
         doc1b.setString("Lion", forKey: "lastName")
         if try saveDocument(doc1b, concurrencyControl: cc) {
-            let savedDoc = try defaultCol!.document(id: doc1b.id)!
+            let savedDoc = try defaultCollection!.document(id: doc1b.id)!
             XCTAssertTrue(savedDoc.toDictionary() == doc1b.toDictionary())
             XCTAssertEqual(savedDoc.sequence, 4)
         }
@@ -460,16 +460,16 @@ class DatabaseTest: CBLTestCase {
         let doc1a = createDocument("doc1")
         doc1a.setString("Daniel", forKey: "firstName")
         doc1a.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         XCTAssertEqual(doc1a.sequence, 1)
-        let savedDoc = try defaultCol!.document(id: "doc1")!
+        let savedDoc = try defaultCollection!.document(id: "doc1")!
         XCTAssertEqual(savedDoc.sequence, 1)
         
         let doc1b = createDocument(doc1a.id)
         doc1b.setString("Scott", forKey: "firstName")
         doc1b.setString("Tiger", forKey: "lastName")
         if try saveDocument(doc1b, concurrencyControl: cc) {
-            let savedDoc = try defaultCol!.document(id: doc1b.id)!
+            let savedDoc = try defaultCollection!.document(id: doc1b.id)!
             XCTAssertTrue(savedDoc.toDictionary() == doc1b.toDictionary())
             XCTAssertEqual(savedDoc.sequence, 2)
         }
@@ -489,21 +489,21 @@ class DatabaseTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Get two doc1 document objects (doc1a and doc1b):
-        let doc1a = try defaultCol!.document(id: doc.id)!
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         
         // Delete doc1a
-        try defaultCol!.delete(document: doc1a)
+        try defaultCollection!.delete(document: doc1a)
         XCTAssertEqual(doc1a.sequence, 2)
-        XCTAssertNil(try defaultCol!.document(id: doc1a.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc1a.id))
         
         // Modify doc1b:
         doc1b.setString("Lion", forKey: "lastName")
         if try saveDocument(doc1b, concurrencyControl: cc) {
-            let savedDoc = try defaultCol!.document(id: doc1b.id)!
+            let savedDoc = try defaultCollection!.document(id: doc1b.id)!
             XCTAssertTrue(savedDoc.toDictionary() == doc1b.toDictionary())
             XCTAssertEqual(savedDoc.sequence, 3)
         }
@@ -518,16 +518,16 @@ class DatabaseTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Get two doc1 document objects (doc1a and doc1b):
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         
         // Modify doc1a:
         doc1a.setString("Scott", forKey: "firstName")
         doc1a.setString("Scotty", forKey: "nickName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         XCTAssertTrue(doc1a.toDictionary() == ["firstName": "Scott",
                                                "lastName": "Tiger",
                                                "nickName": "Scotty"])
@@ -537,13 +537,13 @@ class DatabaseTest: CBLTestCase {
         doc1b.setString("Lion", forKey: "middleName")
         
         // merge the dictionaries, and keeping the doc1b dictionary values if duplicate comes in.
-        XCTAssertTrue(try defaultCol!.save(document: doc1b) { (doc, old) -> Bool in
+        XCTAssertTrue(try defaultCollection!.save(document: doc1b) { (doc, old) -> Bool in
             let merged = doc.toDictionary()
                 .merging(old!.toDictionary(), uniquingKeysWith: { (first, _) in first })
             doc.setData(merged)
             return true
         })
-        let savedDoc = try defaultCol!.document(id: doc1b.id)!
+        let savedDoc = try defaultCollection!.document(id: doc1b.id)!
         XCTAssertTrue(savedDoc.toDictionary() == ["firstName": "Daniel", // kept previous key value
                                                   "nickName": "Scotty", // merged
                                                   "lastName": "Tiger",  // NA
@@ -554,54 +554,54 @@ class DatabaseTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // create conflict and return false
-        var doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        var doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        var doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        var doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         doc1a.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         doc1b.setString("Lion", forKey: "middleName")
-        XCTAssertFalse(try defaultCol!.save(document: doc1b) { (doc, old) -> Bool in
+        XCTAssertFalse(try defaultCollection!.save(document: doc1b) { (doc, old) -> Bool in
             XCTAssert(doc1b == doc)
             XCTAssertEqual(doc1a, old)
             return false
             })
         
         // check it is same as old doc, and didn't updated the doc
-        XCTAssertEqual(try defaultCol!.document(id: doc1b.id)!, doc1a)
+        XCTAssertEqual(try defaultCollection!.document(id: doc1b.id)!, doc1a)
         
         // Updates to Current Mutable Document, should not save contents.
         // create conflict, update the mutable doc, and return false
-        doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         doc1a.setString("Sccotty", forKey: "nickname")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         doc1b.setString("Scotty", forKey: "nickname")
-        XCTAssertFalse(try defaultCol!.save(document: doc1b) { (doc, old) -> Bool in
+        XCTAssertFalse(try defaultCollection!.save(document: doc1b) { (doc, old) -> Bool in
             XCTAssert(doc1b == doc)
             XCTAssertEqual(doc1a, old)
             doc.setString("Scott", forKey: "nickname")
             return false
             })
         // check whether it is same old doc, and no update happened.
-        XCTAssertEqual(try defaultCol!.document(id: doc1b.id)!, doc1a)
+        XCTAssertEqual(try defaultCollection!.document(id: doc1b.id)!, doc1a)
     }
     
     func testConflictHandlerWhenDocumentIsPurged() throws {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Purge one instance
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        try defaultCol!.purge(document: try defaultCol!.document(id: doc.id)!)
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        try defaultCollection!.purge(document: try defaultCollection!.document(id: doc.id)!)
         
         doc1a.setString("Scotty", forKey: "nickName")
         ignoreException {
             do {
-                _ = try self.defaultCol!.save(document: doc1a) { (doc, old) -> Bool in
+                _ = try self.defaultCollection!.save(document: doc1a) { (doc, old) -> Bool in
                     return true
                 }
                 XCTFail("Shouldn't reach here, it should throw an exception when saving")
@@ -614,52 +614,52 @@ class DatabaseTest: CBLTestCase {
     
     func testConflictHandlerWithDeletedOldDoc() throws {
         let doc = createDocument("doc1")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // KEEPS NEW DOC(non-deleted)
-        var doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        XCTAssertTrue(try defaultCol!.delete(document: try defaultCol!.document(id: doc.id)!, concurrencyControl: .failOnConflict))
+        var doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        XCTAssertTrue(try defaultCollection!.delete(document: try defaultCollection!.document(id: doc.id)!, concurrencyControl: .failOnConflict))
         
         doc1a.setString("Lion", forKey: "middleName")
-        XCTAssertTrue(try defaultCol!.save(document: doc1a) { (doc, old) -> Bool in
+        XCTAssertTrue(try defaultCollection!.save(document: doc1a) { (doc, old) -> Bool in
             XCTAssertNil(old)
             XCTAssertNotNil(doc)
             XCTAssert(doc == doc1a)
             return true
         })
-        XCTAssert(try defaultCol!.document(id: doc.id) == doc1a)
+        XCTAssert(try defaultCollection!.document(id: doc.id) == doc1a)
         
         // KEEPS THE DELETED(old doc)
-        doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        XCTAssertTrue(try defaultCol!.delete(document: try defaultCol!.document(id: doc.id)!, concurrencyControl: .failOnConflict))
+        doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        XCTAssertTrue(try defaultCollection!.delete(document: try defaultCollection!.document(id: doc.id)!, concurrencyControl: .failOnConflict))
         
         doc1a.setString("Lion", forKey: "nickName")
-        XCTAssertFalse(try defaultCol!.save(document: doc1a) { (doc, old) -> Bool in
+        XCTAssertFalse(try defaultCollection!.save(document: doc1a) { (doc, old) -> Bool in
             XCTAssertNil(old)
             XCTAssertNotNil(doc)
             XCTAssert(doc == doc1a)
             return false
         })
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
     }
     
     func testConflictHandlerCalledTwice() throws {
         let doc = createDocument("doc1")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         doc1a.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         
         doc1b.setString("Lion", forKey: "middleName")
         var count = 0
-        _ = try defaultCol!.save(document: doc1b) { (doc, old) -> Bool in
+        _ = try defaultCollection!.save(document: doc1b) { (doc, old) -> Bool in
             count += 1
-            let doc1c = try! self.defaultCol!.document(id: doc.id)!.toMutable()
+            let doc1c = try! self.defaultCollection!.document(id: doc.id)!.toMutable()
             if !doc1c.boolean(forKey: "secondUpdate") {
                 doc1c.setBoolean(true, forKey: "secondUpdate")
-                try! self.defaultCol!.save(document: doc1c)
+                try! self.defaultCollection!.save(document: doc1c)
             }
             
             // merge contents
@@ -673,12 +673,12 @@ class DatabaseTest: CBLTestCase {
         }
         
         XCTAssertEqual(count, 2) // make sure the save handler called twice
-        XCTAssertEqual(defaultCol!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         let dict: [String: Any] = ["middleName": "Lion", // old doc contents - merged
             "firstName": "Scott", // savedDoc contents
             "secondUpdate": true, // second update did.
             "edit": "local"] // new prop added during resolve.
-        XCTAssert(try defaultCol!.document(id: doc1b.id)!.toDictionary() == dict)
+        XCTAssert(try defaultCollection!.document(id: doc1b.id)!.toDictionary() == dict)
     }
     
     /// disabling since, exceptions inside conflict handler will leak, since objc doesn't perform release
@@ -687,17 +687,17 @@ class DatabaseTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         doc1a.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         
         // conflicting save
         doc1b.setString("Lion", forKey: "middleName")
         ignoreException {
-            XCTAssertFalse(try self.defaultCol!.save(document: doc1b) { (cur, old) -> Bool in
+            XCTAssertFalse(try self.defaultCollection!.save(document: doc1b) { (cur, old) -> Bool in
                 NSException(name: .internalInconsistencyException,
                             reason: "some exception happened inside save handler",
                             userInfo: nil).raise()
@@ -712,54 +712,54 @@ class DatabaseTest: CBLTestCase {
         let doc = MutableDocument(id: "doc1")
         doc.setValue(1, forKey: "key")
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.delete(document: doc)
+            try self.defaultCollection!.delete(document: doc)
         }
     }
     
     func testDeleteDoc() throws {
         let doc = try generateDocument(withID: "doc1")
-        try defaultCol!.delete(document: doc)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        try defaultCollection!.delete(document: doc)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
     }
     
     func testDeleteSameDocTwice() throws {
         let doc = try generateDocument(withID: "doc1")
         
         // First time deletion:
-        try defaultCol!.delete(document: doc)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        try defaultCollection!.delete(document: doc)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
         XCTAssertEqual(doc.sequence, 2)
         
         // Second time deletion:
-        try defaultCol!.delete(document: doc)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        try defaultCollection!.delete(document: doc)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
         XCTAssertEqual(doc.sequence, 3)
     }
     
     func testDeleteNoneExistingDoc() throws {
         let doc1a = try generateDocument(withID: "doc1")
-        let doc1b = try defaultCol!.document(id: doc1a.id)!
+        let doc1b = try defaultCollection!.document(id: doc1a.id)!
         
         // Purge doc:
-        try defaultCol!.purge(document: doc1a)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: doc1a.id))
+        try defaultCollection!.purge(document: doc1a)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc1a.id))
         
         // Delete doc1a, 404 error:
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.delete(document: doc1a)
+            try self.defaultCollection!.delete(document: doc1a)
         }
         
         // Delete doc, 404 error:
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.delete(document: doc1b)
+            try self.defaultCollection!.delete(document: doc1b)
         }
         
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: doc1b.id))
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc1b.id))
     }
     
     func testDeleteDocInBatch() throws {
@@ -767,12 +767,12 @@ class DatabaseTest: CBLTestCase {
         let docs = try createDocs(10)
         try db.inBatch {
             for i in 0...9 {
-                let doc = try defaultCol!.document(id: docs[i].id)!
-                try defaultCol!.delete(document: doc)
-                XCTAssertEqual(defaultCol!.count, UInt64(9 - i))
+                let doc = try defaultCollection!.document(id: docs[i].id)!
+                try defaultCollection!.delete(document: doc)
+                XCTAssertEqual(defaultCollection!.count, UInt64(9 - i))
             }
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testDeleteWithErrorInBatch() throws {
@@ -780,9 +780,9 @@ class DatabaseTest: CBLTestCase {
         do {
             try self.db.inBatch {
                 for i in 0...9 {
-                    let doc = try defaultCol!.document(id: docs[i].id)!
-                    try defaultCol!.delete(document: doc)
-                    XCTAssertEqual(defaultCol!.count, UInt64(9 - i))
+                    let doc = try defaultCollection!.document(id: docs[i].id)!
+                    try defaultCollection!.delete(document: doc)
+                    XCTAssertEqual(defaultCollection!.count, UInt64(9 - i))
                 }
                 throw NSError(domain: "someDomain", code: 500, userInfo: nil)
             }
@@ -790,26 +790,26 @@ class DatabaseTest: CBLTestCase {
             XCTAssertNotNil(error);
             XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
         }
-        XCTAssertEqual(defaultCol!.count, 10)
+        XCTAssertEqual(defaultCollection!.count, 10)
     }
     
     func testDeleteDocOnDeletedDB() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
-        try defaultCol!.delete(document: doc)
+        try defaultCollection!.delete(document: doc)
         XCTAssertEqual(doc.sequence, 2)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
         
         doc.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         XCTAssertEqual(doc.sequence, 3)
         XCTAssertTrue(doc.toDictionary() ==
             ["firstName": "Scott", "lastName": "Tiger"])
         
-        let savedDoc = try defaultCol!.document(id: doc.id)!
+        let savedDoc = try defaultCollection!.document(id: doc.id)!
         XCTAssertTrue(savedDoc.toDictionary() == doc.toDictionary())
     }
     
@@ -817,18 +817,18 @@ class DatabaseTest: CBLTestCase {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
-        try defaultCol!.delete(document: doc)
+        try defaultCollection!.delete(document: doc)
         XCTAssertEqual(doc.sequence, 2)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
         
         doc.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         XCTAssertEqual(doc.sequence, 3)
         XCTAssertTrue(doc.toDictionary() == ["firstName": "Scott", "lastName": "Tiger"])
         
-        let savedDoc = try defaultCol!.document(id: doc.id)!
+        let savedDoc = try defaultCollection!.document(id: doc.id)!
         XCTAssertTrue(savedDoc.toDictionary() == doc.toDictionary())
     }
     
@@ -836,21 +836,21 @@ class DatabaseTest: CBLTestCase {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Get two doc1 document objects (doc1a and doc1b):
-        let doc1a = try defaultCol!.document(id: doc.id)!
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         
         // Delete doc1a:
-        try defaultCol!.delete(document: doc1a)
+        try defaultCollection!.delete(document: doc1a)
         XCTAssertEqual(doc1a.sequence, 2)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
         
         // Delete doc1b:
-        try defaultCol!.delete(document: doc1b)
+        try defaultCollection!.delete(document: doc1b)
         XCTAssertEqual(doc1a.sequence, 2)
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
     }
     
     func testDeleteDocWithConflict() throws {
@@ -863,15 +863,15 @@ class DatabaseTest: CBLTestCase {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Daniel", forKey: "firstName")
         doc.setString("Tiger", forKey: "lastName")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         // Get two document objects (doc1a and doc1b):
-        let doc1a = try defaultCol!.document(id: doc.id)!.toMutable()
-        let doc1b = try defaultCol!.document(id: doc.id)!.toMutable()
+        let doc1a = try defaultCollection!.document(id: doc.id)!.toMutable()
+        let doc1b = try defaultCollection!.document(id: doc.id)!.toMutable()
         
         // Modify doc1a
         doc1a.setString("Scott", forKey: "firstName")
-        try defaultCol!.save(document: doc1a)
+        try defaultCollection!.save(document: doc1a)
         XCTAssertTrue(doc1a.toDictionary() == ["firstName": "Scott", "lastName": "Tiger"])
         XCTAssertEqual(doc1a.sequence, 2)
         
@@ -879,7 +879,7 @@ class DatabaseTest: CBLTestCase {
         doc1b.setString("Lion", forKey: "lastName")
         if try deleteDocument(doc1b, concurrencyControl: cc) {
             XCTAssertEqual(doc1b.sequence, 3)
-            XCTAssertNil(try defaultCol!.document(id: doc1b.id))
+            XCTAssertNil(try defaultCollection!.document(id: doc1b.id))
         }
         XCTAssertTrue(doc1b.toDictionary() == ["firstName": "Daniel", "lastName": "Lion"])
         
@@ -892,15 +892,15 @@ class DatabaseTest: CBLTestCase {
     func testPurgePreSaveDoc() throws {
         let doc = createDocument("doc1")
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.purge(document: doc)
+            try self.defaultCollection!.purge(document: doc)
         }
     }
     
     func testPurgeDoc() throws {
         let doc = try generateDocument(withID: "doc1")
-        try defaultCol!.purge(document: doc)
-        XCTAssertNil(try defaultCol!.document(id: "doc1"))
-        XCTAssertEqual(defaultCol!.count, 0)
+        try defaultCollection!.purge(document: doc)
+        XCTAssertNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testPurgeDocInDifferentDBInstance() throws {
@@ -925,12 +925,12 @@ class DatabaseTest: CBLTestCase {
     
     func testPurgeSameDocTwice() throws {
         let doc = try generateDocument(withID: "doc1")
-        try defaultCol!.purge(document: doc)
-        XCTAssertNil(try defaultCol!.document(id: "doc1"))
-        XCTAssertEqual(defaultCol!.count, 0)
+        try defaultCollection!.purge(document: doc)
+        XCTAssertNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.purge(document: doc)
+            try self.defaultCollection!.purge(document: doc)
         }
     }
     
@@ -939,13 +939,13 @@ class DatabaseTest: CBLTestCase {
         try db.inBatch {
             for i in 0..<10 {
                 let docID = String(format: "doc_%03d", i)
-                let doc = try defaultCol!.document(id: docID)!
-                try self.defaultCol!.purge(document: doc)
-                XCTAssertNil(try defaultCol!.document(id: docID))
-                XCTAssertEqual(self.defaultCol!.count, UInt64(9 - i))
+                let doc = try defaultCollection!.document(id: docID)!
+                try self.defaultCollection!.purge(document: doc)
+                XCTAssertNil(try defaultCollection!.document(id: docID))
+                XCTAssertEqual(self.defaultCollection!.count, UInt64(9 - i))
             }
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testPurgeWithErrorInBatch() throws {
@@ -953,9 +953,9 @@ class DatabaseTest: CBLTestCase {
         do {
             try self.db.inBatch {
                 for i in 0...9 {
-                    let doc = try defaultCol!.document(id: docs[i].id)!
-                    try defaultCol!.purge(document: doc)
-                    XCTAssertEqual(defaultCol!.count, UInt64(9 - i))
+                    let doc = try defaultCollection!.document(id: docs[i].id)!
+                    try defaultCollection!.purge(document: doc)
+                    XCTAssertEqual(defaultCollection!.count, UInt64(9 - i))
                 }
                 throw NSError(domain: "someDomain", code: 500, userInfo: nil)
             }
@@ -963,19 +963,19 @@ class DatabaseTest: CBLTestCase {
             XCTAssertNotNil(error);
             XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
         }
-        XCTAssertEqual(defaultCol!.count, 10)
+        XCTAssertEqual(defaultCollection!.count, 10)
     }
     
     func testPurgeDocumentOnADeletedDocument() throws {
         let document = try generateDocument(withID: nil)
         
         // Delete document
-        try self.defaultCol!.delete(document: document)
+        try self.defaultCollection!.delete(document: document)
         
         // Purge doc
-        try defaultCol!.purge(document: document)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: document.id))
+        try defaultCollection!.purge(document: document)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: document.id))
     }
     
     // MARK: Purge Document With ID
@@ -984,17 +984,17 @@ class DatabaseTest: CBLTestCase {
         let documentID = "\(Date().timeIntervalSince1970)"
         let _ = createDocument(documentID)
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.purge(id: documentID)
+            try self.defaultCollection!.purge(id: documentID)
         }
     }
     
     func testPurgeDocumentWithID() throws {
         let doc = try generateDocument(withID: nil)
         
-        try self.defaultCol!.purge(document: doc)
+        try self.defaultCollection!.purge(document: doc)
         
-        XCTAssertNil(try defaultCol!.document(id: doc.id))
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: doc.id))
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testPurgeDocumentWithIDInDifferentDBInstance() throws {
@@ -1023,12 +1023,12 @@ class DatabaseTest: CBLTestCase {
     func testCallPurgeDocumentWithIDTwice() throws {
         let document = try generateDocument(withID: nil)
         let documentID = document.id
-        try defaultCol!.purge(id: documentID)
-        XCTAssertNil(try defaultCol!.document(id: documentID))
-        XCTAssertEqual(defaultCol!.count, 0)
+        try defaultCollection!.purge(id: documentID)
+        XCTAssertNil(try defaultCollection!.document(id: documentID))
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         expectError(domain: CBLError.domain, code: CBLError.notFound) { [unowned self] in
-            try self.defaultCol!.purge(id: documentID)
+            try self.defaultCollection!.purge(id: documentID)
         }
     }
     
@@ -1038,12 +1038,12 @@ class DatabaseTest: CBLTestCase {
         try db.inBatch { [unowned self] in
             for i in 0..<totalDocumentsCount {
                 let documentID = String(format: "doc_%03d", i)
-                try self.defaultCol!.purge(id: documentID)
-                XCTAssertNil(try defaultCol!.document(id: documentID))
-                XCTAssertEqual(self.defaultCol!.count, UInt64((totalDocumentsCount - 1) - i))
+                try self.defaultCollection!.purge(id: documentID)
+                XCTAssertNil(try defaultCollection!.document(id: documentID))
+                XCTAssertEqual(self.defaultCollection!.count, UInt64((totalDocumentsCount - 1) - i))
             }
         }
-        XCTAssertEqual(defaultCol!.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
     }
     
     func testPurgeDocIDWithErrorInBatch() throws {
@@ -1051,8 +1051,8 @@ class DatabaseTest: CBLTestCase {
         do {
             try self.db.inBatch {
                 for i in 0...9 {
-                    try self.defaultCol!.purge(id: docs[i].id)
-                    XCTAssertEqual(defaultCol!.count, UInt64(9 - i))
+                    try self.defaultCollection!.purge(id: docs[i].id)
+                    XCTAssertEqual(defaultCollection!.count, UInt64(9 - i))
                 }
                 throw NSError(domain: "someDomain", code: 500, userInfo: nil)
             }
@@ -1060,29 +1060,29 @@ class DatabaseTest: CBLTestCase {
             XCTAssertNotNil(error);
             XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
         }
-        XCTAssertEqual(defaultCol!.count, 10)
+        XCTAssertEqual(defaultCollection!.count, 10)
     }
     
     func testDeletePurgedDocumentWithID() throws {
         let document = try generateDocument(withID: nil)
         let documentID = document.id
-        let anotherDocumentReference = try defaultCol!.document(id: documentID)!
+        let anotherDocumentReference = try defaultCollection!.document(id: documentID)!
         
         // Purge doc
-        try defaultCol!.purge(id: documentID)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: documentID))
+        try defaultCollection!.purge(id: documentID)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: documentID))
         
         // Delete document & anotherDocumentReference -> 404 NotFound
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.delete(document: document)
+            try self.defaultCollection!.delete(document: document)
         }
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            try self.defaultCol!.delete(document: anotherDocumentReference)
+            try self.defaultCollection!.delete(document: anotherDocumentReference)
         }
         
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: documentID))
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: documentID))
     }
     
     func testPurgeDocumentWithIDOnADeletedDocument() throws {
@@ -1090,45 +1090,45 @@ class DatabaseTest: CBLTestCase {
         let documentID = document.id
         
         // Delete document
-        try self.defaultCol!.delete(document: document)
+        try self.defaultCollection!.delete(document: document)
         
         // Purge doc
-        try defaultCol!.purge(id: documentID)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.document(id: documentID))
+        try defaultCollection!.purge(id: documentID)
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.document(id: documentID))
     }
     
     // MARK: Index
     
     func testCreateIndex() throws {
         // Precheck:
-        XCTAssertEqual(try defaultCol!.indexes().count, 0)
+        XCTAssertEqual(try defaultCollection!.indexes().count, 0)
 
         // Create value index:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
 
         let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
-        try defaultCol!.createIndex(index1, name: "index1")
+        try defaultCollection!.createIndex(index1, name: "index1")
 
         let index2 = IndexBuilder.valueIndex(items: [fNameItem, lNameItem])
-        try defaultCol!.createIndex(index2, name: "index2")
+        try defaultCollection!.createIndex(index2, name: "index2")
 
         // Create FTS index:
         let detailItem = FullTextIndexItem.property("detail")
         let index3 = IndexBuilder.fullTextIndex(items: detailItem)
-        try defaultCol!.createIndex(index3, name: "index3")
+        try defaultCollection!.createIndex(index3, name: "index3")
 
         let detailItem2 = FullTextIndexItem.property("es-detail")
         let index4 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
-        try defaultCol!.createIndex(index4, name: "index4")
+        try defaultCollection!.createIndex(index4, name: "index4")
 
         let nameItem = FullTextIndexItem.property("name")
         let index5 = IndexBuilder.fullTextIndex(items: [nameItem, detailItem])
-        try defaultCol!.createIndex(index5, name: "index5")
+        try defaultCollection!.createIndex(index5, name: "index5")
 
-        XCTAssertEqual(try defaultCol!.indexes().count, 5)
-        XCTAssertEqual(try defaultCol!.indexes(), ["index1", "index2", "index3", "index4", "index5"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 5)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["index1", "index2", "index3", "index4", "index5"])
     }
     
     func testCreateCollectionIndex() throws {
@@ -1254,30 +1254,30 @@ class DatabaseTest: CBLTestCase {
     }
     
     func testN1QLCreateIndexSanity() throws {
-        XCTAssertEqual(try defaultCol!.indexes().count, 0)
+        XCTAssertEqual(try defaultCollection!.indexes().count, 0)
         
         let config1 = ValueIndexConfiguration(["firstName", "lastName"])
-        try defaultCol!.createIndex(withName: "index1", config: config1)
+        try defaultCollection!.createIndex(withName: "index1", config: config1)
         
         let config2 = FullTextIndexConfiguration(["detail"])
-        try defaultCol!.createIndex(withName: "index2", config: config2)
+        try defaultCollection!.createIndex(withName: "index2", config: config2)
         
         let config3 = FullTextIndexConfiguration(["es_detail"], ignoreAccents: true, language: "es")
-        try defaultCol!.createIndex(withName: "index3", config: config3)
+        try defaultCollection!.createIndex(withName: "index3", config: config3)
         
         let config4 = FullTextIndexConfiguration(["name"], ignoreAccents: false, language: "en")
-        try defaultCol!.createIndex(withName: "index4", config: config4)
+        try defaultCollection!.createIndex(withName: "index4", config: config4)
         
         // use backtick in case of property name with hyphen
         let config5 = FullTextIndexConfiguration(["`es-detail`"], ignoreAccents: true, language: "es")
-        try defaultCol!.createIndex(withName: "index5", config: config5)
+        try defaultCollection!.createIndex(withName: "index5", config: config5)
         
         // same index twice: no-op
         let config6 = FullTextIndexConfiguration(["detail"])
-        try defaultCol!.createIndex(withName: "index2", config: config6)
+        try defaultCollection!.createIndex(withName: "index2", config: config6)
         
-        XCTAssertEqual(try defaultCol!.indexes().count, 5)
-        XCTAssertEqual(try defaultCol!.indexes(), ["index1", "index2", "index3", "index4", "index5"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 5)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["index1", "index2", "index3", "index4", "index5"])
     }
     
     func testCreateSameIndexTwice() throws {
@@ -1285,89 +1285,89 @@ class DatabaseTest: CBLTestCase {
         
         // Create index with first name:
         let index = IndexBuilder.valueIndex(items: item)
-        try defaultCol!.createIndex(index, name: "myindex")
+        try defaultCollection!.createIndex(index, name: "myindex")
         
         // Call create index again:
-        try defaultCol!.createIndex(index, name: "myindex")
+        try defaultCollection!.createIndex(index, name: "myindex")
         
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
-        XCTAssertEqual(try defaultCol!.indexes(), ["myindex"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["myindex"])
     }
     
     func failingTestCreateSameNameIndexes() throws {
         // Create value index with first name:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let fNameIndex = IndexBuilder.valueIndex(items: fNameItem)
-        try defaultCol!.createIndex(fNameIndex, name: "myindex")
+        try defaultCollection!.createIndex(fNameIndex, name: "myindex")
         
         // Create value index with last name:
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         let lNameIndex = IndexBuilder.valueIndex(items: lNameItem)
-        try defaultCol!.createIndex(lNameIndex, name: "myindex")
+        try defaultCollection!.createIndex(lNameIndex, name: "myindex")
         
         // Check:
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
-        XCTAssertEqual(try defaultCol!.indexes(), ["myindex"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["myindex"])
         
         // Create FTS index:
         let detailItem = FullTextIndexItem.property("detail")
         let detailIndex = IndexBuilder.fullTextIndex(items: detailItem)
-        try defaultCol!.createIndex(detailIndex, name: "myindex")
+        try defaultCollection!.createIndex(detailIndex, name: "myindex")
         
         // Check:
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
-        XCTAssertEqual(try defaultCol!.indexes(), ["myindex"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["myindex"])
     }
     
     func testDeleteIndex() throws {
         // Precheck:
-        XCTAssertEqual(try defaultCol!.indexes().count, 0)
+        XCTAssertEqual(try defaultCollection!.indexes().count, 0)
         
         // Create value index:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         
         let index1 = IndexBuilder.valueIndex(items: fNameItem, lNameItem)
-        try defaultCol!.createIndex(index1, name: "index1")
+        try defaultCollection!.createIndex(index1, name: "index1")
         
         // Create FTS index:
         let detailItem = FullTextIndexItem.property("detail")
         let index2 = IndexBuilder.fullTextIndex(items: detailItem)
-        try defaultCol!.createIndex(index2, name: "index2")
+        try defaultCollection!.createIndex(index2, name: "index2")
         
         let detailItem2 = FullTextIndexItem.property("es-detail")
         let index3 = IndexBuilder.fullTextIndex(items: detailItem2).language("es").ignoreAccents(true)
-        try defaultCol!.createIndex(index3, name: "index3")
+        try defaultCollection!.createIndex(index3, name: "index3")
         
-        XCTAssertEqual(try defaultCol!.indexes().count, 3)
-        XCTAssertEqual(try defaultCol!.indexes(), ["index1", "index2", "index3"])
+        XCTAssertEqual(try defaultCollection!.indexes().count, 3)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["index1", "index2", "index3"])
         
         // Delete indexes:
-        try defaultCol!.deleteIndex(forName: "index1")
-        XCTAssertEqual(try defaultCol!.indexes().count, 2)
-        XCTAssertEqual(try defaultCol!.indexes(), ["index2", "index3"])
+        try defaultCollection!.deleteIndex(forName: "index1")
+        XCTAssertEqual(try defaultCollection!.indexes().count, 2)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["index2", "index3"])
         
-        try defaultCol!.deleteIndex(forName: "index2")
-        XCTAssertEqual(try defaultCol!.indexes().count, 1)
-        XCTAssertEqual(try defaultCol!.indexes(), ["index3"])
+        try defaultCollection!.deleteIndex(forName: "index2")
+        XCTAssertEqual(try defaultCollection!.indexes().count, 1)
+        XCTAssertEqual(try defaultCollection!.indexes(), ["index3"])
         
-        try defaultCol!.deleteIndex(forName: "index3")
-        XCTAssertEqual(try defaultCol!.indexes().count, 0)
+        try defaultCollection!.deleteIndex(forName: "index3")
+        XCTAssertEqual(try defaultCollection!.indexes().count, 0)
         
         // Delete non existing index:
-        try defaultCol!.deleteIndex(forName: "dummy")
+        try defaultCollection!.deleteIndex(forName: "dummy")
         
         // Delete deleted indexes:
-        try defaultCol!.deleteIndex(forName: "index1")
-        try defaultCol!.deleteIndex(forName: "index2")
-        try defaultCol!.deleteIndex(forName: "index3")
+        try defaultCollection!.deleteIndex(forName: "index1")
+        try defaultCollection!.deleteIndex(forName: "index2")
+        try defaultCollection!.deleteIndex(forName: "index3")
     }
     
     func testCloseWithActiveLiveQueries() throws {
         let change1 = expectation(description: "changes 1")
         let change2 = expectation(description: "changes 2")
         
-        let ds = DataSource.collection(defaultCol!)
+        let ds = DataSource.collection(defaultCollection!)
         
         let q1 = QueryBuilder.select().from(ds)
         q1.addChangeListener { (ch) in change1.fulfill() }
