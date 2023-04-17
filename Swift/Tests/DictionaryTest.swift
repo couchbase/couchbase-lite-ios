@@ -186,7 +186,7 @@ class DictionaryTest: CBLTestCase {
         mDoc.setValue(mDict2, forKey: "dict")
         try saveDocument(mDoc)
         
-        let doc = try self.defaultCol!.document(id: "doc1")!
+        let doc = try self.defaultCollection!.document(id: "doc1")!
         let dict = doc.dictionary(forKey: "dict")!
         XCTAssertEqual(dict.string(forKey: "name"), "Daniel")
         
@@ -203,9 +203,9 @@ class DictionaryTest: CBLTestCase {
         var mDict = try MutableDictionaryObject(json: json)
         var mDoc = MutableDocument(id: "doc")
         mDoc.setDictionary(mDict, forKey: "dict")
-        try self.defaultCol!.save(document: mDoc)
+        try self.defaultCollection!.save(document: mDoc)
         
-        var doc = try self.defaultCol!.document(id: "doc")
+        var doc = try self.defaultCollection!.document(id: "doc")
         var dict = doc?.dictionary(forKey: "dict")
         let jsonObj = dict!.toJSON().toJSONObj() as! [String: Any]
         XCTAssertEqual(jsonObj["name"] as! String, "Rick Sanchez")
@@ -224,9 +224,9 @@ class DictionaryTest: CBLTestCase {
             let _ = mDict.toJSON()
         }
         mDoc.setValue(mDict, forKey: "dict")
-        try self.defaultCol!.save(document: mDoc)
+        try self.defaultCollection!.save(document: mDoc)
         
-        doc = try self.defaultCol!.document(id: "doc")
+        doc = try self.defaultCollection!.document(id: "doc")
         dict = doc!.dictionary(forKey: "dict")
         XCTAssertEqual((dict!.toJSON().toJSONObj() as! [String: Any])["newKeyAppended"] as! String, "newValueAppended")
         XCTAssertEqual((dict!.toJSON().toJSONObj() as! [String: Any]).count, 13)
