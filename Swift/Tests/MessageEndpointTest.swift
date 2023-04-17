@@ -21,7 +21,7 @@ import XCTest
 import MultipeerConnectivity
 import CouchbaseLiteSwift
 
-protocol MultipeerConnectionDelegate: class {
+protocol MultipeerConnectionDelegate: AnyObject {
     
     func connectionDidOpen(_ connection: MessageEndpointConnection)
     
@@ -152,7 +152,7 @@ MultipeerConnectionDelegate {
         if let cols = collections {
             listenerConfig = MessageEndpointListenerConfiguration(collections: cols, protocolType: .messageStream)
         } else {
-            listenerConfig = MessageEndpointListenerConfiguration(database: oDB, protocolType: .messageStream)
+            listenerConfig = MessageEndpointListenerConfiguration(collections: [try! oDB.defaultCollection()], protocolType: .messageStream)
         }
         
         listener = MessageEndpointListener(config: listenerConfig)
@@ -202,7 +202,7 @@ MultipeerConnectionDelegate {
     }
     
     func config(target: Endpoint, type: ReplicatorType, continuous: Bool) -> ReplicatorConfiguration {
-        var config = ReplicatorConfiguration(database: self.db, target: target)
+        var config = ReplicatorConfiguration(target: target)
         config.replicatorType = type
         config.continuous = continuous
         return config
@@ -315,18 +315,18 @@ MultipeerConnectionDelegate {
     func _testPushDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
 
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.oDB.count, 2)
-        let savedDoc = self.oDB.document(withID: "doc1")!
+        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
+        let savedDoc = try self.oDB.defaultCollection().document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -334,18 +334,18 @@ MultipeerConnectionDelegate {
     func _testPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.db.count, 2)
-        let savedDoc = self.db.document(withID: "doc2")!
+        XCTAssertEqual(self.defaultCol!.count, 2)
+        let savedDoc = try self.defaultCol!.document(id: "doc2")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
@@ -353,22 +353,22 @@ MultipeerConnectionDelegate {
     func _testPushPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.oDB.count, 2)
-        let savedDoc1 = self.oDB.document(withID: "doc1")!
+        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
+        let savedDoc1 = try self.oDB.defaultCollection().document(id: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
-        XCTAssertEqual(self.db.count, 2)
-        let savedDoc2 = self.db.document(withID: "doc2")!
+        XCTAssertEqual(self.defaultCol!.count, 2)
+        let savedDoc2 = try self.defaultCol!.document(id: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
     
@@ -376,18 +376,18 @@ MultipeerConnectionDelegate {
     func _testPushDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.oDB.count, 2)
-        let savedDoc = self.oDB.document(withID: "doc1")!
+        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
+        let savedDoc = try self.oDB.defaultCollection().document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -395,18 +395,18 @@ MultipeerConnectionDelegate {
     func _testPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.db.count, 2)
-        let savedDoc = self.db.document(withID: "doc2")!
+        XCTAssertEqual(self.defaultCol!.count, 2)
+        let savedDoc = try self.defaultCol!.document(id: "doc2")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
@@ -414,22 +414,22 @@ MultipeerConnectionDelegate {
     func _testPushPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.db.saveDocument(doc1)
+        try self.defaultCol!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.saveDocument(doc2)
+        try self.oDB.defaultCollection().save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.oDB.count, 2)
-        let savedDoc1 = self.oDB.document(withID: "doc1")!
+        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
+        let savedDoc1 = try self.oDB.defaultCollection().document(id: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
-        XCTAssertEqual(self.db.count, 2)
-        let savedDoc2 = self.db.document(withID: "doc2")!
+        XCTAssertEqual(self.defaultCol!.count, 2)
+        let savedDoc2 = try self.defaultCol!.document(id: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
     

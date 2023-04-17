@@ -228,10 +228,12 @@ class DocumentExpirationTest: CBLTestCase {
         // Create otherDB instance with same name
         let otherDB = try self.openDB(name: db.name)
         
+        let otherDB_defaultCollection = try otherDB.defaultCollection()
+        
         // Setup document change notification on otherDB
-        let token = try otherDB.defaultCollection().addDocumentChangeListener(id: doc.id) { (change) in
+        let token = otherDB_defaultCollection.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
-            if try! otherDB.defaultCollection().document(id: doc.id) == nil {
+            if try! otherDB_defaultCollection.document(id: doc.id) == nil {
                 promise.fulfill()
             }
         }
@@ -241,13 +243,13 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         XCTAssertNotNil(try self.defaultCol!.document(id: doc.id))
-        XCTAssertNotNil(try otherDB.defaultCollection().document(id: doc.id))
+        XCTAssertNotNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
         
         XCTAssertNil(try self.defaultCol!.document(id: doc.id))
-        XCTAssertNil(try otherDB.defaultCollection().document(id: doc.id))
+        XCTAssertNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Remove listener
         token.remove()
