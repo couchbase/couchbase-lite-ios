@@ -77,8 +77,6 @@ class MessageEndpointTest: CBLTestCase, MCNearbyServiceBrowserDelegate,
 MCNearbyServiceAdvertiserDelegate, MCSessionDelegate, MessageEndpointDelegate,
 MultipeerConnectionDelegate {
     
-    var oDB: Database!
-    
     var clientPeer: MCPeerID?
     var serverPeer: MCPeerID?
 
@@ -100,10 +98,10 @@ MultipeerConnectionDelegate {
     override func setUp() {
         super.setUp()
         try! openOtherDB()
-        oDB = otherDB!
     }
     
     override func tearDown() {
+        otherDB_defaultCollection = nil
         listener?.closeAll()
         
         // Workaround to ensure that replicator's background cleaning task was done:
@@ -152,7 +150,7 @@ MultipeerConnectionDelegate {
         if let cols = collections {
             listenerConfig = MessageEndpointListenerConfiguration(collections: cols, protocolType: .messageStream)
         } else {
-            listenerConfig = MessageEndpointListenerConfiguration(collections: [try! oDB.defaultCollection()], protocolType: .messageStream)
+            listenerConfig = MessageEndpointListenerConfiguration(collections: [otherDB_defaultCollection!], protocolType: .messageStream)
         }
         
         listener = MessageEndpointListener(config: listenerConfig)
@@ -315,18 +313,18 @@ MultipeerConnectionDelegate {
     func _testPushDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
 
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
-        let savedDoc = try self.oDB.defaultCollection().document(id: "doc1")!
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 2)
+        let savedDoc = try self.otherDB_defaultCollection!.document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -334,18 +332,18 @@ MultipeerConnectionDelegate {
     func _testPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.defaultCol!.count, 2)
-        let savedDoc = try self.defaultCol!.document(id: "doc2")!
+        XCTAssertEqual(self.defaultCollection!.count, 2)
+        let savedDoc = try self.defaultCollection!.document(id: "doc2")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
@@ -353,22 +351,22 @@ MultipeerConnectionDelegate {
     func _testPushPullDoc() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: false)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
-        let savedDoc1 = try self.oDB.defaultCollection().document(id: "doc1")!
+        XCTAssertEqual(otherDB_defaultCollection!.count, 2)
+        let savedDoc1 = try self.otherDB_defaultCollection!.document(id: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
-        XCTAssertEqual(self.defaultCol!.count, 2)
-        let savedDoc2 = try self.defaultCol!.document(id: "doc2")!
+        XCTAssertEqual(self.defaultCollection!.count, 2)
+        let savedDoc2 = try self.defaultCollection!.document(id: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
     
@@ -376,18 +374,18 @@ MultipeerConnectionDelegate {
     func _testPushDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .push, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
-        let savedDoc = try self.oDB.defaultCollection().document(id: "doc1")!
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 2)
+        let savedDoc = try self.otherDB_defaultCollection!.document(id: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Tiger")
     }
     
@@ -395,18 +393,18 @@ MultipeerConnectionDelegate {
     func _testPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pull, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(self.defaultCol!.count, 2)
-        let savedDoc = try self.defaultCol!.document(id: "doc2")!
+        XCTAssertEqual(self.defaultCollection!.count, 2)
+        let savedDoc = try self.defaultCollection!.document(id: "doc2")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Cat")
     }
     
@@ -414,22 +412,22 @@ MultipeerConnectionDelegate {
     func _testPushPullDocContinous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "name")
-        try self.defaultCol!.save(document: doc1)
+        try self.defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Cat", forKey: "name")
-        try self.oDB.defaultCollection().save(document: doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         let config = self.config(target: target, type: .pushAndPull, continuous: true)
         self.run(config: config, expectedError: nil)
         
-        XCTAssertEqual(try self.oDB.defaultCollection().count, 2)
-        let savedDoc1 = try self.oDB.defaultCollection().document(id: "doc1")!
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 2)
+        let savedDoc1 = try self.otherDB_defaultCollection!.document(id: "doc1")!
         XCTAssertEqual(savedDoc1.string(forKey: "name"), "Tiger")
         
-        XCTAssertEqual(self.defaultCol!.count, 2)
-        let savedDoc2 = try self.defaultCol!.document(id: "doc2")!
+        XCTAssertEqual(self.defaultCollection!.count, 2)
+        let savedDoc2 = try self.defaultCollection!.document(id: "doc2")!
         XCTAssertEqual(savedDoc2.string(forKey: "name"), "Cat")
     }
     
@@ -447,8 +445,8 @@ MultipeerConnectionDelegate {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 1)
         try createDocNumbered(col1b, start: 5, num: 2)
@@ -473,7 +471,7 @@ MultipeerConnectionDelegate {
     
     func testMismatchedCollectionReplication() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         let target = MessageEndpoint(uid: "UID:123", target: nil, protocolType: .messageStream, delegate: self)
         var config = ReplicatorConfiguration(target: target)

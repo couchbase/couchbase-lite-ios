@@ -370,11 +370,11 @@ class LogTest: CBLTestCase {
         let hebrew = "מזג האוויר נחמד היום" // The weather is nice today.
         let doc = MutableDocument()
         doc.setString(hebrew, forKey: "hebrew")
-        try defaultCol!.save(document: doc)
+        try defaultCollection!.save(document: doc)
         
         let q = QueryBuilder
             .select(SelectResult.all())
-            .from(DataSource.collection(defaultCol!))
+            .from(DataSource.collection(defaultCollection!))
         
         let rs = try q.execute()
         XCTAssertEqual(rs.allResults().count, 1);

@@ -24,23 +24,23 @@ class DocumentExpirationTest: CBLTestCase {
     
     func testGetExpirationPreSave() {
         let doc = createDocument(nil)
-        XCTAssertEqual(defaultCol!.count, 0)
-        XCTAssertNil(try defaultCol!.getDocumentExpiration(id: doc.id))
+        XCTAssertEqual(defaultCollection!.count, 0)
+        XCTAssertNil(try defaultCollection!.getDocumentExpiration(id: doc.id))
     }
     
     func testExpirationFromDocumentWithoutExpiry() throws {
         let doc = try generateDocument(withID: nil)
-        XCTAssertEqual(defaultCol!.count, 1)
-        XCTAssertNil(try defaultCol!.getDocumentExpiration(id: doc.id))
+        XCTAssertEqual(defaultCollection!.count, 1)
+        XCTAssertNil(try defaultCollection!.getDocumentExpiration(id: doc.id))
     }
     
     func testSetAndGetExpiration() throws {
         let doc = try generateDocument(withID: nil)
         
         let expiryDate = Date().addingTimeInterval(3.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
-        let expected = try defaultCol!.getDocumentExpiration(id: doc.id)
+        let expected = try defaultCollection!.getDocumentExpiration(id: doc.id)
         XCTAssertNotNil(expected)
         
         let delta = expiryDate.timeIntervalSince(expected!)
@@ -50,7 +50,7 @@ class DocumentExpirationTest: CBLTestCase {
     func testSetExpiryToNonExistingDocument() {
         let expiryDate = Date(timeIntervalSinceNow: 30)
         expectError(domain: CBLError.domain, code: CBLError.notFound) { [unowned self] in
-            try self.defaultCol!.setDocumentExpiration(id: "someInvalidID", expiration: expiryDate)
+            try self.defaultCollection!.setDocumentExpiration(id: "someInvalidID", expiration: expiryDate)
         }
     }
     
@@ -59,10 +59,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Create & set expiry
         let doc = try generateDocument(withID: nil)
-        try defaultCol!.setDocumentExpiration(id: doc.id,
+        try defaultCollection!.setDocumentExpiration(id: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         
-        try defaultCol!.purge(document: doc)
+        try defaultCollection!.purge(document: doc)
         
         // Validate it is not crashing due to the expiry timer!!
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -78,7 +78,7 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 promise.fulfill()
@@ -86,7 +86,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Set expiry
-        try defaultCol!.setDocumentExpiration(id: doc.id,
+        try defaultCollection!.setDocumentExpiration(id: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -102,7 +102,7 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { [unowned self] (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { [unowned self] (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 try! self.verifyQueryResultCount(0, deletedDocs: 0)
@@ -112,7 +112,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set expiry
         let expiryDate = Date().addingTimeInterval(1)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -124,13 +124,13 @@ class DocumentExpirationTest: CBLTestCase {
     func verifyQueryResultCount(_ count: Int, deletedDocs: Int) throws {
         var rs = try QueryBuilder
             .select(SelectResult.expression(Meta.id))
-            .from(DataSource.collection(defaultCol!))
+            .from(DataSource.collection(defaultCollection!))
             .execute()
         XCTAssertEqual(rs.allResults().count, count)
 
         rs = try QueryBuilder
             .select(SelectResult.expression(Meta.id))
-            .from(DataSource.collection(defaultCol!))
+            .from(DataSource.collection(defaultCollection!))
             .where(Meta.isDeleted).execute()
         XCTAssertEqual(rs.allResults().count, deletedDocs)
     }
@@ -143,7 +143,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var purgeTime: TimeInterval = 0.0
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
@@ -154,7 +154,7 @@ class DocumentExpirationTest: CBLTestCase {
         // Set Expiry
         let begin = Date().timeIntervalSince1970
         let expiryDate = Date(timeIntervalSince1970: begin + 2.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -174,7 +174,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set Expiry
         let expiryDate = Date().addingTimeInterval(1.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Close database
         try db.close()
@@ -197,20 +197,20 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set Expiry
         let expiryDate = Date().addingTimeInterval(2.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Reopen database
         try self.reopenDB()
         
         // Setup document change notification
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 promise.fulfill()
             }
         }
         
-        XCTAssertNotNil(try self.defaultCol!.document(id: doc.id))
+        XCTAssertNotNil(try self.defaultCollection!.document(id: doc.id))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -240,15 +240,15 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set expiry on db instance
         let expiryDate = Date().addingTimeInterval(1.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
-        XCTAssertNotNil(try self.defaultCol!.document(id: doc.id))
+        XCTAssertNotNil(try self.defaultCollection!.document(id: doc.id))
         XCTAssertNotNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
         
-        XCTAssertNil(try self.defaultCol!.document(id: doc.id))
+        XCTAssertNil(try self.defaultCollection!.document(id: doc.id))
         XCTAssertNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Remove listener
@@ -266,7 +266,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var purgeTime: TimeInterval = 0.0
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
@@ -277,10 +277,10 @@ class DocumentExpirationTest: CBLTestCase {
         // Set Expiry
         let begin = Date().timeIntervalSince1970
         let expiryDate = Date(timeIntervalSince1970: begin + 1.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Override
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(1.0))
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(1.0))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -300,7 +300,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var purgeTime: TimeInterval = 0.0
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 purgeTime = Date().timeIntervalSince1970
@@ -311,10 +311,10 @@ class DocumentExpirationTest: CBLTestCase {
         // Set Expiry
         let begin = Date().timeIntervalSince1970
         let expiryDate = Date(timeIntervalSince1970: begin + 10.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Override
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(-9.0))
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(-9.0))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -334,14 +334,14 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set expiry on db instance
         let expiryDate = Date().addingTimeInterval(1.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Remove expiry
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: nil)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: nil)
     
         // Validate
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [unowned self] in
-            XCTAssertNotNil(try! self.defaultCol!.document(id: doc.id))
+            XCTAssertNotNil(try! self.defaultCollection!.document(id: doc.id))
             promise.fulfill()
         }
         
@@ -357,7 +357,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
             XCTAssertNil(try! change.collection.document(id: doc.id))
@@ -368,10 +368,10 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Set expiry
         let expiryDate = Date().addingTimeInterval(2.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Delete doc
-        try defaultCol!.delete(document: doc)
+        try defaultCollection!.delete(document: doc)
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -389,7 +389,7 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Setup document change notification
         var count: Int = 0
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             count = count + 1
             XCTAssertEqual(doc.id, change.documentID)
             XCTAssertNil(try! change.collection.document(id: doc.id))
@@ -399,11 +399,11 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Delete doc
-        try defaultCol!.delete(document: doc)
+        try defaultCollection!.delete(document: doc)
         
         // Set expiry
         let expiryDate = Date().addingTimeInterval(1.0)
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -422,7 +422,7 @@ class DocumentExpirationTest: CBLTestCase {
         // Setup document change notification
         var purgeTime: Date!
         let begin = Date()
-        let token = defaultCol!.addDocumentChangeListener(id: doc.id) { (change) in
+        let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
                 purgeTime = Date()
@@ -430,7 +430,7 @@ class DocumentExpirationTest: CBLTestCase {
             }
         }
         
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: Date())
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date())
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
@@ -453,7 +453,7 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        let token = defaultCol!.addChangeListener { (change) in
+        let token = defaultCollection!.addChangeListener { (change) in
             XCTAssertEqual(change.documentIDs.count, 1)
             let docID = change.documentIDs.first
             XCTAssertNotNil(docID)
@@ -463,7 +463,7 @@ class DocumentExpirationTest: CBLTestCase {
             }
         }
         
-        try defaultCol!.setDocumentExpiration(id: doc.id, expiration: Date(timeIntervalSinceNow: 1))
+        try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date(timeIntervalSinceNow: 1))
         
         // Wait for result
         waitForExpectations(timeout: 5.0)
