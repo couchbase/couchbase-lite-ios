@@ -1294,7 +1294,7 @@ class DocumentTest: CBLTestCase {
         doc2.setValue("Scott", forKey: "name")
         try saveDocument(doc2)
         
-        try defaultCollection!.purge(document: defaultCollection!.document(id: doc2.id)!)
+        try defaultCollection!.purge(id: doc2.id)
     }
     
     func testReopenDB() throws {
