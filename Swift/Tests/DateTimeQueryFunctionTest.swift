@@ -83,7 +83,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let select = SelectResult.expression(Function.stringToMillis(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rs = try q.execute()
         let allResults = rs.allResults()
         XCTAssertEqual(allResults.count, 1)
@@ -94,7 +94,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         }
         XCTAssertEqual(result.double(at: 0) , millis)
         
-        try db.purgeDocument(doc)
+        try defaultCollection!.purge(document: doc)
     }
     
     func validateStringToUTC(_ input: String?, utcString: String?) throws {
@@ -105,7 +105,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let select = SelectResult.expression(Function.stringToUTC(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rs = try q.execute()
         let allResults = rs.allResults()
         XCTAssertEqual(allResults.count, 1)
@@ -116,7 +116,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         }
         XCTAssertEqual(result.string(at: 0) , utcString)
         
-        try db.purgeDocument(doc)
+        try defaultCollection!.purge(document: doc)
     }
     
     func validateMillisToString(_ input: Double, date: Date) throws {
@@ -127,7 +127,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let select = SelectResult.expression(Function.millisToString(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rs = try q.execute()
         let allResults = rs.allResults()
         XCTAssertEqual(allResults.count, 1)
@@ -139,7 +139,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         
         XCTAssertEqual(result.date(at: 0) , date)
         
-        try db.purgeDocument(doc)
+        try defaultCollection!.purge(document: doc)
     }
     
     func validateMillisToUTC(_ input: Double, utcString: String?) throws {
@@ -150,7 +150,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         let select = SelectResult.expression(Function.millisToUTC(Expression.property(key)))
         let q = QueryBuilder
             .select([select])
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rs = try q.execute()
         let allResults = rs.allResults()
         XCTAssertEqual(allResults.count, 1)
@@ -162,7 +162,7 @@ class DateTimeQueryFunctionTest: CBLTestCase {
         
         XCTAssertEqual(result.string(at: 0) , utcString)
         
-        try db.purgeDocument(doc)
+        try defaultCollection!.purge(document: doc)
     }
     
 }
