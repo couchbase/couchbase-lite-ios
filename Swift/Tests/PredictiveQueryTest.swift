@@ -32,7 +32,7 @@ class PredictiveQueryTest: CBLTestCase {
     func createDocument(withNumbers numbers: [Int]) -> MutableDocument {
         let doc = MutableDocument()
         doc.setValue(numbers, forKey: "numbers")
-        try! db.saveDocument(doc)
+        try! defaultCollection!.save(document: doc)
         return doc
     }
     
@@ -44,7 +44,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         // Query before registering the model:
         expectError(domain: "CouchbaseLite.SQLite", code: 1) {
@@ -79,7 +79,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         var rows = try verifyQuery(q) { (n, r) in
             let pred = r.dictionary(at: 0)!
             XCTAssertEqual(pred.int(forKey: "sum"), 15)
@@ -155,7 +155,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rows = try verifyQuery(q) { (n, r) in
             let pred = r.dictionary(at: 0)!
             XCTAssertEqual(pred.count, dict.count)
@@ -202,7 +202,7 @@ class PredictiveQueryTest: CBLTestCase {
         for text in texts {
             let doc = MutableDocument()
             doc.setBlob(blobForString(text), forKey: "text")
-            try db.saveDocument(doc)
+            try defaultCollection!.save(document: doc)
         }
         
         let textModel = TextModel()
@@ -215,7 +215,7 @@ class PredictiveQueryTest: CBLTestCase {
         let q = QueryBuilder
             .select(SelectResult.property("text"),
                     SelectResult.expression(prediction.property("wc")).as("wc"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("wc").greaterThan(Expression.value(15)))
         
         let rows = try verifyQuery(q) { (n, r) in
@@ -230,7 +230,7 @@ class PredictiveQueryTest: CBLTestCase {
     }
     
     func testPredictionWithBlobParameterInput() throws {
-        try db.saveDocument(MutableDocument())
+        try defaultCollection!.save(document: MutableDocument())
         
         let textModel = TextModel()
         textModel.registerModel()
@@ -241,7 +241,7 @@ class PredictiveQueryTest: CBLTestCase {
         
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("wc")).as("wc"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let params = Parameters()
         params.setBlob(blobForString("Knox on fox in socks in box. Socks on Knox and Knox in box."),
@@ -257,7 +257,7 @@ class PredictiveQueryTest: CBLTestCase {
     }
     
     func testPredictionWithNonSupportedInputTypes() throws {
-        try db.saveDocument(MutableDocument())
+        try defaultCollection!.save(document: MutableDocument())
         
         let echoModel = EchoModel()
         echoModel.registerModel()
@@ -268,7 +268,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         expectError(domain: "CouchbaseLite.SQLite", code: 1) {
             _ = try q.execute()
@@ -282,7 +282,7 @@ class PredictiveQueryTest: CBLTestCase {
         // let prediction2 = Function.prediction(model: model, input: input2)
         // let q2 = QueryBuilder
         //    .select(SelectResult.expression(prediction2))
-        //    .from(DataSource.database(db))
+        //    .from(DataSource.collection(defaultCollection!))
         // try q2.execute()
         
         echoModel.unregisterModel()
@@ -300,7 +300,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.property("numbers"), SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -333,7 +333,7 @@ class PredictiveQueryTest: CBLTestCase {
                     SelectResult.expression(prediction.property("min")).as("min"),
                     SelectResult.expression(prediction.property("max")).as("max"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -375,7 +375,7 @@ class PredictiveQueryTest: CBLTestCase {
                     SelectResult.expression(prediction.property("min")).as("min"),
                     SelectResult.expression(prediction.property("max")).as("max"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
         let rows = try verifyQuery(q) { (n, r) in
@@ -416,7 +416,7 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").greaterThan(Expression.value(1)))
             .orderBy(Ordering.expression(prediction.property("sum")).descending())
         
@@ -446,7 +446,7 @@ class PredictiveQueryTest: CBLTestCase {
         var q: Query = QueryBuilder
             .select(SelectResult.expression(prediction),
                     SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         var rows = try verifyQuery(q) { (n, r) in
             if n == 1 {
@@ -463,8 +463,8 @@ class PredictiveQueryTest: CBLTestCase {
         q = QueryBuilder
             .select(SelectResult.expression(prediction),
                     SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
-            .where(prediction.notNullOrMissing())
+            .from(DataSource.collection(defaultCollection!))
+            .where(prediction.isValued())
         
         rows = try verifyQuery(q) { (n, r) in
             XCTAssertNotNil(r.dictionary(at: 0))
@@ -485,11 +485,11 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let index = IndexBuilder.valueIndex(items: ValueIndexItem.expression(prediction.property("sum")))
-        try db.createIndex(index, withName: "SumIndex")
+        try defaultCollection!.createIndex(index, name: "SumIndex")
         
         let q = QueryBuilder
             .select(SelectResult.property("numbers"), SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
         let explain = try q.explain() as NSString
@@ -518,15 +518,15 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let sumIndex = IndexBuilder.valueIndex(items: ValueIndexItem.expression(prediction.property("sum")))
-        try db.createIndex(sumIndex, withName: "SumIndex")
+        try defaultCollection!.createIndex(sumIndex, name: "SumIndex")
         
         let avgIndex = IndexBuilder.valueIndex(items: ValueIndexItem.expression(prediction.property("avg")))
-        try db.createIndex(avgIndex, withName: "AvgIndex")
+        try defaultCollection!.createIndex(avgIndex, name: "AvgIndex")
         
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("sum")).as("sum"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                    prediction.property("avg").equalTo(Expression.value(8))))
         
@@ -553,12 +553,12 @@ class PredictiveQueryTest: CBLTestCase {
         
         let index = IndexBuilder.valueIndex(items: ValueIndexItem.expression(prediction.property("sum")),
                                                    ValueIndexItem.expression(prediction.property("avg")))
-        try db.createIndex(index, withName: "SumAvgIndex")
+        try defaultCollection!.createIndex(index, name: "SumAvgIndex")
         
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("sum")).as("sum"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)).and(
                    prediction.property("avg").equalTo(Expression.value(3))))
         
@@ -585,12 +585,12 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let index = IndexBuilder.predictiveIndex(model: model, input: input)
-        try db.createIndex(index, withName: "AggIndex")
+        try defaultCollection!.createIndex(index, name: "AggIndex")
         
         let q = QueryBuilder
             .select(SelectResult.property("numbers"),
                     SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
         let explain = try q.explain() as NSString
@@ -621,12 +621,12 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let index = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["sum"])
-        try db.createIndex(index, withName: "SumIndex")
+        try defaultCollection!.createIndex(index, name: "SumIndex")
         
         let q = QueryBuilder
             .select(SelectResult.property("numbers"),
                     SelectResult.expression(prediction.property("sum")).as("sum"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
         let explain = try q.explain() as NSString
@@ -657,15 +657,15 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let sumIndex = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["sum"])
-        try db.createIndex(sumIndex, withName: "SumIndex")
+        try defaultCollection!.createIndex(sumIndex, name: "SumIndex")
         
         let avgIndex = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["avg"])
-        try db.createIndex(avgIndex, withName: "AvgIndex")
+        try defaultCollection!.createIndex(avgIndex, name: "AvgIndex")
         
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("sum")).as("sum"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                 prediction.property("avg").equalTo(Expression.value(8))))
         
@@ -694,12 +694,12 @@ class PredictiveQueryTest: CBLTestCase {
         let prediction = Function.prediction(model: model, input: input)
         
         let index = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["sum", "avg"])
-        try db.createIndex(index, withName: "SumAvgIndex")
+        try defaultCollection!.createIndex(index, name: "SumAvgIndex")
         
         let q = QueryBuilder
             .select(SelectResult.expression(prediction.property("sum")).as("sum"),
                     SelectResult.expression(prediction.property("avg")).as("avg"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)).and(
                 prediction.property("avg").equalTo(Expression.value(3))))
         
@@ -729,12 +729,12 @@ class PredictiveQueryTest: CBLTestCase {
         
         // Index:
         let index = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["sum"])
-        try db.createIndex(index, withName: "SumIndex")
+        try defaultCollection!.createIndex(index, name: "SumIndex")
         
         // Query with index:
         var q: Query = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         var explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
@@ -747,13 +747,13 @@ class PredictiveQueryTest: CBLTestCase {
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
         
         // Delete SumIndex:
-        try db.deleteIndex(forName: "SumIndex")
+        try defaultCollection!.deleteIndex(forName: "SumIndex")
         
         // Query again:
         aggregateModel.reset()
         q = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         explain = try q.explain() as NSString
         XCTAssertEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
@@ -781,20 +781,20 @@ class PredictiveQueryTest: CBLTestCase {
         
         // Create agg index:
         let aggIndex = IndexBuilder.predictiveIndex(model: model, input: input)
-        try db.createIndex(aggIndex, withName: "AggIndex")
+        try defaultCollection!.createIndex(aggIndex, name: "AggIndex")
         
         // Create sum index:
         let sumIndex = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["sum"])
-        try db.createIndex(sumIndex, withName: "SumIndex")
+        try defaultCollection!.createIndex(sumIndex, name: "SumIndex")
         
         // Create avg index:
         let avgIndex = IndexBuilder.predictiveIndex(model: model, input: input, properties: ["avg"])
-        try db.createIndex(avgIndex, withName: "AvgIndex")
+        try defaultCollection!.createIndex(avgIndex, name: "AvgIndex")
         
         // Query:
         var q: Query = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                    prediction.property("avg").equalTo(Expression.value(8))))
         var explain = try q.explain() as NSString
@@ -809,14 +809,14 @@ class PredictiveQueryTest: CBLTestCase {
         XCTAssertEqual(aggregateModel.numberOfCalls, 2);
         
         // Delete SumIndex:
-        try db.deleteIndex(forName: "SumIndex")
+        try defaultCollection!.deleteIndex(forName: "SumIndex")
         
         // Note: when having only one index, SQLite optimizer doesn't utilize the index
         //       when using OR expr. Hence explicity test each index with two queries:
         aggregateModel.reset()
         q = QueryBuilder
         .select(SelectResult.property("numbers"))
-        .from(DataSource.database(db))
+        .from(DataSource.collection(defaultCollection!))
         .where(prediction.property("sum").equalTo(Expression.value(15)))
         
         explain = try q.explain() as NSString
@@ -832,7 +832,7 @@ class PredictiveQueryTest: CBLTestCase {
         aggregateModel.reset()
         q = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("avg").equalTo(Expression.value(8)))
         explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
@@ -845,12 +845,12 @@ class PredictiveQueryTest: CBLTestCase {
         XCTAssertEqual(aggregateModel.numberOfCalls, 0);
         
         // Delete AvgIndex
-        try db.deleteIndex(forName: "AvgIndex")
+        try defaultCollection!.deleteIndex(forName: "AvgIndex")
         
         aggregateModel.reset()
         q = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("avg").equalTo(Expression.value(8)))
         explain = try q.explain() as NSString
         XCTAssertEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
@@ -863,12 +863,12 @@ class PredictiveQueryTest: CBLTestCase {
         XCTAssertEqual(aggregateModel.numberOfCalls, 0);
         
         // Delete AggIndex
-        try db.deleteIndex(forName: "AggIndex")
+        try defaultCollection!.deleteIndex(forName: "AggIndex")
         
         aggregateModel.reset()
         q = QueryBuilder
             .select(SelectResult.property("numbers"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                 prediction.property("avg").equalTo(Expression.value(8))))
         explain = try q.explain() as NSString
@@ -899,14 +899,14 @@ class PredictiveQueryTest: CBLTestCase {
             doc.setValue(test[0], forKey: "v1")
             doc.setValue(test[1], forKey: "v2")
             doc.setValue(test[2], forKey: "distance")
-            try db.saveDocument(doc)
+            try defaultCollection!.save(document: doc)
         }
         
         let distance = Function.euclideanDistance(between: Expression.property("v1"),
                                                       and: Expression.property("v2"))
         let q = QueryBuilder
             .select(SelectResult.expression(distance), SelectResult.property("distance"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         
         let rows = try verifyQuery(q) { (n, r) in
@@ -933,14 +933,14 @@ class PredictiveQueryTest: CBLTestCase {
             doc.setValue(test[0], forKey: "v1")
             doc.setValue(test[1], forKey: "v2")
             doc.setValue(test[2], forKey: "distance")
-            try db.saveDocument(doc)
+            try defaultCollection!.save(document: doc)
         }
         
         let distance = Function.squaredEuclideanDistance(between: Expression.property("v1"),
                                                              and: Expression.property("v2"))
         let q = QueryBuilder
             .select(SelectResult.expression(distance), SelectResult.property("distance"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         
         let rows = try verifyQuery(q) { (n, r) in
@@ -968,14 +968,14 @@ class PredictiveQueryTest: CBLTestCase {
             doc.setValue(test[0], forKey: "v1")
             doc.setValue(test[1], forKey: "v2")
             doc.setValue(test[2], forKey: "distance")
-            try db.saveDocument(doc)
+            try defaultCollection!.save(document: doc)
         }
         
         let distance = Function.cosineDistance(between: Expression.property("v1"),
                                                    and: Expression.property("v2"))
         let q = QueryBuilder
             .select(SelectResult.expression(distance), SelectResult.property("distance"))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let rows = try verifyQuery(q) { (n, r) in
             if r.value(at: 1) == nil {

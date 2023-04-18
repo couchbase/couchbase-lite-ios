@@ -96,7 +96,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         
         let q = QueryBuilder
             .select(SelectResult.property("expected_price"), SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let rows = try verifyQuery(q) { (n, r) in
             let expectedPrice = r.double(at: 0)
@@ -123,7 +123,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         let prediction = Function.prediction(model: "MarsHabitatPricer", input: input)
         let q = QueryBuilder
             .select(SelectResult.property("expected_price"), SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rows = try verifyQuery(q) { (n, r) in
             let pred = r.dictionary(at: 1)
             if let expectedPrice = r.value(at: 0) as? Double {
@@ -151,7 +151,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         let prediction = Function.prediction(model: "MobileNet", input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rows = try verifyQuery(q) { (n, r) in
             let pred = r.dictionary(at: 0)!
             let label = pred.string(forKey: "classLabel")!.lowercased()
@@ -183,7 +183,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         let prediction = Function.prediction(model: "OpenFace", input: input)
         var q: Query = QueryBuilder
             .select(SelectResult.property("name"), SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         var rows = try verifyQuery(q) { (n, r) in
             let name = r.string(at: 0)!
             let pred = r.dictionary(at: 1)!
@@ -201,7 +201,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         let distance = Function.euclideanDistance(between: vector1, and: vector2)
         q = QueryBuilder
             .select(SelectResult.property("name"), SelectResult.expression(distance))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
             .orderBy(Ordering.expression(distance))
         let params = Parameters()
         params.setArray(lennon1, forName: "vectorParam")
@@ -257,7 +257,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         let prediction = Function.prediction(model: "MobileNet", input: input)
         let q = QueryBuilder
             .select(SelectResult.expression(prediction))
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         let rows = try verifyQuery(q) { (n, r) in
             let pred = r.dictionary(at: 0)!
             let label = pred.string(forKey: "label")!.lowercased()
