@@ -64,7 +64,7 @@ class FragmentTest: CBLTestCase {
                                     "state": "CA"]]
         try saveDocument(createDocument("doc1", data: dict))
         
-        let doc = db["doc1"]
+        let doc = defaultCollection!["doc1"]
         XCTAssertNotNil(doc)
         XCTAssertTrue(doc.exists)
         XCTAssertNotNil(doc.document)
@@ -74,7 +74,7 @@ class FragmentTest: CBLTestCase {
     }
     
     func testGetDocFragmentWithNonExistingID() throws {
-        let doc = db["doc1"]
+        let doc = defaultCollection!["doc1"]
         XCTAssertNotNil(doc)
         XCTAssertFalse(doc.exists)
         XCTAssertNil(doc["address"]["street"].string)

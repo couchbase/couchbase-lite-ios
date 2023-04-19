@@ -293,7 +293,7 @@ class LogTest: CBLTestCase {
         writeOneKiloByteOfLog()
         writeOneKiloByteOfLog()
         
-        guard let maxRotateCount = Database.log.file.config?.maxRotateCount else {
+        guard (Database.log.file.config?.maxRotateCount) != nil else {
             fatalError("Config should be present!!")
         }
         var totalFilesShouldBeInDirectory = 15 /* (maxRotateCount + 1) * 5(levels) */
@@ -370,11 +370,11 @@ class LogTest: CBLTestCase {
         let hebrew = "מזג האוויר נחמד היום" // The weather is nice today.
         let doc = MutableDocument()
         doc.setString(hebrew, forKey: "hebrew")
-        try db.saveDocument(doc)
+        try defaultCollection!.save(document: doc)
         
         let q = QueryBuilder
             .select(SelectResult.all())
-            .from(DataSource.database(db))
+            .from(DataSource.collection(defaultCollection!))
         
         let rs = try q.execute()
         XCTAssertEqual(rs.allResults().count, 1);
