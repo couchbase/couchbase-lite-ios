@@ -85,9 +85,8 @@
     NSLog(@"%@: Open connection ...", self);
     _replicatorConnection = connection;
     CBLMessagingError* error;
-    if(self.isClient && [self.errorLogic shouldCloseAtLocation: kCBLMockConnectionConnect]) {
+    if (self.isClient && [self.errorLogic shouldCloseAtLocation: kCBLMockConnectionConnect]) {
         error = [self.errorLogic createError];
-        [self connectionBroken: error];
     }
     NSLog(@"%@: Complete open connection with error: %@", self, error);
     completion(!error, error);
@@ -121,7 +120,7 @@ typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
 
 @interface CBLMockClientConnection ()
 @property (atomic, nullable) OpenCompletion openCompletion;
-@property (atomic, nullable) CBLMockServerConnection* server;
+@property (atomic, weak, nullable) CBLMockServerConnection* server;
 @property (atomic) BOOL isClosed;
 @property (atomic) BOOL isConnectionBroken;
 @end
@@ -167,7 +166,6 @@ typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
     if (!connectionBroken)
         [self.server clientDisconnected: nil];
     completion();
-    self.server = nil;
 }
 
 - (void) connectionBroken: (CBLMessagingError*)error {
@@ -198,7 +196,7 @@ typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
 @end
 
 @interface CBLMockServerConnection ()
-@property (atomic, nullable) CBLMockClientConnection* client;
+@property (atomic, nullable, weak) CBLMockClientConnection* client;
 @property (atomic) BOOL isClosed;
 @end
 
@@ -235,13 +233,11 @@ typedef void (^OpenCompletion)(BOOL, CBLMessagingError * _Nullable);
     self.isClosed = YES;
     [self.client serverDisconnected];
     completion();
-    self.client = nil;
 }
 
 - (void) performWrite: (NSData*)data {
     NSLog(@"%@: Perform write with data size = %lu bytes to client", self, (unsigned long)data.length);
     [self.client acceptBytes: data];
-    
 }
 
 @end

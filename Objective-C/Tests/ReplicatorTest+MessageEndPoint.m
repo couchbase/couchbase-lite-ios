@@ -53,7 +53,7 @@
     XCTestExpectation* x = [self expectationWithDescription:@"Listener stop"];
     __block id token = nil;
     __weak CBLMessageEndpointListener* wListener = listener;
-    token = [listener addChangeListener:^(CBLMessageEndpointListenerChange * change) {
+    token = [listener addChangeListener: ^(CBLMessageEndpointListenerChange * change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
             [wListener removeChangeListenerWithToken:token];
@@ -62,10 +62,14 @@
     return x;
 }
 
-- (CBLReplicatorConfiguration*) createFailureP2PConfigurationWithProtocol: (CBLProtocolType)protocolType
-                                                               atLocation: (CBLMockConnectionLifecycleLocation)location
-                                                       withRecoverability: (BOOL)isRecoverable
-                                                                 listener: (CBLMessageEndpointListener**)outListener {
+- (NSString*) clientID {
+    return [[NSUUID UUID] UUIDString];
+}
+
+- (CBLReplicatorConfiguration*) createFailureConfigurationWithProtocol: (CBLProtocolType)protocolType
+                                                              location: (CBLMockConnectionLifecycleLocation)location
+                                                           recoverable: (BOOL)isRecoverable
+                                                              listener: (CBLMessageEndpointListener**)outListener {
     NSInteger recoveryCount = isRecoverable ? 1 : 0;
     CBLTestErrorLogic* errorLogic = [[CBLTestErrorLogic alloc] initAtLocation: location
                                                             withRecoveryCount: recoveryCount];
@@ -80,7 +84,7 @@
     server.errorLogic = errorLogic;
     
     _delegate = [[MockConnectionFactory alloc] initWithErrorLogic: errorLogic];
-    CBLMessageEndpoint* endpoint = [[CBLMessageEndpoint alloc] initWithUID: @"p2ptest1"
+    CBLMessageEndpoint* endpoint = [[CBLMessageEndpoint alloc] initWithUID: [self clientID]
                                                                     target: server
                                                               protocolType: protocolType
                                                                   delegate: _delegate];
@@ -89,28 +93,33 @@
     return replConfig;
 }
 
-- (void) runTwoStepContinuousWithType: (CBLReplicatorType)replicatorType usingUID: (NSString*)uid {
-    CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: kCBLProtocolTypeByteStream];
-    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:config];
+- (void) runTestWithType: (CBLReplicatorType)replicatorType protocol: (CBLProtocolType)protocol {
+    // Listener:
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
+                                                                                                           protocolType: protocol];
+    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
     XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
+    
+    // Replicator:
     CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener: listener
-                                                                            protocol: kCBLProtocolTypeByteStream];
+                                                                            protocol: protocol];
     MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: uid
+    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: [self clientID]
                                                                   target: server
-                                                            protocolType: kCBLProtocolTypeByteStream delegate: delegate];
+                                                            protocolType: protocol
+                                                                delegate: delegate];
     CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
     replConfig.replicatorType = replicatorType;
     replConfig.continuous = YES;
     
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
     [replicator start];
+    
     CBLDatabase* firstSource = nil;
     CBLDatabase* secondSource = nil;
     CBLDatabase* firstTarget = nil;
     CBLDatabase* secondTarget = nil;
+    
     if(replicatorType == kCBLReplicatorTypePush) {
         firstSource = self.db;
         secondSource = self.db;
@@ -128,54 +137,48 @@
         secondTarget = self.db;
     }
     
-    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
+    XCTestExpectation* x = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
+    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"doc1"];
     [mdoc setString: @"db" forKey: @"name"];
     [mdoc setInteger: 1 forKey: @"version"];
     [self saveDocument:mdoc toDatabase: firstSource];
-    
-    XCTestExpectation* x = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
     [self waitForExpectations: @[x] timeout: 10.0];
     
     uint64_t previousCompleted = replicator.status.progress.completed;
     AssertEqual(firstTarget.count, 1UL);
     
-    mdoc = [[secondSource documentWithID: @"livesindb"] toMutable];
+    x = [self waitForReplicatorIdle: replicator withProgressAtLeast: previousCompleted];
+    mdoc = [[secondSource documentWithID: @"doc1"] toMutable];
     [mdoc setInteger: 2 forKey: @"version"];
     [self saveDocument: mdoc toDatabase: secondSource];
-    
-    x = [self waitForReplicatorIdle: replicator withProgressAtLeast: previousCompleted];
     [self waitForExpectations: @[x] timeout: 10.0];
     
-    CBLDocument* savedDoc = [secondTarget documentWithID: @"livesindb"];
+    x = [self waitForReplicatorStopped: replicator];
+    CBLDocument* savedDoc = [secondTarget documentWithID: @"doc1"];
     AssertEqual([savedDoc integerForKey: @"version"], 2);
     [replicator stop];
-    
-    // Wait for replicator to stop:
-    x = [self waitForReplicatorStopped: replicator];
     [self waitForExpectations: @[x] timeout: 5.0];
-    
-    // Wait for listener to stop:
     [self waitForExpectations: @[listenerStop] timeout: 10.0];
 }
 
-- (void) runP2PErrorScenario: (CBLMockConnectionLifecycleLocation)location withRecoverability: (BOOL)isRecoverable {
-    NSTimeInterval oldTimeout = timeout;
-    timeout = 100.0;
-    
+- (void) runErrorTestForCase: (CBLMockConnectionLifecycleLocation)location
+                    protocol: (CBLProtocolType)protocolType
+                 recoverable: (BOOL)isRecoverable {
+    NSError* error = nil;
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
     [mdoc setString: @"db" forKey: @"name"];
-    NSError* error = nil;
     [_db saveDocument: mdoc error: &error];
     AssertNil(error);
     
     XCTestExpectation* listenerStop;
     NSString* expectedDomain = isRecoverable ? nil : CBLErrorDomain;
     NSInteger expectedCode = isRecoverable ? 0 : CBLErrorWebSocketCloseUserPermanent;
+    
     CBLMessageEndpointListener* listener;
-    CBLReplicatorConfiguration* config = [self createFailureP2PConfigurationWithProtocol: kCBLProtocolTypeByteStream
-                                                                              atLocation: location
-                                                                      withRecoverability: isRecoverable
-                                                                                listener: &listener];
+    CBLReplicatorConfiguration* config = [self createFailureConfigurationWithProtocol: protocolType
+                                                                             location: location
+                                                                          recoverable: isRecoverable
+                                                                             listener: &listener];
     if (location != kCBLMockConnectionConnect) {
         listenerStop = [self waitForListenerStopped: listener];
     }
@@ -185,303 +188,96 @@
     if (listenerStop) {
         [self waitForExpectations: @[listenerStop] timeout: 10.0];
     }
-    
-    config = [self createFailureP2PConfigurationWithProtocol: kCBLProtocolTypeMessageStream
-                                                  atLocation: location
-                                          withRecoverability: isRecoverable
-                                                    listener: &listener];
-    
-    if (location != kCBLMockConnectionConnect) {
-        listenerStop = [self waitForListenerStopped: listener];
-    }
-    
-    [self run: config reset: YES errorCode: expectedCode errorDomain: expectedDomain];
-    
-    if (listenerStop) {
-        [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    }
-    
-    timeout = oldTimeout;
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PWithMessageStream {
-    CBLProtocolType protocolType = kCBLProtocolTypeMessageStream;
-    
-    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
-    [mdoc setString: @"db" forKey: @"name"];
-    [self saveDocument: mdoc];
-    
-    mdoc = [CBLMutableDocument documentWithID: @"livesinotherdb"];
-    [mdoc setString: @"otherdb" forKey: @"name"];
-    [self saveDocument: mdoc toDatabase: self.otherDB];
-    
-    // PUSH
-    Log(@"----> Push Replication ...");
-    
-    CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: protocolType];
-    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
-    XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
-    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener: listener protocol: protocolType];
-    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat:@"test1"]
-                                                                  target: server
-                                                            protocolType: protocolType
-                                                                delegate: delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    replConfig.replicatorType = kCBLReplicatorTypePush;
-    [self run:replConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(self.otherDB.count, 2UL);
-    AssertEqual(_db.count, 1UL);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    // PULL
-    Log(@"----> Pull Replication ...");
-    
-    listenerStop = [self waitForListenerStopped: listener];
-    server = [[CBLMockServerConnection alloc] initWithListener: listener protocol: protocolType];
-    target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat: @"test1"]
-                                              target: server
-                                        protocolType: protocolType
-                                            delegate: delegate];
-    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    replConfig.replicatorType = kCBLReplicatorTypePull;
-    [self run:replConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(_db.count, 2UL);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    // PUSH & PULL
-    Log(@"----> Push and Pull Replication ...");
-    
-    mdoc = [[_db documentWithID: @"livesinotherdb"] toMutable];
-    [mdoc setBoolean:YES forKey: @"modified"];
-    [self saveDocument:mdoc];
-    
-    mdoc = [[self.otherDB documentWithID: @"livesindb"] toMutable];
-    [mdoc setBoolean: YES forKey: @"modified"];
-    [self saveDocument:mdoc toDatabase: self.otherDB];
-    
-    listenerStop = [self waitForListenerStopped: listener];
-    server = [[CBLMockServerConnection alloc] initWithListener: listener protocol: protocolType];
-    target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat:@"test1"]
-                                              target: server
-                                        protocolType: protocolType
-                                            delegate: delegate];
-    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    [self run: replConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(_db.count, 2UL);
-    
-    CBLDocument* savedDoc = [_db documentWithID: @"livesindb"];
-    Assert([savedDoc booleanForKey: @"modified"]);
-    savedDoc = [self.otherDB documentWithID: @"livesinotherdb"];
-    Assert([savedDoc booleanForKey: @"modified"]);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    NSError* err = nil;
-    BOOL success = [_db delete: &err];
-    Assert(success);
-    [self reopenDB];
-    success = [self.otherDB delete: &err];
-    Assert(success);
+- (void) testPushWithMessageStream {
+    [self runTestWithType: kCBLReplicatorTypePush protocol: kCBLProtocolTypeMessageStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PWithByteStream {
-    CBLProtocolType protocolType = kCBLProtocolTypeByteStream;
-    
-    CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
-    [mdoc setString: @"db" forKey: @"name"];
-    [self saveDocument: mdoc];
-    
-    mdoc = [CBLMutableDocument documentWithID: @"livesinotherdb"];
-    [mdoc setString: @"otherdb" forKey: @"name"];
-    [self saveDocument: mdoc toDatabase: self.otherDB];
-    
-    // PUSH
-    Log(@"----> Push Replication ...");
-    
-    CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: protocolType];
-    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
-    XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
-    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener: listener
-                                                                            protocol: protocolType];
-    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat:@"test1"]
-                                                                  target: server
-                                                            protocolType: protocolType
-                                                                delegate: delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    replConfig.replicatorType = kCBLReplicatorTypePush;
-    [self run: replConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(self.otherDB.count, 2UL);
-    AssertEqual(_db.count, 1UL);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    // PULL
-    Log(@"----> Pull Replication ...");
-    
-    listenerStop = [self waitForListenerStopped: listener];
-    server = [[CBLMockServerConnection alloc] initWithListener: listener protocol: protocolType];
-    target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat:@"test1"]
-                                              target: server
-                                        protocolType: protocolType
-                                            delegate: delegate];
-    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    replConfig.replicatorType = kCBLReplicatorTypePull;
-    [self run: replConfig errorCode:0 errorDomain: nil];
-    AssertEqual(_db.count, 2UL);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    // PUSH & PULL
-    Log(@"----> Push and Pull Replication ...");
-    
-    mdoc = [[_db documentWithID: @"livesinotherdb"] toMutable];
-       [mdoc setBoolean: YES forKey: @"modified"];
-       [self saveDocument: mdoc];
-       
-       mdoc = [[self.otherDB documentWithID: @"livesindb"] toMutable];
-       [mdoc setBoolean: YES forKey: @"modified"];
-       [self saveDocument: mdoc toDatabase: self.otherDB];
-    
-    listenerStop = [self waitForListenerStopped: listener];
-    server = [[CBLMockServerConnection alloc] initWithListener: listener protocol: protocolType];
-    target = [[CBLMessageEndpoint alloc] initWithUID: [NSString stringWithFormat:@"test1"]
-                                              target: server
-                                        protocolType: protocolType
-                                            delegate: delegate];
-    replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    [self run: replConfig errorCode: 0 errorDomain: nil];
-    AssertEqual(_db.count, 2UL);
-    
-    CBLDocument* savedDoc = [_db documentWithID: @"livesindb"];
-    Assert([savedDoc booleanForKey: @"modified"]);
-    savedDoc = [self.otherDB documentWithID: @"livesinotherdb"];
-    Assert([savedDoc booleanForKey: @"modified"]);
-    
-    // Wait for listener to stop:
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
-    
-    NSError* err = nil;
-    BOOL success = [_db delete: &err];
-    Assert(success);
-    [self reopenDB];
-    success = [self.otherDB delete: &err];
-    Assert(success);
+- (void) testPushWithByteStream {
+    [self runTestWithType: kCBLReplicatorTypePush protocol: kCBLProtocolTypeByteStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PContinuousPush {
-    [self runTwoStepContinuousWithType: kCBLReplicatorTypePush usingUID: @"p2ptest1"];
+- (void) testPullWithMessageStream {
+    [self runTestWithType: kCBLReplicatorTypePull protocol: kCBLProtocolTypeMessageStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PContinuousPull {
-    [self runTwoStepContinuousWithType: kCBLReplicatorTypePull usingUID: @"p2ptest2"];
+- (void) testPullWithByteStream {
+    [self runTestWithType: kCBLReplicatorTypePull protocol: kCBLProtocolTypeByteStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PContinuousPushPull {
-    [self runTwoStepContinuousWithType: kCBLReplicatorTypePushAndPull usingUID: @"p2ptest3"];
+- (void) testPushPullWithMessageStream {
+    [self runTestWithType: kCBLReplicatorTypePushAndPull protocol: kCBLProtocolTypeMessageStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PRecoverableFailureDuringOpen {
-    [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: YES];
+- (void) testPushPullWithByteStream {
+    [self runTestWithType: kCBLReplicatorTypePushAndPull protocol: kCBLProtocolTypeByteStream];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PRecoverableFailureDuringSend {
-    [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: YES];
+// Error Tests During Open:
+
+- (void) testRecoverableErrorDuringOpenWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PRecoverableFailureDuringReceive {
-    [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: YES];
+- (void) testRecoverableErrorDuringOpenWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeByteStream recoverable: YES];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PPermanentFailureDuringOpen {
-    [self runP2PErrorScenario: kCBLMockConnectionConnect withRecoverability: NO];
+- (void) testPermanentErrorDuringOpenWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeMessageStream recoverable: NO];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PPermanentFailureDuringSend {
-    [self runP2PErrorScenario: kCBLMockConnectionSend withRecoverability: NO];
+- (void) testPermanentErrorDuringOpenWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeByteStream recoverable: NO];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PPermanentFailureDuringReceive {
-    [self runP2PErrorScenario: kCBLMockConnectionReceive withRecoverability: NO];
+// Error Tests During Send:
+
+- (void) testRecoverableErrorDuringSendWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
-// TODO: flaky https://issues.couchbase.com/browse/CBL-2404
-- (void) _testMEP2PPassiveClose {
-    CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: kCBLProtocolTypeMessageStream];
-    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
-    CBLMockServerConnection* server = [[CBLMockServerConnection alloc] initWithListener: listener
-                                                                            protocol: kCBLProtocolTypeMessageStream];
-    CBLReconnectErrorLogic* errorLogic = [CBLReconnectErrorLogic new];
-    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: errorLogic];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: @"p2ptest1"
-                                                                  target: server
-                                                            protocolType: kCBLProtocolTypeMessageStream
-                                                                delegate: delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
-    replConfig.continuous = YES;
-    
-    XCTestExpectation* listenerStop = [self expectationWithDescription:@"Listener stop"];
-    XCTestExpectation* listenerIdle = [self expectationWithDescription:@"Listener idle"];
-    NSMutableArray* listenerErrors = [NSMutableArray array];
-    [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
-        if(change.status.error) {
-            [listenerErrors addObject: change.status.error];
-        }
-        if (change.status.activity == kCBLReplicatorIdle)
-            [listenerIdle fulfill];
-        
-        if (change.status.activity == kCBLReplicatorStopped)
-            [listenerStop fulfill];
-    }];
-    
-    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
-    XCTestExpectation* replicatorIdle = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
-    [replicator start];
-    [self waitForExpectations: @[replicatorIdle, listenerIdle] timeout: 10.0];
-    errorLogic.isErrorActive = true;
-    XCTestExpectation* replicatorStop = [self waitForReplicatorStopped: replicator];
-    
-    [listener close: server];
-    [self waitForExpectations:@[replicatorStop, listenerStop] timeout:10.0];
-    AssertEqual(listenerErrors.count, 0UL);
-    AssertNotNil(replicator.status.error);
+- (void) testRecoverableErrorDuringSendWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeByteStream recoverable: YES];
 }
 
-// FIXME: https://issues.couchbase.com/browse/CBL-2959
-- (void) _testMEP2PPassiveCloseAll {
-    CBLMutableDocument* doc = [CBLMutableDocument documentWithID:@"test"];
-    [doc setString:@"Smokey" forKey:@"name"];
-    [self saveDocument:doc];
+- (void) testPermanentErrorDuringSendWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeMessageStream recoverable: NO];
+}
+
+- (void) testPermanentErrorDuringSendWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeByteStream recoverable: NO];
+}
+
+// Error Tests During Receive:
+
+- (void) testRecoverableErrorDuringReceiveWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeMessageStream recoverable: YES];
+}
+
+- (void) testRecoverableErrorDuringReceiveWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeByteStream recoverable: YES];
+}
+
+- (void) testPermanentErrorDuringReceiveWithMessageStream {
+    [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeMessageStream recoverable: NO];
+}
+
+- (void) testPermanentErrorDuringReceiveWithByteStream {
+    [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeByteStream recoverable: NO];
+}
+
+- (void) testCloseListener {
+    CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc1"];
+    [doc setString: @"Smokey" forKey: @"name"];
+    [self saveDocument: doc];
     
     CBLMessageEndpointListenerConfiguration* config =
         [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
                                                              protocolType: kCBLProtocolTypeMessageStream];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
+    
     CBLMockServerConnection* serverConnection1 = [[CBLMockServerConnection alloc] initWithListener: listener
                                                                                        protocol: kCBLProtocolTypeMessageStream];
     
@@ -489,7 +285,7 @@
                                                                                        protocol: kCBLProtocolTypeMessageStream];
     CBLReconnectErrorLogic* errorLogic = [CBLReconnectErrorLogic new];
     MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: errorLogic];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: @"p2ptest1"
+    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: [self clientID]
                                                                   target: serverConnection1
                                                             protocolType: kCBLProtocolTypeMessageStream
                                                                 delegate: delegate];
@@ -497,7 +293,7 @@
                                                                                            target: target];
     replConfig.continuous = YES;
     MockConnectionFactory* delegate2 = [[MockConnectionFactory alloc] initWithErrorLogic: errorLogic];
-    CBLMessageEndpoint* target2 = [[CBLMessageEndpoint alloc] initWithUID: @"p2ptest2"
+    CBLMessageEndpoint* target2 = [[CBLMessageEndpoint alloc] initWithUID: [self clientID]
                                                                    target: serverConnection2
                                                              protocolType: kCBLProtocolTypeMessageStream
                                                                  delegate: delegate2];
@@ -535,64 +331,6 @@
     [self waitForExpectations: @[stop1, stop2] timeout: 10.0];
     AssertNotNil(replicator.status.error);
     AssertNotNil(replicator2.status.error);
-}
-
-// TODO: flaky https://issues.couchbase.com/browse/CBL-2404
-- (void) _testMEP2PChangeListener {
-    NSMutableArray* statuses = [NSMutableArray array];
-    CBLMessageEndpointListener* listener =
-        [[CBLMessageEndpointListener alloc] initWithConfig:
-            [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                                 protocolType: kCBLProtocolTypeByteStream]];
-    
-    CBLMockServerConnection* serverConnection = [[CBLMockServerConnection alloc] initWithListener: listener
-                                                                                         protocol: kCBLProtocolTypeByteStream];
-    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID: @"p2ptest1"
-                                                                  target: serverConnection
-                                                            protocolType: kCBLProtocolTypeByteStream
-                                                                delegate: delegate];
-    
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:target];
-    config.continuous = YES;
-    XCTestExpectation *x = [self expectationWithDescription:@"Listener stop"];
-    [listener addChangeListener: ^(CBLMessageEndpointListenerChange * _Nonnull change) {
-        [statuses addObject: @(change.status.activity)];
-        if (change.status.activity == kCBLReplicatorStopped) {
-            [x fulfill];
-        }
-    }];
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    [self waitForExpectations: @[x] timeout:10.0];
-    Assert(statuses.count > 0);
-}
-
-// TODO: flaky https://issues.couchbase.com/browse/CBL-2404
-- (void) _testMEP2PRemoveChangeListener {
-    NSMutableArray* statuses = [NSMutableArray array];
-    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig:
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: kCBLProtocolTypeByteStream]];
-    CBLMockServerConnection* serverConnection = [[CBLMockServerConnection alloc] initWithListener: listener
-                                                                                      protocol: kCBLProtocolTypeByteStream];
-    MockConnectionFactory* delegate = [[MockConnectionFactory alloc] initWithErrorLogic: nil];
-    CBLMessageEndpoint* target = [[CBLMessageEndpoint alloc] initWithUID :@"p2ptest1"
-                                                                   target: serverConnection
-                                                             protocolType: kCBLProtocolTypeByteStream
-                                                                 delegate: delegate];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db
-                                                                                       target: target];
-    config.continuous = YES;
-    XCTestExpectation *x = [self waitForListenerStopped: listener];
-    id token = [listener addChangeListener:^(CBLMessageEndpointListenerChange * _Nonnull change) {
-        [statuses addObject: @(change.status.activity)];
-    }];
-    [listener removeChangeListenerWithToken: token];
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    [self waitForExpectations: @[x] timeout: 10.0];
-    Assert(statuses.count == 0UL);
 }
 
 @end
