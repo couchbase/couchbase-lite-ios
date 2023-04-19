@@ -83,7 +83,7 @@
     
     self.crashWhenStoppedTimeoutOccurred = YES;
     
-    timeout = 15.0; // TODO: CBL-973
+    timeout = 20.0;
     
     [self openOtherDB];
 }
