@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.8
 import PackageDescription
 
 let package = Package(
@@ -14,8 +14,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "CouchbaseLiteSwift",
-            url: "https://packages.couchbase.com/releases/couchbase-lite-ios/3.0.0/couchbase-lite-swift_xc_community_3.0.0.zip",
-            checksum: "1c77f6f9e6eb41e19dec32fbae4463601196c5edca3ae2a164d81e311e57a8d1"
+            url: "https://packages.couchbase.com/releases/couchbase-lite-ios/3.1.0/couchbase-lite-swift_xc_community_3.1.0.zip",
+            checksum: "556d6ae41df3b5ebf91dbe45d38214dd7032f97ac1b132f925356d20e3b9ada5"
         )
     ]
 )
