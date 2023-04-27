@@ -79,7 +79,7 @@ public final class Database {
     
     /// Gets a document from the default collection by document ID.
     /// If the document doesn't exist, nil will be returned.
-    @available(*, deprecated, message: "Use database.defaultCollection().document(withID:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().document(id:) instead.")
     public func document(withID id: String) -> Document? {
         guard let col = try? defaultCollection() else {
             Database.throwNotOpenError()
@@ -108,7 +108,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().save(:) instead.")
     public func saveDocument(_ document: MutableDocument) throws {
         try impl.save(document.impl as! CBLMutableDocument)
     }
@@ -124,7 +124,7 @@ public final class Database {
     /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:concurrencyControl:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().save(:concurrencyControl:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, concurrencyControl: ConcurrencyControl) throws -> Bool
     {
@@ -154,7 +154,7 @@ public final class Database {
     /// - Returns: True if successful. False if there is a conflict, but the conflict wasn't
     ///            resolved as the conflict handler returns 'false' value.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().saveDocument(:conflictHandler:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().save(:conflictHandler:) instead.")
     @discardableResult public func saveDocument(
         _ document: MutableDocument, conflictHandler: @escaping (MutableDocument, Document?) -> Bool
     ) throws -> Bool {
@@ -184,7 +184,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().delete(:) instead.")
     public func deleteDocument(_ document: Document) throws {
         try impl.delete(document.impl)
     }
@@ -200,7 +200,7 @@ public final class Database {
     /// - Returns: True if successful. False if the failOnConflict concurrency
     ///            control is used, and there is a conflict.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().deleteDocument(:concurrencyControl:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().delete(:concurrencyControl:) instead.")
     @discardableResult public func deleteDocument(
         _ document: Document, concurrencyControl: ConcurrencyControl) throws -> Bool
     {
@@ -223,7 +223,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().purge(:) instead.")
     public func purgeDocument(_ document: Document) throws {
         try impl.purgeDocument(document.impl)
     }
@@ -234,7 +234,7 @@ public final class Database {
     ///
     /// - Parameter documentID: The document.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().purgeDocument(withID:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().purge(id:) instead.")
     public func purgeDocument(withID documentID: String) throws {
         try impl.purgeDocument(withID: documentID)
     }
@@ -291,7 +291,7 @@ public final class Database {
     ///     - documentID: The ID of the document to set the expiration date for
     ///     - expiration: The expiration date. Set nil date will reset the document expiration.
     /// - Throws: An error on a failure.
-    @available(*, deprecated, message: "Use database.defaultCollection().setDocumentExpiration(withID:expiration:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().setDocumentExpiration(id:expiration:) instead.")
     public func setDocumentExpiration(withID documentID: String, expiration: Date?) throws {
         try impl.setDocumentExpirationWithID(documentID, expiration: expiration)
     }
@@ -300,7 +300,7 @@ public final class Database {
     ///
     /// - Parameter documentID: The ID of the document to set the expiration date for.
     /// - Returns: the expiration time of a document, if one has been set, else nil.
-    @available(*, deprecated, message: "Use database.defaultCollection().getDocumentExpiration(withID:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().getDocumentExpiration(id:) instead.")
     public func getDocumentExpiration(withID documentID: String) -> Date? {
         return impl.getDocumentExpiration(withID: documentID)
     }
@@ -325,7 +325,7 @@ public final class Database {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
-    @available(*, deprecated, message: "Use database.defaultCollection().addChangeListener(withQueue:listener:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().addChangeListener(queue:listener:) instead.")
     @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
         listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
@@ -341,7 +341,7 @@ public final class Database {
     ///   - documentID: The document ID.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
-    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(withID:listener:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(id:listener:) instead.")
     @discardableResult public func addDocumentChangeListener(withID id: String,
         listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
@@ -356,7 +356,7 @@ public final class Database {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
-    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(withID:queue:listener:) instead.")
+    @available(*, deprecated, message: "Use database.defaultCollection().addDocumentChangeListener(id:queue:listener:) instead.")
     @discardableResult public func addDocumentChangeListener(withID id: String,
                                                              queue: DispatchQueue?,
                                                              listener: @escaping (DocumentChange) -> Void) -> ListenerToken
@@ -372,7 +372,7 @@ public final class Database {
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
-    @available(*, deprecated, message: "Use database.defaultCollection().removeChangeListener(withToken:) instead.")
+    @available(*, deprecated, message: "Use token.remove() instead.")
     public func removeChangeListener(withToken token: ListenerToken) {
         impl.removeChangeListener(with: token.impl)
     }
