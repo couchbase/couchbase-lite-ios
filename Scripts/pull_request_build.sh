@@ -2,7 +2,7 @@
 
 cd couchbase-lite-ios
 
-TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
+TEST_SIMULATOR=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}')
 
 SCHEMES=("CBL_EE_ObjC" "CBL_EE_Swift")
 for SCHEME in "${SCHEMES[@]}"
