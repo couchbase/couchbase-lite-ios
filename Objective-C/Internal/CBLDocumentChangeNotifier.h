@@ -23,15 +23,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 /**
  A subclass of CBLChangeNotifier that manages document change notifications.
  It manages the underlying C4DocumentObserver and posts the CBLDocumentChange notifications itself.
 */
 @interface CBLDocumentChangeNotifier : CBLChangeNotifier<CBLDocumentChange*>
 
-- (instancetype) initWithCollection: (CBLCollection*)collection
-                         documentID: (NSString*)documentID;
+@property (nonatomic, weak, nullable) CBLCollection* collection;
+
+- (instancetype) initWithCollection: (CBLCollection*)collection documentID: (NSString*)documentID;
 
 /** Immediately stops the C4DocumentObserver. No more notifications will be sent. */
 - (void) stop;

@@ -648,6 +648,23 @@
     AssertEqual(changeListenerFired, 0);
 }
 
+- (void) testCollectionChangeListenerWithoutRemoveToken {
+    @autoreleasepool {
+        NSError* error = nil;
+        CBLCollection* colA = [self.db createCollectionWithName: @"colA"
+                                                          scope: @"scopeA" error: &error];
+        
+        XCTestExpectation* exp1 = [self expectationWithDescription: @"change listener 1"];
+        [colA addChangeListener: ^(CBLCollectionChange* change) {
+            [exp1 fulfill];
+        }];
+        
+        [self createDocNumbered: colA start: 0 num: 1];
+        
+        [self waitForExpectations: @[exp1] timeout: 10.0];
+    }
+}
+
 - (void) testCollectionDocumentChangeListener {
     NSError* error = nil;
     CBLCollection* col1 = [self.db createCollectionWithName: @"colA"
@@ -731,6 +748,25 @@
     
     [self createDocNumbered: col2 start: 10 num: 10];
     AssertEqual(changeListenerFired, 0);
+}
+
+- (void) testCollectionDocumentChangeListenerWithoutRemoveToken {
+    @autoreleasepool {
+        NSError* error = nil;
+        CBLCollection* colA = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+        AssertNotNil(colA);
+        
+        XCTestExpectation* exp1 = [self expectationWithDescription: @"doc change listener 1"];
+        [colA addDocumentChangeListenerWithID: @"doc-1" listener: ^(CBLDocumentChange* change) {
+            [exp1 fulfill];
+        }];
+        
+        CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc-1"];
+        [doc setString: @"str" forKey: @"key"];
+        [colA saveDocument: doc error: &error];
+        
+        [self waitForExpectations: @[exp1] timeout: 10.0];
+    }
 }
 
 #pragma mark - 8.5-6 Use collection APIs on deleted/closed scenarios
