@@ -118,7 +118,7 @@ function xcarchive
     -destination "${DESTINATION}" \
     ${BUILD_VERSION} ${BUILD_NUMBER} "${CBL_COPYRIGHT_YEAR}" "${EDITION}" \
     -archivePath "${ARCHIVE_PATH}/${BIN_NAME}.xcarchive" \
-    "ONLY_ACTIVE_ARCH=NO" "BITCODE_GENERATION_MODE=bitcode" \
+    "ONLY_ACTIVE_ARCH=NO" \
     "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" \
     "SKIP_INSTALL=NO" ${QUIET}
   
