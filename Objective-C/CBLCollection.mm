@@ -496,6 +496,10 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return { .name = name, .scope = scopeName };
 }
 
+- (NSString*) fullName {
+    return $sprintf(@"%@.%@", _scope.name, _name);
+}
+
 - (BOOL) isEqual: (id)object {
     if (self == object)
         return YES;
@@ -617,15 +621,13 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         
         CBLDocumentChangeNotifier* docNotifier = _docChangeNotifiers[documentID];
         if (!docNotifier) {
-            docNotifier = [[CBLDocumentChangeNotifier alloc] initWithCollection: self
-                                                                     documentID: documentID];
+            docNotifier = [[CBLDocumentChangeNotifier alloc] initWithCollection: self documentID: documentID];
             _docChangeNotifiers[documentID] = docNotifier;
         }
         
         CBLChangeListenerToken* token = [docNotifier addChangeListenerWithQueue: queue
                                                                        listener: listener
                                                                        delegate: self];
-        
         token.context = documentID;
         return token;
     }

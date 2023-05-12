@@ -513,6 +513,23 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(changeListenerFired, 0)
     }
     
+    /** Test that there is no collection or c4 object leak when the listener token is not removed.
+        The actual check for the object leak is in the test's tear down. */
+    func testCollectionChangeListenerWithoutRemoveToken() throws {
+        try autoreleasepool {
+            let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+            
+            let exp1 = expectation(description: "doc change listener 1")
+            _ = colA.addChangeListener { change in
+                exp1.fulfill()
+            }
+            
+            try createDocNumbered(colA, start: 0, num: 1)
+            
+            waitForExpectations(timeout: 10.0)
+        }
+    }
+    
     func testCollectionDocumentChangeListener() throws {
         let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
         let colB = try self.db.createCollection(name: "colB", scope: "scopeA")
@@ -600,6 +617,25 @@ class CollectionTest: CBLTestCase {
         
         try createDocNumbered(colB, start: 10, num: 10)
         XCTAssertEqual(changeListenerFired, 0)
+    }
+    
+    /** Test that there is no collection or c4 object leak when the listener token is not removed.
+        The actual check for the object leak is in the test's tear down. */
+    func testCollectionDocumentChangeListenerWithoutRemoveToken() throws {
+        try autoreleasepool {
+            let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
+            
+            let exp1 = expectation(description: "doc change listener 1")
+            _ = colA.addDocumentChangeListener(id: "doc-1") { change in
+                exp1.fulfill()
+            }
+            
+            let doc = MutableDocument(id: "doc-1")
+            doc.setString("str", forKey: "key")
+            try colA.save(document: doc)
+            
+            waitForExpectations(timeout: 10.0)
+        }
     }
     
     // MARK: Index
