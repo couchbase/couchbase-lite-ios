@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) C4CollectionSpec c4spec;
 
+@property (nonatomic, readonly) NSString* fullName;
+
 /** This constructor will return CBLCollection for the c4collection. */
 - (instancetype) initWithDB: (CBLDatabase*)db
                c4collection: (C4Collection*)c4collection;

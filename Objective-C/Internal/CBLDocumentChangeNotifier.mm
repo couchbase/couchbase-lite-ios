@@ -25,16 +25,19 @@
 @implementation CBLDocumentChangeNotifier
 {
     NSString* _docID;
-    CBLCollection* _col;
     C4DocumentObserver* _obs;
+    NSString* _collectionName;
 }
+
+@synthesize collection=_collection;
 
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
 {
     self = [super init];
     if (self) {
-        _col = collection;
+        _collection = collection;
+        _collectionName = collection.fullName;
         _docID = documentID;
         CBLStringBytes bDocID(documentID);
         C4Error c4err = {};
@@ -44,8 +47,9 @@
                                              (__bridge void *)self,
                                              &c4err);
         if (!_obs) {
-            CBLWarn(Database, @"%@ Failed to create collection doc-obs col=%@ err=%d/%d",
-                    self, collection, c4err.domain, c4err.code);
+            CBLWarn(Database, @"%@ Failed to create document change observer for document '%@' "
+                                "in collection '%@' with error '%d/%d'",
+                    self, _docID, _collectionName, c4err.domain, c4err.code);
         }
     }
     return self;
@@ -58,16 +62,24 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Collection* collectio
 }
 
 - (void) postChange {
-    NSError* e = nil;
-    CBLDocumentChange* c = [[CBLDocumentChange alloc] initWithCollection: _col
-                                                              documentID: _docID
-                                                                   error: &e];
-    if (!c) {
-        CBLWarn(Database, @"Unable to post the doc change %@ %@ %@", e, _docID, _col);
+    CBLCollection* collection = _collection;
+    if (!collection) {
+        CBLWarn(Database, @"%@ Unnable to notify a change for document '%@' in collection '%@' "
+                           "as the collection has been released", self, _collectionName, _docID);
         return;
     }
     
-    [self postChange: c];
+    NSError* error = nil;
+    CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithCollection: collection
+                                                                   documentID: _docID
+                                                                        error: &error];
+    if (!change) {
+        CBLWarn(Database, @"%@ Unable to notify a change for document '%@' in collection '%@' : %@",
+                self, _docID, collection.fullName, error);
+        return;
+    }
+    
+    [self postChange: change];
 }
 
 - (void) stop {
