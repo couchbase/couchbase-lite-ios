@@ -513,6 +513,8 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(changeListenerFired, 0)
     }
     
+    /** Test that there is no collection or c4 object leak when the listener token is not removed.
+        The actual check for the object leak is in the test's tear down. */
     func testCollectionChangeListenerWithoutRemoveToken() throws {
         try autoreleasepool {
             let colA = try self.db.createCollection(name: "colA", scope: "scopeA")
@@ -617,6 +619,8 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(changeListenerFired, 0)
     }
     
+    /** Test that there is no collection or c4 object leak when the listener token is not removed.
+        The actual check for the object leak is in the test's tear down. */
     func testCollectionDocumentChangeListenerWithoutRemoveToken() throws {
         try autoreleasepool {
             let colA = try self.db.createCollection(name: "colA", scope: "scopeA")

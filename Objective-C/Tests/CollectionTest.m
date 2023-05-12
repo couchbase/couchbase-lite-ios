@@ -648,6 +648,8 @@
     AssertEqual(changeListenerFired, 0);
 }
 
+/** Test that there is no collection or c4 object leak when the listener token is not removed.
+    The actual check for the object leak is in the test's tear down. */
 - (void) testCollectionChangeListenerWithoutRemoveToken {
     @autoreleasepool {
         NSError* error = nil;
@@ -750,6 +752,8 @@
     AssertEqual(changeListenerFired, 0);
 }
 
+/** Test that there is no collection or c4 object leak when the listener token is not removed.
+    The actual check for the object leak is in the test's tear down. */
 - (void) testCollectionDocumentChangeListenerWithoutRemoveToken {
     @autoreleasepool {
         NSError* error = nil;
