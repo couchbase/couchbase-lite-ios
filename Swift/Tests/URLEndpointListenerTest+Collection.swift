@@ -36,8 +36,8 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 3)
         try createDocNumbered(col1b, start: 10, num: 5)
@@ -68,8 +68,8 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 10)
         try createDocNumbered(col1b, start: 10, num: 10)
@@ -99,7 +99,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         if !self.keyChainAccessAllowed { return }
         
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 10)
         

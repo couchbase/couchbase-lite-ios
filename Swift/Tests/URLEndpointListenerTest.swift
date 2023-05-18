@@ -21,8 +21,8 @@ import XCTest
 
 @available(macOS 10.12, iOS 10.3, *)
 class URLEndpointListenerTest: ReplicatorTest {
-    let wsPort: UInt16 = 4984
-    let wssPort: UInt16 = 4985
+    let wsPort: UInt16 = 2
+    let wssPort: UInt16 = 3
     let serverCertLabel = "CBL-Server-Cert"
     let clientCertLabel = "CBL-Client-Cert"
     
@@ -38,7 +38,7 @@ class URLEndpointListenerTest: ReplicatorTest {
         }
         
         // Listener:
-        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(collections: [self.otherDB_defaultCollection!])
         config.port = tls ? wssPort : wsPort
         config.disableTLS = !tls
         config.authenticator = auth
@@ -105,10 +105,12 @@ class URLEndpointListenerTest: ReplicatorTest {
                           continuous: Bool = true,
                           type: ReplicatorType = .pushAndPull,
                           serverCert: SecCertificate? = nil) -> Replicator {
-        var config = ReplicatorConfiguration(database: db, target: target)
+        let db_defaultCollection = try! db.defaultCollection()
+        var config = ReplicatorConfiguration(target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.pinnedServerCertificate = serverCert
+        config.addCollection(db_defaultCollection)
         return Replicator(config: config)
     }
     
@@ -148,6 +150,8 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try deleteDB(name: "db2")
         let db1 = try openDB(name: "db1")
         let db2 = try openDB(name: "db2")
+        let db1_defaultCollection = try db1.defaultCollection()
+        let db2_defaultCollection = try db2.defaultCollection()
         
         // For keeping the replication long enough to validate connection status, we will use blob
         let imageData = try dataFromResource(name: "image", ofType: "jpg")
@@ -156,13 +160,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let doc1 = createDocument()
         let blob1 = Blob(contentType: "image/jpg", data: imageData)
         doc1.setBlob(blob1, forKey: "blob")
-        try db1.saveDocument(doc1)
+        try db1_defaultCollection.save(document: doc1)
         
         // DB#2
         let doc2 = createDocument()
         let blob2 = Blob(contentType: "image/jpg", data: imageData)
         doc2.setBlob(blob2, forKey: "blob")
-        try db2.saveDocument(doc2)
+        try db2_defaultCollection.save(document: doc2)
         
         let repl1 = createReplicator(db: db1,
                                      target: listener.localURLEndpoint,
@@ -218,15 +222,15 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let stopExp2 = expectation(description: "replicator#2 stop")
         
         let doc1 = createDocument("db-doc")
-        try self.db.saveDocument(doc1)
+        try self.defaultCollection!.save(document: doc1)
         let doc2 = createDocument("other-db-doc")
-        try self.oDB.saveDocument(doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         // start listener
         try startListener()
         
         // replicator#1
-        let repl1 = createReplicator(db: self.oDB, target: DatabaseEndpoint(database: self.db))
+        let repl1 = createReplicator(db: self.otherDB!, target: DatabaseEndpoint(database: self.db))
         
         // replicator#2
         try deleteDB(name: "db2")
@@ -258,10 +262,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         if (isDeleteDBs) {
             try db2.delete()
-            try self.oDB.delete()
+            try self.otherDB!.delete()
         } else {
             try db2.close()
-            try self.oDB.close()
+            try self.otherDB!.close()
         }
         
         wait(for: [stopExp1, stopExp2], timeout: 10.0) // TODO: FIXME
@@ -276,7 +280,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let idleExp = allowOverfillExpectation(description: "replicator idle")
         let stopExp = expectation(description: "replicator stop")
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         let listener1 = URLEndpointListener(config: config)
         let listener2 = URLEndpointListener(config: config)
         
@@ -285,12 +289,12 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try listener2.start()
         
         let doc1 = createDocument("db-doc")
-        try self.db.saveDocument(doc1)
+        try self.defaultCollection!.save(document: doc1)
         let doc2 = createDocument("other-db-doc")
-        try self.oDB.saveDocument(doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         // replicator
-        let repl1 = createReplicator(db: self.oDB,
+        let repl1 = createReplicator(db: self.otherDB!,
                                      target: listener1.localURLEndpoint,
                                      serverCert: listener1.tlsIdentity!.certs[0])
         let token1 = repl1.addChangeListener({ (change: ReplicatorChange) in
@@ -305,9 +309,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         wait(for: [idleExp], timeout: 5.0)
         
         if (isDeleteDB) {
-            try self.oDB.delete()
+            try self.otherDB!.delete()
         } else {
-            try self.oDB.close()
+            try self.otherDB!.close()
         }
         
         wait(for: [stopExp], timeout: 5.0)
@@ -325,7 +329,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.port)
@@ -341,7 +345,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testEmptyPort() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.port)
         
@@ -358,7 +362,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         try startListener()
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = self.listener!.port
         let listener2 = URLEndpointListener(config: config)
         
@@ -370,7 +374,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testURLs() throws {
         if !self.keyChainAccessAllowed { return }
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = wsPort
         self.listener = URLEndpointListener(config: config)
         XCTAssertNil(self.listener!.urls)
@@ -387,9 +391,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         if !self.keyChainAccessAllowed { return }
         
         let doc = createDocument("doc-1")
-        try self.oDB.saveDocument(doc)
+        try self.otherDB_defaultCollection!.save(document: doc)
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         let listener = URLEndpointListener(config: config)
         XCTAssertNil(listener.tlsIdentity)
         try listener.start()
@@ -432,10 +436,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         if !self.keyChainAccessAllowed { return }
         
         let doc = createDocument("doc-1")
-        try self.oDB.saveDocument(doc)
+        try self.otherDB_defaultCollection!.save(document: doc)
         
         let tls = try createTLSIdentity()
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.tlsIdentity = tls
         let listener = URLEndpointListener(config: config)
         XCTAssertNil(listener.tlsIdentity)
@@ -646,7 +650,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         let replicatorStop = expectation(description: "replicator stop")
         let pullFilterBusy = expectation(description: "pull filter busy")
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = wsPort
         config.disableTLS = true
         self.listener = URLEndpointListener(config: config)
@@ -659,13 +663,14 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         XCTAssertEqual(self.listener!.status.activeConnectionCount, 0)
         
         let doc1 = createDocument()
-        try self.oDB.saveDocument(doc1)
+        try self.otherDB_defaultCollection!.save(document: doc1)
         
         var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
-        var rConfig = ReplicatorConfiguration(database: self.db, target: self.listener!.localURLEndpoint)
+        var rConfig = ReplicatorConfiguration(target: self.listener!.localURLEndpoint)
         rConfig.replicatorType = .pull
         rConfig.continuous = false
-        rConfig.pullFilter = { (doc, flags) -> Bool in
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) -> Bool in
             let s = self.listener!.status
             maxConnectionCount = max(s.connectionCount, maxConnectionCount)
             maxActiveCount = max(s.activeConnectionCount, maxActiveCount)
@@ -673,6 +678,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             return true
         }
         
+        rConfig.addCollection(defaultCollection!, config: colConfig)
         let repl: Replicator = Replicator(config: rConfig)
         let token = repl.addChangeListener { (change) in
             if change.status.activity == .stopped {
@@ -686,7 +692,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         XCTAssertEqual(maxConnectionCount, 1)
         XCTAssertEqual(maxActiveCount, 1)
-        XCTAssertEqual(self.oDB.count, 1)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 1)
 
         try stopListener()
         XCTAssertEqual(self.listener!.status.connectionCount, 0)
@@ -696,7 +702,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testMultipleListenersOnSameDatabase() throws {
         if !self.keyChainAccessAllowed { return }
         
-        let config = URLEndpointListenerConfiguration(database: self.oDB)
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         let listener1 = URLEndpointListener(config: config)
         let listener2 = URLEndpointListener(config: config)
         
@@ -713,7 +719,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         // since listener1 and listener2 are using same certificates, one listener only needs stop.
         listener2.stop()
         try stopListener(listener: listener1)
-        XCTAssertEqual(self.oDB.count, 1)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 1)
     }
     
     func testReplicatorAndListenerOnSameDatabase() throws {
@@ -724,20 +730,21 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // listener
         let doc = createDocument()
-        try self.oDB.saveDocument(doc)
+        try self.otherDB_defaultCollection!.save(document: doc)
         try startListener()
         
         // Replicator#1 (otherDB -> DB#1)
         let doc1 = createDocument()
-        try self.db.saveDocument(doc1)
+        try self.defaultCollection!.save(document: doc1)
         let target = DatabaseEndpoint(database: self.db)
-        let repl1 = createReplicator(db: self.oDB, target: target)
+        let repl1 = createReplicator(db: self.otherDB!, target: target)
         
         // Replicator#2 (DB#2 -> Listener(otherDB))
         try deleteDB(name: "db2")
         let db2 = try openDB(name: "db2")
+        let db2_defaultCollection = try! db2.defaultCollection()
         let doc2 = createDocument()
-        try db2.saveDocument(doc2)
+        try db2_defaultCollection.save(document: doc2)
         let repl2 = createReplicator(db: db2,
                                target: self.listener!.localURLEndpoint,
                                serverCert: self.listener!.tlsIdentity!.certs[0])
@@ -745,7 +752,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let changeListener = { (change: ReplicatorChange) in
             if change.status.activity == .idle &&
                 change.status.progress.completed == change.status.progress.total {
-                if self.oDB.count == 3 && self.db.count == 3 && db2.count == 3 {
+                if self.otherDB_defaultCollection!.count == 3 && self.defaultCollection!.count == 3 && db2_defaultCollection.count == 3 {
                     change.replicator.stop()
                 }
             }
@@ -766,9 +773,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         repl2.start()
         wait(for: [exp1, exp2], timeout: 10.0) // TODO: FIXME
         
-        XCTAssertEqual(self.oDB.count, 3)
-        XCTAssertEqual(self.db.count, 3)
-        XCTAssertEqual(db2.count, 3)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 3)
+        XCTAssertEqual(self.defaultCollection!.count, 3)
+        XCTAssertEqual(db2_defaultCollection.count, 3)
         
         repl1.removeChangeListener(withToken: token1)
         repl2.removeChangeListener(withToken: token2)
@@ -783,7 +790,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try startListener()
         
         // Close database should also stop the listener:
-        try self.oDB.close()
+        try self.otherDB!.close()
         
         XCTAssertNil(self.listener!.port)
         XCTAssertNil(self.listener!.urls)
@@ -803,23 +810,25 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         for (i, url) in notLinkLocal.enumerated() {
             // separate db instance!
             let db = try Database(name: "db-\(i)")
+            let db_defaultCollection = try! db.defaultCollection()
             let doc = createDocument()
             doc.setString(url.absoluteString, forKey: "url")
-            try db.saveDocument(doc)
+            try db_defaultCollection.save(document: doc)
             
             // separate replicator instance
             let target = URLEndpoint(url: url)
-            var rConfig = ReplicatorConfiguration(database: db, target: target)
+            var rConfig = ReplicatorConfiguration(target: target)
             rConfig.pinnedServerCertificate = self.listener?.tlsIdentity!.certs[0]
+            rConfig.addCollection(db_defaultCollection)
             run(config: rConfig, expectedError: nil)
             
             // remove the db
             try db.delete()
         }
         
-        XCTAssertEqual(self.oDB.count, UInt64(notLinkLocal.count))
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, UInt64(notLinkLocal.count))
         
-        let q = QueryBuilder.select([SelectResult.all()]).from(DataSource.database(self.oDB))
+        let q = QueryBuilder.select([SelectResult.all()]).from(DataSource.collection(self.otherDB_defaultCollection!))
         let rs = try q.execute()
         var result = [URL]()
         for res in rs.allResults() {
@@ -838,7 +847,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         let doc = createDocument()
         doc.setString("Tiger", forKey: "species")
-        try self.oDB.saveDocument(doc)
+        try self.otherDB_defaultCollection!.save(document: doc)
         
         // pushAndPull can cause race; so only push is validated
         try validateMultipleReplicationsTo(self.listener!, type: .push)
@@ -849,13 +858,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testMultipleReplicatorsToReadOnlyListener() throws {
         if !self.keyChainAccessAllowed { return }
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.readOnly = true
         try startListener(withConfig: config)
         
         let doc = createDocument()
         doc.setString("Tiger", forKey: "species")
-        try self.oDB.saveDocument(doc)
+        try self.otherDB_defaultCollection!.save(document: doc)
         
         try validateMultipleReplicationsTo(self.listener!, type: .pull)
         
@@ -866,9 +875,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         if !self.keyChainAccessAllowed { return }
         
         let doc1 = createDocument()
-        try self.db.saveDocument(doc1)
+        try self.defaultCollection!.save(document: doc1)
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.readOnly = true
         try startListener(withConfig: config)
         
@@ -886,7 +895,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let listener = try startListener()
         
         let serverCert = listener.tlsIdentity!.certs[0]
-        let repl = createReplicator(db: self.oDB,
+        let repl = createReplicator(db: self.otherDB!,
                               target: listener.localURLEndpoint,
                               serverCert: serverCert)
         repl.addChangeListener { (change) in
@@ -924,7 +933,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let listener = try startListener()
         
         var serverCert = listener.tlsIdentity!.certs[0]
-        var repl = createReplicator(db: self.oDB, target: listener.localURLEndpoint)
+        var repl = createReplicator(db: self.otherDB!, target: listener.localURLEndpoint)
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .stopped && change.status.error != nil {
@@ -946,7 +955,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         x1 = allowOverfillExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
         serverCert = receivedServerCert!
-        repl = createReplicator(db: self.oDB,
+        repl = createReplicator(db: self.otherDB!,
                                 target: listener.localURLEndpoint,
                                 serverCert: serverCert)
         repl.addChangeListener { (change) in
@@ -981,7 +990,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let x2 = expectation(description: "stopped")
         
         let listener = try startListener(tls: false)
-        let repl = createReplicator(db: self.oDB, target: listener.localURLEndpoint)
+        let repl = createReplicator(db: self.otherDB!, target: listener.localURLEndpoint)
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .idle {
@@ -1066,7 +1075,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(collections: [self.otherDB_defaultCollection!])
         config.tlsIdentity = identity
         
         self.ignoreException {
@@ -1077,13 +1086,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         XCTAssert(identity === listener!.tlsIdentity!)
         
         try generateDocument(withID: "doc-1")
-        XCTAssertEqual(self.oDB.count, 0)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 0)
         self.run(target: listener!.localURLEndpoint,
                  type: .pushAndPull,
                  continuous: false,
                  auth: nil,
                  serverCert: listener!.tlsIdentity!.certs[0])
-        XCTAssertEqual(self.oDB.count, 1)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 1)
         
         try stopListener(listener: listener!)
         XCTAssertNil(listener!.tlsIdentity)
@@ -1098,7 +1107,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // Start replicator:
         let target = listener.localURLEndpoint
-        let repl = createReplicator(db: self.oDB, target: target)
+        let repl = createReplicator(db: self.otherDB!, target: target)
         repl.addChangeListener { (change) in
             let activity = change.status.activity
             if activity == .idle {
@@ -1130,7 +1139,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         if !self.keyChainAccessAllowed { return }
         
         let doc1 = createDocument()
-        try self.oDB.saveDocument(doc1)
+        try self.otherDB_defaultCollection!.save(document: doc1)
         
         // Listener:
         let auth = ListenerPasswordAuthenticator { (username, password) -> Bool in
@@ -1194,7 +1203,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        var config = URLEndpointListenerConfiguration.init(database: self.oDB)
+        var config = URLEndpointListenerConfiguration.init(collections: [self.otherDB_defaultCollection!])
         config.tlsIdentity = identity
         
         ignoreException {
@@ -1233,7 +1242,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         XCTAssertEqual(identity.certs.count, 2)
         
-        var config = URLEndpointListenerConfiguration(database: self.oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.tlsIdentity = identity
         
         self.ignoreException {
@@ -1241,7 +1250,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         
         try generateDocument(withID: "doc-1")
-        XCTAssertEqual(self.oDB.count, 0)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 0)
         
         // Reject the server with non-self-signed cert
         run(target: listener!.localURLEndpoint,
@@ -1311,7 +1320,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     // MARK: ListenerConfig
     
     func testSetListenerConfigurationProperties() throws {
-        var config = URLEndpointListenerConfiguration(database: oDB)
+        var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
             return uname == "username" && pswd == "secret"
         }
@@ -1363,7 +1372,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testDefaultListenerConfiguration() throws {
-        let config = URLEndpointListenerConfiguration(database: oDB)
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         
         XCTAssertFalse(config.disableTLS)
         XCTAssertFalse(config.enableDeltaSync)
@@ -1375,7 +1384,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testCopyingListenerConfiguration() throws {
-        var config1 = URLEndpointListenerConfiguration(database: oDB)
+        var config1 = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
     
         let basic = ListenerPasswordAuthenticator { (uname, pswd) -> Bool in
             return uname == "username" && pswd == "secret"
