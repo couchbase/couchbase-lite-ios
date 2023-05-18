@@ -421,8 +421,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 5)
         try createDocNumbered(col1b, start: 10, num: 3)
@@ -431,7 +431,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 0)
         XCTAssertEqual(col2b.count, 0)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: continous)
         config.addCollections([col1a, col1b])
         
@@ -454,8 +454,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col2a, start: 0, num: 10)
         try createDocNumbered(col2b, start: 10, num: 10)
@@ -464,7 +464,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 10)
         XCTAssertEqual(col2b.count, 10)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: continous)
         config.addCollections([col1a, col1b])
         run(config: config, expectedError: nil)
@@ -487,8 +487,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 2)
         try createDocNumbered(col2a, start: 10, num: 5)
@@ -502,7 +502,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col1b.count, 3)
         XCTAssertEqual(col2b.count, 8)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pushAndPull, continuous: continous)
         config.addCollections([col1a, col1b])
         run(config: config, expectedError: nil)
@@ -515,13 +515,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
     
     func testCollectionResetReplication() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
         
         try createDocNumbered(col2a, start: 0, num: 5)
         XCTAssertEqual(col1a.count, 0)
         XCTAssertEqual(col2a.count, 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: false)
         config.addCollections([col1a])
         run(config: config, expectedError: nil)
@@ -543,12 +543,12 @@ class ReplicatorTest_Collection: ReplicatorTest {
     
     func testCollectionDefaultConflictResolver() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
         
         let doc1 = try createDocument("doc1")
         try col1a.save(document: doc1)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pushAndPull, continuous: false)
         config.addCollections([col1a])
         run(config: config, expectedError: nil)
@@ -589,8 +589,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         // Create a document with id "doc1" in colA and colB of the database A.
         let doc1a = try createDocument("doc1")
@@ -614,7 +614,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         var colConfig2 = CollectionConfiguration()
         colConfig2.conflictResolver = conflictResolver2
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pushAndPull, continuous: false)
         config.addCollection(col1a, config: colConfig1)
         config.addCollection(col1b, config: colConfig2)
@@ -674,8 +674,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         // Create some documents in colA and colB of the database A.
         try createDocNumbered(col1a, start: 0, num: 10)
@@ -690,7 +690,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
             }
         }
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: false)
         config.addCollections([col1a, col1b], config: colConfig)
         run(config: config, expectedError: nil)
@@ -705,8 +705,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         // Create some documents in colA and colB of the database A.
         try createDocNumbered(col2a, start: 0, num: 10)
@@ -721,7 +721,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
             }
         }
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: false)
         config.addCollections([col1a, col1b], config: colConfig)
         run(config: config, expectedError: nil)
@@ -736,13 +736,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 5)
         try createDocNumbered(col1b, start: 10, num: 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: false)
         
         var colConfig1 = CollectionConfiguration()
@@ -765,13 +765,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col2a, start: 0, num: 5)
         try createDocNumbered(col2b, start: 10, num: 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: false)
         
         var colConfig1 = CollectionConfiguration()
@@ -794,13 +794,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 10)
         try createDocNumbered(col1b, start: 10, num: 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: false)
         config.addCollections([col1a, col1b])
         let r = Replicator(config: config)
@@ -838,13 +838,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let _ = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let _ = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let _ = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let _ = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 10)
         try createDocNumbered(col1b, start: 10, num: 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: false)
         config.addCollections([col1a, col1b])
         let r = Replicator(config: config)
@@ -885,13 +885,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try oDB.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try oDB.createCollection(name: "colB", scope: "scopeA")
+        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 4)
         try createDocNumbered(col1b, start: 5, num: 5)
         
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pushAndPull, continuous: false)
         config.addCollections([col1a, col1b])
         let r = Replicator(config: config)
