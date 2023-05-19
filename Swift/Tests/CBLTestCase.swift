@@ -94,7 +94,7 @@ class CBLTestCase: XCTestCase {
         self.defaultCollection = nil
         self.otherDB_defaultCollection = nil
         try! db.close()
-        try? otherDB?.close()
+        try! otherDB?.close()
         super.tearDown()
     }
     

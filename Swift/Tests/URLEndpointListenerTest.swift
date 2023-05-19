@@ -21,8 +21,8 @@ import XCTest
 
 @available(macOS 10.12, iOS 10.3, *)
 class URLEndpointListenerTest: ReplicatorTest {
-    let wsPort: UInt16 = 2
-    let wssPort: UInt16 = 3
+    let wsPort: UInt16 = 4084
+    let wssPort: UInt16 = 4085
     let serverCertLabel = "CBL-Server-Cert"
     let clientCertLabel = "CBL-Client-Cert"
     

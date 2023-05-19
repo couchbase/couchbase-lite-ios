@@ -25,7 +25,7 @@ class ReplicatorTest: CBLTestCase {
     var timeout: TimeInterval!
     
     // connect to an unknown-db on same machine, for the connection refused transient error.
-    let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:1/unknown-db-wXBl5n3fed")!)
+    let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4083/unknown-db-wXBl5n3fed")!)
     
     override func setUp() {
         super.setUp()
