@@ -44,12 +44,14 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     }
     
     func validatePendingDocumentIDs(_ docIds: Set<String>, pushOnlyDocIds: Set<String>? = nil) throws {
-        var replConfig = config(target: DatabaseEndpoint(database: oDB), type: .push, continuous: false)
+        var replConfig = config(target: DatabaseEndpoint(database: otherDB!), type: .push, continuous: false)
+        var colConfig = CollectionConfiguration()
         if let pushOnlyDocIds = pushOnlyDocIds, pushOnlyDocIds.count > 0 {
-            replConfig.pushFilter = { (doc, flags) -> Bool in
+            colConfig.pushFilter = { (doc, flags) -> Bool in
                 return pushOnlyDocIds.contains(doc.id)
             }
         }
+        replConfig.addCollection(defaultCollection!, config: colConfig)
         let replicator = Replicator(config: replConfig)
         
         // Check document pending:
@@ -89,8 +91,9 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     // MARK: Unit Tests
     
     func testPendingDocIDsPullOnlyException() throws {
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .pull, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var replConfig = config(target: target, type: .pull, continuous: false)
+        replConfig.addCollection(defaultCollection!)
         let replicator = Replicator(config: replConfig)
         
         var pullOnlyError: NSError? = nil
@@ -112,8 +115,9 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testPendingDocIDsWithUpdate() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var replConfig = config(target: target, type: .push, continuous: false)
+        replConfig.addCollection(defaultCollection!)
         run(config: replConfig, expectedError: nil)
         
         let updatedIds: Set<String> = ["doc-2", "doc-4"]
@@ -130,14 +134,15 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
     func testPendingDocIdsWithDelete() throws {
         let _ = try createDocs()
         
-        let target = DatabaseEndpoint(database: oDB)
-        let replConfig = config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var replConfig = config(target: target, type: .push, continuous: false)
+        replConfig.addCollection(defaultCollection!)
         run(config: replConfig, expectedError: nil)
         
         let deletedIds: Set<String> = ["doc-2", "doc-4"]
         for docId in deletedIds {
-            let doc = db.document(withID: docId)!
-            try db.deleteDocument(doc)
+            let doc = try defaultCollection!.document(id: docId)!
+            try defaultCollection!.delete(document: doc)
         }
         
         try validatePendingDocumentIDs(deletedIds)

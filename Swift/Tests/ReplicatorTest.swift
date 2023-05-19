@@ -21,23 +21,19 @@ import XCTest
 import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
-    var oDB: Database!
     var repl: Replicator!
     var timeout: TimeInterval!
     
     // connect to an unknown-db on same machine, for the connection refused transient error.
-    let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4984/unknown-db-wXBl5n3fed")!)
+    let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4083/unknown-db-wXBl5n3fed")!)
     
     override func setUp() {
         super.setUp()
         try! openOtherDB()
-        oDB = otherDB!
         timeout = 10 // At least 10 to cover single-shot replicator's retry logic
     }
     
     override func tearDown() {
-        try! oDB.close()
-        oDB = nil
         repl = nil
         super.tearDown()
     }
@@ -45,7 +41,7 @@ class ReplicatorTest: CBLTestCase {
     func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
                 auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
                 maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
-        var config = ReplicatorConfiguration(database: self.db, target: target)
+        var config = ReplicatorConfiguration(target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
@@ -88,8 +84,9 @@ class ReplicatorTest: CBLTestCase {
              continuous: Bool = false, auth: Authenticator? = nil,
              serverCert: SecCertificate? = nil,
              expectedError: Int? = nil) {
-        let config = self.config(target: target, type: type, continuous: continuous,
+        var config = self.config(target: target, type: type, continuous: continuous,
                                  auth: auth, serverCert: serverCert)
+        config.addCollection(defaultCollection!)
         run(config: config, reset: false, expectedError: expectedError)
     }
     
@@ -100,9 +97,10 @@ class ReplicatorTest: CBLTestCase {
              serverCert: SecCertificate? = nil,
              maxAttempts: UInt? = 0,
              expectedError: Int? = nil) {
-        let config = self.config(target: target, type: type, continuous: continuous, auth: auth,
+        var config = self.config(target: target, type: type, continuous: continuous, auth: auth,
                                  acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert,
                                  maxAttempts: maxAttempts)
+        config.addCollection(defaultCollection!)
         run(config: config, reset: false, expectedError: expectedError)
     }
     #endif
@@ -155,8 +153,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     #if COUCHBASE_ENTERPRISE
     
     func testEmptyPush() throws {
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
+
         run(config: config, expectedError: nil)
     }
     
@@ -164,94 +164,102 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("striped", forKey: "pattern")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
+        
         run(config: config, expectedError: nil)
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollection(defaultCollection!)
+
         run(config: config, expectedError: nil)
         
-        XCTAssertEqual(db.count, 2)
+        XCTAssertEqual(defaultCollection!.count, 2)
         
-        var doc = db.document(withID: "doc1")!
-        try db.purgeDocument(doc)
+        var doc = try defaultCollection!.document(id: "doc1")!
+        try defaultCollection!.purge(document: doc)
         
-        doc = db.document(withID: "doc2")!
-        try db.purgeDocument(doc)
+        doc = try defaultCollection!.document(id: "doc2")!
+        try defaultCollection!.purge(document: doc)
         
-        XCTAssertEqual(db.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         // Pull again, shouldn't have any new changes:
         run(config: config, expectedError: nil)
-        XCTAssertEqual(db.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         // Reset and pull:
         run(config: config, reset: true, expectedError: nil)
-        XCTAssertEqual(db.count, 2)
+        XCTAssertEqual(defaultCollection!.count, 2)
     }
     
     func testStartWithResetCheckpointContinuous() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("striped", forKey: "pattern")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: true)
+        config.addCollection(defaultCollection!)
+
         run(config: config, expectedError: nil)
         
         // Pull:
         config = self.config(target: target, type: .pull, continuous: true)
+        config.addCollection(defaultCollection!)
         run(config: config, expectedError: nil)
         
-        XCTAssertEqual(db.count, 2)
+        XCTAssertEqual(defaultCollection!.count, 2)
         
-        var doc = db.document(withID: "doc1")!
-        try db.purgeDocument(doc)
+        var doc = try defaultCollection!.document(id: "doc1")!
+        try defaultCollection!.purge(document: doc)
         
-        doc = db.document(withID: "doc2")!
-        try db.purgeDocument(doc)
+        doc = try defaultCollection!.document(id: "doc2")!
+        try defaultCollection!.purge(document: doc)
         
-        XCTAssertEqual(db.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         // Pull again, shouldn't have any new changes:
         run(config: config, expectedError: nil)
-        XCTAssertEqual(db.count, 0)
+        XCTAssertEqual(defaultCollection!.count, 0)
         
         // Reset and pull:
         run(config: config, reset: true, expectedError: nil)
-        XCTAssertEqual(db.count, 2)
+        XCTAssertEqual(defaultCollection!.count, 2)
     }
     
     func testDocumentReplicationEvent() throws {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("Striped", forKey: "pattern")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -282,7 +290,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("Tiger", forKey: "species")
         doc3.setString("Star", forKey: "pattern")
-        try db.saveDocument(doc3)
+        try defaultCollection!.save(document: doc3)
         
         // Run the replicator again:
         self.run(replicator: replicator, expectedError: nil)
@@ -298,7 +306,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc4 = MutableDocument(id: "doc4")
         doc4.setString("Tiger", forKey: "species")
         doc4.setString("WhiteStriped", forKey: "pattern")
-        try db.saveDocument(doc4)
+        try defaultCollection!.save(document: doc4)
         
         // Remove document replication listener:
         replicator.removeChangeListener(withToken: token)
@@ -314,16 +322,17 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1a = MutableDocument(id: "doc1")
         doc1a.setString("Tiger", forKey: "species")
         doc1a.setString("Star", forKey: "pattern")
-        try db.saveDocument(doc1a)
+        try defaultCollection!.save(document: doc1a)
         
         let doc1b = MutableDocument(id: "doc1")
         doc1b.setString("Tiger", forKey: "species")
         doc1b.setString("Striped", forKey: "pattern")
-        try oDB.saveDocument(doc1b)
+        try otherDB_defaultCollection!.save(document: doc1b)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -356,17 +365,18 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1a = MutableDocument(id: "doc1")
         doc1a.setString("Tiger", forKey: "species")
         doc1a.setString("Star", forKey: "pattern")
-        try db.saveDocument(doc1a)
+        try defaultCollection!.save(document: doc1a)
         
         let doc1b = MutableDocument(id: "doc1")
         doc1b.setString("Tiger", forKey: "species")
         doc1b.setString("Striped", forKey: "pattern")
-        try oDB.saveDocument(doc1b)
+        try otherDB_defaultCollection!.save(document: doc1b)
         
         // Pull:
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .pull, continuous: false)
-        
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollection(defaultCollection!)
+
         var replicator: Replicator!
         var token: ListenerToken!
         var docs: [ReplicatedDocument] = []
@@ -395,14 +405,15 @@ class ReplicatorTest_Main: ReplicatorTest {
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Star", forKey: "pattern")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         // Delete:
-        try db.deleteDocument(doc1)
+        try defaultCollection!.delete(document: doc1)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -445,26 +456,28 @@ class ReplicatorTest_Main: ReplicatorTest {
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
         doc1.setBlob(blob, forKey: "photo")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("Striped", forKey: "pattern")
         doc2.setBlob(blob, forKey: "photo")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("Tiger", forKey: "species")
         doc3.setString("Star", forKey: "pattern")
         doc3.setBlob(blob, forKey: "photo")
-        try db.saveDocument(doc3)
-        try db.deleteDocument(doc3)
+        try defaultCollection!.save(document: doc3)
+        try defaultCollection!.delete(document: doc3)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: isContinuous)
-        config.pushFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
             XCTAssert(doc.id == "doc3" ? isDeleted : !isDeleted)
@@ -488,6 +501,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.id == "doc2" ? false : true
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
+        
         // Run the replicator:
         run(config: config, expectedError: nil)
         
@@ -498,16 +513,16 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         
         // Check replicated documents:
-        XCTAssertNotNil(oDB.document(withID: "doc1"))
-        XCTAssertNil(oDB.document(withID: "doc2"))
-        XCTAssertNil(oDB.document(withID: "doc3"))
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "doc1"))
+        XCTAssertNil(try otherDB_defaultCollection!.document(id: "doc2"))
+        XCTAssertNil(try otherDB_defaultCollection!.document(id: "doc3"))
     }
     
     func testPullFilter() throws {
         // Add a document to db database so that it can pull the deleted docs from:
         let doc0 = MutableDocument(id: "doc0")
         doc0.setString("Cat", forKey: "species")
-        try db.saveDocument(doc0)
+        try defaultCollection!.save(document: doc0)
         
         // Create documents:
         let content = "I'm a tiger.".data(using: .utf8)!
@@ -517,26 +532,28 @@ class ReplicatorTest_Main: ReplicatorTest {
         doc1.setString("Tiger", forKey: "species")
         doc1.setString("Hobbes", forKey: "pattern")
         doc1.setBlob(blob, forKey: "photo")
-        try self.oDB.saveDocument(doc1)
+        try self.otherDB_defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("Tiger", forKey: "species")
         doc2.setString("Striped", forKey: "pattern")
         doc2.setBlob(blob, forKey: "photo")
-        try self.oDB.saveDocument(doc2)
+        try self.otherDB_defaultCollection!.save(document: doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("Tiger", forKey: "species")
         doc3.setString("Star", forKey: "pattern")
         doc3.setBlob(blob, forKey: "photo")
-        try self.oDB.saveDocument(doc3)
-        try self.oDB.deleteDocument(doc3)
+        try self.otherDB_defaultCollection!.save(document: doc3)
+        try self.otherDB_defaultCollection!.delete(document: doc3)
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: false)
-        config.pullFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
             XCTAssert(doc.id == "doc3" ? isDeleted : !isDeleted)
@@ -562,6 +579,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.id == "doc2" ? false : true
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
+        
         // Run the replicator:
         run(config: config, expectedError: nil)
         
@@ -572,47 +591,48 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         
         // Check replicated documents:
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNil(db.document(withID: "doc2"))
-        XCTAssertNil(db.document(withID: "doc3"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc2"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc3"))
     }
     
     func testPushAndForget() throws {
         let doc = MutableDocument(id: "doc1")
         doc.setString("Tiger", forKey: "species")
         doc.setString("Hobbes", forKey: "pattern")
-        try db.saveDocument(doc)
+        try defaultCollection!.save(document: doc)
         
         let promise = expectation(description: "document expiry expectation")
         let docChangeToken =
-            db.addDocumentChangeListener(withID: doc.id) { [unowned self] (change) in
+            defaultCollection!.addDocumentChangeListener(id: doc.id) { [unowned self] (change) in
                 XCTAssertEqual(doc.id, change.documentID)
-                if self.db.document(withID: doc.id) == nil {
+                if try! self.defaultCollection!.document(id: doc.id) == nil {
                     promise.fulfill()
                 }
         }
-        XCTAssertEqual(self.db.count, 1)
-        XCTAssertEqual(oDB.count, 0)
+        XCTAssertEqual(self.defaultCollection!.count, 1)
+        XCTAssertEqual(otherDB_defaultCollection!.count, 0)
         
         // Push:
-        let target = DatabaseEndpoint(database: oDB)
-        let config = self.config(target: target, type: .push, continuous: false)
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push, continuous: false)
+        config.addCollection(defaultCollection!)
         var replicator: Replicator!
         var docReplicationToken: ListenerToken!
         self.run(config: config, reset: false, expectedError: nil) { [unowned self] (r) in
             replicator = r
             docReplicationToken = r.addDocumentReplicationListener({ [unowned self] (replication) in
-                try! self.db.setDocumentExpiration(withID: doc.id, expiration: Date())
+                try! self.defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date())
             })
         }
         
         waitForExpectations(timeout: 5.0)
         
         replicator.removeChangeListener(withToken: docReplicationToken)
-        db.removeChangeListener(withToken: docChangeToken);
+        docChangeToken.remove()
         
-        XCTAssertEqual(self.db.count, 0)
-        XCTAssertEqual(oDB.count, 1)
+        XCTAssertEqual(self.defaultCollection!.count, 0)
+        XCTAssertEqual(otherDB_defaultCollection!.count, 1)
     }
     
     // MARK: Removed Doc with Filter
@@ -629,17 +649,19 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc1)
+        try otherDB_defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "pass")
         doc2.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc2)
+        try otherDB_defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: isContinuous)
-        config.pullFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
             let isAccessRemoved = flags.contains(.accessRemoved)
@@ -650,24 +672,25 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
         
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNotNil(db.document(withID: "pass"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "pass"))
         
-        guard let doc1Mutable = oDB.document(withID: "doc1")?.toMutable() else {
+        guard let doc1Mutable = try otherDB_defaultCollection!.document(id: "doc1")?.toMutable() else {
             fatalError("Docs must exists")
         }
         doc1Mutable.setData(["_removed": true])
-        try oDB.saveDocument(doc1Mutable)
+        try otherDB_defaultCollection!.save(document: doc1Mutable)
         
-        guard let doc2Mutable = oDB.document(withID: "pass")?.toMutable() else {
+        guard let doc2Mutable = try otherDB_defaultCollection!.document(id: "pass")?.toMutable() else {
             fatalError("Docs must exists")
         }
         doc2Mutable.setData(["_removed": true])
-        try oDB.saveDocument(doc2Mutable)
+        try otherDB_defaultCollection!.save(document: doc2Mutable)
         
         run(config: config, expectedError: nil)
         
@@ -676,8 +699,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc1"))
         XCTAssert(docIds.contains("pass"))
         
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNil(db.document(withID: "pass"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNil(try defaultCollection!.document(id: "pass"))
     }
     
     // MARK: Deleted Doc with Filter
@@ -702,17 +725,19 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "pass")
         doc2.setString("pass", forKey: "name")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: isContinuous)
-        config.pushFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
             let isDeleted = flags.contains(.deleted)
@@ -723,15 +748,16 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
         
-        XCTAssertNotNil(oDB.document(withID: "doc1"))
-        XCTAssertNotNil(oDB.document(withID: "pass"))
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "doc1"))
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "pass"))
         
-        try db.deleteDocument(doc1)
-        try db.deleteDocument(doc2)
+        try defaultCollection!.delete(document: doc1)
+        try defaultCollection!.delete(document: doc2)
         
         run(config: config, expectedError: nil)
         
@@ -740,25 +766,27 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc1"))
         XCTAssert(docIds.contains("pass"))
         
-        XCTAssertNotNil(oDB.document(withID: "doc1"))
-        XCTAssertNil(oDB.document(withID: "pass"))
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "doc1"))
+        XCTAssertNil(try otherDB_defaultCollection!.document(id: "pass"))
     }
     
     func testPullDeletedDocWithFilter(_ isContinuous: Bool) throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc1)
+        try otherDB_defaultCollection!.save(document: doc1)
         
         let doc2 = MutableDocument(id: "pass")
         doc2.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc2)
+        try otherDB_defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: isContinuous)
-        config.pullFilter = { (doc, flags) in
+
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
             let isDeleted = flags.contains(.deleted)
@@ -769,15 +797,16 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
         
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNotNil(db.document(withID: "pass"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "pass"))
         
-        try oDB.deleteDocument(doc1)
-        try oDB.deleteDocument(doc2)
+        try otherDB_defaultCollection!.delete(document: doc1)
+        try otherDB_defaultCollection!.delete(document: doc2)
         
         run(config: config, expectedError: nil)
         
@@ -786,8 +815,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc1"))
         XCTAssert(docIds.contains("pass"))
         
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNil(db.document(withID: "pass"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNil(try defaultCollection!.document(id: "pass"))
     }
     
     // MARK: stop and restart replication with filter
@@ -796,34 +825,37 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .push, continuous: true)
-        config.pushFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
             return doc.string(forKey: "name") == "pass"
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
         // create a replicator
         repl = Replicator(config: config)
         run(replicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
-        XCTAssertEqual(oDB.count, 1)
-        XCTAssertEqual(db.count, 1)
+        XCTAssertEqual(otherDB_defaultCollection!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         
         // make some more changes
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("pass", forKey: "name")
-        try db.saveDocument(doc2)
+        try defaultCollection!.save(document: doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("donotpass", forKey: "name")
-        try db.saveDocument(doc3)
+        try defaultCollection!.save(document: doc3)
         
         // restart the same replicator
         docIds.removeAllObjects()
@@ -834,45 +866,48 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         XCTAssert(docIds.contains("doc2"))
         
-        XCTAssertNotNil(oDB.document(withID: "doc1"))
-        XCTAssertNotNil(oDB.document(withID: "doc2"))
-        XCTAssertNil(oDB.document(withID: "doc3"))
-        XCTAssertEqual(db.count, 3)
-        XCTAssertEqual(oDB.count, 2)
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "doc1"))
+        XCTAssertNotNil(try otherDB_defaultCollection!.document(id: "doc2"))
+        XCTAssertNil(try otherDB_defaultCollection!.document(id: "doc3"))
+        XCTAssertEqual(defaultCollection!.count, 3)
+        XCTAssertEqual(otherDB_defaultCollection!.count, 2)
     }
     
     func testStopAndRestartPullReplicationWithFilter() throws {
         // Create documents:
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc1)
+        try otherDB_defaultCollection!.save(document: doc1)
         
         // Create replicator with pull filter:
         let docIds = NSMutableSet()
-        let target = DatabaseEndpoint(database: oDB)
+        let target = DatabaseEndpoint(database: otherDB!)
         var config = self.config(target: target, type: .pull, continuous: true)
-        config.pullFilter = { (doc, flags) in
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
             return doc.string(forKey: "name") == "pass"
         }
         
+        config.addCollection(defaultCollection!, config: colConfig)
         // create a replicator
         repl = Replicator(config: config)
         run(replicator: repl, expectedError: nil)
         
         XCTAssertEqual(docIds.count, 1)
-        XCTAssertEqual(oDB.count, 1)
-        XCTAssertEqual(db.count, 1)
+        XCTAssertEqual(otherDB_defaultCollection!.count, 1)
+        XCTAssertEqual(defaultCollection!.count, 1)
         
         // make some more changes
         let doc2 = MutableDocument(id: "doc2")
         doc2.setString("pass", forKey: "name")
-        try oDB.saveDocument(doc2)
+        try otherDB_defaultCollection!.save(document: doc2)
         
         let doc3 = MutableDocument(id: "doc3")
         doc3.setString("donotpass", forKey: "name")
-        try oDB.saveDocument(doc3)
+        try otherDB_defaultCollection!.save(document: doc3)
         
         // restart the same replicator
         docIds.removeAllObjects()
@@ -883,11 +918,11 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(docIds.contains("doc3"))
         XCTAssert(docIds.contains("doc2"))
         
-        XCTAssertNotNil(db.document(withID: "doc1"))
-        XCTAssertNotNil(db.document(withID: "doc2"))
-        XCTAssertNil(db.document(withID: "doc3"))
-        XCTAssertEqual(oDB.count, 3)
-        XCTAssertEqual(db.count, 2)
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc1"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc2"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc3"))
+        XCTAssertEqual(otherDB_defaultCollection!.count, 3)
+        XCTAssertEqual(defaultCollection!.count, 2)
     }
     
     #endif
@@ -895,6 +930,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testReplicatorConfigDefaultValues() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
         var config = ReplicatorConfiguration(target: target)
+        config.addCollection(defaultCollection!)
         
         XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
@@ -934,6 +970,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         var config = self.config(target: target, type: .pushAndPull, continuous: true)
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         config.heartbeat = 60
+        config.addCollection(defaultCollection!)
         repl = Replicator(config: config)
         
         XCTAssertEqual(repl.config.heartbeat, 60)
@@ -975,7 +1012,8 @@ class ReplicatorTest_Main: ReplicatorTest {
                                                           continuous: continuous)
         var offlineCount = 0
         config.maxAttempts = attempt
-        
+        config.addCollection(defaultCollection!)
+
         repl = Replicator(config: config)
         repl.addChangeListener { (change) in
             if change.status.activity == .offline {
@@ -990,6 +1028,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(count, offlineCount)
     }
     
+    // todo - currently failing on last two
     func testMaxAttempt() {
         // replicator with no retry; only initial request
         testMaxAttempt(attempt: 1, count: 0, continuous: false)
@@ -1016,6 +1055,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
         XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
         
+        config.addCollection(defaultCollection!)
         repl = Replicator(config: config)
         XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
     }
@@ -1049,6 +1089,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertThrowsError(try expectException(-1))
     }
     
+    // todo - currently failing on assert
     func testMaxAttemptWaitTimeOfReplicator() {
         timeout = 12 // already it takes 8 secs of retry, hence 12secs timeout. 
         let x = self.expectation(description: "repl finish")
@@ -1058,6 +1099,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         config.maxAttempts = 4
         config.maxAttemptWaitTime = 2
         
+        config.addCollection(defaultCollection!)
+
         var diff: TimeInterval = 0
         var time = Date()
         repl = Replicator(config: config)
@@ -1075,6 +1118,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(abs(diff - config.maxAttemptWaitTime) < 1.0)
     }
     
+    // todo: refactor - currently failing
     func testListenerAddRemoveAfterReplicatorStart() throws {
         timeout = 15
         let x1 = self.expectation(description: "#1 repl finish")
@@ -1082,13 +1126,14 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         let doc1 = MutableDocument(id: "doc1")
         doc1.setString("pass", forKey: "name")
-        try db.saveDocument(doc1)
+        try defaultCollection!.save(document: doc1)
         
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
                                                           continuous: false)
         config.maxAttempts = 4
         config.maxAttemptWaitTime = 2
+        config.addCollection(defaultCollection!)
         
         repl = Replicator(config: config)
         let token1 = repl.addChangeListener { (change) in
@@ -1123,14 +1168,15 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testCopyingReplicatorConfiguration() throws {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config1 = ReplicatorConfiguration(database: oDB, target: target)
+        var config1 = ReplicatorConfiguration(target: target)
+        
+        
         #if COUCHBASE_ENTERPRISE
         config1.acceptOnlySelfSignedServerCertificate = true
         #endif
+        
         config1.continuous = true
         config1.authenticator = basic
-        config1.channels = ["c1", "c2"]
-        config1.documentIDs = ["d1", "d2"]
         config1.headers = ["a": "aa", "b": "bb"]
         config1.replicatorType = .pull
         config1.heartbeat = 211
@@ -1148,11 +1194,18 @@ class ReplicatorTest_Main: ReplicatorTest {
             
             return !flags.contains(.deleted)
         }
-        config1.pullFilter = filter
-        config1.pushFilter = filter
+        
+        var colConfig1 = CollectionConfiguration()
+        colConfig1.channels = ["c1", "c2"]
+        colConfig1.documentIDs = ["d1", "d2"]
+        colConfig1.pushFilter = filter
+        colConfig1.pullFilter = filter
+        
+        config1.addCollection(otherDB_defaultCollection!, config: colConfig1)
         
         // copying
         let config = ReplicatorConfiguration(config: config1)
+        
         
         // update config1 after passing to configuration’s constructor
         #if COUCHBASE_ENTERPRISE
@@ -1160,16 +1213,18 @@ class ReplicatorTest_Main: ReplicatorTest {
         #endif
         config1.continuous = false
         config1.authenticator = nil
-        config1.channels = nil
-        config1.documentIDs = nil
         config1.headers = nil
         config1.replicatorType = .push
         config1.heartbeat = 11
         config1.maxAttempts = 13
         config1.maxAttemptWaitTime = 17
         config1.pinnedServerCertificate = nil
-        config1.pullFilter = nil
-        config1.pushFilter = nil
+        colConfig1.channels = nil
+        colConfig1.documentIDs = nil
+        colConfig1.pullFilter = nil
+        colConfig1.pushFilter = nil
+
+        config1.addCollection(otherDB_defaultCollection!, config: colConfig1)
         
         #if COUCHBASE_ENTERPRISE
         XCTAssert(config.acceptOnlySelfSignedServerCertificate)
@@ -1177,29 +1232,27 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(config.continuous)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).password, basic.password)
-        XCTAssertEqual(config.channels, ["c1", "c2"])
-        XCTAssertEqual(config.documentIDs, ["d1", "d2"])
+        XCTAssertEqual(config.collectionConfig(otherDB_defaultCollection!)!.channels, ["c1", "c2"])
+        XCTAssertEqual(config.collectionConfig(otherDB_defaultCollection!)!.documentIDs, ["d1", "d2"])
         XCTAssertEqual(config.headers, ["a": "aa", "b": "bb"])
         XCTAssertEqual(config.replicatorType, .pull)
         XCTAssertEqual(config.heartbeat, 211)
         XCTAssertEqual(config.maxAttempts, 223)
         XCTAssertEqual(config.maxAttemptWaitTime, 227)
         XCTAssertEqual(config.pinnedServerCertificate, cert)
-        XCTAssertNotNil(config.pushFilter)
-        XCTAssertNotNil(config.pullFilter)
+        XCTAssertNotNil(config.collectionConfig(otherDB_defaultCollection!)!.pushFilter)
+        XCTAssertNotNil(config.collectionConfig(otherDB_defaultCollection!)!.pullFilter)
     }
     
     func testReplicationConfigSetterMethods() throws {
         let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config = ReplicatorConfiguration(database: oDB, target: target)
+        var config = ReplicatorConfiguration(target: target)
         #if COUCHBASE_ENTERPRISE
         config.acceptOnlySelfSignedServerCertificate = true
         #endif
         config.continuous = true
         config.authenticator = basic
-        config.channels = ["c1", "c2"]
-        config.documentIDs = ["d1", "d2"]
         config.headers = ["a": "aa", "b": "bb"]
         config.replicatorType = .pull
         config.heartbeat = 211
@@ -1217,8 +1270,14 @@ class ReplicatorTest_Main: ReplicatorTest {
             
             return !flags.contains(.deleted)
         }
-        config.pullFilter = filter
-        config.pushFilter = filter
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.channels = ["c1", "c2"]
+        colConfig.documentIDs = ["d1", "d2"]
+        colConfig.pushFilter = filter
+        colConfig.pullFilter = filter
+        
+        config.addCollection(otherDB_defaultCollection!, config: colConfig)
         
         // set correctly on replicator
         repl = Replicator(config:  config)
@@ -1230,34 +1289,37 @@ class ReplicatorTest_Main: ReplicatorTest {
         #endif
         config.continuous = false
         config.authenticator = nil
-        config.channels = nil
-        config.documentIDs = nil
         config.headers = nil
         config.replicatorType = .push
         config.heartbeat = 11
         config.maxAttempts = 13
         config.maxAttemptWaitTime = 17
         config.pinnedServerCertificate = nil
-        config.pullFilter = nil
-        config.pushFilter = nil
+        colConfig.channels = nil
+        colConfig.documentIDs = nil
+        colConfig.pullFilter = nil
+        colConfig.pushFilter = nil
+        
+        config.addCollection(otherDB_defaultCollection!, config: colConfig)
         
         // update returned configuration.
         var config2 = repl.config
+        var colConfig2 = config.collectionConfig(otherDB_defaultCollection!)
         #if COUCHBASE_ENTERPRISE
         config2.acceptOnlySelfSignedServerCertificate = false
         #endif
         config2.continuous = false
         config2.authenticator = nil
-        config2.channels = nil
-        config2.documentIDs = nil
         config2.headers = nil
         config2.replicatorType = .push
         config2.heartbeat = 11
         config2.maxAttempts = 13
         config2.maxAttemptWaitTime = 17
         config2.pinnedServerCertificate = nil
-        config2.pullFilter = nil
-        config2.pushFilter = nil
+        colConfig2!.channels = nil
+        colConfig2!.documentIDs = nil
+        colConfig2!.pullFilter = nil
+        colConfig2!.pushFilter = nil
         
         // validate no impact on above updates.
         #if COUCHBASE_ENTERPRISE
@@ -1266,33 +1328,35 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(repl.config.continuous)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).password, basic.password)
-        XCTAssertEqual(repl.config.channels, ["c1", "c2"])
-        XCTAssertEqual(repl.config.documentIDs, ["d1", "d2"])
         XCTAssertEqual(repl.config.headers, ["a": "aa", "b": "bb"])
         XCTAssertEqual(repl.config.replicatorType, .pull)
         XCTAssertEqual(repl.config.heartbeat, 211)
         XCTAssertEqual(repl.config.maxAttempts, 223)
         XCTAssertEqual(repl.config.maxAttemptWaitTime, 227)
         XCTAssertEqual(repl.config.pinnedServerCertificate, cert)
-        XCTAssertNotNil(repl.config.pushFilter)
-        XCTAssertNotNil(repl.config.pullFilter)
+        let colConfigRepl = repl.config.collectionConfig(otherDB_defaultCollection!)
+        XCTAssertEqual(colConfigRepl!.channels, ["c1", "c2"])
+        XCTAssertEqual(colConfigRepl!.documentIDs, ["d1", "d2"])
+        XCTAssertNotNil(colConfigRepl!.pushFilter)
+        XCTAssertNotNil(colConfigRepl!.pullFilter)
     }
     
     func testDefaultReplicatorConfiguration() throws {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        let config = ReplicatorConfiguration(database: oDB, target: target)
+        var config = ReplicatorConfiguration(target: target)
+        config.addCollection(otherDB_defaultCollection!)
         
 #if COUCHBASE_ENTERPRISE
         XCTAssertEqual(config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
 #endif
         XCTAssertNil(config.authenticator)
-        XCTAssertNil(config.channels)
-        XCTAssertNil(config.conflictResolver)
-        XCTAssertNil(config.documentIDs)
         XCTAssertNil(config.headers)
         XCTAssertNil(config.pinnedServerCertificate)
-        XCTAssertNil(config.pullFilter)
-        XCTAssertNil(config.pushFilter)
+        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.channels)
+        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.conflictResolver)
+        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.documentIDs)
+        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.pullFilter)
+        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.pushFilter)
         
         XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
