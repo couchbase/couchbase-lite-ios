@@ -497,8 +497,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 }
 
 - (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
-    return [self pendingDocumentIDsForCollection: [_config.database defaultCollectionOrThrow]
-                                           error: error];
+    return [_config.database withDefaultCollectionForObjectAndError: error block:
+                 ^id(CBLCollection* collection, NSError** err) {
+        return [self pendingDocumentIDsForCollection: collection error: err];
+    }];
 }
 
 - (BOOL) isDocumentPending: (NSString *)documentID
@@ -539,9 +541,9 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
     CBLAssertNotNil(documentID);
     
-    return [self isDocumentPending: documentID
-                        collection: [_config.database defaultCollectionOrThrow]
-                             error: error];
+    return [_config.database withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [self isDocumentPending: documentID collection: collection error: err];
+    }];
 }
 
 #pragma mark - REACHABILITY:

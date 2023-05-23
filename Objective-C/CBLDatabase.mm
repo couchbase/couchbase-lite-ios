@@ -196,17 +196,20 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 #pragma mark - GET EXISTING DOCUMENT
 
-- (CBLDocument*) documentWithID: (NSString*)documentID {
-    NSError *error = nil;
-    CBLDocument *res = [[self defaultCollectionOrThrow] documentWithID: documentID error: &error];
-    throwIfNotOpenError(error);
-    return res;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID {
+    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [[self defaultCollectionOrThrow] documentWithID: documentID error: err];
+    }];
 }
 
 #pragma mark - SUBSCRIPTION
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
-    return [[self defaultCollectionOrThrow] objectForKeyedSubscript: documentID];
+    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection objectForKeyedSubscript: documentID];
+    }];
+    assert(result != nil);
+    return result;
 }
 
 #pragma mark - SAVE
@@ -220,29 +223,17 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (BOOL) saveDocument: (CBLMutableDocument*)document
    concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                 error: (NSError**)error {
-    NSError* err = nil;
-    BOOL res = [[self defaultCollectionOrThrow] saveDocument: document
-                                          concurrencyControl: concurrencyControl
-                                                       error: &err];
-    throwIfNotOpenError(err);
-    
-    if (error)
-        *error = err;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection saveDocument: document concurrencyControl: concurrencyControl error: err];
+    }];
 }
 
 - (BOOL) saveDocument: (CBLMutableDocument*)document
       conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
                 error: (NSError**)error {
-    NSError* err = nil;
-    BOOL res = [[self defaultCollectionOrThrow] saveDocument: document
-                                             conflictHandler: conflictHandler
-                                                       error: &err];
-    throwIfNotOpenError(err);
-    
-    if (error)
-        *error = err;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection saveDocument: document conflictHandler: conflictHandler error: err];
+    }];
 }
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
@@ -254,35 +245,21 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (BOOL) deleteDocument: (CBLDocument*)document
      concurrencyControl: (CBLConcurrencyControl)concurrencyControl
                   error: (NSError**)error {
-    NSError* err = nil;
-    BOOL res = [[self defaultCollectionOrThrow] deleteDocument: document
-                                            concurrencyControl: concurrencyControl
-                                                         error: &err];
-    throwIfNotOpenError(err);
-    
-    if (error)
-        *error = err;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection deleteDocument: document concurrencyControl: concurrencyControl error: err];
+    }];
 }
 
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
-    NSError* err = nil;
-    BOOL res = [[self defaultCollectionOrThrow] purgeDocument: document error: &err];
-    throwIfNotOpenError(err);
-    
-    if (error)
-        *error = err;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection purgeDocument: document error: err];
+    }];
 }
 
 - (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
-    NSError* err = nil;
-    BOOL res = [[self defaultCollectionOrThrow] purgeDocumentWithID: documentID error: &err];
-    throwIfNotOpenError(err);
-    
-    if (error)
-        *error = err;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection purgeDocumentWithID: documentID error: err];
+    }];
 }
 
 #pragma mark - Blob Save/Get
@@ -537,20 +514,17 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - Index:
 
 - (NSArray<NSString*>*) indexes {
-    NSError *error = nil;
-    NSArray *res = [[self defaultCollectionOrThrow] indexes: &error];
-    throwIfNotOpenError(error);
-    return res;
+    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection indexes: err];
+    }];
+    assert(result != nil);
+    return result;
 }
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
-    NSError *e = nil;
-    BOOL res = [[self defaultCollectionOrThrow] createIndex: index name: name error: &e];
-    throwIfNotOpenError(e);
-    
-    if (error)
-        *error = e;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection createIndex: index name: name error: err];
+    }];
 }
 
 - (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
@@ -559,23 +533,15 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
-    NSError *e = nil;
-    BOOL res = [[self defaultCollectionOrThrow] createIndexWithName: name config: config error: &e];
-    throwIfNotOpenError(e);
-    
-    if (error)
-        *error = e;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection createIndexWithName: name config: config error: err];
+    }];
 }
 
-- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)outError {
-    NSError *e = nil;
-    BOOL res = [[self defaultCollectionOrThrow] deleteIndexWithName: name error: &e];
-    throwIfNotOpenError(e);
-    
-    if (outError)
-        *outError = e;
-    return res;
+- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection deleteIndexWithName: name error: err];
+    }];
 }
 
 #pragma mark - DOCUMENT EXPIRATION
@@ -583,23 +549,15 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (BOOL) setDocumentExpirationWithID: (NSString*)documentID
                           expiration: (nullable NSDate*)date
                                error: (NSError**)error {
-    NSError *e = nil;
-    BOOL res = [[self defaultCollectionOrThrow] setDocumentExpirationWithID: documentID
-                                                                 expiration: date
-                                                                      error: &e];
-    throwIfNotOpenError(e);
-    
-    if (error)
-        *error = e;
-    return res;
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection setDocumentExpirationWithID: documentID expiration: date error: err];
+    }];
 }
 
 - (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
-    NSError *error = nil;
-    NSDate* res = [[self defaultCollectionOrThrow] getDocumentExpirationWithID: documentID
-                                                                         error: &error];
-    throwIfNotOpenError(error);
-    return res;
+    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection getDocumentExpirationWithID: documentID error: err];
+    }];
 }
 
 #pragma mark - Query
@@ -707,11 +665,39 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (CBLCollection*) defaultCollectionOrThrow {
     CBL_LOCK(_mutex) {
-        CBLCollection* col = [self defaultCollection: nil];
-        if (!col)
-            throwNotOpen();
-        return _defaultCollection;
+        NSError* error;
+        CBLCollection* col = [self defaultCollection: &error];
+        if (!col) {
+            throwIfNotOpenError(error);
+            
+            // Not expect to happen but if it does, log a warning error before raising the exception:
+            CBLWarn(Database, @"%@ Failed to get default collection with error: %@", self, error);
+            [NSException raise: NSInternalInconsistencyException format: @"Unable to get the default collection"];
+        }
+        return col;
     }
+}
+
+- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block {
+    NSError* outError = nil;
+    BOOL result = block([self defaultCollectionOrThrow], &outError);
+    if (!result) {
+        throwIfNotOpenError(outError);
+        if (error) *error = outError;
+    }
+    return result;
+}
+
+- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
+                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block
+{
+    NSError* outError = nil;
+    id result = block([self defaultCollectionOrThrow], &outError);
+    if (!result) {
+        throwIfNotOpenError(outError);
+        if (error) *error = outError;
+    }
+    return result;
 }
 
 static void throwNotOpen() {
