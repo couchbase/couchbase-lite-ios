@@ -74,6 +74,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url acceptParentDomain: (BOOL)acceptParentDomain;
 
 - (CBLCollection*) defaultCollectionOrThrow;
+- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block;
+- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
+                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block;
 
 - (id) mutex;
 
