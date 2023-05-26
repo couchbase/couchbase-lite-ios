@@ -240,7 +240,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// To remove the listener, call remove() function on the returned listener token.
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    public func addDocumentChangeListener(id: String,
+    @discardableResult public func addDocumentChangeListener(id: String,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         return self.addDocumentChangeListener(id: id, queue: nil, listener: listener)
     }
@@ -250,7 +250,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// call remove() function on the returned listener token.
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
+    @discardableResult public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         let token = impl.addDocumentChangeListener(withID: id, queue: queue)
         { [unowned self] (change) in
@@ -265,7 +265,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// To remove the listener, call remove() function on the returned listener token
     ///.
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
+    @discardableResult public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         return self.addChangeListener(queue: nil, listener: listener)
     }
      
@@ -274,7 +274,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// To remove the listener, call remove() function on the returned listener token.
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
-    public func addChangeListener(queue: DispatchQueue?,
+    @discardableResult public func addChangeListener(queue: DispatchQueue?,
                                   listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
         let token = impl.addChangeListener(with: queue) { [unowned self] (change) in
             listener(CollectionChange(collection: self, documentIDs: change.documentIDs))

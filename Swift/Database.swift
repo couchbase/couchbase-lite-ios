@@ -326,7 +326,7 @@ public final class Database {
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
     @available(*, deprecated, message: "Use database.defaultCollection().addChangeListener(queue:listener:) instead.")
-    @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
+    @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
         let token = impl.addChangeListener(with: queue) { [unowned self] (change) in
