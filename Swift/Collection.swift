@@ -253,8 +253,12 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     @discardableResult public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
                                    listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
         let token = impl.addDocumentChangeListener(withID: id, queue: queue)
-        { [unowned self] (change) in
-            listener(DocumentChange(database: db,
+        { [weak self] (change) in
+            guard let self = self else {
+                Log.log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
+                return
+            }
+            listener(DocumentChange(database: self.db,
                                     documentID: change.documentID,
                                     collection: self))
         }
