@@ -38,7 +38,7 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
     if (self != kCBLRemovedValue) {
         [NSException raise: NSInternalInconsistencyException
                     format: kCBLErrorMessageInvalidCouchbaseObjType, [self class],
-         @"NSNumber, NSString, NSDate, CBLDictionary, CBLArray"];
+         @"NSArray, NSDictionary, NSDate, NSString, NSNumber, NSNull, CBLArray, CBLMutableArray, CBLDictionary, CBLMutableDictionary, CBLNewDictionary, CBLBlob"];
     }
     return self;
 }
