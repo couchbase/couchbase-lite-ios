@@ -64,7 +64,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Collection* collectio
 - (void) postChange {
     CBLCollection* collection = _collection;
     if (!collection) {
-        CBLWarn(Database, @"%@ Unnable to notify a change for document '%@' in collection '%@' "
+        CBLWarn(Database, @"%@ Unable to notify a change for document '%@' in collection '%@' "
                            "as the collection has been released", self, _collectionName, _docID);
         return;
     }
