@@ -661,8 +661,9 @@ static void doDispose(C4Socket* s) {
         NSArray* cookies = [CBLWebSocket parseCookies: cookie];
         
         // Save to LiteCore
+        bool acceptParentDomain = _options[kC4ReplicatorOptionAcceptParentDomainCookies].asBool();
         for (NSString* cookieStr in cookies) {
-            [_db saveCookie: cookieStr url: _remoteURL];
+            [_db saveCookie: cookieStr url: _remoteURL acceptParentDomain: acceptParentDomain];
         }
         
         if (cookies.count > 0) {

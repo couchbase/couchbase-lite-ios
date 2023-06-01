@@ -796,13 +796,14 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-- (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url {
+- (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url acceptParentDomain: (BOOL)acceptParentDomain {
     CBL_LOCK(self) {
         C4Error err = {};
         CBLStringBytes header(cookie);
         CBLStringBytes host(url.host);
         CBLStringBytes path(url.path.stringByDeletingLastPathComponent);
-        if (!c4db_setCookie(_c4db, header, host, path, &err)) {
+        
+        if (!c4db_setCookie(_c4db, header, host, path, acceptParentDomain, &err)) {
             CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
             return NO;
         }
