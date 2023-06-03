@@ -1165,13 +1165,28 @@ class DocumentTest: CBLTestCase {
         let dict: [String: Any] = ["type": "profile",
                                    "name": "Jason",
                                    "age": "30",
+                                   "remote": false,
+                                   "active": true,
                                    "address": ["street": "1 milky way."]]
         doc.setData(dict)
+        
+        // Swift Sequence Protocol
         XCTAssert(doc.contains("type"))
         XCTAssert(doc.contains("name"))
         XCTAssert(doc.contains("age"))
+        XCTAssert(doc.contains("remote"))
+        XCTAssert(doc.contains("active"))
         XCTAssert(doc.contains("address"))
         XCTAssertFalse(doc.contains("weight"))
+        
+        // DictionaryProtocol
+        XCTAssert(doc.contains(key: "type"))
+        XCTAssert(doc.contains(key: "name"))
+        XCTAssert(doc.contains(key: "age"))
+        XCTAssert(doc.contains(key: "remote"))
+        XCTAssert(doc.contains(key: "active"))
+        XCTAssert(doc.contains(key: "address"))
+        XCTAssertFalse(doc.contains(key: "weight"))
     }
     
     func testRemoveKeys() throws {

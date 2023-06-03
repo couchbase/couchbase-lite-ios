@@ -1342,16 +1342,20 @@
 - (void) testContainsKey {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setData: @{ @"type": @"profile",
-                           @"name": @"Jason",
-                           @"age": @"30",
-                           @"address": @{
-                                   @"street": @"1 milky way.",
-                                   }
-                           }];
+                     @"name": @"Jason",
+                     @"age": @"30",
+                     @"remote": @NO,
+                     @"active": @YES,
+                     @"address": @{
+                         @"street": @"1 milky way.",
+                     }
+                  }];
     
     Assert([doc containsValueForKey: @"type"]);
     Assert([doc containsValueForKey: @"name"]);
     Assert([doc containsValueForKey: @"age"]);
+    Assert([doc containsValueForKey: @"remote"]);
+    Assert([doc containsValueForKey: @"active"]);
     Assert([doc containsValueForKey: @"address"]);
     AssertFalse([doc containsValueForKey: @"weight"]);
 }
