@@ -24,6 +24,9 @@ echo
 echo "Use the password 123 if you want the exported p12 to work correctly with the tests"
 read -p "Press Enter to continue"
 
+# Use LibreSSL. If using OpenSSL 3.x add -legacy when exporting below
+# https://stackoverflow.com/questions/70431528/mac-verification-failed-during-pkcs12-import-wrong-password-azure-devops
+
 openssl pkcs12 -export -out client.p12 -inkey test-node.key -in test-node.crt
 openssl x509 -in test-ca.crt -out client-ca.der -outform DER
 
