@@ -179,16 +179,24 @@
     [super setUp];
     if (!self.keyChainAccessAllowed) return;
     
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
+    }];
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    }];
 }
 
 - (void) tearDown {
     [super tearDown];
     if (!self.keyChainAccessAllowed) return;
     
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: nil]);
+    }];
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    }];
 }
 
 - (void) testCreateGetDeleteServerIdentity {
@@ -196,10 +204,6 @@
     
     NSError* error;
     CBLTLSIdentity* identity;
-    
-    // Delete:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    AssertNil(error);
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
@@ -277,10 +281,6 @@
     
     NSError* error;
     CBLTLSIdentity* identity;
-    
-    // Delete:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
-    AssertNil(error);
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
@@ -399,10 +399,6 @@
     AssertNotNil(identity);
     AssertNil(error);
     AssertEqual(identity.certs.count, 2u);
-    
-    // Delete from KeyChain:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    AssertNil(error);
 }
 
 - (void) testImportIdentity {
@@ -434,7 +430,9 @@
     AssertEqual(identity.certs.count, 2);
     
     // Delete:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    }];
     AssertNil(error);
     
     // Get:
@@ -448,10 +446,6 @@
     
     NSError* error;
     CBLTLSIdentity* identity;
-    
-    // Delete:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    AssertNil(error);
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
@@ -476,10 +470,6 @@
 
     NSError* error;
     CBLTLSIdentity* identity;
-    
-    // Delete:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
-    AssertNil(error);
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];

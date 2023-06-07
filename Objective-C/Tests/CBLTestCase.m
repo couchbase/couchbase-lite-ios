@@ -159,7 +159,15 @@
 }
 
 - (BOOL) deleteDBNamed: (NSString*)name error: (NSError**)error {
-    return [CBLDatabase deleteDatabase: name inDirectory: self.directory error: error];
+    __block BOOL result;
+    __block NSError* err = nil;
+    [self ignoreExceptionBreakPoint: ^{
+        result = [CBLDatabase deleteDatabase: name inDirectory: self.directory error: &err];
+    }];
+    if (error) {
+        *error = err;
+    }
+    return result;
 }
 
 - (void) deleteDatabase: (CBLDatabase*)database {
@@ -372,7 +380,7 @@
     }
 }
 
-- (void) ignoreExceptionBreakPointOnly: (void (^) (void))block {
+- (void) ignoreExceptionBreakPoint: (void (^) (void))block {
     ++gC4ExpectExceptions;
     block();
     --gC4ExpectExceptions;

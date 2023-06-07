@@ -139,23 +139,28 @@ class TLSIdentityTest: CBLTestCase {
         super.setUp()
         if (!keyChainAccessAllowed) { return }
         
-        try! TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
-        try! TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        ignoreException {
+            try! TLSIdentity.deleteIdentity(withLabel: self.serverCertLabel)
+        }
+        ignoreException {
+            try! TLSIdentity.deleteIdentity(withLabel: self.clientCertLabel)
+        }
     }
     
     override func tearDown() {
         super.tearDown()
         if (!keyChainAccessAllowed) { return }
         
-        try! TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
-        try! TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
+        ignoreException {
+            try! TLSIdentity.deleteIdentity(withLabel: self.serverCertLabel)
+        }
+        ignoreException {
+            try! TLSIdentity.deleteIdentity(withLabel: self.clientCertLabel)
+        }
     }
     
     func testCreateGetDeleteServerIdentity() throws {
         if (!keyChainAccessAllowed) { return }
-        
-        // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
         var identity: TLSIdentity?
@@ -218,9 +223,6 @@ class TLSIdentityTest: CBLTestCase {
     
     func testCreateGetDeleteClientIdentity() throws {
         if (!keyChainAccessAllowed) { return }
-        
-        // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Get:
         var identity: TLSIdentity?
@@ -321,16 +323,10 @@ class TLSIdentityTest: CBLTestCase {
         let identity = try TLSIdentity.identity(withIdentity: secIdentity, certs: [certs[1]])
         XCTAssertNotNil(identity)
         XCTAssertEqual(identity.certs.count, 2)
-        
-        // Delete from KeyChain:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
     
     func testImportIdentity() throws {
         if (!keyChainAccessAllowed) { return }
-        
-        // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         
@@ -355,7 +351,9 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentityInKeyChain(identity: identity!)
         
         // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+        ignoreException {
+            try TLSIdentity.deleteIdentity(withLabel: self.serverCertLabel)
+        }
         
         // Get:
         expectError(domain: CBLError.domain, code: CBLError.notFound) {
@@ -365,9 +363,6 @@ class TLSIdentityTest: CBLTestCase {
     
     func testCreateIdentityWithNoAttributes() throws {
         if (!keyChainAccessAllowed) { return }
-        
-        // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
         var identity: TLSIdentity?
@@ -388,9 +383,6 @@ class TLSIdentityTest: CBLTestCase {
     
     func testCertificateExpiration() throws {
         if (!keyChainAccessAllowed) { return }
-        
-        // Delete:
-        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
         var identity: TLSIdentity?
