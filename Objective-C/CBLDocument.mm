@@ -372,7 +372,7 @@ using namespace fleece;
 }
 
 - (BOOL) containsValueForKey: (nonnull NSString *)key {
-    return [_dict booleanForKey: key];
+    return [_dict containsValueForKey: key];
 }
 
 - (CBLFragment *) objectForKeyedSubscript: (NSString *)key {
