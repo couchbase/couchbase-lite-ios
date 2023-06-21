@@ -20,7 +20,6 @@
 #import "CBLTestCase.h"
 #import "CBLTLSIdentity+Internal.h"
 
-API_AVAILABLE(macos(10.12), ios(10.0))
 @interface TLSIdentityTest : CBLTestCase
 
 @end
@@ -46,16 +45,13 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 - (NSData*) publicKeyHashFromCert: (SecCertificateRef)certRef {
     // Get public key from the certificate:
     SecKeyRef publicKeyRef;
-    if (@available(iOS 12, macOS 10.14, *)) {
+    if (@available(iOS 12, *)) {
         publicKeyRef = SecCertificateCopyKey(certRef);
     } else {
 #if TARGET_OS_MACCATALYST
         Assert(false, @"Catalyst:SecCertificateCopyKey is not supported, iOS < 12, macOS < 10.14");
 #elif TARGET_OS_IOS
-        if (@available(iOS 10.3, *))
-            publicKeyRef = SecCertificateCopyPublicKey(certRef);
-        else
-            Assert(false, @"IOS:SecCertificateCopyPublicKey is not supported, iOS < 10.3");
+        publicKeyRef = SecCertificateCopyPublicKey(certRef);
 #elif TARGET_OS_OSX
         if (@available(macOS 10.3, *)) {
             OSStatus status = SecCertificateCopyPublicKey(certRef, &publicKeyRef);
@@ -65,14 +61,8 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 #endif
     }
     Assert(publicKeyRef);
-                
-    if (@available(iOS 10.0, macOS 10.12, *)) {
-        NSDictionary* attrs = CFBridgingRelease(SecKeyCopyAttributes(publicKeyRef));
-        return [attrs objectForKey: (id)kSecAttrApplicationLabel];
-    } else {
-        Assert(false, @"SecKeyCopyAttributes is not supported, iOS < 10.0, macOS < 10.12");
-    }
-    return nil;
+    NSDictionary* attrs = CFBridgingRelease(SecKeyCopyAttributes(publicKeyRef));
+    return [attrs objectForKey: (id)kSecAttrApplicationLabel];
 }
 
 - (void) checkIdentityInKeyChain: (CBLTLSIdentity*)identity {

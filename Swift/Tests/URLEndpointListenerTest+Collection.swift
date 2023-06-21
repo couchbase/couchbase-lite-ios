@@ -20,7 +20,6 @@
 import XCTest
 import CouchbaseLiteSwift
 
-@available(macOS 10.12, iOS 10.3, *)
 class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     override func setUpWithError() throws {
         try super.setUpWithError()

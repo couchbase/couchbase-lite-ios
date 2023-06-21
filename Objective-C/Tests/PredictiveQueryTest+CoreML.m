@@ -19,7 +19,6 @@
 #import "CBLTestCase.h"
 #import "CBLCoreMLPredictiveModel+Internal.h"
 
-API_AVAILABLE(macos(10.13), ios(11.0))
 @interface PredictiveQueryWithCoreMLTest : CBLTestCase
 
 @end
@@ -303,7 +302,7 @@ API_AVAILABLE(macos(10.13), ios(11.0))
 }
 
 - (void) testSequenceDataConversion {
-    if (@available(macOS 10.14, iOS 12.0, *)) {
+    if (@available(iOS 12.0, *)) {
         NSArray* types = @[@(MLFeatureTypeInt64), @(MLFeatureTypeString)];
         NSArray* tests = @[@[@1, @2, @3, @4, @5], @[@"1", @"2", @"3", @"4", @"5"]];
         

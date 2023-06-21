@@ -271,16 +271,12 @@ static void doDispose(C4Socket* s) {
             C4Cert* c4cert = c4cert_fromData(certData, &err);
             if (c4cert) {
                 NSError* error;
-                if (@available(macOS 10.12, iOS 10.0, *)) {
-                    _clientIdentity = toSecIdentityWithCertChain(c4cert, &error);
-                    if (_clientIdentity) {
-                        c4cert_release(c4cert);
-                        return;
-                    }
-                    CBLWarnError(Sync, @"%@: Couldn't lookup the identity from the KeyChain: %@", self, error);
-                } else {
-                    CBLWarnError(Sync, @"%@: Client Cert Auth is not supported by macOS < 10.12 and iOS < 10.0", self);
+                _clientIdentity = toSecIdentityWithCertChain(c4cert, &error);
+                if (_clientIdentity) {
+                    c4cert_release(c4cert);
+                    return;
                 }
+                CBLWarnError(Sync, @"%@: Couldn't lookup the identity from the KeyChain: %@", self, error);
                 c4cert_release(c4cert);
             } else {
                 NSError* error;

@@ -665,7 +665,7 @@
     
 }
 
-- (void) testClientCertAuthWithCallback API_AVAILABLE(macos(10.12), ios(10.3)) {
+- (void) testClientCertAuthWithCallback {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
@@ -700,7 +700,7 @@
     [self stopListener: listener];
 }
 
-- (void) testClientCertAuthWithCallbackError API_AVAILABLE(macos(10.12), ios(10.3)) {
+- (void) testClientCertAuthWithCallbackError {
     if (!self.keyChainAccessAllowed) return;
     
     // Listener:
