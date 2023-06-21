@@ -829,7 +829,7 @@
         
         // separate replicator instance
         id end = [[CBLURLEndpoint alloc] initWithURL: url];
-        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: end];
+        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: end];
         [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.tlsIdentity.certs.firstObject)];
         [self run: rConfig errorCode: 0 errorDomain: nil];
         

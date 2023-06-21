@@ -21,8 +21,8 @@
 #import "CBLURLEndpointListenerConfiguration.h"
 #import "CBLURLEndpointListener+Internal.h"
 
-#define kWsPort 4984
-#define kWssPort 4985
+#define kWsPort 4084
+#define kWssPort 4085
 
 #define kServerCertLabel @"CBL-Server-Cert"
 #define kClientCertLabel @"CBL-Client-Cert"
