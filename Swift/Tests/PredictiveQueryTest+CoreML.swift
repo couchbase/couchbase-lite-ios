@@ -20,7 +20,6 @@ import XCTest
 import CoreML
 import CouchbaseLiteSwift
 
-@available(macOS 10.13, iOS 11.0, *)
 class PredictiveQueryWithCoreMLTest: CBLTestCase {
     
     func coreMLModel(name: String, mustExist: Bool = true) throws -> MLModel? {

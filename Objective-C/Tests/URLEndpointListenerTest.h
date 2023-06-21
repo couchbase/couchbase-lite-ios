@@ -27,10 +27,8 @@
 #define kServerCertLabel @"CBL-Server-Cert"
 #define kClientCertLabel @"CBL-Client-Cert"
 
-API_AVAILABLE(macos(10.12), ios(10.0))
 typedef CBLURLEndpointListenerConfiguration Config;
 
-API_AVAILABLE(macos(10.12), ios(10.0))
 typedef CBLURLEndpointListener Listener;
 
 NS_ASSUME_NONNULL_BEGIN

@@ -19,7 +19,6 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
-@available(macOS 10.12, iOS 10.3, *)
 class URLEndpointListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4084
     let wssPort: UInt16 = 4085
@@ -126,7 +125,6 @@ class URLEndpointListenerTest: ReplicatorTest {
     }
 }
 
-@available(macOS 10.12, iOS 10.3, *)
 class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     override func setUp() {
         super.setUp()
@@ -1429,7 +1427,6 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
 
 }
 
-@available(macOS 10.12, iOS 10.3, *)
 extension URLEndpointListener {
     var localURL: URL {
         assert(self.port != nil && self.port! > UInt16(0))

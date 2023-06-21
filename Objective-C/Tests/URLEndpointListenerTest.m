@@ -157,7 +157,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {
-    if (@available(macOS 10.5, iOS 10.3, *)) {
+    if (@available(macOS 10.5, *)) {
         CFStringRef cnRef1, cnRef2;
         AssertEqual(SecCertificateCopyCommonName(cert1, &cnRef1), errSecSuccess);
         AssertEqual(SecCertificateCopyCommonName(cert2, &cnRef2), errSecSuccess);

@@ -204,13 +204,9 @@
 
 - (NSString*) getCertificateID: (SecCertificateRef)cert {
     CFErrorRef* errRef = NULL;
-    if (@available(macOS 10.13, iOS 11.0, *)) {
         NSData* data = (NSData*)CFBridgingRelease(SecCertificateCopySerialNumberData(cert, errRef));
         Assert(errRef == NULL);
         return [NSString stringWithFormat: @"%lu", (unsigned long)[data hash]];
-    } else {
-        return (NSString*) CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
-    }
 }
 
 #pragma mark - Configs
