@@ -1,0 +1,54 @@
+name: Sync gateway tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  downloadAndRunSG:
+    name: build-and-test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with: 
+          submodules: recursive
+      
+      - name: Download SGW
+        run: |
+          curl -o sg.zip http://packages.couchbase.com/releases/couchbase-sync-gateway/3.1.0/couchbase-sync-gateway-enterprise_3.1.0_x86_64.zip
+          tar -zxvf sg.zip
+          echo "${PWD}/couchbase-sync-gateway/bin" >> $GITHUB_PATH
+          echo "$PATH"
+
+      - name: Run Walrus no-SSL
+        working-directory: ${{github.workspace}}
+        run: |
+          pushd vendor/couchbase-lite-core/Replicator/tests/data
+          sync_gateway walrus_config_3-0.json & sleep 10
+          popd
+
+      - name: Run Walrus SSL
+        working-directory: ${{github.workspace}}
+        run: |
+          pushd vendor/couchbase-lite-core/Replicator/tests/data
+          sync_gateway ssl_walrus_config_3-0.json & sleep 10
+          popd
+      
+      - name: Select-Device
+        run: |
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}'`
+          echo $device | cat >device
+          echo "Selected the device : ${device}"
+      
+      - name: Build-for-testing
+        run: |
+          DEVICE=$(cat device)
+          xcodebuild build-for-testing -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
+      
+      - name: Run-SG-Tests
+        run: |
+          DEVICE=$(cat device)
+          xcodebuild test-without-building -scheme "CBL_ObjC_SG_Tests" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
