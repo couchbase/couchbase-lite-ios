@@ -21,7 +21,7 @@
 #import "c4.h"
 
 __attribute__((constructor))
-static void initialize()
+static void initialize(void)
 {
     static int initialized = 0;
     if (!initialized)
