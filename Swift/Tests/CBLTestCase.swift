@@ -132,7 +132,9 @@ class CBLTestCase: XCTestCase {
     }
     
     func deleteDB(name: String) throws {
-        try Database.delete(withName: name, inDirectory: self.directory)
+        ignoreException {
+            try Database.delete(withName: name, inDirectory: self.directory)
+        }
     }
     
     func createDocument() -> MutableDocument {

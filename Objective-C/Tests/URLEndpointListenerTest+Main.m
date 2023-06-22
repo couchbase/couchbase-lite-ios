@@ -743,7 +743,9 @@
     
     // Cleanup:
     __block NSError* error;
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    }];
     
     // Create client identity:
     NSData* clientIdentityData = [self dataFromResource: @"identity/client" ofType: @"p12"];
@@ -769,8 +771,9 @@
     }];
 
     // Cleanup:
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
-    
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: &error]);
+    }];
     [self stopListener: listener];
 }
 
