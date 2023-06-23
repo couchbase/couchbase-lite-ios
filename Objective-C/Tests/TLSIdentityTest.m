@@ -53,11 +53,7 @@
 #elif TARGET_OS_IOS
         publicKeyRef = SecCertificateCopyPublicKey(certRef);
 #elif TARGET_OS_OSX
-        if (@available(macOS 10.3, *)) {
-            OSStatus status = SecCertificateCopyPublicKey(certRef, &publicKeyRef);
-            Assert(status == errSecSuccess);
-        } else
-            Assert(false, @"OSX:SecCertificateCopyPublicKey is not supported, macOS < 10.3");
+        Assert(false, @"OSX:SecCertificateCopyPublicKey is not supported, macOS < 10.14");
 #endif
     }
     Assert(publicKeyRef);
