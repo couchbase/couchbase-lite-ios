@@ -57,11 +57,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
         else
             Assert(false, @"IOS:SecCertificateCopyPublicKey is not supported, iOS < 10.3");
 #elif TARGET_OS_OSX
-        if (@available(macOS 10.3, *)) {
-            OSStatus status = SecCertificateCopyPublicKey(certRef, &publicKeyRef);
-            Assert(status == errSecSuccess);
-        } else
-            Assert(false, @"OSX:SecCertificateCopyPublicKey is not supported, macOS < 10.3");
+        Assert(false, @"OSX:SecCertificateCopyPublicKey is not supported, macOS < 10.14");
 #endif
     }
     Assert(publicKeyRef);
