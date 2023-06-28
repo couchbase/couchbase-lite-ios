@@ -1,12 +1,12 @@
 name: macOS
 
 on:
-   push:
-     branches:
-       - master
-   pull_request:
-     branches:
-       - '**'
+  push:
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - 'Package.swift'
 
 jobs: 
   build:

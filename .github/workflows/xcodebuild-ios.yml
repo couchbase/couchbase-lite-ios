@@ -2,14 +2,16 @@ name: iOS
 
 on:
   push:
-    branches: [ master ]
+    branches:
+       - master
   pull_request:
-    branches: [ master ]
+    paths-ignore:
+       - 'Package.swift'
 
 jobs:
   build:
     name: build-and-test
-    runs-on: macos-latest
+    runs-on: macOS-latest
     strategy:
        matrix:
          scheme: ["CBL_ObjC", "CBL_Swift"]

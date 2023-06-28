@@ -1,0 +1,37 @@
+name: Swift Package Validation
+
+on:
+  push:
+    paths:
+      - 'Package.swift'
+  pull_request:
+    paths:
+      - 'Package.swift'
+
+jobs:
+  build:
+    name: Swift ${{ matrix.swift }}
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        swift: ["5.3", "5.3.1", "5.3.2", "5.4", "5.4.2", "5.5", "5.8"]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        swift-version: ${{ matrix.swift }}
+    - name: Build & test MacOS
+      run: |
+        swift build -v
+        swift test -v
+    - name: Build & test iOS
+        run: |
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}'`
+          echo $device | cat > device
+          echo "Selected the device : ${device}"
+
+          DEVICE=$(cat device)
+          xcodebuild build-for-testing -scheme "CBL_Swift" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
+
+          DEVICE=$(cat device)
+          xcodebuild test-without-building -scheme "CBL_Swift" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
