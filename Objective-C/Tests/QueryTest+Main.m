@@ -1921,9 +1921,7 @@
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
                                      from: [CBLQueryDataSource database: self.db]];
     XCTestExpectation* first = [self expectationWithDescription: @"1st change"];
-    __block int count = 0;
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
-        count++;
         NSArray<CBLQueryResult*>* rows = [change.results allObjects];
         AssertEqual(rows.count, 0);
         [first fulfill];
