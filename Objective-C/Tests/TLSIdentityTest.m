@@ -50,8 +50,6 @@
     } else {
 #if TARGET_OS_IOS
         publicKeyRef = SecCertificateCopyPublicKey(certRef);
-#else
-        Assert(false, @"Not supported, iOS < 11, macOS < 10.14");
 #endif
     }
     Assert(publicKeyRef);
