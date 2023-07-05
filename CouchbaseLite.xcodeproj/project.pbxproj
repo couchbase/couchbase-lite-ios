@@ -23,6 +23,16 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
+		1A0BFA2D27B51FD700BA84E5 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
+		1A0BFA2F27B51FD700BA84E5 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		1A0BFA3027B51FD700BA84E5 /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
+		1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
+		1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4627B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4827B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
+		1A0BFA4927B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */; };
 		1A13DD4128B882A700BC1084 /* URLEndpointListenerTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13DD3F28B881BF00BC1084 /* URLEndpointListenerTest+Main.m */; };
 		1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13DD3F28B881BF00BC1084 /* URLEndpointListenerTest+Main.m */; };
 		1A13DD4328B882BA00BC1084 /* URLEndpointListenerTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A13DD3328B8809300BC1084 /* URLEndpointListenerTest+Collection.swift */; };
@@ -1675,6 +1685,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1A0BFA1127B51FD700BA84E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9398D9111E03434200464432;
+			remoteInfo = CouchbaseLite;
+		};
 		1A93FACE24F03E800015D54D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -2009,6 +2026,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_ObjC_SG_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+SG.m"; sourceTree = "<group>"; };
 		1A13DD3328B8809300BC1084 /* URLEndpointListenerTest+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URLEndpointListenerTest+Collection.swift"; sourceTree = "<group>"; };
 		1A13DD3F28B881BF00BC1084 /* URLEndpointListenerTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "URLEndpointListenerTest+Main.m"; sourceTree = "<group>"; };
 		1A16129C283DDE8000AA4987 /* CBLCollection+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCollection+Internal.h"; sourceTree = "<group>"; };
@@ -2632,6 +2651,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1A0BFA2C27B51FD700BA84E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA2D27B51FD700BA84E5 /* CouchbaseLite.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F92701E4D30A4007FD5A2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3692,6 +3719,7 @@
 				930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */,
 				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
 				93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */,
+				1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3838,6 +3866,7 @@
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
 				1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */,
+				1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
 				93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */,
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
@@ -4779,6 +4808,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1A0BFA0F27B51FD700BA84E5 /* CBL_ObjC_SG_Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0BFA3127B51FD700BA84E5 /* Build configuration list for PBXNativeTarget "CBL_ObjC_SG_Tests" */;
+			buildPhases = (
+				1A0BFA1227B51FD700BA84E5 /* Sources */,
+				1A0BFA2C27B51FD700BA84E5 /* Frameworks */,
+				1A0BFA2E27B51FD700BA84E5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1A0BFA1027B51FD700BA84E5 /* PBXTargetDependency */,
+			);
+			name = CBL_ObjC_SG_Tests;
+			productName = CouchbaseLiteTests;
+			productReference = 1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		275F92731E4D30A4007FD5A2 /* CBL_Swift */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */;
@@ -5128,6 +5175,9 @@
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
+					1A0BFA0F27B51FD700BA84E5 = {
+						DevelopmentTeam = N2Q372V7W2;
+					};
 					275F92731E4D30A4007FD5A2 = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = N2Q372V7W2;
@@ -5251,6 +5301,7 @@
 				9343F18A207D636300F19A89 /* CBL_EE_Swift_Tests */,
 				9343F1A4207D63BF00F19A89 /* PerfTests_EE_Mac */,
 				27BF031C1FB6290C003D5BB8 /* All */,
+				1A0BFA0F27B51FD700BA84E5 /* CBL_ObjC_SG_Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -5350,6 +5401,15 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1A0BFA2E27B51FD700BA84E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA2F27B51FD700BA84E5 /* Support in Resources */,
+				1A0BFA3027B51FD700BA84E5 /* iTunesMusicLibrary.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F927A1E4D30A4007FD5A2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5558,6 +5618,16 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1A0BFA1227B51FD700BA84E5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0BFA4627B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
+				1A0BFA4327B522DB00BA84E5 /* CBLTestCase.m in Sources */,
+				1A0BFA2527B51FD700BA84E5 /* ReplicatorTest.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275F926F1E4D30A4007FD5A2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6244,6 +6314,7 @@
 				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				1AC16CF4287D4D9B0041728F /* CollectionTest.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
+				1A0BFA4827B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
 				1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
@@ -6279,6 +6350,7 @@
 				1ABA63B128813A8D005835E7 /* ReplicatorTest+Collection.m in Sources */,
 				93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F174207D633300F19A89 /* NotificationTest.m in Sources */,
+				1A0BFA4927B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
@@ -6385,6 +6457,7 @@
 				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
+				1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				1ABA63AF28813A8A005835E7 /* ReplicatorTest+Collection.m in Sources */,
@@ -6542,6 +6615,7 @@
 				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A621D6D2887DCE70017F905 /* QueryTest+Collection.m in Sources */,
 				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
+				1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
@@ -6586,6 +6660,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1A0BFA1027B51FD700BA84E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9398D9111E03434200464432 /* CBL_ObjC */;
+			targetProxy = 1A0BFA1127B51FD700BA84E5 /* PBXContainerItemProxy */;
+		};
 		275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
@@ -6749,6 +6828,64 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1A0BFA3227B51FD700BA84E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1A0BFA3327B51FD700BA84E5 /* Debug_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug_EE;
+		};
+		1A0BFA3427B51FD700BA84E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		1A0BFA3527B51FD700BA84E5 /* Release_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				INFOPLIST_FILE = "Objective-C/Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release_EE;
+		};
 		275F92861E4D30A4007FD5A2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */;
@@ -6971,6 +7108,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
@@ -6990,6 +7128,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -7000,6 +7139,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -7018,6 +7158,7 @@
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Debug_EE;
@@ -7147,6 +7288,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
@@ -7165,6 +7307,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = 5.0;
 			};
@@ -7174,6 +7317,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -7192,6 +7336,7 @@
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Release_EE;
@@ -7838,6 +7983,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
@@ -7851,6 +7997,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
@@ -7864,6 +8011,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
@@ -7876,6 +8024,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
@@ -7914,6 +8063,7 @@
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 			};
 			name = Debug;
 		};
@@ -7922,6 +8072,7 @@
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 			};
 			name = Debug_EE;
 		};
@@ -7930,6 +8081,7 @@
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 			};
 			name = Release;
 		};
@@ -7938,6 +8090,7 @@
 			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 			};
 			name = Release_EE;
 		};
@@ -7946,6 +8099,7 @@
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -7964,6 +8118,7 @@
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -7982,6 +8137,7 @@
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8000,6 +8156,7 @@
 			baseConfigurationReference = 932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8018,6 +8175,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Debug;
@@ -8027,6 +8185,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Debug_EE;
@@ -8036,6 +8195,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Release;
@@ -8045,6 +8205,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
 			name = Release_EE;
@@ -8441,6 +8602,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8458,6 +8620,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8476,6 +8639,7 @@
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Debug;
@@ -8485,6 +8649,7 @@
 			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_Tests.app/CBL_Tests";
 			};
 			name = Release;
@@ -8510,6 +8675,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = "";
@@ -8523,6 +8689,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = "";
 			};
@@ -8534,6 +8701,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -8546,6 +8714,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				SWIFT_VERSION = 5.0;
 			};
@@ -9078,6 +9247,17 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1A0BFA3127B51FD700BA84E5 /* Build configuration list for PBXNativeTarget "CBL_ObjC_SG_Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0BFA3227B51FD700BA84E5 /* Debug */,
+				1A0BFA3327B51FD700BA84E5 /* Debug_EE */,
+				1A0BFA3427B51FD700BA84E5 /* Release */,
+				1A0BFA3527B51FD700BA84E5 /* Release_EE */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL_Swift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
