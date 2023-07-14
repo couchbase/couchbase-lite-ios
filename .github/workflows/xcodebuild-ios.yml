@@ -2,17 +2,21 @@ name: iOS
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - 'master'
+      - 'release/**'
   pull_request:
-    branches: [ master ]
+    branches:
+      - 'master'
+      - 'release/**'
 
 jobs:
   build:
     name: build-and-test
-    runs-on: macos-latest
+    runs-on: macOS-latest
     strategy:
-       matrix:
-         scheme: ["CBL_ObjC", "CBL_Swift"]
+      matrix:
+        scheme: ["CBL_ObjC", "CBL_Swift"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

@@ -1,0 +1,34 @@
+name: Swift Package
+
+on:
+  pull_request:
+    paths: 
+      - "Package.swift"
+
+jobs:
+  build:
+    name: Swift ${{ matrix.swift }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        swift: ["5.7", "5.8"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: webfactory/ssh-agent@v0.7.0
+      with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_VERIFY }}
+          log-public-key: false
+    - uses: swift-actions/setup-swift@v1.23.0
+      with:
+        swift-version: ${{ matrix.swift }} 
+    - name: Set CBL Version
+      run: |
+        export VERSION=$(awk -F'/' '/url:/{print $6}' Package.swift | cut -d'_' -f3)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+    - name: Checkout couchbase-lite-ios-release-verify
+      run: |   
+        git clone https://github.com/couchbaselabs/couchbase-lite-ios-release-verify.git
+    - name: Validate
+      run: |
+        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -ce -v $VERSION
