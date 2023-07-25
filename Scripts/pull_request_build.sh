@@ -6,8 +6,9 @@ if [ "$1" = "-enterprise" ]
     cd couchbase-lite-ios
 fi
 
+
 TEST_SIMULATOR=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}')
-SCHEMES=("CBL_EE_ObjC" "CBL_EE_Swift")
+SCHEMES=("CBL_EE_ObjC_Tests_iOS_App" "CBL_EE_Swift_Tests_iOS_App")
 
 for SCHEME in "${SCHEMES[@]}"
 do

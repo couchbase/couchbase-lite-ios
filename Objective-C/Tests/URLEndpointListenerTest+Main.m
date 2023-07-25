@@ -813,7 +813,7 @@
     NSArray* urls = _listener.urls;
     
     /** Link local addresses cannot be assigned via network interface because they don't map to any given interface.  */
-    NSPredicate* p = [NSPredicate predicateWithFormat: @"NOT(SELF.host CONTAINS 'fe80::') AND NOT(SELF.host CONTAINS '.local')"];
+    NSPredicate* p = [NSPredicate predicateWithFormat: @"NOT(SELF.host CONTAINS ':') AND NOT(SELF.host CONTAINS '.local')"];
     NSArray* notLinkLocal = [urls filteredArrayUsingPredicate: p];
     
     NSError* err = nil;
@@ -829,7 +829,7 @@
         
         // separate replicator instance
         id end = [[CBLURLEndpoint alloc] initWithURL: url];
-        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db target: end];
+        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: end];
         [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.tlsIdentity.certs.firstObject)];
         [self run: rConfig errorCode: 0 errorDomain: nil];
         
