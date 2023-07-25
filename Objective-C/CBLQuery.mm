@@ -254,12 +254,11 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    C4QueryOptions options = kC4DefaultQueryOptions;
     
     __block C4QueryEnumerator* e;
     __block C4Error c4Err;
     [self.database safeBlock:^{
-        e = c4query_run(_c4Query, &options, kC4SliceNull, &c4Err);
+        e = c4query_run(_c4Query, kC4SliceNull, &c4Err);
     }];
     
     if (!e) {
