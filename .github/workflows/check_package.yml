@@ -1,0 +1,46 @@
+name: Swift Package
+
+on:
+  pull_request:
+    paths: Package.swift
+
+jobs:
+  build-5_7:
+    name: Swift 5.7
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: webfactory/ssh-agent@v0.7.0
+      with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          log-public-key: false
+    - name: Setup Swift 5.7
+      uses: swift-actions/setup-swift@v1.23.0
+      with:
+        swift-version: "5.7" 
+    - name: Checkout couchbase-lite-ios-release-verify
+      run: |   
+        git clone https://github.com/couchbaselabs/couchbase-lite-ios-release-verify.git
+    - name: Validate
+      run: |
+        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -ce
+  
+  build-5_8:
+    name: Swift 5.8
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: webfactory/ssh-agent@v0.7.0
+      with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          log-public-key: false
+    - name: Setup Swift 5.8
+      uses: swift-actions/setup-swift@v1.23.0
+      with:
+        swift-version: "5.8" 
+    - name: Checkout couchbase-lite-ios-release-verify
+      run: |   
+        git clone https://github.com/couchbaselabs/couchbase-lite-ios-release-verify.git
+    - name: Validate
+      run: |
+        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -ce
