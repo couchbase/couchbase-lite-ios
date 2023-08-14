@@ -19,6 +19,7 @@
 
 #include "Project.xcconfig"
 
+DEAD_CODE_STRIPPING                 = YES
 DEBUG_INFORMATION_FORMAT            = dwarf
 ENABLE_TESTABILITY                  = YES
 GCC_OPTIMIZATION_LEVEL              = 0
