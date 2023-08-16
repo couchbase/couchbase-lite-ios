@@ -180,13 +180,13 @@
         }];
         
         if ([file rangeOfString: @"verbose"].location != NSNotFound)
-            AssertEqual(lineCount, 2);
-        else if ([file rangeOfString: @"info"].location != NSNotFound)
             AssertEqual(lineCount, 3);
-        else if ([file rangeOfString: @"warning"].location != NSNotFound)
+        else if ([file rangeOfString: @"info"].location != NSNotFound)
             AssertEqual(lineCount, 4);
-        else if ([file rangeOfString: @"error"].location != NSNotFound)
+        else if ([file rangeOfString: @"warning"].location != NSNotFound)
             AssertEqual(lineCount, 5);
+        else if ([file rangeOfString: @"error"].location != NSNotFound)
+            AssertEqual(lineCount, 6);
     }
 }
 
@@ -379,11 +379,16 @@
         NSString* contents = [NSString stringWithContentsOfURL: url
                                                       encoding: NSASCIIStringEncoding
                                                          error: &error];
-        AssertNil(error);
-        NSString* firstLine = [contents componentsSeparatedByString:@"\n"].firstObject;
-        Assert([firstLine rangeOfString: @"CouchbaseLite/"].location != NSNotFound);
-        Assert([firstLine rangeOfString: @"Build/"].location != NSNotFound);
-        Assert([firstLine rangeOfString: @"Commit/"].location != NSNotFound);
+        NSAssert(!error, @"Error reading file: %@", [error localizedDescription]);
+        NSArray<NSString *> *lines = [contents componentsSeparatedByString:@"\n"];
+        
+        // Check if the log file contains at least two lines
+        NSAssert(lines.count >= 2, @"log contents should have at least two lines: information and header section");
+        NSString *secondLine = lines[1];
+
+        NSAssert([secondLine rangeOfString:@"CouchbaseLite/"].location != NSNotFound, @"Second line should contain 'CouchbaseLite/'");
+        NSAssert([secondLine rangeOfString:@"Build/"].location != NSNotFound, @"Second line should contain 'Build/'");
+        NSAssert([secondLine rangeOfString:@"Commit/"].location != NSNotFound, @"Second line should contain 'Commit/'");
     }
 }
 
