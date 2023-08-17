@@ -158,13 +158,13 @@ class LogTest: CBLTestCase {
             
             let sfile = file as NSString
             if sfile.range(of: "verbose").location != NSNotFound {
-                XCTAssertEqual(lineCount, 2)
-            } else if sfile.range(of: "info").location != NSNotFound {
                 XCTAssertEqual(lineCount, 3)
-            } else if sfile.range(of: "warning").location != NSNotFound {
+            } else if sfile.range(of: "info").location != NSNotFound {
                 XCTAssertEqual(lineCount, 4)
-            } else if sfile.range(of: "error").location != NSNotFound {
+            } else if sfile.range(of: "warning").location != NSNotFound {
                 XCTAssertEqual(lineCount, 5)
+            } else if sfile.range(of: "error").location != NSNotFound {
+                XCTAssertEqual(lineCount, 6)
             }
         }
     }
@@ -352,12 +352,17 @@ class LogTest: CBLTestCase {
         writeOneKiloByteOfLog()
         for file in try getLogsInDirectory(config.directory) {
             let contents = try String(contentsOf: file, encoding: .ascii)
-            guard let firstLine = contents.components(separatedBy: "\n").first else {
-                fatalError("log contents should be empty and needs header section")
+            let lines = contents.components(separatedBy: "\n")
+            
+            // Check if the log file contains at least two lines
+            guard lines.count >= 2 else {
+                fatalError("log contents should have at least two lines: information and header section")
             }
-            XCTAssert(firstLine.contains("CouchbaseLite/"))
-            XCTAssert(firstLine.contains("Build/"))
-            XCTAssert(firstLine.contains("Commit/"))
+            let secondLine = lines[1]
+
+            XCTAssert(secondLine.contains("CouchbaseLite/"))
+            XCTAssert(secondLine.contains("Build/"))
+            XCTAssert(secondLine.contains("Commit/"))
         }
     }
     
