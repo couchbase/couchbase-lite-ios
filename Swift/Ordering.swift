@@ -24,10 +24,7 @@ public protocol OrderingProtocol {
     
 }
 
-@available(*, deprecated, message: "Please use QuerySortOrder")
-typealias SortOrder = QuerySortOrder
-
-/// SortOrder allows to specify the ordering direction which is ascending or
+/// QuerySortOrder allows to specify the ordering direction which is ascending or
 /// descending order. The default ordering is the ascending order.
 public protocol QuerySortOrder: OrderingProtocol {
     
