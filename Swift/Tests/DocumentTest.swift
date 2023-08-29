@@ -1598,6 +1598,45 @@ class DocumentTest: CBLTestCase {
     
     // MARK: toJSON
     
+    // CBL-4855 https://issues.couchbase.com/browse/CBL-4855
+    func testNumberJSON () throws {
+        // JSON string
+        let doc1 = try MutableDocument(id: "docJSON1", json: "{\"key1\": 12345}")
+        try self.defaultCollection!.save(document: doc1)
+        let pullDoc1 = try self.defaultCollection!.document(id: "docJSON1")
+        let jsonObj = pullDoc1?.toJSON().toJSONObj() as! [String: Any]
+        
+        XCTAssertEqual(jsonObj["key1"] as! Int, 12345)
+        
+        // DictObject
+        let doc2 = createDocument("docJSON2")
+        let dict2 = MutableDictionaryObject()
+        dict2.setValue(12345, forKey: "key1")
+        doc2.setValue(dict2, forKey: "dict")
+        
+        try self.defaultCollection!.save(document: doc2)
+        let pullDoc2 = try self.defaultCollection!.document(id: "docJSON2")
+        let pullDict2 = pullDoc2!.dictionary(forKey: "dict")
+
+        XCTAssertEqual(pullDict2!.int(forKey: "key1"), 12345)
+
+        // Swift Dict
+        let dict3: [String: Any] = ["key1": 12345];
+        let json = MutableDictionaryObject(data: dict3)
+        XCTAssertEqual(json.int(forKey: "key1"), 12345)
+        XCTAssert(json.toDictionary() == dict3)
+        
+        let doc3 = createDocument("doc3")
+        doc3.setValue(json, forKey: "json")
+        XCTAssert(doc3.dictionary(forKey: "json")! === json)
+        
+        try self.defaultCollection!.save(document: doc3)
+        let pullDoc3 = try self.defaultCollection!.document(id: "doc3")
+        let pulljson = pullDoc3!.dictionary(forKey: "json")!
+        XCTAssertEqual(pulljson.int(forKey: "key1"), 12345)
+    }
+    
+    
     func testDocumentToJSON() throws {
         let json = try getRickAndMortyJSON()
         var mDoc = try MutableDocument(id: "doc", json: json)
