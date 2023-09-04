@@ -1598,6 +1598,35 @@ class DocumentTest: CBLTestCase {
     
     // MARK: toJSON
     
+    // CBL-4855
+    func testJSONNumber () throws {
+        // assigned type [String: Any] -> key1 Int and key2 Double
+        let dict1 : [String : Any] = ["key1": 12345, "key2": 10.5]
+        XCTAssert(type(of: dict1["key1"]!) == Int.self)
+        let mdoc1 = MutableDocument(id: "doc1", data: dict1)
+        try self.defaultCollection!.save(document: mdoc1)
+        let doc1 = try self.defaultCollection!.document(id: "doc1")!
+        let json1 = doc1.toJSON()
+        XCTAssertEqual("{\"key1\":12345,\"key2\":10.5}", json1)
+        
+        // no type -> Swift will assign a type to suit both -> Double
+        let dict2 = ["key1": 12345, "key2": 10.5]
+        XCTAssert(type(of: dict2["key1"]!) == Double.self)
+        let mdoc2 = MutableDocument(id: "doc2", data: dict2)
+        try self.defaultCollection!.save(document: mdoc2)
+        let doc2 = try self.defaultCollection!.document(id: "doc2")!
+        let json2 = doc2.toJSON()
+        XCTAssertEqual("{\"key1\":12345.0,\"key2\":10.5}", json2)
+        
+        // JSONSerialization - assigned type [String: Any]
+        let dict3 = try JSONSerialization.jsonObject(with: "{\"key1\": 12345, \"key2\": 10.5 }".data(using: .utf8)!, options: []) as! [String : Any]
+        let mdoc3 = MutableDocument(id: "doc3", data: dict3)
+        try self.defaultCollection!.save(document: mdoc3)
+        let doc3 = try self.defaultCollection!.document(id: "doc3")!
+        let json3 = doc3.toJSON()
+        XCTAssertEqual("{\"key1\":12345,\"key2\":10.5}", json3)
+    }
+    
     func testDocumentToJSON() throws {
         let json = try getRickAndMortyJSON()
         var mDoc = try MutableDocument(id: "doc", json: json)
