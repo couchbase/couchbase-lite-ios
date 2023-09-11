@@ -796,7 +796,7 @@ static void throwIfNotOpenError(NSError* error) {
         C4Error c4err = {};
         C4Collection* c4col = c4db_getCollection(_c4db, spec, &c4err);
         if (!c4col) {
-            if (c4err.code != kC4ErrorNotFound && c4err.domain == LiteCoreDomain) {
+            if (!(c4err.code == kC4ErrorNotFound && c4err.domain == LiteCoreDomain)) {
                 CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
                         self, scopeName, name, c4err.domain, c4err.code);
                 convertError(c4err, error);
