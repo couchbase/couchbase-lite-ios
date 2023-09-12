@@ -5566,7 +5566,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\necho \"Private headers removed\"\n";
 		};
 		93CED8D52048B3D600E6F0A4 /* Remove private headers */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5581,7 +5581,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\necho \"Private headers removed\"\n";
 		};
 		93D118ED1F560232000F6D3E /* Check Git Commit */ = {
 			isa = PBXShellScriptBuildPhase;
