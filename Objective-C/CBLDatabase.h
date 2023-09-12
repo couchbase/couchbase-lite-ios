@@ -18,9 +18,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CBLLogger.h>
-#import <CBLQueryFactory.h>
-#import <CBLCollectionTypes.h>
+#import "CBLLogger.h"
+#import "CBLQueryFactory.h"
+#import "CBLCollectionTypes.h"
 @class CBLBlob;
 @class CBLCollection;
 @class CBLDatabaseChange;

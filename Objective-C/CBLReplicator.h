@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CBLReplicatorTypes.h>
+#import "CBLReplicatorTypes.h"
 
 @class CBLCollection;
 @class CBLDatabase;

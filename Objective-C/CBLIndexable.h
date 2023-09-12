@@ -17,8 +17,8 @@
 //  limitations under the License.
 //
 
-#import <CBLIndexConfiguration.h>
-#import <CBLIndex.h>
+#import "CBLIndexConfiguration.h"
+#import "CBLIndex.h"
 
 NS_ASSUME_NONNULL_BEGIN
 /** The Indexable interface defines a set of functions for managing the query indexes. */

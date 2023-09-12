@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CBLIndexConfiguration.h>
+#import "CBLIndexConfiguration.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

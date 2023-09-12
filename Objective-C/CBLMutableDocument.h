@@ -18,8 +18,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CBLDocument.h>
-#import <CBLMutableDictionary.h>
+#import "CBLDocument.h"
+#import "CBLMutableDictionary.h"
 @class CBLDatabase;
 
 NS_ASSUME_NONNULL_BEGIN

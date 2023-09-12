@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CBLIndex.h>
+#import "CBLIndex.h"
 @class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
