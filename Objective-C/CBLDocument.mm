@@ -174,7 +174,7 @@ using namespace fleece;
         }
         _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
         [db safeBlock:^{
-            _dict = _root->asNative();
+            self->_dict = self->_root->asNative();
         }];
     } else {
         // New document:

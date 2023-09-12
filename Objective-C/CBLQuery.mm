@@ -202,7 +202,7 @@ using namespace fleece;
 
 - (void) dealloc {    
     [self.database safeBlock:^{
-        c4query_release(_c4Query);
+        c4query_release(self->_c4Query);
     }];
 }
 
@@ -236,7 +236,7 @@ using namespace fleece;
             
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
             [self.database safeBlock:^{
-                c4query_setParameters(_c4Query, {params.bytes, params.length});
+                c4query_setParameters(self->_c4Query, {params.bytes, params.length});
             }];
         }
         else
@@ -247,7 +247,7 @@ using namespace fleece;
 - (NSString*) explain: (NSError**)outError {
     __block NSString* result;
     [self.database safeBlock: ^{
-        result = sliceResult2string(c4query_explain(_c4Query));
+        result = sliceResult2string(c4query_explain(self->_c4Query));
     }];
     
     return result;
@@ -258,7 +258,7 @@ using namespace fleece;
     __block C4QueryEnumerator* e;
     __block C4Error c4Err;
     [self.database safeBlock:^{
-        e = c4query_run(_c4Query, kC4SliceNull, &c4Err);
+        e = c4query_run(self->_c4Query, kC4SliceNull, &c4Err);
     }];
     
     if (!e) {
@@ -352,13 +352,13 @@ using namespace fleece;
         __block C4Error c4Err;
         __block C4Query* query;
         [self.database safeBlock:^{
-            if (_language == kC4JSONQuery) {
-                assert(_json);
+            if (self->_language == kC4JSONQuery) {
+                assert(self->_json);
                 query = c4query_new2(self.database.c4db,
-                                     kC4JSONQuery, {_json.bytes, _json.length}, nullptr, &c4Err);
+                                     kC4JSONQuery, {self->_json.bytes, self->_json.length}, nullptr, &c4Err);
             } else {
-                assert(_expressions);
-                CBLStringBytes exp(_expressions);
+                assert(self->_expressions);
+                CBLStringBytes exp(self->_expressions);
                 query = c4query_new2(self.database.c4db, kC4N1QLQuery, exp, nullptr, &c4Err);
             }
         }];

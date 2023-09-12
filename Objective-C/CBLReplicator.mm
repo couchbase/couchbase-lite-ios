@@ -289,17 +289,17 @@ typedef enum {
 
     // Create a C4Replicator:
     [_config.database safeBlock: ^{
-        [_config.database mustBeOpenLocked];
+        [self->_config.database mustBeOpenLocked];
         
         if (remoteURL || !otherDB)
-            _repl = c4repl_new(_config.database.c4db, addr, dbName, params, outErr);
+            self->_repl = c4repl_new(self->_config.database.c4db, addr, dbName, params, outErr);
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB) {
                 [otherDB safeBlock: ^{
                     [otherDB mustBeOpenLocked];
                     
-                    _repl = c4repl_newLocal(_config.database.c4db, otherDB.c4db, params, outErr);
+                    self->_repl = c4repl_newLocal(self->_config.database.c4db, otherDB.c4db, params, outErr);
                 }];
             }
 #else
@@ -718,13 +718,13 @@ static void onDocsEnded(C4Replicator* repl,
     dispatch_async(_conflictQueue, ^{
         [self _resolveConflict: doc];
         CBL_LOCK(self) {
-            if (--_conflictCount == 0 && _deferReplicatorNotification) {
-                if (_rawStatus.level == kC4Stopped) {
-                    Assert(_state == kCBLStateStopping);
+            if (--self->_conflictCount == 0 && self->_deferReplicatorNotification) {
+                if (self->_rawStatus.level == kC4Stopped) {
+                    Assert(self->_state == kCBLStateStopping);
                     [self stopped];
                 }
                 
-                _deferReplicatorNotification = NO;
+                self->_deferReplicatorNotification = NO;
                 [self updateAndPostStatus];
             }
         }
