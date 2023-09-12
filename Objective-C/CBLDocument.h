@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLDictionary.h"
+#import <CBLDictionary.h>
 @class CBLMutableDocument;
 @class CBLCollection;
 

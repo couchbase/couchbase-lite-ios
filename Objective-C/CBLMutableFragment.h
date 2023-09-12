@@ -18,11 +18,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLMutableArray.h"
-#import "CBLMutableArrayFragment.h"
-#import "CBLMutableDictionary.h"
-#import "CBLMutableDictionaryFragment.h"
-#import "CBLFragment.h"
+#import <CBLMutableArray.h>
+#import <CBLMutableArrayFragment.h>
+#import <CBLMutableDictionary.h>
+#import <CBLMutableDictionaryFragment.h>
+#import <CBLFragment.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

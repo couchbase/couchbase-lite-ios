@@ -18,7 +18,7 @@
 //
 
 
-#import "CBLDictionaryFragment.h"
+#import <CBLDictionaryFragment.h>
 @class CBLMutableFragment;
 
 NS_ASSUME_NONNULL_BEGIN

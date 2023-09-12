@@ -17,8 +17,8 @@
 //  limitations under the License.
 //
 
-#import "CBLCollectionChange.h"
-#import "CBLListenerToken.h"
+#import <CBLCollectionChange.h>
+#import <CBLListenerToken.h>
 
 NS_ASSUME_NONNULL_BEGIN
 /**

@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLLogger.h"
+#import <CBLLogger.h>
 @class CBLLogFileConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN

@@ -17,9 +17,9 @@
 //  limitations under the License.
 //
 
-#import "CBLCollectionChangeObservable.h"
-#import "CBLIndexable.h"
-#import "CBLCollectionTypes.h"
+#import <CBLCollectionChangeObservable.h>
+#import <CBLIndexable.h>
+#import <CBLCollectionTypes.h>
 
 @class CBLDocument;
 @class CBLDocumentChange;

@@ -17,8 +17,13 @@
 //  limitations under the License.
 //
 
-#import "CBLReplicatorConfiguration.h"
+#import <CBLReplicatorConfiguration.h>
+
+// This is needed as this file is used for both Obj-C and Swift, Swift requiring <>, while Obj-C is looking for "".
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 #import "CBLConflictResolverBridge.h"
+#pragma clang diagnostic pop
 
 NS_ASSUME_NONNULL_BEGIN
 

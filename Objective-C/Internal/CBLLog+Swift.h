@@ -17,8 +17,8 @@
 //  limitations under the License.
 //
 
-#import "CBLLog.h"
-#import "CBLLogger.h"
+#import <CBLLog.h>
+#import <CBLLogger.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -19,8 +19,8 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
-#import "CBLDocumentFlags.h"
-#import "CBLReplicatorTypes.h"
+#import <CBLDocumentFlags.h>
+#import <CBLReplicatorTypes.h>
 
 @class CBLAuthenticator;
 @class CBLCollection;

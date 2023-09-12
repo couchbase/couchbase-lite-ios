@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLDictionaryFragment.h"
+#import <CBLDictionaryFragment.h>
 @class CBLDocument;
 
 NS_ASSUME_NONNULL_BEGIN

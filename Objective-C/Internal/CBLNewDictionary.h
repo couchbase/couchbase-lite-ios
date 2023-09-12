@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "CBLMutableDictionary.h"
+#import <CBLMutableDictionary.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

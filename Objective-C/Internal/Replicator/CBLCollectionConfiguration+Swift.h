@@ -17,9 +17,9 @@
 //  limitations under the License.
 //
 
-#import "CBLCollectionConfiguration.h"
-#import "CBLConflictResolver.h"
-#import "CBLConflictResolverBridge.h"
+#import <CBLCollectionConfiguration.h>
+#import <CBLConflictResolver.h>
+#import <CBLConflictResolverBridge.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

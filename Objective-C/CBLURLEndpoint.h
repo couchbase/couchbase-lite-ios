@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLEndpoint.h"
+#import <CBLEndpoint.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

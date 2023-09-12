@@ -18,7 +18,7 @@
 //
 
 #pragma once
-#import "CBLDocumentFlags.h"
+#import <CBLDocumentFlags.h>
 
 @class CBLDocument;
 

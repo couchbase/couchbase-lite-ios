@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLAuthenticator.h"
+#import <CBLAuthenticator.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
