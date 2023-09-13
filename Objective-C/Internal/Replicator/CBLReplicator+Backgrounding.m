@@ -74,7 +74,7 @@
 - (void) endCurrentBackgroundTask {
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([self.bgMonitor hasBackgroundTask]) {
-            _deepBackground = YES;
+            self->_deepBackground = YES;
             [self updateSuspended];
             CBLLogInfo(Sync, @"%@: ending background task as idle.", self);
             [self.bgMonitor endBackgroundTask];  // will probably suspend the process immediately

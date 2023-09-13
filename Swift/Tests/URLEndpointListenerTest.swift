@@ -803,7 +803,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let urls = self.listener!.urls!
         
         /// Link local addresses cannot be assigned via network interface because they don't map to any given interface.
-        let notLinkLocal: [URL] = urls.filter { !$0.host!.contains("fe80::") && !$0.host!.contains(".local")}
+        let notLinkLocal: [URL] = urls.filter { !$0.host!.contains(":") && !$0.host!.contains(".local")}
         
         for (i, url) in notLinkLocal.enumerated() {
             // separate db instance!

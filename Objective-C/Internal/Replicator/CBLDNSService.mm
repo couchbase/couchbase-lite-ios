@@ -174,7 +174,7 @@
         if (!_timeoutBlock) {
             _timeoutBlock = dispatch_block_create(DISPATCH_BLOCK_ASSIGN_CURRENT, ^{
                 @synchronized (self) {
-                    CBLWarnError(WebSocket, @"%@: Looking up '%@' timeout", self, _host);
+                    CBLWarnError(WebSocket, @"%@: Looking up '%@' timeout", self, self->_host);
                     [self notifyError: kDNSServiceErr_Timeout];
                 }
             });
@@ -215,7 +215,7 @@
     
     if (info) {
         dispatch_async(_dnsQueue, ^{
-            [_delegate didResolveSuccessWithAddress: info];
+            [self->_delegate didResolveSuccessWithAddress: info];
         });
         return true;
     }

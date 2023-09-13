@@ -95,16 +95,16 @@ namespace cbl {
 - (id) nextObject {
     __block id row = nil;
     [self.database safeBlock: ^{
-        if (_isAllEnumerated)
+        if (self->_isAllEnumerated)
             return;
         
-        if (c4queryenum_next(_c4enum, &_error)) {
+        if (c4queryenum_next(self->_c4enum, &self->_error)) {
             row = self.currentObject;
-        } else if (_error.code) {
-            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
+        } else if (self->_error.code) {
+            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, self->_error.domain, self->_error.code);
         } else {
-            _isAllEnumerated = YES;
-            CBLLogInfo(Query, @"End of query enumeration (%p)", _c4enum);
+            self->_isAllEnumerated = YES;
+            CBLLogInfo(Query, @"End of query enumeration (%p)", self->_c4enum);
         }
     }];
     return row;
@@ -144,8 +144,8 @@ namespace cbl {
     
     __block id result;
     [db safeBlock: ^{
-        if (!c4queryenum_seek(_c4enum, index, &_error)) {
-            NSString* message = sliceResult2string(c4error_getMessage(_error));
+        if (!c4queryenum_seek(self->_c4enum, index, &self->_error)) {
+            NSString* message = sliceResult2string(c4error_getMessage(self->_error));
             [NSException raise: NSInternalInconsistencyException
                         format: @"CBLQueryEnumerator couldn't get a value: %@", message];
         }
@@ -172,7 +172,7 @@ namespace cbl {
     
     CBLDatabase* db = self.database;
     [db safeBlock: ^{
-        newEnum = c4queryenum_refresh(_c4enum, &c4error);
+        newEnum = c4queryenum_refresh(self->_c4enum, &c4error);
     }];
     if (!newEnum) {
         if (c4error.code)

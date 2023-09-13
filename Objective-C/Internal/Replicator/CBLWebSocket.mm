@@ -300,9 +300,9 @@ static void doDispose(C4Socket* s) {
 
 - (void) start {
     dispatch_async(_queue, ^{
-        if (_logic.error) {
+        if (self->_logic.error) {
             // PAC resolution must have failed. Give up.
-            [self closeWithError: _logic.error];
+            [self closeWithError: self->_logic.error];
             return;
         }
         [self _connect];
@@ -389,7 +389,7 @@ static void doDispose(C4Socket* s) {
 
 - (void) didResolveSuccessWithAddress: (AddressInfo*)info {
     dispatch_async(_queue, ^{
-        if (_dnsService) {
+        if (self->_dnsService) {
             CBLLogVerbose(WebSocket, @"%@: Host '%@' was resolved as ip=%@, family=%d",
                           self, info.host, info.addrstr, info.addr->sa_family);
             [self _socketConnect: info];
@@ -399,7 +399,7 @@ static void doDispose(C4Socket* s) {
 
 - (void) didResolveFailWithError: (NSError*)error {
     dispatch_async(_queue, ^{
-        if (_dnsService) {
+        if (self->_dnsService) {
             CBLWarnError(WebSocket, @"%@: Host was failed to resolve with error '%@'",
                          self, error.my_compactDescription);
             [self closeWithError: error];
@@ -453,13 +453,13 @@ static void doDispose(C4Socket* s) {
         CBLLogVerbose(WebSocket, @"%@: Connect to IP address %@", self, info.addrstr);
         int status = connect(sockfd, info.addr, info.length);
         if (status == 0) {
-            dispatch_async(_queue, ^{
-                if (_sockfd < 0)
+            dispatch_async(self->_queue, ^{
+                if (self->_sockfd < 0)
                     return; // Already disconnected
                 
                 // Enable non-blocking mode on the socket:
-                int flags = fcntl(_sockfd, F_GETFL);
-                if (fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
+                int flags = fcntl(self->_sockfd, F_GETFL);
+                if (fcntl(self->_sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
                     int errNo = errno;
                     NSString* msg = $sprintf(@"Failed to enable non-blocking mode with errno %d", errNo);
                     CBLWarnError(WebSocket, @"%@: %@", self, msg);
@@ -470,7 +470,7 @@ static void doDispose(C4Socket* s) {
                 // Create a pair steam with the socket:
                 CFReadStreamRef readStream;
                 CFWriteStreamRef writeStream;
-                CFStreamCreatePairWithSocket(kCFAllocatorDefault, _sockfd, &readStream, &writeStream);
+                CFStreamCreatePairWithSocket(kCFAllocatorDefault, self->_sockfd, &readStream, &writeStream);
                 
                 CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
                 CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
@@ -487,7 +487,7 @@ static void doDispose(C4Socket* s) {
                                      info.interface, errNo);
             CBLWarnError(WebSocket, @"%@: %@", self, msg);
             NSError* error = posixError(errNo, msg);
-            dispatch_async(_queue, ^{
+            dispatch_async(self->_queue, ^{
                 [self closeWithError: error];
             });
         }
@@ -845,7 +845,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     dispatch_async(_queue, ^{
         bool wasThrottled = self.readThrottled;
         self->_receivedBytesPending -= byteCount;
-        if (_hasBytes && wasThrottled && !self.readThrottled)
+        if (self->_hasBytes && wasThrottled && !self.readThrottled)
             [self doRead];
     });
 }
@@ -854,7 +854,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeSocket {
     CBLLogInfo(WebSocket, @"%@: CBLWebSocket closeSocket requested", self);
     dispatch_async(_queue, ^{
-        if (_in || _out || _sockfd >= 0) {
+        if (self->_in || self->_out || self->_sockfd >= 0) {
             [self closeWithError: nil];
         }
     });

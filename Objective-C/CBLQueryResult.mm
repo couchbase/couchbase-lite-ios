@@ -293,7 +293,7 @@ using namespace fleece;
     
     __block id result;
     [_rs.database safeBlock:^{
-        MRoot<id> root(_context, value, false);
+        MRoot<id> root(self->_context, value, false);
         result = root.asNative();
     }];
     return result;
