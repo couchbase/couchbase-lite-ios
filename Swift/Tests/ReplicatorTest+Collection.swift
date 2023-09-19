@@ -634,7 +634,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         mdoc1b.setString("update1b", forKey: "update")
         try col1b.save(document: mdoc1b)
         
-        var mdoc2b = try col2b.document(id: "doc2")!.toMutable()
+        let mdoc2b = try col2b.document(id: "doc2")!.toMutable()
         mdoc2b.setString("update2b", forKey: "update")
         try col2b.save(document: mdoc2b)
         
