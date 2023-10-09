@@ -361,6 +361,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
     }
     
+    
+    // Disabled for version-vectors
     func testDocumentReplicationEventWithPullConflict() throws {
         let doc1a = MutableDocument(id: "doc1")
         doc1a.setString("Tiger", forKey: "species")

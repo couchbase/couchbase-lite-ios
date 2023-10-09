@@ -278,6 +278,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(["docType": "new-with-same-ID"] == value)
     }
     
+    // Disabled for version-vectors
     func testDocumentReplicationEventForConflictedDocs() throws {
         var resolver: TestConflictResolver!
         
@@ -481,7 +482,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         run(config: config, expectedError: nil)
         XCTAssert(try defaultCollection!.document(id: docID)!.toDictionary() == remoteData)
     }
-    
+   
+    // Disabled for version-vectors
     func testConflictResolutionDefault() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]

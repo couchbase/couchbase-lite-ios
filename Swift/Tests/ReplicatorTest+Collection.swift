@@ -541,6 +541,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 5)
     }
     
+    // Disabled for version-vectors
     func testCollectionDefaultConflictResolver() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")

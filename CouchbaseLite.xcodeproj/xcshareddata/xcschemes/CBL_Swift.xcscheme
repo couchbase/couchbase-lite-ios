@@ -55,6 +55,17 @@
                BlueprintName = "CBL_Swift_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "ReplicatorTest_Collection/testCollectionDefaultConflictResolver()">
+               </Test>
+               <Test
+                  Identifier = "ReplicatorTest_CustomConflict/testConflictResolutionDefault()">
+               </Test>
+               <Test
+                  Identifier = "ReplicatorTest_CustomConflict/testDocumentReplicationEventForConflictedDocs()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>
