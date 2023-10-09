@@ -64,6 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSUInteger generation;
 
+@property (nonatomic, readonly) NSUInteger timestamp;
+
 @property (readonly, nonatomic) BOOL isDeleted;
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;

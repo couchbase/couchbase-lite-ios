@@ -195,6 +195,10 @@ using namespace fleece;
     return super.generation + !!self.changed;
 }
 
+- (NSUInteger) timestamp {
+    return super.timestamp + !!self.changed;
+}
+
 - (NSString*) generateID {
     char docID[kC4GeneratedIDLength + 1];
     c4doc_generateID(docID, sizeof(docID));

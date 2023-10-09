@@ -307,6 +307,13 @@ using namespace fleece;
     }
 }
 
+- (NSUInteger) timestamp {
+    // CBLMutableDocument overrides this
+    CBL_LOCK(self) {
+        return _c4Doc != nil ? c4rev_getTimestamp(_c4Doc.revID) : 0;
+    }
+}
+
 - (BOOL) isDeleted {
     CBL_LOCK(self) {
         return _c4Doc != nil ? (_c4Doc.revFlags & kRevDeleted) != 0 : NO;
