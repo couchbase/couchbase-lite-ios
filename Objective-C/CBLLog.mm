@@ -84,7 +84,7 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"Query": @(kCBLLogDomainQuery),
                               @"Sync": @(kCBLLogDomainReplicator),
                               @"SyncBusy": @(kCBLLogDomainReplicator),
-                              @"Changes": @(kCBLLogDomainReplicator),
+                              @"Changes": @(kCBLLogDomainDatabase),
                               @"BLIP": @(kCBLLogDomainNetwork),
                               @"WS": @(kCBLLogDomainNetwork),
                               @"BLIPMessages": @(kCBLLogDomainNetwork),
