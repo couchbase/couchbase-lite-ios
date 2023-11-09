@@ -18,6 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
+#import "CBLBlockConflictResolver.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicator+Backgrounding.h"
@@ -347,9 +348,11 @@
     for (int i = 0; i < numRounds; i++) {
         [r appBackgrounding];
         [self waitForExpectations: @[backgroundExps[i]] timeout: 5.0];
+        Assert(r.conflictResolutionSuspended);
         
         [r appForegrounding];
         [self waitForExpectations: @[foregroundExps[i+1]] timeout: 5.0];
+        AssertFalse(r.conflictResolutionSuspended);
     }
     
     [r stop];
@@ -445,6 +448,84 @@
     
     [r removeChangeListenerWithToken: token];
     r = nil;
+}
+
+- (void) testSuspendConflictResolution {
+    // Prepare conflicts:
+    NSUInteger numDocs = 1000;
+    for (NSUInteger i = 0; i < numDocs; i++) {
+        NSError* error;
+        NSString* docID = [NSString stringWithFormat: @"doc-%lu", (unsigned long)i];
+        CBLMutableDocument *doc1a = [[CBLMutableDocument alloc] initWithID: docID];
+        [doc1a setString: self.db.name forKey: @"name"];
+        Assert([self.db saveDocument: doc1a error: &error]);
+        
+        CBLMutableDocument *doc1b = [[CBLMutableDocument alloc] initWithID: docID];
+        [doc1b setString: self.otherDB.name forKey: @"name"];
+        Assert([self.otherDB saveDocument: doc1b error: &error]);
+    }
+    
+    NSLock* lock = [[NSLock alloc] init];
+    
+    __block NSUInteger resolvingCount = 0;
+    XCTestExpectation* resolving = [self allowOverfillExpectationWithDescription: @"Resolver was called"];
+    CBLBlockConflictResolver* resolver = [[CBLBlockConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* conflict) {
+        [resolving fulfill];
+        
+        [lock lock];
+        resolvingCount++;
+        [lock unlock];
+        
+        return conflict.remoteDocument;
+    }];
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    config.conflictResolver = resolver;
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    XCTestExpectation* offline = [self expectationWithDescription: @"Offline"];
+    XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
+    
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        NSLog(@">>> %d (%llu/%llu) %@", change.status.activity, change.status.progress.completed, change.status.progress.total, change.status.error);
+        if (change.status.activity == kCBLReplicatorOffline) {
+            [offline fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopped fulfill];
+        }
+    }];
+    
+    [r start];
+    
+    // Wait until there is at least one conflict resolver is called.
+    [self waitForExpectations: @[resolving] timeout: 10.0];
+    
+    // Now suspend.
+    [r setSuspended: YES];
+    
+    // Wait until no pending conflcit resolver:
+    NSDate* checkTimeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
+    while (r.pendingConflictCount != 0 && checkTimeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]]) {
+            break;
+        }
+    }
+    
+    AssertEqual(r.pendingConflictCount, 0);
+    Assert(resolvingCount > 0);
+    Assert(resolvingCount < numDocs);
+    
+    // Wait until suspended:
+    [self waitForExpectations: @[offline] timeout: 10.0];
+    
+    // Stop the replicator:
+    [r stop];
+    
+    // Wait until the replicator is stopped:
+    [self waitForExpectations: @[stopped] timeout: 5.0];
+    
+    [r removeChangeListenerWithToken: token];
 }
 
 #endif // TARGET_OS_IPHONE
