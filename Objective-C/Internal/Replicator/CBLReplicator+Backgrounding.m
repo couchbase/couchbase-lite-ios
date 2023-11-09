@@ -27,7 +27,12 @@
 
 @implementation CBLReplicator (Backgrounding)
 
-- (void) setupBackgrounding {
+- (void) startBackgroundingMonitor {
+    if (self.bgMonitor) {
+        CBLLogInfo(Sync, @"%@: Ignored starting backgrounding monitor as already started", self);
+        return;
+    }
+    
     CBLLogInfo(Sync, @"%@: Starting backgrounding monitor...", self);
     NSFileProtectionType prot = self.fileProtection;
     if ([prot isEqual: NSFileProtectionComplete] ||
@@ -55,7 +60,12 @@
     return attrs[NSFileProtectionKey] ?: NSFileProtectionNone;
 }
 
-- (void) endBackgrounding {
+- (void) endBackgroundingMonitor {
+    if (!self.bgMonitor) {
+        CBLLogInfo(Sync, @"%@: Ignored ending backgrounding monitor as not started", self);
+        return;
+    }
+    
     CBLLogInfo(Sync, @"%@: Ending backgrounding monitor...", self);
     [NSNotificationCenter.defaultCenter removeObserver: self
                                                   name: UIApplicationProtectedDataWillBecomeUnavailable
@@ -64,6 +74,7 @@
                                                   name: UIApplicationProtectedDataDidBecomeAvailable
                                                 object: nil];
     [self.bgMonitor stop];
+    self.bgMonitor = nil;
 }
 
 // Called when the replicator goes idle
@@ -92,8 +103,9 @@
 
 - (void) appForegrounding {
     BOOL ended = [self.bgMonitor endBackgroundTask];
-    if (ended)
+    if (ended) {
         CBLLogInfo(Sync, @"%@: App foregrounding, ending background task.", self);
+    }
     if (_deepBackground) {
         _deepBackground = NO;
         [self updateSuspended];
@@ -108,13 +120,14 @@
 
 // Called when the app is about to lose access to files:
 - (void) fileAccessChanged: (NSNotification*)n {
-    CBLLogInfo(Sync, @"%@: Device locked, database unavailable.", self);
+    CBLLogInfo(Sync, @"%@: Device lock status and file access changed to %@", self, n.name);
     _filesystemUnavailable = [n.name isEqual: UIApplicationProtectedDataWillBecomeUnavailable];
     [self updateSuspended];
 }
 
 - (void) updateSuspended {
     BOOL suspended = (_filesystemUnavailable || _deepBackground);
+    CBLLogInfo(Sync, @"%@: Update suspended status to '%@'", self, suspended ? @"suspended" : @"resumed");
     self.suspended = suspended;
 }
 

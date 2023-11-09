@@ -56,7 +56,9 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property (readonly, atomic) BOOL active;
-@property (nonatomic) MYBackgroundMonitor* bgMonitor;
+@property (readonly, atomic) BOOL conflictResolutionSuspended;
+@property (readonly, atomic) NSUInteger pendingConflictCount;
+@property (nonatomic, nullable) MYBackgroundMonitor* bgMonitor;
 @property (readonly, atomic) dispatch_queue_t dispatchQueue;
 
 // For CBLWebSocket to set the current server certificate
