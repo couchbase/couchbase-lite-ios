@@ -104,6 +104,7 @@ typedef enum {
         _progressLevel = kCBLProgressLevelOverall;
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
+        _pendingConflicts = [NSMutableArray array];
         _status = [[CBLReplicatorStatus alloc] initWithStatus: {kC4Stopped, {}, {}}];
         
         NSString* qName = self.description;
@@ -670,7 +671,7 @@ static void onDocsEnded(C4Replicator* repl,
 
 // Called inside the lock
 - (void) scheduleConflictResolutionForDocument: (CBLReplicatedDocument*)doc {
-    if (_conflictResolutionSuspended) {
+    if (_conflictResolutionSuspended || _state == kCBLStateStopped) {
         return;
     }
     
