@@ -222,6 +222,12 @@
 		27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
 		27F9619C1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
+		40BC51EF2AFC39ED0090EDD5 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9343F00F207D611600F19A89 /* CouchbaseLite.framework */; };
+		40BC51F02AFC39ED0090EDD5 /* CouchbaseLite.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9343F00F207D611600F19A89 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		40BC51F82AFC40F10090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
+		40BC51F92AFC40F40090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
+		40BC51FA2AFC56BB0090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
+		40BC51FB2AFC56BC0090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
 		69002EB9234E693F00776107 /* CBLErrorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 69002EA9234E693F00776107 /* CBLErrorMessage.h */; };
 		69002EBA234E693F00776107 /* CBLErrorMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 69002EB8234E693F00776107 /* CBLErrorMessage.m */; };
 		69002EBB234E695400776107 /* CBLErrorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 69002EA9234E693F00776107 /* CBLErrorMessage.h */; };
@@ -877,7 +883,6 @@
 		9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 931C14691EAAF08C0094F9B2 /* FragmentTest.m */; };
 		9343F146207D61EC00F19A89 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
-		9343F148207D61EC00F19A89 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		9343F14A207D61EC00F19A89 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		9343F14B207D61EC00F19A89 /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
 		9343F157207D62C900F19A89 /* PerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6381E3FFBC0005F90DD /* PerfTest.mm */; };
@@ -1616,6 +1621,13 @@
 			remoteGlobalIDString = 27DF7D631F4236500022F3DF;
 			remoteInfo = SQLite;
 		};
+		40BC51F12AFC39ED0090EDD5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9343EF2A207D611600F19A89;
+			remoteInfo = CBL_EE_ObjC;
+		};
 		9308F40D1E64B24700F53EE4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -1832,6 +1844,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		40BC51F32AFC39ED0090EDD5 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				40BC51F02AFC39ED0090EDD5 /* CouchbaseLite.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		93095B0A246BC325005633B4 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1994,6 +2017,8 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		40BC51F42AFC40930090EDD5 /* CBLBlockConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlockConflictResolver.h; sourceTree = "<group>"; };
+		40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
 		69002EB8234E693F00776107 /* CBLErrorMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLErrorMessage.m; sourceTree = "<group>"; };
 		6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_xcframework.sh; sourceTree = "<group>"; };
@@ -2540,7 +2565,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9343F148207D61EC00F19A89 /* CouchbaseLite.framework in Frameworks */,
+				40BC51EF2AFC39ED0090EDD5 /* CouchbaseLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2780,6 +2805,8 @@
 				930C7F8120FE4F7400C74A12 /* CBLMockConnectionErrorLogic.h */,
 				930C7F7E20FE4F7400C74A12 /* CBLMockConnectionErrorLogic.m */,
 				930C7F8020FE4F7400C74A12 /* CBLMockConnectionLifecycleLocation.h */,
+				40BC51F42AFC40930090EDD5 /* CBLBlockConflictResolver.h */,
+				40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -4666,11 +4693,13 @@
 				9343F138207D61EC00F19A89 /* Sources */,
 				9343F147207D61EC00F19A89 /* Frameworks */,
 				9343F149207D61EC00F19A89 /* Resources */,
+				40BC51F32AFC39ED0090EDD5 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				9382351A207D80490022328B /* PBXTargetDependency */,
+				40BC51F22AFC39ED0090EDD5 /* PBXTargetDependency */,
 			);
 			name = CBL_EE_ObjC_Tests;
 			productName = CouchbaseLiteTests;
@@ -5942,6 +5971,7 @@
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
 				1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
+				40BC51FA2AFC56BB0090EDD5 /* CBLBlockConflictResolver.m in Sources */,
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
 				93F714212490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
 				9343F142207D61EC00F19A89 /* ReplicatorTest.m in Sources */,
@@ -5995,6 +6025,7 @@
 				1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
+				40BC51FB2AFC56BC0090EDD5 /* CBLBlockConflictResolver.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
 				1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */,
@@ -6088,6 +6119,7 @@
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
 				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
 				938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */,
+				40BC51F92AFC40F40090EDD5 /* CBLBlockConflictResolver.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6214,6 +6246,7 @@
 				1A4160C62283673E0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */,
+				40BC51F82AFC40F10090EDD5 /* CBLBlockConflictResolver.m in Sources */,
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				1AA3D78422AB07C50098E16B /* CustomLogger.m in Sources */,
@@ -6290,6 +6323,11 @@
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 27BF03371FB62933003D5BB8 /* PBXContainerItemProxy */;
+		};
+		40BC51F22AFC39ED0090EDD5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9343EF2A207D611600F19A89 /* CBL_EE_ObjC */;
+			targetProxy = 40BC51F12AFC39ED0090EDD5 /* PBXContainerItemProxy */;
 		};
 		9308F40E1E64B24700F53EE4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -6688,6 +6726,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -6866,6 +6905,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8155,6 +8195,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
@@ -8172,6 +8213,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
