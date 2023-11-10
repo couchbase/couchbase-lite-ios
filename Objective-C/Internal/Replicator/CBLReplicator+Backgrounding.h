@@ -23,9 +23,9 @@
 
 @interface CBLReplicator (Backgrounding)
 
-- (void) setupBackgrounding;
+- (void) startBackgroundingMonitor;
 
-- (void) endBackgrounding;
+- (void) endBackgroundingMonitor;
 
 - (void) endCurrentBackgroundTask;
 
