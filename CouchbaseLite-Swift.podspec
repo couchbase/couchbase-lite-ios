@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                  = 'CouchbaseLite-Swift'
-  s.version               = '3.1.0'
+  s.version               = '3.1.3'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'https://github.com/couchbase/couchbase-lite-ios'
   s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
@@ -17,6 +17,6 @@ Pod::Spec.new do |s|
   s.osx.preserve_paths = 'frameworks/CBL_Swift/macOS/CouchbaseLiteSwift.framework'
   s.osx.vendored_frameworks = 'frameworks/CBL_Swift/macOS/CouchbaseLiteSwift.framework'
 
-  s.ios.deployment_target  = '9.0'
-  s.osx.deployment_target  = '10.11'
+  s.ios.deployment_target  = '11.0'
+  s.osx.deployment_target  = '10.14'
 end
