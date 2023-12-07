@@ -254,7 +254,7 @@
     Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
-    NSTimeInterval expiryTime = 120;
+    NSTimeInterval expiryTime = 50;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
