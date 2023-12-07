@@ -3,9 +3,10 @@
   <div class="task-name-container">
     <a name="/{{uid}}"></a>
     <a name="//apple_ref/{{language_stub}}/Section/{{name}}" class="dashAnchor"></a>
-    <a href="#/{{uid}}">
-      <h3 class="section-name">{{name}}</h3>
-    </a>
+    <div class="section-name-container">
+      <a class="section-name-link" href="#/{{uid}}"></a>
+      <h3 class="section-name">{{{name_html}}}</h3>
+    </div>
   </div>
   {{/name}}
   <ul>
@@ -15,23 +16,29 @@
         <code>
         <a name="/{{usr}}"></a>
         <a name="//apple_ref/{{language_stub}}/{{dash_type}}/{{name}}" class="dashAnchor"></a>
-        <a class="token" href="#/{{usr}}">{{name}}</a>
+        {{#direct_link}}
+        <a class="direct-link{{#usage_discouraged}} discouraged{{/usage_discouraged}}" href="{{{path_to_root}}}{{{url}}}">{{name}}</a>
         </code>
-        {{#default_impl_abstract}}
+        {{/direct_link}}
+        {{^direct_link}}
+        {{^usage_discouraged}}
+        <a class="token" href="#/{{usr}}">{{{name_html}}}</a>
+        {{/usage_discouraged}}
+        {{#usage_discouraged}}
+        <a class="token discouraged" href="#/{{usr}}">{{{name_html}}}</a>
+        {{/usage_discouraged}}
+        </code>
+        {{#declaration_note}}
           <span class="declaration-note">
-            Default implementation
+            {{.}}
           </span>
-        {{/default_impl_abstract}}
-        {{#from_protocol_extension}}
-          <span class="declaration-note">
-            Extension method
-          </span>
-        {{/from_protocol_extension}}
+        {{/declaration_note}}
       </div>
       <div class="height-container">
         <div class="pointer-container"></div>
         <section class="section">
           <div class="pointer"></div>
+          {{> deprecation}}
           {{#abstract}}
           <div class="abstract">
             {{{abstract}}}
@@ -79,12 +86,13 @@
             {{{return}}}
           </div>
           {{/return}}
-          {{#github_token_url}}
+          {{#source_host_item_url}}
           <div class="slightly-smaller">
-            <a href="{{{github_token_url}}}">Show on GitHub</a>
+            <a href="{{{.}}}">Show on {{source_host_name}}</a>
           </div>
-          {{/github_token_url}}
+          {{/source_host_item_url}}
         </section>
+        {{/direct_link}}
       </div>
     </li>
     {{/items}}
