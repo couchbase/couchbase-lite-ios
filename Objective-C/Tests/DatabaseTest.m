@@ -2592,6 +2592,7 @@
     
     // Create in Custom Scope
     c = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    AssertNotNil(c);
     
     // verify
     collections = [self.db collections: @"scope1" error: &error];
@@ -2634,7 +2635,9 @@
     
     // Create in Custom Scope
     c1 = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    AssertNotNil(c1);
     c2 = [self.db createCollectionWithName: @"collection2" scope: @"scope1" error: &error];
+    AssertNotNil(c2);
     
     // verify no duplicate is created.
     collections = [self.db collections: @"scope1" error: &error];

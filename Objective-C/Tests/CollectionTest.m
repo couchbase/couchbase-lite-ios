@@ -470,6 +470,39 @@
     Assert([(@[@"scopeA", @"SCOPEa", kCBLDefaultScopeName]) containsObject: scopes[1].name]);
 }
 
+#pragma mark - Collection Full Name
+
+// Spec: https://docs.google.com/document/d/1nUgaCgXIB3lLViudf6Pw6H9nPa_OeYU6uM_9xAd08M0
+
+- (void) testCollectionFullName {
+    NSError* error;
+    
+    // 3.1 TestGetFullNameFromDefaultCollection
+    CBLCollection* col1 = [self.db defaultCollection: &error];
+    AssertNotNil(col1);
+    AssertEqualObjects(col1.fullName, @"_default._default");
+    
+    // 3.2 TestGetFullNameFromNewCollectionInDefaultScope
+    CBLCollection* col2 = [self.db createCollectionWithName: @"colA" scope: nil error: &error];
+    AssertNotNil(col2);
+    AssertEqualObjects(col2.fullName, @"_default.colA");
+    
+    // 3.3 TestGetFullNameFromNewCollectionInCustomScope
+    CBLCollection* col3 = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col3);
+    AssertEqualObjects(col3.fullName, @"scopeA.colA");
+    
+    // 3.4 TestGetFullNameFromExistingCollectionInDefaultScope
+    CBLCollection* col4 = [self.db collectionWithName: @"colA" scope: nil error: &error];
+    AssertNotNil(col4);
+    AssertEqualObjects(col4.fullName, @"_default.colA");
+    
+    // 3.5 TestGetFullNameFromNewCollectionInCustomScope
+    CBLCollection* col5 = [self.db collectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col5);
+    AssertEqualObjects(col5.fullName, @"scopeA.colA");
+}
+
 #pragma mark - 8.3 Collections and Cross Database Instance
 
 - (void) testCreateThenGetCollectionFromDifferentDatabaseInstance {

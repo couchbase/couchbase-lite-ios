@@ -58,8 +58,11 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// The default scope name constant
     public static let defaultCollectionName: String = kCBLDefaultCollectionName
     
-    /// Collection name.
+    /// Collection's name.
     public var name: String { impl.name }
+    
+    /// Collection's fully qualified name in the '<scope-name>.<collection-name>' format.
+    public var fullName: String { impl.fullName }
     
     /// The scope of the collection.
     public let scope: Scope
