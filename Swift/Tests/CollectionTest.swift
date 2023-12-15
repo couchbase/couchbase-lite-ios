@@ -100,6 +100,37 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(scopes[0].name, Scope.defaultScopeName)
     }
     
+    // MARK: Collection Full Name
+    
+    // Spec: https://docs.google.com/document/d/1nUgaCgXIB3lLViudf6Pw6H9nPa_OeYU6uM_9xAd08M0
+
+    func testCollectionFullName() throws {
+        // 3.1 TestGetFullNameFromDefaultCollection
+        let col1 = try self.db.defaultCollection()
+        XCTAssertNotNil(col1)
+        XCTAssertEqual(col1.fullName, "_default._default")
+        
+        // 3.2 TestGetFullNameFromNewCollectionInDefaultScope
+        let col2 = try self.db.createCollection(name: "colA")
+        XCTAssertNotNil(col2)
+        XCTAssertEqual(col2.fullName, "_default.colA")
+        
+        // 3.3 TestGetFullNameFromNewCollectionInCustomScope
+        let col3 = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(col3)
+        XCTAssertEqual(col3.fullName, "scopeA.colA")
+        
+        // 3.4 TestGetFullNameFromExistingCollectionInDefaultScope
+        let col4 = try self.db.collection(name: "colA")
+        XCTAssertNotNil(col4)
+        XCTAssertEqual(col4!.fullName, "_default.colA")
+        
+        // 3.5 TestGetFullNameFromNewCollectionInCustomScope
+        let col5 = try self.db.collection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(col5)
+        XCTAssertEqual(col5!.fullName, "scopeA.colA")
+    }
+    
     // MARK: 8.2 Collections
     
     func testCreateAndGetCollectionsInDefaultScope() throws {

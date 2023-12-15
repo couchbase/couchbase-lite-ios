@@ -70,8 +70,11 @@ extern NSString* const kCBLDefaultCollectionName;
  */
 @interface CBLCollection : NSObject<CBLCollectionChangeObservable, CBLIndexable, NSCopying>
 
-/** Collection name.*/
+/** Collection's name.*/
 @property (readonly, nonatomic) NSString* name;
+
+/** Collection's fully qualified name in the '<scope-name>.<collection-name>' format. */
+@property (readonly, nonatomic) NSString* fullName;
 
 /** The scope of the collection. */
 @property (readonly, nonatomic) CBLScope* scope;

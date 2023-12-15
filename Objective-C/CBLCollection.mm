@@ -98,16 +98,21 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     return [self.name hash] ^ [self.scope.name hash];
 }
 
+- (id) copyWithZone: (nullable NSZone*)zone {
+    return [[[self class] alloc] initWithDB: _db c4collection: _c4col];
+}
+
+#pragma mark - Properties
+
+- (NSString*) fullName {
+    return $sprintf(@"%@.%@", _scope.name, _name);
+}
+
 - (uint64_t) count {
     CBL_LOCK(_mutex) {
         _count = c4coll_isValid(_c4col) ? c4coll_getDocumentCount(_c4col) : 0;
     }
-    
     return _count;
-}
-
-- (id) copyWithZone: (nullable NSZone*)zone {
-    return [[[self class] alloc] initWithDB: _db c4collection: _c4col];
 }
 
 #pragma mark - Indexable
@@ -494,10 +499,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     C4Slice name = c4str([_name cStringUsingEncoding: NSUTF8StringEncoding]);
     C4Slice scopeName = c4str([_scope.name cStringUsingEncoding: NSUTF8StringEncoding]);
     return { .name = name, .scope = scopeName };
-}
-
-- (NSString*) fullName {
-    return $sprintf(@"%@.%@", _scope.name, _name);
 }
 
 - (BOOL) isEqual: (id)object {
