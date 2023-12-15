@@ -25,6 +25,7 @@
 #import "CBLErrorMessage.h"
 #import "CBLVersion.h"
 #import "CBLCollection+Internal.h"
+#import "CBLScope+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
 #import "CBLDefaults.h"
 
@@ -80,9 +81,7 @@
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                           target: (id<CBLEndpoint>)target
-{
+- (instancetype) initWithDatabase: (CBLDatabase*)database target: (id<CBLEndpoint>)target {
     CBLAssertNotNil(database);
     CBLAssertNotNil(target);
     
@@ -91,11 +90,10 @@
         _database = database;
         _target = target;
         
-        // add default collection
-        CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
-        CBLCollectionConfiguration* defaultCollectionConfig = [[CBLCollectionConfiguration alloc] init];
-        [self addCollection: defaultCollection config: defaultCollectionConfig];
-        
+        // Add default collection
+        CBLCollection* collection = [_database defaultCollection: nil];
+        CBLAssertNotNil(collection);
+        [self addCollection: collection config: nil];
     }
     return self;
 }
@@ -167,14 +165,17 @@
     _acceptParentDomainCookies = acceptParentDomainCookies;
 }
 
-- (CBLCollectionConfiguration*) defaultCollectionConfig {
-    CBLCollection* defaultCollection = [_database defaultCollectionOrThrow];
-    return _collectionConfigs[defaultCollection];
-}
-
-- (CBLCollectionConfiguration*) defaultCollectionConfigOrThrow {
-    CBLCollectionConfiguration* config = [self defaultCollectionConfig];
-    if (!config) {
+- (CBLCollectionConfiguration*) defaultCollectionConfig: (BOOL)mustExist {
+    __block CBLCollectionConfiguration* config;
+    [_collectionConfigs enumerateKeysAndObjectsUsingBlock: ^(CBLCollection *col, CBLCollectionConfiguration *conf, BOOL *stop) {
+        if ([col.scope.name isEqualToString: kCBLDefaultScopeName] &&
+            [col.name isEqualToString: kCBLDefaultCollectionName]) {
+            config = conf;
+            *stop = YES;
+        }
+    }];
+    
+    if (!config && mustExist) {
         [NSException raise: NSInternalInconsistencyException
                     format: @"%@", kCBLErrorMessageNoDefaultCollectionInConfig];
     }
@@ -183,45 +184,45 @@
 
 - (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
     [self checkReadonly];
-    [self defaultCollectionConfigOrThrow].documentIDs = documentIDs;
+    [self defaultCollectionConfig: YES].documentIDs = documentIDs;
 }
 
 - (NSArray<NSString*>*) documentIDs {
-    return [self defaultCollectionConfig].documentIDs;
+    return [self defaultCollectionConfig: NO].documentIDs;
 }
 
 - (void) setChannels: (NSArray<NSString *>*)channels {
     [self checkReadonly];
-    [self defaultCollectionConfigOrThrow].channels = channels;
+    [self defaultCollectionConfig: YES].channels = channels;
 }
 
 - (NSArray<NSString*>*) channels {
-    return [self defaultCollectionConfig].channels;
+    return [self defaultCollectionConfig: NO].channels;
 }
 
 - (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
     [self checkReadonly];
-    [self defaultCollectionConfigOrThrow].conflictResolver = conflictResolver;
+    [self defaultCollectionConfig: YES].conflictResolver = conflictResolver;
 }
 
 - (id<CBLConflictResolver>) conflictResolver {
-    return [self defaultCollectionConfig].conflictResolver;
+    return [self defaultCollectionConfig: NO].conflictResolver;
 }
 
 - (void) setPullFilter: (CBLReplicationFilter)pullFilter {
-    [self defaultCollectionConfigOrThrow].pullFilter = pullFilter;
+    [self defaultCollectionConfig: YES].pullFilter = pullFilter;
 }
 
 - (CBLReplicationFilter) pullFilter {
-    return [self defaultCollectionConfig].pullFilter;
+    return [self defaultCollectionConfig: NO].pullFilter;
 }
 
 - (void) setPushFilter: (CBLReplicationFilter)pushFilter {
-    [self defaultCollectionConfigOrThrow].pushFilter = pushFilter;
+    [self defaultCollectionConfig: YES].pushFilter = pushFilter;
 }
 
 - (CBLReplicationFilter) pushFilter {
-    return [self defaultCollectionConfig].pushFilter;
+    return [self defaultCollectionConfig: NO].pushFilter;
 }
 
 #if TARGET_OS_IPHONE
@@ -271,8 +272,8 @@
 
 - (void) addCollection: (CBLCollection*)collection
                 config: (nullable CBLCollectionConfiguration*)config {    
-    CBLDatabase* colDB = collection.db;
-    if (!collection.isValid || !colDB) {
+    CBLDatabase* colDB = collection.database;
+    if (!collection.isValid) {
         [NSException raise: NSInvalidArgumentException
                     format: @"%@", kCBLErrorMessageAddInvalidCollection];
     }

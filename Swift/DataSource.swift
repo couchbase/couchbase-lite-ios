@@ -122,7 +122,7 @@ extension DataSourceProtocol {
         }
         
         if let colSource = o.source() as? Collection {
-            return colSource.db
+            return colSource.database
         } else if let s = o.source() as? Database {
             return s
         }

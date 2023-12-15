@@ -317,7 +317,7 @@ public struct ReplicatorConfiguration {
             fatalError("Attempt to add an invalid collection.")
         }
         
-        let db = collection.db
+        let db = collection.database
         if let db1 = self.db {
             if db1.impl != db.impl {
                 fatalError("Attempt to add collection from different databases.")

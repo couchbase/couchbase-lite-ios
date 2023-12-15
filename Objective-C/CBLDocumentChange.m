@@ -32,13 +32,7 @@
 {
     self = [super init];
     if (self) {
-        CBLDatabase* db = collection.db;
-        if (!db) {
-            if (error)
-                *error = CBLDatabaseErrorNotOpen;
-            return nil;
-        }
-        _database = db;
+        _database = collection.database;;
         _collection = collection;
         _documentID = documentID;
     }

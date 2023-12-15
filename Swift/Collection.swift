@@ -64,8 +64,11 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Collection's fully qualified name in the '<scope-name>.<collection-name>' format.
     public var fullName: String { impl.fullName }
     
-    /// The scope of the collection.
+    /// Collection's scope.
     public let scope: Scope
+    
+    /// Collection's database
+    public let database: Database
     
     // MARK: Document Management
     
@@ -261,7 +264,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 Log.log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
                 return
             }
-            listener(DocumentChange(database: self.db,
+            listener(DocumentChange(database: self.database,
                                     documentID: change.documentID,
                                     collection: self))
         }
@@ -328,12 +331,11 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     
     init(_ impl: CBLCollection, db: Database) {
         self.impl = impl
-        self.db = db
+        self.database = db
         self.scope = Scope(impl.scope, db: db)
     }
     
     var isValid: Bool { impl.isValid }
     
     let impl: CBLCollection
-    let db: Database
 } 

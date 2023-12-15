@@ -391,13 +391,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
         *outHasAttachment = true;
     
     if (encContext->document) {
-        CBLDatabase* database = encContext->document.collection.db;
-        if (!database) {
-            CBLWarn(Database, @"Unable to encode the blob, as the db has been released.");
-            [encContext->document setEncodingError: CBLDatabaseErrorNotOpen];
-            return;
-        }
-        
+        CBLDatabase* database = encContext->document.collection.database;
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {

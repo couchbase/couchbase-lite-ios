@@ -26,25 +26,38 @@ NSString* const kCBLDefaultScopeName = @"_default";
 
 @implementation CBLScope
 
-@synthesize name=_scopeName, db=_db;
+@synthesize name=_scopeName, strongdb=_strongdb, weakdb=_weakdb;
 
-- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name {
+- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString *)name cached:(BOOL)cached {
     CBLAssertNotNil(name);
     self = [super init];
     if (self) {
         _scopeName = name;
-        _db = db;
-        CBLLogVerbose(Database, @"%@ Creating scope", self.fullDescription);
+        if (cached) {
+            _weakdb = db;
+        } else {
+            _strongdb = db;
+        }
     }
     return self;
 }
 
+- (CBLDatabase*) database {
+    if (_strongdb) {
+        return _strongdb;
+    } else {
+        CBLDatabase* db = _weakdb;
+        assert(db);
+        return db;
+    }
+}
+
 - (nullable CBLCollection *) collectionWithName: (NSString *)name error: (NSError**)error {
-    return [_db collectionWithName: name scope: _scopeName error: error];
+    return [self.database collectionWithName: name scope: _scopeName error: error];
 }
 
 - (nullable NSArray<CBLCollection*>*) collections: (NSError**)error {
-    return [_db collections: _scopeName error: error];
+    return [self.database collections: _scopeName error: error];
 }
 
 - (NSString*) description {
@@ -52,11 +65,11 @@ NSString* const kCBLDefaultScopeName = @"_default";
 }
 
 - (NSString*) fullDescription {
-    return [NSString stringWithFormat: @"%p %@[%@] db[%@]", self, self.class, _scopeName, _db];
+    return [NSString stringWithFormat: @"%p %@[%@] db[%@]", self, self.class, _scopeName, self.database];
 }
 
 - (NSUInteger) hash {
-    return [self.name hash] ^ [self.db.path hash];
+    return [self.name hash] ^ [self.database.path hash];
 }
 
 - (BOOL) isEqual: (id)object {
@@ -68,7 +81,7 @@ NSString* const kCBLDefaultScopeName = @"_default";
         return NO;
     
     if (!(other && [self.name isEqual: other.name] &&
-          [self.db.path isEqual: other.db.path])) {
+          [self.database.path isEqual: other.database.path])) {
         return NO;
     }
     

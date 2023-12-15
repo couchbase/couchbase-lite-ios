@@ -33,28 +33,30 @@ public final class Scope {
     /// The default scope name constant
     public static let defaultScopeName: String = kCBLDefaultScopeName
     
-    /// Scope name
+    /// Scope's name
     public var name: String {
         return impl.name
     }
+    
+    /// Collection's database
+    public let database: Database
     
     // MARK: Collections
     
     /// Get all collections in the scope.
     public func collections() throws -> [Collection] {
-        return try db.collections(scope: impl.name)
+        return try self.database.collections(scope: impl.name)
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
     public func collection(name: String) throws -> Collection? {
-        return try db.collection(name: name, scope: impl.name)
+        return try self.database.collection(name: name, scope: impl.name)
     }
     
     init(_ scope: CBLScope, db: Database) {
         self.impl = scope
-        self.db = db
+        self.database = db
     }
     
     let impl: CBLScope
-    let db: Database
 }

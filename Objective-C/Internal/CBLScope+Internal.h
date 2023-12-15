@@ -26,10 +26,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLScope ()
 
-@property (nonatomic, readonly, weak) CBLDatabase* db;
+/** The database associated with the scope. When the (internal default) collection is cached in the database,
+    the database of the collection's scope will be set to the weakdb to avoid circular retain references. */
+@property (nonatomic, readonly, weak) CBLDatabase* weakdb;
+@property (nonatomic, readonly, nullable) CBLDatabase* strongdb;
 
-- (instancetype) initWithDB: (CBLDatabase*)db
-                       name: (NSString*)name;
+/** The cached mode indicates that the scope object will be cached (via the collection object) inside the database or not.
+    When the collection is cached, the collection will not retain the database inside the collection object to avoid
+    the circular refererences. */
+- (instancetype) initWithDB: (CBLDatabase*)db name: (NSString*)name cached: (BOOL)cached;
 
 @end
 

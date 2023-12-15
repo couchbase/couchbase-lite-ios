@@ -189,7 +189,7 @@ using namespace fleece;
     if ([from.source isKindOfClass: [CBLDatabase class]]) {
         db = ((CBLDatabase*)from.source);
     } else if ([from.source isKindOfClass: [CBLCollection class]]) {
-        db = ((CBLCollection*)from.source).db;
+        db = ((CBLCollection*)from.source).database;
     }
      
     if (!db) {
