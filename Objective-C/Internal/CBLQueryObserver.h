@@ -20,8 +20,9 @@
 #import <Foundation/Foundation.h>
 
 @protocol CBLListenerToken;
-@class CBLQuery;
+@class CBLChangeListenerToken;
 @class CBLChangeNotifier;
+@class CBLQuery;
 @class CBLQueryChange;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,14 +33,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Initialize with a Query. */
 - (instancetype) initWithQuery: (CBLQuery*)query
-                   columnNames: (NSDictionary *)columnNames
-                         token: (id<CBLListenerToken>)token;
+                   columnNames: (NSDictionary*)columnNames
+                         token: (CBLChangeListenerToken*)token;
 
 /** Starts the observer */
 - (void) start;
 
 /** Stops and frees the observer */
-- (void) stopAndFree;
+- (void) stop;
 
 @end
 
