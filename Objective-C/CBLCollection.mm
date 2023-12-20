@@ -51,27 +51,31 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     id _mutex;
 }
 
-@synthesize count=_count, name=_name, scope=_scope, db=_db;
+@synthesize count=_count, name=_name, scope=_scope, weakdb=_weakdb, strongdb=_strongdb;
 @synthesize dispatchQueue=_dispatchQueue;
 @synthesize c4col=_c4col;
 
 - (instancetype) initWithDB: (CBLDatabase*)db
-               c4collection: (C4Collection*)c4collection {
+               c4collection: (C4Collection*)c4collection
+                     cached: (BOOL)cached {
     CBLAssertNotNil(db);
     CBLAssertNotNil(c4collection);
     self = [super init];
     if (self) {
         C4CollectionSpec spec = c4coll_getSpec(c4collection);
         
-        _db = db;
+        if (cached) {
+            _weakdb = db;
+        } else {
+            _strongdb = db;
+        }
+        
         _c4col = c4coll_retain(c4collection);
         _name = slice2string(spec.name);
-        _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope)];
+        _scope = [[CBLScope alloc] initWithDB: db name: slice2string(spec.scope) cached: cached];
         
-        NSString* qName = $sprintf(@"Collection <%@: %@>", self, _name);
+        NSString* qName = $sprintf(@"Collection <%p: %@>", self, self);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
-        
-        CBLLogVerbose(Database, @"%@ init collection", self.fullDescription);
         _mutex = db.mutex;
     }
     
@@ -85,21 +89,21 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@.%@] db[%@]",
-            self.class, _scope.name, _name, _db];
+    return [NSString stringWithFormat: @"%@[%@] db[%@]",
+            self.class, self.fullName, self.database];
 }
 
 - (NSString*) fullDescription {
-    return [NSString stringWithFormat: @"%p:%p:%p %@[%@.%@] db[%@]",
-            self, _scope, _c4col, self.class, _scope.name, _name, _db];
+    return [NSString stringWithFormat: @"%p:%p:%p %@[%@] db[%@]",
+            self, _scope, _c4col, self.class, self.fullName, self.database];
 }
 
 - (NSUInteger) hash {
-    return [self.name hash] ^ [self.scope.name hash];
+    return [self.name hash] ^ [self.scope.name hash] ^ [self.database.path hash];
 }
 
 - (id) copyWithZone: (nullable NSZone*)zone {
-    return [[[self class] alloc] initWithDB: _db c4collection: _c4col];
+    return [[[self class] alloc] initWithDB: self.database c4collection: _c4col cached: NO];
 }
 
 #pragma mark - Properties
@@ -113,6 +117,16 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         _count = c4coll_isValid(_c4col) ? c4coll_getDocumentCount(_c4col) : 0;
     }
     return _count;
+}
+
+- (CBLDatabase*) database {
+    if (_strongdb) {
+        return _strongdb;
+    } else {
+        CBLDatabase* db = _weakdb;
+        assert(db);
+        return db;
+    }
 }
 
 #pragma mark - Indexable
@@ -288,7 +302,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         if (![self checkIsValid: error])
             return NO;
         
-        CBLDatabase* db = _db;
+        CBLDatabase* db = self.database;
         if (![self database: db isValid: error])
             return NO;
         
@@ -511,7 +525,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     
     if (!(other && [self.name isEqual: other.name] &&
           [self.scope.name isEqual: other.scope.name] &&
-          [self.db.path isEqual: other.db.path])) {
+          [self.database.path isEqual: other.database.path])) {
         return NO;
     }
     
@@ -649,7 +663,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         if (![self checkIsValid: outError])
             return NO;
         
-        CBLDatabase* db = _db;
+        CBLDatabase* db = self.database;
         if (![self database: db isValid: outError])
             return NO;
         
@@ -866,7 +880,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                         error: (NSError**)outError
 {
     CBL_LOCK(_mutex) {
-        CBLDatabase* db = _db;
+        CBLDatabase* db = self.database;
         if (![self database: db isValid: outError])
             return NO;
         

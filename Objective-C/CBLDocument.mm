@@ -147,13 +147,8 @@ using namespace fleece;
 
 #pragma mark - Internal
 
-- (nullable C4Database*) c4db {
-    CBLDatabase* db = _collection.db;
-    if (!db) {
-        return nil;
-    }
-    Assert(db.c4db, @"%@ does not belong to a database", self);
-    return db.c4db;
+- (C4Database*) c4db {
+    return _collection.database.c4db;
 }
 
 - (bool) isMutable {
@@ -167,11 +162,7 @@ using namespace fleece;
 
 - (void) updateDictionary {
     if (_fleeceData) {
-        CBLDatabase* db = _collection.db;
-        if (!db) {
-            CBLWarn(Database, @"Unable to update the document's content as the db has been released.");
-            return;
-        }
+        CBLDatabase* db = _collection.database;
         _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
         [db safeBlock:^{
             self->_dict = self->_root->asNative();
@@ -212,14 +203,7 @@ using namespace fleece;
 
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
     _encodingError = nil;
-    C4Database* c4db = self.c4db;
-    if (!c4db) {
-        if (outError)
-            *outError = CBLDatabaseErrorNotOpen;
-        return {};
-    }
-    
-    auto encoder = c4db_getSharedFleeceEncoder(c4db);
+    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
     bool hasAttachment = false;
     FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
     FLEncoder_SetExtraInfo(encoder, &ctx);
@@ -238,12 +222,7 @@ using namespace fleece;
         createError(flErr, [NSString stringWithUTF8String: errMessage], outError);
     
     if (!hasAttachment) {
-        CBLDatabase* db = self.collection.db;
-        if (!db) {
-            if (outError)
-                *outError = CBLDatabaseErrorNotOpen;
-            return {};
-        }
+        CBLDatabase* db = self.collection.database;
         FLDoc doc = FLDoc_FromResultData(body, kFLTrusted, db.sharedKeys, nullslice);
         hasAttachment = c4doc_dictContainsBlobs((FLDict)FLDoc_GetRoot(doc));
         FLDoc_Release(doc);

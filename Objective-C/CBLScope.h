@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 
 @class CBLCollection;
+@class CBLDatabase;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,6 +42,9 @@ extern NSString* const kCBLDefaultScopeName;
 
 /** Scope name. */
 @property (readonly, nonatomic) NSString* name;
+
+/** Scope name. */
+@property (readonly, nonatomic) CBLDatabase* database;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

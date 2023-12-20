@@ -132,10 +132,10 @@ static const C4DatabaseConfig2 kDBConfig = {
         if (![self open: outError])
             return nil;
         
-        NSString* qName = $sprintf(@"Database <%@: %@>", self, name);
+        NSString* qName = $sprintf(@"Database <%p: %@>", self, self);
         _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
-        qName = $sprintf(@"Database-Query <%@: %@>", self, name);
+        qName = $sprintf(@"Database::Query <%p: %@>", self, self);
         _queryQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _state = kCBLDatabaseStateOpened;
@@ -486,7 +486,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLDatabaseChange*))listener {
     return [[self defaultCollectionOrThrow] addChangeListener:^(CBLCollectionChange *change) {
-        CBLDatabaseChange* dbChange = [[CBLDatabaseChange alloc] initWithDatabase: change.collection.db
+        CBLDatabaseChange* dbChange = [[CBLDatabaseChange alloc] initWithDatabase: change.collection.database
                                                                       documentIDs: change.documentIDs
                                                                        isExternal: change.isExternal];
         listener(dbChange);
@@ -573,7 +573,7 @@ static const C4DatabaseConfig2 kDBConfig = {
         if (![self mustBeOpen: error])
             return nil;
         
-        return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName];
+        return [[CBLScope alloc] initWithDB: self name: kCBLDefaultScopeName cached: NO];
     }
 }
 
@@ -628,7 +628,7 @@ static const C4DatabaseConfig2 kDBConfig = {
             return nil;
         }
         
-        return [[CBLScope alloc] initWithDB: self name: scopeName];
+        return [[CBLScope alloc] initWithDB: self name: scopeName cached: NO];
     }
 }
 
@@ -646,18 +646,11 @@ static const C4DatabaseConfig2 kDBConfig = {
                 if (c4error.code != 0) {
                     CBLWarn(Database, @"%@ : Error getting the default collection: %d/%d",
                             self, c4error.domain, c4error.code);
+                    convertError(c4error, error);
                 }
-                convertError(c4error, error);
                 return nil;
             }
-            _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col];
-            return _defaultCollection; // Bypass checking if collection is valid
-        }
-        
-        // When we allow to delete the default collection, the default collection
-        // may become invalid here.
-        if (![_defaultCollection checkIsValid: error]) {
-            return nil;
+            _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col cached: YES];
         }
         return _defaultCollection;
     }
@@ -665,11 +658,12 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (CBLCollection*) defaultCollectionOrThrow {
     CBL_LOCK(_mutex) {
+        [self mustBeOpen];
+        
         NSError* error;
         CBLCollection* col = [self defaultCollection: &error];
         if (!col) {
             throwIfNotOpenError(error);
-            
             // Not expect to happen but if it does, log a warning error before raising the exception:
             CBLWarn(Database, @"%@ Failed to get default collection with error: %@", self, error);
             [NSException raise: NSInternalInconsistencyException format: @"Unable to get the default collection"];
@@ -777,7 +771,7 @@ static void throwIfNotOpenError(NSError* error) {
         CBLLogVerbose(Database, @"%@ Created c4collection[%@.%@] c4col=%p",
                       self.fullDescription, scopeName, name, c4collection);
         
-        return [[CBLCollection alloc] initWithDB: self c4collection: c4collection];
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4collection cached: NO];
     }
 }
 
@@ -803,7 +797,7 @@ static void throwIfNotOpenError(NSError* error) {
             }
             return nil;
         }
-        return [[CBLCollection alloc] initWithDB: self c4collection: c4col];
+        return [[CBLCollection alloc] initWithDB: self c4collection: c4col cached: NO];
     }
 }
 

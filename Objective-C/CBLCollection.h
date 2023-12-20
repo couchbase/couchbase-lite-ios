@@ -21,6 +21,7 @@
 #import "CBLIndexable.h"
 #import "CBLCollectionTypes.h"
 
+@class CBLDatabase;
 @class CBLDocument;
 @class CBLDocumentChange;
 @class CBLDocumentFragment;
@@ -76,8 +77,11 @@ extern NSString* const kCBLDefaultCollectionName;
 /** Collection's fully qualified name in the '<scope-name>.<collection-name>' format. */
 @property (readonly, nonatomic) NSString* fullName;
 
-/** The scope of the collection. */
+/** Collection's scope. */
 @property (readonly, nonatomic) CBLScope* scope;
+
+/** Collection's database. */
+@property (readonly, nonatomic) CBLDatabase* database;
 
 #pragma mark - Document Management
 

@@ -503,6 +503,38 @@
     AssertEqualObjects(col5.fullName, @"scopeA.colA");
 }
 
+#pragma mark - Collection and Scope Database
+
+// Spec: https://docs.google.com/document/d/1kA78r1aRbbaJVepseSjdzqxgCQjjC5NWU449O3l33U8
+
+- (void) testCollectionDatabase {
+    NSError* error;
+        
+    // 3.1 TestGetDatabaseFromNewCollection
+    CBLCollection* col1 = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col1);
+    AssertEqual(col1.database, self.db);
+    
+    // 3.2 TestGetDatabaseFromExistingCollection
+    CBLCollection* col2 = [self.db collectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col2);
+    AssertEqual(col2.database, self.db);
+}
+
+- (void) testScopeDatabase {
+    NSError* error;
+        
+    // 3.3 TestGetDatabaseFromScopeObtainedFromCollection
+    CBLCollection* col1 = [self.db createCollectionWithName: @"colA" scope: @"scopeA" error: &error];
+    AssertNotNil(col1);
+    AssertEqual(col1.scope.database, self.db);
+    
+    // 3.4 TestGetDatabaseFromScopeObtainedFromDatabase
+    CBLScope* scope = [self.db scopeWithName: @"scopeA" error: &error];
+    AssertNotNil(scope);
+    AssertEqual(scope.database, self.db);
+}
+
 #pragma mark - 8.3 Collections and Cross Database Instance
 
 - (void) testCreateThenGetCollectionFromDifferentDatabaseInstance {

@@ -131,6 +131,34 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col5!.fullName, "scopeA.colA")
     }
     
+    // MARK: Collection and Scope Database
+    
+    // Spec: https://docs.google.com/document/d/1kA78r1aRbbaJVepseSjdzqxgCQjjC5NWU449O3l33U8
+    
+    func testCollectionDatabase() throws {
+        // 3.1 TestGetDatabaseFromNewCollection
+        let col1 = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(col1)
+        XCTAssertTrue(col1.database === self.db)
+        
+        // 3.2 TestGetDatabaseFromExistingCollection
+        let col2 = try self.db.collection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(col2)
+        XCTAssertTrue(col2!.database === self.db)
+    }
+    
+    func testScopeDatabase() throws {
+        // 3.3 TestGetDatabaseFromScopeObtainedFromCollection
+        let col1 = try self.db.createCollection(name: "colA", scope: "scopeA")
+        XCTAssertNotNil(col1)
+        XCTAssertTrue(col1.scope.database === self.db)
+        
+        // 3.2 TestGetDatabaseFromExistingCollection
+        let scope = try self.db.scope(name: "scopeA")
+        XCTAssertNotNil(scope)
+        XCTAssertTrue(scope!.database === self.db)
+    }
+    
     // MARK: 8.2 Collections
     
     func testCreateAndGetCollectionsInDefaultScope() throws {
