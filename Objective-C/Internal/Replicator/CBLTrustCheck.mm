@@ -78,7 +78,6 @@ static BOOL sOnlyTrustAnchorCerts;
 - (BOOL) shouldAcceptProblems: (NSError**)outError {
     NSDictionary* resultDict = CFBridgingRelease(SecTrustCopyResult(_trust));
     NSArray* detailsArray = resultDict[@"TrustResultDetails"];
-    NSUInteger i = 0;
     for (NSDictionary* details in detailsArray) {
         // Each item in detailsArray corresponds to one certificate in the chain.
         for (NSString* problem in details) {
@@ -100,7 +99,6 @@ static BOOL sOnlyTrustAnchorCerts;
                 return NO;
             }
         }
-        i++;
     }
     return YES;
 }
