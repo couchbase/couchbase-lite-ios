@@ -1050,6 +1050,28 @@
     [replicator removeChangeListenerWithToken: token];
 }
 
+- (void) testRemoveDocumentReplicationListener {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"Tiger" forKey: @"species"];
+    [doc1 setString: @"Star" forKey: @"pattern"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    XCTestExpectation* exp = [self expectationWithDescription: @"Document Replication - Inverted"];
+    exp.inverted = YES;
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        id<CBLListenerToken> token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
+            [exp fulfill];
+        }];
+        [token remove];
+    }];
+    
+    [self waitForExpectations: @[exp] timeout: 5];
+}
+
 - (void) testSingleShotPushFilter {
     [self testPushFilter: NO];
 }
@@ -2404,20 +2426,45 @@
     AssertNil(replicatedDoc.error);
 }
 
-- (void) testListenerAddRemoveAfterReplicatorStart {
-    NSError* error;
-    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
-    [doc setString: @"Tiger" forKey: @"species"];
-    [doc setString: @"Hobbes" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc error: &error]);
+# pragma mark - Change Listener
+
+- (void) testRemoveChangeListnener {
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"Replicator Stopped"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"Replicator Stopped - Inverted"];
+    exp2.inverted = YES;
     
-    XCTestExpectation* exp1 = [self expectationWithDescription: @"#1 replicator finish"];
-    XCTestExpectation* exp3 = [self expectationWithDescription: @"#3 replicator finish"];
     CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    config.maxAttemptWaitTime = 2;
+    config.maxAttempts = 1;
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    id token1 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        if (c.status.activity == kCBLReplicatorStopped) {
+            [exp1 fulfill];
+        }
+    }];
+    
+    id<CBLListenerToken> token2 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
+        [exp2 fulfill];
+    }];
+    [token2 remove];
+    
+    [repl start];
+    [self waitForExpectations: @[exp1, exp2] timeout: timeout];
+    [token1 remove];
+}
+
+- (void) testAddRemoveChangeListenerAfterReplicatorStart {
+    XCTestExpectation* exp1 = [self expectationWithDescription: @"Replicator Stopped 1"];
+    XCTestExpectation* exp2 = [self expectationWithDescription: @"Replicator Stopped 2 - Inverted"];
+    XCTestExpectation* exp3 = [self expectationWithDescription: @"Replicator Stopped 3"];
+    exp2.inverted = YES;
+    
+    CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
+                                                           type: kCBLReplicatorTypePush
+                                                     continuous: NO];
     config.maxAttempts = 4;
+    config.maxAttemptWaitTime = 2;
     repl = [[CBLReplicator alloc] initWithConfig: config];
     id token1 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
         if (c.status.activity == kCBLReplicatorStopped) {
@@ -2425,10 +2472,10 @@
         }
     }];
     [repl start];
+    
     id token2 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
         if (c.status.activity == kCBLReplicatorStopped) {
-            // remove after the start should work
-            XCTFail("shouldn't have called");
+            [exp2 fulfill];
         }
     }];
     
@@ -2440,8 +2487,7 @@
         }
     }];
     
-    
-    [self waitForExpectations: @[exp1, exp3] timeout: timeout];
+    [self waitForExpectations: @[exp1, exp2, exp3] timeout: timeout];
     [repl removeChangeListenerWithToken: token1];
     [repl removeChangeListenerWithToken: token3];
 }

@@ -310,6 +310,31 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(docs.count, 3)
     }
     
+    func testRemoveDocumentReplicationListener() throws {
+        let defaultCollection = try db.defaultCollection()
+        
+        let doc1 = MutableDocument(id: "doc1")
+        doc1.setString("Tiger", forKey: "species")
+        doc1.setString("Hobbes", forKey: "pattern")
+        try defaultCollection.save(document: doc1)
+        
+        // Push:
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .push)
+        config.addCollection(defaultCollection)
+        
+        let x = self.expectation(description: "Document Replication - Inverted")
+        x.isInverted = true
+        
+        self.run(config: config, reset: false, expectedError: nil) { (r) in
+            let token = r.addDocumentReplicationListener { doc in
+                x.fulfill()
+            }
+            token.remove()
+        }
+        wait(for: [x], timeout: 5)
+    }
+    
     func testDocumentReplicationEventWithPushConflict() throws {
         let doc1a = MutableDocument(id: "doc1")
         doc1a.setString("Tiger", forKey: "species")
@@ -1075,18 +1100,44 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(abs(diff - config.maxAttemptWaitTime) < 1.0)
     }
     
-    func testListenerAddRemoveAfterReplicatorStart() throws {
-        timeout = 15
-        let x1 = self.expectation(description: "#1 repl finish")
-        let x2 = self.expectation(description: "#2 repl finish")
+    // MARK: Change Listener
+    
+    func testRemoveChangeListener() throws {
+        let x1 = self.expectation(description: "Replicator Stopped")
+        let x2 = self.expectation(description: "Replicator Stopped - Inverted")
+        x2.isInverted = true
         
-        let doc1 = MutableDocument(id: "doc1")
-        doc1.setString("pass", forKey: "name")
-        try db.saveDocument(doc1)
+        let defaultCollection = try db.defaultCollection()
         
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
-                                                          type: .pushAndPull,
-                                                          continuous: false)
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget)
+        config.maxAttempts = 1
+        config.addCollection(defaultCollection)
+        
+        repl = Replicator(config: config)
+        let token1 = repl.addChangeListener { (change) in
+            if change.status.activity == .stopped {
+                x1.fulfill()
+            }
+        }
+        
+        let token2 = repl.addChangeListener { (change) in
+            x2.fulfill()
+        }
+        token2.remove()
+        
+        repl.start()
+        wait(for: [x1, x2], timeout: timeout)
+        token1.remove()
+    }
+
+    
+    func testAddRemoveChangeListenerAfterReplicatorStart() throws {
+        let x1 = self.expectation(description: "Replicator Stopped 1")
+        let x2 = self.expectation(description: "Replicator Stopped 2 - Inverted")
+        let x3 = self.expectation(description: "Replicator Stopped 3")
+        x2.isInverted = true
+        
+        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget)
         config.maxAttempts = 4
         config.maxAttemptWaitTime = 2
         
@@ -1098,24 +1149,24 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
+        
         let token2 = repl.addChangeListener { (change) in
             if change.status.activity == .stopped {
-                // validate the remove change listener after the replicator-start
-                XCTFail("shouldn't have called")
+                x2.fulfill()
             }
         }
         
         let token3 = repl.addChangeListener { (change) in
             if change.status.activity == .offline {
-                change.replicator.removeChangeListener(withToken: token2)
+                token2.remove()
             } else if change.status.activity == .stopped {
-                x2.fulfill()
+                x3.fulfill()
             }
         }
         
-        wait(for: [x1, x2], timeout: timeout)
-        repl.removeChangeListener(withToken: token1)
-        repl.removeChangeListener(withToken: token3)
+        wait(for: [x1, x2, x3], timeout: timeout)
+        token1.remove()
+        token3.remove()
     }
     
     // MARK: ReplicatorConfig
