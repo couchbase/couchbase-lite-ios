@@ -413,7 +413,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
                                            listener: (void (^)(CBLReplicatorChange*))listener
 {
-    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener delegate: nil];
+    return [_changeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
 }
 
 - (id<CBLListenerToken>) addDocumentReplicationListener: (void (^)(CBLDocumentReplication*))listener {
@@ -425,7 +425,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 {
     CBL_LOCK(self) {
         [self setProgressLevel: kCBLProgressLevelPerDocument];
-        return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener delegate: nil];
+        return [_docReplicationNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
     }
 }
 
