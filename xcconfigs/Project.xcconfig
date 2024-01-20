@@ -20,7 +20,7 @@
 CBL_VERSION_STRING                 = 3.2.0
 CBL_BUILD_NUMBER                   = 0
 CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
-CBL_SWIFT_MODULEMAP_FILE           = Swift/CouchbaseLiteSwift.modulemap
+CBL_SWIFT_PRIVATE_MODULEMAP_FILE   = Swift/CouchbaseLiteSwift.private.modulemap
 CBL_COPYRIGHT_YEAR                 = 2021
 
 IPHONEOS_DEPLOYMENT_TARGET         = 11.0

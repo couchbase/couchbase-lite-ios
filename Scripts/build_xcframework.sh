@@ -66,8 +66,9 @@ else
   QUIET="-quiet"
 fi
 
-# clean the output directory
-OUTPUT_BASE_DIR=${OUTPUT_DIR}/xc/${SCHEME}
+# Create output dir and get the absolute path (required by the xcodebuild -create-xcframework command)
+mkdir -p "${OUTPUT_DIR}"
+OUTPUT_DIR=`realpath "${OUTPUT_DIR}"`
 
 # Get binary and framework name:
 BIN_NAME=`xcodebuild -scheme "${SCHEME}" -showBuildSettings|grep -w PRODUCT_NAME|head -n 1|awk '{ print $3 }'`
@@ -98,11 +99,11 @@ else
   EDITION="CBL_EDITION=Enterprise"
 fi
 
-# archive
+# Archive
 BUILD_DIR=$OUTPUT_DIR/build/$(echo ${SCHEME} | sed 's/ /_/g')
 FRAMEWORK_LOC=${BIN_NAME}.xcarchive/Products/Library/Frameworks/${BIN_NAME}.framework
 
-# this will be used to collect all destination framework path with `-framework`
+# This will be used to collect all destination framework path with `-framework`
 # to include them in `-create-xcframework`
 FRAMEWORK_PATH_ARGS=()
 
@@ -132,13 +133,16 @@ xcarchive "generic/platform=iOS"
 xcarchive "generic/platform=macOS"
 xcarchive "generic/platform=macOS,variant=Mac Catalyst"
 
-# create xcframework
-echo "Creating XCFramework..."
-mkdir -p "${OUTPUT_BASE_DIR}"
-xcodebuild -create-xcframework \
-    -output "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework" \
-    ${FRAMEWORK_PATH_ARGS[*]}
+# Create xcframework
 
-# remove build directory
+# Clean the output directory
+OUTPUT_XC_DIR=${OUTPUT_DIR}/xc/${SCHEME}
+rm -rf "${OUTPUT_XC_DIR}"
+
+echo "Creating XCFramework..."
+mkdir -p "${OUTPUT_XC_DIR}"
+xcodebuild -create-xcframework -output "${OUTPUT_XC_DIR}/${BIN_NAME}.xcframework" ${FRAMEWORK_PATH_ARGS[*]}
+
+# Remove build directory
 rm -rf ${BUILD_DIR}
-echo "Finished creating XCFramework. Output at "${OUTPUT_BASE_DIR}/${BIN_NAME}.xcframework""
+echo "Finished creating XCFramework. Output at "${OUTPUT_XC_DIR}/${BIN_NAME}.xcframework""
