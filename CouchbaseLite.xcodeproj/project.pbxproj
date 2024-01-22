@@ -2073,7 +2073,6 @@
 		1A93FAE124F0E6E60015D54D /* prepare_project.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = prepare_project.sh; path = ../Scripts/prepare_project.sh; sourceTree = "<group>"; };
 		1A93FAE224F0E6E60015D54D /* generate_carthage_package.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_carthage_package.sh; path = ../Scripts/generate_carthage_package.sh; sourceTree = "<group>"; };
 		1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = generate_ee_release_zip.sh; path = ../Scripts/generate_ee_release_zip.sh; sourceTree = "<group>"; };
-		1A93FAE424F0E6E60015D54D /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = pull_request_build.sh; path = ../Scripts/pull_request_build.sh; sourceTree = "<group>"; };
 		1A93FAE524F0E6E60015D54D /* loc.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = loc.sh; path = ../Scripts/loc.sh; sourceTree = "<group>"; };
 		1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "URLEndpointListenerTest+Collection.m"; sourceTree = "<group>"; };
 		1A9617FF289BF6940037E78E /* URLEndpointListenerTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = URLEndpointListenerTest.h; sourceTree = "<group>"; };
@@ -2176,6 +2175,8 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
+		40E905782B5B9A6700EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
 		69002EB8234E693F00776107 /* CBLErrorMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLErrorMessage.m; sourceTree = "<group>"; };
 		6932D48B2954640000D28C18 /* CBLQueryFullTextIndexExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLQueryFullTextIndexExpression.h; path = ../CBLQueryFullTextIndexExpression.h; sourceTree = "<group>"; };
@@ -2429,7 +2430,6 @@
 		9381961D1EC11A8C0032CC51 /* CBLDictionary+Swift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDictionary+Swift.h"; sourceTree = "<group>"; };
 		938196201EC11CDF0032CC51 /* CBLArray+Swift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLArray+Swift.h"; sourceTree = "<group>"; };
 		938196291EC152410032CC51 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
-		93823518207D7CF70022328B /* CouchbaseLiteSwift-EE.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "CouchbaseLiteSwift-EE.modulemap"; sourceTree = "<group>"; };
 		9383A5821F1EE7C00083053D /* CBLQueryResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultSet.h; sourceTree = "<group>"; };
 		9383A5831F1EE7C00083053D /* CBLQueryResultSet.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryResultSet.mm; sourceTree = "<group>"; };
 		9383A5881F1EE8EF0083053D /* CBLQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResult.h; sourceTree = "<group>"; };
@@ -2465,7 +2465,6 @@
 		9388CB8E21BCDF8B005CA66D /* carat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = carat.png; sourceTree = "<group>"; };
 		9388CB8F21BCDF8B005CA66D /* dash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dash.png; sourceTree = "<group>"; };
 		9388CB9021BCDF8B005CA66D /* gh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gh.png; sourceTree = "<group>"; };
-		9388CB9221BCDF8B005CA66D /* remove_private_headers.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_headers.sh; sourceTree = "<group>"; };
 		9388CB9321BCDF8B005CA66D /* get_repo_version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = get_repo_version.sh; sourceTree = "<group>"; };
 		9388CB9421BCDF8B005CA66D /* build_framework.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_framework.sh; sourceTree = "<group>"; };
 		9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = strip_frameworks.sh; sourceTree = "<group>"; };
@@ -2584,7 +2583,6 @@
 		93CD02DD1EA037B200AFB3FA /* CBLDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDictionary.mm; sourceTree = "<group>"; };
 		93CD02E41EA0382C00AFB3FA /* CBLMutableDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMutableDictionary.h; sourceTree = "<group>"; };
 		93CD02E51EA0382D00AFB3FA /* CBLMutableDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLMutableDictionary.mm; sourceTree = "<group>"; };
-		93CED8B620488B9200E6F0A4 /* CouchbaseLiteSwift.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.modulemap; sourceTree = "<group>"; };
 		93CED8C820488BC900E6F0A4 /* DatabaseChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseChange.swift; sourceTree = "<group>"; };
 		93CED8CA20488BD400E6F0A4 /* DocumentChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentChange.swift; sourceTree = "<group>"; };
 		93CED8CC20488C1300E6F0A4 /* Blob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Blob.swift; sourceTree = "<group>"; };
@@ -2828,7 +2826,6 @@
 				1A93FAE324F0E6E60015D54D /* generate_ee_release_zip.sh */,
 				1A93FAE524F0E6E60015D54D /* loc.sh */,
 				1A93FAE124F0E6E60015D54D /* prepare_project.sh */,
-				1A93FAE424F0E6E60015D54D /* pull_request_build.sh */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
@@ -2887,8 +2884,7 @@
 				9388CC4521C250A4005CA66D /* Log */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				93CED8B620488B9200E6F0A4 /* CouchbaseLiteSwift.modulemap */,
-				93823518207D7CF70022328B /* CouchbaseLiteSwift-EE.modulemap */,
+				40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Swift;
@@ -3097,6 +3093,7 @@
 				93249D7D246B6EFF000A8A6E /* Listener */,
 				931713F722C183F200F1B5BF /* Query */,
 				9392608E20A0C94100E5748C /* Replicator */,
+				40E905782B5B9A6700EDF483 /* CouchbaseLiteSwift.private.modulemap */,
 			);
 			name = Swift;
 			path = ../Sources/Swift;
@@ -3442,7 +3439,6 @@
 				9388CB7721BCDF8B005CA66D /* Support */,
 				9388CB7521BCDF8B005CA66D /* generate_api_docs.sh */,
 				9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */,
-				9388CB9221BCDF8B005CA66D /* remove_private_headers.sh */,
 				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
 				9388CB9421BCDF8B005CA66D /* build_framework.sh */,
 				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
@@ -4834,7 +4830,6 @@
 				275F926F1E4D30A4007FD5A2 /* Sources */,
 				275F92701E4D30A4007FD5A2 /* Frameworks */,
 				275F92711E4D30A4007FD5A2 /* Headers */,
-				93CED8D52048B3D600E6F0A4 /* Remove private headers */,
 			);
 			buildRules = (
 			);
@@ -4948,7 +4943,6 @@
 				9343F015207D61AB00F19A89 /* Sources */,
 				9343F0B1207D61AB00F19A89 /* Frameworks */,
 				9343F0B4207D61AB00F19A89 /* Headers */,
-				9343F12D207D61AB00F19A89 /* Remove private headers */,
 			);
 			buildRules = (
 			);
@@ -5552,36 +5546,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
-		};
-		9343F12D207D61AB00F19A89 /* Remove private headers */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Scripts/remove_private_headers.sh",
-			);
-			name = "Remove private headers";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\necho \"Private headers removed\"\n";
-		};
-		93CED8D52048B3D600E6F0A4 /* Remove private headers */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Scripts/remove_private_headers.sh",
-			);
-			name = "Remove private headers";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\necho \"Private headers removed\"\n";
 		};
 		93D118ED1F560232000F6D3E /* Check Git Commit */ = {
 			isa = PBXShellScriptBuildPhase;
