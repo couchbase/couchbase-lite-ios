@@ -2199,6 +2199,7 @@
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40E905782B5B9A6700EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
+		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
 		69002EB8234E693F00776107 /* CBLErrorMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLErrorMessage.m; sourceTree = "<group>"; };
 		6932D48B2954640000D28C18 /* CBLQueryFullTextIndexExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLQueryFullTextIndexExpression.h; path = ../CBLQueryFullTextIndexExpression.h; sourceTree = "<group>"; };
@@ -3472,17 +3473,18 @@
 			isa = PBXGroup;
 			children = (
 				9388CB7721BCDF8B005CA66D /* Support */,
-				9388CB7521BCDF8B005CA66D /* generate_api_docs.sh */,
-				9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */,
-				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
 				9388CB9421BCDF8B005CA66D /* build_framework.sh */,
 				6992582A22DFE9A100E0D1D2 /* build_xcframework.sh */,
-				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
-				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
-				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
+				9388CB7521BCDF8B005CA66D /* generate_api_docs.sh */,
+				1AF98EC427B0E08D00B3EA5F /* generate_objc_release_zip.sh */,
 				1A967A5F251BF78400B70945 /* generate_package_manifest.sh */,
 				1AF98EB827AD22C500B3EA5F /* generate_swift_release_zip.sh */,
-				1AF98EC427B0E08D00B3EA5F /* generate_objc_release_zip.sh */,
+				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
+				9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */,
+				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
+				40EF68102B71891A00F0CB50 /* remove_private_module.sh */,
+				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
+				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,
 			);
 			path = Scripts;
 			sourceTree = "<group>";
@@ -4902,6 +4904,7 @@
 				275F926F1E4D30A4007FD5A2 /* Sources */,
 				275F92701E4D30A4007FD5A2 /* Frameworks */,
 				275F92711E4D30A4007FD5A2 /* Headers */,
+				40EF68002B71889F00F0CB50 /* Remove Private Module */,
 			);
 			buildRules = (
 			);
@@ -5015,6 +5018,7 @@
 				9343F015207D61AB00F19A89 /* Sources */,
 				9343F0B1207D61AB00F19A89 /* Frameworks */,
 				9343F0B4207D61AB00F19A89 /* Headers */,
+				40EF680F2B7188D100F0CB50 /* Remove Private Module */,
 			);
 			buildRules = (
 			);
@@ -5587,6 +5591,46 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		40EF68002B71889F00F0CB50 /* Remove Private Module */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/remove_private_module.sh",
+			);
+			name = "Remove Private Module";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
+		};
+		40EF680F2B7188D100F0CB50 /* Remove Private Module */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/remove_private_module.sh",
+			);
+			name = "Remove Private Module";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
+		};
 		9343EF2D207D611600F19A89 /* Check Git Commit */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
