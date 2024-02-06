@@ -1704,6 +1704,8 @@
 		AE006D402B696DF600884E2B /* CBLProductQuantizer.h in Headers */ = {isa = PBXBuildFile; fileRef = AE006D3D2B696DF600884E2B /* CBLProductQuantizer.h */; };
 		AE006D412B696DF600884E2B /* CBLProductQuantizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE006D3E2B696DF600884E2B /* CBLProductQuantizer.mm */; };
 		AE006D422B696DF600884E2B /* CBLProductQuantizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE006D3E2B696DF600884E2B /* CBLProductQuantizer.mm */; };
+		AE006DA92B7135D100884E2B /* VectorIndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE006DA82B7135D100884E2B /* VectorIndexConfiguration.swift */; };
+		AE006DAB2B7135F400884E2B /* VectorEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE006DAA2B7135F400884E2B /* VectorEncoding.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2680,6 +2682,8 @@
 		AE006D382B696B3700884E2B /* CBLScalarQuantizer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLScalarQuantizer.mm; sourceTree = "<group>"; };
 		AE006D3D2B696DF600884E2B /* CBLProductQuantizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLProductQuantizer.h; sourceTree = "<group>"; };
 		AE006D3E2B696DF600884E2B /* CBLProductQuantizer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLProductQuantizer.mm; sourceTree = "<group>"; };
+		AE006DA82B7135D100884E2B /* VectorIndexConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorIndexConfiguration.swift; sourceTree = "<group>"; };
+		AE006DAA2B7135F400884E2B /* VectorEncoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorEncoding.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3061,6 +3065,7 @@
 		931713F722C183F200F1B5BF /* Query */ = {
 			isa = PBXGroup;
 			children = (
+				AE006D9B2B7135A400884E2B /* VectorIndex */,
 				9317140722C1843C00F1B5BF /* Prediction */,
 			);
 			path = Query;
@@ -4132,6 +4137,15 @@
 				AE006CE72B62E47700884E2B /* CBLVectorEncoding.mm */,
 				AE006CA42B61732800884E2B /* CBLVectorIndexConfiguration.h */,
 				AE006CDE2B62C1F700884E2B /* CBLVectorIndexConfiguration.mm */,
+			);
+			name = VectorIndex;
+			sourceTree = "<group>";
+		};
+		AE006D9B2B7135A400884E2B /* VectorIndex */ = {
+			isa = PBXGroup;
+			children = (
+				AE006DA82B7135D100884E2B /* VectorIndexConfiguration.swift */,
+				AE006DAA2B7135F400884E2B /* VectorEncoding.swift */,
 			);
 			name = VectorIndex;
 			sourceTree = "<group>";
@@ -6181,6 +6195,7 @@
 				9369A68D207DB3D4009B5B83 /* CBLEncryptionKey.m in Sources */,
 				9343F030207D61AB00F19A89 /* MutableFragment.swift in Sources */,
 				9343F031207D61AB00F19A89 /* ListenerToken.swift in Sources */,
+				AE006DAB2B7135F400884E2B /* VectorEncoding.swift in Sources */,
 				937DDC362487644000CECA9D /* CBLKeyChain.mm in Sources */,
 				1A2AB75822BBFDB7000B9325 /* CBLConflictResolver.m in Sources */,
 				931713FF22C1842300F1B5BF /* CoreMLPredictiveModel.swift in Sources */,
@@ -6213,6 +6228,7 @@
 				931713E722C182F500F1B5BF /* CBLCoreMLPredictiveModel.m in Sources */,
 				9343F044207D61AB00F19A89 /* DatabaseChange.swift in Sources */,
 				93BD00FA2474875B00BAD40B /* CBLListenerPasswordAuthenticator.m in Sources */,
+				AE006DA92B7135D100884E2B /* VectorIndexConfiguration.swift in Sources */,
 				9343F045207D61AB00F19A89 /* CBLQueryChange.m in Sources */,
 				9343F046207D61AB00F19A89 /* CBLDatabaseChange.m in Sources */,
 				1AC7EC3B249DA70F00978C2E /* Foundation+CBL.mm in Sources */,
