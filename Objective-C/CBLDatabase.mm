@@ -53,6 +53,10 @@ using namespace cbl;
 
 #define kDBExtension @"cblite2"
 
+#ifdef COUCHBASE_ENTERPRISE
+#define kVectorSearchExtIdentifier @"com.couchbase.vectorSearchExtension"
+#endif
+
 static NSString* kBlobTypeProperty = @kC4ObjectTypeProperty;
 static NSString* kBlobDigestProperty = @kC4BlobDigestProperty;
 static NSString* kBlobDataProperty = @kC4BlobDataProperty;
@@ -104,12 +108,46 @@ static const C4DatabaseConfig2 kDBConfig = {
     .flags = (kC4DB_Create | kC4DB_AutoCompact),
 };
 
+/** 
+ Static Initializer called when CBL library is loaded.
+ @note: App may not configure its logging yet when this initialize() method is called. So if possible, any operations that may log are better
+ to be done in CBLInit()which is called only once when the first CBLDatabase is created
+ */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
         NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
-        CBLLogInfo(Database, @"%@", [CBLVersion userAgent]);
+    }
+}
+
+/** Called when the first CBLDatabase object is created. */
++ (void) CBLInit {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [self checkFileLogging];
+        [self setExtensionPath];
+    });
+}
+
+/** Detect and set extension path  */
++ (void) setExtensionPath {
+#ifdef COUCHBASE_ENTERPRISE
+    // Note: For non app, the bundle will not be found.
+    NSBundle* vsBundle = [NSBundle bundleWithIdentifier: kVectorSearchExtIdentifier];
+    if (vsBundle.bundlePath) {
+        CBLLogInfo(Database, @"Set extension path : %@", vsBundle.bundlePath);
+        CBLStringBytes path(vsBundle.bundlePath);
+        c4_setExtensionPath(path);
+    }
+#endif
+}
+
+/** Check and show warning if file logging is not configured. */
++ (void) checkFileLogging {
+    if (!CBLDatabase.log.file.config) {
+        CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
+                "Log files required for product support are not being generated.");
     }
 }
 
@@ -125,7 +163,8 @@ static const C4DatabaseConfig2 kDBConfig = {
     
     self = [super init];
     if (self) {
-        [[self class] checkFileLogging: NO];
+        // Perform only once when the first CBLDatabase object is created:
+        [[self class] CBLInit];
         
         _name = name;
         _config = [[CBLDatabaseConfiguration alloc] initWithConfig: config readonly: YES];
@@ -1114,18 +1153,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     CBL_LOCK(_mutex) {
         return _activeStoppables.count;
     }
-}
-
-/** Check and show warning if file logging is not configured. */
-+ (void) checkFileLogging: (BOOL)swift {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        if (!CBLDatabase.log.file.config) {
-            NSString* clazz = swift ? @"Database" : @"CBLDatabase";
-            CBLWarn(Database, @"%@.log.file.config is nil, meaning file logging is disabled. "
-                    "Log files required for product support are not being generated.", clazz);
-        }
-    });
 }
 
 @end
