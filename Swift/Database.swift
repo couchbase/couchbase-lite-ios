@@ -59,7 +59,6 @@ public final class Database {
     ///   - config: The database options, or nil for the default options.
     /// - Throws: An error when the database cannot be opened.
     public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration()) throws {
-        CBLDatabase.checkFileLogging(true);
         self.config = DatabaseConfiguration(config: config)
         self.impl = try CBLDatabase(name: name, config: self.config.toImpl())
     }
