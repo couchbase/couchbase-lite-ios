@@ -22,6 +22,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ Configuration for creating value indexes.
+ */
 @interface CBLValueIndexConfiguration : CBLIndexConfiguration
 
 /**
