@@ -525,7 +525,8 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     
     if (!(other && [self.name isEqual: other.name] &&
           [self.scope.name isEqual: other.scope.name] &&
-          [self.database.path isEqual: other.database.path])) {
+          // don't use isEqual: here!  The database must be the exact same instance.
+          self.database == other.database)) {
         return NO;
     }
     
