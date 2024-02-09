@@ -779,7 +779,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
     if (!document.collection) {
         document.collection = self;
-    } else if (document.collection != self) {
+    } else if (![document.collection isEqual:self]) {
         return createError(CBLErrorInvalidParameter,
                            kCBLErrorMessageDocumentAnotherCollection, error);
     }
@@ -847,7 +847,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
                         resolvedDoc.id, docID);
             }
             
-            if (resolvedDoc && resolvedDoc.collection && resolvedDoc.collection != self) {
+            if (resolvedDoc && resolvedDoc.collection && ![resolvedDoc.collection isEqual:self]) {
                 [NSException raise: NSInternalInconsistencyException
                             format: kCBLErrorMessageResolvedDocWrongDb,
                  resolvedDoc.collection.name, self.name];
