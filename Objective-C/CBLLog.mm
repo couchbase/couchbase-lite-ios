@@ -48,13 +48,10 @@ static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERR
 
 @synthesize console=_console, file=_file, custom=_custom;
 
+#ifdef DEBUG
 static C4LogLevel string2level(NSString* value) {
     if (value == nil) {
-#ifdef DEBUG
         return kC4LogDebug;
-#else
-        return kC4LogVerbose;
-#endif
     }
     
     switch (value.length > 0 ? toupper([value characterAtIndex: 0]) : 'Y') {
@@ -68,6 +65,7 @@ static C4LogLevel string2level(NSString* value) {
             return kC4LogInfo;
     }
 }
+#endif
 
 static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel level) {
     C4LogDomain domain = c4log_getDomain(domainName, true);
@@ -132,9 +130,11 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
     if (shouldLogToCustom)
         [log.custom logWithLevel: level domain: domain message: message];
     
+#ifdef DEBUG
     // Breakpoint if enabled:
     if (level >= kCBLLogLevelWarning && [NSUserDefaults.standardUserDefaults boolForKey: @"CBLBreakOnWarning"])
         MYBreakpoint();     // stops debugger at breakpoint. You can resume normally.
+#endif
 }
 
 // Initialize the CBLLog object and register the logging callback.
@@ -152,15 +152,19 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         // The most default callback log level:
         C4LogLevel callbackLogLevel = kC4LogWarning;
         
+#ifdef DEBUG
         // Check if user overrides the default callback log level:
         NSString* userLogLevel = [NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"];
-        if (userLogLevel)
+        if (userLogLevel) {
             callbackLogLevel = string2level(userLogLevel);
+        }
+        if (callbackLogLevel != kC4LogWarning) {
+            NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
+        }
+#endif
         
         // Enable callback logging:
         c4log_writeToCallback(callbackLogLevel, &logCallback, true);
-        if (callbackLogLevel != kC4LogWarning)
-            NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
         
         // Set log level for each domains to the lowest:
         kCBL_LogDomainDatabase  = setNamedLogDomainLevel("DB", kC4LogDebug);
@@ -175,6 +179,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         setNamedLogDomainLevel("Zip", kC4LogDebug);
         setNamedLogDomainLevel("BLIPMessages", kC4LogDebug);
         
+#ifdef DEBUG
         // Now map user defaults starting with CBLLog... to log levels:
         NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];
         for (NSString* key in defaults) {
@@ -188,6 +193,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
                 NSLog(@"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]);
             }
         }
+#endif
         
         // Keep the current callback log level:
         _callbackLogLevel = (CBLLogLevel)callbackLogLevel;
