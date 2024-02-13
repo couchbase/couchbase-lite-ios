@@ -74,7 +74,7 @@
     }
 
     // Wait a little while for objects to be cleaned up:
-    int leaks;
+    int leaks = 0;
     for (int i = 0; i < 20; i++) {
         leaks = c4_getObjectCount() - _c4ObjectCount;
         if (leaks == 0)

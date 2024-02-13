@@ -68,8 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLURLEndpointListener (Test)
 
-- (NSURL*) localURL;
-- (CBLURLEndpoint*) localEndpoint;
+@property (nonatomic, readonly) NSURL* localURL;
+@property (nonatomic, readonly) CBLURLEndpoint* localEndpoint;
 
 @end
 
