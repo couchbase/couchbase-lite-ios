@@ -89,8 +89,9 @@ typedef enum {
     CBLChangeNotifier<CBLReplicatorChange*>* _changeNotifier;
     CBLChangeNotifier<CBLDocumentReplication*>* _docReplicationNotifier;
     BOOL _resetCheckpoint;          // Reset the replicator checkpoint
-    unsigned _conflictCount;        // Current number of conflict resolving tasks
-    BOOL _deferReplicatorNotification; // Defer replicator notification until finishing all conflict resolving tasks
+    BOOL _conflictResolutionSuspended;
+    NSMutableArray<dispatch_block_t>* _pendingConflicts;
+    BOOL _deferChangeNotification;  // Defer change notification until finishing all conflict resolving tasks
     SecCertificateRef _serverCertificate;
     NSDictionary* _collectionMap;   // [scopeName.collectionName : CBLCollection]
 }
@@ -120,6 +121,7 @@ typedef enum {
         _progressLevel = kCBLProgressLevelOverall;
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
+        _pendingConflicts = [NSMutableArray array];
         _status = [[CBLReplicatorStatus alloc] initWithStatus: {kC4Stopped, {}, {}}];
         
         NSString* qName = self.description;
@@ -171,13 +173,14 @@ typedef enum {
             // Start the C4Replicator:
             self.serverCertificate = NULL;
             _state = kCBLStateStarting;
+            [self setConflictResolutionSuspended: NO];
             c4repl_start(_repl, reset);
             status = c4repl_getStatus(_repl);
             [_config.database addActiveStoppable: self];
             
 #if TARGET_OS_IPHONE
             if (!_config.allowReplicatingInBackground)
-                [self setupBackgrounding];
+                [self startBackgroundingMonitor];
 #endif
         } else {
             // Failed to create C4Replicator:
@@ -370,6 +373,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBLReplicator* repl = self;
     [_config.database removeActiveStoppable: repl];
     
+#if TARGET_OS_IPHONE
+    [self endBackgroundingMonitor];
+#endif
+
     CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
 }
 
@@ -377,6 +384,15 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     CBL_LOCK(self) {
         block();
     }
+}
+
+// Always being called inside the lock
+- (void) idled {
+    Assert(_rawStatus.level == kC4Idle);
+#if TARGET_OS_IPHONE
+    [self endCurrentBackgroundTask];
+#endif
+    CBLLogInfo(Sync, @"%@: Replicator is now idled.", self);
 }
 
 #pragma mark - Server Certificate
@@ -603,59 +619,63 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         // Record raw status:
         _rawStatus = c4Status;
         
-        // Running; idle or busy:
-        if (c4Status.level > kC4Connecting) {
-            if (_state == kCBLStateStarting) {
-                _state = kCBLStateRunning;
-            }
-            [self stopReachability];
-        }
+        // Reset to notify for now:
+        _deferChangeNotification = NO;
         
-        // Offline / suspending:
         if (c4Status.level == kC4Offline) {
+            // When the replicator is offline, it could be either that :
+            // 1. The replicator is offline as the remote server is not reachable.
+            // 2. (iOS Only) The replicator is suspended as the app was backgrounding
+            //    or lost the access to the database file due to the file protection
+            //    level set when the screen was lock.
+            // When the app went offline, start the reachability monitor to observe the
+            // network changes and retry when the remote server is reachable again.
+            // No reachability is started when the replicator is suspended.
             if (_state == kCBLStateSuspending) {
                 _state = kCBLStateSuspended;
             } else if (_state > kCBLStateStopping) {
                 _state = kCBLStateOffline;
                 [self startReachability];
             }
-        }
-        
-        // Stopped:
-        if (c4Status.level == kC4Stopped) {
+        } else {
+            // Stop the reachability monitor as the replicator is not offline anymore.
             [self stopReachability];
-        #if TARGET_OS_IPHONE
-            [self endBackgrounding];
-        #endif
             
-            if (_conflictCount == 0)
-                [self stopped];
+            if (c4Status.level == kC4Stopped) {
+                // When the replicator is stopped, check if there are any pending conflicts
+                // to be resolved. If none, the replicator will go into the stopped state,
+                // and the change listeners will be notified about the stopped status.
+                // Otherwise, the stopped status will be defered to notify until all pending
+                // conflicts are resolved.
+                if ([self hasPendingConflicts]) {
+                    _state = kCBLStateStopping;
+                    _deferChangeNotification = YES;
+                } else {
+                    [self stopped];
+                }
+            } else if (c4Status.level == kC4Idle) {
+                // When the replicator is idle, check if there are any pending conflicts
+                // to be resolved. If none, the change listeners will be notified about
+                // the idle status. Otherwise, the idle status will be defered to notify
+                // until all pending conflicts are resolved.
+                _state = kCBLStateRunning;
+                if ([self hasPendingConflicts]) {
+                    _deferChangeNotification = YES;
+                } else {
+                    [self idled];
+                }
+            } else if (c4Status.level == kC4Busy) {
+                _state = kCBLStateRunning;
+            }
         }
-
-        // replicator status callback
-        /// stopped and idle state, we will defer status callback till conflicts finish resolving
-        if (_conflictCount > 0 && (c4Status.level == kC4Stopped || c4Status.level == kC4Idle)) {
-            CBLLogInfo(Sync, @"%@: Status = %d, but waiting for conflict resolution (pending = %d) "
-            "to finish before notifying.", self, c4Status.level, _conflictCount);
-            
-            _deferReplicatorNotification = YES;
-            if (c4Status.level == kC4Stopped)
-                _state = kCBLStateStopping;
-        } else
-            _deferReplicatorNotification = NO;
         
-        if (!_deferReplicatorNotification)
-            [self updateAndPostStatus];
-
-    #if TARGET_OS_IPHONE
-        //  End the current background task when the replicator is idle:
-        if (c4Status.level == kC4Idle)
-            [self endCurrentBackgroundTask];
-    #endif
+        if (!_deferChangeNotification) {
+            [self postChangeNotification];
+        }
     }
 }
 
-- (void) updateAndPostStatus {
+- (void) postChangeNotification {
     NSError* error = nil;
     if (_rawStatus.error.code)
         convertError(_rawStatus.error, &error);
@@ -672,7 +692,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                                                                           status: self.status]];
 }
 
-#pragma mark - DOCUMENT-LEVEL 0:
+#pragma mark - DOCUMENT REPLICATION EVENT HANDLER:
 
 static void onDocsEnded(C4Replicator* repl,
                         bool pushing,
@@ -696,12 +716,13 @@ static void onDocsEnded(C4Replicator* repl,
     });
 }
 
+// Called inside the lock
 - (void) onDocsEnded: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
     NSMutableArray* posts = [NSMutableArray array];
     for (CBLReplicatedDocument *doc in docs) {
         C4Error c4err = doc.c4Error;
         if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
-            [self resolveConflict: doc];
+            [self scheduleConflictResolutionForDocument: doc];
         } else {
             [posts addObject: doc];
             [self logErrorOnDocument: doc pushing: pushing];
@@ -711,25 +732,50 @@ static void onDocsEnded(C4Replicator* repl,
         [self postDocumentReplications: posts pushing: pushing];
 }
 
-- (void) resolveConflict: (CBLReplicatedDocument*)doc {
-    _conflictCount++;
-    dispatch_async(_conflictQueue, ^{
-        [self _resolveConflict: doc];
-        CBL_LOCK(self) {
-            if (--_conflictCount == 0 && _deferReplicatorNotification) {
-                if (_rawStatus.level == kC4Stopped) {
-                    Assert(_state == kCBLStateStopping);
-                    [self stopped];
-                }
-                
-                _deferReplicatorNotification = NO;
-                [self updateAndPostStatus];
-            }
-        }
-    });
+- (void) postDocumentReplications: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
+    id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
+                                                                 isPush: pushing
+                                                              documents: docs];
+    [_docReplicationNotifier postChange: replication];
 }
 
+- (void) logErrorOnDocument: (CBLReplicatedDocument*)doc pushing: (BOOL)pushing {
+    C4Error c4err = doc.c4Error;
+    if (doc.c4Error.code)
+        CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
+                   (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
+}
+
+#pragma mark - CONFLICT RESOLUTION:
+
+// Called inside the lock
+- (void) scheduleConflictResolutionForDocument: (CBLReplicatedDocument*)doc {
+    if (_conflictResolutionSuspended || _state == kCBLStateStopped) {
+        return;
+    }
+    
+    dispatch_block_t resolution = dispatch_block_create(DISPATCH_BLOCK_ASSIGN_CURRENT, ^{
+        [self _resolveConflict: doc];
+    });
+    
+    dispatch_block_notify(resolution, _dispatchQueue, ^{
+        // Called when the resolution was either successful or cancelled:
+        [self didFinishConflictResolution: resolution];
+    });
+    
+    [_pendingConflicts addObject: resolution];
+    
+    dispatch_async(_conflictQueue, resolution);
+}
+
+// Called inside conflict resolution queue:
 - (void) _resolveConflict: (CBLReplicatedDocument*)doc {
+    CBL_LOCK(self) {
+        if (_conflictResolutionSuspended) {
+            return;
+        }
+    }
+    
     CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
     
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
@@ -750,18 +796,53 @@ static void onDocsEnded(C4Replicator* repl,
     [self postDocumentReplications: @[doc] pushing: NO];
 }
 
-- (void) postDocumentReplications: (NSArray<CBLReplicatedDocument*>*)docs pushing: (BOOL)pushing {
-    id replication = [[CBLDocumentReplication alloc] initWithReplicator: self
-                                                                 isPush: pushing
-                                                              documents: docs];
-    [_docReplicationNotifier postChange: replication];
+- (void) didFinishConflictResolution: (dispatch_block_t)resolution {
+    CBL_LOCK(self) {
+        [_pendingConflicts removeObject: resolution];
+        
+        if (_pendingConflicts.count == 0) {
+            if (_rawStatus.level == kC4Stopped && _state == kCBLStateStopping) {
+                [self stopped];
+            } else if (_rawStatus.level == kC4Idle) {
+                [self idled];
+            }
+            if (_deferChangeNotification) {
+                _deferChangeNotification = NO;
+                [self postChangeNotification];
+            }
+        }
+    }
 }
 
-- (void) logErrorOnDocument: (CBLReplicatedDocument*)doc pushing: (BOOL)pushing {
-    C4Error c4err = doc.c4Error;
-    if (doc.c4Error.code)
-        CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
-                   (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
+// Called inside the lock
+- (BOOL) hasPendingConflicts {
+    return _pendingConflicts.count > 0;
+}
+
+// For test to get number of pending conflicts
+- (NSUInteger) pendingConflictCount {
+    CBL_LOCK(self) {
+        return _pendingConflicts.count > 0;
+    }
+}
+
+// Called inside the lock
+- (void) setConflictResolutionSuspended: (BOOL)suspended {
+    _conflictResolutionSuspended = suspended;
+    if (suspended) {
+        // Note: All cancelled resolutions will be notified and queued again when
+        // the replicator is resumed or restarted.
+        for (dispatch_block_t resolution in _pendingConflicts) {
+            dispatch_block_cancel(resolution);
+        }
+    }
+}
+
+// For test to check the suspended status
+- (BOOL) conflictResolutionSuspended {
+    CBL_LOCK(self) {
+        return _conflictResolutionSuspended;
+    }
 }
 
 #pragma mark - PUSH/PULL FILTER:
@@ -815,13 +896,34 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
 
 - (BOOL) active {
     CBL_LOCK(self) {
-        return (_rawStatus.level == kC4Connecting || _rawStatus.level == kC4Busy);
+        return (_rawStatus.level == kC4Connecting || _rawStatus.level == kC4Busy || [self hasPendingConflicts]);
     }
 }
 
 - (void) setSuspended: (BOOL)suspended {
+    // (iOS Only) The replicator could be suspended by the backgrounding
+    // monitor either when :
+    // 1. The app was in the background && the replicator was caught up
+    //    (IDLE) or the background task for the replicator was expired.
+    // 2. The app lost access to the database files under the lock screen
+    //    as the file protection level as set to "Complete" or
+    //    "Complete Unless Open".
+    //
+    // When the replicator is suspended, the internal replicator at
+    // the LiteCore level will be stopped and the replicator status
+    // will be OFFLINE (instead of stopped). Any pending conflict
+    // resolution will be cancelled as best effort as any being-excuted
+    // conflict resolution cannot be cancelled.
+    //
+    // All cancelled conflict resolutions will be notified, and put into the queue 
+    // again when the replicator is resumed or is restarted.
     CBL_LOCK(self) {
+        if (suspended && _state > kCBLStateSuspending) {
+            // Currently not in any suspend* or stop* state:
+            _state = kCBLStateSuspending;
+        }
         c4repl_setSuspended(_repl, suspended);
+        [self setConflictResolutionSuspended: suspended];
     }
 }
 

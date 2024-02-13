@@ -920,19 +920,17 @@
     
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     id token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docReplication) {
-        // change with single document are the update revisions from colA & colB collections.
-        if (docReplication.documents.count == 1) {
+        if (!docReplication.isPush) {
+            // Pull will resolve the conflicts:
             CBLReplicatedDocument* doc = docReplication.documents[0];
             AssertEqualObjects(doc.id, [doc.collection isEqualToString: @"colA"] ?  @"doc1" : @"doc2");
             AssertEqual(doc.error.code, 0);
-        } else if (docReplication.documents.count == 2) {
-            // change with 2 docs, will be the conflict
+        } else {
+            // Push will have conflict errors:
             for (CBLReplicatedDocument* doc in docReplication.documents) {
                 AssertEqualObjects(doc.id, [doc.collection isEqualToString: @"colA"] ?  @"doc1" : @"doc2");
                 AssertEqual(doc.error.code, CBLErrorHTTPConflict);
             }
-        } else {
-            AssertFalse(true, @"Unexpected document change listener");
         }
     }];
     [self runWithReplicator: r errorCode: 0 errorDomain: nil];

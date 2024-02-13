@@ -45,7 +45,7 @@ API_AVAILABLE(macos(10.12), ios(10.0))
 
 - (NSData*) publicKeyHashFromCert: (SecCertificateRef)certRef {
     // Get public key from the certificate:
-    SecKeyRef publicKeyRef;
+    SecKeyRef publicKeyRef = NULL;
     if (@available(iOS 12, macOS 10.14, *)) {
         publicKeyRef = SecCertificateCopyKey(certRef);
     } else {
