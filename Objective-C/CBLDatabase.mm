@@ -1124,9 +1124,11 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 - (void) removeActiveStoppable: (id<CBLStoppable>)stoppable {
     CBL_LOCK(_mutex) {
         [_activeStoppables removeObject: stoppable];
-        
-        if (_activeStoppables.count == 0)
+        if (_activeStoppables.count == 0) {
+            [_closeCondition lock];
             [_closeCondition broadcast];
+            [_closeCondition unlock];
+        }
     }
 }
 
