@@ -357,6 +357,10 @@
 		40BC51F92AFC40F40090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
 		40BC51FA2AFC56BB0090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
 		40BC51FB2AFC56BC0090EDD5 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */; };
+		40EF69622B7C03D300F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */; };
+		40EF69642B7C03EC00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */; };
+		40EF69662B7C03FE00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */; };
+		40EF696A2B7C041D00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */; };
 		69002EB9234E693F00776107 /* CBLErrorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 69002EA9234E693F00776107 /* CBLErrorMessage.h */; };
 		69002EBA234E693F00776107 /* CBLErrorMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 69002EB8234E693F00776107 /* CBLErrorMessage.m */; };
 		69002EBB234E695400776107 /* CBLErrorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 69002EA9234E693F00776107 /* CBLErrorMessage.h */; };
@@ -2182,6 +2186,7 @@
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		40BC51F42AFC40930090EDD5 /* CBLBlockConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlockConflictResolver.h; sourceTree = "<group>"; };
 		40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
+		40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
 		69002EB8234E693F00776107 /* CBLErrorMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLErrorMessage.m; sourceTree = "<group>"; };
 		6932D48B2954640000D28C18 /* CBLQueryFullTextIndexExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLQueryFullTextIndexExpression.h; path = ../CBLQueryFullTextIndexExpression.h; sourceTree = "<group>"; };
@@ -2967,6 +2972,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		40EF695E2B7C038000F0CB50 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		930C7F7C20FE4F7400C74A12 /* Util */ = {
 			isa = PBXGroup;
 			children = (
@@ -3695,6 +3708,7 @@
 				9382354F207D9EA30022328B /* EE */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
 				9398D92D1E03467C00464432 /* vendor */,
+				40EF695E2B7C038000F0CB50 /* Resources */,
 				9388CB7421BCDF8B005CA66D /* Scripts */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
 				9398D9131E03434200464432 /* Products */,
@@ -4818,6 +4832,7 @@
 				275F926F1E4D30A4007FD5A2 /* Sources */,
 				275F92701E4D30A4007FD5A2 /* Frameworks */,
 				275F92711E4D30A4007FD5A2 /* Headers */,
+				40EF69632B7C03E300F0CB50 /* Resources */,
 				93CED8D52048B3D600E6F0A4 /* Remove private headers */,
 			);
 			buildRules = (
@@ -4911,6 +4926,7 @@
 				9343EF2E207D611600F19A89 /* Sources */,
 				9343EF8D207D611600F19A89 /* Frameworks */,
 				9343EF90207D611600F19A89 /* Headers */,
+				40EF69652B7C03F600F0CB50 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -4932,6 +4948,7 @@
 				9343F015207D61AB00F19A89 /* Sources */,
 				9343F0B1207D61AB00F19A89 /* Frameworks */,
 				9343F0B4207D61AB00F19A89 /* Headers */,
+				40EF69692B7C041400F0CB50 /* Resources */,
 				9343F12D207D61AB00F19A89 /* Remove private headers */,
 			);
 			buildRules = (
@@ -5084,6 +5101,7 @@
 				9398D90D1E03434200464432 /* Sources */,
 				9398D90E1E03434200464432 /* Frameworks */,
 				9398D90F1E03434200464432 /* Headers */,
+				40EF69612B7C03C600F0CB50 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -5388,6 +5406,38 @@
 			buildActionMask = 2147483647;
 			files = (
 				93DECF40200DBE5900F44953 /* Support in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40EF69612B7C03C600F0CB50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40EF69622B7C03D300F0CB50 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40EF69632B7C03E300F0CB50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40EF69642B7C03EC00F0CB50 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40EF69652B7C03F600F0CB50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40EF69662B7C03FE00F0CB50 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40EF69692B7C041400F0CB50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40EF696A2B7C041D00F0CB50 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
