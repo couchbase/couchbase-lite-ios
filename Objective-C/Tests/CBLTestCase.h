@@ -97,6 +97,12 @@ NS_ASSUME_NONNULL_BEGIN
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
 - (nullable CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
 
+/** Wrapper for openDB. Use this to override. */
+- (void) initDB;
+
+/** Opens test database*/
+- (void) openDB;
+
 /** Reopen the default test database (.db property). */
 - (void) reopenDB;
 

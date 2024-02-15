@@ -57,7 +57,7 @@
         Assert([[NSFileManager defaultManager] removeItemAtPath: dir error: &error],
                @"Error deleting CouchbaseLite folder: %@", error);
     }
-    [self openDB];
+    [self initDB];
 }
 
 - (void) tearDown {
@@ -117,6 +117,10 @@
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }
 
+- (void) initDB {
+    [self openDB];
+}
+
 - (void) openDB {
     Assert(!_db);
     NSError* error;
@@ -131,7 +135,7 @@
         Assert([_db close: &error], @"Close error: %@", error);
         _db = nil;
     }
-    [self openDB];
+    [self initDB];
 }
 
 - (void) cleanDB {
