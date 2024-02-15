@@ -3918,7 +3918,6 @@
 		93BFCD931E0380A300E52F8A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				AE2022A22B7EA8B700AACB47 /* Extensions */,
 				930C7F7C20FE4F7400C74A12 /* Util */,
 				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
 				1ADA05382240218F0068F745 /* AuthenticatorTest.m */,
@@ -4197,13 +4196,6 @@
 				AE006DAA2B7135F400884E2B /* VectorEncoding.swift */,
 			);
 			name = VectorIndex;
-			sourceTree = "<group>";
-		};
-		AE2022A22B7EA8B700AACB47 /* Extensions */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
