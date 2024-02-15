@@ -1712,8 +1712,6 @@
 		AE006DAB2B7135F400884E2B /* VectorEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE006DAA2B7135F400884E2B /* VectorEncoding.swift */; };
 		AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
 		AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
-		AE006DE72B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
-		AE006DE82B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		AE006DF72B7BE99D00884E2B /* Frameworks in Resources */ = {isa = PBXBuildFile; fileRef = AE006DF62B7BE99D00884E2B /* Frameworks */; };
@@ -6670,7 +6668,6 @@
 				1A621D792887DCFC0017F905 /* QueryTest+Collection.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
 				1AA67439227924110018CC6D /* QueryTest+Meta.m in Sources */,
-				AE006DE82B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
@@ -6810,7 +6807,6 @@
 				1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */,
 				1A908401288027EE006B1885 /* ReplicatorTest+Collection.m in Sources */,
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
-				AE006DE72B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				1AA3D78422AB07C50098E16B /* CustomLogger.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,

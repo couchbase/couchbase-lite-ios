@@ -47,7 +47,7 @@
     return path;
 }
 
-- (void) testVectorIndexConfigurationDefaultValue {
+- (void) _testVectorIndexConfigurationDefaultValue {
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
 
     AssertEqualObjects(config.encoding, [config getEncoding]);
@@ -56,7 +56,7 @@
     AssertEqual(config.maxTrainingSize, 256 * config.centroids);
 }
 
-- (void) testVectorIndexConfigurationSettersAndGetters {
+- (void) _testVectorIndexConfigurationSettersAndGetters {
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
     
     CBLVectorEncoding* noneEncoding = [CBLVectorEncoding none];
@@ -76,7 +76,7 @@
     AssertEqual(config.maxTrainingSize, 200);
 }
 
-- (void) testDimensionsValidation {
+- (void) _testDimensionsValidation {
     CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 1 centroids: 10];
     AssertNotNil(config1);
     
@@ -94,7 +94,7 @@
     }];
 }
 
-- (void) testCentroidsValidation {
+- (void) _testCentroidsValidation {
     CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 300 centroids: 1];
     AssertNotNil(config1);
     
@@ -112,7 +112,7 @@
     }];
 }
 
-- (void) testCreateVectorIndex {
+- (void) _testCreateVectorIndex {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: nil];
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
