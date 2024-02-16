@@ -39,7 +39,7 @@
 }
 
 - (void) _testVectorIndexConfigurationDefaultValue {
-    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 20];
 
     AssertEqualObjects(config.encoding, [config getEncoding]);
     AssertEqual(config.metric, kCBLDistanceMetricEuclidean);
@@ -48,7 +48,7 @@
 }
 
 - (void) _testVectorIndexConfigurationSettersAndGetters {
-    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 20];
     
     CBLVectorEncoding* noneEncoding = [CBLVectorEncoding none];
     
@@ -60,7 +60,7 @@
     AssertEqual(config.expression, @"vector");
     AssertEqualObjects(config.expressions, @[@"vector"]);
     AssertEqual(config.dimensions, 300);
-    AssertEqual(config.centroids, 10);
+    AssertEqual(config.centroids, 20);
     AssertEqual(config.encoding, noneEncoding);
     AssertEqual(config.metric, kCBLDistanceMetricCosine);
     AssertEqual(config.minTrainingSize, 100);
@@ -68,19 +68,19 @@
 }
 
 - (void) _testDimensionsValidation {
-    CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 1 centroids: 10];
+    CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 1 centroids: 20];
     AssertNotNil(config1);
     
-    CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 2048 centroids: 10];
+    CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 2048 centroids: 20];
     AssertNotNil(config2);
     
     [self expectException: NSInvalidArgumentException in:^{
-        (void) [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 0 centroids: 10];
+        (void) [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 0 centroids: 20];
         NSLog(@"Invalid Argument test for dimensions = 0");
     }];
     
     [self expectException: NSInvalidArgumentException in:^{
-        (void) [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 2049 centroids: 10];
+        (void) [[CBLVectorIndexConfiguration alloc] initWithExpression:@"vector" dimensions: 2049 centroids: 20];
         NSLog(@"Invalid Argument test for dimensions = 2049");
     }];
 }
@@ -106,7 +106,7 @@
 - (void) _testCreateVectorIndex {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: nil];
-    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 20];
     
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -114,7 +114,7 @@
     AssertEqual(names.count, 1u);
     AssertEqualObjects(names, (@[@"words_index"]));
     
-    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 300)";
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
     
     CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
     [parameters setValue: kDinnerVector forName: @"vector"];
@@ -127,7 +127,7 @@
     
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
-    AssertEqual(allObjects.count, 300);
+    AssertEqual(allObjects.count, 20);
 }
 
 @end
