@@ -29,15 +29,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-- (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
-    NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
-                                                                       ofType: nil
-                                                                  inDirectory: directory];
-    Assert(path, @"FATAL: Missing file '%@' in bundle directory '%@'", fileName, directory);
-    return path;
-}
-
 - (void)testMigration {
     NSFileManager *manager = [NSFileManager defaultManager];
     NSString* copiedPath = [self.directory stringByAppendingPathComponent: @"iosdb.cblite2"];

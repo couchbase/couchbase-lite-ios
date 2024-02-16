@@ -57,7 +57,7 @@
         Assert([[NSFileManager defaultManager] removeItemAtPath: dir error: &error],
                @"Error deleting CouchbaseLite folder: %@", error);
     }
-    [self openDB];
+    [self initDB];
 }
 
 - (void) tearDown {
@@ -111,10 +111,23 @@
     #endif
 }
 
+- (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
+    NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
+                                                                       ofType: nil
+                                                                  inDirectory: directory];
+    Assert(path, @"FATAL: Missing file '%@' in bundle directory '%@'", fileName, directory);
+    return path;
+}
+
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     config.directory = self.directory;
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
+}
+
+- (void) initDB {
+    [self openDB];
 }
 
 - (void) openDB {

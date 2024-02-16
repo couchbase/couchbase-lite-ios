@@ -1710,6 +1710,12 @@
 		AE006D422B696DF600884E2B /* CBLProductQuantizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE006D3E2B696DF600884E2B /* CBLProductQuantizer.mm */; };
 		AE006DA92B7135D100884E2B /* VectorIndexConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE006DA82B7135D100884E2B /* VectorIndexConfiguration.swift */; };
 		AE006DAB2B7135F400884E2B /* VectorEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE006DAA2B7135F400884E2B /* VectorEncoding.swift */; };
+		AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
+		AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
+		AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		AE006DFD2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AE006DFB2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h */; };
+		AE006DFE2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AE006DFB2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2049,6 +2055,26 @@
 			files = (
 				93BB72781E446FE000427251 /* CouchbaseLite.framework in CopyFiles */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE006DC62B76808100884E2B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE006DCB2B76809300884E2B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -2689,6 +2715,10 @@
 		AE006D3E2B696DF600884E2B /* CBLProductQuantizer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLProductQuantizer.mm; sourceTree = "<group>"; };
 		AE006DA82B7135D100884E2B /* VectorIndexConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorIndexConfiguration.swift; sourceTree = "<group>"; };
 		AE006DAA2B7135F400884E2B /* VectorEncoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorEncoding.swift; sourceTree = "<group>"; };
+		AE006DD22B7B9FEF00884E2B /* CBLWordEmbeddingModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLWordEmbeddingModel.h; sourceTree = "<group>"; };
+		AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLWordEmbeddingModel.m; sourceTree = "<group>"; };
+		AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VectorSearchTest.m; sourceTree = "<group>"; };
+		AE006DFB2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLVectorIndexConfiguration+Internal.h"; path = "V/CBLVectorIndexConfiguration+Internal.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3021,6 +3051,8 @@
 				930C7F8120FE4F7400C74A12 /* CBLMockConnectionErrorLogic.h */,
 				930C7F7E20FE4F7400C74A12 /* CBLMockConnectionErrorLogic.m */,
 				930C7F8020FE4F7400C74A12 /* CBLMockConnectionLifecycleLocation.h */,
+				AE006DD22B7B9FEF00884E2B /* CBLWordEmbeddingModel.h */,
+				AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -3930,6 +3962,7 @@
 				1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
+				AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -4140,6 +4173,7 @@
 				AE006D372B696B3700884E2B /* CBLScalarQuantizer.h */,
 				AE006D382B696B3700884E2B /* CBLScalarQuantizer.mm */,
 				AE006CD12B62B21300884E2B /* CBLVectorEncoding+Internal.h */,
+				AE006DFB2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h */,
 			);
 			name = VectorIndex;
 			sourceTree = "<group>";
@@ -4467,6 +4501,7 @@
 				931713EE22C1836500F1B5BF /* CBLCoreMLPredictiveModel+Internal.h in Headers */,
 				931713D622C182F500F1B5BF /* CBLQueryFunction+Vector.h in Headers */,
 				9343EFDD207D611600F19A89 /* CBLTrustCheck.h in Headers */,
+				AE006DFD2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h in Headers */,
 				AE006CD22B62B23300884E2B /* CBLVectorEncoding+Internal.h in Headers */,
 				9343EFDE207D611600F19A89 /* CBLBasicAuthenticator.h in Headers */,
 				1A34714B2671C8800042C6BA /* CBLFullTextIndexConfiguration.h in Headers */,
@@ -4587,6 +4622,7 @@
 				9343F0D2207D61AB00F19A89 /* CBLQueryArrayExpression.h in Headers */,
 				1A3470C4266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */,
 				69ABB5E92976A5CA00DA0229 /* CBLDNSService.h in Headers */,
+				AE006DFE2B7D2AAF00884E2B /* CBLVectorIndexConfiguration+Internal.h in Headers */,
 				9343F0D3207D61AB00F19A89 /* CBLQueryFullTextFunction.h in Headers */,
 				934608F7247F85E300CF2F27 /* CBLTLSIdentity+Swift.h in Headers */,
 				9343F0D4207D61AB00F19A89 /* CBLDictionaryFragment.h in Headers */,
@@ -5070,6 +5106,7 @@
 				9343F138207D61EC00F19A89 /* Sources */,
 				9343F147207D61EC00F19A89 /* Frameworks */,
 				9343F149207D61EC00F19A89 /* Resources */,
+				AE006DC62B76808100884E2B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -5125,6 +5162,7 @@
 				9343F18D207D636300F19A89 /* Sources */,
 				9343F199207D636300F19A89 /* Frameworks */,
 				9343F19B207D636300F19A89 /* Resources */,
+				AE006DCB2B76809300884E2B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -6450,6 +6488,7 @@
 				933F841D220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78722AB07D70098E16B /* CustomLogger.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
+				AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				1A4160DB22836E8C0061A567 /* ReplicatorTest+Main.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
@@ -6457,6 +6496,7 @@
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1ABA63B028813A8C005835E7 /* ReplicatorTest+Collection.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
+				AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */,
 				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
@@ -6510,6 +6550,7 @@
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
+				AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
@@ -6524,6 +6565,7 @@
 				1AA3D78822AB07D80098E16B /* CustomLogger.m in Sources */,
 				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
 				1A961801289BF7F90037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
+				AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */,
 				1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
