@@ -38,15 +38,6 @@
     [self openDB];
 }
 
-- (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
-    NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
-                                                                       ofType: nil
-                                                                  inDirectory: directory];
-    Assert(path, @"FATAL: Missing file '%@' in bundle directory '%@'", fileName, directory);
-    return path;
-}
-
 - (void) _testVectorIndexConfigurationDefaultValue {
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
 
@@ -117,20 +108,20 @@
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: nil];
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" dimensions: 300 centroids: 10];
     
-    [collection createIndexWithName: @"words_index" config: config error: &error];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
     AssertEqual(names.count, 1u);
     AssertEqualObjects(names, (@[@"words_index"]));
     
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 300)";
-    CBLMutableArray* dinnerArray = [[CBLMutableArray alloc] initWithData: kDinnerVector];
     
     CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
-    [parameters setArray: dinnerArray forName:@"vector"];
+    [parameters setValue: kDinnerVector forName: @"vector"];
     
     CBLQuery* q = [_db createQuery: sql error: &error];
     [q setParameters: parameters];
+
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
     

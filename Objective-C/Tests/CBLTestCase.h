@@ -93,7 +93,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) BOOL keyChainAccessAllowed;
 
-/** Open a database with the given name for testing. Note that the database will be opened at 
+/** Returns the database path for a given db file and its directory */
+- (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir;
+
+/** Open a database with the given name for testing. Note that the database will be opened at
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
 - (nullable CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
 
