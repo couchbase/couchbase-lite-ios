@@ -640,20 +640,18 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         let r = Replicator(config: config)
         r.addDocumentReplicationListener { docReplication in
-            if docReplication.documents.count == 1 {
-                // change with single doc, will be update revisions from colA & colB collections.
+            if !docReplication.isPush {
+                // Pull will resolve the conflicts:
                 let doc = docReplication.documents[0]
                 XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
                 XCTAssertNil(doc.error)
                 
-            } else if docReplication.documents.count == 2 {
-                // change with 2 docs, will be the conflict change
+            } else {
+                // Push will have conflict errors:
                 for doc in docReplication.documents {
                     XCTAssertEqual(doc.id, doc.collection == "colA" ? "doc1" : "doc2")
                     XCTAssertEqual((doc.error as? NSError)?.code, CBLError.httpConflict)
                 }
-            } else {
-                XCTFail("Unexpected document change listener")
             }
         }
         run(replicator: r, expectedError: nil)
