@@ -24,15 +24,6 @@
 #import "CollectionUtils.h"
 #import "URLEndpointListenerTest.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface CBLURLEndpointListener (Test)
-@property (nonatomic, readonly) NSURL* localURL;
-@property (nonatomic, readonly) CBLURLEndpoint* localEndpoint;
-@end
-
-NS_ASSUME_NONNULL_END
-
 @implementation CBLURLEndpointListener (Test)
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206

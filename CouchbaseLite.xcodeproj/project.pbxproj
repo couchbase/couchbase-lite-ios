@@ -364,6 +364,10 @@
 		40086B1A2B7EDDD500DA6770 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 40086B172B7EDDD400DA6770 /* README.md */; };
 		40086B1B2B7EDDE100DA6770 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (Required, ); }; };
 		40086B3A2B800CC600DA6770 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
+		40086B532B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
+		40086B552B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
+		40086B572B803B4300DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
+		40086B582B803B4E00DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
 		40EF690C2B7757CF00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */; };
 		40EF690E2B77582E00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */; };
 		40EF69102B77584600F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */; };
@@ -2233,6 +2237,8 @@
 		40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = CouchbaseLiteVectorSearch.xcframework; sourceTree = "<group>"; };
 		40086B162B7EDDD400DA6770 /* version.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = version.txt; sourceTree = "<group>"; };
 		40086B172B7EDDD400DA6770 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		40086B452B803B2A00DA6770 /* CBLBlockConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlockConflictResolver.h; sourceTree = "<group>"; };
+		40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
 		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40E905782B5B9A6700EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
@@ -3076,6 +3082,8 @@
 				930C7F8020FE4F7400C74A12 /* CBLMockConnectionLifecycleLocation.h */,
 				AE006DD22B7B9FEF00884E2B /* CBLWordEmbeddingModel.h */,
 				AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */,
+				40086B452B803B2A00DA6770 /* CBLBlockConflictResolver.h */,
+				40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -6526,6 +6534,7 @@
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
 				1A6F0945246C78FC0097D8B5 /* URLEndpointListenerTest.m in Sources */,
+				40086B552B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */,
 				9343F141207D61EC00F19A89 /* ConcurrentTest.m in Sources */,
 				1A961800289BF7F80037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
 				9388CBAD21BD9185005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -6600,6 +6609,7 @@
 				930C7F9320FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				9343F17F207D633300F19A89 /* CBLTestCase.m in Sources */,
 				1A4160E02283759A0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
+				40086B582B803B4E00DA6770 /* CBLBlockConflictResolver.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6677,6 +6687,7 @@
 				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
+				40086B572B803B4300DA6770 /* CBLBlockConflictResolver.m in Sources */,
 				1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
@@ -6838,6 +6849,7 @@
 				1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
+				40086B532B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
