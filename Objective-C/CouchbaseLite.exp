@@ -27,7 +27,6 @@
 .objc_class_name_CBLConsoleLogger
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
-.objc_class_name_CBLDatabaseChangeObservable
 .objc_class_name_CBLDatabaseConfiguration
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
@@ -39,7 +38,6 @@
 .objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment
 .objc_class_name_CBLIndex
-.objc_class_name_CBLIndexable
 .objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLLog
 .objc_class_name_CBLLogFileConfiguration
