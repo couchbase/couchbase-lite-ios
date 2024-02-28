@@ -83,7 +83,7 @@ struct PendingWrite {
     dispatch_queue_t _queue;
     NSString* _expectedAcceptHeader;
     CBLHTTPLogic* _logic;
-    std::atomic<C4Socket*> _c4socket;
+    C4Socket* _c4socket;
     CFHTTPMessageRef _httpResponse;
     id _keepMeAlive;
     
@@ -223,21 +223,49 @@ static void doDispose(C4Socket* s) {
 
 - (void) dealloc {
     CBLLogVerbose(WebSocket, @"%@: DEALLOC...", self);
-    Assert(!_in);
-    Assert(_sockfd < 0);
+    Assert(!_in, @"Network stream was not closed");
+    Assert(_sockfd < 0, @"Socket was not closed");
     free(_readBuffer);
-    if (_httpResponse)
+    if (_httpResponse) {
         CFRelease(_httpResponse);
+    }
 }
 
 - (void) dispose {
-    CBLLogVerbose(WebSocket, @"%@: C4Socket of is being disposed", self);
+    CBLLogVerbose(WebSocket, @"%@: CBLWebSocket is being disposed", self);
+    
     // This has to be done synchronously, because _c4socket will be freed when this method returns
-    auto socket = _c4socket.exchange(nullptr);
-    if (socket)
+    [self callC4Socket: ^(C4Socket *socket) {
+        // A lock is necessary as the socket could be accessed from another thread under the dispatch
+        // queue, otherwise crash will happen as the c4socket will be freed after this.
+        // The c4socket doesn't call dispose under a mutex so this is safe from being deadlock.
         c4Socket_setNativeHandle(socket, nullptr);
-    // Remove the self-reference, so this object will be dealloced:
-    _keepMeAlive = nil;
+        self->_c4socket = nullptr;
+    }];
+
+    dispatch_async(_queue, ^{
+        // CBSE-16151:
+        //
+        // The CBLWebSocket may be called to dispose() by the c4socket before the
+        // disconnect() can happen. For example, if the CBLWebSocket cannot
+        // call c4socket_closed() callback before the timeout (5 seconds),
+        // the c4socket will call to dispose() the CBLWebSocket right away.
+        //
+        // Therefore, before CBLWebSocket is dealloc, we need to ensure that the
+        // disconnect() is called to close the network steams and sockets. This
+        // needs to be done under the same queue that the network streams and
+        // c4socket's handlers/callbacks are using to avoid threading issues.
+        //
+        // Note: the CBLWebSocket will be retained until this block is called
+        // even though the _keepMeAlive is set to nil at the end of this
+        // dispose method.
+        if ([self isConnected]) {
+            [self disconnect];
+        }
+    });
+    
+    // Remove the self-reference, so this object will be dealloced.
+    self->_keepMeAlive = nil;
 }
 
 - (void) clearHTTPState {
@@ -291,9 +319,11 @@ static void doDispose(C4Socket* s) {
 }
 
 - (void) callC4Socket: (void (^)(C4Socket*))callback {
-    auto socket = _c4socket.load();
-    if (socket)
-        callback(socket);
+    @synchronized (self) {
+        if (_c4socket) {
+            callback(_c4socket);
+        }
+    }
 }
 
 #pragma mark - HANDSHAKE:
@@ -467,7 +497,7 @@ static void doDispose(C4Socket* s) {
                     return;
                 }
                 
-                // Create a pair steam with the socket:
+                // Create a pair stream with the socket:
                 CFReadStreamRef readStream;
                 CFWriteStreamRef writeStream;
                 CFStreamCreatePairWithSocket(kCFAllocatorDefault, self->_sockfd, &readStream, &writeStream);
@@ -854,7 +884,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) closeSocket {
     CBLLogInfo(WebSocket, @"%@: CBLWebSocket closeSocket requested", self);
     dispatch_async(_queue, ^{
-        if (self->_in || self->_out || self->_sockfd >= 0) {
+        if ([self isConnected]) {
             [self closeWithError: nil];
         }
     });
@@ -1091,6 +1121,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         [_dnsService stop];
         _dnsService = nil;
     }
+}
+
+- (BOOL) isConnected {
+    return (_in || _out || _sockfd >= 0 || _dnsService);
 }
 
 #pragma mark - Helper
