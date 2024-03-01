@@ -1,8 +1,8 @@
 //
-//  CBL-EE Swift Tests - iOS App.xcconfig
+//  CBL_EE_Common.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,10 +17,6 @@
 //  limitations under the License.
 //
 
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
-CODE_SIGN_IDENTITY = iPhone Developer
-INFOPLIST_FILE = $(SRCROOT)/Swift/Tests/iOS/Info.plist
-LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
-PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-swift-ios-tests-app
-PRODUCT_NAME = CBL-EE Swift Tests
-SDKROOT = iphoneos
+GCC_PREPROCESSOR_DEFINITIONS        = COUCHBASE_ENTERPRISE=1 $(inherited)
+OTHER_SWIFT_FLAGS                   = -DCOUCHBASE_ENTERPRISE
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) COUCHBASE_ENTERPRISE

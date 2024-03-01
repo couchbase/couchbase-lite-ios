@@ -18,7 +18,6 @@ frameworks/
 # CBL files:
 Tests/Extensions/CouchbaseLiteVectorSearch.xcframework
 vendor/couchbase-lite-core-EE
-*_EE*.xcscheme
 
 # spm 
 .swiftpm/*

@@ -2,7 +2,7 @@
 //  Project.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@
 
 CBL_VERSION_STRING                 = 3.2.0
 CBL_BUILD_NUMBER                   = 0
-CBL_EXPORTED_SYMBOLS_FILE          = Objective-C/CouchbaseLite.exp
-CBL_SWIFT_PRIVATE_MODULEMAP_FILE   = Swift/CouchbaseLiteSwift.private.modulemap
 CBL_COPYRIGHT_YEAR                 = 2021
 
 IPHONEOS_DEPLOYMENT_TARGET         = 12.0

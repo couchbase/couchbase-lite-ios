@@ -17,7 +17,7 @@
 
 #  All public global symbols -- classes, functions, constants -- need to be declared here.
 
-#  Public classes:
+# Public classes:
 .objc_class_name_CBLArray
 .objc_class_name_CBLAuthenticator
 .objc_class_name_CBLBasicAuthenticator
@@ -64,7 +64,9 @@
 .objc_class_name_CBLQueryResult
 .objc_class_name_CBLQueryResultSet
 .objc_class_name_CBLQuerySelectResult
+.objc_class_name_CBLQuerySortOrder
 .objc_class_name_CBLQueryVariableExpression
+.objc_class_name_CBLReplicatedDocument
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
@@ -77,7 +79,34 @@
 .objc_class_name_CBLFullTextIndexConfiguration
 .objc_class_name_CBLValueIndexConfiguration
 
-# NSString constants:
+# Blob Constants:
+_kCBLBlobType
+_kCBLTypeProperty
+_kCBLBlobDigestProperty
+_kCBLBlobLengthProperty
+_kCBLBlobContentTypeProperty
+
+# Default Constants:
+_kCBLDefaultLogFileUsePlainText
+_kCBLDefaultLogFileMaxSize
+_kCBLDefaultLogFileMaxRotateCount
+_kCBLDefaultFullTextIndexIgnoreAccents
+_kCBLDefaultReplicatorType
+_kCBLDefaultReplicatorContinuous
+_kCBLDefaultReplicatorAllowReplicatingInBackground
+_kCBLDefaultReplicatorHeartbeat
+_kCBLDefaultReplicatorMaxAttemptsSingleShot
+_kCBLDefaultReplicatorMaxAttemptsContinuous
+_kCBLDefaultReplicatorMaxAttemptWaitTime
+_kCBLDefaultReplicatorEnableAutoPurge
+_kCBLDefaultReplicatorSelfSignedCertificateOnly
+_kCBLDefaultReplicatorAcceptParentCookies
+_kCBLDefaultListenerPort
+_kCBLDefaultListenerDisableTls
+_kCBLDefaultListenerReadOnly
+_kCBLDefaultListenerEnableDeltaSync
+
+# Others constants:
 _CBLErrorDomain
 _kCBLAllPropertiesName
 _kCBLDefaultCollectionName

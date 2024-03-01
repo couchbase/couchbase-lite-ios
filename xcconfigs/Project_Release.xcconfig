@@ -2,7 +2,7 @@
 //  Project_Release.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include "Project.xcconfig"
 
+EXPORTED_SYMBOLS_FILE            = $(CBL_EXPORTED_SYMBOLS_FILE)
 DEAD_CODE_STRIPPING              = YES                   // Strip dead code
 DEBUG_INFORMATION_FORMAT         = dwarf-with-dsym       // Debug symbols in external .dSYM file
 DEPLOYMENT_POSTPROCESSING        = YES                   // Enable symbol stripping
@@ -26,8 +27,7 @@ STRIP_STYLE                      = non-global
 ENABLE_NS_ASSERTIONS             = NO                    // Disable NSAssert
 ENABLE_TESTABILITY               = NO
 GCC_OPTIMIZATION_LEVEL           = s                     // s=Small, fast=Fastest
-GCC_PREPROCESSOR_DEFINITIONS_DEF = NDEBUG=1 CBL_VERSION_STRING="\"$(CBL_VERSION_STRING)\"" CBL_BUILD_NUMBER="$(CBL_BUILD_NUMBER)" CBL_COPYRIGHT_YEAR="$(CBL_COPYRIGHT_YEAR)" CBL_PRODUCT_NAME="\"$(PRODUCT_NAME)\"" CBL_EDITION="$(CBL_EDITION)" $(inherited) // NDEBUG is recognized by Unix headers
-GCC_PREPROCESSOR_DEFINITIONS     = ${GCC_PREPROCESSOR_DEFINITIONS_DEF}
+GCC_PREPROCESSOR_DEFINITIONS     = NDEBUG=1 CBL_VERSION_STRING="\"$(CBL_VERSION_STRING)\"" CBL_BUILD_NUMBER="$(CBL_BUILD_NUMBER)" CBL_COPYRIGHT_YEAR="$(CBL_COPYRIGHT_YEAR)" CBL_PRODUCT_NAME="\"$(PRODUCT_NAME)\"" CBL_EDITION="$(CBL_EDITION)" $(inherited) // NDEBUG is recognized by Unix headers
 LD_GENERATE_MAP_FILE             = YES                   // Generate link map, to analyze code size
 LD_MAP_FILE_PATH                 = $(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME)-LinkMap-$(CURRENT_ARCH).txt
 LLVM_LTO                         = YES                   // Link-time optimization FTW!

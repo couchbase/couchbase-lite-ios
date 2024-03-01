@@ -1,8 +1,8 @@
 //
-//  CBL ObjC.xcconfig
+//  CBL_ObjC.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+CBL_EXPORTED_SYMBOLS_FILE    = Objective-C/CouchbaseLite.exp
 DEFINES_MODULE               = YES
 DYLIB_COMPATIBILITY_VERSION  = 1
 DYLIB_CURRENT_VERSION        = 1

@@ -1,9 +1,8 @@
 //
-//  CBL ObjC Tests.xcconfig
+//  CBL_EE_Swift_Tests_iOS_App.xcconfig
 //  CouchbaseLite
 //
-//
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,10 +16,13 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//
 
-HEADER_SEARCH_PATHS       = $(SRCROOT)/vendor/couchbase-lite-core/C/include $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC
-INFOPLIST_FILE            = Objective-C/Tests/Info.plist
-LD_RUNPATH_SEARCH_PATHS   = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
-PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteTests
-PRODUCT_NAME              = CouchbaseLiteTests
+#include "CBL_EE_Common.xcconfig"
+
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+CODE_SIGN_IDENTITY = iPhone Developer
+INFOPLIST_FILE = $(SRCROOT)/Swift/Tests/iOS/Info.plist
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
+PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-swift-ios-tests-app
+PRODUCT_NAME = CBL-EE Swift Tests
+SDKROOT = iphoneos

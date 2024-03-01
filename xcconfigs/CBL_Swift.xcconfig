@@ -1,8 +1,8 @@
 //
-//  CBL Swift Tests.xcconfig
+//  CBL_Swift.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -16,8 +16,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-INFOPLIST_FILE = Swift/Tests/Info.plist
-LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @loader_path/Frameworks @executable_path/../Frameworks @loader_path/../Frameworks
-PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftTests
-PRODUCT_NAME = CouchbaseLiteSwiftTests
-SWIFT_OBJC_BRIDGING_HEADER = Swift/Tests/CBL Swift Tests-Bridging-Header.h
+
+#include "CBL_ObjC.xcconfig"
+
+CBL_EXPORTED_SYMBOLS_FILE    = // None
+MODULEMAP_PRIVATE_FILE       = Swift/CouchbaseLiteSwift.private.modulemap
+INFOPLIST_FILE               = Swift/Info.plist
+PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
+PRODUCT_NAME                 = CouchbaseLiteSwift
