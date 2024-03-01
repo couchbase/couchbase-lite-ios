@@ -1,8 +1,8 @@
 //
-//  CBL-EE ObjC Tests - iOS App.xcconfig
+//  CBL_EE_ObjC_Tests_iOS_App.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//
+
+#include "CBL_EE_Common.xcconfig"
 
 ASSETCATALOG_COMPILER_APPICON_NAME         = AppIcon
 CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = NO
