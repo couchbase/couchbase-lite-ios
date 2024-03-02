@@ -4,11 +4,11 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]"
-  echo "\nOptions:"
-  echo "  --notest\t create a release package but no tests needs to be run"
-  echo "  --nocov\t create a release package, run tests but no code coverage zip"
-  echo "  --nodocs\t create a release package without API docs"
+  echo -e "Usage: ${0} -o <Output Directory> -e <Edition; ce or ee> [-v <Version (<Version Number>[-<Build Number>])>]"
+  echo -e "\nOptions:"
+  echo -e "  --notest\t create a release package but no tests needs to be run"
+  echo -e "  --nocov\t create a release package, run tests but no code coverage zip"
+  echo -e "  --nodocs\t create a release package without API docs"
 }
 
 function checkCrashLogs
@@ -30,8 +30,9 @@ do
       OUTPUT_DIR=${2}
       shift
       ;;
-      --EE)
-      EE=YES
+      -e)
+      EDITION=${2}
+      shift
       ;;
       --notest)
       NO_TEST=YES
@@ -59,20 +60,30 @@ then
   exit 4
 fi
 
-if [ -z "$EE" ]
+if [ -z "$EDITION" ]
+then
+  usage
+  exit 4
+fi
+
+if [ "$EDITION" == "ce" ]
 then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="swift_coverage"
   EDITION="community"
-else
+elif [ "$EDITION" == "ee" ]
+then
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
   COVERAGE_NAME="swift_coverage-ee"
   EDITION="enterprise"
   OPTS="--EE"
+else
+  echo "Invalid Edition"
+  exit 4
 fi
 
 if [ -z "$PRETTY" ]
@@ -190,4 +201,3 @@ fi
 rm -rf "$BUILD_DIR"
 rm -rf "$OUTPUT_SWIFT_XC_DIR"
 rm -rf "$OUTPUT_DOCS_DIR"
-

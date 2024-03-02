@@ -64,6 +64,14 @@
     _directory = directory;
 }
 
+#ifdef COUCHBASE_ENTERPRISE
+- (void) setEncryptionKey: (CBLEncryptionKey*)encryptionKey {
+    [self checkReadonly];
+    
+    _encryptionKey = encryptionKey;
+}
+#endif
+
 #pragma mark - Internal
 
 - (void) checkReadonly {

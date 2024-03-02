@@ -30,8 +30,12 @@ pipeline {
                     shopt -s extglob dotglob
 
                     # move PR related repo to tmp folder
-                    mkdir tmp
-                    mv !(tmp) tmp
+                    mkdir couchbase-lite-ios
+                    mv !(couchbase-lite-ios) couchbase-lite-ios
+                    # submodule update inside lite-ios
+                    pushd couchbase-lite-ios
+                    git submodule update --init --recursive
+                    popd
 
                     # Sometimes the PR depends on a PR in the EE repo as well. It will look for a branch with the same name as the one in CE repo. If not found, use the name of the target branch (master, release/XXX etc) 
                     # clone the EE-repo
@@ -40,29 +44,17 @@ pipeline {
 
                     # submodule update for core-EE
                     pushd couchbase-lite-ios-ee
-                    git submodule update --init couchbase-lite-core-EE
-                    popd
-
-                    # restructure folders
-                    mv couchbase-lite-ios-ee/* .
-                    rm -rf couchbase-lite-ios && mv tmp couchbase-lite-ios
-                    
-                    # submodule update inside lite-ios
-                    pushd couchbase-lite-ios
                     git submodule update --init --recursive
                     popd
-
-                    # remove tmp folders
-                    rmdir couchbase-lite-ios-ee
                     
-                    ./Scripts/prepare_project.sh
+                    ./couchbase-lite-ios-ee/Scripts/prepare_project.sh
                 """
             }
         }
         stage('Build'){
             steps {
                 sh """ 
-		            ./${env.PRODUCT}/Scripts/pull_request_build.sh
+		            ./couchbase-lite-ios/Scripts/pull_request_build.sh
                 """
             }
         }

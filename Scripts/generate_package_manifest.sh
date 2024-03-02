@@ -65,4 +65,3 @@ rm "Package.swift"
 # generates the package manifest
 FILENAME="$(basename $ZIP_PATH)-Package.swift"
 createManifest $OUTPUT_DIR/$FILENAME
-  
