@@ -2,9 +2,6 @@ pipeline {
     options {
         disableConcurrentBuilds() 
     }
-    environment {
-       PRODUCT = 'couchbase-lite-ios'
-    }
     agent { label 'mobile-builder-ios-pull-request'  }
     stages {
         stage('Cleanup'){
