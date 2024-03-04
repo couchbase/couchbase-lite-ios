@@ -82,7 +82,7 @@
     Assert([names containsObject: @"words_index_1"]);
     
     CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
-                                                                                        dimensions: 300
+                                                                                        dimensions: 2048
                                                                                          centroids: 20];
     AssertNotNil(config2);
     Assert([collection createIndexWithName: @"words_index_2" config: config2 error: &error]);
@@ -92,12 +92,6 @@
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                             dimensions: 0 
-                                                             centroids: 20];
-    }];
-    
-    [self expectException: NSInvalidArgumentException in:^{
-        (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
-                                                            dimensions: 301
                                                              centroids: 20];
     }];
     
@@ -118,7 +112,6 @@
                                                                                          centroids: 1];
     AssertNotNil(config1);
     Assert([collection createIndexWithName: @"words_index_1" config: config1 error: &error]);
-    
     
     CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                         dimensions: 300
