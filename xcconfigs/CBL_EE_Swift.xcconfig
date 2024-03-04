@@ -21,4 +21,4 @@
 #include "CBL_Swift.xcconfig"
 
 CBL_EXPORTED_SYMBOLS_FILE    = // None
-MODULEMAP_PRIVATE_FILE       = ../Sources/Swift/CouchbaseLiteSwift.private.modulemap
+MODULEMAP_PRIVATE_FILE       = ../couchbase-lite-ios-ee/Sources/Swift/CouchbaseLiteSwift.private.modulemap
