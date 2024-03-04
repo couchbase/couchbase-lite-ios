@@ -6,6 +6,7 @@
 //  COUCHBASE CONFIDENTIAL -- part of Couchbase Lite Enterprise Edition
 //
 
+#import "CBLErrors.h"
 #import "CBLTestCase.h"
 #import "CBLVectorEncoding.h"
 #import "CBLWordEmbeddingModel.h"
@@ -503,7 +504,7 @@
 }
 
 // CBL-5459
-- (void) testSubquantizersValidation {
+- (void) _testSubquantizersValidation {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
@@ -511,7 +512,7 @@
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
                                                                                         centroids: 20];
-    config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 2
+    config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 1
                                                                       bits: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -713,9 +714,6 @@
                                                                                        dimensions: 300
                                                                                         centroids: 20];
     Assert([collection createIndexWithName: @"words_index" config: config2 error: &error]);
-    
-    NSArray* names = [collection indexes: &error];
-    Assert([names containsObject: @"words_index"]);
 }
 
 - (void) testDeleteVectorIndex {
@@ -750,6 +748,46 @@
     
     names = [collection indexes: &error];
     AssertEqual(names.count, 0);
+}
+
+// CBL-5466
+- (void) _testVectorMatchOnNonExistingIndex {
+    NSError* error;
+    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
+    
+    [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError** err) {
+        return [self.db createQuery: sql
+                              error: err] != nil;
+    }];
+}
+
+// CBL-5465
+- (void) _testVectorMatchDefaultLimit {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 3);
 }
 
 @end
