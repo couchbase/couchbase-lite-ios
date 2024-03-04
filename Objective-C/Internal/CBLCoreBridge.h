@@ -43,7 +43,7 @@ public:
     
     ~C4Transaction() {
         if (_active)
-            c4db_endTransaction(_db, false, nullptr);
+            (void)c4db_endTransaction(_db, false, nullptr);
     }
     
     bool begin() {

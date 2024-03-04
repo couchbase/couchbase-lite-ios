@@ -12,7 +12,7 @@
     CBLDatabase* _database;
 }
 
-- (instancetype) init: (CBLDatabase*)database {
+- (instancetype) initWithDatabase: (CBLDatabase*)database {
     self = [super init];
     if (self) {
         _database = database;
@@ -20,13 +20,19 @@
     return self;
 }
 
-- (NSArray*) vectorForWord: (NSString*)word collection: (NSString*)collection {
+- (CBLArray*) vectorForWord: (NSString*)word collection: (NSString*)collection {
     NSError* error;
-    NSString* sql = [NSString stringWithFormat: @"select vector from %@ where word = %@", collection, word];
+    NSString* sql = [NSString stringWithFormat: @"select vector from %@ where word = '%@'", collection, word];
     CBLQuery* q = [_database createQuery: sql error: &error];
     CBLQueryResultSet* rs = [q execute: &error];
-    NSArray* results = [rs allResults];
-    return results.count > 0 ? results[0][@"word"] : nil;
+    NSArray<CBLQueryResult*>* results = [rs allResults];
+    
+    if (results.count == 0) {
+        return nil;
+    }
+    
+    CBLQueryResult* result = results[0];
+    return [result arrayForKey: @"vector"];
 }
 
 
@@ -38,7 +44,7 @@
         return nil;
     }
     
-    NSArray* result = [self vectorForWord: inputWord collection: @"words"];
+    CBLArray* result = [self vectorForWord: inputWord collection: @"words"];
     if (!result) {
         result = [self vectorForWord: inputWord collection: @"extwords"];
     }

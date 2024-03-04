@@ -13,7 +13,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLWordEmbeddingModel : NSObject <CBLPredictiveModel>
 
-- (instancetype) init: (CBLDatabase*) database;
+- (instancetype) initWithDatabase: (CBLDatabase*) database;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
