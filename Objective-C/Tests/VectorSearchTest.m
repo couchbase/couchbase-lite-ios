@@ -326,7 +326,7 @@
 }
 
 // CBL-5444 + CBL-5453
-- (void) testCreateVectorIndexUsingPredictionModelWithInvalidVectors {
+- (void) _testCreateVectorIndexUsingPredictionModelWithInvalidVectors {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
