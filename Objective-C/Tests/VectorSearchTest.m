@@ -360,7 +360,7 @@
     Assert([collection createIndexWithName: @"words_pred_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_pred_index"]);
+    Assert([names containsObject: @"words_pred_index"]);
 
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_pred_index, $vector, 350)";
@@ -400,7 +400,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
@@ -675,7 +675,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
@@ -726,7 +726,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
@@ -769,7 +769,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector)";
@@ -800,7 +800,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Check valid query with 1 and 10000 set limit
     int goodValues[2] = {1, 10000};
@@ -832,7 +832,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query with a single AND:
     NSString* sql = @"select meta().id, word, catid from _default.words where vector_match(words_index, $vector, 300) AND catid = 'cat1'";
@@ -866,7 +866,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query with mutiple ANDs:
     NSString* sql = @"select meta().id, word, catid from _default.words where (vector_match(words_index, $vector, 300) AND word is valued) AND catid = 'cat1'";
@@ -901,7 +901,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    Assert([names containsObject:@"words_index"]);
+    Assert([names containsObject: @"words_index"]);
     
     // Query with OR:
     NSString* sql = @"select meta().id, word, catid from _default.words where vector_match(words_index, $vector, 300) OR catid = 'cat1'";
