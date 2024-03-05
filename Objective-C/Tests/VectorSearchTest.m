@@ -751,10 +751,17 @@
 
 // CBL-5466
 - (void) _testVectorMatchOnNonExistingIndex {
-    [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError** err) {
-        return [self.db createQuery: @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
-                              error: err] != nil;
-    }];
+    NSError* vectorError;
+    [_db createQuery: @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)" 
+               error: &vectorError];
+    
+    NSError* ftsError;
+    [self.db createQuery: @"select meta().id, word from _default.words where match(fts_words_index, 'word')"
+                   error: &ftsError];
+    
+    AssertEqualObjects(vectorError, ftsError);
+    AssertEqual(vectorError.domain, CBLErrorDomain);
+    AssertEqual(vectorError.code, CBLErrorMissingIndex);
 }
 
 // CBL-5465
@@ -910,6 +917,62 @@
                               error: err] != nil;
     }];
 
+}
+
+- (void) testChangeIndexTypeUsingConfigs {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create and recreate vector index using the same config
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    // Recreate index with same name using different config - fts config
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"word"]
+                                                                                         ignoreAccents: NO 
+                                                                                              language: nil];
+    Assert([collection createIndexWithName: @"words_index" config: config2 error: &error]);
+    
+    // Recreate index with same name using different config - value config
+    CBLValueIndexConfiguration* config3 = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"word"]];
+    Assert([collection createIndexWithName: @"words_index" config: config3 error: &error]);
+}
+
+- (void) testChangeExpressionForEachIndex {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create-Recreate vector index with different expression
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vectors"
+                                                          dimensions: 300
+                                                           centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    // Create-Recreate fts index with different expression
+    CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"word"]
+                                                                                         ignoreAccents: NO
+                                                                                              language: nil];
+    Assert([collection createIndexWithName: @"fts_words_index" config: config2 error: &error]);
+    
+    config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"words"]
+                                                          ignoreAccents: NO
+                                                               language: nil];
+    Assert([collection createIndexWithName: @"fts_words_index" config: config2 error: &error]);
+    
+    // Create-Recreate fts index with different expression
+    CBLValueIndexConfiguration* config3 = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"word"]];
+    Assert([collection createIndexWithName: @"value_words_index" config: config3 error: &error]);
+    
+    config3 = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"words"]];
+    Assert([collection createIndexWithName: @"value_words_index" config: config3 error: &error]);
 }
 
 @end
