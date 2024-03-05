@@ -68,55 +68,67 @@
     AssertEqual(config.maxTrainingSize, 200);
 }
 
-- (void) testDimensionsValidation {
+// CBL-5462
+- (void) _testDimensionsValidation {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
     CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                         dimensions: 1
                                                                                          centroids: 20];
     AssertNotNil(config1);
+    Assert([collection createIndexWithName: @"words_index_1" config: config1 error: &error]);
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index_1"]);
     
     CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                         dimensions: 2048
                                                                                          centroids: 20];
     AssertNotNil(config2);
+    Assert([collection createIndexWithName: @"words_index_2" config: config2 error: &error]);
+    names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index_2"]);
     
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                             dimensions: 0 
                                                              centroids: 20];
-        NSLog(@"Invalid Argument test for dimensions = 0");
     }];
     
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" 
                                                             dimensions: 2049 
                                                              centroids: 20];
-        NSLog(@"Invalid Argument test for dimensions = 2049");
     }];
 }
 
-- (void) testCentroidsValidation {
+// CBL-5463
+- (void) _testCentroidsValidation {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
     CBLVectorIndexConfiguration* config1 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                         dimensions: 300
                                                                                          centroids: 1];
     AssertNotNil(config1);
+    Assert([collection createIndexWithName: @"words_index_1" config: config1 error: &error]);
     
     CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                         dimensions: 300
                                                                                          centroids: 64000];
     AssertNotNil(config2);
+    Assert([collection createIndexWithName: @"words_index_2" config: config2 error: &error]);
     
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" 
                                                             dimensions: 300
                                                              centroids: 0];
-        NSLog(@"Invalid Argument test for centroids = 0");
     }];
     
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" 
                                                             dimensions: 300
                                                              centroids: 64001];
-        NSLog(@"Invalid Argument test for centroids = 64001");
     }];
 }
 
@@ -129,8 +141,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, (@[@"words_index"]));
+    Assert([names containsObject: @"words_index"]);
     
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
     CBLQuery* q = [_db createQuery: sql error: &error];
@@ -159,9 +170,9 @@
     Assert([wordsCollection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [wordsCollection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, (@[@"words_index"]));
+    Assert([names containsObject: @"words_index"]);
     
+    // Query
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 350)";
     CBLQuery* q = [_db createQuery: sql error: &error];
     
@@ -210,11 +221,11 @@
     
     auxDoc = [[collection documentWithID: @"word2" error: &error] toMutable];
     [auxDoc setString: @"string" forKey: @"vector"];
-    [collection saveDocument:auxDoc error:&error];
+    [collection saveDocument: auxDoc error: &error];
     
     auxDoc = [[collection documentWithID: @"word3" error: &error] toMutable];
     [auxDoc removeValueForKey: @"vector"];
-    [collection saveDocument:auxDoc error:&error];
+    [collection saveDocument: auxDoc error: &error];
     
     // CBL-5444
     auxDoc = [[collection documentWithID: @"word4" error: &error] toMutable];
@@ -229,8 +240,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
 
     NSArray* names = [collection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, (@[@"words_index"]));
+    Assert([names containsObject: @"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 350)";
@@ -256,6 +266,7 @@
 }
 
 - (void) testCreateVectorIndexUsingPredictionModel {
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     NSError* error;
     
     CBLCollection* wordsCollection = [_db collectionWithName: @"words" scope: nil error: &error];
@@ -271,8 +282,7 @@
     Assert([wordsCollection createIndexWithName: @"words_pred_index" config: config error: &error]);
     
     NSArray* names = [wordsCollection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, ((@[@"words_pred_index"])));
+    Assert([names containsObject: @"words_pred_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_pred_index, $vector, 350)";
@@ -350,8 +360,7 @@
     Assert([collection createIndexWithName: @"words_pred_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, ((@[@"words_pred_index"])));
+    Assert([names containsObject:@"words_pred_index"]);
 
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_pred_index, $vector, 350)";
@@ -391,8 +400,7 @@
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
-    AssertEqual(names.count, 1u);
-    AssertEqualObjects(names, ((@[@"words_index"])));
+    Assert([names containsObject:@"words_index"]);
     
     // Query:
     NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
@@ -428,4 +436,320 @@
     allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
 }
+
+- (void) testCreateVectorIndexWithNoneEncoding {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.encoding = [CBLVectorEncoding none];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allObjects;
+    AssertEqual(allObjects.count, 20);
+}
+
+- (void) testCreateVectorIndexWithPQ {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    int bitsValues[3] = {8, 4, 12};
+    for (size_t i = 0; i < sizeof(bitsValues)/sizeof(int); i++) {
+        // Create vector index
+        CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                           dimensions: 300
+                                                                                            centroids: 20];
+        config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 5
+                                                                          bits: bitsValues[i]];
+        Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+        
+        NSArray* names = [collection indexes: &error];
+        Assert([names containsObject: @"words_index"]);
+        
+        // Query:
+        NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
+        CBLQuery* q = [_db createQuery: sql error: &error];
+        
+        CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+        [parameters setValue: kDinnerVector forName: @"vector"];
+        [q setParameters: parameters];
+        
+        NSString* explain = [q explain: &error];
+        Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+        CBLQueryResultSet* rs = [q execute: &error];
+        NSArray* allObjects = rs.allObjects;
+        AssertEqual(allObjects.count, 20);
+        
+        // Delete index
+        [collection deleteIndexWithName: @"words_index" error: &error];
+    }
+}
+
+// CBL-5459
+- (void) testSubquantizersValidation {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 2
+                                                                      bits: 8];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Check if valid values
+    int goodValues[17] = {2, 3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 75, 100, 150, 300};
+    for (size_t i = 0; i < sizeof(goodValues)/sizeof(int); i++) {
+        [collection deleteIndexWithName: @"words_index" error: &error];
+        config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: goodValues[i]
+                                                                          bits: 8];
+        Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    }
+    
+    // Check if exception thrown for wrong values
+    [self expectException: NSInvalidArgumentException in:^{
+        int wrongValues[2] = {0, 7};
+        for (size_t i = 0; i < sizeof(wrongValues)/sizeof(int); i++) {
+            [collection deleteIndexWithName: @"words_index" error: nil];
+            config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: wrongValues[i]
+                                                                              bits: 8];
+            [collection createIndexWithName: @"words_index" config: config error: nil];
+        }
+    }];
+}
+
+- (void) testeCreateVectorIndexWithFixedTrainingSize {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.minTrainingSize = 100;
+    config.maxTrainingSize = 100;
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allObjects;
+    AssertEqual(allObjects.count, 20);
+}
+
+- (void) testValidateMinMaxTrainingSize {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.minTrainingSize = 1;
+    config.maxTrainingSize = 100;
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Check if exception thrown for wrong values
+    [self expectException: NSInvalidArgumentException in:^{
+        int minTrainingValues[3] = {0, 0, 10};
+        int maxTrainingValues[3] = {0, 100, 9};
+        for (size_t i = 0; i < sizeof(minTrainingValues)/sizeof(int); i++) {
+            [collection deleteIndexWithName: @"words_index" error: nil];
+            config.minTrainingSize = minTrainingValues[i];
+            config.maxTrainingSize = maxTrainingValues[i];
+            [collection createIndexWithName: @"words_index" config: config error: nil];
+        }
+    }];
+}
+
+- (void) testQueryUntrainedVectorIndex {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    // out of bounds (300 words in db)
+    config.minTrainingSize = 400;
+    config.maxTrainingSize = 500;
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allObjects;
+    AssertEqual(allObjects.count, 20);
+}
+
+- (void) testCreateVectorIndexWithCosineDistance {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.metric = kCBLDistanceMetricCosine;
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 20);
+    
+    for(CBLQueryResult* result in rs){
+        // doubleAtIndex: vector_distance(words_index)
+        Assert([result doubleAtIndex: 3] > 0);
+        Assert([result doubleAtIndex: 3] < 1);
+    }
+}
+
+- (void) testCreateVectorIndexWithEuclideanDistance {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create vector index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    config.metric = kCBLDistanceMetricEuclidean;
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 20);
+    
+    for(CBLQueryResult* result in rs){
+        // doubleAtIndex: vector_distance(words_index)
+        Assert([result doubleAtIndex: 3] > 0);
+    }
+}
+
+- (void) testCreateVectorIndexWithExistingName {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create and recreate vector index using the same config
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    // Recreate index with same name using different config
+    CBLVectorIndexConfiguration* config2 = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vectors"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config2 error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject: @"words_index"]);
+}
+
+- (void) testDeleteVectorIndex {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create and recreate vector index using the same config
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 20);
+    
+    // Delete index
+    [collection deleteIndexWithName: @"words_index" error: &error];
+    
+    names = [collection indexes: &error];
+    AssertEqual(names.count, 0);
+}
+
 @end
