@@ -267,7 +267,6 @@
 }
 
 - (void) testCreateVectorIndexUsingPredictionModel {
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     NSError* error;
     
     CBLCollection* wordsCollection = [_db collectionWithName: @"words" scope: nil error: &error];
@@ -730,7 +729,7 @@
     Assert([names containsObject:@"words_index"]);
     
     // Query:
-    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)";
     CBLQuery* q = [_db createQuery: sql error: &error];
     
     CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
@@ -752,17 +751,45 @@
 
 // CBL-5466
 - (void) _testVectorMatchOnNonExistingIndex {
-    NSError* error;
-    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)";
-    
     [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError** err) {
-        return [self.db createQuery: sql
+        return [self.db createQuery: @"select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
                               error: err] != nil;
     }];
 }
 
 // CBL-5465
 - (void) _testVectorMatchDefaultLimit {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: nil];
+    
+    // Create index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query:
+    NSString* sql = @"select meta().id, word from _default.words where vector_match(words_index, $vector)";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    AssertNil(error);
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 3);
+}
+
+// CBL-5476
+// Error might not be shown
+- (void) _testVectorMatchLimitBoundary {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
@@ -775,19 +802,114 @@
     NSArray* names = [collection indexes: &error];
     Assert([names containsObject:@"words_index"]);
     
-    // Query:
-    NSString* sql = @"select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector)";
+    // Check valid query with 1 and 10000 set limit
+    int goodValues[2] = {1, 10000};
+    for (size_t i = 0; i < sizeof(goodValues)/sizeof(int); i++) {
+        NSString* sql = [NSString stringWithFormat: @"select meta().id, word from _default.words where vector_match(words_index, $vector, %d)", goodValues[i]];
+        [_db createQuery: sql error: &error];
+        AssertNil(error);
+    }
+    
+    // Check if exception thrown for wrong limit values
+    int wrongValues[3] = {-1, 0, 10001};
+    for (size_t i = 0; i < sizeof(wrongValues)/sizeof(int); i++) {
+        int currValue =  wrongValues[i];
+        [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
+            return [self.db createQuery: [NSString stringWithFormat:@"select meta().id, word from _default.words where vector_match(words_index, $vector, %d)", currValue]
+                                  error: err] != nil;
+        }];
+    }
+}
+
+- (void) testVectorMatchWithAndExpression {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 2];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query with a single AND:
+    NSString* sql = @"select meta().id, word, catid from _default.words where vector_match(words_index, $vector, 300) AND catid = 'cat1'";
     CBLQuery* q = [_db createQuery: sql error: &error];
+    AssertNil(error);
     
     CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
     [parameters setValue: kDinnerVector forName: @"vector"];
     [q setParameters: parameters];
-    
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
     CBLQueryResultSet* rs = [q execute: &error];
+
     NSArray* allObjects = rs.allResults;
-    AssertEqual(allObjects.count, 3);
+    AssertEqual(allObjects.count, 50);
+    
+    for(CBLQueryResult* result in rs){
+        // valueAtIndex: catid
+        AssertEqual([result valueAtIndex: 3], @"cat1");
+    }
+}
+
+- (void) testVectorMatchWithMultipleAndExpression {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 2];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query with mutiple ANDs:
+    NSString* sql = @"select meta().id, word, catid from _default.words where (vector_match(words_index, $vector, 300) AND word is valued) AND catid = 'cat1'";
+    CBLQuery* q = [_db createQuery: sql error: &error];
+    AssertNil(error);
+    
+    CBLQueryParameters* parameters = [[CBLQueryParameters alloc] init];
+    [parameters setValue: kDinnerVector forName: @"vector"];
+    [q setParameters: parameters];
+    NSString* explain = [q explain: &error];
+    Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    CBLQueryResultSet* rs = [q execute: &error];
+
+    NSArray* allObjects = rs.allResults;
+    AssertEqual(allObjects.count, 50);
+    
+    for(CBLQueryResult* result in rs){
+        // valueAtIndex: catid
+        AssertEqual([result valueAtIndex: 3], @"cat1");
+    }
+}
+
+// CBL-5477
+- (void) _testInvalidVectorMatchWithOrExpression {
+    NSError* error;
+    CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
+    
+    // Create index
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 2];
+    Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
+    
+    NSArray* names = [collection indexes: &error];
+    Assert([names containsObject:@"words_index"]);
+    
+    // Query with OR:
+    NSString* sql = @"select meta().id, word, catid from _default.words where vector_match(words_index, $vector, 300) OR catid = 'cat1'";
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
+        return [self.db createQuery: sql
+                              error: err] != nil;
+    }];
+
 }
 
 @end
