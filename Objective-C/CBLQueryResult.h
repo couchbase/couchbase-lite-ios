@@ -18,8 +18,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLArray.h"
-#import "CBLDictionary.h"
+#import <CouchbaseLite/CBLArray.h>
+#import <CouchbaseLite/CBLDictionary.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

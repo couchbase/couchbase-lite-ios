@@ -2,7 +2,7 @@
 //  CBLArray.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLArrayFragment.h"
+#import <CouchbaseLite/CBLArrayFragment.h>
+
 @class CBLBlob;
 @class CBLDictionary;
 @class CBLArray;
 @class CBLMutableArray;
-
 
 NS_ASSUME_NONNULL_BEGIN
 
