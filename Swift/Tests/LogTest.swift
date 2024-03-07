@@ -206,7 +206,7 @@ class LogTest: CBLTestCase {
     
     func testFileLoggingUsePlainText() throws {
         let config = self.logFileConfig()
-        XCTAssertEqual(config.usePlainText, LogFileConfiguration.defaultUsePlainText)
+        XCTAssertEqual(config.usePlainText, LogFileConfiguration.defaultUsePlaintext)
         config.usePlainText = true
         XCTAssert(config.usePlainText)
         Database.log.file.config = config

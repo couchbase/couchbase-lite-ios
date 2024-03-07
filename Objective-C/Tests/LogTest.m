@@ -228,7 +228,7 @@
 
 - (void) testFileLoggingUsePlainText {
     CBLLogFileConfiguration* config = [self logFileConfig];
-    AssertEqual(config.usePlainText, kCBLDefaultLogFileUsePlainText);
+    AssertEqual(config.usePlainText, kCBLDefaultLogFileUsePlaintext);
     config.usePlainText = YES;
     Assert(config.usePlainText);
     CBLDatabase.log.file.config = config;

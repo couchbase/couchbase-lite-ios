@@ -130,5 +130,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLURLEndpointListenerConfiguration.h>
 #import <CouchbaseLite/CBLVectorEncoding.h>
 #import <CouchbaseLite/CBLVectorIndexConfiguration.h>
+#import <CouchbaseLite/CBLVectorIndexTypes.h>
 
 #endif

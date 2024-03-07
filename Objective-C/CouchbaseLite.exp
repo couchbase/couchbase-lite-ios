@@ -87,6 +87,7 @@ _kCBLBlobLengthProperty
 _kCBLBlobContentTypeProperty
 
 # Default Constants:
+_kCBLDefaultLogFileUsePlaintext
 _kCBLDefaultLogFileUsePlainText
 _kCBLDefaultLogFileMaxSize
 _kCBLDefaultLogFileMaxRotateCount
@@ -98,13 +99,10 @@ _kCBLDefaultReplicatorHeartbeat
 _kCBLDefaultReplicatorMaxAttemptsSingleShot
 _kCBLDefaultReplicatorMaxAttemptsContinuous
 _kCBLDefaultReplicatorMaxAttemptWaitTime
+_kCBLDefaultReplicatorMaxAttemptsWaitTime
 _kCBLDefaultReplicatorEnableAutoPurge
 _kCBLDefaultReplicatorSelfSignedCertificateOnly
 _kCBLDefaultReplicatorAcceptParentCookies
-_kCBLDefaultListenerPort
-_kCBLDefaultListenerDisableTls
-_kCBLDefaultListenerReadOnly
-_kCBLDefaultListenerEnableDeltaSync
 
 # Others constants:
 _CBLErrorDomain

@@ -2,7 +2,7 @@
 //  CBLDefaults.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2023-present Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -22,11 +22,14 @@
 
 #import "CBLDefaults.h"
 
-
 #pragma mark - CBLLogFileConfiguration
 
+const BOOL kCBLDefaultLogFileUsePlaintext = NO;
+
 const BOOL kCBLDefaultLogFileUsePlainText = NO;
+
 const uint64_t kCBLDefaultLogFileMaxSize = 524288;
+
 const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
 
 #pragma mark - CBLFullTextIndexConfiguration
@@ -36,19 +39,43 @@ const BOOL kCBLDefaultFullTextIndexIgnoreAccents = NO;
 #pragma mark - CBLReplicatorConfiguration
 
 const CBLReplicatorType kCBLDefaultReplicatorType = kCBLReplicatorTypePushAndPull;
+
 const BOOL kCBLDefaultReplicatorContinuous = NO;
+
 const BOOL kCBLDefaultReplicatorAllowReplicatingInBackground = NO;
+
 const NSTimeInterval kCBLDefaultReplicatorHeartbeat = 300;
+
 const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot = 10;
+
 const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous = NSUIntegerMax;
+
+const NSTimeInterval kCBLDefaultReplicatorMaxAttemptsWaitTime = 300;
+
 const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime = 300;
+
 const BOOL kCBLDefaultReplicatorEnableAutoPurge = YES;
+
 const BOOL kCBLDefaultReplicatorSelfSignedCertificateOnly = NO;
+
 const BOOL kCBLDefaultReplicatorAcceptParentCookies = NO;
+
+#ifdef COUCHBASE_ENTERPRISE
+
+#pragma mark - CBLVectorIndexConfiguration
+
+const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
+
+const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclidean;
 
 #pragma mark - CBLURLEndpointListenerConfiguration
 
 const unsigned short kCBLDefaultListenerPort = 0;
+
 const BOOL kCBLDefaultListenerDisableTls = NO;
+
 const BOOL kCBLDefaultListenerReadOnly = NO;
+
 const BOOL kCBLDefaultListenerEnableDeltaSync = NO;
+
+#endif

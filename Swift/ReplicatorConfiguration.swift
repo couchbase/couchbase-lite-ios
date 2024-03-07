@@ -246,13 +246,13 @@ public struct ReplicatorConfiguration {
     /// Max wait time for the next attempt(retry).
     ///
     /// The exponential backoff for calculating the wait time will be used by default and cannot be
-    /// customized. Default max attempts is ``ReplicatorConfiguration.defaultMaxAttemptWaitTime`` secs.
+    /// customized. Default max attempts is ``ReplicatorConfiguration.defaultMaxAttemptsWaitTime`` secs.
     ///
     /// Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException
     /// being thrown.
     ///
     /// - Note: For backward compatibility, setting it to zero will result in default secs internally.
-    public var maxAttemptWaitTime: TimeInterval = ReplicatorConfiguration.defaultMaxAttemptWaitTime {
+    public var maxAttemptWaitTime: TimeInterval = ReplicatorConfiguration.defaultMaxAttemptsWaitTime {
         willSet(newValue) {
             
             guard newValue >= 0 else {
