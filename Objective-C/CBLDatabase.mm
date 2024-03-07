@@ -212,11 +212,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
-}
-
-- (NSString*) fullDescription {
-    return [NSString stringWithFormat: @"%p %@[%@] c4db=%p", self, self.class, _name, _c4db];
+    return [NSString stringWithFormat: @"%@@%p[name=%@]", self.class, self, _name];
 }
 
 - (NSString*) path {
@@ -385,7 +381,7 @@ static const C4DatabaseConfig2 kDBConfig = {
         if ([self isClosed])
             return YES;
         
-        CBLLogInfo(Database, @"Closing %@ at path %@", self, self.path);
+        CBLLogInfo(Database, @"%@: Closing database at path %@", self, self.path);
         
         if (_state != kCBLDatabaseStateClosing) {
             _state = kCBLDatabaseStateClosing;
@@ -704,7 +700,7 @@ static const C4DatabaseConfig2 kDBConfig = {
         if (!col) {
             throwIfNotOpenError(error);
             // Not expect to happen but if it does, log a warning error before raising the exception:
-            CBLWarn(Database, @"%@ Failed to get default collection with error: %@", self, error);
+            CBLWarn(Database, @"%@: Failed to get default collection with error: %@", self, error);
             [NSException raise: NSInternalInconsistencyException format: @"Unable to get the default collection"];
         }
         return col;
@@ -807,9 +803,7 @@ static void throwIfNotOpenError(NSError* error) {
             convertError(c4err, error);
             return nil;
         }
-        CBLLogVerbose(Database, @"%@ Created c4collection[%@.%@] c4col=%p",
-                      self.fullDescription, scopeName, name, c4collection);
-        
+        CBLLogVerbose(Database, @"%@: Created collection %@.%@ (c4col=%p)", self, scopeName, name, c4collection);
         return [[CBLCollection alloc] initWithDB: self c4collection: c4collection cached: NO];
     }
 }
@@ -830,7 +824,7 @@ static void throwIfNotOpenError(NSError* error) {
         C4Collection* c4col = c4db_getCollection(_c4db, spec, &c4err);
         if (!c4col) {
             if (!(c4err.code == kC4ErrorNotFound && c4err.domain == LiteCoreDomain)) {
-                CBLWarn(Database, @"%@ Failed to get collection: %@.%@ (%d/%d)",
+                CBLWarn(Database, @"%@: Failed to get collection %@.%@ (%d/%d)",
                         self, scopeName, name, c4err.domain, c4err.code);
                 convertError(c4err, error);
             }
@@ -851,7 +845,7 @@ static void throwIfNotOpenError(NSError* error) {
         if (![self mustBeOpen: error])
             return NO;
         
-        CBLLogVerbose(Database, @"%@ Deleting c4collection[%@.%@]", self.fullDescription, scopeName, name);
+        CBLLogVerbose(Database, @"%@: Deleting collection %@.%@", self, scopeName, name);
         C4Error c4err = {};
         return c4db_deleteCollection(_c4db, spec, &c4err) || convertError(c4err, error);
     }
@@ -995,7 +989,7 @@ static void throwIfNotOpenError(NSError* error) {
         return createError(CBLErrorInvalidParameter, outError);
     
     NSString* path = databasePath(_name, dir);
-    CBLLogInfo(Database, @"Opening %@ at path %@", self, path);
+    CBLLogInfo(Database, @"%@: Opening database at path %@", self, path);
     
     C4DatabaseConfig2 c4config = c4DatabaseConfig2(_config);
     CBLStringBytes d(_config.directory);
@@ -1006,6 +1000,8 @@ static void throwIfNotOpenError(NSError* error) {
     _c4db = c4db_openNamed(n, &c4config, &err);
     if (!_c4db)
         return convertError(err, outError);
+    
+    CBLLogVerbose(Database, @"%@: Openned database (c4db=%p) successfully at path %@", self, _c4db, path);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
         

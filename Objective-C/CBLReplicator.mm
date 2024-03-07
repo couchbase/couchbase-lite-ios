@@ -17,11 +17,12 @@
 //  limitations under the License.
 //
 
+#import "CBLReplicator.h"
 #import "CBLReplicator+Backgrounding.h"
+#import "CBLReplicator+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
 #import "CBLCollection+Internal.h"
 #import "CBLDocumentReplication+Internal.h"
-#import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
 #import "CBLScope.h"
@@ -80,6 +81,7 @@ typedef enum {
     dispatch_queue_t _dispatchQueue;
     dispatch_queue_t _conflictQueue;
     C4Replicator* _repl;
+    NSString* _replicatorID;
     NSString* _desc;
     CBLReplicatorState _state;
     C4ReplicatorStatus _rawStatus;
@@ -118,6 +120,7 @@ typedef enum {
                         format: @"Attempt to initiate replicator with empty collection"];
         
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
+        _replicatorID = $sprintf(@"CBLRepl@%p", self);
         _progressLevel = kCBLProgressLevelOverall;
         _changeNotifier = [CBLChangeNotifier new];
         _docReplicationNotifier = [CBLChangeNotifier new];
@@ -144,14 +147,7 @@ typedef enum {
 }
 
 - (NSString*) description {
-    if (!_desc)
-        _desc = $sprintf(@"%@[%s%s%s %@]",
-                         self.class,
-                         (isPull(_config.replicatorType) ? "<" : ""),
-                         (_config.continuous ? "*" : "-"),
-                         (isPush(_config.replicatorType)  ? ">" : ""),
-                         _config.target);
-    return _desc;
+    return _replicatorID;
 }
 
 - (void) start {
@@ -230,6 +226,7 @@ typedef enum {
         Assert(remoteURL, @"Endpoint has no URL");
 #endif
     }
+    CBLStringBytes replicatorID(_replicatorID);
 
     // Socket factory:
     C4SocketFactory socketFactory = { };
@@ -295,14 +292,13 @@ typedef enum {
         [self->_config.database mustBeOpenLocked];
         
         if (remoteURL || !otherDB)
-            self->_repl = c4repl_new(self->_config.database.c4db, addr, dbName, params, outErr);
+            self->_repl = c4repl_new(self->_config.database.c4db, addr, dbName, params, replicatorID, outErr);
         else  {
 #ifdef COUCHBASE_ENTERPRISE
             if (otherDB) {
                 [otherDB safeBlock: ^{
                     [otherDB mustBeOpenLocked];
-                    
-                    self->_repl = c4repl_newLocal(self->_config.database.c4db, otherDB.c4db, params, outErr);
+                    self->_repl = c4repl_newLocal(self->_config.database.c4db, otherDB.c4db, params, replicatorID, outErr);
                 }];
             }
 #else
