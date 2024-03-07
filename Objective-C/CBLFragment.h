@@ -18,8 +18,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLArrayFragment.h"
-#import "CBLDictionaryFragment.h"
+#import <CouchbaseLite/CBLArrayFragment.h>
+#import <CouchbaseLite/CBLDictionaryFragment.h>
+
 @class CBLBlob;
 @class CBLArray;
 @class CBLDictionary;
