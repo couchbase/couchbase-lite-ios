@@ -46,7 +46,7 @@
 
 - (void) setUp {
     [super setUp];
-        
+    
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];
     

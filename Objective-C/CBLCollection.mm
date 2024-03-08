@@ -89,13 +89,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@] db[%@]",
-            self.class, self.fullName, self.database];
-}
-
-- (NSString*) fullDescription {
-    return [NSString stringWithFormat: @"%p:%p:%p %@[%@] db[%@]",
-            self, _scope, _c4col, self.class, self.fullName, self.database];
+    return [NSString stringWithFormat: @"%@@%p[name=%@]", self.class, self, self.fullName];
 }
 
 - (NSUInteger) hash {
@@ -472,8 +466,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         NSError* error = nil;
         if (![self checkIsValid: &error]) {
             CBLWarn(Database,
-                    @"%@ Cannot add change listener. Database is closed or collection is removed.",
-                    self);
+                    @"%@: Cannot add change listener. Database is closed or collection is removed.", self);
         }
         
         return [self addCollectionChangeListener: listener queue: queue];
