@@ -364,7 +364,6 @@
 		4006AB7C2B9169C50036E66D /* CBLEdition.h in Headers */ = {isa = PBXBuildFile; fileRef = 4006AB4E2B9106000036E66D /* CBLEdition.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		40086B1A2B7EDDD500DA6770 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 40086B172B7EDDD400DA6770 /* README.md */; };
 		40086B1B2B7EDDE100DA6770 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (Required, ); }; };
-		40086B3A2B800CC600DA6770 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
 		40086B532B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
 		40086B552B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
 		40086B572B803B4300DA6770 /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
@@ -1734,6 +1733,15 @@
 		AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
 		AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		AE5803A42B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */; };
+		AE5803A52B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */; };
+		AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */; };
+		AE5803D92B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */; };
+		AE5803EA2B9B9578001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
+		AE5803F82B9B969D001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
+		AE5803F92B9B969D001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AE5803FA2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
+		AE5803FB2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2029,6 +2037,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				AE5803FB2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */,
 				93095B09246BC325005633B4 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -2051,6 +2060,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				AE5803F92B9B969D001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in CopyFiles */,
 				9343F167207D62C900F19A89 /* CouchbaseLite.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2076,16 +2086,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AE006DC62B76808100884E2B /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AE006DCB2B76809300884E2B /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
@@ -2744,6 +2744,8 @@
 		AE006DD22B7B9FEF00884E2B /* CBLWordEmbeddingModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLWordEmbeddingModel.h; sourceTree = "<group>"; };
 		AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLWordEmbeddingModel.m; sourceTree = "<group>"; };
 		AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VectorSearchTest.m; sourceTree = "<group>"; };
+		AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorSearchTest.swift; sourceTree = "<group>"; };
+		AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordEmbeddingModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2784,6 +2786,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE5803FA2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
 				93095B08246BC325005633B4 /* CouchbaseLiteSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2832,8 +2835,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE5803F82B9B969D001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
 				9343F160207D62C900F19A89 /* CouchbaseLite.framework in Frameworks */,
-				40086B3A2B800CC600DA6770 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2848,6 +2851,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE5803EA2B9B9578001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
 				9343F19A207D636300F19A89 /* CouchbaseLiteSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2997,6 +3001,7 @@
 		27BE3B491E4E45CB0012B74A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				AE5803CA2B9B5B11001A1BE3 /* Util */,
 				934C2CDA1F4FC0610010316F /* Bridge */,
 				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
@@ -3022,6 +3027,7 @@
 				93095B23246CF1DE005633B4 /* TLSIdentityTest.swift */,
 				934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */,
 				1A13DD3328B8809300BC1084 /* URLEndpointListenerTest+Collection.swift */,
+				AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -4249,6 +4255,14 @@
 			name = Index;
 			sourceTree = "<group>";
 		};
+		AE5803CA2B9B5B11001A1BE3 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -5224,7 +5238,6 @@
 				9343F18D207D636300F19A89 /* Sources */,
 				9343F199207D636300F19A89 /* Frameworks */,
 				9343F19B207D636300F19A89 /* Resources */,
-				AE006DCB2B76809300884E2B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -6144,6 +6157,8 @@
 				93BB1CB2246BB2E8004FFA00 /* PredictiveQueryTest+CoreML.swift in Sources */,
 				93BB1C9A246BB2AD004FFA00 /* ArrayTest.swift in Sources */,
 				93BB1CAF246BB2DE004FFA00 /* NotificationTest.swift in Sources */,
+				AE5803A52B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */,
+				AE5803D92B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
@@ -6673,6 +6688,8 @@
 				93AE16E4221DC93D00539C05 /* PredictiveQueryTest+CoreML.swift in Sources */,
 				9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */,
 				9388CC5621C25CCB005CA66D /* LogTest.swift in Sources */,
+				AE5803A42B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */,
+				AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
@@ -8708,7 +8725,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4006AB4C2B9048930036E66D /* CBL_EE_Swift_Tests.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -8763,7 +8779,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4006AB4C2B9048930036E66D /* CBL_EE_Swift_Tests.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";

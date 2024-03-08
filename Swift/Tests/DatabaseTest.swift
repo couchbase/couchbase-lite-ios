@@ -1487,7 +1487,7 @@ class DatabaseTest: CBLTestCase {
     
     func testDefaultDatabaseConfiguration() {
         let config = DatabaseConfiguration()
-        XCTAssertEqual(config.directory, CBLDatabaseConfiguration().directory)
+        XCTAssertEqual(config.directory, DatabaseConfiguration().directory)
         
         #if COUCHBASE_ENTERPRISE
         XCTAssertNil(config.encryptionKey)
