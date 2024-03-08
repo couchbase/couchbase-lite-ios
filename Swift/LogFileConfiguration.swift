@@ -26,7 +26,7 @@ public class LogFileConfiguration {
     public let directory: String
     
     /// To use plain text file format instead of the default binary format.
-    public var usePlainText: Bool = LogFileConfiguration.defaultUsePlainText  {
+    public var usePlainText: Bool = LogFileConfiguration.defaultUsePlaintext  {
         willSet(newValue) {
             checkReadOnly()
         }

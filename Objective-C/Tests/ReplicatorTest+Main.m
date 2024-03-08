@@ -1813,7 +1813,7 @@
     
     AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
     AssertEqual(config.maxAttempts, kCBLDefaultReplicatorMaxAttemptsSingleShot);
-    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptsWaitTime);
     AssertEqual(config.enableAutoPurge, kCBLDefaultReplicatorEnableAutoPurge);
     
     config.continuous = YES;
@@ -1927,17 +1927,17 @@
     CBLReplicatorConfiguration* config = [self configWithTarget: kDummyTarget
                                                            type: kCBLReplicatorTypePush
                                                      continuous: NO];
-    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptsWaitTime);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptsWaitTime);
     
     // continuous
     config = [self configWithTarget: kDummyTarget
                                type: kCBLReplicatorTypePush
                          continuous: YES];
-    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptsWaitTime);
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptWaitTime);
+    AssertEqual(repl.config.maxAttemptWaitTime, kCBLDefaultReplicatorMaxAttemptsWaitTime);
     
     repl = nil;
 }

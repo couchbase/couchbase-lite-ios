@@ -2,7 +2,7 @@
 //  Defaults.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2023-present Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -23,70 +23,92 @@
 import Foundation
 
 public extension LogFileConfiguration {
+
     /// [false] Plaintext is not used, and instead binary encoding is used in log files
-    static let defaultUsePlainText: Bool = kCBLDefaultLogFileUsePlainText.boolValue
+    static let defaultUsePlaintext: Bool = false
+    
+    /// [false] Plaintext is not used, and instead binary encoding is used in log files
+    /// @available(*, deprecated, message: "Use LogFileConfiguration.defaultUsePlaintext instead.")
+    static let defaultUsePlainText: Bool = false
 
     /// [524288] 512 KiB for the size of a log file
-    static let defaultMaxSize: UInt64 = kCBLDefaultLogFileMaxSize
+    static let defaultMaxSize: UInt64 = 524288
 
     /// [1] 1 rotated file present (2 total, including the currently active log file)
-    static let defaultMaxRotateCount: Int = kCBLDefaultLogFileMaxRotateCount
+    static let defaultMaxRotateCount: Int = 1
 
 }
 
 public extension FullTextIndexConfiguration {
+
     /// [false] Accents and ligatures are not ignored when indexing via full text search
-    static let defaultIgnoreAccents: Bool = kCBLDefaultFullTextIndexIgnoreAccents.boolValue
+    static let defaultIgnoreAccents: Bool = false
 
 }
 
 public extension ReplicatorConfiguration {
+
     /// [ReplicatorType.pushAndPull] Perform bidirectional replication
     static let defaultType: ReplicatorType = ReplicatorType.pushAndPull
 
     /// [false] One-shot replication is used, and will stop once all initial changes are processed
-    static let defaultContinuous: Bool = kCBLDefaultReplicatorContinuous.boolValue
+    static let defaultContinuous: Bool = false
 
     /// [false] Replication stops when an application enters background mode
-    static let defaultAllowReplicatingInBackground: Bool = kCBLDefaultReplicatorAllowReplicatingInBackground.boolValue
+    static let defaultAllowReplicatingInBackground: Bool = false
 
-    /// [300 seconds] A heartbeat messages is sent every 300 seconds to keep the connection alive
-    static let defaultHeartbeat: TimeInterval = kCBLDefaultReplicatorHeartbeat
+    /// [300] A heartbeat messages is sent every 300 seconds to keep the connection alive
+    static let defaultHeartbeat: TimeInterval = 300
 
     /// [10] When replicator is not continuous, after 10 failed attempts give up on the replication
-    static let defaultMaxAttemptsSingleShot: UInt = kCBLDefaultReplicatorMaxAttemptsSingleShot
+    static let defaultMaxAttemptsSingleShot: UInt = 10
 
     /// [UInt.max] When replicator is continuous, never give up unless explicitly stopped
-    static let defaultMaxAttemptsContinuous: UInt = kCBLDefaultReplicatorMaxAttemptsContinuous
+    static let defaultMaxAttemptsContinuous: UInt = UInt.max
 
-    /// [300 seconds] Max wait time between retry attempts in seconds
-    static let defaultMaxAttemptWaitTime: TimeInterval = kCBLDefaultReplicatorMaxAttemptWaitTime
-
+    /// [300] Max wait time between retry attempts in seconds
+    static let defaultMaxAttemptsWaitTime: TimeInterval = 300
+    
+    /// [300] Max wait time between retry attempts in seconds
+    /// @available(*, deprecated, message: "Use ReplicatorConfiguration.defaultMaxAttemptsWaitTime instead.")
+    static let defaultMaxAttemptWaitTime: TimeInterval = 300
+    
     /// [true] Purge documents when a user loses access
-    static let defaultEnableAutoPurge: Bool = kCBLDefaultReplicatorEnableAutoPurge.boolValue
+    static let defaultEnableAutoPurge: Bool = true
 
     /// [false] Whether or not a replicator only accepts self-signed certificates from the remote
-    static let defaultSelfSignedCertificateOnly: Bool = kCBLDefaultReplicatorSelfSignedCertificateOnly.boolValue
+    static let defaultSelfSignedCertificateOnly: Bool = false
 
     /// [false] Whether or not a replicator only accepts cookies for the sender's parent domains
-    static let defaultAcceptParentCookies: Bool = kCBLDefaultReplicatorAcceptParentCookies.boolValue
+    static let defaultAcceptParentCookies: Bool = false
 
 }
 
 #if COUCHBASE_ENTERPRISE
 
+public extension VectorIndexConfiguration {
+
+    /// [ScalarQuantizerType.SQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default
+    static let defaultEncoding: ScalarQuantizerType = ScalarQuantizerType.SQ8
+
+    /// [DistanceMetric.euclidean] By default, vectors are compared using Euclidean metrics
+    static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclidean
+
+}
+
 public extension URLEndpointListenerConfiguration {
+
     /// [0] No port specified, the OS will assign one
-    static let defaultPort: UInt16 = kCBLDefaultListenerPort
+    static let defaultPort: UInt16 = 0
 
     /// [false] TLS is enabled on the connection
-    static let defaultDisableTls: Bool = kCBLDefaultListenerDisableTls.boolValue
+    static let defaultDisableTls: Bool = false
 
     /// [false] The listener will allow database writes
-    static let defaultReadOnly: Bool = kCBLDefaultListenerReadOnly.boolValue
+    static let defaultReadOnly: Bool = false
 
     /// [false] Delta sync is disabled for the listener
-    static let defaultEnableDeltaSync: Bool = kCBLDefaultListenerEnableDeltaSync.boolValue
+    static let defaultEnableDeltaSync: Bool = false
 
 }
 

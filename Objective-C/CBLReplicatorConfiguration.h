@@ -178,7 +178,7 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  Max wait time for the next attempt(retry).
  
  The exponential backoff for calculating the wait time will be used by default and cannot be customized.
- Default max attempts is ``kCBLDefaultReplicatorMaxAttemptWaitTime`` seconds.
+ Default max attempts is ``kCBLDefaultReplicatorMaxAttemptsWaitTime`` seconds.
  
  @Note: Set the maxAttemptWaitTime to negative value will result in InvalidArgumentException being thrown.
  For backward compatibility, setting it to zero will result in default maxAttemptWaitTime internally.

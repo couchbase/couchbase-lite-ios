@@ -70,7 +70,7 @@
         _acceptParentDomainCookies = kCBLDefaultReplicatorAcceptParentCookies;
         _heartbeat = kCBLDefaultReplicatorHeartbeat;
         _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
-        _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptWaitTime;
+        _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptsWaitTime;
         _enableAutoPurge = kCBLDefaultReplicatorEnableAutoPurge;
         _collectionConfigs = [NSMutableDictionary dictionary];
     #if TARGET_OS_IPHONE
@@ -413,7 +413,7 @@
     
     options[@kC4ReplicatorOptionMaxRetryInterval] = _maxAttemptWaitTime > 0
     ? @(_maxAttemptWaitTime)
-    : @(kCBLDefaultReplicatorMaxAttemptWaitTime) /*backward compatibility*/;
+    : @(kCBLDefaultReplicatorMaxAttemptsWaitTime) /*backward compatibility*/;
     
     if (_maxAttempts > 0) {
         options[@kC4ReplicatorOptionMaxRetries] =  @(_maxAttempts - 1);

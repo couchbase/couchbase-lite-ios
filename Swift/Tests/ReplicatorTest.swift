@@ -963,7 +963,7 @@ class ReplicatorTest_Main: ReplicatorTest {
 #endif
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
-        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
         
         config.continuous = true
@@ -1072,15 +1072,15 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testMaxAttemptWaitTime() {
         // single shot
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
-        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         
         // continous
         config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
-        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         
         config.addCollection(defaultCollection!)
         repl = Replicator(config: config)
-        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
     }
     
     func testCustomMaxAttemptWaitTime() {
@@ -1406,7 +1406,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
-        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
 #if os(iOS)
@@ -1421,7 +1421,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(repl.config.continuous, ReplicatorConfiguration.defaultContinuous)
         XCTAssertEqual(repl.config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         XCTAssertEqual(repl.config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
-        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptWaitTime)
+        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         XCTAssertEqual(repl.config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(repl.config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
 #if os(iOS)

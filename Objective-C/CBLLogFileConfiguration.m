@@ -35,7 +35,7 @@
         _directory = directory;
         _maxSize = kCBLDefaultLogFileMaxSize;
         _maxRotateCount = kCBLDefaultLogFileMaxRotateCount;
-        _usePlainText = kCBLDefaultLogFileUsePlainText;
+        _usePlainText = kCBLDefaultLogFileUsePlaintext;
     }
     return self;
 }
