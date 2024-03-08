@@ -30,8 +30,9 @@ do
       OUTPUT_DIR=${2}
       shift
       ;;
-      --EE)
-      EE=YES
+      -e)
+      EDITION=${2}
+      shift
       ;;
       --notest)
       NO_TEST=YES
@@ -59,21 +60,26 @@ then
   exit 4
 fi
 
-if [ -z "$EE" ]
+if [ "$EDITION" == "ce" ] || [ "$EDITION" == "community" ]
 then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="swift_coverage"
   EDITION="community"
-else
+elif [ "$EDITION" == "ee" ] || [ "$EDITION" == "enterprise" ]
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
   COVERAGE_NAME="swift_coverage-ee"
   EDITION="enterprise"
   OPTS="--EE"
+else
+  echo "Invalid Edition"
+  exit 4
 fi
+
+echo "Build Edition : ${EDITION}"
 
 if [ -z "$PRETTY" ]
 then

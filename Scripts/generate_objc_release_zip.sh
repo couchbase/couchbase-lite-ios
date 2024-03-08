@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]"
+  echo "Usage: ${0} -o <Output Directory> -e <Edition; ce, community, ee, enterprise> [-v <Version (<Version Number>[-<Build Number>])>]"
   echo "\nOptions:"
   echo "  --notest\t create a release package but no tests needs to be run"
   echo "  --nocov\t create a release package, run tests but no code coverage zip"
@@ -30,8 +30,9 @@ do
       OUTPUT_DIR=${2}
       shift
       ;;
-      --EE)
-      EE=YES
+      -e)
+      EDITION=${2}
+      shift
       ;;
       --notest)
       NO_TEST=YES
@@ -59,14 +60,14 @@ then
   exit 4
 fi
 
-if [ -z "$EE" ]
+if [ "$EDITION" == "ce" ] || [ "$EDITION" == "community" ]
 then
   SCHEME_PREFIX="CBL"
   CONFIGURATION="Release"
   CONFIGURATION_TEST="Debug"
   COVERAGE_NAME="objc_coverage"
   EDITION="community"
-else
+elif [ "$EDITION" == "ee" ] || [ "$EDITION" == "enterprise" ]
   SCHEME_PREFIX="CBL_EE"
   CONFIGURATION="Release_EE"
   CONFIGURATION_TEST="Debug_EE"
@@ -74,7 +75,12 @@ else
   EDITION="enterprise"
   EXTRA_CMD_OPTIONS="--EE"
   OPTS="--EE"
+else
+  echo "Invalid Edition"
+  exit 4
 fi
+
+echo "Build Edition : ${EDITION}"
 
 if [ -z "$PRETTY" ]
 then
