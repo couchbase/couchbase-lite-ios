@@ -17,29 +17,27 @@ public struct WordEmbeddingModel: PredictiveModel {
         self.db = db;
     }
     
-    public func getWordVector(word: String, collection: String) -> Any? {
+    public func getWordVector(word: String, collection: String) -> ArrayObject? {
         let sql = "select vector from \(collection) where word = '\(word)'"
         let q = try! self.db.createQuery(sql)
         let rs: ResultSet = try! q.execute()
         let results = rs.allResults()
     
-        if (results.count == 0) {
-            return nil;
+        guard let result = results.first else {
+            return nil
         }
-            
-        let result = results[0];
-        return result["vector"]
+        
+        return result.array(forKey: "vector")
     }
         
     
-    public func predict(input: CouchbaseLiteSwift.DictionaryObject) -> CouchbaseLiteSwift.DictionaryObject? {
+    public func predict(input: DictionaryObject) -> DictionaryObject? {
         guard let inputWord = input.string(forKey: "word") else {
             fatalError("No word input !!!")
         }
-        
-        let result = getWordVector(word: inputWord, collection: "words")
-        
-        if (result == nil) {
+
+        guard let result = self.getWordVector(word: inputWord, collection: "words") ??
+                           self.getWordVector(word: inputWord, collection: "extwords") else {
             return nil
         }
         

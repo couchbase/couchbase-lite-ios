@@ -23,12 +23,11 @@ class VectorSearchTest: CBLTestCase {
     override func initDB() throws {
         var config = DatabaseConfiguration()
         config.directory = self.directory
-     
-        let res = ("Support/databases/vectorsearch" as NSString).appendingPathComponent("words_db")
-        let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: "cblite2")
         
         if !Database.exists(withName: "words_db") {
             do {
+                let res = ("Support/databases/vectorsearch" as NSString).appendingPathComponent("words_db")
+                let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: "cblite2")
                 try Database.copy(fromPath: path!, toDatabase: databaseName, withConfig: config)
             } catch {
                 fatalError("Couldn't load words_db")
@@ -48,55 +47,54 @@ class VectorSearchTest: CBLTestCase {
         return wordMap
     }
     
-/*
- 1. TestVectorIndexConfigurationDefaultValue
-    Description
-        Test that the VectorIndexConfiguration has all default values returned as expected.
-    Steps
-        1. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 20
-        2. Get and check the following property values:
-            - encoding: 8-Bit Scalar Quantizer Encoding
-            - metric: Euclidean Distance
-            - minTrainingSize: 25 * centroids
-            - maxTrainingSize: 256 * centroids
-        3. To check the encoding type, platform code will have to expose some internal property to the tests for verification.
- */
-    func testVectorIndexConfigurationDefaultValue() {
-        let config = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+    /// 1. TestVectorIndexConfigurationDefaultValue
+    /// Description
+    ///     Test that the VectorIndexConfiguration has all default values returned as expected.
+    /// Steps
+    ///     1. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     2. Get and check the following property values:
+    ///         - encoding: 8-Bit Scalar Quantizer Encoding
+    ///         - metric: Euclidean Distance
+    ///         - minTrainingSize: 25 * centroids
+    ///         - maxTrainingSize: 256 * centroids
+    ///     3. To check the encoding type, platform code will have to expose some internal property to the tests for verification.
+
+    func testVectorIndexConfigurationDefaultValue() throws {
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
         XCTAssertEqual(config.encoding, .scalarQuantizer(type: VectorIndexConfiguration.defaultEncoding));
         XCTAssertEqual(config.metric, VectorIndexConfiguration.defaultDistanceMetric)
         XCTAssertEqual(config.minTrainingSize, 25 * config.centroids)
         XCTAssertEqual(config.maxTrainingSize, 256 * config.centroids)
     }
     
-/*
- 2. TestVectorIndexConfigurationSettersAndGetters
-    Description
-        Test that all getters and setters of the VectorIndexConfiguration work as expected.
-    Steps
-        1. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 20
-            - encoding: None
-            - metric: Cosine Distance
-            - minTrainingSize: 100
-            - maxTrainingSize: 200
-        2. Get and check the following property values:
-            - expression: "vector"
-            - expressions: ["vector"]
-            - distance: 300
-            - centroids: 20
-            - encoding: None
-            - metric: Cosine Distance
-            - minTrainingSize: 100
-            - maxTrainingSize: 200
- */
-    func testVectorIndexConfigurationSettersAndGetters() {
-        var config = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+
+    /// 2. TestVectorIndexConfigurationSettersAndGetters
+    /// Description
+    ///     Test that all getters and setters of the VectorIndexConfiguration work as expected.
+    /// Steps
+    ///     1. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///         - encoding: None
+    ///         - metric: Cosine Distance
+    ///         - minTrainingSize: 100
+    ///         - maxTrainingSize: 200
+    ///     2. Get and check the following property values:
+    ///         - expression: "vector"
+    ///         - expressions: ["vector"]
+    ///         - distance: 300
+    ///         - centroids: 20
+    ///         - encoding: None
+    ///         - metric: Cosine Distance
+    ///         - minTrainingSize: 100
+    ///         - maxTrainingSize: 200
+
+    func testVectorIndexConfigurationSettersAndGetters() throws {
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
         config.encoding = .none
         config.metric = .cosine
         config.minTrainingSize = 100
@@ -109,277 +107,268 @@ class VectorSearchTest: CBLTestCase {
         XCTAssertEqual(config.maxTrainingSize, 200)
     }
     
-/*
- 3. TestDimensionsValidation
-    Description
-        Test that the dimensions are validated correctly. The invalid argument exception should be thrown when creating vector index configuration objects with invalid dimensions.
-    Steps
-        1. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 20
-        2. Check that the config can be created without an error thrown.
-        3. Use the config to create the index and check that the index
- can be created successfully.
-        4. Change the dimensions to 1 and 2049.
-        5. Check that an invalid argument exception is thrown.
- */
-    func testDimensionsValidation() {
-        let collection = try! db.collection(name: "words")
+    /// 3. TestDimensionsValidation
+    /// Description
+    ///     Test that the dimensions are validated correctly. The invalid argument exception should be thrown when creating vector index configuration objects with invalid dimensions.
+    /// Steps
+    ///     1. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///    2. Check that the config can be created without an error thrown.
+    ///    3. Use the config to create the index and check that the index can be created successfully.
+    ///    4. Change the dimensions to 1 and 2049.
+    ///    5. Check that an invalid argument exception is thrown.
+
+    func testDimensionsValidation() throws {
+        let collection = try db.collection(name: "words")!
         
-        let config1 = try? VectorIndexConfiguration(expression: "vector", dimensions: 2, centroids: 20)
+        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 2, centroids: 20)
         
         XCTAssertNotNil(config1)
-        XCTAssertNotNil(try? collection!.createIndex(withName: "words_index_1", config: config1!))
+        try collection.createIndex(withName: "words_index_1", config: config1)
         
-        var names = try! collection!.indexes()
+        var names = try collection.indexes()
         XCTAssert(names.contains("words_index_1"))
         
-        let config2 = try? VectorIndexConfiguration(expression: "vector", dimensions: 2048, centroids: 20)
+        let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 2048, centroids: 20)
         XCTAssertNotNil(config2)
-        XCTAssertNotNil(try? collection!.createIndex(withName: "words_index_2", config: config2!))
+        try collection.createIndex(withName: "words_index_2", config: config2)
         
-        names = try! collection!.indexes()
+        names = try collection.indexes()
         XCTAssert(names.contains("words_index_2"))
         
         expectExcepion(exception: .invalidArgumentException) {
-           _ = try! VectorIndexConfiguration(expression: "vector", dimensions: 1, centroids: 20)
+            _ = VectorIndexConfiguration(expression: "vector", dimensions: 1, centroids: 20)
         }
         
         expectExcepion(exception: .invalidArgumentException) {
-            _ = try! VectorIndexConfiguration(expression: "vector", dimensions: 2049, centroids: 20)
+            _ = VectorIndexConfiguration(expression: "vector", dimensions: 2049, centroids: 20)
         }
     }
 
-/*
- 4. TestCentroidsValidation
-    Description
-        Test that the centroids value is validated correctly. The invalid argument exception should be thrown when creating vector index configuration objects with invalid centroids.
-    Steps
-        1. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 20
-        2. Check that the config can be created without an error thrown.
-        3. Use the config to create the index and check that the index
- can be created successfully.
-        4. Change the centroids to 0 and 64001.
-        5. Check that an invalid argument exception is thrown.
- */
-    func testCentroidsValidation() {
-        let collection = try! db.collection(name: "words")
+
+    /// 4. TestCentroidsValidation
+    /// Description
+    ///     Test that the centroids value is validated correctly. The invalid argument exception should be thrown when creating vector index configuration objects with invalid centroids.
+    /// Steps
+    ///     1. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     2. Check that the config can be created without an error thrown.
+    ///     3. Use the config to create the index and check that the index can be created successfully.
+    ///     4. Change the centroids to 0 and 64001.
+    ///     5. Check that an invalid argument exception is thrown.
+
+    func testCentroidsValidation() throws {
+        let collection = try db.collection(name: "words")!
         
-        let config1 = try? VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
+        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
         
         XCTAssertNotNil(config1)
-        XCTAssertNotNil(try? collection!.createIndex(withName: "words_index_1", config: config1!))
+        try collection.createIndex(withName: "words_index_1", config: config1)
 
-        var names = try! collection!.indexes()
+        var names = try collection.indexes()
         XCTAssert(names.contains("words_index_1"))
         
-        let config2 = try? VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64000)
+        let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64000)
         
         XCTAssertNotNil(config2)
-        XCTAssertNotNil(try? collection!.createIndex(withName: "words_index_2", config: config2!))
+        try collection.createIndex(withName: "words_index_2", config: config2)
 
-        names = try! collection!.indexes()
+        names = try collection.indexes()
         XCTAssert(names.contains("words_index_2"))
         
         expectExcepion(exception: .invalidArgumentException) {
-           _ = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 0)
+           _ = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 0)
         }
         
         expectExcepion(exception: .invalidArgumentException) {
-           _ = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64001)
+           _ = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64001)
         }
     }
 
-/*
- 5. TestCreateVectorIndex
-    Description
-        Using the default configuration, test that the vector index can be created from the embedded vectors in the documents. The test also verifies that the created index can be used in the query.
-    Steps
-        1. Copy database "words_db".
-        2. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 20
-        3. Check that the config can be created without an error thrown.
-        4. Get index names from the _default.words collection and check that the index names contain “words_index”
-        5. Create an SQL++ query:
-            - SELECT meta().id, word
-              FROM _default.words
-              WHERE vector_match(words_index, <dinner vector>, 20)
-        6. Check the explain() result of the query to ensure that the "words_index" is used.
-        7. Execute the query and check that 20 results are returned.
- */
-    func testCreateVectorIndex() {
-        let collection = try! db.collection(name: "words")
+    /// 5. TestCreateVectorIndex
+    /// Description
+    ///     Using the default configuration, test that the vector index can be created from the embedded vectors in the documents. The test also verifies that the created index can be used in the query.
+    /// Steps
+    ///     1. Copy database "words_db".
+    ///     2. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the config can be created without an error thrown.
+    ///     4. Get index names from the _default.words collection and check that the index names contain “words_index”
+    ///     5. Create an SQL++ query:
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     7. Execute the query and check that 20 results are returned.
+
+    func testCreateVectorIndex() throws{
+        let collection = try db.collection(name: "words")!
         
-        let config1 = try? VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
+        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
         
         XCTAssertNotNil(config1)
-        XCTAssertNotNil(try? collection!.createIndex(withName: "words_index", config: config1!))
+        try collection.createIndex(withName: "words_index", config: config1)
 
-        let names = try! collection!.indexes()
+        let names = try collection.indexes()
         XCTAssert(names.contains("words_index"))
         
         let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
         let parameters = Parameters()
         parameters.setValue(dinnerVector, forName: "vector")
         
-        let q = try! self.db.createQuery(sql)
+        let q = try self.db.createQuery(sql)
         q.parameters = parameters
-        let explain = try! q.explain() as NSString
+        let explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
         
-        let rs: ResultSet = try! q.execute()
+        let rs: ResultSet = try q.execute()
         XCTAssertEqual(rs.allResults().count, 20)
     }
     
+    /// 6. TestUpdateVectorIndex
+    /// Description
+    ///     Test that the vector index created from the embedded vectors will be updated when documents are changed. The test also verifies that the created index can be used in the query.
+    /// Steps
+    ///     1. Copy database "words_db".
+    ///     2. Create a VectorIndexConfiguration object.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query:
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 350)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 300 results are returned.
+    ///     7. Update the documents:
+    ///         - Create _default.words.word301 with the content from _default.extwords.word1
+    ///         - Create _default.words.word302 with the content from _default.extwords.word2
+    ///         - Update _default.words.word1 with the content from _default.extwords.word3
+    ///         - Delete _default.words.word2
+    ///     8. Execute the query again, check that 301 results are returned, and:
+    ///         - word301 and word302 are included
+    ///         - word1’s word is updated with the word from _default.extwords.word3
+    ///         - word2 is not included
 
-/*
- 6. TestUpdateVectorIndex
-    Description
-        Test that the vector index created from the embedded vectors will be updated when documents are changed. The test also verifies that the created index can be used in the query.
-    Steps
-        1. Copy database "words_db".
-        2. Create a VectorIndexConfiguration object.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
-        3. Check that the index is created without an error returned.
-        4. Create an SQL++ query:
-            - SELECT meta().id, word
-              FROM _default.words
-              WHERE vector_match(words_index, <dinner vector>, 350)
-        5. Check the explain() result of the query to ensure that the "words_index" is used.
-        6. Execute the query and check that 300 results are returned.
-        7. Update the documents:
-            - Create _default.words.word301 with the content from _default.extwords.word1
-            - Create _default.words.word302 with the content from _default.extwords.word2
-            - Update _default.words.word1 with the content from _default.extwords.word3
-            - Delete _default.words.word2
-        8. Execute the query again, check that 301 results are returned, and:
-            - word301 and word302 are included
-            - word1’s word is updated with the word from _default.extwords.word3
-            - word2 is not included
- */
-    func testUpdateVectorIndex() {
-        let wordsCollection = try! db.collection(name: "words")
-        let extWordsCollection = try! db.collection(name: "extwords")
+    func testUpdateVectorIndex() throws {
+        let wordsCollection = try db.collection(name: "words")!
+        let extWordsCollection = try db.collection(name: "extwords")!
         
-        let config = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
 
-        XCTAssertNotNil(try! wordsCollection!.createIndex(withName: "words_index", config: config))
+        try wordsCollection.createIndex(withName: "words_index", config: config)
 
-        let names = try! wordsCollection!.indexes()
+        let names = try wordsCollection.indexes()
         XCTAssert(names.contains("words_index"))
-        
         
         // Query:
         let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 350)"
         let parameters = Parameters()
         parameters.setValue(dinnerVector, forName: "vector")
         
-        let q = try! self.db.createQuery(sql)
+        let q = try self.db.createQuery(sql)
         q.parameters = parameters
-        let explain = try! q.explain() as NSString
+        let explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
         
-        var rs: ResultSet = try! q.execute()
+        var rs: ResultSet = try q.execute()
         XCTAssertEqual(rs.allResults().count, 300)
         
         // Update docs:
-        let extWord1 = try! extWordsCollection!.document(id: "word1")
+        let extWord1 = try extWordsCollection.document(id: "word1")!
         let word301 = createDocument("word301")
-        word301.setData(extWord1!.toDictionary())
-        try! wordsCollection!.save(document: word301)
+        word301.setData(extWord1.toDictionary())
+        try wordsCollection.save(document: word301)
         
-        let extWord2 = try! extWordsCollection!.document(id: "word2")
+        let extWord2 = try extWordsCollection.document(id: "word2")!
         let word302 = createDocument("word302")
-        word302.setData(extWord2!.toDictionary())
-        try! wordsCollection!.save(document: word302)
+        word302.setData(extWord2.toDictionary())
+        try wordsCollection.save(document: word302)
         
-        let extWord3 = try! extWordsCollection!.document(id: "word3")
-        let word1 = try! wordsCollection!.document(id: "word1")!.toMutable()
-        word1.setData(extWord3!.toDictionary())
-        try! wordsCollection!.save(document: word1)
+        let extWord3 = try extWordsCollection.document(id: "word3")!
+        let word1 = try wordsCollection.document(id: "word1")!.toMutable()
+        word1.setData(extWord3.toDictionary())
+        try wordsCollection.save(document: word1)
         
-        try! wordsCollection!.delete(document: wordsCollection!.document(id: "word2")!)
+        try wordsCollection.delete(document: wordsCollection.document(id: "word2")!)
         
-        rs = try! q.execute()
+        rs = try q.execute()
         let wordMap: [String: String] = toDocIDWordMap(rs: rs)
-        print(wordMap)
         XCTAssertEqual(wordMap.count, 301)
         XCTAssertEqual(wordMap["word301"], word301.string(forKey: "word"))
     }
     
-/*
- 7. TestCreateVectorIndexWithInvalidVectors
-    Description
-        Using the default configuration, test that when creating the vector index with invalid vectors, the invalid vectors will be skipped from indexing.
-    Steps
-        1. Copy database "words_db".
-        2. Update the documents:
-            - Update _default.words word1 with "vector" = null
-            - Update _default.words word2 with "vector" = "string"
-            - Update _default.words word3 by removing the "vector" key.
-            - Update _default.words word4 by removing one number from the "vector" key.
-        3. Create a vector index named "words_index" in _default.words collection.
-            - expression: "vector"
-            - dimensions: 300
-            - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
-        4. Check that the index is created without an error returned.
-        5. Create an SQL++ query:
-            - SELECT meta().id, word
-              FROM _default.words
-              WHERE vector_match(words_index, <dinner vector>, 350)
-        6. Execute the query and check that 296 results are returned, and the results do not include document word1, word2, word3, and word4.
-        7. Update an already index vector with an invalid vector.
-            - Update _default.words word5 with "vector" = null.
-        7. Execute the query and check that 295 results are returned, and the results do not include document word5.
- */
-    func testCreateVectorIndexWithInvalidVectors() {
-        let collection = try! db.collection(name: "words")
+
+    /// 7. TestCreateVectorIndexWithInvalidVectors
+    /// Description
+    ///     Using the default configuration, test that when creating the vector index with invalid vectors, the invalid vectors will be skipped from indexing.
+    /// Steps
+    ///     1. Copy database "words_db".
+    ///     2. Update the documents:
+    ///         - Update _default.words word1 with "vector" = null
+    ///         - Update _default.words word2 with "vector" = "string"
+    ///         - Update _default.words word3 by removing the "vector" key.
+    ///         - Update _default.words word4 by removing one number from the "vector" key.
+    ///     3. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
+    ///     4. Check that the index is created without an error returned.
+    ///     5. Create an SQL++ query:
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 350)
+    ///     6. Execute the query and check that 296 results are returned, and the results do not include document       word1, word2, word3, and word4.
+    ///     7. Update an already index vector with an invalid vector.
+    ///         - Update _default.words word5 with "vector" = null.
+    ///     8. Execute the query and check that 295 results are returned, and the results do not include document word5.
+
+    func testCreateVectorIndexWithInvalidVectors() throws {
+        let collection = try db.collection(name: "words")!
         
         // Update docs:
-        var auxDoc = try! collection!.document(id: "word1")!.toMutable()
+        var auxDoc = try collection.document(id: "word1")!.toMutable()
         auxDoc.setArray(nil, forKey: "vector")
-        XCTAssertNotNil(try! collection!.save(document: auxDoc))
+        try collection.save(document: auxDoc)
         
-        auxDoc = try! collection!.document(id: "word2")!.toMutable()
+        auxDoc = try collection.document(id: "word2")!.toMutable()
         auxDoc.setString("string", forKey: "vector")
-        XCTAssertNotNil(try! collection!.save(document: auxDoc))
+        try collection.save(document: auxDoc)
         
-        auxDoc = try! collection!.document(id: "word3")!.toMutable()
+        auxDoc = try collection.document(id: "word3")!.toMutable()
         auxDoc.removeValue(forKey: "vector")
-        XCTAssertNotNil(try! collection!.save(document: auxDoc))
+        try collection.save(document: auxDoc)
         
-        auxDoc = try! collection!.document(id: "word4")!.toMutable()
+        auxDoc = try collection.document(id: "word4")!.toMutable()
         let vector = auxDoc.array(forKey: "vector")
         vector!.removeValue(at: 0)
-        XCTAssertNotNil(try! collection!.save(document: auxDoc))
+        try collection.save(document: auxDoc)
         
-        let config = try! VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         
-        XCTAssertNotNil(try! collection!.createIndex(withName: "words_index", config: config))
+        try collection.createIndex(withName: "words_index", config: config)
 
-        let names = try! collection!.indexes()
+        let names = try collection.indexes()
         XCTAssert(names.contains("words_index"))
-        
         
         // Query:
         let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 350)"
         let parameters = Parameters()
         parameters.setValue(dinnerVector, forName: "vector")
         
-        let q = try! self.db.createQuery(sql)
+        let q = try self.db.createQuery(sql)
         q.parameters = parameters
-        let explain = try! q.explain() as NSString
+        let explain = try q.explain() as NSString
         XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
         
-        var rs: ResultSet = try! q.execute()
+        var rs: ResultSet = try q.execute()
         var wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 296)
         XCTAssertNil(wordMap["word1"])
@@ -387,14 +376,134 @@ class VectorSearchTest: CBLTestCase {
         XCTAssertNil(wordMap["word3"])
         XCTAssertNil(wordMap["word4"])
         
-        auxDoc = try! collection!.document(id: "word5")!.toMutable()
+        auxDoc = try collection.document(id: "word5")!.toMutable()
         auxDoc.setString(nil, forKey: "vector")
-        XCTAssertNotNil(try! collection!.save(document: auxDoc))
+        try collection.save(document: auxDoc)
         
-        rs = try! q.execute()
+        rs = try q.execute()
         wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 295)
         XCTAssertNil(wordMap["word5"])
+    }
+    
 
+    /// 8. TestCreateVectorIndexUsingPredictionModel
+    /// Description
+    ///     Using the default configuration, test that the vector index can be created from the vectors returned by a predictive model.
+    /// WORKAROUND:
+    ///     Need quotes on WordEmbedding index name until the issue is resolved. https://issues.couchbase.com/browse/CBL-5407
+    /// Steps
+    ///     1. Copy database "words_db".
+    ///     2. Register  "WordEmbedding" predictive model defined in section 2.
+    ///     3. Create a vector index named "words_pred_index" in _default.words collection.
+    ///         - expression: "prediction(WordEmbedding, {"word": word}).vector"
+    ///         - dimensions: 300
+    ///         - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
+    ///     4. Check that the index is created without an error returned.
+    ///     5. Create an SQL++ query:
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_pred_index, <dinner vector>, 350)
+    ///     6. Check the explain() result of the query to ensure that the "words_pred_index" is used.
+    ///     7. Execute the query and check that 300 results are returned.
+    ///     8. Update the vector index:
+    ///         - Create _default.words.word301 with the content from _default.extwords.word1
+    ///         - Create _default.words.word302 with the content from _default.extwords.word2
+    ///         - Update _default.words.word1 with the content from _default.extwords.word3
+    ///         - Delete _default.words.word2
+    ///     9. Execute the query and check that 301 results are returned.
+    ///         - word301 and word302 are included.
+    ///         - word1 is updated with the word from _default.extwords.word2.
+    ///         - word2 is not included.
+
+    func testCreateVectorIndexUsingPredictionModel() throws {
+        let wordsCollection = try db.collection(name: "words")!
+        let extWordsCollection = try db.collection(name: "extwords")!
+        
+        let modelDb = try openDB(name: databaseName)
+        let model = WordEmbeddingModel(db: modelDb)
+        Database.prediction.registerModel(model, withName: "WordEmbedding")
+        
+        let exp = "prediction(\"WordEmbedding\",{\"word\": word}).vector"
+        
+        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        
+        try wordsCollection.createIndex(withName: "words_pred_index", config: config)
+        
+        let names = try wordsCollection.indexes()
+        XCTAssert(names.contains("words_pred_index"))
+        
+        // Query:
+        let sql = "select meta().id, word from _default.words where vector_match(words_pred_index, $vector, 350)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_pred_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 300)
+        
+        let extWord1 = try extWordsCollection.document(id: "word1")!
+        let word301 = createDocument("word301")
+        word301.setData(extWord1.toDictionary())
+        try wordsCollection.save(document: word301)
+        
+        let extWord2 = try extWordsCollection.document(id: "word2")!
+        let word302 = createDocument("word302")
+        word302.setData(extWord2.toDictionary())
+        try wordsCollection.save(document: word302)
+        
+        let extWord3 = try extWordsCollection.document(id: "word3")!
+        let word1 = try wordsCollection.document(id: "word1")!.toMutable()
+        word1.setData(extWord3.toDictionary())
+        try wordsCollection.save(document: word1)
+        
+        try wordsCollection.delete(document: wordsCollection.document(id: "word2")!)
+        
+        rs = try q.execute()
+        let wordMap = toDocIDWordMap(rs: rs)
+        XCTAssertEqual(wordMap.count, 301)
+        XCTAssertEqual(wordMap["word301"], word301.string(forKey: "word"))
+        XCTAssertEqual(wordMap["word302"], word302.string(forKey: "word"))
+        XCTAssertEqual(wordMap["word1"], word1.string(forKey: "word"))
+        XCTAssertNil(wordMap["word2"])
+        
+        Database.prediction.unregisterModel(withName: "WordEmbedding")
+    }
+    
+    /// 9. TestCreateVectorIndexUsingPredictiveModelWithInvalidVectors
+    /// Description
+    ///     Using the default configuration, test that when creating the vector index using a predictive model with invalid vectors, the invalid vectors will be skipped from indexing.
+    /// WORKAROUND:
+    ///     Need quotes on WordEmbedding index name until the issue is resolved. https://issues.couchbase.com/browse/CBL-5407
+    /// Steps
+    ///     1. Copy database "words_db".
+    ///     2. Register  "WordEmbedding" predictive model defined in section 2.
+    ///     3. Update documents.
+    ///         - Update _default.words word1 with "vector" = null
+    ///         - Update _default.words word2 with "vector" = "string"
+    ///         - Update _default.words word3 by removing the "vector" key.
+    ///         - Update _default.words word4 by removing one number from the centroids the query will look for the vector).
+    ///     4. Create a vector index named "words_prediction_index" in _default.words collection.
+    ///         - expression: "prediction(WordEmbedding, {"word": word}).embedding"
+    ///         - dimensions: 300
+    ///         - centroids: 8 (The default number of probes which is the max number of centroids the query will look for the vector).
+    ///     5. Check that the index is created without an error returned.
+    ///     6. Create an SQL++ query:
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_pred_index, <dinner vector>, 350)
+    ///     7. Check the explain() result of the query to ensure that the "words_pred_index" is used.
+    ///     8. Execute the query and check that 296 results are returned and the results do not include word1, word2, word3, and word4.
+    ///     9. Update an already index vector with a non existing word in the database.
+    ///         - Update _default.words.word5 with “word” = “Fried Chicken”.
+    ///     9. Execute the query and check that 295 results are returned, and the results do not include document word5.
+
+    func testCreateVectorIndexUsingPredictiveModelWithInvalidVectors() throws {
+        let collection = try db.collection(name: "words")!
     }
 }

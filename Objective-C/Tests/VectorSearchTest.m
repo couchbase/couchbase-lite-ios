@@ -578,7 +578,7 @@
  *     6. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>, limit 350)
+ *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
  *     7. Check the explain() result of the query to ensure that the "words_predi_index" is used.
  *     8. Execute the query and check that 296 results are returned and the results
  *        do not include word1, word2, word3, and word4.
