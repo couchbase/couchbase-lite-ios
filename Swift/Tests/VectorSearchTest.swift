@@ -562,4 +562,67 @@ class VectorSearchTest: CBLTestCase {
         XCTAssertEqual(wordMap.count, 295)
         XCTAssertNil(wordMap["word5"])
     }
+    
+    /// 10. TestCreateVectorIndexWithSQ
+    /// Description
+    ///     Using different types of the Scalar Quantizer Encoding, test that the vector index can be created and used.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///         - encoding: ScalarQuantizer(type: SQ4)
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 20 results are returned.
+    ///     7. Delete the "words_index".
+    ///     8. Repeat Step 2 – 7 by using SQ6 and SQ8 respectively.
+
+    func testCreateVectorIndexWithSQ() throws {
+        let collection = try db.collection(name: "words")!
+        
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        config.encoding = .scalarQuantizer(type: .SQ4)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        let names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query:
+        let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+        
+        // Repeat using SQ6
+        try collection.deleteIndex(forName: "words_index")
+        config.encoding = .scalarQuantizer(type: .SQ6)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        // Rerun query:
+        rs = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+        
+        // Repeat using SQ8
+        try collection.deleteIndex(forName: "words_index")
+        config.encoding = .scalarQuantizer(type: .SQ8)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        // Rerun query:
+        rs = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+    }
 }
