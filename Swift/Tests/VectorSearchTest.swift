@@ -124,15 +124,12 @@ class VectorSearchTest: CBLTestCase {
         let collection = try db.collection(name: "words")!
         
         let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 2, centroids: 20)
-        
-        XCTAssertNotNil(config1)
         try collection.createIndex(withName: "words_index_1", config: config1)
         
         var names = try collection.indexes()
         XCTAssert(names.contains("words_index_1"))
         
         let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 2048, centroids: 20)
-        XCTAssertNotNil(config2)
         try collection.createIndex(withName: "words_index_2", config: config2)
         
         names = try collection.indexes()
@@ -165,16 +162,12 @@ class VectorSearchTest: CBLTestCase {
         let collection = try db.collection(name: "words")!
         
         let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
-        
-        XCTAssertNotNil(config1)
         try collection.createIndex(withName: "words_index_1", config: config1)
 
         var names = try collection.indexes()
         XCTAssert(names.contains("words_index_1"))
         
         let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64000)
-        
-        XCTAssertNotNil(config2)
         try collection.createIndex(withName: "words_index_2", config: config2)
 
         names = try collection.indexes()
@@ -211,8 +204,6 @@ class VectorSearchTest: CBLTestCase {
         let collection = try db.collection(name: "words")!
         
         let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
-        
-        XCTAssertNotNil(config1)
         try collection.createIndex(withName: "words_index", config: config1)
 
         let names = try collection.indexes()
