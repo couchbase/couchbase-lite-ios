@@ -1169,7 +1169,7 @@
  *         - expression: "vectors"
  *         - dimensions: 300
  *         - centroids: 20
- *     6. Check that CouchbaseLiteException (code = 9, domain = CBL) is returned.
+ *     6. Check that the index is created without an error returned.
  */
 - (void) testCreateVectorIndexWithExistingName {
     NSError* error;
