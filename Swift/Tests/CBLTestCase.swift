@@ -87,7 +87,7 @@ class CBLTestCase: XCTestCase {
         }
         XCTAssertTrue(!FileManager.default.fileExists(atPath: self.directory))
         
-        try! openDB()
+        try! initDB()
     }
     
     override func tearDown() {
@@ -107,6 +107,10 @@ class CBLTestCase: XCTestCase {
     func openDB() throws {
         db = try openDB(name: databaseName)
         self.defaultCollection = try! db.defaultCollection()
+    }
+    
+    func initDB() throws {
+        try openDB()
     }
     
     func reopenDB() throws {

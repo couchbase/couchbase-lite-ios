@@ -335,12 +335,12 @@
     
     // Update docs:
     CBLDocument* extWord1 = [extWordsCollection documentWithID: @"word1" error : &error];
-    CBLMutableDocument* word351 = [self createDocument: @"word351" data: [extWord1 toDictionary]];
-    Assert([wordsCollection saveDocument: word351 error: &error]);
+    CBLMutableDocument* word301 = [self createDocument: @"word301" data: [extWord1 toDictionary]];
+    Assert([wordsCollection saveDocument: word301 error: &error]);
     
     CBLDocument* extWord2 = [extWordsCollection documentWithID: @"word2" error : &error];
-    CBLMutableDocument* word352 = [self createDocument: @"word352" data: [extWord2 toDictionary]];
-    Assert([wordsCollection saveDocument: word352 error: &error]);
+    CBLMutableDocument* word302 = [self createDocument: @"word302" data: [extWord2 toDictionary]];
+    Assert([wordsCollection saveDocument: word302 error: &error]);
     
     CBLDocument* extWord3 = [extWordsCollection documentWithID: @"word3" error : &error];
     CBLMutableDocument* word1 = [[wordsCollection documentWithID: @"word1" error: &error] toMutable];
@@ -353,8 +353,8 @@
     
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 301);
-    AssertEqualObjects(wordMap[@"word351"], [word351 stringForKey: @"word"]);
-    AssertEqualObjects(wordMap[@"word352"], [word352 stringForKey: @"word"]);
+    AssertEqualObjects(wordMap[@"word301"], [word301 stringForKey: @"word"]);
+    AssertEqualObjects(wordMap[@"word302"], [word302 stringForKey: @"word"]);
     AssertEqualObjects(wordMap[@"word1"], [word1 stringForKey: @"word"]);
     AssertNil(wordMap[@"word2"]);
 }
@@ -380,7 +380,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, limit 350)
+ *           WHERE vector_match(words_index, <dinner vector>, 350)
  *     6. Execute the query and check that 296 results are returned, and the results
  *        do not include document word1, word2, word3, and word4.
  *     7. Update an already index vector with an invalid vector.
@@ -578,7 +578,7 @@
  *     6. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>, limit 350)
+ *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
  *     7. Check the explain() result of the query to ensure that the "words_predi_index" is used.
  *     8. Execute the query and check that 296 results are returned and the results
  *        do not include word1, word2, word3, and word4.
