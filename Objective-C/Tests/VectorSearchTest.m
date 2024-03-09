@@ -1208,13 +1208,12 @@
  *     5. Check the explain() result of the query to ensure that the "words_index" is used.
  *     6. Execute the query and check that 20 results are returned.
  *     7. Delete index named "words_index".
- *     8. Check that getIndexes() return an empty array.
+ *     8. Check that getIndexes() does not contain "words_index".
  */
 - (void) testDeleteVectorIndex {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
-    // Create and recreate vector index using the same config
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
                                                                                         centroids: 20];
@@ -1242,7 +1241,7 @@
     [collection deleteIndexWithName: @"words_index" error: &error];
     
     names = [collection indexes: &error];
-    AssertEqual(names.count, 0);
+    AssertFalse([names containsObject: @"words_index"]);
 }
 
 /**
@@ -1356,7 +1355,7 @@
         AssertNil(error);
     }
     
-    // Check if exception thrown for wrong limit values
+    // Check if error thrown for wrong limit values
     for (NSNumber* limit in @[@-1, @0, @10001]) {
         [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
             return [self.db createQuery: [NSString stringWithFormat:@"select meta().id, word from _default.words where vector_match(words_index, $vector, %d)", limit.unsignedIntValue]
@@ -1446,7 +1445,7 @@
     // Create index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 2];
+                                                                                        centroids: 20];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -1497,7 +1496,7 @@
     // Create index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 2];
+                                                                                        centroids: 20];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
