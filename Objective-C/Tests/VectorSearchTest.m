@@ -876,7 +876,7 @@
 }
 
 /**
- * 14. TestCreateVectorIndexWithFixedTrainningSize
+ * 14. TestCreateVectorIndexWithFixedTrainingSize
  * Description
  *     Test that the vector index can be created and trained when minTrainingSize
  *     equals to maxTrainingSize.
@@ -886,7 +886,7 @@
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *         - minTrainningSize: 100 and maxTrainningSize: 100
+ *         - minTrainingSize: 100 and maxTrainingSize: 100
  *     3. Check that the index is created without an error returned.
  *     4. Create an SQL++ query.
  *         - SELECT meta().id, word
@@ -937,13 +937,13 @@
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *         - minTrainningSize: 1 and maxTrainningSize: 100
+ *         - minTrainingSize: 1 and maxTrainingSize: 100
  *     3. Check that the index is created without an error returned.
  *     4. Delete the "words_index"
  *     5. Repeat Step 2 with the following cases:
- *         - minTrainningSize = 0 and maxTrainningSize 0
- *         - minTrainningSize = 0 and maxTrainningSize 100
- *         - minTrainningSize = 10 and maxTrainningSize 9
+ *         - minTrainingSize = 0 and maxTrainingSize 0
+ *         - minTrainingSize = 0 and maxTrainingSize 100
+ *         - minTrainingSize = 10 and maxTrainingSize 9
  *     6. Check that an invalid argument exception was thrown for all cases in step 4.
  */
 - (void) testValidateMinMaxTrainingSize {
@@ -988,8 +988,8 @@
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *         - minTrainningSize: 400
- *         - maxTrainningSize: 500
+ *         - minTrainingSize: 400
+ *         - maxTrainingSize: 500
  *     3. Check that the index is created without an error returned.
  *     4. Create an SQL++ query.
  *         - SELECT meta().id, word
