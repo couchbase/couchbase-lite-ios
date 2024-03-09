@@ -21,11 +21,10 @@ class VectorSearchTest: CBLTestCase {
     }
     
     override func initDB() throws {
-        var config = DatabaseConfiguration()
-        config.directory = self.directory
-        
         if !Database.exists(withName: "words_db") {
             do {
+                var config = DatabaseConfiguration()
+                config.directory = self.directory
                 let res = ("Support/databases/vectorsearch" as NSString).appendingPathComponent("words_db")
                 let path = Bundle(for: Swift.type(of:self)).path(forResource: res, ofType: "cblite2")
                 try Database.copy(fromPath: path!, toDatabase: databaseName, withConfig: config)
@@ -862,8 +861,6 @@ class VectorSearchTest: CBLTestCase {
         let customLogger = CustomLogger()
         customLogger.level = .info
         Database.log.custom = customLogger
-        Database.log.console.domains = .all
-        Database.log.console.level = .info
         
         let collection = try db.collection(name: "words")!
         
@@ -892,5 +889,405 @@ class VectorSearchTest: CBLTestCase {
         XCTAssert(customLogger.lines
                     .contains("SQLite message: vectorsearch: Untrained index; queries may be slow."))
         Database.log.custom = nil
+    }
+    
+    /// 17. TestCreateVectorIndexWithCosineDistance
+    /// Description
+    ///     Test that the vector index can be created and used with the cosine distance metric.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///         - metric: Cosine
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT meta().id, word,vector_distance(words_index)
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 20 results are returned and the vector distance value is in between 0 – 1.0 inclusively.
+
+    func testCreateVectorIndexWithCosineDistance() throws {
+        let collection = try db.collection(name: "words")!
+        
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        config.metric = .cosine
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        let names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query:
+        let sql = "select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+        
+        for result in rs.allResults() {
+            XCTAssert(result.double(at: 3) > 0)
+            XCTAssert(result.double(at: 3) > 1)
+        }
+    }
+    
+    /// 18. TestCreateVectorIndexWithEuclideanDistance
+    /// Description
+    ///     Test that the vector index can be created and used with the euclidean distance metric.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///         - metric: Euclidean
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT meta().id, word, vector_distance(words_index)
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 20 results are returned and the distance value is more than zero.
+
+    func testCreateVectorIndexWithEuclideanDistance() throws {
+        let collection = try db.collection(name: "words")!
+        
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        config.metric = .euclidean
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        let names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query:
+        let sql = "select meta().id, word, vector_distance(words_index) from _default.words where vector_match(words_index, $vector, 20)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+        
+        for result in rs.allResults() {
+            XCTAssert(result.double(at: 3) > 0)
+        }
+    }
+    
+    /// 19. TestCreateVectorIndexWithExistingName
+    /// Description
+    ///     Test that creating a new vector index with an existing name is fine if the index configuration is the same. Otherwise, an error will be returned.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Repeat step 2 and check that the index is created without an error returned.
+    ///     5. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vectors"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     6. Check that the index is created without an error returned.
+
+    func testCreateVectorIndexWithExistingName() throws {
+        let collection = try db.collection(name: "words")!
+        
+        // Create and recreate vector index using the same config
+        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config1)
+        try collection.createIndex(withName: "words_index", config: config1)
+        
+        // Recreate index with same name using different config
+        let config2 = VectorIndexConfiguration(expression: "vectors", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config2)
+    }
+    
+    /// 20. TestDeleteVectorIndex
+    /// Description
+    ///     Test that creating a new vector index with an existing name is fine if the index configuration is the same. Otherwise, an error will be returned.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vectors"
+    ///         - dimensions: 300
+    ///        - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///          WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 20 results are returned.
+    ///     7. Delete index named "words_index".
+    ///     8. Check that getIndexes() does not contain "words_index".
+
+    func testDeleteVectorIndex() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query:
+        let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 20)
+        
+        try collection.deleteIndex(forName: "words_index")
+        names = try collection.indexes()
+        XCTAssertFalse(names.contains("words_index"))
+    }
+    
+
+    /// 21. TestVectorMatchOnNonExistingIndex
+    /// Description
+    ///     Test that an error will be returned when creating a vector match query that uses a non existing index.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create an SQL++ query.
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20)
+    ///     3. Check that a CouchbaseLiteException is returned as the index doesn’t exist.
+
+    func testVectorMatchOnNonExistingIndex() throws {
+        self.expectError(domain: CBLErrorDomain, code: CBLError.missingIndex) {
+            let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, 20)"
+            _ = try self.db.createQuery(sql)
+        }
+    }
+    
+    /// 22. TestVectorMatchDefaultLimit
+    /// Description
+    ///     Test that the number of rows returned is limited to the default value which is 3 when using the vector_match query without the limit number specified.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>)
+    ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     6. Execute the query and check that 3 results are returned.
+
+    func testVectorMatchDefaultLimit() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query:
+        let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 3)
+    }
+    
+    /// 23. TestVectorMatchLimitBoundary
+    /// Description
+    ///     Test vector_match’s limit boundary which is between 1 - 10000 inclusively. When creating vector_match queries with an out-out-bound limit, an error should be returned.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT meta().id, word
+    ///           FROM _default.words
+    ///          WHERE vector_match(words_index, <dinner vector>, <limit>)
+    ///         - limit: 1 and 10000
+    ///     5. Check that the query can be created without an error.
+    ///     6. Repeat step 4 with the limit: -1, 0, and 10001
+    ///     7. Check that a CouchbaseLiteException is returned when creating the query.
+
+    func testVectorMatchLimitBoundary() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Check valid query with 1 and 10000 set limit
+        for limit in [1, 10000] {
+            let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, \(limit))"
+            _ = try self.db.createQuery(sql)
+        }
+        
+        // Check if error thrown for wrong limit values
+        for limit in [-1, 0, 10001] {
+            self.expectError(domain: CBLErrorDomain, code: CBLError.invalidQuery) {
+                let sql = "select meta().id, word from _default.words where vector_match(words_index, $vector, \(limit)"
+                _ = try self.db.createQuery(sql)
+            }
+        }
+    }
+    
+    /// 24. TestVectorMatchWithAndExpression
+    /// Description
+    ///     Test that vector_match can be used in AND expression.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///        - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT word, catid
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 300) AND catid = 'cat1'
+    ///     5. Check that the query can be created without an error.
+    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     7. Execute the query and check that the number of results returned is 50 (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+ 
+    func testVectorMatchWithAndExpression() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query with a single AND:
+        let sql = "select word, catid from _default.words where vector_match(words_index, $vector, 300) AND catid = 'cat1'"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 50)
+        
+        for result in rs.allResults() {
+            XCTAssertEqual(result.value(at: 1) as! String, "cat1")
+        }
+    }
+    
+    /// 25. TestVectorMatchWithMultipleAndExpression
+    /// Description
+    ///     Test that vector_match can be used in multiple AND expressions.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT word, catid
+    ///           FROM _default.words
+    ///           WHERE (vector_match(words_index, <dinner vector>, 300) AND word is valued) AND catid = 'cat1'
+    ///     5. Check that the query can be created without an error.
+    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///     7. Execute the query and check that the number of results returned is 50 (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+
+    func testVectorMatchWithMultipleAndExpression() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query with mutiple ANDs:
+        let sql = "select word, catid from _default.words where (vector_match(words_index, $vector, 300) AND word is valued) AND catid = 'cat1'"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        XCTAssertEqual(rs.allResults().count, 50)
+        
+        for result in rs.allResults() {
+            XCTAssertEqual(result.value(at: 1) as! String, "cat1")
+        }
+    }
+    
+
+    /// 26. TestInvalidVectorMatchWithOrExpression
+    /// Description
+    ///     Test that vector_match cannot be used with OR expression.
+    /// Steps
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
+    ///         - expression: "vector"
+    ///         - dimensions: 300
+    ///         - centroids: 20
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Create an SQL++ query.
+    ///         - SELECT word, catid
+    ///           FROM _default.words
+    ///           WHERE vector_match(words_index, <dinner vector>, 20) OR catid = 1
+    ///     5. Check that a CouchbaseLiteException is returned when creating the query.
+
+    func testInvalidVectorMatchWithOrExpression() throws {
+        let collection = try db.collection(name: "words")!
+        
+        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        try collection.createIndex(withName: "words_index", config: config)
+        
+        var names = try collection.indexes()
+        XCTAssert(names.contains("words_index"))
+        
+        // Query with OR:
+        let sql = "select meta().id, word, catid from _default.words where vector_match(words_index, $vector, 300) OR catid = 'cat1'"
+        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidQuery) {
+            _ = try self.db.createQuery(sql)
+        }
     }
 }
