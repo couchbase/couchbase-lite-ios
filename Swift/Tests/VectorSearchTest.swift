@@ -427,7 +427,6 @@ class VectorSearchTest: CBLTestCase {
         let exp = "prediction(\"WordEmbedding\",{\"word\": word}).vector"
         
         let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
-        
         try wordsCollection.createIndex(withName: "words_pred_index", config: config)
         
         let names = try wordsCollection.indexes()
@@ -505,5 +504,62 @@ class VectorSearchTest: CBLTestCase {
 
     func testCreateVectorIndexUsingPredictiveModelWithInvalidVectors() throws {
         let collection = try db.collection(name: "words")!
+        let modelDb = try openDB(name: databaseName)
+        let model = WordEmbeddingModel(db: modelDb)
+        Database.prediction.registerModel(model, withName: "WordEmbedding")
+        
+        // Update docs:
+        var auxDoc = try collection.document(id: "word1")!.toMutable()
+        auxDoc.setArray(nil, forKey: "vector")
+        try collection.save(document: auxDoc)
+        
+        auxDoc = try collection.document(id: "word2")!.toMutable()
+        auxDoc.setString("string", forKey: "vector")
+        try collection.save(document: auxDoc)
+        
+        auxDoc = try collection.document(id: "word3")!.toMutable()
+        auxDoc.removeValue(forKey: "vector")
+        try collection.save(document: auxDoc)
+        
+        auxDoc = try collection.document(id: "word4")!.toMutable()
+        let vector = auxDoc.array(forKey: "vector")
+        vector!.removeValue(at: 0)
+        try collection.save(document: auxDoc)
+        
+        let exp = "prediction(\"WordEmbedding\",{\"word\": word}).vector"
+        
+        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        try collection.createIndex(withName: "words_pred_index", config: config)
+        
+        let names = try collection.indexes()
+        XCTAssert(names.contains("words_pred_index"))
+        
+        // Query:
+        let sql = "select meta().id, word from _default.words where vector_match(words_pred_index, $vector, 350)"
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        
+        let q = try self.db.createQuery(sql)
+        q.parameters = parameters
+        
+        let explain = try q.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "SCAN kv_.words:vector:words_pred_index").location, NSNotFound)
+        
+        var rs: ResultSet = try q.execute()
+        var wordMap = toDocIDWordMap(rs: rs)
+        XCTAssertEqual(wordMap.count, 296)
+        XCTAssertNil(wordMap["word1"])
+        XCTAssertNil(wordMap["word2"])
+        XCTAssertNil(wordMap["word3"])
+        XCTAssertNil(wordMap["word4"])
+        
+        auxDoc = try collection.document(id: "word5")!.toMutable()
+        auxDoc.setString("Fried Chicken", forKey: "word")
+        try collection.save(document: auxDoc)
+        
+        rs = try q.execute()
+        wordMap = toDocIDWordMap(rs: rs)
+        XCTAssertEqual(wordMap.count, 295)
+        XCTAssertNil(wordMap["word5"])
     }
 }
