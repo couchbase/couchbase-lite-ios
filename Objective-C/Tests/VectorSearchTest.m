@@ -241,7 +241,7 @@
  *         - centroids: 20
  *     3. Check that the index is created without an error returned.
  *     4. Get index names from the _default.words collection and check that the index
- *       names contain “words_index”.
+ *       names contains “words_index”.
  *     5. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
@@ -456,11 +456,6 @@
  * Description
  *     Using the default configuration, test that the vector index can be created from
  *     the vectors returned by a predictive model.
- *
- * WORKAROUND:
- *    Need quotes on WordEmbedding index name until the issue is resolved.
- *    https://issues.couchbase.com/browse/CBL-5407
- *
  * Steps
  *     1. Copy database words_db.
  *     2. Register  "WordEmbedding" predictive model defined in section 2.
@@ -473,7 +468,7 @@
  *     5. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>, limit 350)
+ *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
  *     6. Check the explain() result of the query to ensure that the "words_pred_index" is used.
  *     7. Execute the query and check that 300 results are returned.
  *     8. Update the vector index:
@@ -496,7 +491,7 @@
     CBLWordEmbeddingModel* model = [[CBLWordEmbeddingModel alloc] initWithDatabase: modelDb];
     [CBLDatabase.prediction registerModel: model withName: @"WordEmbedding"];
     
-    NSString* expr = @"prediction(\"WordEmbedding\",{\"word\": word}).vector";
+    NSString* expr = @"prediction(WordEmbedding,{\"word\": word}).vector";
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: expr
                                                                                        dimensions: 300
                                                                                         centroids: 8];
@@ -557,11 +552,6 @@
  *     Using the default configuration, test that when creating the vector index using
  *     a predictive model with invalid vectors, the invalid vectors will be skipped
  *     from indexing.
- *
- * WORKAROUND:
- *    Need quotes on WordEmbedding index name until the issue is resolved.
- *    https://issues.couchbase.com/browse/CBL-5407
- *
  * Steps
  *     1. Copy database words_db.
  *     2. Register  "WordEmbedding" predictive model defined in section 2.
@@ -615,7 +605,7 @@
     Assert([collection saveDocument: auxDoc error: &error]);
 
     // Create vector index
-    NSString* expr = @"prediction(\"WordEmbedding\",{\"word\": word}).vector";
+    NSString* expr = @"prediction(WordEmbedding,{\"word\": word}).vector";
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: expr
                                                                                        dimensions: 300
                                                                                         centroids: 8];
@@ -645,7 +635,7 @@
     AssertNil(wordMap[@"word4"]);
     
     auxDoc = [[collection documentWithID: @"word5" error: &error] toMutable];
-    [auxDoc setString: @"Fried Chiecker" forKey: @"word"];
+    [auxDoc setString: @"Fried Chicken" forKey: @"word"];
     Assert([collection saveDocument: auxDoc error: &error]);
 
     rs = [q execute: &error];
@@ -896,7 +886,7 @@
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *         - minTrainningSize: 100 and maxTranningSize: 100
+ *         - minTrainningSize: 100 and maxTrainningSize: 100
  *     3. Check that the index is created without an error returned.
  *     4. Create an SQL++ query.
  *         - SELECT meta().id, word
@@ -947,13 +937,13 @@
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *         - minTrainningSize: 1 and maxTranningSize: 100
+ *         - minTrainningSize: 1 and maxTrainningSize: 100
  *     3. Check that the index is created without an error returned.
  *     4. Delete the "words_index"
  *     5. Repeat Step 2 with the following cases:
- *         - minTrainningSize = 0 and maxTranningSize 0
- *         - minTrainningSize = 0 and maxTranningSize 100
- *         - minTrainningSize = 10 and maxTranningSize 9
+ *         - minTrainningSize = 0 and maxTrainningSize 0
+ *         - minTrainningSize = 0 and maxTrainningSize 100
+ *         - minTrainningSize = 10 and maxTrainningSize 9
  *     6. Check that an invalid argument exception was thrown for all cases in step 4.
  */
 - (void) testValidateMinMaxTrainingSize {
@@ -973,13 +963,16 @@
     
     // Check if exception thrown for wrong values
     [self expectException: NSInvalidArgumentException in:^{
-        NSArray<NSNumber*>* minTrainingSizes = @[@0, @0, @10];
-        NSArray<NSNumber*>* maxTrainingSizes = @[@0, @100, @9];
+        NSArray<NSArray<NSNumber *> *> *trainingSizes = @[
+            @[@0, @0],
+            @[@0, @100],
+            @[@10, @9]
+        ];
         
-        for (size_t i = 0; i < minTrainingSizes.count; i++) {
+        for (size_t i = 0; i < trainingSizes.count; i++) {
             [collection deleteIndexWithName: @"words_index" error: nil];
-            config.minTrainingSize = minTrainingSizes[i].unsignedIntValue;
-            config.maxTrainingSize = maxTrainingSizes[i].unsignedIntValue;
+            config.minTrainingSize = trainingSizes[i][0].unsignedIntValue;
+            config.maxTrainingSize = trainingSizes[i][1].unsignedIntValue;
             [collection createIndexWithName: @"words_index" config: config error: nil];
         }
     }];
@@ -988,7 +981,7 @@
 /**
  * 16. TestQueryUntrainedVectorIndex
  * Description
- *     Test that the untrained vector index can be queries.
+ *     Test that the untrained vector index can be used in queries.
  * Steps
  *     1. Copy database words_db.
  *     2. Create a vector index named "words_index" in _default.words collection.
@@ -1156,7 +1149,7 @@
  * 19. TestCreateVectorIndexWithExistingName
  * Description
  *     Test that creating a new vector index with an existing name is fine if the index
- *     configuration is the same. Otherwise, an error will be returned.
+ *     configuration is the same or not.
  * Steps
  *     1. Copy database words_db.
  *     2. Create a vector index named "words_index" in _default.words collection.

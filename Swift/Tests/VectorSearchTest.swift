@@ -88,7 +88,7 @@ class VectorSearchTest: CBLTestCase {
     ///         - distance: 300
     ///         - centroids: 20
     ///         - encoding: None
-    ///         - metric: Cosine Distance
+    ///         - metric: Cosine
     ///         - minTrainingSize: 100
     ///         - maxTrainingSize: 200
 
@@ -100,6 +100,8 @@ class VectorSearchTest: CBLTestCase {
         config.maxTrainingSize = 200
         
         XCTAssertEqual(config.expression, "vector")
+        XCTAssertEqual(config.dimensions, 300);
+        XCTAssertEqual(config.centroids, 20);
         XCTAssertEqual(config.encoding, .none);
         XCTAssertEqual(config.metric, .cosine)
         XCTAssertEqual(config.minTrainingSize, 100)
@@ -112,7 +114,7 @@ class VectorSearchTest: CBLTestCase {
     /// Steps
     ///     1. Create a VectorIndexConfiguration object.
     ///         - expression: "vector"
-    ///         - dimensions: 300
+    ///         - dimensions: 2 and 2048
     ///         - centroids: 20
     ///    2. Check that the config can be created without an error thrown.
     ///    3. Use the config to create the index and check that the index can be created successfully.
@@ -151,7 +153,7 @@ class VectorSearchTest: CBLTestCase {
     ///     1. Create a VectorIndexConfiguration object.
     ///         - expression: "vector"
     ///         - dimensions: 300
-    ///         - centroids: 20
+    ///         - centroids: 1 and 64000
     ///     2. Check that the config can be created without an error thrown.
     ///     3. Use the config to create the index and check that the index can be created successfully.
     ///     4. Change the centroids to 0 and 64001.
@@ -185,13 +187,13 @@ class VectorSearchTest: CBLTestCase {
     /// Description
     ///     Using the default configuration, test that the vector index can be created from the embedded vectors in the documents. The test also verifies that the created index can be used in the query.
     /// Steps
-    ///     1. Copy database "words_db".
-    ///     2. Create a VectorIndexConfiguration object.
+    ///     1. Copy database words_db.
+    ///     2. Create a vector index named "words_index" in _default.words collection.
     ///         - expression: "vector"
     ///         - dimensions: 300
     ///         - centroids: 20
-    ///     3. Check that the config can be created without an error thrown.
-    ///     4. Get index names from the _default.words collection and check that the index names contain “words_index”
+    ///     3. Check that the index is created without an error returned.
+    ///     4. Get index names from the _default.words collection and check that the index names contains “words_index”
     ///     5. Create an SQL++ query:
     ///         - SELECT meta().id, word
     ///           FROM _default.words
@@ -202,7 +204,7 @@ class VectorSearchTest: CBLTestCase {
     func testCreateVectorIndex() throws{
         let collection = try db.collection(name: "words")!
         
-        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 1)
+        let config1 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
         try collection.createIndex(withName: "words_index", config: config1)
 
         let names = try collection.indexes()
@@ -225,7 +227,7 @@ class VectorSearchTest: CBLTestCase {
     /// Description
     ///     Test that the vector index created from the embedded vectors will be updated when documents are changed. The test also verifies that the created index can be used in the query.
     /// Steps
-    ///     1. Copy database "words_db".
+    ///     1. Copy database words_db.
     ///     2. Create a VectorIndexConfiguration object.
     ///         - expression: "vector"
     ///         - dimensions: 300
@@ -293,6 +295,9 @@ class VectorSearchTest: CBLTestCase {
         let wordMap: [String: String] = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 301)
         XCTAssertEqual(wordMap["word301"], word301.string(forKey: "word"))
+        XCTAssertEqual(wordMap["word302"], word302.string(forKey: "word"))
+        XCTAssertEqual(wordMap["word1"], word1.string(forKey: "word"))
+        XCTAssertNil(wordMap["word2"])
     }
     
 
@@ -300,7 +305,7 @@ class VectorSearchTest: CBLTestCase {
     /// Description
     ///     Using the default configuration, test that when creating the vector index with invalid vectors, the invalid vectors will be skipped from indexing.
     /// Steps
-    ///     1. Copy database "words_db".
+    ///     1. Copy database words_db.
     ///     2. Update the documents:
     ///         - Update _default.words word1 with "vector" = null
     ///         - Update _default.words word2 with "vector" = "string"
@@ -380,10 +385,8 @@ class VectorSearchTest: CBLTestCase {
     /// 8. TestCreateVectorIndexUsingPredictionModel
     /// Description
     ///     Using the default configuration, test that the vector index can be created from the vectors returned by a predictive model.
-    /// WORKAROUND:
-    ///     Need quotes on WordEmbedding index name until the issue is resolved. https://issues.couchbase.com/browse/CBL-5407
     /// Steps
-    ///     1. Copy database "words_db".
+    ///     1. Copy database words_db.
     ///     2. Register  "WordEmbedding" predictive model defined in section 2.
     ///     3. Create a vector index named "words_pred_index" in _default.words collection.
     ///         - expression: "prediction(WordEmbedding, {"word": word}).vector"
@@ -414,7 +417,7 @@ class VectorSearchTest: CBLTestCase {
         let model = WordEmbeddingModel(db: modelDb)
         Database.prediction.registerModel(model, withName: "WordEmbedding")
         
-        let exp = "prediction(\"WordEmbedding\",{\"word\": word}).vector"
+        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
         
         let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
         try wordsCollection.createIndex(withName: "words_pred_index", config: config)
@@ -436,21 +439,25 @@ class VectorSearchTest: CBLTestCase {
         var rs: ResultSet = try q.execute()
         XCTAssertEqual(rs.allResults().count, 300)
         
+        // Create words.word301 with extwords.word1 content
         let extWord1 = try extWordsCollection.document(id: "word1")!
         let word301 = createDocument("word301")
         word301.setData(extWord1.toDictionary())
         try wordsCollection.save(document: word301)
         
+        // Create words.word302 with extwords.word2 content
         let extWord2 = try extWordsCollection.document(id: "word2")!
         let word302 = createDocument("word302")
         word302.setData(extWord2.toDictionary())
         try wordsCollection.save(document: word302)
         
+        // Update words.word1 with extwords.word3 content
         let extWord3 = try extWordsCollection.document(id: "word3")!
         let word1 = try wordsCollection.document(id: "word1")!.toMutable()
         word1.setData(extWord3.toDictionary())
         try wordsCollection.save(document: word1)
         
+        // Delete words.word2
         try wordsCollection.delete(document: wordsCollection.document(id: "word2")!)
         
         rs = try q.execute()
@@ -467,10 +474,8 @@ class VectorSearchTest: CBLTestCase {
     /// 9. TestCreateVectorIndexUsingPredictiveModelWithInvalidVectors
     /// Description
     ///     Using the default configuration, test that when creating the vector index using a predictive model with invalid vectors, the invalid vectors will be skipped from indexing.
-    /// WORKAROUND:
-    ///     Need quotes on WordEmbedding index name until the issue is resolved. https://issues.couchbase.com/browse/CBL-5407
     /// Steps
-    ///     1. Copy database "words_db".
+    ///     1. Copy database words_db.
     ///     2. Register  "WordEmbedding" predictive model defined in section 2.
     ///     3. Update documents.
     ///         - Update _default.words word1 with "vector" = null
@@ -516,7 +521,7 @@ class VectorSearchTest: CBLTestCase {
         vector!.removeValue(at: 0)
         try collection.save(document: auxDoc)
         
-        let exp = "prediction(\"WordEmbedding\",{\"word\": word}).vector"
+        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
         
         let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
         try collection.createIndex(withName: "words_pred_index", config: config)
@@ -576,7 +581,7 @@ class VectorSearchTest: CBLTestCase {
     func testCreateVectorIndexWithSQ() throws {
         let collection = try db.collection(name: "words")!
         
-        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
         config.encoding = .scalarQuantizer(type: .SQ4)
         try collection.createIndex(withName: "words_index", config: config)
         
@@ -637,7 +642,7 @@ class VectorSearchTest: CBLTestCase {
 
     func testCreateVectorIndexWithNoneEncoding() throws {
         let collection = try db.collection(name: "words")!
-        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
         config.encoding = .none
         try collection.createIndex(withName: "words_index", config: config)
         
@@ -684,6 +689,7 @@ class VectorSearchTest: CBLTestCase {
         let collection = try! db.collection(name: "words")!
         
         for numberOfBits in [8, 4, 12] {
+            // Create vector index
             var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
             config.encoding = .productQuantizer(subquantizers: 5, bits: UInt32(numberOfBits))
             try collection.createIndex(withName: "words_index", config: config)
@@ -705,6 +711,7 @@ class VectorSearchTest: CBLTestCase {
             var rs: ResultSet = try q.execute()
             XCTAssertEqual(rs.allResults().count, 20)
             
+            // Delete index
             try collection.deleteIndex(forName: "words_index")
         }
     }
@@ -724,7 +731,8 @@ class VectorSearchTest: CBLTestCase {
     ///         - PQ(subquantizers: 2, bits: 8)
     ///     3. Check that the index is created without an error returned.
     ///     4. Delete the "words_index".
-    ///     5. Repeat steps 2 to 4 by changing the subquantizers to 3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 75, 100, 150, and 300.
+    ///     5. Repeat steps 2 to 4 by changing the subquantizers to 
+    ///         3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 75, 100, 150, and 300.
     ///     6. Repeat step 2 to 4 by changing the subquantizers to 0 and 7.
     ///     7. Check that an invalid argument exception is thrown.
 
@@ -763,7 +771,7 @@ class VectorSearchTest: CBLTestCase {
     ///         - expression: "vector"
     ///         - dimensions: 300
     ///         - centroids: 20
-    ///         - minTrainningSize: 100 and maxTranningSize: 100
+    ///         - minTrainningSize: 100 and maxTrainningSize: 100
     ///     3. Check that the index is created without an error returned.
     ///     4. Create an SQL++ query.
     ///         - SELECT meta().id, word
@@ -807,13 +815,13 @@ class VectorSearchTest: CBLTestCase {
     ///         - expression: "vector"
     ///         - dimensions: 300
     ///         - centroids: 20
-    ///         - minTrainningSize: 1 and maxTranningSize: 100
+    ///         - minTrainningSize: 1 and maxTrainningSize: 100
     ///     3. Check that the index is created without an error returned.
     ///     4. Delete the "words_index"
     ///     5. Repeat Step 2 with the following cases:
-    ///         - minTrainningSize = 0 and maxTranningSize 0
-    ///         - minTrainningSize = 0 and maxTranningSize 100
-    ///         - minTrainningSize = 10 and maxTranningSize 9
+    ///         - minTrainningSize = 0 and maxTrainningSize 0
+    ///         - minTrainningSize = 0 and maxTrainningSize 100
+    ///         - minTrainningSize = 10 and maxTrainningSize 9
     ///     6. Check that an invalid argument exception was thrown for all cases in step 4.
 
     func testValidateMinMaxTrainingSize() throws {
@@ -840,7 +848,7 @@ class VectorSearchTest: CBLTestCase {
     
     /// 16. TestQueryUntrainedVectorIndex
     /// Description
-    ///     Test that the untrained vector index can be queries.
+    ///     Test that the untrained vector index can be used in queries.
     /// Steps
     ///     1. Copy database words_db.
     ///     2. Create a vector index named "words_index" in _default.words collection.
@@ -865,6 +873,7 @@ class VectorSearchTest: CBLTestCase {
         let collection = try db.collection(name: "words")!
         
         var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 20)
+        // out of bounds (300 words in db)
         config.minTrainingSize = 400
         config.maxTrainingSize = 500
         try collection.createIndex(withName: "words_index", config: config)
@@ -988,7 +997,7 @@ class VectorSearchTest: CBLTestCase {
     
     /// 19. TestCreateVectorIndexWithExistingName
     /// Description
-    ///     Test that creating a new vector index with an existing name is fine if the index configuration is the same. Otherwise, an error will be returned.
+    ///     Test that creating a new vector index with an existing name is fine if the index configuration is the same or not.
     /// Steps
     ///     1. Copy database words_db.
     ///     2. Create a vector index named "words_index" in _default.words collection.
