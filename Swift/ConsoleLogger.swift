@@ -38,7 +38,7 @@ public struct LogDomains: OptionSet {
     /// Database domain.
     public static let database = LogDomains(rawValue: Int(LogDomain.database.rawValue))
     
-    /// Database domain.
+    /// Query domain.
     public static let query = LogDomains(rawValue: Int(LogDomain.query.rawValue))
     
     /// Replicator domain.
