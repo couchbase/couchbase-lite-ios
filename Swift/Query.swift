@@ -115,7 +115,10 @@ public class Query {
             database.addQuery(self)
         }
         
-        let listenerToken = ListenerToken(token)
+        let listenerToken = ListenerToken(token) { token in
+            self.didRemoveChangeListener(withToken: token)
+        }
+        
         tokens.add(listenerToken)
         return listenerToken
     }
@@ -124,15 +127,19 @@ public class Query {
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
+        token.remove()
+    }
+    
+    // MARK: Internal
+    
+    func didRemoveChangeListener(withToken token: ListenerToken) {
         lock.lock()
-        prepareQuery()
-        queryImpl!.removeChangeListener(with: token.impl)
-        tokens.remove(token)
+        defer { lock.unlock() }
         
+        tokens.remove(token)
         if tokens.count == 0 {
             database.removeQuery(self)
         }
-        lock.unlock()
     }
 
     /// Encoded JSON representation of the query.
@@ -160,8 +167,6 @@ public class Query {
         self.database = database
         queryImpl = try database.impl.createQuery(expressions)
     }
-
-    // MARK: Internal
     
     var params: Parameters?
     

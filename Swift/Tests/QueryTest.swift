@@ -1788,6 +1788,31 @@ class QueryTest: CBLTestCase {
         try testLiveQuery(query: q)
     }
     
+    // CBSE-15957 : Crash when creating multiple live queries concurrently
+    func testCreateLiveQueriesConcurrently() throws {
+        // Create 1000 docs:
+        try loadNumbers(1000)
+        
+        // Create two live queries then remove them concurrently:
+        let remExp = self.expectation(description: "Listener Removed")
+        remExp.expectedFulfillmentCount = 2
+        let queue = DispatchQueue(label: "query-queue", attributes: .concurrent)
+        for i in 0..<2 {
+            queue.async {
+                let exp = self.expectation(description: "Change Received")
+                let query = try! self.db.createQuery("select * from _ where number1 < \(i * 200)")
+                let token = query.addChangeListener {
+                    change in exp.fulfill()
+                }
+                self.wait(for: [exp], timeout: 5.0)
+                token.remove()
+                remExp.fulfill()
+            }
+        }
+        
+        wait(for: [remExp], timeout: 5.0)
+    }
+    
     func testLiveQuery(query: Query) throws {
         try loadNumbers(100)
         var count = 0;

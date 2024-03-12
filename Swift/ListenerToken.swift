@@ -26,14 +26,23 @@ public class ListenerToken {
     /// Remove the listener associated with the token.
     public func remove() {
         impl.remove()
+        
+        if let removedBlock = self.removedBlock {
+            removedBlock(self)
+        }
     }
     
     // MARK: Internal
     
-    init(_ impl: CBLListenerToken) {
+    typealias RemovedBlock = (_ token: ListenerToken) -> Void
+    
+    init(_ impl: CBLListenerToken, removeBlock: RemovedBlock? = nil) {
         self.impl = impl
+        self.removedBlock = removeBlock
     }
     
     let impl: CBLListenerToken
+    
+    let removedBlock: RemovedBlock?
     
 }

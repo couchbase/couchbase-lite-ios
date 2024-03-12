@@ -1878,6 +1878,35 @@
     [q removeChangeListenerWithToken: token];
 }
 
+// CBSE-15957: Crash when creating multiple live queries concurrently
+- (void) testCreateLiveQueriesConcurrently {
+    // Create 1000 docs:
+    [self loadNumbers: 1000];
+    
+    // Create two live queries then remove them concurrently:
+    XCTestExpectation* remExp = [self expectationWithDescription: @"Listener Removed"];
+    remExp.expectedFulfillmentCount = 2;
+    
+    dispatch_queue_t queue = dispatch_queue_create("query-queue", DISPATCH_QUEUE_CONCURRENT);
+    for (int i = 0; i < 2; i++) {
+        dispatch_async(queue, ^{
+            XCTestExpectation* exp = [self expectationWithDescription: @"Change Received"];
+            NSError* error;
+            NSString* str = [NSString stringWithFormat: @"select * from _ where number1 < %d", (i * 200)];
+            CBLQuery* query = [self.db createQuery: str error: &error];
+            AssertNotNil(query);
+            id token = [query addChangeListener:^(CBLQueryChange* change) {
+                [exp fulfill];
+            }];
+            [self waitForExpectations: @[exp] timeout: 5.0];
+            [token remove];
+            [remExp fulfill];
+        });
+    }
+    
+    [self waitForExpectations: @[remExp] timeout: 5.0];
+}
+
 /**
  When adding a second listener after the first listener is notified, the second listener
  should get the change (current result).

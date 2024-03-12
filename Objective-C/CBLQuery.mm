@@ -206,15 +206,6 @@ using namespace fleece;
     }];
 }
 
-- (NSString*) description {
-    if (_language == kC4JSONQuery) {
-        NSString* desc = [[NSString alloc] initWithData: _json encoding: NSUTF8StringEncoding];
-        return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
-    } else {
-        return [NSString stringWithFormat: @"%@[n1ql=%@]", self.class, _expressions];
-    }
-}
-
 #pragma mark - Parameters
 
 - (CBLQueryParameters*) parameters {
@@ -262,7 +253,7 @@ using namespace fleece;
     }];
     
     if (!e) {
-        CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
+        CBLWarnError(Query, @"%@: Failed to execute with error: %d/%d", self, c4Err.domain, c4Err.code);
         convertError(c4Err, outError);
         return nullptr;
     }
@@ -282,20 +273,25 @@ using namespace fleece;
     CBLAssertNotNil(listener);
     
     CBL_LOCK(self) {
-        if (!_changeNotifier)
+        // Only use CBLChangeNotifier for creating and maintaining the tokens. The CBLQueryObserver object will
+        // be created per token and will post change to its token directly instead of using the CBLChangeNotifier.
+        if (!_changeNotifier) {
             _changeNotifier = [CBLChangeNotifier new];
+        }
         
-        CBLChangeListenerToken* token = [_changeNotifier addChangeListenerWithQueue: queue
-                                                                           listener: listener
-                                                                           delegate: self];
+        CBLChangeListenerToken<CBLQueryChange*>* token = [_changeNotifier addChangeListenerWithQueue: queue
+                                                                                            listener: listener
+                                                                                            delegate: self];
         
-        // create c4queryobs & start immediately
-        CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: self
-                                                            columnNames: _columnNames
-                                                                  token: token];
+        // The CBLQueryObserver retains both query (self) and the token. Two circular retain references will happen:
+        //  * query (self) -> _changeNotifier -> obs ->  query
+        //  * obs -> token -> obs (_token.context)
+        // With the current design which is not obvious, the two circular retain references will be broken when the
+        // obs is stopped. An alternative more obvious approach would be using a stopped callback or delegate to
+        // break the circles.
+        CBLQueryObserver* obs = [[CBLQueryObserver alloc] initWithQuery: self columnNames: _columnNames token: token];
         [obs start];
         token.context = obs;
-        
         return token;
     }
 }
@@ -305,8 +301,7 @@ using namespace fleece;
     
     CBL_LOCK(self) {
         CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-        [(CBLQueryObserver*)t.context stopAndFree];
-        
+        [(CBLQueryObserver*)t.context stop];
         [_changeNotifier removeChangeListenerWithToken: token];
     }
 }
