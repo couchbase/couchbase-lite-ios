@@ -34,4 +34,13 @@ class CustomLogger: Logger {
         lines.append(message)
     }
     
+    func containsString(_ string: String) -> Bool {
+        for line in lines {
+            if (line as NSString).contains(string) {
+                return true
+            }
+        }
+        return false
+    }
+    
 }
