@@ -42,6 +42,15 @@
     [_lines removeAllObjects];
 }
 
+- (BOOL) containsString: (NSString *)string {
+    for (NSString* line in _lines) {
+        if ([line containsString: string]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 - (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
     [_lines addObject: message];        
 }

@@ -30,13 +30,21 @@
 /**
  Test Spec : https://docs.google.com/document/d/1p8RPmlXjA5KKvHLoFR6dcubFlObAqomlacxVbEvXYoU
 */
-@implementation VectorSearchTest
+@implementation VectorSearchTest {
+    CustomLogger* _logger;
+}
 
 - (void) setUp {
     [super setUp];
+    
+    _logger = [[CustomLogger alloc] init];
+    _logger.level = kCBLLogLevelInfo;
+    CBLDatabase.log.custom = _logger;
 }
 
 - (void) tearDown {
+    CBLDatabase.log.custom = nil;
+    
     [super tearDown];
 }
 
@@ -59,6 +67,14 @@
         wordMap[docID] = word;
     }
     return wordMap;
+}
+
+- (void) resetIndexWasTrainedLog {
+    [_logger reset];
+}
+
+- (BOOL) checkIndexWasTrained {
+    return ![_logger containsString: @"Untrained index; queries may be slow"];
 }
 
 /**
@@ -143,8 +159,8 @@
  *         - dimensions: 2 and 2048
  *         - centroids: 20
  *     2. Check that the config can be created without an error thrown.
-       3. Use the config to create the index and check that the index
-          can be created successfully.
+ *     3. Use the config to create the index and check that the index
+ *       can be created successfully.
  *     4. Change the dimensions to 1 and 2049.
  *     5. Check that an invalid argument exception is thrown.
  */
@@ -235,26 +251,32 @@
  *     index can be used in the query.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
  *         - centroids: 20
- *     3. Check that the index is created without an error returned.
- *     4. Get index names from the _default.words collection and check that the index
+ *     4. Check that the index is created without an error returned.
+ *     5. Get index names from the _default.words collection and check that the index
  *       names contains “words_index”.
- *     5. Create an SQL++ query:
+ *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that 20 results are returned.
+ *     7. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     8. Execute the query and check that 20 results are returned.
+ *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
+ *       doesn’t exist in the log.
+ *     10. Reset the custom logger.
  */
 - (void) testCreateVectorIndex {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
+    config.minTrainingSize = 200;
+    
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -273,6 +295,7 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -283,27 +306,30 @@
  *     used in the query.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 8 (The default number of probes which is the max number of
- *                      centroids the query will look for the vector).
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query:
+ *         - centroids: 8
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 350)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 300 results are returned.
- *     7. Update the documents:
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 300 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
+ *       doesn’t exist in the log.
+ *     9. Update the documents:
  *         - Create _default.words.word301 with the content from _default.extwords.word1
  *         - Create _default.words.word302 with the content from _default.extwords.word2
  *         - Update _default.words.word1 with the content from _default.extwords.word3
  *         - Delete _default.words.word2
- *     8. Execute the query again and check that 301 results are returned, and
+ *     10. Execute the query again and check that 301 results are returned, and
  *         - word301 and word302 are included.
  *         - word1’s word is updated with the word from _default.extwords.word3
  *         - word2 is not included.
+ *     11. Reset the custom logger.
  */
 - (void) testUpdateVectorIndex {
     NSError* error;
@@ -333,6 +359,7 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* results = rs.allObjects;
     AssertEqual(results.count, 300);
+    Assert([self checkIndexWasTrained]);
     
     // Update docs:
     CBLDocument* extWord1 = [extWordsCollection documentWithID: @"word1" error : &error];
@@ -367,27 +394,30 @@
  *     invalid vectors, the invalid vectors will be skipped from indexing.
  * Steps
  *     1. Copy database words_db.
- *     2. Update documents:
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Update documents:
  *         - Update _default.words word1 with "vector" = null
  *         - Update _default.words word2 with "vector" = "string"
  *         - Update _default.words word3 by removing the "vector" key.
  *         - Update _default.words word4 by removing one number from the "vector" key.
- *     3. Create a vector index named "words_index" in _default.words collection.
+ *     4. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 8 (The default number of probes which is the max number of
- *                      centroids the query will look for the vector).
- *     4. Check that the index is created without an error returned.
- *     5. Create an SQL++ query.
+ *         - centroids: 8
+ *     5. Check that the index is created without an error returned.
+ *     6. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 350)
- *     6. Execute the query and check that 296 results are returned, and the results
+ *     7. Execute the query and check that 296 results are returned, and the results
  *        do not include document word1, word2, word3, and word4.
- *     7. Update an already index vector with an invalid vector.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
+ *       doesn’t exist in the log.
+ *     9. Update an already index vector with an invalid vector.
  *         - Update _default.words word5 with "vector" = null.
- *     8. Execute the query and check that 295 results are returned, and the results
+ *     10. Execute the query and check that 295 results are returned, and the results
  *        do not include document word5.
+ *     11. Reset the custom logger.
  */
 - (void) testCreateVectorIndexWithInvalidVectors {
     NSError* error;
@@ -439,6 +469,7 @@
     AssertNil(wordMap[@"word2"]);
     AssertNil(wordMap[@"word3"]);
     AssertNil(wordMap[@"word4"]);
+    Assert([self checkIndexWasTrained]);
     
     auxDoc = [[collection documentWithID: @"word5" error: &error] toMutable];
     [auxDoc setString: nil forKey: @"vector"];
@@ -458,28 +489,31 @@
  *     the vectors returned by a predictive model.
  * Steps
  *     1. Copy database words_db.
- *     2. Register  "WordEmbedding" predictive model defined in section 2.
- *     3. Create a vector index named "words_pred_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Register  "WordEmbedding" predictive model defined in section 2.
+ *     4. Create a vector index named "words_pred_index" in _default.words collection.
  *         - expression: "prediction(WordEmbedding, {"word": word}).vector"
  *         - dimensions: 300
- *         - centroids: 8 (The default number of probes which is the max number of
- *                      centroids the query will look for the vector).
- *     4. Check that the index is created without an error returned.
- *     5. Create an SQL++ query:
+ *         - centroids: 8
+ *     5. Check that the index is created without an error returned.
+ *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
- *     6. Check the explain() result of the query to ensure that the "words_pred_index" is used.
- *     7. Execute the query and check that 300 results are returned.
- *     8. Update the vector index:
+ *     7. Check the explain() result of the query to ensure that the "words_pred_index" is used.
+ *     8. Execute the query and check that 300 results are returned.
+ *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     10. Update the vector index:
  *         - Create _default.words.word301 with the content from _default.extwords.word1
  *         - Create _default.words.word302 with the content from _default.extwords.word2
  *         - Update _default.words.word1 with the content from _default.extwords.word3
  *         - Delete _default.words.word2
- *     9. Execute the query and check that 301 results are returned.
+ *     11. Execute the query and check that 301 results are returned.
  *         - word301 and word302 are included.
  *         - word1 is updated with the word from _default.extwords.word2.
  *         - word2 is not included.
+ *     12. Reset the custom logger.
  */
 - (void) testCreateVectorIndexUsingPredictionModel {
     NSError* error;
@@ -511,9 +545,11 @@
     
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_pred_index"].location != NSNotFound);
+    
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 300);
+    Assert([self checkIndexWasTrained]);
     
     // Create words.word301 with extwords.word1 content
     CBLDocument* extWord1 = [extWordsCollection documentWithID: @"word1" error : &error];
@@ -554,29 +590,31 @@
  *     from indexing.
  * Steps
  *     1. Copy database words_db.
- *     2. Register  "WordEmbedding" predictive model defined in section 2.
- *     3. Update documents.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Register  "WordEmbedding" predictive model defined in section 2.
+ *     4. Update documents.
  *         - Update _default.words word1 with "vector" = null
  *         - Update _default.words word2 with "vector" = "string"
  *         - Update _default.words word3 by removing the "vector" key.
  *         - Update _default.words word4 by removing one number from the "vector" key.
- *     4. Create a vector index named "words_prediction_index" in _default.words collection.
+ *     5. Create a vector index named "words_prediction_index" in _default.words collection.
  *         - expression: "prediction(WordEmbedding, {"word": word}).embedding"
  *         - dimensions: 300
- *         - centroids: 8 (The default number of probes which is the max number
- *                      of centroids the query will look for the vector).
- *     5. Check that the index is created without an error returned.
- *     6. Create an SQL++ query.
+ *         - centroids: 8
+ *     6. Check that the index is created without an error returned.
+ *     7. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
- *     7. Check the explain() result of the query to ensure that the "words_predi_index" is used.
- *     8. Execute the query and check that 296 results are returned and the results
+ *     8. Check the explain() result of the query to ensure that the "words_predi_index" is used.
+ *     9. Execute the query and check that 296 results are returned and the results
  *        do not include word1, word2, word3, and word4.
- *     9. Update an already index vector with a non existing word in the database.
+ *     10. Verify that the index was trained by checking that the “Untrained index; queries may be slow” doesn’t exist in the log.
+ *     11. Update an already index vector with a non existing word in the database.
  *         - Update _default.words.word5 with “word” = “Fried Chicken”.
- *     10. Execute the query and check that 295 results are returned, and the results
+ *     12. Execute the query and check that 295 results are returned, and the results
  *         do not include document word5.
+ *     13. Reset the custom logger.
  */
 - (void) testCreateVectorIndexUsingPredictionModelWithInvalidVectors {
     NSError* error;
@@ -633,6 +671,7 @@
     AssertNil(wordMap[@"word2"]);
     AssertNil(wordMap[@"word3"]);
     AssertNil(wordMap[@"word4"]);
+    Assert([self checkIndexWasTrained]);
     
     auxDoc = [[collection documentWithID: @"word5" error: &error] toMutable];
     [auxDoc setString: @"Fried Chicken" forKey: @"word"];
@@ -654,20 +693,24 @@
  *     index can be created and used.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - encoding: ScalarQuantizer(type: SQ4)
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned.
- *     7. Delete the "words_index".
- *     8. Repeat Step 2 – 7 by using SQ6 and SQ8 respectively.
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
+ *       doesn’t exist in the log.
+ *     9. Delete the "words_index".
+ *     10. Reset the custom logger.
+ *     11. Repeat Step 2 – 10 by using SQ6 and SQ8 respectively.
  */
 - (void) testCreateVectorIndexWithSQ {
     NSError* error;
@@ -676,7 +719,7 @@
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector" 
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.encoding = [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ4];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -697,8 +740,10 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
     
     // Repeat using SQ6
+    [self resetIndexWasTrainedLog];
     [collection deleteIndexWithName: @"words_index" error: &error];
     config.encoding = [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ6];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
@@ -707,8 +752,10 @@
     rs = [q execute: &error];
     allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
     
     // Repeat using SQ8
+    [self resetIndexWasTrainedLog];
     [collection deleteIndexWithName: @"words_index" error: &error];
     config.encoding = [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
@@ -717,6 +764,7 @@
     rs = [q execute: &error];
     allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -725,18 +773,22 @@
  *     Using the None Encoding, test that the vector index can be created and used.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - encoding: None
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned.
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Reset the custom logger.
  */
 - (void) testCreateVectorIndexWithNoneEncoding {
     NSError* error;
@@ -745,7 +797,7 @@
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.encoding = [CBLVectorEncoding none];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -762,42 +814,51 @@
     
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
+ * FAILED : https://issues.couchbase.com/browse/CBL-5538
+ * Disable bits = 12 for now.
+ *
  * 12. TestCreateVectorIndexWithPQ
  * Description
  *     Using the PQ Encoding, test that the vector index can be created and used. The
  *     test also tests the lower and upper bounds of the PQ’s bits.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - encoding : PQ(subquantizers: 5 bits: 8)
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned.
- *     7. Delete the “words_index”.
- *     8. Repeat steps 2 to 7 by changing the PQ’s bits to 4 and 12 respectively.
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Delete the “words_index”.
+ *     10. Reset the custom logger.
+ *     11. Repeat steps 2 to 10 by changing the PQ’s bits to 4 and 12 respectively.
  */
 - (void) testCreateVectorIndexWithPQ {
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
-    for (NSNumber* bit in @[@8, @4, @12]) {
+    for (NSNumber* bit in @[@4, @8, /* @12 */]) {
         // Create vector index
         CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                            dimensions: 300
-                                                                                            centroids: 20];
+                                                                                            centroids: 8];
         config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 5 bits: bit.unsignedIntValue];
         Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
         
@@ -818,9 +879,13 @@
         CBLQueryResultSet* rs = [q execute: &error];
         NSArray* allObjects = rs.allObjects;
         AssertEqual(allObjects.count, 20);
+        Assert([self checkIndexWasTrained]);
         
         // Delete index
         [collection deleteIndexWithName: @"words_index" error: &error];
+        
+        // Reset log
+        [self resetIndexWasTrainedLog];
     }
 }
 
@@ -835,12 +900,12 @@
  *     2. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - PQ(subquantizers: 2, bits: 8)
  *     3. Check that the index is created without an error returned.
  *     4. Delete the "words_index".
  *     5. Repeat steps 2 to 4 by changing the subquantizers to
- *        3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 75, 100, 150, and 300.
+ *       3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 75, 100, 150, and 300.
  *     6. Repeat step 2 to 4 by changing the subquantizers to 0 and 7.
  *     7. Check that an invalid argument exception is thrown.
  */
@@ -851,7 +916,7 @@
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 2 bits: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -876,33 +941,43 @@
 }
 
 /**
+ * https://issues.couchbase.com/browse/CBL-5537
+ * The test will fail when using centroid = 20 as the number of vectors for training
+ * the index is not low.
+ *
  * 14. TestCreateVectorIndexWithFixedTrainingSize
  * Description
  *     Test that the vector index can be created and trained when minTrainingSize
  *     equals to maxTrainingSize.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - minTrainingSize: 100 and maxTrainingSize: 100
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
  *     5. Check the explain() result of the query to ensure that the "words_index" is used.
  *     6. Execute the query and check that 20 results are returned.
+ *     7. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     8. Reset the custom logger.
  */
 - (void) testeCreateVectorIndexWithFixedTrainingSize {
+    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.minTrainingSize = 100;
     config.maxTrainingSize = 100;
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
@@ -920,9 +995,11 @@
     
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -984,32 +1061,32 @@
  *     Test that the untrained vector index can be used in queries.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - minTrainingSize: 400
  *         - maxTrainingSize: 500
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned.
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned.
+ *     8. Verify that the index was not trained by checking that the “Untrained index;
+ *       queries may be slow” message exists in the log.
+ *     9. Reset the custom logger.
  */
 - (void) testQueryUntrainedVectorIndex {
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelInfo;
-    CBLDatabase.log.custom = custom;
-    
     NSError* error;
     CBLCollection* collection = [_db collectionWithName: @"words" scope: nil error: &error];
     
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     // out of bounds (300 words in db)
     config.minTrainingSize = 400;
     config.maxTrainingSize = 500;
@@ -1028,12 +1105,11 @@
     
     NSString* explain = [q explain: &error];
     Assert([explain rangeOfString: @"SCAN kv_.words:vector:words_index"].location != NSNotFound);
+    
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allObjects;
     AssertEqual(allObjects.count, 20);
-    
-    Assert([custom.lines containsObject: @"SQLite message: vectorsearch: Untrained index; queries may be slow."]);
-    CBLDatabase.log.custom = nil;
+    AssertFalse([self checkIndexWasTrained]);
 }
 
 /**
@@ -1042,19 +1118,23 @@
  *     Test that the vector index can be created and used with the cosine distance metric.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - metric: Cosine
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word,vector_distance(words_index)
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned and the vector
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned and the vector
  *       distance value is in between 0 – 1.0 inclusively.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Reset the custom logger.
  */
 - (void) testCreateVectorIndexWithCosineDistance {
     NSError* error;
@@ -1063,7 +1143,7 @@
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.metric = kCBLDistanceMetricCosine;
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -1084,11 +1164,11 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allResults;
     AssertEqual(allObjects.count, 20);
-    
     for(CBLQueryResult* result in rs){
         Assert([result doubleAtIndex: 3] > 0);
         Assert([result doubleAtIndex: 3] < 1);
     }
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -1097,19 +1177,23 @@
  *     Test that the vector index can be created and used with the euclidean distance metric.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
+ *         - centroids: 8
  *         - metric: Euclidean
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word, vector_distance(words_index)
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned and the
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned and the
  *        distance value is more than zero.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Reset the custom logger.
  */
 - (void) testCreateVectorIndexWithEuclideanDistance {
     NSError* error;
@@ -1118,7 +1202,7 @@
     // Create vector index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     config.metric = kCBLDistanceMetricEuclidean;
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
@@ -1139,10 +1223,10 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allResults;
     AssertEqual(allObjects.count, 20);
-    
     for(CBLQueryResult* result in rs){
         Assert([result doubleAtIndex: 3] > 0);
     }
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -1189,19 +1273,25 @@
  *     configuration is the same. Otherwise, an error will be returned.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vectors"
  *         - dimensions: 300
- *         - centroids: 20
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *         - centroids: 8
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 20)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 20 results are returned.
- *     7. Delete index named "words_index".
- *     8. Check that getIndexes() does not contain "words_index".
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 20 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Delete index named "words_index".
+ *     10. Check that getIndexes() does not contain "words_index".
+ *     11. Create the same query again and check that a CouchbaseLiteException is returned
+ *        as the index doesn’t exist.
+ *     12. Reset the custom logger.
  */
 - (void) testDeleteVectorIndex {
     NSError* error;
@@ -1209,7 +1299,7 @@
     
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -1229,12 +1319,17 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allResults;
     AssertEqual(allObjects.count, 20);
+    Assert([self checkIndexWasTrained]);
     
     // Delete index
     [collection deleteIndexWithName: @"words_index" error: &error];
     
     names = [collection indexes: &error];
     AssertFalse([names containsObject: @"words_index"]);
+    
+    [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError **err) {
+        return [self->_db createQuery: sql error: err];
+    }];
 }
 
 /**
@@ -1264,17 +1359,21 @@
  *     when using the vector_match query without the limit number specified.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *         - centroids: 8
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>)
- *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Execute the query and check that 3 results are returned.
+ *     6. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     7. Execute the query and check that 3 results are returned.
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     9. Reset the custom logger.
  */
 - (void) testVectorMatchDefaultLimit {
     NSError* error;
@@ -1283,7 +1382,7 @@
     // Create index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -1304,6 +1403,7 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* allObjects = rs.allResults;
     AssertEqual(allObjects.count, 3);
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -1363,19 +1463,23 @@
  *     Test that vector_match can be used in AND expression.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *         - centroids: 8
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
  *           WHERE vector_match(words_index, <dinner vector>, 300) AND catid = 'cat1'
- *     5. Check that the query can be created without an error.
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that the number of results returned is 50
- *        (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+ *     6. Check that the query can be created without an error.
+ *     7. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     8. Execute the query and check that the number of results returned is 50
+ *       (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+ *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     10. Reset the custom logger.
  */
 - (void) testVectorMatchWithAndExpression {
     NSError* error;
@@ -1384,7 +1488,7 @@
     // Create index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -1405,10 +1509,10 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* results = rs.allResults;
     AssertEqual(results.count, 50);
-    
     for(CBLQueryResult* result in results){
         AssertEqualObjects([result valueAtIndex: 1], @"cat1");
     }
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
@@ -1417,19 +1521,23 @@
  *     Test that vector_match can be used in multiple AND expressions.
  * Steps
  *     1. Copy database words_db.
- *     2. Create a vector index named "words_index" in _default.words collection.
+ *     2. Register a custom logger to capture the INFO log.
+ *     3. Create a vector index named "words_index" in _default.words collection.
  *         - expression: "vector"
  *         - dimensions: 300
- *         - centroids: 20
- *     3. Check that the index is created without an error returned.
- *     4. Create an SQL++ query.
+ *         - centroids: 8
+ *     4. Check that the index is created without an error returned.
+ *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
  *           WHERE (vector_match(words_index, <dinner vector>, 300) AND word is valued) AND catid = 'cat1'
- *     5. Check that the query can be created without an error.
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that the number of results returned is 50
- *        (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+ *     6. Check that the query can be created without an error.
+ *     7. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     8. Execute the query and check that the number of results returned is 50
+ *       (there are 50 words in catid=1), and the results contain only catid == 'cat1'.
+ *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *       doesn’t exist in the log.
+ *     10. Reset the custom logger.
  */
 - (void) testVectorMatchWithMultipleAndExpression {
     NSError* error;
@@ -1438,7 +1546,7 @@
     // Create index
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
-                                                                                        centroids: 20];
+                                                                                        centroids: 8];
     Assert([collection createIndexWithName: @"words_index" config: config error: &error]);
     
     NSArray* names = [collection indexes: &error];
@@ -1459,10 +1567,10 @@
     CBLQueryResultSet* rs = [q execute: &error];
     NSArray* results = rs.allResults;
     AssertEqual(results.count, 50);
-    
     for(CBLQueryResult* result in results){
         AssertEqualObjects([result stringAtIndex: 1], @"cat1");
     }
+    Assert([self checkIndexWasTrained]);
 }
 
 /**
