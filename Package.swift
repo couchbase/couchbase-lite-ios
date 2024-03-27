@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "CouchbaseLiteSwift",
     platforms: [
-        .iOS(.v10), .macOS(.v10_12)
+        .iOS(.v12), .macOS(.v12)
     ],
     products: [
         .library(
@@ -14,8 +14,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "CouchbaseLiteSwift",
-            url: "https://packages.couchbase.com/releases/couchbase-lite-ios/3.1.0/couchbase-lite-swift_xc_community_3.1.0.zip",
-            checksum: "556d6ae41df3b5ebf91dbe45d38214dd7032f97ac1b132f925356d20e3b9ada5"
+            url: "https://packages.couchbase.com/releases/couchbase-lite-ios/3.2.0-beta.1/couchbase-lite-swift_xc_community_3.2.0-beta.1.zip",
+            checksum: "39dd4d80a8edb6eb87a2f5ae91753b16064c04c6c74f10f7ef2707902efe14c4"
         )
     ]
 )
