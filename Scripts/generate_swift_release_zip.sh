@@ -154,9 +154,11 @@ then
 fi
 
 VERSION_SUFFIX=""
+API_DOC_VERSION=""
 if [ -n "$VERSION" ]
 then
   VERSION_SUFFIX="_$VERSION"
+  API_DOC_VERSION="$VERSION"
 fi
 
 # Build frameworks:
@@ -191,7 +193,7 @@ sh Scripts/generate_package_manifest.sh -zip-path "$OUTPUT_DIR/couchbase-lite-sw
 if [[ -z $NO_API_DOCS ]]; then
   # Generate API docs:
   echo "Generate API docs ..."
-  jazzy --clean --xcodebuild-arguments "clean,build,-scheme,${SCHEME_PREFIX}_Swift,-sdk,iphonesimulator,-destination,generic/platform=iOS Simulator" --module CouchbaseLiteSwift --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLiteSwift
+  jazzy --clean --xcodebuild-arguments "clean,build,-scheme,${SCHEME_PREFIX}_Swift,-sdk,iphonesimulator,-destination,generic/platform=iOS Simulator" --module CouchbaseLiteSwift --module-version "${API_DOC_VERSION}" --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLiteSwift
   
   # >> Swift API docs
   pushd "$OUTPUT_SWIFT_DOCS_DIR" > /dev/null
