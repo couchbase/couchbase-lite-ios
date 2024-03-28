@@ -160,9 +160,11 @@ then
 fi
 
 VERSION_SUFFIX=""
+API_DOC_VERSION=""
 if [ -n "$VERSION" ]
 then
   VERSION_SUFFIX="_$VERSION"
+  API_DOC_VERSION="$VERSION"
 fi
 
 # Build frameworks:
@@ -194,7 +196,7 @@ if [[ -z $NO_API_DOCS ]]; then
   # Generate API docs:
   echo "Generate API docs ..."
   OBJC_UMBRELLA_HEADER=`find $OUTPUT_OBJC_XC_DIR -name "CouchbaseLite.h"`
-  jazzy --clean --objc --umbrella-header ${OBJC_UMBRELLA_HEADER} --module CouchbaseLite --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLite
+  jazzy --clean --objc --umbrella-header ${OBJC_UMBRELLA_HEADER} --module CouchbaseLite --module-version "${API_DOC_VERSION}" --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLite
   
   # >> Objective-C API
   pushd "$OUTPUT_OBJC_DOCS_DIR" > /dev/null
