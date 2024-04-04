@@ -775,7 +775,8 @@ class VectorSearchTest: CBLTestCase {
             
             let rs = try q.execute()
             XCTAssertEqual(rs.allResults().count, 20)
-            XCTAssert(checkIndexWasTrained())
+            // will re-enable once we increase the dataset
+            // XCTAssert(checkIndexWasTrained())
             
             // Delete index
             try collection.deleteIndex(forName: "words_index")
