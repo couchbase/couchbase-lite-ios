@@ -18,7 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLQueryDatabase, CBLDatabase;
+@class CBLDatabase;
 @class CBLCollection;
 
 
@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  Create a database data source.
  
  @param database The database used as the data source as the query.
- @return The CBLQueryDatabase instance.
+ @return The CBLQueryDataSource instance for the database.
  */
 + (instancetype) database: (CBLDatabase*)database
 __deprecated_msg("Use [DataSource collection: [database defaultCollection]]) instead.");
@@ -44,7 +44,7 @@ __deprecated_msg("Use [DataSource collection: [database defaultCollection]]) ins
  
  @param database The database used as the data source as the query.
  @param alias The alias name of the data source.
- @return The CBLQueryDatabase instance.
+ @return The CBLQueryDataSource instance for the database.
  */
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias
 __deprecated_msg("Use [DataSource collection: [database defaultCollection] as:]) instead.");
@@ -52,7 +52,7 @@ __deprecated_msg("Use [DataSource collection: [database defaultCollection] as:])
 /** Create a collection data source.
  
  @param collection The collection used as the data source as the query.
- @return The CBLQueryDatabase instance.
+ @return The CBLQueryDataSource instance for the collection.
  */
 + (instancetype) collection: (CBLCollection*)collection;
 
@@ -61,7 +61,7 @@ __deprecated_msg("Use [DataSource collection: [database defaultCollection] as:])
  
  @param collection The collection used as the data source as the query.
  @param alias The alias name of the data source.
- @return The CBLQueryDatabase instance.
+ @return The CBLQueryDataSource instance for the collection.
  */
 + (instancetype) collection: (CBLCollection*)collection as: (nullable NSString*)alias;
 

@@ -20,7 +20,6 @@
 #import <Foundation/Foundation.h>
 @class CBLBlob;
 @class CBLQueryCollation;
-@class CBLVariableExpression;
 @protocol CBLQueryFullTextIndexExpressionProtocol;
 
 NS_ASSUME_NONNULL_BEGIN
