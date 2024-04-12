@@ -2213,7 +2213,6 @@
 		275FF6581E412C66005F90DD /* DocPerfTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DocPerfTest.m; sourceTree = "<group>"; };
 		275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
 		275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
-		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLTrustCheck.mm; sourceTree = "<group>"; };
 		27BE3B451E4D63AF0012B74A /* CBL_Swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBL_Swift.xcconfig; sourceTree = "<group>"; };
@@ -2243,6 +2242,11 @@
 		40086B172B7EDDD400DA6770 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		40086B452B803B2A00DA6770 /* CBLBlockConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlockConflictResolver.h; sourceTree = "<group>"; };
 		40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
+		40A789282BE2C7D100CA43A1 /* CBL_EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL_EE.exp; sourceTree = "<group>"; };
+		40A789292BE2C7D100CA43A1 /* CBL.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL.exp; sourceTree = "<group>"; };
+		40A7892B2BE2C7D100CA43A1 /* CBL_EE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL_EE.txt; sourceTree = "<group>"; };
+		40A7892C2BE2C7D100CA43A1 /* CBL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL.txt; sourceTree = "<group>"; };
+		40A7892D2BE2C7D100CA43A1 /* generate_exports.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_exports.sh; sourceTree = "<group>"; };
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
 		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
@@ -2263,7 +2267,6 @@
 		40FC1AB12B9286E700394276 /* CBLListenerCertificateAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLListenerCertificateAuthenticator.m; sourceTree = "<group>"; };
 		40FC1AB22B9286E700394276 /* CBLListenerPasswordAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLListenerPasswordAuthenticator.m; sourceTree = "<group>"; };
 		40FC1AB32B9286E700394276 /* CBLURLEndpointListenerConfiguration.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLURLEndpointListenerConfiguration.mm; sourceTree = "<group>"; };
-		40FC1AB42B9286E700394276 /* CouchbaseLite.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		40FC1AB72B9286E700394276 /* CBLEncryptionKey+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLEncryptionKey+Internal.h"; sourceTree = "<group>"; };
 		40FC1AB82B9286E700394276 /* CBLDatabase+EncryptionInternal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBLDatabase+EncryptionInternal.mm"; sourceTree = "<group>"; };
 		40FC1ABA2B9286E700394276 /* CBLTLSIdentity+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLTLSIdentity+Internal.h"; sourceTree = "<group>"; };
@@ -3069,6 +3072,26 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		40A7892A2BE2C7D100CA43A1 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				40A789282BE2C7D100CA43A1 /* CBL_EE.exp */,
+				40A789292BE2C7D100CA43A1 /* CBL.exp */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		40A7892E2BE2C7D100CA43A1 /* Exports */ = {
+			isa = PBXGroup;
+			children = (
+				40A7892A2BE2C7D100CA43A1 /* Generated */,
+				40A7892B2BE2C7D100CA43A1 /* CBL_EE.txt */,
+				40A7892C2BE2C7D100CA43A1 /* CBL.txt */,
+				40A7892D2BE2C7D100CA43A1 /* generate_exports.sh */,
+			);
+			path = Exports;
+			sourceTree = "<group>";
+		};
 		40EF68FD2B7755FD00F0CB50 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -3086,7 +3109,6 @@
 				40FC1AD72B9286E700394276 /* Replicator */,
 				40FC1AB52B9286E700394276 /* Internal */,
 				40FC1AD62B9286E700394276 /* CBLEdition.h */,
-				40FC1AB42B9286E700394276 /* CouchbaseLite.exp */,
 			);
 			name = "Objective-C";
 			path = "../couchbase-lite-ios-ee/Sources/Objective-C";
@@ -3983,9 +4005,9 @@
 				9388CBE521BF717C005CA66D /* Log */,
 				934F4C931E241FB500F90659 /* Internal */,
 				93BFCD931E0380A300E52F8A /* Tests */,
+				40A7892E2BE2C7D100CA43A1 /* Exports */,
 				4006AB4E2B9106000036E66D /* CBLEdition.h */,
 				9398D9FD1E03531A00464432 /* CouchbaseLite.h */,
-				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 			);
 			path = "Objective-C";

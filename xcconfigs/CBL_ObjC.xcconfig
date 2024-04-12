@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-CBL_EXPORTED_SYMBOLS_FILE    = Objective-C/CouchbaseLite.exp
+CBL_EXPORTED_SYMBOLS_FILE    = Objective-C/Exports/Generated/CBL.exp
 DEFINES_MODULE               = YES
 DYLIB_COMPATIBILITY_VERSION  = 1
 DYLIB_CURRENT_VERSION        = 1

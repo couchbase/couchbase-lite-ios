@@ -20,4 +20,4 @@
 #include "CBL_EE_Common.xcconfig"
 #include "CBL_ObjC.xcconfig"
 
-CBL_EXPORTED_SYMBOLS_FILE = ../couchbase-lite-ios-ee/Sources/Objective-C/CouchbaseLite.exp
+CBL_EXPORTED_SYMBOLS_FILE = Objective-C/Exports/Generated/CBL_EE.exp

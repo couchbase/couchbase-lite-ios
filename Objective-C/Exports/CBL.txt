@@ -1,7 +1,7 @@
-#  CouchbaseLite.exp
+#  CBL.txt
 #  CouchbaseLite
 #
-#  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+#  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,15 +15,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-#  All public global symbols -- classes, functions, constants -- need to be declared here.
+# All public symbols -- classes and constants -- need to be declared here.
+# Run generate_exports.sh after modifying this file.
 
-# Public classes:
+#  Classes:
 .objc_class_name_CBLArray
 .objc_class_name_CBLAuthenticator
 .objc_class_name_CBLBasicAuthenticator
 .objc_class_name_CBLBlob
 .objc_class_name_CBLCollection
+.objc_class_name_CBLCollectionChange
 .objc_class_name_CBLCollectionConfiguration
+.objc_class_name_CBLConflict
+.objc_class_name_CBLConflictResolver
 .objc_class_name_CBLConsoleLogger
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
@@ -34,11 +38,13 @@
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLDocumentReplication
 .objc_class_name_CBLFileLogger
-.objc_class_name_CBLFullTextIndex
-.objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLFragment
+.objc_class_name_CBLFullTextIndex
+.objc_class_name_CBLFullTextIndexConfiguration
+.objc_class_name_CBLFullTextIndexItem
 .objc_class_name_CBLIndex
 .objc_class_name_CBLIndexBuilder
+.objc_class_name_CBLIndexConfiguration
 .objc_class_name_CBLLog
 .objc_class_name_CBLLogFileConfiguration
 .objc_class_name_CBLMutableArray
@@ -70,42 +76,35 @@
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
+.objc_class_name_CBLReplicatorStatus
 .objc_class_name_CBLScope
 .objc_class_name_CBLSessionAuthenticator
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
-.objc_class_name_CBLValueIndexItem
-.objc_class_name_CBLIndexConfiguration
-.objc_class_name_CBLFullTextIndexConfiguration
 .objc_class_name_CBLValueIndexConfiguration
+.objc_class_name_CBLValueIndexItem
 
-# Blob Constants:
-_kCBLBlobType
-_kCBLTypeProperty
+# Constants:
+_CBLErrorDomain
+_kCBLBlobContentTypeProperty
 _kCBLBlobDigestProperty
 _kCBLBlobLengthProperty
-_kCBLBlobContentTypeProperty
-
-# Default Constants:
-_kCBLDefaultLogFileUsePlaintext
-_kCBLDefaultLogFileUsePlainText
-_kCBLDefaultLogFileMaxSize
-_kCBLDefaultLogFileMaxRotateCount
-_kCBLDefaultFullTextIndexIgnoreAccents
-_kCBLDefaultReplicatorType
-_kCBLDefaultReplicatorContinuous
-_kCBLDefaultReplicatorAllowReplicatingInBackground
-_kCBLDefaultReplicatorHeartbeat
-_kCBLDefaultReplicatorMaxAttemptsSingleShot
-_kCBLDefaultReplicatorMaxAttemptsContinuous
-_kCBLDefaultReplicatorMaxAttemptWaitTime
-_kCBLDefaultReplicatorMaxAttemptsWaitTime
-_kCBLDefaultReplicatorEnableAutoPurge
-_kCBLDefaultReplicatorSelfSignedCertificateOnly
-_kCBLDefaultReplicatorAcceptParentCookies
-
-# Others constants:
-_CBLErrorDomain
-_kCBLAllPropertiesName
+_kCBLBlobType
 _kCBLDefaultCollectionName
+_kCBLDefaultFullTextIndexIgnoreAccents
+_kCBLDefaultLogFileMaxRotateCount
+_kCBLDefaultLogFileMaxSize
+_kCBLDefaultLogFileUsePlainText
+_kCBLDefaultReplicatorAcceptParentCookies
+_kCBLDefaultReplicatorAllowReplicatingInBackground
+_kCBLDefaultReplicatorContinuous
+_kCBLDefaultReplicatorEnableAutoPurge
+_kCBLDefaultReplicatorHeartbeat
+_kCBLDefaultReplicatorMaxAttemptWaitTime
+_kCBLDefaultReplicatorMaxAttemptsContinuous
+_kCBLDefaultReplicatorMaxAttemptsSingleShot
+_kCBLDefaultReplicatorMaxAttemptsWaitTime
+_kCBLDefaultReplicatorSelfSignedCertificateOnly
+_kCBLDefaultReplicatorType
 _kCBLDefaultScopeName
+_kCBLTypeProperty
