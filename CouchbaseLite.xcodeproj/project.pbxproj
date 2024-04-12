@@ -2161,7 +2161,6 @@
 		275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
 		275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Release.xcconfig"; sourceTree = "<group>"; };
-		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLTrustCheck.mm; sourceTree = "<group>"; };
 		2791EA6620327DCB00BD813C /* Project_Debug_EE.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug_EE.xcconfig; sourceTree = "<group>"; };
@@ -2184,6 +2183,11 @@
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		40486D2B2BC8E37700BEA3EF /* CBL_EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL_EE.exp; sourceTree = "<group>"; };
+		40486D2C2BC8E37700BEA3EF /* CBL.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL.exp; sourceTree = "<group>"; };
+		40486D2E2BC8E37700BEA3EF /* CBL_EE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL_EE.txt; sourceTree = "<group>"; };
+		40486D2F2BC8E37700BEA3EF /* CBL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL.txt; sourceTree = "<group>"; };
+		40486D302BC8E37700BEA3EF /* generate_exports.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_exports.sh; sourceTree = "<group>"; };
 		40BC51F42AFC40930090EDD5 /* CBLBlockConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlockConflictResolver.h; sourceTree = "<group>"; };
 		40BC51F52AFC40930090EDD5 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
 		40EF695F2B7C038000F0CB50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -2271,7 +2275,6 @@
 		932565C021ED51290092F4E0 /* LogFileConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfiguration.swift; sourceTree = "<group>"; };
 		93292D9C22BD448400A0862A /* CBLReplicatorConfiguration+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplicatorConfiguration+Swift.h"; sourceTree = "<group>"; };
 		93292D9D22BD448400A0862A /* CBLReplicatorConfiguration+Swift.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLReplicatorConfiguration+Swift.m"; sourceTree = "<group>"; };
-		93292DBE22C19E7F00A0862A /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		932C69DC2453636100C382FB /* CBL-EE ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		932C69DD2453636100C382FB /* CBL-EE ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL-EE ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
 		932CC552207D9ED2000B4B78 /* CBLDatabaseEndpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseEndpoint.h; sourceTree = "<group>"; };
@@ -2972,6 +2975,26 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		40486D2D2BC8E37700BEA3EF /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				40486D2B2BC8E37700BEA3EF /* CBL_EE.exp */,
+				40486D2C2BC8E37700BEA3EF /* CBL.exp */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		40486D312BC8E37700BEA3EF /* Exports */ = {
+			isa = PBXGroup;
+			children = (
+				40486D2D2BC8E37700BEA3EF /* Generated */,
+				40486D2E2BC8E37700BEA3EF /* CBL_EE.txt */,
+				40486D2F2BC8E37700BEA3EF /* CBL.txt */,
+				40486D302BC8E37700BEA3EF /* generate_exports.sh */,
+			);
+			path = Exports;
+			sourceTree = "<group>";
+		};
 		40EF695E2B7C038000F0CB50 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -3100,7 +3123,6 @@
 				9392608B20A0C8DF00E5748C /* Replicator */,
 				9369A675207DB3D4009B5B83 /* Internal */,
 				932CC553207D9ED2000B4B78 /* CouchbaseLite.h */,
-				93292DBE22C19E7F00A0862A /* CouchbaseLite.exp */,
 			);
 			name = "Objective-C";
 			path = "../Sources/Objective-C";
@@ -3779,8 +3801,8 @@
 				9388CBE521BF717C005CA66D /* Log */,
 				934F4C931E241FB500F90659 /* Internal */,
 				93BFCD931E0380A300E52F8A /* Tests */,
+				40486D312BC8E37700BEA3EF /* Exports */,
 				9398D9FD1E03531A00464432 /* CouchbaseLite.h */,
-				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 			);
 			path = "Objective-C";
@@ -5574,7 +5596,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
 		};
 		9343F12D207D61AB00F19A89 /* Remove private headers */ = {
 			isa = PBXShellScriptBuildPhase;
