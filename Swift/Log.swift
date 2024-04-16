@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Log allows to configure console and file logger or to set a custom logger.
 public class Log {

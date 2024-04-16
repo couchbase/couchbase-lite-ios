@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Meta expression.
 public protocol MetaExpressionProtocol: ExpressionProtocol {

@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// The collection configuration that can be configured specifically for the replication.
 public struct CollectionConfiguration {

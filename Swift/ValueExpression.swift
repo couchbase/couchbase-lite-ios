@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Value Expression.
 /* internal */ class ValueExpression: QueryExpression {

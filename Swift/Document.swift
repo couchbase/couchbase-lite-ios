@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Couchbase Lite document. The Document is immutable.
 public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {

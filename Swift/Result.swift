@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Result represents a single row in the query result. The projecting result value can be
 /// accessed either by using a zero based index or by a key corresponding to the
