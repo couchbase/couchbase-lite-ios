@@ -18,7 +18,8 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift_Private
 
 class DatabaseTest: CBLTestCase {
 

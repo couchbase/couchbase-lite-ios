@@ -18,6 +18,7 @@
 
 import XCTest
 @testable import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift_Private
 
 class URLEndpointListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4084

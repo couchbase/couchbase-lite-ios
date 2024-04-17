@@ -18,7 +18,8 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift_Private
 
 class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     override func setUpWithError() throws {
