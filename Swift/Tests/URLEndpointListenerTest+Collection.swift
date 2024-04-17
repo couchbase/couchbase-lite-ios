@@ -19,7 +19,6 @@
 
 import XCTest
 @testable import CouchbaseLiteSwift
-@testable import CouchbaseLiteSwift_Private
 
 class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     override func setUpWithError() throws {
@@ -110,7 +109,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         rConfig.pinnedServerCertificate = listener.tlsIdentity!.certs[0]
         rConfig.addCollections([col1a])
         
-        run(config: rConfig, expectedError: CBLErrorHTTPNotFound)
+        run(config: rConfig, expectedError: CBLError.httpNotFound)
         try stopListener()
     }
     

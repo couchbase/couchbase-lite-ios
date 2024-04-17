@@ -19,7 +19,6 @@
 
 import XCTest
 @testable import CouchbaseLiteSwift
-@testable import CouchbaseLiteSwift_Private
 
 class DatabaseTest: CBLTestCase {
 
@@ -368,7 +367,7 @@ class DatabaseTest: CBLTestCase {
             }
         } catch {
             XCTAssertNotNil(error);
-            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+            XCTAssertEqual((error as NSError).code, CBLError.unexpectedError);
         }
         XCTAssertEqual(defaultCollection!.count, 0)
     }
@@ -789,7 +788,7 @@ class DatabaseTest: CBLTestCase {
             }
         } catch {
             XCTAssertNotNil(error);
-            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+            XCTAssertEqual((error as NSError).code, CBLError.unexpectedError);
         }
         XCTAssertEqual(defaultCollection!.count, 10)
     }
@@ -909,7 +908,7 @@ class DatabaseTest: CBLTestCase {
         let otherDB = try openDB(name: db.name)
         XCTAssertNotNil(try otherDB.defaultCollection().document(id: doc.id))
         XCTAssertEqual(try otherDB.defaultCollection().count, 1)
-        expectError(domain: CBLError.domain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try otherDB.defaultCollection().purge(document: doc)
         }
         try otherDB.close()
@@ -918,7 +917,7 @@ class DatabaseTest: CBLTestCase {
     func testPurgeDocInDifferentDB() throws {
         let doc = try generateDocument(withID: "doc1")
         let otherDB = try openDB(name: "otherDB")
-        expectError(domain: CBLError.domain, code: CBLErrorInvalidParameter) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try otherDB.defaultCollection().purge(document: doc)
         }
         try otherDB.delete()
@@ -962,7 +961,7 @@ class DatabaseTest: CBLTestCase {
             }
         } catch {
             XCTAssertNotNil(error);
-            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+            XCTAssertEqual((error as NSError).code, CBLError.unexpectedError);
         }
         XCTAssertEqual(defaultCollection!.count, 10)
     }
@@ -1059,7 +1058,7 @@ class DatabaseTest: CBLTestCase {
             }
         } catch {
             XCTAssertNotNil(error);
-            XCTAssertEqual((error as NSError).code, CBLErrorUnexpectedError);
+            XCTAssertEqual((error as NSError).code, CBLError.unexpectedError);
         }
         XCTAssertEqual(defaultCollection!.count, 10)
     }

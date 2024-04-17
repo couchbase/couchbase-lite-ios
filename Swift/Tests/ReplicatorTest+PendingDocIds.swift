@@ -19,7 +19,6 @@
 
 import XCTest
 @testable import CouchbaseLiteSwift
-@testable import CouchbaseLiteSwift_Private
 
 class ReplicatorTest_PendingDocIds: ReplicatorTest {
     
@@ -105,7 +104,7 @@ class ReplicatorTest_PendingDocIds: ReplicatorTest {
             pullOnlyError = error as NSError
         }
         
-        XCTAssertEqual(pullOnlyError?.code, CBLErrorUnsupported)
+        XCTAssertEqual(pullOnlyError?.code, CBLError.unsupported)
     }
     
     func testPendingDocIDsWithCreate() throws {
