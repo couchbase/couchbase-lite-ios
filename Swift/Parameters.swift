@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /// Query parameters used for setting values to the query parameters defined in the query.

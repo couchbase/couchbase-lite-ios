@@ -414,7 +414,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: nil,
             serverCert: tlsID.certs[0],
-            expectedError: CBLErrorTLSCertUnknownRoot)
+            expectedError: CBLError.tlsCertUnknownRoot)
         try TLSIdentity.deleteIdentity(withLabel: "dummy")
         
         // No pinned cert
@@ -423,7 +423,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: nil,
             serverCert: nil,
-            expectedError: CBLErrorTLSCertUnknownRoot)
+            expectedError: CBLError.tlsCertUnknownRoot)
         
         try stopListener(listener: listener)
         XCTAssertNil(listener.tlsIdentity)
@@ -460,7 +460,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: nil,
             serverCert: tlsID.certs[0],
-            expectedError: CBLErrorTLSCertUnknownRoot)
+            expectedError: CBLError.tlsCertUnknownRoot)
         try TLSIdentity.deleteIdentity(withLabel: "dummy")
         
         // No pinned cert
@@ -469,7 +469,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: nil,
             serverCert: nil,
-            expectedError: CBLErrorTLSCertUnknownRoot)
+            expectedError: CBLError.tlsCertUnknownRoot)
         
         try stopListener(listener: listener)
         XCTAssertNil(listener.tlsIdentity)
@@ -511,22 +511,22 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // Replicator - No Authenticator:
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: nil, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: nil, expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Wrong Username:
         var auth = BasicAuthenticator.init(username: "daneil", password: "123")
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: auth, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: auth, expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Wrong Password:
         auth = BasicAuthenticator.init(username: "daniel", password: "456")
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: auth, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: auth, expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Client Cert Authenticator
         let certAuth = ClientCertificateAuthenticator(identity: try createTLSIdentity(isServer: false)!)
         self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                 auth: certAuth, expectedError: CBLErrorHTTPAuthRequired)
+                 auth: certAuth, expectedError: CBLError.httpAuthRequired)
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Replicator - Success:
@@ -580,7 +580,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         // Replicator:
         let auth = ClientCertificateAuthenticator(identity: try createTLSIdentity(isServer: false)!)
         let serverCert = listener.tlsIdentity!.certs[0]
-        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
+        self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false, auth: auth, serverCert: serverCert, expectedError: CBLError.tlsClientCertRejected)
         
         // Cleanup:
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
@@ -635,7 +635,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     auth: auth, serverCert: serverCert, expectedError: CBLErrorTLSClientCertRejected)
+                     auth: auth, serverCert: serverCert, expectedError: CBLError.tlsClientCertRejected)
         }
         
         // Cleanup:
@@ -881,7 +881,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         self.run(target: self.listener!.localURLEndpoint, type: .pushAndPull, continuous: false,
                  auth: nil, serverCert: self.listener!.tlsIdentity!.certs[0],
-                 expectedError: CBLErrorHTTPForbidden)
+                 expectedError: CBLError.httpForbidden)
     }
     
     func testReplicatorServerCertificate() throws {
@@ -936,7 +936,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             let activity = change.status.activity
             if activity == .stopped && change.status.error != nil {
                 // TODO: https://issues.couchbase.com/browse/CBL-1471
-                XCTAssertEqual((change.status.error! as NSError).code, CBLErrorTLSCertUnknownRoot)
+                XCTAssertEqual((change.status.error! as NSError).code, CBLError.tlsCertUnknownRoot)
                 x1.fulfill()
             }
         }
@@ -1023,7 +1023,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         // Replicator - TLS Error:
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLError.tlsCertUnknownRoot)
         }
         
         // Replicator - Success:
@@ -1047,7 +1047,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         // Replicator - TLS Error:
         self.ignoreException {
             self.run(target: listener.localURLEndpoint, type: .pushAndPull, continuous: false,
-                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLErrorTLSCertUnknownRoot)
+                     acceptSelfSignedOnly: false, serverCert: nil, expectedError: CBLError.tlsCertUnknownRoot)
         }
         
         // Replicator - Success:
@@ -1126,7 +1126,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         wait(for: [x2], timeout: 5.0)
         
         // Check error:
-        XCTAssertEqual((repl.status.error! as NSError).code, CBLErrorWebSocketGoingAway)
+        XCTAssertEqual((repl.status.error! as NSError).code, CBLError.webSocketGoingAway)
         
         // Check to ensure that the replicator is not accessible:
         run(target: target, type: .pushAndPull, continuous: false, auth: nil, serverCert: nil,
@@ -1151,7 +1151,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: nil,
             serverCert: self.listener!.tlsIdentity!.certs[0],
-            expectedError: CBLErrorHTTPAuthRequired)
+            expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Wrong Username:
         run(target: self.listener!.localURLEndpoint,
@@ -1159,7 +1159,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: BasicAuthenticator(username: "daneil", password: "123"),
             serverCert: self.listener!.tlsIdentity!.certs[0],
-            expectedError: CBLErrorHTTPAuthRequired)
+            expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Wrong Password:
         run(target: self.listener!.localURLEndpoint,
@@ -1167,7 +1167,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: BasicAuthenticator(username: "daniel", password: "132"),
             serverCert: self.listener!.tlsIdentity!.certs[0],
-            expectedError: CBLErrorHTTPAuthRequired)
+            expectedError: CBLError.httpAuthRequired)
         
         // Replicator - Different ClientCertAuthenticator
         run(target: self.listener!.localURLEndpoint,
@@ -1175,7 +1175,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             continuous: false,
             auth: ClientCertificateAuthenticator(identity: try createTLSIdentity(isServer: false)!),
             serverCert: self.listener!.tlsIdentity!.certs[0],
-            expectedError: CBLErrorHTTPAuthRequired)
+            expectedError: CBLError.httpAuthRequired)
         
         // cleanup client cert authenticator identity
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
@@ -1257,7 +1257,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             auth: nil,
             acceptSelfSignedOnly: true,
             serverCert: nil,
-            expectedError: CBLErrorTLSCertUntrusted)
+            expectedError: CBLError.tlsCertUntrusted)
         
         try stopListener()
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -1280,7 +1280,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
                      continuous: false,
                      acceptSelfSignedOnly: true,
                      serverCert: dummyTLSIdentity!.certs[0],
-                     expectedError: CBLErrorTLSCertUnknownRoot)
+                     expectedError: CBLError.tlsCertUnknownRoot)
         }
         
         // listener = cert1; replicator.pin = cert1; acceptSelfSigned = false => pass

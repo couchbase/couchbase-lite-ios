@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A Joins component represents a collection of the joins clauses of the query statement.
 public final class Joins: Query, WhereRouter, OrderByRouter, LimitRouter {

@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Full-text function factory.
 public final class FullTextFunction {

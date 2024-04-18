@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// ResultSet is a result returned from a query.
 public final class ResultSet : Sequence, IteratorProtocol {

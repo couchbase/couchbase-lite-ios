@@ -18,7 +18,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class QueryTest_Collection: QueryTest {
     override func setUpWithError() throws {
@@ -61,7 +61,7 @@ class QueryTest_Collection: QueryTest {
         
         try loadJSONResource("names_100", collection: col)
         
-        expectError(domain: CBLErrorDomain, code: CBLError.invalidQuery) {
+        expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
             let _ = try self.db.createQuery("SELECT name.first FROM person.names ORDER BY name.first LIMIT 1")
         }
     }

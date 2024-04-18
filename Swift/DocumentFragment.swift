@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// DocumentFragment provides access to a document object. DocumentFragment also provides
 /// subscript access by either key or index to the data values of the document which are

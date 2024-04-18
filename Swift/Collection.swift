@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A `Collection` represent a collection which is a container for documents.
 ///

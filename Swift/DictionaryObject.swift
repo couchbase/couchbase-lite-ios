@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.

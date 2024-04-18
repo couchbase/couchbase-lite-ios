@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A GroupBy represents the GROUP BY clause to group the query result.
 /// The GROUP BY clause is normally used with aggregate functions (AVG, COUNT, MAX, MIN, SUM)

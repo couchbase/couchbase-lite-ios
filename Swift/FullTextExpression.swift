@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Full-text expression.
 @available(*, deprecated, message: "Use FullTextFunction.match(indexName: String, query: String) instead.")

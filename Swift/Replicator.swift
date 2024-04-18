@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /// A replicator for replicating document changes between a local database and a target database.

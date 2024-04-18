@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Configuration for creating indexes.
 public protocol IndexConfiguration { }

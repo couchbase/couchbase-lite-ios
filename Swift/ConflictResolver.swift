@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Conflict Resolver protocol
 public protocol ConflictResolverProtocol {

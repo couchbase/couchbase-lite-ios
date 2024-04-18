@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A database query.
 /// A Query instance can be constructed by calling one of the select class methods.

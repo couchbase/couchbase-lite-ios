@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Listener token returned when adding a change listener. The token is used
 /// for removing the added change listener.

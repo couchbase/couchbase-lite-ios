@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A mutable version of the Document.
 public final class MutableDocument : Document, MutableDictionaryProtocol {

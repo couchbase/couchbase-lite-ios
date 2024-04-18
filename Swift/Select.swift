@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A Select component represents the returning properties in each query result row.
 public final class Select: Query, FromRouter {

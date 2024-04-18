@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// MutableFragmentProtocol provides read and write access to the data value
 /// wrapped by a fragment object.

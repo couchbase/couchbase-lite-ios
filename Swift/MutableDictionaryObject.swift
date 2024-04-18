@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// MutableDictionaryProtocol defines a set of methods for getting and setting
 /// dictionary data.
