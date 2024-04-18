@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// File logger used for writing log messages to files. To enable the file logger,
 /// setup the log file configuration and specify the log level as desired.

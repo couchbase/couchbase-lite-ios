@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /** MutableArrayProtocol protocol defines a set of methods for getting and setting array data. */

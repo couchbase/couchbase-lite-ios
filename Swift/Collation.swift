@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Collation defines how strings are compared and is used when creating a COLLATE expression.
 /// The COLLATE expression can be used in the WHERE clause when comparing two strings or in the

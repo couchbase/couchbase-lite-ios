@@ -19,6 +19,7 @@
 
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 public struct CBLError {
     public static let domain = CBLErrorDomain

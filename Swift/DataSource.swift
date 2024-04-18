@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /// A query data source. used for specifiying the data source for your query.

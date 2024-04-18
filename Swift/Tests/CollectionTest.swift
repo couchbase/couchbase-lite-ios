@@ -18,7 +18,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class CollectionTest: CBLTestCase {
 
@@ -72,7 +72,7 @@ class CollectionTest: CBLTestCase {
     }
     
     func testDeleteDefaultCollection() throws {
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try self.db.deleteCollection(name: Database.defaultCollectionName)
         }
         
@@ -88,7 +88,7 @@ class CollectionTest: CBLTestCase {
     }
     
     func testGetDefaultScopeAfterDeleteDefaultCollection() throws {
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             try self.db.deleteCollection(name: Database.defaultCollectionName)
         }
         
@@ -324,28 +324,28 @@ class CollectionTest: CBLTestCase {
     }
     
     func testScopeCollectionNameWithIllegalChars() throws {
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: "_")
         }
         
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: "a", scope: "_")
         }
         
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: "%")
         }
         
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: "b", scope: "%")
         }
         
         for char in "!@#$^&*()+={}[]<>,.?/:;\"'\\|`~" {
-            self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
                 let _ = try self.db.createCollection(name: "a\(char)z")
             }
             
-            self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+            self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
                 let _ = try self.db.createCollection(name: "colA", scope: "a\(char)z")
             }
         }
@@ -370,11 +370,11 @@ class CollectionTest: CBLTestCase {
         }
         
         name.append("a")
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: name, scope: "scopeA")
         }
         
-        self.expectError(domain: CBLErrorDomain, code: CBLError.invalidParameter) {
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
             let _ = try self.db.createCollection(name: "colA", scope: name)
         }
     }
@@ -766,57 +766,57 @@ class CollectionTest: CBLTestCase {
         try onAction()
         
         // document(id:)
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.document(id: "doc2")
         }
         
         // save document
         let mdoc = MutableDocument()
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.save(document: mdoc)
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.save(document: mdoc, conflictHandler: { doc, doc2 in
                 return true
             })
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.save(document: mdoc, concurrencyControl: .lastWriteWins)
         }
         
         // delete functions
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.delete(document: doc)
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.delete(document: doc, concurrencyControl: .lastWriteWins)
         }
         
         // purge functions
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.purge(document: doc)
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.purge(id: "doc2")
         }
         
         // doc expiry
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.setDocumentExpiration(id: "doc6", expiration: Date())
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.getDocumentExpiration(id: "doc6")
         }
         
         // indexes
         let config = ValueIndexConfiguration.init(["firstName"])
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.createIndex(withName: "index1", config: config)
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.indexes()
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.deleteIndex(forName: "index2")
         }
     }
@@ -841,10 +841,10 @@ class CollectionTest: CBLTestCase {
         
         try onAction()
         
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try scope.collection(name: "colA")
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try scope.collections()
         }
     }
@@ -865,35 +865,35 @@ class CollectionTest: CBLTestCase {
     
     func getScopesOrCollectionsTest() throws {
         // default collection/scope
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.defaultCollection()
         }
         
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.defaultScope()
         }
         
         // collection(s)
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.collection(name: "colA", scope: "scopeA")
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.collections()
         }
         
         // scope(s)
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.scope(name: "scopeA")
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.scopes()
         }
         
         // create/delete collections
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.createCollection(name: "colA", scope: "scopeA")
         }
-        expectError(domain: CBLErrorDomain, code: CBLError.notOpen) {
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try self.db.deleteCollection(name: "colA", scope: "scopeA")
         }
     }

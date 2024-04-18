@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Ordering represents a single ordering component in the query ORDER BY clause.
 public protocol OrderingProtocol {

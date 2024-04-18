@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// A CBLScope represents a scope or namespace of the collections.
 ///
