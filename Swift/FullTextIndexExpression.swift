@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Index Expression.
 public protocol IndexExpressionProtocol { }

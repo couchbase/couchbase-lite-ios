@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Where class represents the WHERE clause of the query statement.
 public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {

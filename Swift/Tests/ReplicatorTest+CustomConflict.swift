@@ -18,7 +18,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class ReplicatorTest_CustomConflict: ReplicatorTest {
     
@@ -655,7 +655,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             })
         }
         XCTAssertNotNil(error)
-        XCTAssertEqual(error?.code, CBLErrorUnexpectedError)
+        XCTAssertEqual(error?.code, CBLError.unexpectedError)
         XCTAssert((error?.userInfo[NSLocalizedDescriptionKey] as! String) ==
             "A document contains a blob that was saved to a different " +
             "database. The save operation cannot complete.")
@@ -763,7 +763,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             })
         })
         XCTAssertNotNil(error)
-        XCTAssertEqual(error?.code, CBLErrorNotFound)
+        XCTAssertEqual(error?.code, CBLError.notFound)
         replicator.removeChangeListener(withToken: token)
     }
     

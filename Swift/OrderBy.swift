@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// An OrderBy represents an ORDER BY clause of the query statement.
 public final class OrderBy: Query, LimitRouter {

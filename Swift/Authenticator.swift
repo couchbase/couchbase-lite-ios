@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 /// Authenticator objects provide server authentication credentials to the replicator.
 /// Authenticator is a base opaque protocol; you must instantiate one of

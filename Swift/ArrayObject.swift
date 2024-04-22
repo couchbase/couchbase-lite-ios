@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
 
 /// ArrayProtocol defines a set of methods for readonly accessing array data.
