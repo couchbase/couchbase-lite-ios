@@ -31,6 +31,10 @@
 #import "Foundation+CBL.h"
 #import "CollectionUtils.h"
 
+#ifdef DEBUG
+#import "CBLQueryObserver.h"
+#endif
+
 @interface QueryTest_Main : QueryTest
 
 @end
@@ -40,6 +44,13 @@
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+- (void) tearDown {
+#ifdef DEBUG
+    [CBLQueryObserver setC4QueryObserverCallbackDelayInterval: 0.0];
+#endif
+    [super tearDown];
+}
 
 #pragma mark - Where
 
@@ -2060,6 +2071,145 @@
     AssertEqual(count, 2);
     [q removeChangeListenerWithToken: token];
 }
+
+// CBSE-16662, CBL-5631: thread_mutex crash issue
+// This test is a sanity test to check that no crash happens but as the issue was a race condition
+// in LiteCore, the test might pass without hitting the issue.
+- (void) testCreateAndRemoveLiveQueriesConcurrently {
+    [self loadNumbers: 1000];
+    
+    NSError* error;
+    
+    NSLock *lock = [[NSLock alloc] init];
+    dispatch_queue_t queue = dispatch_queue_create("query-queue", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_queue_t listenerQueue = dispatch_queue_create("query-listener-queue", DISPATCH_QUEUE_CONCURRENT);
+    
+    CBLQuery* query = [self.db createQuery: @"select * from _ where number1 < 500" error: &error];
+    AssertNotNil(query);
+    
+    NSMutableArray<id<CBLListenerToken>>* tokens = [NSMutableArray array];
+    NSMutableArray<XCTestExpectation*>* expectations = [NSMutableArray array];
+    
+    for (int i = 1; i <= 1000; i++) {
+        XCTestExpectation* exp = [self expectationWithDescription: [NSString stringWithFormat: @"exp %d", i]];
+        [expectations addObject: exp];
+        
+        dispatch_async(queue, ^{
+            if (i % 2 == 1) {
+                id token = [query addChangeListenerWithQueue: listenerQueue listener:^(CBLQueryChange *change) { }];
+                [lock lock];
+                [tokens addObject: token];
+                [lock unlock];
+            } else {
+                [lock lock];
+                if ([tokens count] > 0) {
+                    id<CBLListenerToken> token = [tokens objectAtIndex: 0];
+                    [tokens removeObjectAtIndex: 0];
+                    [token remove];
+                }
+                [lock unlock];
+            }
+            [exp fulfill];
+        });
+    }
+    
+    [self waitForExpectations: expectations timeout: 10];
+    
+    // Remove any tokens left:
+    for (id<CBLListenerToken> token in tokens) {
+        [token remove];
+    }
+    [tokens removeAllObjects];
+    
+    // Wait for listener queue to get drained:
+    [NSThread sleepForTimeInterval: 5];
+}
+
+- (void) testLiveQueryNoChangesNotifiedAfterRemoveListenerToken {
+    // Create 1000 docs:
+    [self createDocNumbered: 1 of: 100];
+    
+    NSError *error;
+    NSString* str = [NSString stringWithFormat: @"select * from _ where number1 < 300"];
+    CBLQuery* query = [self.db createQuery: str error: &error];
+    
+    __block BOOL tokenRemoved = NO;
+    
+    XCTestExpectation* changedExp = [self expectationWithDescription: @"Changed"];
+    XCTestExpectation* noChangedExp = [self expectationWithDescription: @"No Changed"];
+    noChangedExp.inverted = YES;
+    
+    id token = [query addChangeListener:^(CBLQueryChange* change) {
+        if (tokenRemoved) {
+            [noChangedExp fulfill];
+        } else {
+            [changedExp fulfill];
+        }
+    }];
+    
+    [self waitForExpectations: @[changedExp] timeout: 5.0];
+    
+    // Remove the token:
+    tokenRemoved = YES;
+    [token remove];
+    
+    // Add more docs:
+    [self createDocNumbered: 101 of: 200];
+    
+    // Wait for no changes notified:
+    [self waitForExpectations: @[noChangedExp] timeout: 3.0];
+}
+
+#ifdef DEBUG
+
+// CBL-5659 : Invalidated context may be used in query observer callback
+// This tests that the callback will not be called without a crash.
+- (void) testLiveQueryNoDelayedChangesNotifiedAfterRemoveListenerToken {
+    // Create 1000 docs:
+    [self createDocNumbered: 1 of: 100];
+    
+    __block BOOL tokenRemoved = NO;
+    
+    XCTestExpectation* changedExp = [self expectationWithDescription: @"Changed"];
+    XCTestExpectation* noChangedExp = [self expectationWithDescription: @"No Changed"];
+    noChangedExp.inverted = YES;
+    
+    // Execute the code in an autoreleasepool so that the internal CBLQueryObserver will be released
+    // immediately right after the token is removed.
+    @autoreleasepool {
+        NSError *error;
+        NSString* str = [NSString stringWithFormat: @"select * from _ where number1 < 300"];
+        CBLQuery* query = [self.db createQuery: str error: &error];
+        
+        id token = [query addChangeListener:^(CBLQueryChange* change) {
+            if (tokenRemoved) {
+                [noChangedExp fulfill];
+            } else {
+                [changedExp fulfill];
+            }
+        }];
+        
+        [self waitForExpectations: @[changedExp] timeout: 5.0];
+        
+        // Inject some delay in C4QueryObserverCallback:
+        [CBLQueryObserver setC4QueryObserverCallbackDelayInterval: 3.0];
+        
+        // Add more docs:
+        [self createDocNumbered: 101 of: 200];
+        
+        // Wait a little for the query to pickup the change:
+        [NSThread sleepForTimeInterval: 1.0];
+        
+        // Remove the token:
+        tokenRemoved = YES;
+        [token remove];
+    }
+    
+    // Wait for no changes notified:
+    [self waitForExpectations: @[noChangedExp] timeout: 5.0];
+}
+
+#endif
 
 #pragma clang diagnostic pop
 
