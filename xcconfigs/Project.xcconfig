@@ -22,7 +22,7 @@ CBL_BUILD_NUMBER                   = 0
 CBL_COPYRIGHT_YEAR                 = 2021
 
 IPHONEOS_DEPLOYMENT_TARGET         = 12.0
-MACOSX_DEPLOYMENT_TARGET           = 12
+MACOSX_DEPLOYMENT_TARGET           = 12.0
 TVOS_DEPLOYMENT_TARGET             = 11.0
 
 CODE_SIGN_IDENTITY                 =
