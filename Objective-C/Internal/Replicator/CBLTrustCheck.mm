@@ -111,23 +111,13 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
 
-    if (@available(iOS 12.0, macos 10.14, *)) {
-        CFErrorRef error;
-        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
-        if (!trusted)
-            CBLWarnError(Sync, @"Failed to force trust");
-        
-        return trusted;
-    } else {
-#if TARGET_OS_MACCATALYST
-        CBLWarnError(Sync, @"Catalyst:SecTrustEvaluate API not available, macOS < 10.14, iOS < 12");
-#else
-        SecTrustResultType result;
-        SecTrustEvaluate(_trust, &result);
-#endif
-    }
+   
+    CFErrorRef error;
+    BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+    if (!trusted)
+        CBLWarnError(Sync, @"Failed to force trust");
     
-    return YES;
+    return trusted;
 }
 
 
@@ -147,22 +137,13 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustResultType result;
     OSStatus err;
 
-    if (@available(iOS 12.0, macos 10.14, *)) {
-        CFErrorRef error;
-        BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
-        if (!trusted) {
-            NSError* cferr = (__bridge NSError*)error;
-            CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
-        }
-        err = SecTrustGetTrustResult(_trust, &result);
-    } else {
-#if TARGET_OS_MACCATALYST
-        CBLWarnError(Sync, @"Catalyst:SecTrustEvaluate API not available, macOS < 10.14, iOS < 12");
-        return nil;
-#else
-    err = SecTrustEvaluate(_trust, &result);
-#endif
+    CFErrorRef error;
+    BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+    if (!trusted) {
+        NSError* cferr = (__bridge NSError*)error;
+        CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
     }
+    err = SecTrustGetTrustResult(_trust, &result);
     
     if (err) {
         CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
@@ -179,8 +160,8 @@ static BOOL sOnlyTrustAnchorCerts;
     // If using cert-pinning, accept cert iff it matches the pin:
     if (_pinnedCertData) {
         CFIndex count = SecTrustGetCertificateCount(_trust);
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
-        if (@available(macOS 12.0, iOS 15.0, *)) {
+#if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+        if (@available(iOS 15.0, *)) {
             NSData* certData = nil;
             for (CFIndex i = 0; i < count; i++) {
                 CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
@@ -196,7 +177,10 @@ static BOOL sOnlyTrustAnchorCerts;
 #endif
         {
             for (CFIndex i = 0; i < count; i++) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, i);
+#pragma clang diagnostic pop
                 if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
                     [self forceTrusted];
                     return credential;
@@ -227,8 +211,8 @@ static BOOL sOnlyTrustAnchorCerts;
         return NO;
     
     C4Cert* c4cert = nil;
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
-    if (@available(macOS 12.0, iOS 15.0, *)) {
+#if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+    if (@available(iOS 15.0, *)) {
         CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
         SecCertificateRef certRef = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
         c4cert = toC4Cert(@[(__bridge id) certRef], outError);
@@ -236,7 +220,10 @@ static BOOL sOnlyTrustAnchorCerts;
     } else
 #endif
     {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         SecCertificateRef certRef = SecTrustGetCertificateAtIndex(_trust, 0);
+#pragma clang diagnostic pop
         c4cert = toC4Cert(@[(__bridge id) certRef], outError);
     }
     

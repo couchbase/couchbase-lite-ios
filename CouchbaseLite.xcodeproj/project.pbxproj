@@ -325,8 +325,6 @@
 		276740B81EE7381E0036DE42 /* CBLTrustCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 276740B51EE7381E0036DE42 /* CBLTrustCheck.h */; };
 		276740B91EE7381E0036DE42 /* CBLTrustCheck.mm in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */; };
 		276740BA1EE7381E0036DE42 /* CBLTrustCheck.mm in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */; };
-		27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
-		27B69A151F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
 		27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
 		27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */; };
@@ -702,7 +700,6 @@
 		9343EF38207D611600F19A89 /* CBLData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 930AE46C1EAA6C9100E92E9A /* CBLData.mm */; };
 		9343EF39207D611600F19A89 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		9343EF3A207D611600F19A89 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C591E1EF25E00F90659 /* Test.m */; };
-		9343EF3C207D611600F19A89 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
 		9343EF3D207D611600F19A89 /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		9343EF3E207D611600F19A89 /* CBLAggregateExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 934A278B1F30E5A5003946A7 /* CBLAggregateExpression.m */; };
 		9343EF3F207D611600F19A89 /* CBLJSON.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C9B1E241FB500F90659 /* CBLJSON.mm */; };
@@ -961,7 +958,6 @@
 		9343F067207D61AB00F19A89 /* ResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93140F001F22AA5E006E18EF /* ResultSet.swift */; };
 		9343F068207D61AB00F19A89 /* CBLReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 9374A8A5201FC53600BA0D9E /* CBLReplicator+Backgrounding.m */; };
 		9343F069207D61AB00F19A89 /* CBLChangeListenerToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 937F026B1EFC662100060D64 /* CBLChangeListenerToken.m */; };
-		9343F06A207D61AB00F19A89 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
 		9343F06B207D61AB00F19A89 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
 		9343F06C207D61AB00F19A89 /* Limit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9322DCF41F14654E00C4ACF7 /* Limit.swift */; };
 		9343F06E207D61AB00F19A89 /* CBLQueryCollation.m in Sources */ = {isa = PBXBuildFile; fileRef = 938E38801F3A5BB4006806C7 /* CBLQueryCollation.m */; };
@@ -2220,8 +2216,6 @@
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLTrustCheck.mm; sourceTree = "<group>"; };
-		27B69A121F2A4B7400782145 /* MYAnonymousIdentity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYAnonymousIdentity.h; sourceTree = "<group>"; };
-		27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYAnonymousIdentity.m; sourceTree = "<group>"; };
 		27BE3B451E4D63AF0012B74A /* CBL_Swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBL_Swift.xcconfig; sourceTree = "<group>"; };
 		27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBLTestCase.swift; sourceTree = "<group>"; };
 		27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
@@ -3563,8 +3557,6 @@
 				934F4BD11E1EF19000F90659 /* CollectionUtils.m */,
 				275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */,
 				275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */,
-				27B69A121F2A4B7400782145 /* MYAnonymousIdentity.h */,
-				27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */,
 				9374A89C201FC47D00BA0D9E /* MYBackgroundMonitor.h */,
 				9374A88A201FC47D00BA0D9E /* MYBackgroundMonitor.m */,
 				934F4BE91E1EF19000F90659 /* MYErrorUtils.h */,
@@ -5999,7 +5991,6 @@
 				93140F011F22AA5E006E18EF /* ResultSet.swift in Sources */,
 				9374A8A9201FC53600BA0D9E /* CBLReplicator+Backgrounding.m in Sources */,
 				937F02A41EFC7DD000060D64 /* CBLChangeListenerToken.m in Sources */,
-				27B69A151F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */,
 				93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */,
 				9322DCF51F14654E00C4ACF7 /* Limit.swift in Sources */,
 				938E38841F3A5BB4006806C7 /* CBLQueryCollation.m in Sources */,
@@ -6189,7 +6180,6 @@
 				9343EF39207D611600F19A89 /* CollectionUtils.m in Sources */,
 				9343EF3A207D611600F19A89 /* Test.m in Sources */,
 				1AAB2786227793E50037A880 /* CBLConflict.m in Sources */,
-				9343EF3C207D611600F19A89 /* MYAnonymousIdentity.m in Sources */,
 				9343EF3D207D611600F19A89 /* CBLBlob.mm in Sources */,
 				9343EF3E207D611600F19A89 /* CBLAggregateExpression.m in Sources */,
 				9343EF3F207D611600F19A89 /* CBLJSON.mm in Sources */,
@@ -6447,7 +6437,6 @@
 				9343F067207D61AB00F19A89 /* ResultSet.swift in Sources */,
 				9343F068207D61AB00F19A89 /* CBLReplicator+Backgrounding.m in Sources */,
 				9343F069207D61AB00F19A89 /* CBLChangeListenerToken.m in Sources */,
-				9343F06A207D61AB00F19A89 /* MYAnonymousIdentity.m in Sources */,
 				9343F06B207D61AB00F19A89 /* CBLIndex.m in Sources */,
 				40FC1C5F2B928C1600394276 /* ClientCertificateAuthenticator.swift in Sources */,
 				9343F06C207D61AB00F19A89 /* Limit.swift in Sources */,
@@ -6776,7 +6765,6 @@
 				930AE46E1EAA6C9100E92E9A /* CBLData.mm in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
-				27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934A278E1F30E5A5003946A7 /* CBLAggregateExpression.m in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.mm in Sources */,
