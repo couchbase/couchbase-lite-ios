@@ -1,5 +1,5 @@
 //
-//  CBLLogg+Admin.h
+//  CBLLog+Admin.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
