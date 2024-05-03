@@ -21,7 +21,6 @@
 
 @class CBLBlob;
 @class CBLQueryCollation;
-@class CBLVariableExpression;
 @protocol CBLQueryFullTextIndexExpressionProtocol;
 
 NS_ASSUME_NONNULL_BEGIN

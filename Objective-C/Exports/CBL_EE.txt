@@ -1,0 +1,65 @@
+#  CBL_EE.txt
+#  CouchbaseLite
+#
+#  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# All public symbols -- classes and constants -- need to be declared here.
+# Run generate_exports.sh after modifying this file.
+
+# Classes:
+.objc_class_name_CBLCoreMLPredictiveModel
+.objc_class_name_CBLClientCertificateAuthenticator
+.objc_class_name_CBLDatabaseEndpoint
+.objc_class_name_CBLEncryptionKey
+.objc_class_name_CBLListenerCertificateAuthenticator
+.objc_class_name_CBLListenerPasswordAuthenticator
+.objc_class_name_CBLMessage
+.objc_class_name_CBLMessageEndpoint
+.objc_class_name_CBLMessageEndpointListener
+.objc_class_name_CBLMessageEndpointListenerChange
+.objc_class_name_CBLMessageEndpointListenerConfiguration
+.objc_class_name_CBLMessagingError
+.objc_class_name_CBLPrediction
+.objc_class_name_CBLPredictiveIndex
+.objc_class_name_CBLQueryPredictionFunction
+.objc_class_name_CBLTLSIdentity
+.objc_class_name_CBLURLEndpointListener
+.objc_class_name_CBLURLEndpointListenerConfiguration
+.objc_class_name_CBLVectorEncoding
+.objc_class_name_CBLVectorIndexConfiguration
+
+# Constants:
+_kCBLDefaultListenerPort
+_kCBLDefaultListenerDisableTls
+_kCBLDefaultListenerReadOnly
+_kCBLDefaultListenerEnableDeltaSync
+_kCBLDefaultVectorIndexDistanceMetric
+_kCBLDefaultVectorIndexEncoding
+_kCBLCertAttrCommonName
+_kCBLCertAttrCountry
+_kCBLCertAttrEmailAddress
+_kCBLCertAttrGivenName
+_kCBLCertAttrHostname
+_kCBLCertAttrIPAddress
+_kCBLCertAttrLocality
+_kCBLCertAttrOrganization
+_kCBLCertAttrOrganizationUnit
+_kCBLCertAttrPostalAddress
+_kCBLCertAttrPostalCode
+_kCBLCertAttrPseudonym
+_kCBLCertAttrRegisteredID
+_kCBLCertAttrStateOrProvince
+_kCBLCertAttrSurname
+_kCBLCertAttrURL
