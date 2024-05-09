@@ -2,7 +2,7 @@
 //  Indexable.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public protocol Indexable {
     /// Create an index with the index name and config.
     func createIndex(withName name: String, config: IndexConfiguration) throws
     
-    /// Create an index with the index name and index. 
+    /// Create an index with the index and index name. 
     func createIndex(_ index: Index, name: String) throws;
     
     /// Delete an index by name.

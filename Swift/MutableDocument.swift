@@ -2,7 +2,7 @@
 //  MutableDocument.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -57,8 +57,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     
     /// Initializes a new MutableDocument object with the JSON data.
     /// 
-    /// - Parameters:
-    ///   - json: The JSON string with data.
+    /// - Parameter json: The JSON string with data.
     /// - Throws: An error on a failure.
     public convenience init(json: String) throws {
         self.init(CBLMutableDocument())

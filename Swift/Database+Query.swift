@@ -2,7 +2,7 @@
 //  Database+Query.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ extension Database : QueryFactory {
     /// Creates a Query object from the given query string.
     ///
     /// - Parameters:
-    ///     - query Query string
+    ///   - query: Query string.
     /// - Returns: A query created by the given query string.
     /// - Throws: An error on when the given query string is invalid.
     public func createQuery(_ query: String) throws -> Query {
@@ -53,8 +53,8 @@ extension Database : QueryFactory {
     /// will replace the old index. Creating the same index with the same name will be no-ops.
     ///
     /// - Parameters:
-    ///     - config: The index configuration
-    ///     - name: The index name.
+    ///   - config: The index configuration
+    ///   - name: The index name.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().createIndex(:name:) instead.")
     public func createIndex(_ config: IndexConfiguration, name: String) throws {
@@ -63,7 +63,8 @@ extension Database : QueryFactory {
     
     /// Deletes the index from the default collection by name.
     ///
-    /// - Parameter name: The index name.
+    /// - Parameters:
+    ///   - name: The index name.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteIndex(forName:) instead.")
     public func deleteIndex(forName name: String) throws {
