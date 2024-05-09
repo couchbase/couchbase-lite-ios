@@ -2,7 +2,7 @@
 //  ReplicatorConfiguration.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import Foundation
 import CouchbaseLiteSwift_Private
 
 ///  Replicator type.
-///
-/// - pushAndPull: Bidirectional; both push and pull
-/// - push: Pushing changes to the target
-/// - pull: Pulling changes from the target
+/// - Note:
+///   - pushAndPull: Bidirectional; both push and pull
+///   - push: Pushing changes to the target
+///   - pull: Pulling changes from the target
 public enum ReplicatorType: UInt8 {
     case pushAndPull = 0
     case push
@@ -120,7 +120,7 @@ public struct ReplicatorConfiguration {
     /// Note: channels that are not accessible to the user will be ignored by
     /// Sync Gateway.
     ///
-    /// - Note:Channels are not supported in Peer-to-Peer and Database-to-Database replication.
+    /// - Note: Channels are not supported in Peer-to-Peer and Database-to-Database replication.
     @available(*, deprecated, message: """
                 Use init(target:) and config.addCollection(config:) with a CollectionConfiguration
                 object instead

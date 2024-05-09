@@ -2,7 +2,7 @@
 //  Replicator.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -29,11 +29,12 @@ public final class Replicator {
     
     /// Activity level of a replicator.
     ///
-    /// - stopped: The replicator is finished or hit a fatal error.
-    /// - offline: The replicator is offline as the remote host is unreachable.
-    /// - connecting: The replicator is connecting to the remote host.
-    /// - idle: The replicator is inactive waiting for changes or offline.
-    /// - busy: The replicator is actively transferring data.
+    /// - Note:
+    ///   - stopped: The replicator is finished or hit a fatal error.
+    ///   - offline: The replicator is offline as the remote host is unreachable.
+    ///   - connecting: The replicator is connecting to the remote host.
+    ///   - idle: The replicator is inactive waiting for changes or offline.
+    ///   - busy: The replicator is actively transferring data.
     public enum ActivityLevel : UInt8 {
         case stopped = 0
         case offline
@@ -231,8 +232,9 @@ public final class Replicator {
     /// Check whether the document in the given collection is pending to push or not. If the given collection
     /// is not part of the replicator, an Invalid Parameter Exception will be thrown.
     ///
-    /// - Parameter collection The collection where the document belongs
-    /// - Parameter documentID: The ID of the document to check
+    /// - Parameters:
+    ///   - collection: The collection where the document belongs.
+    ///   - documentID: The ID of the document to check.
     /// - Returns: true if the document has one or more revisions pending, false otherwise
     public func isDocumentPending(_ documentID: String, collection: Collection) throws -> Bool {
         var error: NSError?

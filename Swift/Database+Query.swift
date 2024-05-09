@@ -63,8 +63,7 @@ extension Database : QueryFactory {
     
     /// Deletes the index from the default collection by name.
     ///
-    /// - Parameters:
-    ///   - name: The index name.
+    /// - Parameter name: The index name.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().deleteIndex(forName:) instead.")
     public func deleteIndex(forName name: String) throws {

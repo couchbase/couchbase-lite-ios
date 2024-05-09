@@ -2,7 +2,7 @@
 //  Having.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -48,8 +48,8 @@ public final class Having: Query, OrderByRouter, LimitRouter {
         return self.limit(limit, offset: nil)
     }
     
-    ///  Creates and chains a Limit object to skip the returned results for the given offset
-    ///  position and to limit the number of results to not more than the given limit value.
+    /// Creates and chains a Limit object to skip the returned results for the given offset
+    /// position and to limit the number of results to not more than the given limit value.
     ///
     /// - Parameters:
     ///   - limit: The limit expression.

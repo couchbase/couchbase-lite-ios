@@ -2,7 +2,7 @@
 //  Function.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -259,7 +259,7 @@ public final class Function {
     /// Creates a TAN(expr) function that returns the tangent of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
-    /// - Returns:  The TAN(expr) function.
+    /// - Returns: The TAN(expr) function.
     public static func tan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.tan(expression.toImpl()))
     }

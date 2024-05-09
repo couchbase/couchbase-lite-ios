@@ -50,8 +50,7 @@ public final class Scope {
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
-    /// - Parameters:
-    ///    - name: Collection name as String.
+    /// - Parameter name: Collection name as String.
     /// - Returns: Collection object or nil if it doesn't exist.
     /// - Throws: An error on when database object is not available.
     public func collection(name: String) throws -> Collection? {

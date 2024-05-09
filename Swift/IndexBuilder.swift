@@ -2,7 +2,7 @@
 //  IndexBuilder.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ public class IndexBuilder {
     /// Create a value index with the given index items. The index items are a list of
     /// the properties or expressions to be indexed.
     ///
-    /// - Parameter: items The index items.
+    /// - Parameter items: The index items.
     /// - Returns: The ValueIndex.
     public static func valueIndex(items: ValueIndexItem...) -> ValueIndex {
         return valueIndex(items: items);
@@ -44,7 +44,7 @@ public class IndexBuilder {
     /// the index items are the properties that are used to perform the
     /// match operation against with.
     ///
-    /// - Parameter: items The index items.
+    /// - Parameter items: The index items.
     /// - Returns:  The FullTextIndex.
     public static func fullTextIndex(items: FullTextIndexItem...) -> FullTextIndex {
         return fullTextIndex(items: items)
@@ -54,7 +54,7 @@ public class IndexBuilder {
     /// the index items are the properties that are used to perform the
     /// match operation against with.
     ///
-    /// - Parameter: items The index items.
+    /// - Parameter items: The index items.
     /// - Returns:  The FullTextIndex.
     public static func fullTextIndex(items: [FullTextIndexItem]) -> FullTextIndex {
         return FullTextIndex(items: items)

@@ -2,7 +2,7 @@
 //  QueryFactory.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ import Foundation
 public protocol QueryFactory {
     /// Creates a Query object from the given query string.
     ///
-    /// - Parameters:
-    ///     - query Query string
+    /// - Parameter query: Query string
     /// - Returns: A query created by the given query string.
     /// - Throws: An error on when the given query string is invalid.
     func createQuery(_ query: String) throws -> Query

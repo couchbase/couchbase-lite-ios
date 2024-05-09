@@ -2,7 +2,7 @@
 //  Query.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ public class Query {
     /// - Parameters:
     ///   - database: The database to query.
     ///   - json: JSON data encoding the query. This can be obtained from a Query object's
-    //            JSONRepresentation property.
+    ///           JSONRepresentation property.
     init(database: Database, JSONRepresentation json: Data) {
         self.database = database
         queryImpl = CBLQuery(database: database.impl, jsonRepresentation: json)
@@ -162,8 +162,8 @@ public class Query {
     
     /// Creates a query, given the query string, as from the expression property.
     /// - Parameters:
-    ///     - database  The database to query.
-    ///     - expressions  String representing the query expression.
+    ///   - database: The database to query.
+    ///   - expressions: String representing the query expression.
     init(database: Database, expressions: String) throws {
         self.database = database
         queryImpl = try database.impl.createQuery(expressions)
