@@ -20,7 +20,7 @@
 #import <Foundation/Foundation.h>
 
 @class CBLQuery, CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin;
-@class CBLQueryOrdering, CBLQueryGroupBy, CBLQueryLimit;
+@class CBLQueryOrdering, CBLQueryLimit;
 @class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
