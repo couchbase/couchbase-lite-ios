@@ -2,7 +2,7 @@
 //  Scope.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2022 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@
 import Foundation
 import CouchbaseLiteSwift_Private
 
-/// A CBLScope represents a scope or namespace of the collections.
+/// A Scope represents a scope or namespace of the collections.
 ///
 /// The scope implicitly exists when there is at least one collection created under the scope.
 /// The default scope is exceptional in that it will always exists even there are no collections
 /// under it.
 ///
-/// `CBLScope` Lifespan
-/// A `CBLScope` object remain valid until either the database is closed or
+/// `Scope` Lifespan
+/// A `Scope` object remain valid until either the database is closed or
 /// the scope itself is invalidated as all collections in the scope have been deleted. 
 public final class Scope {
     
