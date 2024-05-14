@@ -107,7 +107,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func save(document: MutableDocument) throws {
-        document.collection = self
+        if (document.collection == nil){
+            document.collection = self
+        }
         try impl.save(document.impl as! CBLMutableDocument)
     }
     

@@ -1822,9 +1822,23 @@ class DocumentTest: CBLTestCase {
     
     func testGetCollectionAfterDocIsSaved() throws {
         let col1 = try db.createCollection(name: "collection1")
-        var doc = MutableDocument(id: "doc1")
+        let doc = MutableDocument(id: "doc1")
         doc.setString("hello", forKey: "greeting")
         try col1.save(document: doc)
         XCTAssert(doc.collection == col1)
+    }
+    
+    func testDocumentResaveInAnotherCollection() throws {
+        let colA = try db.createCollection(name: "collA")
+        let colB = try db.createCollection(name: "collB")
+        
+        var doc = MutableDocument(id: "doc1")
+        doc.setString("hello", forKey: "greeting")
+        
+        try colA.save(document: doc)
+        doc = try colA.document(id: "doc1")!.toMutable()
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
+            try colB.save(document: doc)
+        }
     }
 }
