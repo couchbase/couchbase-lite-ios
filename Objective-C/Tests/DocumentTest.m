@@ -2237,6 +2237,16 @@
     AssertEqual(blob.length, 0);
 }
 
+- (void) testGetCollectionAfterDocIsSaved {
+    NSError* error;
+    CBLCollection* col1 = [self.db createCollectionWithName:@"collection1" scope: nil error: &error];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"hello" forKey: @"greetings"];
+    [col1 saveDocument: doc error: &error];
+    CBLCollection* docColl = [doc collection];
+    AssertEqual(col1, docColl);
+}
+
 #pragma clang diagnostic pop
 
 @end

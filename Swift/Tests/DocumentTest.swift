@@ -1818,6 +1818,13 @@ class DocumentTest: CBLTestCase {
                                                             Blob.blobLengthProperty: blob.length])
         XCTAssertNil(retrivedBlob)
         XCTAssertEqual(retrivedBlob?.length ?? 0, 0)
-        
+    }
+    
+    func testGetCollectionAfterDocIsSaved() throws {
+        let col1 = try db.createCollection(name: "collection1")
+        var doc = MutableDocument(id: "doc1")
+        doc.setString("hello", forKey: "greeting")
+        try col1.save(document: doc)
+        XCTAssert(doc.collection == col1)
     }
 }
