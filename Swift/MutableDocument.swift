@@ -94,8 +94,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     }
     
     // MARK: Edit
-    
-    // TODO: Implement copy
+
     /// Returns the same MutableDocument object.
     ///
     /// - Returns: The MutableDocument object.
@@ -307,5 +306,4 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     private var docImpl: CBLMutableDocument {
         return impl as! CBLMutableDocument
     }
-    
 }
