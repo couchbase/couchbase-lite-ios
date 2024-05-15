@@ -56,8 +56,7 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     
     /// Initializes a new MutableDocument object with the JSON data.
     /// 
-    /// - Parameters:
-    ///   - json: The JSON string with data.
+    /// - Parameter json: The JSON string with data.
     /// - Throws: An error on a failure.
     public convenience init(json: String) throws {
         self.init(CBLMutableDocument())
