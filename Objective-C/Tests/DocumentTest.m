@@ -2247,6 +2247,22 @@
     AssertEqual(col1, docColl);
 }
 
+- (void) testDocumentResaveInAnotherCollection {
+    NSError* error;
+    CBLCollection* colA = [self.db createCollectionWithName:@"collA" scope: nil error: &error];
+    CBLCollection* colB = [self.db createCollectionWithName:@"collB" scope: nil error: &error];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"hello" forKey: @"greetings"];
+    
+    [colA saveDocument: doc error: &error];
+    doc = [[colA documentWithID: @"doc1" error: &error] toMutable];
+    
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
+        return [colB saveDocument: doc error: e];
+    }];
+}
+
 #pragma clang diagnostic pop
 
 @end
