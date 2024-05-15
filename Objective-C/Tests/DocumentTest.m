@@ -2257,7 +2257,6 @@
     
     [colA saveDocument: doc error: &error];
     doc = [[colA documentWithID: @"doc1" error: &error] toMutable];
-    
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
         return [colB saveDocument: doc error: e];
     }];

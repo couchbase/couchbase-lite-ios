@@ -107,10 +107,10 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func save(document: MutableDocument) throws {
-        if (document.collection == nil){
+        try impl.save(document.impl as! CBLMutableDocument)
+        if (document.collection == nil) {
             document.collection = self
         }
-        try impl.save(document.impl as! CBLMutableDocument)
     }
     
     /// Save a document into the collection with a specified concurrency control. When specifying
@@ -133,6 +133,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 return false
             }
             throw err
+        }
+        if (document.collection == nil) {
+            document.collection = self
         }
         return result
     }
@@ -161,6 +164,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 return false
             }
             throw err
+        }
+        if (document.collection == nil) {
+            document.collection = self
         }
         return result
     }
