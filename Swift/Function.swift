@@ -259,7 +259,7 @@ public final class Function {
     /// Creates a TAN(expr) function that returns the tangent of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
-    /// - Returns:  The TAN(expr) function.
+    /// - Returns: The TAN(expr) function.
     public static func tan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.tan(expression.toImpl()))
     }

@@ -24,7 +24,7 @@ extension Database : QueryFactory {
     /// Creates a Query object from the given query string.
     ///
     /// - Parameters:
-    ///     - query Query string
+    ///   - query: Query string.
     /// - Returns: A query created by the given query string.
     /// - Throws: An error on when the given query string is invalid.
     public func createQuery(_ query: String) throws -> Query {
@@ -53,8 +53,8 @@ extension Database : QueryFactory {
     /// will replace the old index. Creating the same index with the same name will be no-ops.
     ///
     /// - Parameters:
-    ///     - config: The index configuration
-    ///     - name: The index name.
+    ///   - config: The index configuration
+    ///   - name: The index name.
     /// - Throws: An error on a failure.
     @available(*, deprecated, message: "Use database.defaultCollection().createIndex(:name:) instead.")
     public func createIndex(_ config: IndexConfiguration, name: String) throws {
