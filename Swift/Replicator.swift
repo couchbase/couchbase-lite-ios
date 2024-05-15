@@ -98,6 +98,7 @@ public final class Replicator {
     
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress through the replicator change notification.
+    ///  - Note: This method MUST NOT be called within database's inBatch() block, as it will enter deadlock.
     public func start() {
         registerActiveReplicator()
         impl.start()
