@@ -2237,6 +2237,31 @@
     AssertEqual(blob.length, 0);
 }
 
+- (void) testGetCollectionAfterDocIsSaved {
+    NSError* error;
+    CBLCollection* col1 = [self.db createCollectionWithName:@"collection1" scope: nil error: &error];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"hello" forKey: @"greetings"];
+    [col1 saveDocument: doc error: &error];
+    CBLCollection* docColl = [doc collection];
+    AssertEqual(col1, docColl);
+}
+
+- (void) testDocumentResaveInAnotherCollection {
+    NSError* error;
+    CBLCollection* colA = [self.db createCollectionWithName:@"collA" scope: nil error: &error];
+    CBLCollection* colB = [self.db createCollectionWithName:@"collB" scope: nil error: &error];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"hello" forKey: @"greetings"];
+    
+    [colA saveDocument: doc error: &error];
+    doc = [[colA documentWithID: @"doc1" error: &error] toMutable];
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
+        return [colB saveDocument: doc error: e];
+    }];
+}
+
 #pragma clang diagnostic pop
 
 @end
