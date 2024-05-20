@@ -1818,6 +1818,27 @@ class DocumentTest: CBLTestCase {
                                                             Blob.blobLengthProperty: blob.length])
         XCTAssertNil(retrivedBlob)
         XCTAssertEqual(retrivedBlob?.length ?? 0, 0)
+    }
+    
+    func testGetCollectionAfterDocIsSaved() throws {
+        let col1 = try db.createCollection(name: "collection1")
+        let doc = MutableDocument(id: "doc1")
+        doc.setString("hello", forKey: "greeting")
+        try col1.save(document: doc)
+        XCTAssert(doc.collection == col1)
+    }
+    
+    func testDocumentResaveInAnotherCollection() throws {
+        let colA = try db.createCollection(name: "collA")
+        let colB = try db.createCollection(name: "collB")
         
+        var doc = MutableDocument(id: "doc1")
+        doc.setString("hello", forKey: "greeting")
+        
+        try colA.save(document: doc)
+        doc = try colA.document(id: "doc1")!.toMutable()
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
+            try colB.save(document: doc)
+        }
     }
 }

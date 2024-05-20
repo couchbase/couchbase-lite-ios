@@ -108,6 +108,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument) throws {
         try impl.save(document.impl as! CBLMutableDocument)
+        if (document.collection == nil) {
+            document.collection = self
+        }
     }
     
     /// Save a document into the collection with a specified concurrency control. When specifying
@@ -130,6 +133,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 return false
             }
             throw err
+        }
+        if (document.collection == nil) {
+            document.collection = self
         }
         return result
     }
@@ -158,6 +164,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 return false
             }
             throw err
+        }
+        if (document.collection == nil) {
+            document.collection = self
         }
         return result
     }
