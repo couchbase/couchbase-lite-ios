@@ -40,6 +40,8 @@ class CBLTestCase: XCTestCase {
     
     let otherDatabaseName = "otherdb"
     
+    let expTimeout: TimeInterval = 20.0
+    
     var defaultCollection: Collection?
     
     var otherDB_defaultCollection: Collection?
@@ -95,6 +97,7 @@ class CBLTestCase: XCTestCase {
         self.otherDB_defaultCollection = nil
         try! db.close()
         try! otherDB?.close()
+        
         super.tearDown()
     }
     

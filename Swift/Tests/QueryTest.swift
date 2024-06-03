@@ -1833,10 +1833,10 @@ class QueryTest: CBLTestCase {
             }
         }
         
-        wait(for: [x1], timeout: 2.0)
+        wait(for: [x1], timeout: expTimeout)
         try! self.createDoc(numbered: -1, of: 100)
         
-        wait(for: [x2], timeout: 2.0)
+        wait(for: [x2], timeout: expTimeout)
         query.removeChangeListener(withToken: token)
     }
     

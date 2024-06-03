@@ -560,7 +560,7 @@ class CollectionTest: CBLTestCase {
         try createDocNumbered(colA, start: 0, num: 10)
         try createDocNumbered(colB, start: 0, num: 10)
         
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
         changeListenerFired = 0
         token1.remove()
         token2.remove()
@@ -585,7 +585,7 @@ class CollectionTest: CBLTestCase {
             
             try createDocNumbered(colA, start: 0, num: 1)
             
-            waitForExpectations(timeout: 10.0)
+            waitForExpectations(timeout: expTimeout)
         }
     }
     
@@ -663,7 +663,7 @@ class CollectionTest: CBLTestCase {
         
         try createDocNumbered(colB, start: 0, num: 10)
         
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
         changeListenerFired = 0;
         token1.remove()
         token2.remove()
@@ -693,7 +693,7 @@ class CollectionTest: CBLTestCase {
             doc.setString("str", forKey: "key")
             try colA.save(document: doc)
             
-            waitForExpectations(timeout: 10.0)
+            waitForExpectations(timeout: expTimeout)
         }
     }
     
@@ -940,7 +940,7 @@ class CollectionTest: CBLTestCase {
         try collection.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove();
