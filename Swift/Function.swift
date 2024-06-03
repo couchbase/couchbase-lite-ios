@@ -45,7 +45,6 @@ public final class Function {
         } else {
             return QueryExpression(CBLQueryFunction.count(Expression.property("*").toImpl()))
         }
-        
     }
     
     /// Create a MIN(expr) function expression that returns the minimum value
