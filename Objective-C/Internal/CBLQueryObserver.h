@@ -29,8 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryObserver : NSObject
 
-- (instancetype) init NS_UNAVAILABLE; 
-
 /** Initialize with a Query. */
 - (instancetype) initWithQuery: (CBLQuery*)query
                    columnNames: (NSDictionary*)columnNames
@@ -41,6 +39,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Stops and frees the observer */
 - (void) stop;
+
+- (instancetype) init NS_UNAVAILABLE;
+
+#ifdef DEBUG
++ (void) setC4QueryObserverCallbackDelayInterval: (NSTimeInterval)delay;
+#endif
 
 @end
 
