@@ -1280,9 +1280,9 @@ class QueryTest: CBLTestCase {
     
     func testCompareWithUnicodeCollation() throws {
         let bothSensitive = Collation.unicode()
-        let accentSensitive = Collation.unicode().ignoreCase(true)
-        let caseSensitive = Collation.unicode().ignoreAccents(true)
-        let noSensitive = Collation.unicode().ignoreCase(true).ignoreCase(true)
+        let caseInsensitive = Collation.unicode().ignoreCase(true)
+        let accentInsensitive = Collation.unicode().ignoreAccents(true)
+        let noSensitive = Collation.unicode().ignoreCase(true).ignoreAccents(true)
         
         let testCases = [
             // Edge cases: empty and 1-char strings:
@@ -1297,30 +1297,30 @@ class QueryTest: CBLTestCase {
             ("abc", "abC", false, bothSensitive),
             ("AB", "abc", false, bothSensitive),
             
-            // Case insenstive:
-            ("ABCDEF", "ZYXWVU", false, accentSensitive),
-            ("ABCDEF", "Z", false, accentSensitive),
+            // Case insensitive:
+            ("ABCDEF", "ZYXWVU", false, caseInsensitive),
+            ("ABCDEF", "Z", false, caseInsensitive),
             
-            ("a", "A", true, accentSensitive),
-            ("abc", "ABC", true, accentSensitive),
-            ("ABA", "abc", false, accentSensitive),
+            ("a", "A", true, caseInsensitive),
+            ("abc", "ABC", true, caseInsensitive),
+            ("ABA", "abc", false, caseInsensitive),
             
-            ("commonprefix1", "commonprefix2", false, accentSensitive),
-            ("commonPrefix1", "commonprefix2", false, accentSensitive),
+            ("commonprefix1", "commonprefix2", false, caseInsensitive),
+            ("commonPrefix1", "commonprefix2", false, caseInsensitive),
             
-            ("abcdef", "abcdefghijklm", false, accentSensitive),
-            ("abcdeF", "abcdefghijklm", false, accentSensitive),
+            ("abcdef", "abcdefghijklm", false, caseInsensitive),
+            ("abcdeF", "abcdefghijklm", false, caseInsensitive),
             
             // Now bring in non-ASCII characters:
-            ("a", "á", false, accentSensitive),
-            ("", "á", false, accentSensitive),
-            ("á", "á", true, accentSensitive),
-            ("•a", "•A", true, accentSensitive),
+            ("a", "á", false, caseInsensitive),
+            ("", "á", false, caseInsensitive),
+            ("á", "á", true, caseInsensitive),
+            ("•a", "•A", true, caseInsensitive),
             
-            ("test a", "test á", false, accentSensitive),
-            ("test á", "test b", false, accentSensitive),
-            ("test á", "test Á", true, accentSensitive),
-            ("test á1", "test Á2", false, accentSensitive),
+            ("test a", "test á", false, caseInsensitive),
+            ("test á", "test b", false, caseInsensitive),
+            ("test á", "test Á", true, caseInsensitive),
+            ("test á1", "test Á2", false, caseInsensitive),
             
             // Case sensitive, diacritic sensitive:
             ("ABCDEF", "ZYXWVU", false, bothSensitive),
@@ -1338,15 +1338,65 @@ class QueryTest: CBLTestCase {
             ("test u", "test Ü", false, bothSensitive),
             
             // Case sensitive, diacritic insensitive
-            ("abc", "ABC", false, caseSensitive),
-            ("test á", "test a", true, caseSensitive),
-            ("test á", "test A", false, caseSensitive),
-            ("test á", "test b", false, caseSensitive),
-            ("test á", "test Á", false, caseSensitive),
+            ("abc", "ABC", false, accentInsensitive),
+            ("test á", "test a", true, accentInsensitive),
+            ("test á", "test A", false, accentInsensitive),
+            ("test á", "test b", false, accentInsensitive),
+            ("test á", "test Á", false, accentInsensitive),
             
             // Case and diacritic insensitive
             ("test á", "test Á", true, noSensitive)
         ]
+        
+        for data in testCases {
+            let doc = createDocument()
+            doc.setValue(data.0, forKey: "value")
+            try saveDocument(doc)
+            
+            let VALUE = Expression.property("value")
+            let comparison = data.2 ?
+                VALUE.collate(data.3).equalTo(Expression.string(data.1)) :
+                VALUE.collate(data.3).lessThan(Expression.string(data.1))
+            
+            let q = QueryBuilder.select().from(DataSource.collection(defaultCollection!)).where(comparison)
+            let numRow = try verifyQuery(q, block: { (n, r) in })
+            XCTAssertEqual(numRow, 1)
+            
+            try defaultCollection!.delete(document: doc)
+        }
+    }
+    
+    func testCompareWithASCIICollation() throws {
+        let ascii = Collation.ascii()
+        let caseInsensitive = Collation.ascii().ignoreCase(true)
+        
+        let testCases = [
+            // Edge cases: empty and 1-char strings:
+            ("", "", true, ascii),
+            ("", "a", false, ascii),
+            ("a", "a", true, ascii),
+            
+            // Case sensitive:
+            ("A", "a", false, ascii),
+            ("abc", "abc", true, ascii),
+            ("Aaa", "abc", false, ascii),
+            ("abC", "abc", false, ascii),
+            ("AB", "abc", false, ascii),
+            
+            
+            // Case insenstive:
+            ("ABCDEF", "ZYXWVU", false, caseInsensitive),
+            ("ABCDEF", "Z", false, caseInsensitive),
+            ("a", "A", true, caseInsensitive),
+            ("ABC", "abc", true, caseInsensitive),
+            ("ABA", "abc", false, caseInsensitive),
+            
+            ("commonprefix1", "commonprefix2", false, caseInsensitive),
+            ("commonPrefix1", "commonprefix2", false, caseInsensitive),
+            
+            ("abcdef", "abcdefghijklm", false, caseInsensitive),
+            ("abcdeF", "abcdefghijklm", false, caseInsensitive),
+            ]
         
         for data in testCases {
             let doc = createDocument()

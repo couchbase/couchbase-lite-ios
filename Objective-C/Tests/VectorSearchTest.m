@@ -1612,4 +1612,35 @@
     }];
 }
 
+
+/*
+ Private methods tests
+ */
+
+- (void) testIsEqual {
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    Assert([config.encoding isEqual: [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ8]]);
+}
+
+- (void) testHash {
+    CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
+                                                                                       dimensions: 300
+                                                                                        centroids: 20];
+    /* 
+     type = 3 (SQ)
+     bits = 8
+    */
+    AssertEqual(config.encoding.hash, 32682);
+    
+    config.encoding = [CBLVectorEncoding productQuantizerWithSubquantizers: 5 bits: 4];
+    /*
+     type = 2 (PQ)
+     pq_subquantizers = 5
+     bits = 4
+    */
+    AssertEqual(config.encoding.hash, 31872);
+}
+
 @end
