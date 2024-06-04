@@ -40,11 +40,7 @@ public final class Function {
     /// - Parameter expression: The expression.
     /// - Returns: The COUNT(expr) function.
     public static func count(_ expression: ExpressionProtocol? = nil) -> ExpressionProtocol {
-        if let expression = expression {
-            return QueryExpression(CBLQueryFunction.count(expression.toImpl()))
-        } else {
-            return QueryExpression(CBLQueryFunction.count(Expression.property("*").toImpl()))
-        }
+        return QueryExpression(CBLQueryFunction.count(expression != nil ? expression.toImpl() : nil))
     }
     
     /// Create a MIN(expr) function expression that returns the minimum value

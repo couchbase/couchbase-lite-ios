@@ -32,7 +32,7 @@
                                                     params: @[expression]];
 }
 
-+ (CBLQueryExpression*) count: (CBLQueryExpression*)expression {
++ (CBLQueryExpression*) count: (nullable CBLQueryExpression*)expression {
     if (expression == nil) {
         expression = [CBLQueryExpression all];
     }
