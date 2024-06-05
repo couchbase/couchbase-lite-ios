@@ -124,8 +124,7 @@ class DocumentTest: CBLTestCase {
                                                "state": "CA"],
                                    "phones": ["650-123-0001", "650-123-0002"]]
         
-        let doc = createDocument("doc1")
-        doc.setData(dict)
+        let doc = createDocument(data: dict)
         XCTAssertTrue(doc.toDictionary() == dict)
         try saveDocument(doc)
         
@@ -211,16 +210,16 @@ class DocumentTest: CBLTestCase {
     
     func testSetString() throws {
         var doc = createDocument("doc1")
-        doc.setValue("string1", forKey: "string1")
-        doc.setValue("string2", forKey: "string2")
+        doc.setString("string1", forKey: "string1")
+        doc.setString("string2", forKey: "string2")
         try saveDocument(doc) { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "string1")
             XCTAssertEqual(d.string(forKey: "string2"), "string2")
         }
         
         // Update:
-        doc.setValue("string1a", forKey: "string1")
-        doc.setValue("string2a", forKey: "string2")
+        doc.setString("string1a", forKey: "string1")
+        doc.setString("string2a", forKey: "string2")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "string1a")
             XCTAssertEqual(d.string(forKey: "string2"), "string2a")
@@ -228,8 +227,8 @@ class DocumentTest: CBLTestCase {
         
         // Get and update:
         doc = try defaultCollection!.document(id: doc.id)!.toMutable()
-        doc.setValue("string1b", forKey: "string1")
-        doc.setValue("string2b", forKey: "string2")
+        doc.setString("string1b", forKey: "string1")
+        doc.setString("string2b", forKey: "string2")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "string1b")
             XCTAssertEqual(d.string(forKey: "string2"), "string2b")
@@ -258,11 +257,11 @@ class DocumentTest: CBLTestCase {
     
     func testSetNumber() throws {
         var doc = createDocument("doc1")
-        doc.setValue(1, forKey: "number1")
-        doc.setValue(0, forKey: "number2")
-        doc.setValue(-1, forKey: "number3")
-        doc.setValue(1.1, forKey: "number4")
-        doc.setValue(12345678, forKey: "number5")
+        doc.setNumber(1, forKey: "number1")
+        doc.setNumber(0, forKey: "number2")
+        doc.setNumber(-1, forKey: "number3")
+        doc.setNumber(1.1, forKey: "number4")
+        doc.setNumber(12345678, forKey: "number5")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 1)
             XCTAssertEqual(doc.int(forKey: "number2"), 0)
@@ -273,11 +272,11 @@ class DocumentTest: CBLTestCase {
         })
         
         // Update:
-        doc.setValue(0, forKey: "number1")
-        doc.setValue(1, forKey: "number2")
-        doc.setValue(1.1, forKey: "number3")
-        doc.setValue(-1, forKey: "number4")
-        doc.setValue(-12345678, forKey: "number5")
+        doc.setNumber(0, forKey: "number1")
+        doc.setNumber(1, forKey: "number2")
+        doc.setNumber(1.1, forKey: "number3")
+        doc.setNumber(-1, forKey: "number4")
+        doc.setNumber(-12345678, forKey: "number5")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 0)
             XCTAssertEqual(doc.int(forKey: "number2"), 1)
@@ -289,11 +288,11 @@ class DocumentTest: CBLTestCase {
         
         // Get and update:
         doc = try defaultCollection!.document(id: doc.id)!.toMutable()
-        doc.setValue(1, forKey: "number1")
-        doc.setValue(0, forKey: "number2")
-        doc.setValue(2.1, forKey: "number3")
-        doc.setValue(-2, forKey: "number4")
-        doc.setValue(-123456789, forKey: "number5")
+        doc.setNumber(1, forKey: "number1")
+        doc.setNumber(0, forKey: "number2")
+        doc.setNumber(2.1, forKey: "number3")
+        doc.setNumber(-2, forKey: "number4")
+        doc.setNumber(-123456789, forKey: "number5")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 1)
             XCTAssertEqual(doc.int(forKey: "number2"), 0)
@@ -366,14 +365,14 @@ class DocumentTest: CBLTestCase {
     
     func testSetGetMinMaxNumbers() throws {
         let doc = createDocument("doc1")
-        doc.setValue(Int.min, forKey: "min_int")
-        doc.setValue(Int.max, forKey: "max_int")
-        doc.setValue(Int64.min, forKey: "min_int64")
-        doc.setValue(Int64.max, forKey: "max_int64")
-        doc.setValue(Float.leastNormalMagnitude, forKey: "min_float")
-        doc.setValue(Float.greatestFiniteMagnitude, forKey: "max_float")
-        doc.setValue(Double.leastNormalMagnitude, forKey: "min_double")
-        doc.setValue(Double.greatestFiniteMagnitude, forKey: "max_double")
+        doc.setInt(Int.min, forKey: "min_int")
+        doc.setInt(Int.max, forKey: "max_int")
+        doc.setInt64(Int64.min, forKey: "min_int64")
+        doc.setInt64(Int64.max, forKey: "max_int64")
+        doc.setFloat(Float.leastNormalMagnitude, forKey: "min_float")
+        doc.setFloat(Float.greatestFiniteMagnitude, forKey: "max_float")
+        doc.setDouble(Double.leastNormalMagnitude, forKey: "min_double")
+        doc.setDouble(Double.greatestFiniteMagnitude, forKey: "max_double")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.int(forKey: "min_int"), Int.min);
@@ -400,47 +399,42 @@ class DocumentTest: CBLTestCase {
     
     func testSetGetFloatNumbers() throws {
         let doc = createDocument("doc1")
-        doc.setValue(1.00, forKey: "number1")
-        doc.setValue(1.49, forKey: "number2")
-        doc.setValue(1.50, forKey: "number3")
-        doc.setValue(1.51, forKey: "number4")
-        doc.setValue(1.99, forKey: "number5")
+        doc.setFloat(1.00, forKey: "number1")
+        doc.setFloat(1.49, forKey: "number2")
+        doc.setFloat(1.50, forKey: "number3")
+        doc.setFloat(1.51, forKey: "number4")
+        doc.setFloat(1.99, forKey: "number5")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.int(forKey: "number1"), 1);
             XCTAssertEqual(d.float(forKey: "number1"), 1.00);
-            XCTAssertEqual(d.double(forKey: "number1"), 1.00);
             
             XCTAssertEqual(d.int(forKey: "number2"), 1);
             XCTAssertEqual(d.float(forKey: "number2"), 1.49);
-            XCTAssertEqual(d.double(forKey: "number2"), 1.49);
             
             XCTAssertEqual(d.int(forKey: "number3"), 1);
             XCTAssertEqual(d.float(forKey: "number3"), 1.50);
-            XCTAssertEqual(d.double(forKey: "number3"), 1.50);
             
             XCTAssertEqual(d.int(forKey: "number4"), 1);
             XCTAssertEqual(d.float(forKey: "number4"), 1.51);
-            XCTAssertEqual(d.double(forKey: "number4"), 1.51);
             
             XCTAssertEqual(d.int(forKey: "number5"), 1);
             XCTAssertEqual(d.float(forKey: "number5"), 1.99);
-            XCTAssertEqual(d.double(forKey: "number5"), 1.99);
         })
     }
     
     func testSetBoolean() throws {
         var doc = createDocument("doc1")
-        doc.setValue(true, forKey: "boolean1")
-        doc.setValue(false, forKey: "boolean2")
+        doc.setBoolean(true, forKey: "boolean1")
+        doc.setBoolean(false, forKey: "boolean2")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), true);
             XCTAssertEqual(d.boolean(forKey: "boolean2"), false);
         })
         
         // Update:
-        doc.setValue(false, forKey: "boolean1")
-        doc.setValue(true, forKey: "boolean2")
+        doc.setBoolean(false, forKey: "boolean1")
+        doc.setBoolean(true, forKey: "boolean2")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), false);
             XCTAssertEqual(d.boolean(forKey: "boolean2"), true);
@@ -448,8 +442,8 @@ class DocumentTest: CBLTestCase {
         
         // Get and update:
         doc = try defaultCollection!.document(id: doc.id)!.toMutable()
-        doc.setValue(true, forKey: "boolean1")
-        doc.setValue(false, forKey: "boolean2")
+        doc.setBoolean(true, forKey: "boolean1")
+        doc.setBoolean(false, forKey: "boolean2")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), true);
             XCTAssertEqual(d.boolean(forKey: "boolean2"), false);
@@ -481,7 +475,7 @@ class DocumentTest: CBLTestCase {
         let date = Date()
         let dateStr = jsonFromDate(date)
         XCTAssertTrue(dateStr.count > 0)
-        doc.setValue(date, forKey: "date")
+        doc.setDate(date, forKey: "date")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "date") as! String, dateStr);
             XCTAssertEqual(d.string(forKey: "date"), dateStr);
@@ -491,7 +485,7 @@ class DocumentTest: CBLTestCase {
         // Update:
         var nuDate = Date(timeInterval: 60.0, since: date)
         var nuDateStr = jsonFromDate(nuDate)
-        doc.setValue(nuDate, forKey: "date")
+        doc.setDate(nuDate, forKey: "date")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "date") as! String, nuDateStr);
             XCTAssertEqual(d.string(forKey: "date"), nuDateStr);
@@ -534,7 +528,7 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
-        doc.setValue(blob, forKey: "blob")
+        doc.setBlob(blob, forKey: "blob")
         try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == blob.properties)
             XCTAssertEqual(d.blob(forKey: "blob")!.content, content)
@@ -543,7 +537,7 @@ class DocumentTest: CBLTestCase {
         // Update:
         var nuContent = "1234567890".data(using: .utf8)!
         var nuBlob = Blob(contentType: "text/plain", data: nuContent)
-        doc.setValue(nuBlob, forKey: "blob")
+        doc.setBlob(nuBlob, forKey: "blob")
         try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == nuBlob.properties)
             XCTAssertEqual(d.blob(forKey: "blob")!.content, nuContent)
@@ -553,7 +547,7 @@ class DocumentTest: CBLTestCase {
         doc = try defaultCollection!.document(id: doc.id)!.toMutable()
         nuContent = "abcdefg".data(using: .utf8)!
         nuBlob = Blob(contentType: "text/plain", data: nuContent)
-        doc.setValue(nuBlob, forKey: "blob")
+        doc.setBlob(nuBlob, forKey: "blob")
         try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == nuBlob.properties)
             XCTAssertEqual(d.blob(forKey: "blob")!.content, nuContent)
@@ -584,7 +578,7 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         var dict = MutableDictionaryObject()
         dict.setValue("1 Main street", forKey: "street")
-        doc.setValue(dict, forKey: "dict")
+        doc.setDictionary(dict, forKey: "dict")
         XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === dict)
         try saveDocument(doc, eval: { (d) in
             let savedDict = doc.value(forKey: "dict") as! DictionaryObject
@@ -660,7 +654,7 @@ class DocumentTest: CBLTestCase {
         array.addValue("item1")
         array.addValue("item2")
         array.addValue("item3")
-        doc.setValue(array, forKey: "array")
+        doc.setArray(array, forKey: "array")
         XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === array)
         XCTAssertTrue(doc.array(forKey: "array")! === array)
         try saveDocument(doc, eval: { (d) in

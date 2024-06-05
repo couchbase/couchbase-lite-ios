@@ -23,6 +23,8 @@ import CouchbaseLiteSwift
 
 class DictionaryTest: CBLTestCase {
     
+    let kTestDate = "2017-01-01T00:00:00.000Z"
+    
     func testCreateDictionary() throws {
         let address = MutableDictionaryObject()
         XCTAssertEqual(address.count, 0)
@@ -75,20 +77,66 @@ class DictionaryTest: CBLTestCase {
         })
     }
     
+    func testSettersDictionary() throws {
+        let dict = MutableDictionaryObject()
+        dict.setValue("value", forKey: "key")
+        XCTAssertEqual("value", dict.value(forKey: "key") as! String);
+        
+        dict.setValue(2, forKey: "key")
+        XCTAssertEqual(2, dict.value(forKey: "key") as! Int64);
+        
+        dict.setString("string", forKey: "key")
+        XCTAssertEqual("string", dict.string(forKey: "key"));
+        
+        dict.setNumber(2, forKey: "key")
+        XCTAssertEqual(2, dict.number(forKey: "key"));
+        
+        dict.setInt(2, forKey: "key")
+        XCTAssertEqual(2, dict.int(forKey: "key"));
+        
+        dict.setInt64(Int64("2")!, forKey: "key")
+        XCTAssertEqual(2, dict.int64(forKey: "key"));
+        
+        let double = Double.random(in: -1.0...1.0)
+        dict.setDouble(double, forKey: "key")
+        XCTAssertEqual(double, dict.double(forKey: "key"));
+        
+        let float = Float.random(in: -1.0...1.0)
+        dict.setFloat(float , forKey: "key")
+        XCTAssertEqual(float, dict.float(forKey: "key"));
+        
+        dict.setBoolean(true, forKey: "key")
+        XCTAssertEqual(true, dict.boolean(forKey: "key"));
+        
+        dict.setDate(dateFromJson(kTestDate), forKey: "key")
+        XCTAssertEqual(dateFromJson(kTestDate), dict.date(forKey: "key"));
+        
+        let data1 = "data1".data(using: String.Encoding.utf8)!
+        let blob = Blob.init(contentType: "text/plain", data: data1)
+        dict.setBlob(blob, forKey: "key")
+        XCTAssertEqual(blob, dict.blob(forKey: "key"));
+        
+        let array = MutableArrayObject()
+        array.addString("a1")
+        array.addDictionary(MutableDictionaryObject(data: ["name": "n1"]))
+        dict.setArray(array, forKey: "key")
+        XCTAssertEqual(array, dict.array(forKey: "key"));
+    }
+    
     func testSetNestedDictionaries() throws {
         let doc = createDocument("doc1")
         
         let level1 = MutableDictionaryObject()
         level1.setValue("n1", forKey: "name")
-        doc.setValue(level1, forKey: "level1")
+        doc.setDictionary(level1, forKey: "level1")
         
         let level2 = MutableDictionaryObject()
         level2.setValue("n2", forKey: "name")
-        level1.setValue(level2, forKey: "level2")
+        level1.setDictionary(level2, forKey: "level2")
         
         let level3 = MutableDictionaryObject()
         level3.setValue("n3", forKey: "name")
-        level2.setValue(level3, forKey: "level3")
+        level2.setDictionary(level3, forKey: "level3")
         
         XCTAssert(doc.dictionary(forKey: "level1")! === level1)
         XCTAssert(level1.dictionary(forKey: "level2")! === level2)

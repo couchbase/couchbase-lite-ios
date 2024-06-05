@@ -152,6 +152,10 @@ class CBLTestCase: XCTestCase {
         return MutableDocument(id: id)
     }
     
+    func createDocument(data: [String:Any]) -> MutableDocument {
+        return MutableDocument(data: data)
+    }
+    
     func createDocument(_ id: String?, data: [String:Any]) -> MutableDocument {
         return MutableDocument(id: id, data: data)
     }
