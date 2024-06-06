@@ -20,6 +20,7 @@
 #import <CouchbaseLite/CBLCollectionChangeObservable.h>
 #import <CouchbaseLite/CBLIndexable.h>
 #import <CouchbaseLite/CBLCollectionTypes.h>
+#import <CouchbaseLite/CBLQueryIndex.h>
 
 @class CBLDatabase;
 @class CBLDocument;
@@ -267,6 +268,15 @@ extern NSString* const kCBLDefaultCollectionName;
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)documentID
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener;
+
+
+/**
+ Get a query index object by name.
+
+ @param name The index name
+ @return QueryIndex object if index exists. If not, it will return nil
+ */
+- (nullable CBLQueryIndex*) getIndex: (NSString*)name error: (NSError**)error;
 
 #pragma mark -
 
