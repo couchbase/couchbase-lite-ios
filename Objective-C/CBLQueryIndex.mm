@@ -17,9 +17,9 @@
 //  limitations under the License.
 //
 
-#import "CouchbaseLite/CBLDatabase+Internal.h"
-#import "CouchbaseLite/CBLQueryIndex+Internal.h"
-#import "CouchbaseLite/CBLIndexUpdater+Internal.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLQueryIndex+Internal.h"
+#import "CBLIndexUpdater+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 
@@ -71,7 +71,5 @@
 - (id) mutex {
     return _mutex;
 }
-
-
 
 @end

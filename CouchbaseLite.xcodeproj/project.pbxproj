@@ -1762,6 +1762,8 @@
 		AECD5A012C0E137200B1247E /* CBLQueryIndex+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AECD59F92C0E137200B1247E /* CBLQueryIndex+Internal.h */; };
 		AECD5A162C0E21D900B1247E /* CBLIndexUpdater+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */; };
 		AECD5A172C0E21D900B1247E /* CBLIndexUpdater+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */; };
+		AECD5A512C125D4800B1247E /* CBLQueryIndex.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D07B2C06242F0055D2CF /* CBLQueryIndex.mm */; };
+		AECD5A522C125D4800B1247E /* CBLQueryIndex.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D07B2C06242F0055D2CF /* CBLQueryIndex.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -5455,6 +5457,7 @@
 		9398D9091E03434200464432 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = NO;
 				CLASSPREFIX = CBL;
 				LastSwiftUpdateCheck = 1010;
 				LastUpgradeCheck = 1020;
@@ -6072,6 +6075,7 @@
 				93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */,
 				9322DCF51F14654E00C4ACF7 /* Limit.swift in Sources */,
 				938E38841F3A5BB4006806C7 /* CBLQueryCollation.m in Sources */,
+				AECD5A522C125D4800B1247E /* CBLQueryIndex.mm in Sources */,
 				9384D80C1FC3F75700FE89D8 /* CBLQueryArrayFunction.m in Sources */,
 				93AF51C41E80A6FC00E200F0 /* CBLQueryOrdering.m in Sources */,
 				93DB7FEF1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m in Sources */,
@@ -6917,6 +6921,7 @@
 				934F4C2A1E1EF19000F90659 /* MYErrorUtils.m in Sources */,
 				1AEF05A32833900800D5DDEA /* CBLScope.mm in Sources */,
 				93EC42CD1FB3801E00D54BB4 /* CBLFullTextIndex.m in Sources */,
+				AECD5A512C125D4800B1247E /* CBLQueryIndex.mm in Sources */,
 				93DB7FEE1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m in Sources */,
 				934F4C2C1E1EF19000F90659 /* MYLogging.m in Sources */,
 				93EC42E81FB3930E00D54BB4 /* CBLQueryArrayExpression.m in Sources */,

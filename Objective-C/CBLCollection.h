@@ -20,7 +20,6 @@
 #import <CouchbaseLite/CBLCollectionChangeObservable.h>
 #import <CouchbaseLite/CBLIndexable.h>
 #import <CouchbaseLite/CBLCollectionTypes.h>
-#import <CouchbaseLite/CBLQueryIndex.h>
 
 @class CBLDatabase;
 @class CBLDocument;
@@ -28,6 +27,7 @@
 @class CBLDocumentFragment;
 @class CBLMutableDocument;
 @class CBLScope;
+@class CBLQueryIndex;
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN

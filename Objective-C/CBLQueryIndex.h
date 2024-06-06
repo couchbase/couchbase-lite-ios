@@ -19,7 +19,10 @@
 
 #import <Foundation/Foundation.h>
 #import <CouchbaseLite/CBLCollection.h>
+
+#ifdef COUCHBASE_ENTERPRISE
 #import <CouchbaseLite/CBLIndexUpdater.h>
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 /**
@@ -38,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (readonly, nonatomic) NSString* name;
 
+#ifdef COUCHBASE_ENTERPRISE
 /**
  ENTERPRISE EDITION ONLY
 
@@ -56,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit
                                  error:(NSError**) error;
+#endif
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
