@@ -28,8 +28,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryIndex : NSObject
 
+/**
+ The collection object.
+ */
 @property (readonly, nonatomic) CBLCollection* collection;
 
+/**
+ The index name.
+ */
 @property (readonly, nonatomic) NSString* name;
 
 /**
@@ -41,8 +47,11 @@ NS_ASSUME_NONNULL_BEGIN
  The limit parameter is for setting the max number of vectors to be computed.
  
  If index is up-to-date, null will be returned.
-
  If the index is not lazy, a CouchbaseLiteException will be thrown.
+ 
+ @param limit The limit per update..
+ @param error On return, the error if any.
+ @return IndexUpdater object if there are updates to be done. If not, it will return nil.
  */
 
 - (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit

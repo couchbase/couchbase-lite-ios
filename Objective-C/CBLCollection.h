@@ -273,10 +273,12 @@ extern NSString* const kCBLDefaultCollectionName;
 /**
  Get a query index object by name.
 
- @param name The index name
- @return QueryIndex object if index exists. If not, it will return nil
+ @param name The index name.
+ @param error On return, the error if any.
+ @return QueryIndex object if index exists. If not, it will return nil.
  */
-- (nullable CBLQueryIndex*) getIndex: (NSString*)name error: (NSError**)error;
+- (nullable CBLQueryIndex*) getIndex: (NSString*)name 
+                               error: (NSError**)error;
 
 #pragma mark -
 
