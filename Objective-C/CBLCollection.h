@@ -174,7 +174,7 @@ extern NSString* const kCBLDefaultCollectionName;
  
  @param document The document.
  @param error On return, the error if any.
- @return /True on success, false on failure.
+ @return True on success, false on failure.
  */
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 
@@ -275,10 +275,10 @@ extern NSString* const kCBLDefaultCollectionName;
 
  @param name The index name.
  @param error On return, the error if any.
- @return QueryIndex object if index exists. If not, it will return nil.
+ @return CBLQueryIndex object if index exists. If not, it will return nil.
  */
-- (nullable CBLQueryIndex*) getIndex: (NSString*)name 
-                               error: (NSError**)error;
+- (nullable CBLQueryIndex*) indexWithName: (NSString*)name
+                                    error: (nullable NSError*)error;
 
 #pragma mark -
 

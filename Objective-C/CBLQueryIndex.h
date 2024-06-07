@@ -26,7 +26,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 /**
- QueryIndex object represents an existing index in the collection.
+ QueryIndex object representing an existing index in the collection.
  */
 
 @interface CBLQueryIndex : NSObject
@@ -50,16 +50,15 @@ NS_ASSUME_NONNULL_BEGIN
  return an IndexUpdater object used for setting the computed vectors for updating the index.
  The limit parameter is for setting the max number of vectors to be computed.
  
- If index is up-to-date, null will be returned.
- If the index is not lazy, a CouchbaseLiteException will be thrown.
+ If index is up-to-date, nil will be returned.
+ If the index is not lazy, an error will be returned.
  
  @param limit The limit per update..
  @param error On return, the error if any.
- @return IndexUpdater object if there are updates to be done. If not, it will return nil.
+ @return CBLIndexUpdater object if there are updates to be done, or nil if the index is up-to-date or if an error occurred.
  */
-
-- (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit
-                                 error:(NSError**) error;
+- (nullable CBLIndexUpdater*) beginUpdate: (uint64_t) limit
+                                    error: (NSError*) error;
 #endif
 
 /** Not available */

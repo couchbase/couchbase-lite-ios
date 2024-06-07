@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id) mutex;
 
-- (instancetype) initWithIndex: (C4Index*) index
+- (instancetype) initWithC4Index: (C4Index*) c4index
                           name: (NSString*) name
                     collection: (CBLCollection*) collection;
 @end

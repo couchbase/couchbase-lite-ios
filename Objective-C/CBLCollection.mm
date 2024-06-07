@@ -952,29 +952,26 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
     return result;
 }
 
-- (nullable CBLQueryIndex*) getIndex:(nonnull NSString*)name error: (NSError**)error {
+- (nullable CBLQueryIndex*) indexWithName: (nonnull NSString*)name
+                                    error: (NSError*)error {
     CBLAssertNotNil(name);
     
     CBL_LOCK(_mutex) {
-        if (![self checkIsValid: error])
+        if (![self checkIsValid: &error])
             return nil;
         
-        C4Error* c4err = {};
+        C4Error c4err = {};
         CBLStringBytes iName(name);
         
-        C4Index* c4index = c4coll_getIndex(_c4col, iName, c4err);
-        if (c4err) {
-            convertError(*c4err, error);
+        C4Index* c4index = c4coll_getIndex(_c4col, iName, &c4err);
+        if (!c4index) {
+            if (c4err.code != 0){
+                convertError(c4err, &error);
+            }
             return nil;
         }
-        
-        if(c4index){
-            CBLQueryIndex* index = [[CBLQueryIndex alloc] initWithIndex:c4index name:name collection:self];
-            c4index_release(c4index);
-            return index;
-        } else{
-            return nil;
-        }
+
+        return [[CBLQueryIndex alloc] initWithC4Index: c4index name: name collection: self];
     }
 }
 

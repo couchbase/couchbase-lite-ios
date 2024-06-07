@@ -28,41 +28,45 @@
     id _mutex;
 }
 
-@synthesize collection = _collection, name = _name, c4index=_c4index;
+@synthesize collection = _collection, name = _name, c4index = _c4index;
 
-- (instancetype) initWithIndex: (C4Index*) index
+- (instancetype) initWithC4Index: (C4Index*) c4index
                           name: (NSString*) name
                     collection: (CBLCollection*) collection {
     self = [super init];
     if (self) {
-        _c4index = index;
+        _c4index = c4index;
+        c4index_retain(_c4index);
+        
         _collection = collection;
+        // grab name from c4index
         _name = name;
         _mutex = _collection.database.mutex;
     }
     return self;
 }
 
+- (void) dealloc {
+    c4index_release(_c4index);
+}
+
 #ifdef COUCHBASE_ENTERPRISE
 
-- (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit error:(NSError**) error {
-    // need to check for lazy
-    
+- (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit 
+                                    error:(NSError*) error {
     CBL_LOCK(_mutex){
-        C4Error c4err;
+        C4Error c4err = {};
         C4IndexUpdater* _c4updater = c4index_beginUpdate(_c4index, (size_t)limit, &c4err);
         
-        if(c4err) {
-            convertError(c4err, error);
-        }
-
-        if (_c4updater) {
-            CBLIndexUpdater* updater = [[CBLIndexUpdater alloc] initWithUpdater:_c4updater];
-            updater.queryIndex = self;
-            return updater;
-        } else {
+        if(!_c4updater) {
+            if(c4err.code != 0) {
+                convertError(c4err, &error);
+            }
             return nil;
         }
+        
+        return [[CBLIndexUpdater alloc] initWithC4Updater:_c4updater
+                                               queryIndex: self];
     }
 }
 
