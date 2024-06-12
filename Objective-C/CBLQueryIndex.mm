@@ -31,13 +31,12 @@
 @synthesize collection = _collection, name = _name, c4index = _c4index;
 
 - (instancetype) initWithC4Index: (C4Index*) c4index
-                          name: (NSString*) name
-                    collection: (CBLCollection*) collection {
+                            name: (NSString*) name
+                      collection: (CBLCollection*) collection {
     self = [super init];
     if (self) {
         _c4index = c4index;
         c4index_retain(_c4index);
-        
         _collection = collection;
         // grab name from c4index
         _name = name;
