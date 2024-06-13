@@ -19,9 +19,12 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBLQueryIndex+Internal.h"
-#import "CBLIndexUpdater+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
+
+#ifdef COUCHBASE_ENTERPRISE
+#import "CBLIndexUpdater+Internal.h"
+#endif
 
 @implementation CBLQueryIndex {
     // retained database mutex
