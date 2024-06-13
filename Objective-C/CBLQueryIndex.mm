@@ -33,9 +33,9 @@
 
 @synthesize collection = _collection, name = _name, c4index = _c4index;
 
-- (instancetype) initWithC4Index: (C4Index*) c4index
-                            name: (NSString*) name
-                      collection: (CBLCollection*) collection {
+- (instancetype) initWithC4Index: (C4Index*)c4index
+                            name: (NSString*)name
+                      collection: (CBLCollection*)collection {
     self = [super init];
     if (self) {
         _c4index = c4index;
@@ -53,15 +53,15 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-- (nullable CBLIndexUpdater*) beginUpdateWithLimit:(uint64_t) limit 
-                                             error:(NSError*) error {
+- (nullable CBLIndexUpdater*) beginUpdateWithLimit: (uint64_t)limit
+                                             error: (NSError**)error {
     CBL_LOCK(_mutex){
         C4Error c4err = {};
         C4IndexUpdater* _c4updater = c4index_beginUpdate(_c4index, (size_t)limit, &c4err);
         
         if(!_c4updater) {
             if(c4err.code != 0) {
-                convertError(c4err, &error);
+                convertError(c4err, error);
             }
             return nil;
         }

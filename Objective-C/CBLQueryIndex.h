@@ -57,8 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param error On return, the error if any.
  @return CBLIndexUpdater object if there are updates to be done, or nil if the index is up-to-date or if an error occurred.
  */
-- (nullable CBLIndexUpdater*) beginUpdateWithLimit: (uint64_t) limit
-                                             error: (NSError*) error;
+- (nullable CBLIndexUpdater*) beginUpdateWithLimit: (uint64_t)limit
+                                             error: (NSError**)error;
 #endif
 
 /** Not available */
