@@ -53,8 +53,8 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-- (nullable CBLIndexUpdater*) beginUpdate:(uint64_t) limit 
-                                    error:(NSError*) error {
+- (nullable CBLIndexUpdater*) beginUpdateWithLimit:(uint64_t) limit 
+                                             error:(NSError*) error {
     CBL_LOCK(_mutex){
         C4Error c4err = {};
         C4IndexUpdater* _c4updater = c4index_beginUpdate(_c4index, (size_t)limit, &c4err);
