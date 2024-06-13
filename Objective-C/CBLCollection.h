@@ -278,7 +278,7 @@ extern NSString* const kCBLDefaultCollectionName;
  @return CBLQueryIndex object if index exists. If not, it will return nil.
  */
 - (nullable CBLQueryIndex*) indexWithName: (NSString*)name
-                                    error: (nullable NSError*)error;
+                                    error: (NSError**)error;
 
 #pragma mark -
 

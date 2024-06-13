@@ -953,11 +953,11 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
 }
 
 - (nullable CBLQueryIndex*) indexWithName: (nonnull NSString*)name
-                                    error: (NSError*)error {
+                                    error: (NSError**)error {
     CBLAssertNotNil(name);
     
     CBL_LOCK(_mutex) {
-        if (![self checkIsValid: &error])
+        if (![self checkIsValid: error])
             return nil;
         
         C4Error c4err = {};
@@ -966,7 +966,7 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         C4Index* c4index = c4coll_getIndex(_c4col, iName, &c4err);
         if (!c4index) {
             if (c4err.code != 0){
-                convertError(c4err, &error);
+                convertError(c4err, error);
             }
             return nil;
         }

@@ -39,7 +39,6 @@
     self = [super init];
     if (self) {
         _c4index = c4index;
-        c4index_retain(_c4index);
         _collection = collection;
         // grab name from c4index
         _name = name;
