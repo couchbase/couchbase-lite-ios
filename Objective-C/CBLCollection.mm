@@ -31,6 +31,7 @@
 #import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndex+Internal.h"
+#import "CBLQueryIndex+Internal.h"
 #import "CBLScope.h"
 #import "CBLScope+Internal.h"
 #import "CBLStatus.h"
@@ -949,6 +950,29 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
     auto result = FLEncoder_Finish(enc, nullptr);
     FLEncoder_Reset(enc);
     return result;
+}
+
+- (nullable CBLQueryIndex*) indexWithName: (nonnull NSString*)name
+                                    error: (NSError**)error {
+    CBLAssertNotNil(name);
+    
+    CBL_LOCK(_mutex) {
+        if (![self checkIsValid: error])
+            return nil;
+        
+        C4Error c4err = {};
+        CBLStringBytes iName(name);
+        
+        C4Index* c4index = c4coll_getIndex(_c4col, iName, &c4err);
+        if (!c4index) {
+            if (c4err.code != 0){
+                convertError(c4err, error);
+            }
+            return nil;
+        }
+
+        return [[CBLQueryIndex alloc] initWithC4Index: c4index name: name collection: self];
+    }
 }
 
 @end

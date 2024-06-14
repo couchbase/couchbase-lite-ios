@@ -27,6 +27,7 @@
 @class CBLDocumentFragment;
 @class CBLMutableDocument;
 @class CBLScope;
+@class CBLQueryIndex;
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -173,7 +174,7 @@ extern NSString* const kCBLDefaultCollectionName;
  
  @param document The document.
  @param error On return, the error if any.
- @return /True on success, false on failure.
+ @return True on success, false on failure.
  */
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 
@@ -267,6 +268,17 @@ extern NSString* const kCBLDefaultCollectionName;
 - (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)documentID
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener;
+
+
+/**
+ Get a query index object by name.
+
+ @param name The index name.
+ @param error On return, the error if any.
+ @return CBLQueryIndex object if index exists. If not, it will return nil.
+ */
+- (nullable CBLQueryIndex*) indexWithName: (NSString*)name
+                                    error: (NSError**)error;
 
 #pragma mark -
 
