@@ -12,7 +12,7 @@ on:
 
 jobs: 
   build:
-    name: build-and-test
+    name: build
     runs-on: macOS-latest
     strategy:
       matrix:
@@ -31,10 +31,3 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "${PLATFORM},arch=${ARCH}"
-      - name: "Test"
-        env:
-          SCHEME: ${{ matrix.scheme }}
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
-        run: |
-          xcodebuild test-without-building -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "${PLATFORM},arch=${ARCH}"

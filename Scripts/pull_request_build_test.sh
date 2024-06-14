@@ -6,11 +6,11 @@ if [ "$1" = "-enterprise" ]
     cd couchbase-lite-ios
 fi
 
-SCHEMES_MACOS=("CBL_EE_ObjC" "CBL_EE_Swift")
+SCHEMES_MACOS=("CBL_EE_ObjC_Tests" "CBL_EE_Swift_Tests")
 
 for SCHEMES_MACOS in "${SCHEMES_MACOS[@]}"
 do
-  xcodebuild build -project CouchbaseLite.xcodeproj -scheme "$SCHEMES_MACOS" -destination "platform=macOS"
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEMES_MACOS" -destination "platform=macOS"
 done
 
 TEST_SIMULATOR=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}')
