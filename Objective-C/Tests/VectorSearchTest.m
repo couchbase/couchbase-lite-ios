@@ -1656,7 +1656,6 @@
     }];
 }
 
-
 /*
  Private methods tests
  */
@@ -2425,6 +2424,7 @@
     CBLIndexUpdater* indexUpdater = [qIndex beginUpdateWithLimit: 10 error: &error];
     AssertEqual(indexUpdater.count, 10);
     
+    // String getter
     Assert([[indexUpdater stringAtIndex: 0] isEqual: @"a string"]);
     AssertEqual([indexUpdater stringAtIndex: 1], nil);
     AssertEqual([indexUpdater stringAtIndex: 2], nil);
@@ -2436,6 +2436,7 @@
     AssertEqual([indexUpdater stringAtIndex: 8], nil);
     AssertEqual([indexUpdater stringAtIndex: 9], nil);
     
+    // Int getter
     AssertEqual([indexUpdater integerAtIndex: 0], 0);
     AssertEqual([indexUpdater integerAtIndex: 1], 100);
     AssertEqual([indexUpdater integerAtIndex: 2], 20);
@@ -2447,6 +2448,7 @@
     AssertEqual([indexUpdater integerAtIndex: 8], 0);
     AssertEqual([indexUpdater integerAtIndex: 9], 0);
     
+    // Float getter
     AssertEqual([indexUpdater floatAtIndex: 0], 0.0);
     AssertEqual([indexUpdater floatAtIndex: 1], 100.0);
     AssertEqual([indexUpdater floatAtIndex: 2], (float)20.8);
@@ -2458,6 +2460,7 @@
     AssertEqual([indexUpdater floatAtIndex: 8], 0.0);
     AssertEqual([indexUpdater floatAtIndex: 9], 0.0);
     
+    // Double getter
     AssertEqual([indexUpdater doubleAtIndex: 0], 0.0);
     AssertEqual([indexUpdater doubleAtIndex: 1], 100.0);
     AssertEqual([indexUpdater doubleAtIndex: 2], 20.8);
@@ -2469,6 +2472,7 @@
     AssertEqual([indexUpdater doubleAtIndex: 8], 0.0);
     AssertEqual([indexUpdater doubleAtIndex: 9], 0.0);
     
+    // Boolean getter
     AssertEqual([indexUpdater booleanAtIndex: 0], true);
     AssertEqual([indexUpdater booleanAtIndex: 1], true);
     AssertEqual([indexUpdater booleanAtIndex: 2], true);
@@ -2480,6 +2484,7 @@
     AssertEqual([indexUpdater booleanAtIndex: 8], true);
     AssertEqual([indexUpdater booleanAtIndex: 9], false);
     
+    // Date getter
     AssertEqual([indexUpdater dateAtIndex: 0], nil);
     AssertEqual([indexUpdater dateAtIndex: 1], nil);
     AssertEqual([indexUpdater dateAtIndex: 2], nil);
@@ -2491,6 +2496,7 @@
     AssertEqual([indexUpdater dateAtIndex: 8], nil);
     AssertEqual([indexUpdater dateAtIndex: 9], nil);
     
+    // Blob getter
     AssertEqual([indexUpdater blobAtIndex: 0], nil);
     AssertEqual([indexUpdater blobAtIndex: 1], nil);
     AssertEqual([indexUpdater blobAtIndex: 2], nil);
@@ -2502,6 +2508,7 @@
     AssertEqual([indexUpdater blobAtIndex: 8], nil);
     AssertEqual([indexUpdater blobAtIndex: 9], nil);
     
+    // Dict getter
     AssertEqual([indexUpdater dictionaryAtIndex: 0], nil);
     AssertEqual([indexUpdater dictionaryAtIndex: 1], nil);
     AssertEqual([indexUpdater dictionaryAtIndex: 2], nil);
@@ -2513,6 +2520,7 @@
     AssertEqual([indexUpdater dictionaryAtIndex: 8], nil);
     AssertEqual([indexUpdater dictionaryAtIndex: 9], nil);
     
+    // Array getter
     AssertEqual([indexUpdater arrayAtIndex: 0], nil);
     AssertEqual([indexUpdater arrayAtIndex: 1], nil);
     AssertEqual([indexUpdater arrayAtIndex: 2], nil);
@@ -2524,6 +2532,7 @@
     Assert([[indexUpdater arrayAtIndex: 8] isEqual: array]);
     AssertEqual([indexUpdater arrayAtIndex: 9], nil);
     
+    // Value getter
     Assert([[indexUpdater valueAtIndex: 0] isEqual: @"a string"]);
     Assert([[indexUpdater valueAtIndex: 1] isEqual: @(100)]);
     Assert([[indexUpdater valueAtIndex: 2] isEqual: @(20.8)]);
@@ -2861,7 +2870,6 @@
     }
     
     indexUpdater = [qIndex beginUpdateWithLimit: 100 error: &error];
-    NSLog(@"%lu", (unsigned long)indexUpdater.count);
     AssertNil(indexUpdater);
 }
 
@@ -2914,6 +2922,7 @@
         [indexUpdater setVector: vector atIndex: i error: &error];
     }
     
+    // "Release" CBLIndexUpdater
     indexUpdater = nil;
     
     // Query:
@@ -3091,6 +3100,6 @@
     [self expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
         return [indexUpdater finishWithError: err];
     }];
-    
 }
+
 @end
