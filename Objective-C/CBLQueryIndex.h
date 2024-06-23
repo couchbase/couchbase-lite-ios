@@ -25,20 +25,16 @@
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
-/**
- QueryIndex object representing an existing index in the collection.
- */
 
+/**
+ CBLQueryIndex object representing an existing index in the collection.
+ */
 @interface CBLQueryIndex : NSObject
 
-/**
- The collection object.
- */
+/** The collection. */
 @property (readonly, nonatomic) CBLCollection* collection;
 
-/**
- The index name.
- */
+/** The index name. */
 @property (readonly, nonatomic) NSString* name;
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -47,18 +43,18 @@ NS_ASSUME_NONNULL_BEGIN
 
  For updating lazy vector indexes only.
  Finds new or updated documents for which vectors need to be (re)computed and
- return an IndexUpdater object used for setting the computed vectors for updating the index.
+ return a CBLIndexUpdater object used for setting the computed vectors for updating the index.
  The limit parameter is for setting the max number of vectors to be computed.
  
  If index is up-to-date, nil will be returned.
  If the index is not lazy, an error will be returned.
  
- @param limit The limit per update..
+ @param limit The limit per update.
  @param error On return, the error if any.
  @return CBLIndexUpdater object if there are updates to be done, or nil if the index is up-to-date or if an error occurred.
  */
 - (nullable CBLIndexUpdater*) beginUpdateWithLimit: (uint64_t)limit
-                                             error: (NSError**)error;
+                                             error: (NSError**)error NS_SWIFT_NOTHROW;
 #endif
 
 /** Not available */

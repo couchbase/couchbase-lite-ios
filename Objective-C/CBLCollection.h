@@ -269,17 +269,6 @@ extern NSString* const kCBLDefaultCollectionName;
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener;
 
-
-/**
- Get a query index object by name.
-
- @param name The index name.
- @param error On return, the error if any.
- @return CBLQueryIndex object if index exists. If not, it will return nil.
- */
-- (nullable CBLQueryIndex*) indexWithName: (NSString*)name
-                                    error: (NSError**)error;
-
 #pragma mark -
 
 /** Not available */

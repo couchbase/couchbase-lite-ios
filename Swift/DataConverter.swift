@@ -101,4 +101,14 @@ import CouchbaseLiteSwift_Private
         return result
     }
     
+    static func toPlainObject(_ value: Any?) -> Any? {
+        switch value {
+        case let v as DictionaryObject:
+            return v.toDictionary()
+        case let v as ArrayObject:
+            return v.toArray()
+        default:
+            return value
+        }
+    }
 }

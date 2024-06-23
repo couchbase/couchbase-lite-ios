@@ -23,6 +23,7 @@
 .objc_class_name_CBLClientCertificateAuthenticator
 .objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLEncryptionKey
+.objc_class_name_CBLIndexUpdater
 .objc_class_name_CBLListenerCertificateAuthenticator
 .objc_class_name_CBLListenerPasswordAuthenticator
 .objc_class_name_CBLMessage

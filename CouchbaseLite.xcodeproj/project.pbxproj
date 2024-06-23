@@ -374,6 +374,15 @@
 		4017E46A2BED6E5400A438EE /* CBLContextManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4017E4642BED6E5400A438EE /* CBLContextManager.m */; };
 		4017E46B2BED6E5400A438EE /* CBLContextManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4017E4642BED6E5400A438EE /* CBLContextManager.m */; };
 		4017E46C2BED6E5400A438EE /* CBLContextManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4017E4642BED6E5400A438EE /* CBLContextManager.m */; };
+		406F8DEB2C26901A000223FC /* QueryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DEA2C26901A000223FC /* QueryIndex.swift */; };
+		406F8DEC2C26901A000223FC /* QueryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DEA2C26901A000223FC /* QueryIndex.swift */; };
+		406F8DFB2C27C303000223FC /* IndexUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DF92C27C302000223FC /* IndexUpdater.swift */; };
+		406F8DFF2C27F0A9000223FC /* LazyVectorIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */; };
+		406F8E002C27F0AB000223FC /* LazyVectorIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */; };
+		40AA72952C28938D007FB1E0 /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		40AA72962C28938E007FB1E0 /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		40AA729D2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */; };
+		40AA729E2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */; };
 		40C5FD5B2B9947B3004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40C5FD5C2B9947B9004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		40EF690C2B7757CF00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */; };
@@ -1735,8 +1744,6 @@
 		93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 93FD618A2020757500E7F6A1 /* CBLIndex.m */; };
 		AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
 		AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
-		AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
-		AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		AE5803A42B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */; };
 		AE5803A52B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */; };
 		AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */; };
@@ -2270,11 +2277,16 @@
 		40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBlockConflictResolver.m; sourceTree = "<group>"; };
 		4017E4572BED6E5400A438EE /* CBLContextManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLContextManager.h; sourceTree = "<group>"; };
 		4017E4642BED6E5400A438EE /* CBLContextManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLContextManager.m; sourceTree = "<group>"; };
+		406F8DEA2C26901A000223FC /* QueryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryIndex.swift; sourceTree = "<group>"; };
+		406F8DF92C27C302000223FC /* IndexUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexUpdater.swift; sourceTree = "<group>"; };
+		406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyVectorIndexTest.swift; sourceTree = "<group>"; };
 		40A789282BE2C7D100CA43A1 /* CBL_EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL_EE.exp; sourceTree = "<group>"; };
 		40A789292BE2C7D100CA43A1 /* CBL.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL.exp; sourceTree = "<group>"; };
 		40A7892B2BE2C7D100CA43A1 /* CBL_EE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL_EE.txt; sourceTree = "<group>"; };
 		40A7892C2BE2C7D100CA43A1 /* CBL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL.txt; sourceTree = "<group>"; };
 		40A7892D2BE2C7D100CA43A1 /* generate_exports.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_exports.sh; sourceTree = "<group>"; };
+		40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LazyVectorIndexTest.m; sourceTree = "<group>"; };
+		40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorSearchTest.h; sourceTree = "<group>"; };
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
 		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
@@ -3059,6 +3071,7 @@
 				934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */,
 				1A13DD3328B8809300BC1084 /* URLEndpointListenerTest+Collection.swift */,
 				AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */,
+				406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -3424,6 +3437,7 @@
 			children = (
 				40FC1C4F2B928C1600394276 /* VectorEncoding.swift */,
 				40FC1C4E2B928C1600394276 /* VectorIndexConfiguration.swift */,
+				406F8DF92C27C302000223FC /* IndexUpdater.swift */,
 			);
 			name = Vector;
 			sourceTree = "<group>";
@@ -4120,7 +4134,9 @@
 				1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */,
 				1AA3D77122AB06E10098E16B /* CustomLogger.h */,
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
+				40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */,
 				AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */,
+				40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -4284,6 +4300,7 @@
 				1A84E8F4268560E600C43AF9 /* IndexConfiguration.swift */,
 				931DE0661F4E3EC2003EF76F /* Index.swift */,
 				93EB261A21DDC34C0006FB88 /* IndexBuilder.swift */,
+				406F8DEA2C26901A000223FC /* QueryIndex.swift */,
 			);
 			name = Index;
 			sourceTree = "<group>";
@@ -6096,6 +6113,7 @@
 				931DE0671F4E3EC2003EF76F /* Index.swift in Sources */,
 				93CED8CD20488C1300E6F0A4 /* Blob.swift in Sources */,
 				938B36A7200745FF004485D8 /* CBLQueryResultArray.m in Sources */,
+				406F8DEB2C26901A000223FC /* QueryIndex.swift in Sources */,
 				9384D8631FC4163D00FE89D8 /* FullTextFunction.swift in Sources */,
 				1A8E2FB328FF756600E141A8 /* Defaults.swift in Sources */,
 				9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */,
@@ -6236,6 +6254,7 @@
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
+				406F8E002C27F0AB000223FC /* LazyVectorIndexTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6555,6 +6574,7 @@
 				9343F07C207D61AB00F19A89 /* ReplicatorConfiguration.swift in Sources */,
 				40FC1C012B928AB200394276 /* CBLCert.mm in Sources */,
 				9343F07E207D61AB00F19A89 /* CBLCollationExpression.m in Sources */,
+				406F8DFB2C27C303000223FC /* IndexUpdater.swift in Sources */,
 				9343F07F207D61AB00F19A89 /* Index.swift in Sources */,
 				9343F080207D61AB00F19A89 /* Blob.swift in Sources */,
 				1A84E901268560E600C43AF9 /* IndexConfiguration.swift in Sources */,
@@ -6609,6 +6629,7 @@
 				9388CC5121C2514C005CA66D /* FileLogger.swift in Sources */,
 				40FC1C662B928C1600394276 /* VectorIndexConfiguration.swift in Sources */,
 				9343F0A3207D61AB00F19A89 /* CBLReplicator.mm in Sources */,
+				406F8DEC2C26901A000223FC /* QueryIndex.swift in Sources */,
 				40FC1C632B928C1600394276 /* DatabaseEndpoint.swift in Sources */,
 				9343F0A4207D61AB00F19A89 /* CBLMutableDictionary.mm in Sources */,
 				9343F0A5207D61AB00F19A89 /* MutableArrayObject.swift in Sources */,
@@ -6645,18 +6666,19 @@
 				933F841D220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1AA3D78722AB07D70098E16B /* CustomLogger.m in Sources */,
 				9343F13B207D61EC00F19A89 /* CBLTestCase.m in Sources */,
-				AE006DE92B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				1A4160DB22836E8C0061A567 /* ReplicatorTest+Main.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
 				934EF8312460D0770053A47C /* TLSIdentityTest.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1ABA63B028813A8C005835E7 /* ReplicatorTest+Collection.m in Sources */,
+				40AA72962C28938E007FB1E0 /* VectorSearchTest.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */,
 				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
+				40AA729D2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
@@ -6699,6 +6721,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40AA72952C28938D007FB1E0 /* VectorSearchTest.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				1ABA63B128813A8D005835E7 /* ReplicatorTest+Collection.m in Sources */,
@@ -6708,8 +6731,8 @@
 				9343F175207D633300F19A89 /* DatabaseTest.m in Sources */,
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
-				AE006DEA2B7BB98B00884E2B /* VectorSearchTest.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
+				40AA729E2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -6771,6 +6794,7 @@
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
+				406F8DFF2C27F0A9000223FC /* LazyVectorIndexTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

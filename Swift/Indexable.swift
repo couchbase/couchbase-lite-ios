@@ -32,5 +32,7 @@ public protocol Indexable {
     
     /// Delete an index by name.
     func deleteIndex(forName name: String) throws
-
+    
+    /// Return an index object, or nil if the index doesn't exist.
+    func index(withName name: String) throws -> QueryIndex?
 }

@@ -325,6 +325,20 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         try impl.deleteIndex(withName: name)
     }
     
+    /// Get an index by name. Return nil if the index doesn't exists.
+    public func index(withName name: String) throws -> QueryIndex? {
+        var error: NSError?
+        let index = impl.index(withName: name, error: &error)
+        if let err = error {
+            throw err
+        }
+        
+        guard let indexImpl = index else {
+            return nil
+        }
+        return QueryIndex(indexImpl, collection: self)
+    }
+    
     // MARK: Equatable
     
     public static func == (lhs: Collection, rhs: Collection) -> Bool {
