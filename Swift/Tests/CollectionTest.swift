@@ -819,6 +819,9 @@ class CollectionTest: CBLTestCase {
         expectError(domain: CBLError.domain, code: CBLError.notOpen) {
             let _ = try col.deleteIndex(forName: "index2")
         }
+        expectError(domain: CBLError.domain, code: CBLError.notOpen) {
+            let _ = try col.index(withName: "index1")
+        }
     }
     
     // MARK: 8.7 Use Scope APIs on deleted/closed scenarios

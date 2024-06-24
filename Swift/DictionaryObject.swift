@@ -73,8 +73,8 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     }
     
     /// Gets a property's value. The value types are Blob, ArrayObject,
-    /// DictionaryObject, Number, or String based on the underlying data type; or nil
-    /// if the value is nil or the property doesn't exist.
+    /// DictionaryObject, Number, String or NSNull based on the underlying data type;
+    /// or nil if the property doesn't exist.
     ///
     /// - Parameter key: The key.
     /// - Returns: The value or nil.

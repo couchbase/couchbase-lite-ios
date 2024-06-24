@@ -62,6 +62,7 @@
 .objc_class_name_CBLQueryFullTextExpression
 .objc_class_name_CBLQueryFullTextFunction
 .objc_class_name_CBLQueryFunction
+.objc_class_name_CBLQueryIndex
 .objc_class_name_CBLQueryJoin
 .objc_class_name_CBLQueryLimit
 .objc_class_name_CBLQueryMeta

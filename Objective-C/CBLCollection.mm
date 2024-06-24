@@ -966,7 +966,9 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         C4Index* c4index = c4coll_getIndex(_c4col, iName, &c4err);
         if (!c4index) {
             if (c4err.code != 0){
-                convertError(c4err, error);
+                if (c4err.domain != LiteCoreDomain || c4err.code != kC4ErrorMissingIndex) {
+                    convertError(c4err, error);
+                }
             }
             return nil;
         }

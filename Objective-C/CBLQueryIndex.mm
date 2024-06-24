@@ -55,6 +55,10 @@
 
 - (nullable CBLIndexUpdater*) beginUpdateWithLimit: (uint64_t)limit
                                              error: (NSError**)error {
+    if (limit == 0) {
+        [NSException raise: NSInvalidArgumentException format: @"limit must be > 0"];
+    }
+    
     CBL_LOCK(_mutex){
         C4Error c4err = {};
         C4IndexUpdater* _c4updater = c4index_beginUpdate(_c4index, (size_t)limit, &c4err);

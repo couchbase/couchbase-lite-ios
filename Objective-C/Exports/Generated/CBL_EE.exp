@@ -30,6 +30,7 @@
 .objc_class_name_CBLIndex
 .objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLIndexConfiguration
+.objc_class_name_CBLIndexUpdater
 .objc_class_name_CBLListenerCertificateAuthenticator
 .objc_class_name_CBLListenerPasswordAuthenticator
 .objc_class_name_CBLLog
@@ -57,6 +58,7 @@
 .objc_class_name_CBLQueryFullTextExpression
 .objc_class_name_CBLQueryFullTextFunction
 .objc_class_name_CBLQueryFunction
+.objc_class_name_CBLQueryIndex
 .objc_class_name_CBLQueryJoin
 .objc_class_name_CBLQueryLimit
 .objc_class_name_CBLQueryMeta

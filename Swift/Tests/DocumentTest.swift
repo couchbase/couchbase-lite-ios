@@ -1835,4 +1835,24 @@ class DocumentTest: CBLTestCase {
             try colB.save(document: doc)
         }
     }
+    
+    func testJSON() throws {
+        let jsonString = """
+        {
+            "name": "John Doe",
+            "foo": null
+        }
+        """
+        
+        if let jsonData = jsonString.data(using: .utf8) {
+            do {
+                // Step 3: Convert Data to dictionary
+                if let jsonDictionary = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any?] {
+                    print(jsonDictionary)
+                }
+            } catch {
+                print("Failed to convert JSON to dictionary: \(error.localizedDescription)")
+            }
+        }
+    }
 }

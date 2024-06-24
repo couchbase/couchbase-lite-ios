@@ -950,7 +950,10 @@
         return [col createIndexWithName: @"index2" config: config2 error: err];
     }];
     
-    // get indexes, delete index
+    // get index, get indexes, delete index
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
+        return [col indexWithName: @"index1" error: err];
+    }];
     [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
         return [col indexes: err] != nil;
     }];

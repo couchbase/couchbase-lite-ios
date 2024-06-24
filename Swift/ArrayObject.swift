@@ -52,6 +52,7 @@ public protocol ArrayProtocol: ArrayFragment {
     
     func toArray() -> Array<Any>
     
+    func toJSON() -> String
 }
 
 
@@ -64,7 +65,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     }
     
     /// Gets the value at the given index. The value types are Blob, ArrayObject,
-    /// DictionaryObject, Number, or String based on the underlying data type.
+    /// DictionaryObject, Number, String, or NSNull based on the underlying data type.
     ///
     /// - Parameter index: The index.
     /// - Returns: The value located at the index.
@@ -188,14 +189,8 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     public func toArray() -> Array<Any> {
         var array: [Any] = []
         for value in self {
-            switch value {
-            case let v as DictionaryObject:
-                array.append(v.toDictionary())
-            case let v as ArrayObject:
-                array.append(v.toArray())
-            default:
-                array.append(value)
-            }
+            let val = DataConverter.toPlainObject(value)
+            array.append(val != nil ? val! : NSNull())
         }
         return array
     }
