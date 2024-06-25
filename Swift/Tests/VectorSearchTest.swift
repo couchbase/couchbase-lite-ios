@@ -49,6 +49,8 @@ class VectorSearchTest: CBLTestCase {
         
         super.setUp()
         
+        try! Extension.enableVectorSearch()
+        
         var config = DatabaseConfiguration()
         config.directory = self.directory
         let res = ("Support/databases/vectorsearch" as NSString).appendingPathComponent("words_db")

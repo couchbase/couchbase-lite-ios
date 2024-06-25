@@ -63,6 +63,7 @@
     [super setUp];
 
     NSError* error;
+    Assert([CBLExtension enableVectorSearch: &error]);
     
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     config.directory = self.directory;

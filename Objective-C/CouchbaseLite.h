@@ -111,6 +111,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLDatabaseConfiguration+Encryption.h>
 #import <CouchbaseLite/CBLDatabaseEndpoint.h>
 #import <CouchbaseLite/CBLEncryptionKey.h>
+#import <CouchbaseLite/CBLExtension.h>
 #import <CouchbaseLite/CBLIndexBuilder+Prediction.h>
 #import <CouchbaseLite/CBLIndexUpdater.h>
 #import <CouchbaseLite/CBLListenerAuthenticator.h>

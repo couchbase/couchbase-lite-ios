@@ -35,7 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define VECTOR_INDEX_CONFIG(E, D, C) [[CBLVectorIndexConfiguration alloc] initWithExpression: (E) dimensions: (D) centroids: (C)]
 
-
 @interface VectorSearchTest : CBLTestCase
 
 @property (nonatomic, readonly) CBLDatabase* wordDB;
