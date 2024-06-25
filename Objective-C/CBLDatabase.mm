@@ -126,21 +126,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         [self checkFileLogging];
-        [self setExtensionPath];
     });
-}
-
-/** Detect and set extension path  */
-+ (void) setExtensionPath {
-#ifdef COUCHBASE_ENTERPRISE
-    // Note: For non app, the bundle will not be found.
-    NSBundle* vsBundle = [NSBundle bundleWithIdentifier: kVectorSearchExtIdentifier];
-    if (vsBundle.bundlePath) {
-        CBLLogInfo(Database, @"Set extension path : %@", vsBundle.bundlePath);
-        CBLStringBytes path(vsBundle.bundlePath);
-        c4_setExtensionPath(path);
-    }
-#endif
 }
 
 /** Check and show warning if file logging is not configured. */
