@@ -622,7 +622,7 @@ class LazyVectorIndexTest: VectorSearchTest {
     /// 7. Execute a vector search query.
     ///     - SELECT word
     ///       FROM _default.words
-    ///       WHERE vector_match(words_index, < dinner vector >, 300)
+    ///       WHERE vector_match(words_index, <dinner vector>) LIMIT 300
     /// 8. Check that there are 10 words returned.
     /// 9. Check that the word is in the word set from the step 5.
     func testIndexUpdaterSetFloatArrayVectors() throws {
