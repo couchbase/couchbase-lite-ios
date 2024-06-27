@@ -68,6 +68,12 @@ const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
 
 const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclidean;
 
+const unsigned int kCBLDefaultVectorIndexMaxTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexMinTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexNumProbes = 0;
+
 #pragma mark - CBLURLEndpointListenerConfiguration
 
 const unsigned short kCBLDefaultListenerPort = 0;

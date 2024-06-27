@@ -226,8 +226,9 @@
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     AssertEqualObjects(config.encoding, [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ8]);
     AssertEqual(config.metric, kCBLDistanceMetricEuclidean);
-    AssertEqual(config.minTrainingSize, 25 * config.centroids);
-    AssertEqual(config.maxTrainingSize, 256 * config.centroids);
+    AssertEqual(config.minTrainingSize, 0);
+    AssertEqual(config.maxTrainingSize, 0);
+    AssertEqual(config.numProbes, 0);
 }
 
 /**
@@ -354,7 +355,7 @@
  *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that 20 results are returned.
  *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -385,7 +386,7 @@
  *     5. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 350)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 300 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -454,7 +455,7 @@
  *     6. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 350)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
  *     7. Execute the query and check that 296 results are returned, and the results
  *        do not include document word1, word2, word3, and word4.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -528,7 +529,7 @@
  *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
+ *           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
  *     7. Check the explain() result of the query to ensure that the "words_pred_index" is used.
  *     8. Execute the query and check that 300 results are returned.
  *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -605,7 +606,7 @@
  *     7. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>, 350)
+ *           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
  *     8. Check the explain() result of the query to ensure that the "words_predi_index" is used.
  *     9. Execute the query and check that 296 results are returned and the results
  *        do not include word1, word2, word3, and word4.
@@ -679,7 +680,7 @@
  *     5. Create an SQL++ query
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -734,7 +735,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -751,8 +752,6 @@
 }
 
 /**
- * FAILED : https://issues.couchbase.com/browse/CBL-5538
- *
  * 12. TestCreateVectorIndexWithPQ
  * Description
  *     Using the PQ Encoding, test that the vector index can be created and used. The
@@ -769,7 +768,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -852,7 +851,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     5. Check the explain() result of the query to ensure that the "words_index" is used.
  *     6. Execute the query and check that 20 results are returned.
  *     7. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -884,11 +883,9 @@
  *         - minTrainingSize: 1 and maxTrainingSize: 100
  *     3. Check that the index is created without an error returned.
  *     4. Delete the "words_index"
- *     5. Repeat Step 2 with the following cases:
- *         - minTrainingSize = 0 and maxTrainingSize 0
- *         - minTrainingSize = 0 and maxTrainingSize 100
- *         - minTrainingSize = 10 and maxTrainingSize 9
- *     6. Check that an invalid argument exception was thrown for all cases in step 4.
+ *     5. Repeat Step 2 with the following case:
+ *         - minTrainingSize = 10 and maxTrainingSize = 9
+ *     6. Check that an invalid argument exception was thrown.
  */
 - (void) testValidateMinMaxTrainingSize {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
@@ -896,24 +893,13 @@
     config.maxTrainingSize = 100;
     [self createWordsIndexWithConfig: config];
     
-    NSArray<NSArray<NSNumber *> *> *trainingSizes = @[
-        @[@0, @0],
-        @[@0, @100],
-        @[@10, @9]
-    ];
-    
+    [self deleteWordsIndex];
+    config.minTrainingSize = 10;
+    config.maxTrainingSize = 9;
     CBLCollection* collection = self.wordsCollection;
-    for (size_t i = 0; i < trainingSizes.count; i++) {
-        config.minTrainingSize = trainingSizes[i][0].unsignedIntValue;
-        config.maxTrainingSize = trainingSizes[i][1].unsignedIntValue;
-        
-        // Check if exception thrown for wrong values
-        [self expectException: NSInvalidArgumentException in:^{
-            [collection createIndexWithName: kWordsIndexName config: config error: nil];
-        }];
-        
-        [self deleteWordsIndex];
-    }
+    [self expectException: NSInvalidArgumentException in:^{
+        [collection createIndexWithName: kWordsIndexName config: config error: nil];
+    }];
 }
 
 /**
@@ -933,7 +919,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was not trained by checking that the “Untrained index;
@@ -967,7 +953,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word,vector_distance(words_index)
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned and the vector
  *       distance value is in between 0 – 1.0 inclusively.
@@ -1005,7 +991,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word, vector_distance(words_index)
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned and the
  *        distance value is more than zero.
@@ -1070,7 +1056,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -1106,7 +1092,7 @@
  *     2. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *     3. Check that a CouchbaseLiteException is returned as the index doesn’t exist.
  */
 - (void) testVectorMatchOnNonExistingIndex {
@@ -1163,7 +1149,7 @@
  *     4. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, <limit>)
+ *           WHERE vector_match(words_index, <dinner vector>) LIMIT <limit>
  *         - limit: 1 and 10000
  *     5. Check that the query can be created without an error.
  *     6. Repeat step 4 with the limit: -1, 0, and 10001
@@ -1205,7 +1191,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 300) AND catid = 'cat1'
+ *           WHERE vector_match(words_index, <dinner vector>) AND catid = 'cat1' LIMIT 300
  *     6. Check that the query can be created without an error.
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that the number of results returned is 50
@@ -1245,7 +1231,7 @@
  *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE (vector_match(words_index, <dinner vector>, 300) AND word is valued) AND catid = 'cat1'
+ *           WHERE (vector_match(words_index, <dinner vector>) AND word is valued) AND catid = 'cat1'  LIMIT 300
  *     6. Check that the query can be created without an error.
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that the number of results returned is 50
@@ -1284,7 +1270,7 @@
  *     4. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>, 20) OR catid = 1
+ *           WHERE vector_match(words_index, <dinner vector>) OR catid = 1 LIMIT 20
  *     5. Check that a CouchbaseLiteException is returned when creating the query.
  */
 - (void) testInvalidVectorMatchWithOrExpression {
@@ -1319,7 +1305,7 @@
  *      7. Create an SQL++ query:
  *          - SELECT meta().id, word, vector_distance(words_index)
  *            FROM _default.words
- *            WHERE vector_match(words_index, < dinner vector >, 20)
+ *            WHERE vector_match(words_index, <dinner vector>) LIMIT 20
  *      8. Execute the query and check that 20 results are returned.
  *      9. Check that the result also contains doc id = word49.
  */
@@ -1336,6 +1322,45 @@
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 20);
     AssertNotNil(wordMap[@"word49"]);
+}
+
+/** 
+ * 28. TestNumProbes
+ *
+ * Description
+ *      Test that the numProces specified is effective.
+ * Steps
+ *      1. Copy database words_db.
+ *      2. Create a vector index named "words_index" in _default.words collection.
+ *          - expression: "vector"
+ *          - dimensions: 300
+ *          - centroids : 8
+ *          - numProbes: 5
+ *      3. Check that the index is created without an error returned.
+ *      4. Create an SQL++ query:
+ *          - SELECT meta().id, word
+ *            FROM _default.words
+ *            WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *      5. Execute the query and check that 20 results are returned.
+ *      6. Repeat step 2 - 6 but change the numProbes to 1.
+ *      7. Verify the number of results returned in Step 5 is larger than Step 6.
+*/
+- (void) testNumProbes {
+    CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
+    config.numProbes = 5;
+    [self createWordsIndexWithConfig: config];
+    
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300];
+    NSUInteger numResultsFor5Probes = [[rs allObjects] count];
+    Assert(numResultsFor5Probes > 0);
+    
+    config.numProbes = 1;
+    [self createWordsIndexWithConfig: config];
+    rs = [self executeWordsQueryWithLimit: @300];
+    NSUInteger numResultsFor1Probes = [[rs allObjects] count];
+    Assert(numResultsFor1Probes > 0);
+    
+    Assert(numResultsFor5Probes > numResultsFor1Probes);
 }
 
 /*
