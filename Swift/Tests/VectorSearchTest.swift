@@ -180,8 +180,8 @@ class VectorSearchTest: CBLTestCase {
     ///     2. Get and check the following property values:
     ///         - encoding: 8-Bit Scalar Quantizer Encoding
     ///         - metric: Euclidean Distance
-    ///         - minTrainingSize: 25 * centroids
-    ///         - maxTrainingSize: 256 * centroids
+    ///         - minTrainingSize: 0
+    ///         - maxTrainingSize: 0
     ///     3. To check the encoding type, platform code will have to expose some internal
     ///        property to the tests for verification.
     func testVectorIndexConfigurationDefaultValue() throws {
