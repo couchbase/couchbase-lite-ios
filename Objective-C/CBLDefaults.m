@@ -62,7 +62,7 @@ const BOOL kCBLDefaultReplicatorAcceptParentCookies = NO;
 
 #pragma mark - CBLVectorIndexConfiguration
 
-const BOOL kCBLDefaultVectorIndexIsLazy = YES;
+const BOOL kCBLDefaultVectorIndexIsLazy = NO;
 
 const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
 
