@@ -64,6 +64,10 @@ public extension ReplicatorConfiguration {
 
     /// [300] Max wait time between retry attempts in seconds
     static let defaultMaxAttemptsWaitTime: TimeInterval = 300
+    
+    /// [300] Max wait time between retry attempts in seconds
+    /// @available(*, deprecated, message: "Use ReplicatorConfiguration.defaultMaxAttemptsWaitTime instead.")
+    static let defaultMaxAttemptWaitTime: TimeInterval = 300
 
     /// [true] Purge documents when a user loses access
     static let defaultEnableAutoPurge: Bool = true
