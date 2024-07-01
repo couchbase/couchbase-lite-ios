@@ -92,15 +92,6 @@ extern const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding;
 /** [kCBLDistanceMetricEuclidean] By default, vectors are compared using Euclidean metrics */
 extern const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric;
 
-/** [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters. */
-extern const unsigned int kCBLDefaultVectorIndexMinTrainingSize;
-
-/** [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters */
-extern const unsigned int kCBLDefaultVectorIndexMaxTrainingSize;
-
-/** [0] By default, the value will be determined based on the number of centroids. */
-extern const unsigned int kCBLDefaultVectorIndexNumProbes;
-
 #pragma mark - CBLURLEndpointListenerConfiguration
 
 /** [0] No port specified, the OS will assign one */
