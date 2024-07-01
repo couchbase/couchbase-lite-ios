@@ -884,8 +884,7 @@
  * 5. With the IndexUpdater object, call setVector() with a float array as [1.0]
  * 6. Check that the setVector throws CouchbaseLiteException with the InvalidParameter error.
  */
-// CBL-5814
-- (void) _testIndexUpdaterSetInvalidVectorDimensions {
+- (void) testIndexUpdaterSetInvalidVectorDimensions {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
     NSError* error;
@@ -1247,10 +1246,9 @@
  *     - Convert the vector result which is an array object to a platform's float array.
  *     - Call setVector() with the platform's float array at the index..
  * 8. Call finish() and check that the finish() is successfully called.
- * 9. Call finish() again and check that a CouchbaseLiteException with the code Unsupported is thrown.
+ * 9. Call finish() again and check that a CouchbaseLiteException with the code NotOpen is thrown.
  */
-// CBL-5843
-- (void) _testIndexUpdaterCallFinishTwice {
+- (void) testIndexUpdaterCallFinishTwice {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
     NSError* error;
@@ -1264,7 +1262,7 @@
     Assert([updater setVector: vector atIndex: 0 error: &error]);
     Assert([updater finishWithError: &error]);
     
-    [self expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
         return [updater finishWithError: err];
     }];
 }
