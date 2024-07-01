@@ -28,11 +28,11 @@
 
 #define LAZY_VECTOR_INDEX_CONFIG(E, D, C) [self lazyVectorIndexConfigWithExpression: (E) dimensions: (D) centroids: (C)]
 
-@interface LazyVectorIndexTest : VectorSearchTest
+@interface VectorLazyIndexTest : VectorSearchTest
 
 @end
 
-@implementation LazyVectorIndexTest
+@implementation VectorLazyIndexTest
 
 - (CBLQueryIndex*) wordsIndex {
     CBLQueryIndex* index = [self.wordsCollection indexWithName: kWordsIndexName error: nil];

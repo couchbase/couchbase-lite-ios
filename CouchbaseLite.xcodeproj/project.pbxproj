@@ -382,12 +382,12 @@
 		406F8DEB2C26901A000223FC /* QueryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DEA2C26901A000223FC /* QueryIndex.swift */; };
 		406F8DEC2C26901A000223FC /* QueryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DEA2C26901A000223FC /* QueryIndex.swift */; };
 		406F8DFB2C27C303000223FC /* IndexUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DF92C27C302000223FC /* IndexUpdater.swift */; };
-		406F8DFF2C27F0A9000223FC /* LazyVectorIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */; };
-		406F8E002C27F0AB000223FC /* LazyVectorIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */; };
+		406F8DFF2C27F0A9000223FC /* VectorLazyIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* VectorLazyIndexTest.swift */; };
+		406F8E002C27F0AB000223FC /* VectorLazyIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* VectorLazyIndexTest.swift */; };
 		40AA72952C28938D007FB1E0 /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
 		40AA72962C28938E007FB1E0 /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
-		40AA729D2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */; };
-		40AA729E2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */; };
+		40AA729D2C28B1A3007FB1E0 /* VectorLazyIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* VectorLazyIndexTest.m */; };
+		40AA729E2C28B1A3007FB1E0 /* VectorLazyIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* VectorLazyIndexTest.m */; };
 		40C5FD5B2B9947B3004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40C5FD5C2B9947B9004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		40EF690C2B7757CF00F0CB50 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */; };
@@ -2287,13 +2287,13 @@
 		4017E4642BED6E5400A438EE /* CBLContextManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLContextManager.m; sourceTree = "<group>"; };
 		406F8DEA2C26901A000223FC /* QueryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryIndex.swift; sourceTree = "<group>"; };
 		406F8DF92C27C302000223FC /* IndexUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexUpdater.swift; sourceTree = "<group>"; };
-		406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyVectorIndexTest.swift; sourceTree = "<group>"; };
+		406F8DFC2C27F097000223FC /* VectorLazyIndexTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorLazyIndexTest.swift; sourceTree = "<group>"; };
 		40A789282BE2C7D100CA43A1 /* CBL_EE.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL_EE.exp; sourceTree = "<group>"; };
 		40A789292BE2C7D100CA43A1 /* CBL.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CBL.exp; sourceTree = "<group>"; };
 		40A7892B2BE2C7D100CA43A1 /* CBL_EE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL_EE.txt; sourceTree = "<group>"; };
 		40A7892C2BE2C7D100CA43A1 /* CBL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CBL.txt; sourceTree = "<group>"; };
 		40A7892D2BE2C7D100CA43A1 /* generate_exports.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_exports.sh; sourceTree = "<group>"; };
-		40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LazyVectorIndexTest.m; sourceTree = "<group>"; };
+		40AA72972C28B1A3007FB1E0 /* VectorLazyIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VectorLazyIndexTest.m; sourceTree = "<group>"; };
 		40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorSearchTest.h; sourceTree = "<group>"; };
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
 		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
@@ -3079,7 +3079,7 @@
 				934608EE247F35CC00CF2F27 /* URLEndpointListenerTest.swift */,
 				1A13DD3328B8809300BC1084 /* URLEndpointListenerTest+Collection.swift */,
 				AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */,
-				406F8DFC2C27F097000223FC /* LazyVectorIndexTest.swift */,
+				406F8DFC2C27F097000223FC /* VectorLazyIndexTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -4147,7 +4147,7 @@
 				1AA3D77222AB06E10098E16B /* CustomLogger.m */,
 				40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */,
 				AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */,
-				40AA72972C28B1A3007FB1E0 /* LazyVectorIndexTest.m */,
+				40AA72972C28B1A3007FB1E0 /* VectorLazyIndexTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -6267,7 +6267,7 @@
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
-				406F8E002C27F0AB000223FC /* LazyVectorIndexTest.swift in Sources */,
+				406F8E002C27F0AB000223FC /* VectorLazyIndexTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6694,7 +6694,7 @@
 				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
-				40AA729D2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */,
+				40AA729D2C28B1A3007FB1E0 /* VectorLazyIndexTest.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
 				9343F13E207D61EC00F19A89 /* DocumentTest.m in Sources */,
 				9343F140207D61EC00F19A89 /* DictionaryTest.m in Sources */,
@@ -6748,7 +6748,7 @@
 				1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */,
 				934EF8322460D07B0053A47C /* TLSIdentityTest.m in Sources */,
 				9369A6AF207DD105009B5B83 /* DatabaseEncryptionTest.m in Sources */,
-				40AA729E2C28B1A3007FB1E0 /* LazyVectorIndexTest.m in Sources */,
+				40AA729E2C28B1A3007FB1E0 /* VectorLazyIndexTest.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -6810,7 +6810,7 @@
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
-				406F8DFF2C27F0A9000223FC /* LazyVectorIndexTest.swift in Sources */,
+				406F8DFF2C27F0A9000223FC /* VectorLazyIndexTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

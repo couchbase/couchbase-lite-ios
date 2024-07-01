@@ -39,7 +39,7 @@ import XCTest
  * - Test 6 TestGetIndexOnClosedDatabase is done in CollectionTest.testUseCollectionAPIWhenDatabaseIsClosed()
  * - Test 7 testInvalidCollection) is done in CollectionTest.testUseCollectionAPIOnDeletedCollection()
  */
-class LazyVectorIndexTest: VectorSearchTest {
+class VectorLazyIndexTest: VectorSearchTest {
     func wordsIndex() throws -> QueryIndex {
         let index = try wordsCollection.index(withName: wordsIndexName)
         XCTAssertNotNil(index)
