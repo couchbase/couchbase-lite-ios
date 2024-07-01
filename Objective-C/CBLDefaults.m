@@ -26,8 +26,6 @@
 
 const BOOL kCBLDefaultLogFileUsePlaintext = NO;
 
-const BOOL kCBLDefaultLogFileUsePlainText = NO;
-
 const uint64_t kCBLDefaultLogFileMaxSize = 524288;
 
 const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
@@ -64,9 +62,17 @@ const BOOL kCBLDefaultReplicatorAcceptParentCookies = NO;
 
 #pragma mark - CBLVectorIndexConfiguration
 
+const BOOL kCBLDefaultVectorIndexIsLazy = YES;
+
 const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
 
 const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclidean;
+
+const unsigned int kCBLDefaultVectorIndexMinTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexMaxTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexNumProbes = 0;
 
 #pragma mark - CBLURLEndpointListenerConfiguration
 
