@@ -4325,6 +4325,8 @@
 				93FD618A2020757500E7F6A1 /* CBLIndex.m */,
 				93FD615F20204E3600E7F6A1 /* CBLIndexBuilder.h */,
 				93FD616020204E3600E7F6A1 /* CBLIndexBuilder.m */,
+				AE83D07A2C06242F0055D2CF /* CBLQueryIndex.h */,
+				AE83D07B2C06242F0055D2CF /* CBLQueryIndex.mm */,
 				93EC42CB1FB3801E00D54BB4 /* CBLValueIndex.h */,
 				93EC42CC1FB3801E00D54BB4 /* CBLValueIndex.m */,
 				1A3470BF266F3E7C0042C6BA /* CBLIndexConfiguration.h */,
@@ -4333,8 +4335,6 @@
 				1A3471482671C87F0042C6BA /* CBLFullTextIndexConfiguration.m */,
 				1A34715C2671C9230042C6BA /* CBLValueIndexConfiguration.h */,
 				1A34715D2671C9230042C6BA /* CBLValueIndexConfiguration.m */,
-				AE83D07A2C06242F0055D2CF /* CBLQueryIndex.h */,
-				AE83D07B2C06242F0055D2CF /* CBLQueryIndex.mm */,
 			);
 			name = Index;
 			sourceTree = "<group>";

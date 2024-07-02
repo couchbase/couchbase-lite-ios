@@ -111,7 +111,7 @@
     __block NSError *error = nil;
     // to skip test exception breakpoint  
     [self ignoreException:^{
-        AssertFalse([_db saveDocument: doc error: &error]);
+        AssertFalse([self->_db saveDocument: doc error: &error]);
     }];
     AssertEqual(error.code, CBLErrorBadDocID);
     AssertEqualObjects(error.domain, CBLErrorDomain);
@@ -1558,7 +1558,7 @@
  
     // Purge before save:
     [self expectError: CBLErrorDomain code: CBLErrorNotFound in: ^BOOL(NSError** err) {
-        return [_db purgeDocument: doc1 error: err];
+        return [self->_db purgeDocument: doc1 error: err];
     }];
     
     // Save:

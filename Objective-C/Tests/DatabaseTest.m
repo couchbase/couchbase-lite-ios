@@ -2242,7 +2242,7 @@
     Assert(nudb, @"Cannot open the new database: %@", error);
     
     [self expectError: NSPOSIXErrorDomain code: EEXIST in: ^BOOL(NSError** error2) {
-        return [CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: error2];
+        return [CBLDatabase copyFromPath: self->_db.path toDatabase: dbName withConfig: config error: error2];
     }];
     
     // Clean up:
