@@ -152,7 +152,6 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
-        
         var error: NSError?
         let result = impl.save(
             document.impl as! CBLMutableDocument,

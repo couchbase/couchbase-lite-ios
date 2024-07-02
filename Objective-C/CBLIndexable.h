@@ -17,11 +17,14 @@
 //  limitations under the License.
 //
 
-#import <CouchbaseLite/CBLIndexConfiguration.h>
-#import <CouchbaseLite/CBLIndex.h>
-#import <CouchbaseLite/CBLQueryIndex.h>
+#import <Foundation/Foundation.h>
+
+@class CBLIndex;
+@class CBLIndexConfiguration;
+@class CBLQueryIndex;
 
 NS_ASSUME_NONNULL_BEGIN
+
 /** The Indexable interface defines a set of functions for managing the query indexes. */
 @protocol CBLIndexable <NSObject>
 

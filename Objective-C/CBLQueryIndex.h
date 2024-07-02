@@ -18,11 +18,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CouchbaseLite/CBLCollection.h>
 
 #ifdef COUCHBASE_ENTERPRISE
 #import <CouchbaseLite/CBLIndexUpdater.h>
 #endif
+
+@class CBLCollection;
 
 NS_ASSUME_NONNULL_BEGIN
 

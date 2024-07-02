@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import <Foundation/Foundation.h>
 #import <CouchbaseLite/CBLCollectionChangeObservable.h>
 #import <CouchbaseLite/CBLIndexable.h>
 #import <CouchbaseLite/CBLCollectionTypes.h>
@@ -27,7 +28,6 @@
 @class CBLDocumentFragment;
 @class CBLMutableDocument;
 @class CBLScope;
-@class CBLQueryIndex;
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN

@@ -28,7 +28,6 @@
 #import "CBLDocumentChangeNotifier.h"
 #import "CBLDocument+Internal.h"
 #import "CBLErrorMessage.h"
-#import "CBLIndexable.h"
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQueryIndex+Internal.h"
