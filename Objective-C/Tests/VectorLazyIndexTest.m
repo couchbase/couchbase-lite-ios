@@ -1244,9 +1244,10 @@
  *     - Get the word string from the IndexUpdater.
  *     - Query the vector by word from the _default.words collection.
  *     - Convert the vector result which is an array object to a platform's float array.
- *     - Call setVector() with the platform's float array at the index..
- * 8. Call finish() and check that the finish() is successfully called.
- * 9. Call finish() again and check that a CouchbaseLiteException with the code NotOpen is thrown.
+ *     - Call setVector() with the platform's float array at the index.
+ * 4. Call finish() and check that the finish() is successfully called.
+ * 5. Call finish() again and check that a CouchbaseLiteException with the code NotOpen is thrown.
+ * 6. Count, getValue, setVector, skipVector throw exception.
  */
 - (void) testIndexUpdaterCallFinishTwice {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
@@ -1262,8 +1263,26 @@
     Assert([updater setVector: vector atIndex: 0 error: &error]);
     Assert([updater finishWithError: &error]);
     
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
-        return [updater finishWithError: err];
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        [updater count];
+    }];
+        
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        [updater valueAtIndex: 0];
+    }];
+    
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        NSError* outError;
+        [updater setVector: vector atIndex: 0 error: &outError];
+    }];
+        
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        [updater skipVectorAtIndex: 0];
+    }];
+    
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        NSError* outError;
+        [updater finishWithError: &outError];
     }];
 }
 
