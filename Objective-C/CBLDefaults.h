@@ -83,13 +83,13 @@ extern const BOOL kCBLDefaultReplicatorAcceptParentCookies;
 
 #pragma mark - CBLVectorIndexConfiguration
 
-/** [YES] Vectors are not lazily indexed, by default */
+/** [NO] Vectors are not lazily indexed, by default */
 extern const BOOL kCBLDefaultVectorIndexIsLazy;
 
 /** [kCBLSQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default */
 extern const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding;
 
-/** [kCBLDistanceMetricEuclidean] By default, vectors are compared using Euclidean metrics */
+/** [kCBLDistanceMetricEuclideanSquared] By default, vectors are compared using Euclidean metrics */
 extern const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric;
 
 /** [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters. */
