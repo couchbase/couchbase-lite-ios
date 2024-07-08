@@ -225,7 +225,7 @@
 - (void) testVectorIndexConfigurationDefaultValue {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     AssertEqualObjects(config.encoding, [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ8]);
-    AssertEqual(config.metric, kCBLDistanceMetricEuclidean);
+    AssertEqual(config.metric, kCBLDistanceMetricEuclideanSquared);
     AssertEqual(config.minTrainingSize, 0);
     AssertEqual(config.maxTrainingSize, 0);
     AssertEqual(config.numProbes, 0);
@@ -1001,7 +1001,7 @@
  */
 - (void) testCreateVectorIndexWithEuclideanDistance {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
-    config.metric = kCBLDistanceMetricEuclidean;
+    config.metric = kCBLDistanceMetricEuclideanSquared;
     [self createWordsIndexWithConfig: config];
     
     CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20 queryDistance: true andClause: false checkTraining: false];
