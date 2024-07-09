@@ -945,7 +945,7 @@ class VectorSearchTest: CBLTestCase {
     ///     9. Reset the custom logger.
     func testCreateVectorIndexWithEuclideanDistance() throws {
         var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
-        config.metric = .euclidean
+        config.metric = .euclideanSquared
         try createWordsIndex(config: config)
         
         let rs = try executeWordsQuery(limit: 20)

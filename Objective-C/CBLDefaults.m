@@ -66,7 +66,7 @@ const BOOL kCBLDefaultVectorIndexIsLazy = NO;
 
 const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
 
-const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclidean;
+const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclideanSquared;
 
 const unsigned int kCBLDefaultVectorIndexMinTrainingSize = 0;
 

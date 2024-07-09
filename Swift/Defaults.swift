@@ -90,8 +90,8 @@ public extension VectorIndexConfiguration {
     /// [ScalarQuantizerType.SQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default
     static let defaultEncoding: ScalarQuantizerType = ScalarQuantizerType.SQ8
 
-    /// [DistanceMetric.euclidean] By default, vectors are compared using Euclidean metrics
-    static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclidean
+    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using Euclidean metrics
+    static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclideanSquared
 
     /// [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters.
     static let defaultMinTrainingSize: UInt32 = 0
