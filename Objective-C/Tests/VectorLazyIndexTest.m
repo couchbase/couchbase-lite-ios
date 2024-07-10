@@ -78,6 +78,24 @@
     return results;
 }
 
+- (NSString*) wordsQueryStringWithLimit: (NSNumber*)limit
+                              andClause: (NSString*)andClause {
+    NSString* sql = @"SELECT meta().id, word, catid";
+ 
+    sql = [sql stringByAppendingFormat: @" FROM %@ ORDER BY APPROX_VECTOR_DISTANCE(word, $vector)",
+           kWordsCollectionName];
+    
+    if (andClause) {
+        sql = [sql stringByAppendingFormat: @" %@", andClause];
+    }
+    
+    if (limit) {
+        sql = [sql stringByAppendingFormat: @" LIMIT %d", [limit intValue]];
+    }
+    NSLog(@"%@", sql);
+    return sql;
+}
+
 /**
  * 1. TestIsLazyDefaultValue
  * Description
@@ -218,7 +236,7 @@
 - (void) testLazyVectorIndexNotAutoUpdatedChangedDocs {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: nil];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: @10];
     AssertEqual(rs.allObjects.count, 0);
     
     // Update docs:
@@ -232,7 +250,7 @@
     [word1 setData: [extWord3 toDictionary]];
     Assert([self.wordsCollection saveDocument: word1 error: &error]);
     
-    rs = [self executeWordsQueryNoTrainingCheckWithLimit: nil];
+    rs = [self executeWordsQueryNoTrainingCheckWithLimit: @10];
     AssertEqual(rs.allObjects.count, 0);
 }
 
