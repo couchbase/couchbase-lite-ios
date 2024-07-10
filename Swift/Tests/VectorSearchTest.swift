@@ -129,14 +129,10 @@ class VectorSearchTest: CBLTestCase {
         try wordsCollection.deleteIndex(forName: wordsIndexName)
     }
     
-    func wordsQueryString(limit: Int?, queryDistance: Bool = false, andExpr: String? = nil) -> String {
-        var sql = "SELECT meta().id, word, catid"
-        if (queryDistance) {
-            sql = sql + ", VECTOR_DISTANCE(\(wordsIndexName)) "
-        } else {
-            sql = sql + " "
-        }
-        sql = sql + "FROM \(wordsCollectionName) WHERE APPROX_VECTOR_DIST(\(wordsIndexName), $vector)"
+    func wordsQueryString(limit: Int?, andExpr: String? = nil) -> String {
+        var sql = "SELECT meta().id, word"
+        
+        sql = sql + " FROM \(wordsCollectionName) ORDER BY APPROX_VECTOR_DISTANCE(vector, $vector)"
         
         if let andExpr = andExpr {
             sql = sql + " \(andExpr)"
@@ -149,10 +145,9 @@ class VectorSearchTest: CBLTestCase {
         return sql;
     }
     
-    func executeWordsQuery(limit: Int? = nil, checkTraining: Bool = true, queryDistance: Bool = false,
-                           andExpr: String? = nil) throws -> ResultSet
+    func executeWordsQuery(limit: Int? = nil, checkTraining: Bool = true, andExpr: String? = nil) throws -> ResultSet
     {
-        let sql = wordsQueryString(limit: limit, queryDistance: queryDistance, andExpr: andExpr)
+        let sql = wordsQueryString(limit: limit, andExpr: andExpr)
         let query = try wordDB.createQuery(sql)
         
         let parameters = Parameters()
@@ -498,12 +493,23 @@ class VectorSearchTest: CBLTestCase {
     func testCreateVectorIndexUsingPredictionModel() throws {
         try registerPredictiveModel()
         
-        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
-        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        let expr = "prediction(WordEmbedding,{\"word\": word}).vector"
+        let config = VectorIndexConfiguration(expression: expr, dimensions: 300, centroids: 8)
+        
         try createWordsIndex(config: config)
         
         // Query:
-        var rs = try executeWordsQuery(limit: 350)
+        let sql = "SELECT meta().id, word FROM \(wordsCollectionName) ORDER BY APPROX_VECTOR_DISTANCE(\(expr), $vector) LIMIT 350"
+        let query = try wordDB.createQuery(sql)
+        
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        query.parameters = parameters
+        
+        let explain = try query.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs = try query.execute()
         XCTAssertEqual(rs.allResults().count, 300)
         XCTAssert(checkIndexWasTrained())
         
@@ -528,7 +534,7 @@ class VectorSearchTest: CBLTestCase {
         // Delete words.word2
         try wordsCollection.delete(document: wordsCollection.document(id: "word2")!)
         
-        rs = try executeWordsQuery(limit: 350)
+        rs = try query.execute()
         let wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 301)
         XCTAssertEqual(wordMap["word301"], word301.string(forKey: "word"))
@@ -592,13 +598,25 @@ class VectorSearchTest: CBLTestCase {
         vector!.removeValue(at: 0)
         try wordsCollection.save(document: auxDoc)
         
-        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
-        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        let expr = "prediction(WordEmbedding,{\"word\": word}).vector"
+        let config = VectorIndexConfiguration(expression: expr, dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        var rs = try executeWordsQuery(limit: 350)
+        // Query:
+        let sql = "SELECT meta().id, word FROM \(wordsCollectionName) ORDER BY APPROX_VECTOR_DISTANCE(\(expr), $vector) LIMIT 350"
+        let query = try wordDB.createQuery(sql)
+        
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        query.parameters = parameters
+        
+        let explain = try query.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs = try query.execute()
+        XCTAssertEqual(rs.allResults().count, 296)
+        
         var wordMap = toDocIDWordMap(rs: rs)
-        XCTAssertEqual(wordMap.count, 296)
         XCTAssertNil(wordMap["word1"])
         XCTAssertNil(wordMap["word2"])
         XCTAssertNil(wordMap["word3"])
@@ -609,7 +627,7 @@ class VectorSearchTest: CBLTestCase {
         auxDoc.setString("Fried Chicken", forKey: "word")
         try wordsCollection.save(document: auxDoc)
         
-        rs = try executeWordsQuery(limit: 350)
+        rs = try query.execute()
         wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 295)
         XCTAssertNil(wordMap["word5"])
@@ -916,16 +934,12 @@ class VectorSearchTest: CBLTestCase {
             .dot
         ]
         for metric in allDistanceMetrics {
-            config.metric = .cosine
+            config.metric = metric
             try createWordsIndex(config: config)
             
-            let rs = try executeWordsQuery(limit: 20, queryDistance: true)
+            let rs = try executeWordsQuery(limit: 20)
             let results = rs.allResults()
             XCTAssertEqual(results.count, 20)
-            for result in results {
-                XCTAssert(result.double(at: 3) > 0)
-                XCTAssert(result.double(at: 3) < 1)
-            }
         }
     }
     
@@ -1078,7 +1092,18 @@ class VectorSearchTest: CBLTestCase {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        let rs = try executeWordsQuery(limit: 300, andExpr: "AND catid = 'cat1'")
+        // Query:
+        let sql = "SELECT meta().id, word, catid FROM \(wordsCollectionName) WHERE catid='cat1' ORDER BY APPROX_VECTOR_DISTANCE(vector, $vector) LIMIT 300"
+        let query = try wordDB.createQuery(sql)
+        
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        query.parameters = parameters
+        
+        let explain = try query.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs = try query.execute()
         let results = rs.allResults()
         XCTAssertEqual(results.count, 50)
         for result in results {
@@ -1112,7 +1137,18 @@ class VectorSearchTest: CBLTestCase {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        let rs = try executeWordsQuery(limit: 300, andExpr: "AND word is valued AND catid = 'cat1'")
+        // Query:
+        let sql = "SELECT meta().id, word, catid FROM \(wordsCollectionName) WHERE catid='cat1' AND word is valued ORDER BY APPROX_VECTOR_DISTANCE(vector, $vector) LIMIT 300"
+        let query = try wordDB.createQuery(sql)
+        
+        let parameters = Parameters()
+        parameters.setValue(dinnerVector, forName: "vector")
+        query.parameters = parameters
+        
+        let explain = try query.explain() as NSString
+        XCTAssertNotEqual(explain.range(of: "kv_.words:vector:words_index").location, NSNotFound)
+        
+        var rs = try query.execute()
         let results = rs.allResults()
         XCTAssertEqual(results.count, 50)
         for result in results {
@@ -1140,7 +1176,8 @@ class VectorSearchTest: CBLTestCase {
         try createWordsIndex(config: config)
         
         self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
-            _ = try self.executeWordsQuery(limit: 300, andExpr: "OR catid = 'cat1'")
+            let sql = "SELECT meta().id, word, catid FROM \(self.wordsCollectionName) WHERE catid=APPROX_VECTOR_DISTANCE(vector, $vector) OR catid='cat1' ORDER BY APPROX_VECTOR_DISTANCE(vector, $vector) LIMIT 20"
+            _ = try self.wordDB.createQuery(sql)
         }
     }
      

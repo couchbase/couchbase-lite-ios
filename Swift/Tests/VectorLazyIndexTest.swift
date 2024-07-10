@@ -63,6 +63,22 @@ class VectorLazyIndexTest: VectorSearchTest {
         return nil
     }
     
+    override func wordsQueryString(limit: Int?, andExpr: String? = nil) -> String {
+        var sql = "SELECT meta().id, word"
+        
+        sql = sql + " FROM \(wordsCollectionName) ORDER BY APPROX_VECTOR_DISTANCE(word, $vector)"
+        
+        if let andExpr = andExpr {
+            sql = sql + " \(andExpr)"
+        }
+        
+        if let limit = limit {
+            sql = sql + " LIMIT \(limit)"
+        }
+        
+        return sql;
+    }
+    
     /// 1. TestIsLazyDefaultValue
     ///
     /// Description

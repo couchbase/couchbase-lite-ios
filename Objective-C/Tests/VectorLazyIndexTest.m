@@ -80,7 +80,7 @@
 
 - (NSString*) wordsQueryStringWithLimit: (NSNumber*)limit
                               andClause: (NSString*)andClause {
-    NSString* sql = @"SELECT meta().id, word, catid";
+    NSString* sql = @"SELECT meta().id, word";
  
     sql = [sql stringByAppendingFormat: @" FROM %@ ORDER BY APPROX_VECTOR_DISTANCE(word, $vector)",
            kWordsCollectionName];

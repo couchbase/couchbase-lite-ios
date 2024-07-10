@@ -141,7 +141,7 @@
 
 - (NSString*) wordsQueryStringWithLimit: (NSNumber*)limit
                               andClause: (NSString*)andClause {
-    NSString* sql = @"SELECT meta().id, word, catid";
+    NSString* sql = @"SELECT meta().id, word";
  
     sql = [sql stringByAppendingFormat: @" FROM %@ ORDER BY APPROX_VECTOR_DISTANCE(vector, $vector)",
            kWordsCollectionName];
@@ -153,7 +153,6 @@
     if (limit) {
         sql = [sql stringByAppendingFormat: @" LIMIT %d", [limit intValue]];
     }
-    NSLog(@"%@", sql);
     return sql;
 }
 
@@ -661,7 +660,6 @@
     AssertEqual(rs.allObjects.count, 296);
     
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
-    // AssertEqual(wordMap.count, 296); - I don't know why is failing
     AssertNil(wordMap[@"word1"]);
     AssertNil(wordMap[@"word2"]);
     AssertNil(wordMap[@"word3"]);
