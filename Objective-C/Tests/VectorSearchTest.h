@@ -51,18 +51,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) deleteWordsIndex;
 
-- (NSString*) wordsQueryStringWithLimit: (nullable NSNumber*)limit
-                          queryDistance: (BOOL) queryDistance
-                              andClause: (nullable NSString*)andClause;
+/** For the test subclasses to override the default vector expression. */
+- (NSString*) wordsQueryDefaultExpression;
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (nullable NSNumber*)limit
-                                    queryDistance: (BOOL) queryDistance
-                                        andClause: (nullable NSString*)andClause
+- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit
+                                 metric: (nullable NSString*)metric
+                       vectorExpression: (nullable NSString*)vectorExpression
+                            whereClause: (nullable NSString*)whereClause;
+
+- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit;
+
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit
+                                           metric: (nullable NSString*)metric
+                                 vectorExpression: (nullable NSString*)vectorExpression
+                                      whereClause: (nullable NSString*)whereClause
                                     checkTraining: (BOOL) checkTraining;
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (nullable NSNumber*)limit;
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit;
 
-- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (nullable NSNumber*)limit;
+- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSUInteger)limit;
 
 - (NSDictionary<NSString*, NSString*>*) toDocIDWordMap: (CBLQueryResultSet*)resultSet;
 

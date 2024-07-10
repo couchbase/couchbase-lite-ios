@@ -29,6 +29,7 @@
 /**
  Test Spec: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0001-Vector-Search.md
 */
+
 @implementation VectorSearchTest {
     CustomLogger* _logger;
     
@@ -139,34 +140,50 @@
     AssertFalse([[self.wordsCollection indexes: nil] containsObject: @"words_index"]);
 }
 
-- (NSString*) wordsQueryStringWithLimit: (NSNumber*)limit
-                          queryDistance: (BOOL) queryDistance
-                              andClause: (NSString*)andClause {
-    NSString* sql = @"SELECT meta().id, word, catid";
-    if (queryDistance) {
-        sql = [sql stringByAppendingFormat: @", VECTOR_DISTANCE(%@)", kWordsIndexName];
+- (NSString*) wordsQueryDefaultExpression {
+    return @"vector";
+}
+
+- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit
+                                 metric: (nullable NSString*)metric
+                       vectorExpression: (nullable NSString*)vectorExpression
+                            whereClause: (nullable NSString*)whereClause {
+    NSString* sql = [NSString stringWithFormat: @"SELECT meta().id, word, catid FROM %@ ", kWordsCollectionName];
+    
+    if (whereClause) {
+        sql = [sql stringByAppendingFormat: @"WHERE %@ ", whereClause];
     }
     
-    sql = [sql stringByAppendingFormat: @" FROM %@ WHERE VECTOR_MATCH(%@, $vector)",
-           kWordsCollectionName, kWordsIndexName];
-    
-    if (andClause) {
-        sql = [sql stringByAppendingFormat: @" %@", andClause];
+    if (!vectorExpression) {
+        vectorExpression = [self wordsQueryDefaultExpression];
     }
     
-    if (limit) {
-        sql = [sql stringByAppendingFormat: @" LIMIT %d", [limit intValue]];
+    if (metric) {
+        sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector, %@) ", vectorExpression, metric];
+    } else {
+        sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector) ", vectorExpression];
     }
+    
+    
+    sql = [sql stringByAppendingFormat: @"LIMIT %lu", (unsigned long)limit];
     
     return sql;
 }
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSNumber*)limit
-                                    queryDistance: (BOOL) queryDistance
-                                        andClause: (NSString*)andClause
+- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit {
+    return [self wordsQueryStringWithLimit: limit metric: nil vectorExpression: nil whereClause: nil];
+}
+
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit
+                                           metric: (NSString*)metric
+                                 vectorExpression: (NSString*)vectorExpression
+                                      whereClause: (NSString*)whereClause
                                     checkTraining: (BOOL) checkTraining {
     NSError* error;
-    NSString* sql = [self wordsQueryStringWithLimit: limit queryDistance: queryDistance andClause: andClause];
+    NSString* sql = [self wordsQueryStringWithLimit: limit 
+                                             metric: metric
+                                   vectorExpression: vectorExpression 
+                                        whereClause: whereClause];
     CBLQuery* query = [_wordDB createQuery: sql error: &error];
     AssertNotNil(query);
     
@@ -187,12 +204,20 @@
     return rs;
 }
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSNumber*)limit {
-    return [self executeWordsQueryWithLimit: limit queryDistance: false andClause: nil checkTraining: true];
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit {
+    return [self executeWordsQueryWithLimit: limit 
+                                     metric: nil
+                           vectorExpression: nil
+                                whereClause: nil
+                              checkTraining: true];
 }
 
-- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSNumber*)limit {
-    return [self executeWordsQueryWithLimit: limit queryDistance: false andClause: nil checkTraining: false];
+- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSUInteger)limit {
+    return [self executeWordsQueryWithLimit: limit 
+                                     metric: nil
+                           vectorExpression: nil
+                                whereClause: nil
+                              checkTraining: false];
 }
 
 - (NSDictionary<NSString*, NSString*>*) toDocIDWordMap: (CBLQueryResultSet*)resultSet {
@@ -204,6 +229,20 @@
     }
     return wordMap;
 }
+
+@end
+
+/**
+ * Test Spec:
+ * https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0001-Vector-Search.md
+ *
+ * Version: 2.0.9
+ */
+@interface VectorSearchTest_Main : VectorSearchTest
+
+@end
+
+@implementation VectorSearchTest_Main
 
 /**
  * 1. TestVectorIndexConfigurationDefaultValue
@@ -355,7 +394,8 @@
  *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that 20 results are returned.
  *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -365,7 +405,7 @@
 - (void) testCreateVectorIndex {
     [self createWordsIndexWithConfig: VECTOR_INDEX_CONFIG(@"vector", 300, 8)];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
 }
 
@@ -386,7 +426,8 @@
  *     5. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
+ *           WHERE vector_match(words_index, <dinner vector>)
+ *           LIMIT 350
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 300 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -405,7 +446,7 @@
 - (void) testUpdateVectorIndex {
     [self createWordsIndexWithConfig: VECTOR_INDEX_CONFIG(@"vector", 300, 8)];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @350];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 350];
     AssertEqual(rs.allObjects.count, 300);
     
     // Update docs:
@@ -425,7 +466,7 @@
     
     [self.wordsCollection deleteDocument: [self.wordsCollection documentWithID: @"word2" error :&error] error: &error];
     
-    rs = [self executeWordsQueryWithLimit: @350];
+    rs = [self executeWordsQueryWithLimit: 350];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 301);
     AssertEqualObjects(wordMap[@"word301"], [word301 stringForKey: @"word"]);
@@ -455,7 +496,8 @@
  *     6. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 350
  *     7. Execute the query and check that 296 results are returned, and the results
  *        do not include document word1, word2, word3, and word4.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -491,7 +533,7 @@
     [self createWordsIndexWithConfig: VECTOR_INDEX_CONFIG(@"vector", 300, 8)];
     
     // Query:
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @350];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 350];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 296);
     AssertNil(wordMap[@"word1"]);
@@ -506,7 +548,7 @@
     [self.wordsCollection saveDocument: auxDoc error: &error];
     
     // Query:
-    rs = [self executeWordsQueryWithLimit: @350];
+    rs = [self executeWordsQueryWithLimit: 350];
     wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 295);
     AssertNil(wordMap[@"word5"]);
@@ -529,7 +571,8 @@
  *     6. Create an SQL++ query:
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
+ *           ORDER BY APPROX_VECTOR_DISTANCE(prediction(WordEmbedding, {'word': word}).vector, $dinerVector)
+ *           LIMIT 350
  *     7. Check the explain() result of the query to ensure that the "words_pred_index" is used.
  *     8. Execute the query and check that 300 results are returned.
  *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -551,7 +594,11 @@
     NSString* expr = @"prediction(WordEmbedding,{\"word\": word}).vector";
     [self createWordsIndexWithConfig: VECTOR_INDEX_CONFIG(expr, 300, 8)];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @350];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 350
+                                                      metric: nil
+                                            vectorExpression: expr
+                                                 whereClause: nil
+                                               checkTraining: true];
     AssertEqual(rs.allObjects.count, 300);
     
     // Create words.word301 with extwords.word1 content
@@ -572,9 +619,14 @@
     Assert([self.wordsCollection saveDocument: word1 error: &error]);
     
     // Delete words.word2
-    [_wordsCollection deleteDocument: [self.wordsCollection documentWithID: @"word2" error : &error] error: &error];
+    [self.wordsCollection deleteDocument: [self.wordsCollection documentWithID: @"word2" error : &error]
+                                   error: &error];
     
-    rs = [self executeWordsQueryWithLimit: @350];
+    rs = [self executeWordsQueryWithLimit: 350
+                                   metric: nil
+                         vectorExpression: expr
+                              whereClause: nil
+                            checkTraining: true];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 301);
     AssertEqualObjects(wordMap[@"word301"], [word301 stringForKey: @"word"]);
@@ -606,7 +658,8 @@
  *     7. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
+ *           ORDER BY APPROX_VECTOR_DISTANCE(prediction(WordEmbedding, {'word': word}).vector, $dinerVector)
+ *           LIMIT 350
  *     8. Check the explain() result of the query to ensure that the "words_predi_index" is used.
  *     9. Execute the query and check that 296 results are returned and the results
  *        do not include word1, word2, word3, and word4.
@@ -626,15 +679,15 @@
     [auxDoc setArray: nil forKey: @"vector"];
     Assert([self.wordsCollection saveDocument: auxDoc error: &error]);
     
-    auxDoc = [[_wordsCollection documentWithID: @"word2" error: &error] toMutable];
+    auxDoc = [[self.wordsCollection documentWithID: @"word2" error: &error] toMutable];
     [auxDoc setString: @"string" forKey: @"vector"];
     Assert([self.wordsCollection saveDocument:auxDoc error:&error]);
     
-    auxDoc = [[_wordsCollection documentWithID: @"word3" error: &error] toMutable];
+    auxDoc = [[self.wordsCollection documentWithID: @"word3" error: &error] toMutable];
     [auxDoc removeValueForKey: @"vector"];
     Assert([self.wordsCollection saveDocument:auxDoc error:&error]);
 
-    auxDoc = [[_wordsCollection documentWithID: @"word4" error: &error] toMutable];
+    auxDoc = [[self.wordsCollection documentWithID: @"word4" error: &error] toMutable];
     CBLMutableArray* vector = [auxDoc arrayForKey: @"vector"];
     [vector removeValueAtIndex: 0];
     Assert([self.wordsCollection saveDocument: auxDoc error: &error]);
@@ -644,7 +697,11 @@
     [self createWordsIndexWithConfig: VECTOR_INDEX_CONFIG(expr, 300, 8)];
     
     // Query:
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @350];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 350
+                                                      metric: nil
+                                            vectorExpression: expr
+                                                 whereClause: nil
+                                               checkTraining: true];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 296);
     AssertNil(wordMap[@"word1"]);
@@ -657,7 +714,11 @@
     [auxDoc setString: @"Fried Chicken" forKey: @"word"];
     Assert([self.wordsCollection saveDocument: auxDoc error: &error]);
 
-    rs = [self executeWordsQueryWithLimit: @350];
+    rs = [self executeWordsQueryWithLimit: 350
+                                   metric: nil
+                         vectorExpression: expr
+                              whereClause: nil
+                            checkTraining: true];
     wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 295);
     AssertNil(wordMap[@"word5"]);
@@ -680,7 +741,8 @@
  *     5. Create an SQL++ query
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
@@ -695,7 +757,7 @@
     config.encoding = [CBLVectorEncoding scalarQuantizerWithType: kCBLSQ4];
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
     
     // Repeat using SQ6
@@ -705,7 +767,7 @@
     [self createWordsIndexWithConfig: config];
     
     // Rerun query:
-    rs = [self executeWordsQueryWithLimit: @20];
+    rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
     
     // Repeat using SQ8
@@ -715,7 +777,7 @@
     [self createWordsIndexWithConfig: config];
     
     // Rerun query:
-    rs = [self executeWordsQueryWithLimit: @20];
+    rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
 }
 
@@ -735,7 +797,8 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -747,7 +810,7 @@
     config.encoding = [CBLVectorEncoding none];
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
 }
 
@@ -768,7 +831,8 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -785,7 +849,7 @@
         [self createWordsIndexWithConfig: config];
         
         // Query:
-        CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: @20];
+        CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 20];
         AssertEqual(rs.allObjects.count, 20);
         
         // Delete index
@@ -851,7 +915,8 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     5. Check the explain() result of the query to ensure that the "words_index" is used.
  *     6. Execute the query and check that 20 results are returned.
  *     7. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -864,7 +929,7 @@
     config.maxTrainingSize = 100;
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
 }
 
@@ -919,7 +984,8 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was not trained by checking that the “Untrained index;
@@ -932,83 +998,64 @@
     config.maxTrainingSize = 500;
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
     AssertFalse([self checkIndexWasTrained]);
 }
 
 /**
- * 17. TestCreateVectorIndexWithCosineDistance
+ * 17. TestCreateVectorIndexWithDistanceMetric
  * Description
- *     Test that the vector index can be created and used with the cosine distance metric.
+ *     Test that the vector index can be created with all supported distance metrics.
  * Steps
  *     1. Copy database words_db.
- *     2. Register a custom logger to capture the INFO log.
- *     3. Create a vector index named "words_index" in _default.words collection.
- *         - expression: "vector"
- *         - dimensions: 300
- *         - centroids: 8
- *         - metric: Cosine
- *     4. Check that the index is created without an error returned.
- *     5. Create an SQL++ query.
- *         - SELECT meta().id, word,vector_distance(words_index)
- *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that 20 results are returned and the vector
- *       distance value is in between 0 – 1.0 inclusively.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
- *       doesn’t exist in the log.
- *     9. Reset the custom logger.
+ *     2. For each distance metric types : euclideanSquared, euclidean, cosine, and dot,
+ *       create a vector index named "words_index" in _default.words collection:
+ *        - expression: "vector"
+ *        - dimensions: 300
+ *        - centroids : 8
+ *        - metric: <distance-metric>
+ *     3. Check that the index is created without an error returned.
+ *     4. Create an SQL++ query with the correspoding SQL++ metric name string:
+ *       "EUCLIDEAN_SQUARED", "EUCLIDEAN", "COSINE", and "DOT"
+ *        - SELECT meta().id, word
+ *          FROM _default.words
+ *          ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector, "<metric-name>")
+ *          LIMIT 20
+ *     5. Check the explain() result of the query to ensure that the "words_index" is used.
+ *     6. Verify that the index was trained.
+ *     7. Execute the query and check that 20 results are returned.
  */
-- (void) testCreateVectorIndexWithCosineDistance {
-    CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
-    config.metric = kCBLDistanceMetricCosine;
-    [self createWordsIndexWithConfig: config];
+- (void) TestCreateVectorIndexWithDistanceMetric {
+    NSArray<NSNumber*>*metrics = @[
+        @(kCBLDistanceMetricEuclideanSquared),
+        @(kCBLDistanceMetricEuclidean),
+        @(kCBLDistanceMetricCosine),
+        @(kCBLDistanceMetricDot)
+    ];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20 queryDistance: true andClause: false checkTraining: false];
-    NSArray* results = rs.allResults;
-    AssertEqual(results.count, 20);
-    for(CBLQueryResult* result in results){
-        Assert([result doubleAtIndex: 3] > 0);
-        Assert([result doubleAtIndex: 3] < 1);
-    }
-}
-
-/**
- * 18. TestCreateVectorIndexWithEuclideanDistance
- * Description
- *     Test that the vector index can be created and used with the euclidean distance metric.
- * Steps
- *     1. Copy database words_db.
- *     2. Register a custom logger to capture the INFO log.
- *     3. Create a vector index named "words_index" in _default.words collection.
- *         - expression: "vector"
- *         - dimensions: 300
- *         - centroids: 8
- *         - metric: Euclidean
- *     4. Check that the index is created without an error returned.
- *     5. Create an SQL++ query.
- *         - SELECT meta().id, word, vector_distance(words_index)
- *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that 20 results are returned and the
- *        distance value is more than zero.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
- *       doesn’t exist in the log.
- *     9. Reset the custom logger.
- */
-- (void) testCreateVectorIndexWithEuclideanDistance {
-    CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
-    config.metric = kCBLDistanceMetricEuclideanSquared;
-    [self createWordsIndexWithConfig: config];
+    NSArray<NSString*>*metricNames = @[
+        @"EUCLIDEAN_SQUARED",
+        @"EUCLIDEAN",
+        @"COSINE",
+        @"DOT"
+    ];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20 queryDistance: true andClause: false checkTraining: false];
-    NSArray* results = rs.allResults;
-    AssertEqual(results.count, 20);
-    for(CBLQueryResult* result in results){
-        Assert([result doubleAtIndex: 3] > 0);
+    for (NSUInteger i = 0; i < metrics.count; i++) {
+        CBLDistanceMetric metic = (CBLDistanceMetric)[metrics[i] intValue];
+        NSString* metricName = metricNames[i];
+        
+        CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
+        config.metric = metic;
+        [self createWordsIndexWithConfig: config];
+    
+        CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20
+                                                          metric: metricName
+                                                vectorExpression: @"vector"
+                                                     whereClause: nil
+                                                   checkTraining: true];
+        NSArray* results = rs.allResults;
+        AssertEqual(results.count, 20);
     }
 }
 
@@ -1056,7 +1103,8 @@
  *     5. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
  *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -1071,14 +1119,14 @@
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     AssertEqual(rs.allObjects.count, 20);
     
     [self deleteWordsIndex];
     
     [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError **err) {
-        NSString* sql = [self wordsQueryStringWithLimit: @20 queryDistance: false andClause: nil];
-        return [self->_wordDB createQuery: sql error: err] != nil;
+        NSString* sql = [self wordsQueryStringWithLimit: 20 metric: nil vectorExpression: nil whereClause: nil];
+        return [self.wordDB createQuery: sql error: err] != nil;
     }];
 }
 
@@ -1092,45 +1140,15 @@
  *     2. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     3. Check that a CouchbaseLiteException is returned as the index doesn’t exist.
  */
 - (void) testVectorMatchOnNonExistingIndex {
     [self expectError: CBLErrorDomain code: CBLErrorMissingIndex in: ^BOOL(NSError **err) {
-        NSString* sql = [self wordsQueryStringWithLimit: @20 queryDistance: false andClause: nil];
-        return [self->_wordDB createQuery: sql error: err] != nil;
+        NSString* sql = [self wordsQueryStringWithLimit: 20 metric: nil vectorExpression: nil whereClause: nil];
+        return [self.wordDB createQuery: sql error: err] != nil;
     }];
-}
-
-/**
- * 22. TestVectorMatchDefaultLimit
- * Description
- *     Test that the number of rows returned is limited to the default value which is 3
- *     when using the vector_match query without the limit number specified.
- * Steps
- *     1. Copy database words_db.
- *     2. Register a custom logger to capture the INFO log.
- *     3. Create a vector index named "words_index" in _default.words collection.
- *         - expression: "vector"
- *         - dimensions: 300
- *         - centroids: 8
- *     4. Check that the index is created without an error returned.
- *     5. Create an SQL++ query.
- *         - SELECT meta().id, word
- *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>)
- *     6. Check the explain() result of the query to ensure that the "words_index" is used.
- *     7. Execute the query and check that 3 results are returned.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
- *       doesn’t exist in the log.
- *     9. Reset the custom logger.
- */
-- (void) testVectorMatchDefaultLimit {
-    CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
-    [self createWordsIndexWithConfig: config];
-    
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: nil];
-    AssertEqual(rs.allObjects.count, 3);
 }
 
 /**
@@ -1149,7 +1167,8 @@
  *     4. Create an SQL++ query.
  *         - SELECT meta().id, word
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) LIMIT <limit>
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT <limit>
  *         - limit: 1 and 10000
  *     5. Check that the query can be created without an error.
  *     6. Repeat step 4 with the limit: -1, 0, and 10001
@@ -1162,24 +1181,24 @@
     // Check valid query with 1 and 10000 set limit
     for (NSNumber* limit in @[@1, @10000]) {
         NSError* error;
-        NSString* sql = [self wordsQueryStringWithLimit: limit queryDistance: false andClause: nil];
-        Assert([_wordDB createQuery: sql error: &error]);
+        NSString* sql = [self wordsQueryStringWithLimit: [limit unsignedIntegerValue]];
+        Assert([self.wordDB createQuery: sql error: &error]);
         AssertNil(error);
     }
     
     // Check if error thrown for wrong limit values
     for (NSNumber* limit in @[@-1, @0, @10001]) {
         [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
-            NSString* sql = [self wordsQueryStringWithLimit: limit queryDistance: false andClause: nil];
-            return [self->_wordDB createQuery: sql error: err] != nil;
+            NSString* sql = [self wordsQueryStringWithLimit: [limit unsignedIntegerValue]];
+            return [self.wordDB createQuery: sql error: err] != nil;
         }];
     }
 }
 
 /**
- * 24. TestVectorMatchWithAndExpression
+ * 24. TestHybridVectorSearch
  * Description
- *     Test that vector_match can be used in AND expression.
+ *     Test a simple hybrid search with WHERE clause.
  * Steps
  *     1. Copy database words_db.
  *     2. Register a custom logger to capture the INFO log.
@@ -1191,7 +1210,9 @@
  *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) AND catid = 'cat1' LIMIT 300
+ *           WHERE catid = "cat1"
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 300
  *     6. Check that the query can be created without an error.
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that the number of results returned is 50
@@ -1200,13 +1221,14 @@
  *       doesn’t exist in the log.
  *     10. Reset the custom logger.
  */
-- (void) testVectorMatchWithAndExpression {
+- (void) testHybridVectorSearch {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300 
-                                               queryDistance: false
-                                                   andClause: @"AND catid = 'cat1'" 
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 300
+                                                      metric: nil
+                                            vectorExpression: @"vector"
+                                                 whereClause: @"catid = 'cat1'"
                                                checkTraining: true];
     
     NSArray* results = rs.allResults;
@@ -1217,9 +1239,9 @@
 }
 
 /**
- * 25. TestVectorMatchWithMultipleAndExpression
+ * 25. TestHybridVectorSearchWithAND
  * Description
- *     Test that vector_match can be used in multiple AND expressions.
+ *     Test hybrid search with multiple AND
  * Steps
  *     1. Copy database words_db.
  *     2. Register a custom logger to capture the INFO log.
@@ -1231,7 +1253,9 @@
  *     5. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE (vector_match(words_index, <dinner vector>) AND word is valued) AND catid = 'cat1'  LIMIT 300
+ *           WHERE catid = "cat1" AND word is valued
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 300
  *     6. Check that the query can be created without an error.
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that the number of results returned is 50
@@ -1240,13 +1264,14 @@
  *       doesn’t exist in the log.
  *     10. Reset the custom logger.
  */
-- (void) testVectorMatchWithMultipleAndExpression {
+- (void) testHybridVectorSearchWithAND {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300
-                                               queryDistance: false
-                                                   andClause: @"AND word is valued AND catid = 'cat1'"
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 300
+                                                      metric: nil
+                                            vectorExpression: @"vector"
+                                                 whereClause: @"word is valued AND catid = 'cat1'"
                                                checkTraining: true];
     
     NSArray* results = rs.allResults;
@@ -1257,9 +1282,9 @@
 }
 
 /**
- * 26. TestInvalidVectorMatchWithOrExpression
+ * 26. TestInvalidHybridVectorSearchWithOR
  * Description
- *     Test that vector_match cannot be used with OR expression.
+ *     Test that APPROX_VECTOR_DISTANCE cannot be used with OR expression.
  * Steps
  *     1. Copy database words_db.
  *     2. Create a vector index named "words_index" in _default.words collection.
@@ -1270,18 +1295,21 @@
  *     4. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE vector_match(words_index, <dinner vector>) OR catid = 1 LIMIT 20
+ *           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 10 OR catid = 'cat1'
+ *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *           LIMIT 20
  *     5. Check that a CouchbaseLiteException is returned when creating the query.
  */
-- (void) testInvalidVectorMatchWithOrExpression {
+- (void) testInvalidHybridVectorSearchWithOR {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
     [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError **err) {
-        NSString* sql = [self wordsQueryStringWithLimit: @20
-                                          queryDistance: false
-                                              andClause: @"OR catid = 'cat1'"];
-        return [self->_wordDB createQuery: sql error: err] != nil;
+        NSString* sql = [self wordsQueryStringWithLimit: 20
+                                                 metric: nil
+                                       vectorExpression: @"vector"
+                                            whereClause: @"APPROX_VECTOR_DISTANCE(vector, $vector) OR catid = 'cat1'"];
+        return [self.wordDB createQuery: sql error: err] != nil;
     }];
 }
 
@@ -1303,9 +1331,10 @@
  *          - centroids : 8
  *      6. Check that the index is created without an error returned.
  *      7. Create an SQL++ query:
- *          - SELECT meta().id, word, vector_distance(words_index)
+ *          - SELECT meta().id, word,
  *            FROM _default.words
- *            WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+ *            WHERE vector_match(words_index, <dinner vector>)
+ *            LIMIT 20
  *      8. Execute the query and check that 20 results are returned.
  *      9. Check that the result also contains doc id = word49.
  */
@@ -1318,7 +1347,7 @@
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @20];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 20];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 20);
     AssertNotNil(wordMap[@"word49"]);
@@ -1340,7 +1369,8 @@
  *      4. Create an SQL++ query:
  *          - SELECT meta().id, word
  *            FROM _default.words
- *            WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *            ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+ *            LIMIT 300
  *      5. Execute the query and check that 20 results are returned.
  *      6. Repeat step 2 - 6 but change the numProbes to 1.
  *      7. Verify the number of results returned in Step 5 is larger than Step 6.
@@ -1350,13 +1380,13 @@
     config.numProbes = 5;
     [self createWordsIndexWithConfig: config];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300];
+    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: 300];
     NSUInteger numResultsFor5Probes = [[rs allObjects] count];
     Assert(numResultsFor5Probes > 0);
     
     config.numProbes = 1;
     [self createWordsIndexWithConfig: config];
-    rs = [self executeWordsQueryWithLimit: @300];
+    rs = [self executeWordsQueryWithLimit: 300];
     NSUInteger numResultsFor1Probes = [[rs allObjects] count];
     Assert(numResultsFor1Probes > 0);
     

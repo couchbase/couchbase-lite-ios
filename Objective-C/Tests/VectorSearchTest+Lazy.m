@@ -1,5 +1,5 @@
 //
-//  LazyVectorIndexTest.m
+//  VectorSearchTest+Lazy.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
@@ -22,17 +22,24 @@
 /**
  * Test Spec: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0002-Lazy-Vector-Index.md
  *
- *  Test 6. TestGetIndexOnClosedDatabase is tested in CollectionTest
- *  Test 7. TestGetIndexOnDeletedCollection is tested in CollectionTest
+ * Vesion: 2.0.1
+ *
+ * Test 6. TestGetIndexOnClosedDatabase is tested in CollectionTest
+ * Test 7. TestGetIndexOnDeletedCollection is tested in CollectionTest
  */
 
 #define LAZY_VECTOR_INDEX_CONFIG(E, D, C) [self lazyVectorIndexConfigWithExpression: (E) dimensions: (D) centroids: (C)]
 
-@interface VectorLazyIndexTest : VectorSearchTest
+@interface VectorSearchTest_Lazy : VectorSearchTest
 
 @end
 
-@implementation VectorLazyIndexTest
+@implementation VectorSearchTest_Lazy
+
+/** Override the default VectorSearch Expression */
+- (NSString*) wordsQueryDefaultExpression {
+    return @"word";
+}
 
 - (CBLQueryIndex*) wordsIndex {
     CBLQueryIndex* index = [self.wordsCollection indexWithName: kWordsIndexName error: nil];
@@ -40,7 +47,7 @@
     return index;
 }
 
-- (CBLVectorIndexConfiguration*) lazyVectorIndexConfigWithExpression: (NSString*)expression 
+- (CBLVectorIndexConfiguration*) lazyVectorIndexConfigWithExpression: (NSString*)expression
                                                           dimensions: (unsigned int)dimensions
                                                            centroids: (unsigned int)centroids {
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(expression, dimensions, centroids);
@@ -208,7 +215,8 @@
  * 3. Create an SQL++ query:
  *     - SELECT word
  *       FROM _default.words
- *       WHERE vector_match(words_index, <dinner vector>)
+ *       ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+ *       LIMIT 10
  * 4. Execute the query and check that 0 results are returned.
  * 5. Update the documents:
  *     - Create _default.words.word301 with the content from _default.extwords.word1
@@ -218,7 +226,7 @@
 - (void) testLazyVectorIndexNotAutoUpdatedChangedDocs {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
-    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: nil];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 10];
     AssertEqual(rs.allObjects.count, 0);
     
     // Update docs:
@@ -232,7 +240,7 @@
     [word1 setData: [extWord3 toDictionary]];
     Assert([self.wordsCollection saveDocument: word1 error: &error]);
     
-    rs = [self executeWordsQueryNoTrainingCheckWithLimit: nil];
+    rs = [self executeWordsQueryNoTrainingCheckWithLimit: 10];
     AssertEqual(rs.allObjects.count, 0);
 }
 
@@ -261,7 +269,8 @@
  * 6. Create an SQL++ query:
  *    - SELECT word
  *      FROM _default.words
- *      WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *      ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+ *      LIMIT 300
  * 7. Execute the query and check that 1 results are returned.
  * 8. Check that the word gotten from the query result is the same as the word in Step 5.
  * 9. Delete _default.words.word1 doc.
@@ -284,12 +293,12 @@
     AssertNil(error);
     
     // Query:
-    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: @300];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     AssertEqual(rs.allObjects.count, 1);
     
     // Delete doc and requery:
     [self.wordsCollection deleteDocument: [self.wordsCollection documentWithID: @"word1" error: &error] error: &error];
-    rs = [self executeWordsQueryNoTrainingCheckWithLimit: @300];
+    rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     AssertEqual(rs.allObjects.count, 0);
 }
 
@@ -318,7 +327,8 @@
  * 7. Create an SQL++ query:
  *    - SELECT word
  *      FROM _default.words
- *      WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *      ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+ *      LIMIT 300
  * 8. Execute the query and check that 1 results are returned.
  * 9. Check that the word gotten from the query result is the same as the word in Step 5.
  * 10. Purge _default.words.word1 doc.
@@ -341,12 +351,12 @@
     AssertNil(error);
     
     // Query:
-    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: @300];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     AssertEqual(rs.allObjects.count, 1);
     
     // Delete doc and requery:
     [self.wordsCollection purgeDocumentWithID: @"word1" error: &error];
-    rs = [self executeWordsQueryNoTrainingCheckWithLimit: @300];
+    rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     AssertEqual(rs.allObjects.count, 0);
 }
 
@@ -827,7 +837,8 @@
  * 7. Execute a vector search query.
  *     - SELECT word
  *       FROM _default.words
- *       WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *       ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+ *       LIMIT 300
  * 8. Check that there are 10 words returned.
  * 9. Check that the word is in the word set from the step 5.
  */
@@ -852,10 +863,7 @@
     
     Assert([updater finishWithError: &error]);
     
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300
-                                               queryDistance: false
-                                                   andClause: nil
-                                               checkTraining: false];
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
     AssertEqual(wordMap.count, 10);
     
@@ -1090,10 +1098,10 @@
  * 7. Execute a vector search query.
  *     - SELECT word
  *       FROM _default.words
- *       WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+ *       ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+ *       LIMIT 300
  * 8. Check that there are 0 words returned.
  */
-
 - (void) testNonFinishedIndexUpdaterNotUpdateIndex {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
@@ -1112,11 +1120,7 @@
     
     // "Release" CBLIndexUpdater
     updater = nil;
-    CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300
-                                               queryDistance: false
-                                                   andClause: nil
-                                               checkTraining: false];
-    
+    CBLQueryResultSet* rs = [self executeWordsQueryNoTrainingCheckWithLimit: 300];
     AssertEqual(rs.allObjects.count, 0);
 }
 

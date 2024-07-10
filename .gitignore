@@ -17,6 +17,8 @@ frameworks/
 
 # CBL files:
 Tests/Extensions/CouchbaseLiteVectorSearch.xcframework
+Tests/Extensions/LICENSE.txt
+Tests/Extensions/Build
 vendor/couchbase-lite-core-EE
 
 # spm 

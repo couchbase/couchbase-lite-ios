@@ -47,12 +47,12 @@
 
 - (void) testCreateReplicatorWithNoCollections {
     [self expectException: NSInvalidArgumentException in:^{
-        CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: _config];
+        CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: self->_config];
         NSLog(@"%@", r);
     }];
  
     [self expectException: NSInvalidArgumentException in:^{
-        [_config addCollections: @[] config: nil];
+        [self->_config addCollections: @[] config: nil];
     }];
 }
 
@@ -1310,7 +1310,6 @@
 }
 
 - (void) testCollectionDocumentReplicationEvents {
-    CBLDocumentFlags flags = 0;
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -1342,6 +1341,8 @@
     CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
     [config addCollections: @[col1a, col1b] config: colConfig];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    __block CBLDocumentFlags flags = 0;
     __block int docsCount = 0;
     __block NSMutableArray* docs = [[NSMutableArray alloc] init];
     id token = [r addDocumentReplicationListener: ^(CBLDocumentReplication* docReplication) {
