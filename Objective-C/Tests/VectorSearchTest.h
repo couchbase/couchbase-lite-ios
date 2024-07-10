@@ -52,11 +52,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) deleteWordsIndex;
 
 - (NSString*) wordsQueryStringWithLimit: (nullable NSNumber*)limit
-                          queryDistance: (BOOL) queryDistance
                               andClause: (nullable NSString*)andClause;
 
 - (CBLQueryResultSet*) executeWordsQueryWithLimit: (nullable NSNumber*)limit
-                                    queryDistance: (BOOL) queryDistance
                                         andClause: (nullable NSString*)andClause
                                     checkTraining: (BOOL) checkTraining;
 

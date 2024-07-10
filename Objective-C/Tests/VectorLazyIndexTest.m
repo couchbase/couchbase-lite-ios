@@ -853,7 +853,6 @@
     Assert([updater finishWithError: &error]);
     
     CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300
-                                               queryDistance: false
                                                    andClause: nil
                                                checkTraining: false];
     NSDictionary<NSString*, NSString*>* wordMap = [self toDocIDWordMap: rs];
@@ -1113,7 +1112,6 @@
     // "Release" CBLIndexUpdater
     updater = nil;
     CBLQueryResultSet* rs = [self executeWordsQueryWithLimit: @300
-                                               queryDistance: false
                                                    andClause: nil
                                                checkTraining: false];
     
