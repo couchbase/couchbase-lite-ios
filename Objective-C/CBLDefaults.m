@@ -26,6 +26,8 @@
 
 const BOOL kCBLDefaultLogFileUsePlaintext = NO;
 
+const BOOL kCBLDefaultLogFileUsePlainText = NO;
+
 const uint64_t kCBLDefaultLogFileMaxSize = 524288;
 
 const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
