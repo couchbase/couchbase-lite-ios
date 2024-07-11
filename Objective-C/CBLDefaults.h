@@ -33,6 +33,9 @@
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
 extern const BOOL kCBLDefaultLogFileUsePlaintext;
 
+/** [NO] Plaintext is not used, and instead binary encoding is used in log files */
+extern const BOOL kCBLDefaultLogFileUsePlainText __deprecated_msg("Use kCBLDefaultLogFileUsePlaintext instead.");
+
 /** [524288] 512 KiB for the size of a log file */
 extern const uint64_t kCBLDefaultLogFileMaxSize;
 
