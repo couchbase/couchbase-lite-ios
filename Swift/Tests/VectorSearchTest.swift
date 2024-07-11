@@ -129,30 +129,43 @@ class VectorSearchTest: CBLTestCase {
         try wordsCollection.deleteIndex(forName: wordsIndexName)
     }
     
-    func wordsQueryString(limit: Int?, queryDistance: Bool = false, andExpr: String? = nil) -> String {
-        var sql = "SELECT meta().id, word, catid"
-        if (queryDistance) {
-            sql = sql + ", VECTOR_DISTANCE(\(wordsIndexName)) "
+    func wordsQueryDefaultExpression() -> String {
+        return "vector"
+    }
+    
+    func wordsQueryString(limit: Int,
+                          metric: String? = nil,
+                          vectorExpression: String? = nil,
+                          whereExpression: String? = nil) -> String {
+        var sql = "SELECT meta().id, word, catid "
+        
+        sql = sql + "FROM \(wordsCollectionName) "
+        
+        if let whereExpr = whereExpression {
+            sql = sql + "WHERE \(whereExpr) "
+        }
+        
+        let expr = vectorExpression != nil ? vectorExpression! : self.wordsQueryDefaultExpression()
+        
+        if let metric = metric {
+            sql = sql + "ORDER BY APPROX_VECTOR_DISTANCE(\(expr), $vector, \"\(metric)\") "
         } else {
-            sql = sql + " "
-        }
-        sql = sql + "FROM \(wordsCollectionName) WHERE VECTOR_MATCH(\(wordsIndexName), $vector)"
-        
-        if let andExpr = andExpr {
-            sql = sql + " \(andExpr)"
+            sql = sql + "ORDER BY APPROX_VECTOR_DISTANCE(\(expr), $vector) "
         }
         
-        if let limit = limit {
-            sql = sql + " LIMIT \(limit)"
-        }
+        sql = sql + "LIMIT \(limit)"
         
         return sql;
     }
     
-    func executeWordsQuery(limit: Int? = nil, checkTraining: Bool = true, queryDistance: Bool = false,
-                           andExpr: String? = nil) throws -> ResultSet
-    {
-        let sql = wordsQueryString(limit: limit, queryDistance: queryDistance, andExpr: andExpr)
+    func executeWordsQuery(limit: Int,
+                           metric: String? = nil,
+                           vectorExpression: String? = nil,
+                           whereExpression: String? = nil, checkTraining: Bool = true) throws -> ResultSet {
+        let sql = wordsQueryString(limit: limit,
+                                   metric: metric,
+                                   vectorExpression: vectorExpression,
+                                   whereExpression: whereExpression)
         let query = try wordDB.createQuery(sql)
         
         let parameters = Parameters()
@@ -168,6 +181,15 @@ class VectorSearchTest: CBLTestCase {
         }
         return rs
     }
+}
+
+///
+/// Test Spec:
+/// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0001-Vector-Search.md
+///
+/// Version: 2.0.9
+/// 
+class VectorSearchTest_Main: VectorSearchTest {
     
     /// 1. TestVectorIndexConfigurationDefaultValue
     /// Description
@@ -310,7 +332,8 @@ class VectorSearchTest: CBLTestCase {
     ///     6. Create an SQL++ query:
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     7. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     8. Execute the query and check that 20 results are returned.
     ///     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -340,7 +363,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query:
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
+    ///           WHERE vector_match(words_index, <dinner vector>)
+    ///           LIMIT 350
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 300 results are returned.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -411,7 +435,8 @@ class VectorSearchTest: CBLTestCase {
     ///     6. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 350
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 350
     ///     7. Execute the query and check that 296 results are returned, and the results
     ///        do not include document word1, word2, word3, and word4.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -480,7 +505,8 @@ class VectorSearchTest: CBLTestCase {
     ///     6. Create an SQL++ query:
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(prediction(WordEmbedding, {'word': word}).vector, $dinerVector)
+    ///           LIMIT 350
     ///     7. Check the explain() result of the query to ensure that the "words_pred_index" is used.
     ///     8. Execute the query and check that 300 results are returned.
     ///     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -498,12 +524,12 @@ class VectorSearchTest: CBLTestCase {
     func testCreateVectorIndexUsingPredictionModel() throws {
         try registerPredictiveModel()
         
-        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
-        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        let expr = "prediction(WordEmbedding,{\"word\": word}).vector"
+        let config = VectorIndexConfiguration(expression: expr, dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
         // Query:
-        var rs = try executeWordsQuery(limit: 350)
+        var rs = try executeWordsQuery(limit: 350, vectorExpression: expr)
         XCTAssertEqual(rs.allResults().count, 300)
         XCTAssert(checkIndexWasTrained())
         
@@ -528,7 +554,7 @@ class VectorSearchTest: CBLTestCase {
         // Delete words.word2
         try wordsCollection.delete(document: wordsCollection.document(id: "word2")!)
         
-        rs = try executeWordsQuery(limit: 350)
+        rs = try executeWordsQuery(limit: 350, vectorExpression: expr)
         let wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 301)
         XCTAssertEqual(wordMap["word301"], word301.string(forKey: "word"))
@@ -561,7 +587,8 @@ class VectorSearchTest: CBLTestCase {
     ///     7. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_pred_index, <dinner vector>) LIMIT 350
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(prediction(WordEmbedding, {'word': word}).vector, $dinerVector)
+    ///           LIMIT 350
     ///     8. Check the explain() result of the query to ensure that the "words_predi_index" is used.
     ///     9. Execute the query and check that 296 results are returned and the results
     ///        do not include word1, word2, word3, and word4.
@@ -592,11 +619,11 @@ class VectorSearchTest: CBLTestCase {
         vector!.removeValue(at: 0)
         try wordsCollection.save(document: auxDoc)
         
-        let exp = "prediction(WordEmbedding,{\"word\": word}).vector"
-        let config = VectorIndexConfiguration(expression: exp, dimensions: 300, centroids: 8)
+        let expr = "prediction(WordEmbedding,{\"word\": word}).vector"
+        let config = VectorIndexConfiguration(expression: expr, dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        var rs = try executeWordsQuery(limit: 350)
+        var rs = try executeWordsQuery(limit: 350, vectorExpression: expr)
         var wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 296)
         XCTAssertNil(wordMap["word1"])
@@ -609,7 +636,7 @@ class VectorSearchTest: CBLTestCase {
         auxDoc.setString("Fried Chicken", forKey: "word")
         try wordsCollection.save(document: auxDoc)
         
-        rs = try executeWordsQuery(limit: 350)
+        rs = try executeWordsQuery(limit: 350, vectorExpression: expr)
         wordMap = toDocIDWordMap(rs: rs)
         XCTAssertEqual(wordMap.count, 295)
         XCTAssertNil(wordMap["word5"])
@@ -631,7 +658,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 20 results are returned.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -684,7 +712,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 20 results are returned.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -699,9 +728,6 @@ class VectorSearchTest: CBLTestCase {
         XCTAssertEqual(rs.allResults().count, 20)
     }
     
-    /// FAILED : https://issues.couchbase.com/browse/CBL-5538
-    /// Disable bits = 12 for now.
-    ///
     /// 12. TestCreateVectorIndexWithPQ
     /// Description
     ///     Using the PQ Encoding, test that the vector index can be created and used. The
@@ -718,7 +744,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 20 results are returned.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -727,7 +754,7 @@ class VectorSearchTest: CBLTestCase {
     ///     10. Reset the custom logger.
     ///     11. Repeat steps 2 to 10 by changing the PQ’s bits to 4 and 12 respectively.
     func testCreateVectorIndexWithPQ() throws {
-        for numberOfBits in [8, 4, /*12*/] {
+        for numberOfBits in [8, 4, 12] {
             // Create vector index
             var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
             config.encoding = .productQuantizer(subquantizers: 5, bits: UInt32(numberOfBits))
@@ -804,7 +831,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     5. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     6. Execute the query and check that 20 results are returned.
     ///     7. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -867,7 +895,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 20 results are returned.
     ///     8. Verify that the index was not trained by checking that the “Untrained index;
@@ -885,73 +914,39 @@ class VectorSearchTest: CBLTestCase {
         XCTAssertFalse(checkIndexWasTrained())
     }
     
-    /// 17. TestCreateVectorIndexWithCosineDistance
+    ///
+    /// 17. TestCreateVectorIndexWithDistanceMetric
     /// Description
-    ///     Test that the vector index can be created and used with the cosine distance metric.
+    ///    Test that the vector index can be created with all supported distance metrics.
     /// Steps
-    ///     1. Copy database words_db.
-    ///     2. Register a custom logger to capture the INFO log.
-    ///     3. Create a vector index named "words_index" in _default.words collection.
-    ///         - expression: "vector"
-    ///         - dimensions: 300
-    ///         - centroids: 8
-    ///         - metric: Cosine
-    ///     4. Check that the index is created without an error returned.
-    ///     5. Create an SQL++ query.
-    ///         - SELECT meta().id, word,vector_distance(words_index)
-    ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
-    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
-    ///     7. Execute the query and check that 20 results are returned and the vector
-    ///       distance value is in between 0 – 1.0 inclusively.
-    ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
-    ///       doesn’t exist in the log.
-    ///     9. Reset the custom logger.
-    func testCreateVectorIndexWithCosineDistance() throws {
-        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
-        config.metric = .cosine
-        try createWordsIndex(config: config)
-        
-        let rs = try executeWordsQuery(limit: 20, queryDistance: true)
-        let results = rs.allResults()
-        XCTAssertEqual(results.count, 20)
-        for result in results {
-            XCTAssert(result.double(at: 3) > 0)
-            XCTAssert(result.double(at: 3) < 1)
-        }
-    }
-    
-    /// 18. TestCreateVectorIndexWithEuclideanDistance
-    /// Description
-    ///     Test that the vector index can be created and used with the euclidean distance metric.
-    /// Steps
-    ///     1. Copy database words_db.
-    ///     2. Register a custom logger to capture the INFO log.
-    ///     3. Create a vector index named "words_index" in _default.words collection.
-    ///         - expression: "vector"
-    ///         - dimensions: 300
-    ///         - centroids: 8
-    ///         - metric: Euclidean
-    ///     4. Check that the index is created without an error returned.
-    ///     5. Create an SQL++ query.
-    ///         - SELECT meta().id, word, vector_distance(words_index)
-    ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
-    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
-    ///     7. Execute the query and check that 20 results are returned and the
-    ///        distance value is more than zero.
-    ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
-    ///       doesn’t exist in the log.
-    ///     9. Reset the custom logger.
-    func testCreateVectorIndexWithEuclideanDistance() throws {
-        var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
-        config.metric = .euclideanSquared
-        try createWordsIndex(config: config)
-        
-        let rs = try executeWordsQuery(limit: 20)
-        XCTAssertEqual(rs.allResults().count, 20)
-        for result in rs.allResults() {
-            XCTAssert(result.double(at: 3) > 0)
+    ///    1. Copy database words_db.
+    ///    2. For each distance metric types : euclideanSquared, euclidean, cosine, and dot,
+    ///      create a vector index named "words_index" in _default.words collection:
+    ///       - expression: "vector"
+    ///       - dimensions: 300
+    ///       - centroids : 8
+    ///       - metric: <distance-metric>
+    ///     3. Check that the index is created without an error returned.
+    ///    4. Create an SQL++ query with the correspoding SQL++ metric name string:
+    ///      "EUCLIDEAN_SQUARED", "EUCLIDEAN", "COSINE", and "DOT"
+    ///        - SELECT meta().id, word
+    ///         FROM _default.words
+    ///         ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector, "<metric-name>")
+    ///         LIMIT 20
+    ///    5. Check the explain() result of the query to ensure that the "words_index" is used.
+    ///    6. Verify that the index was trained.
+    ///    7. Execute the query and check that 20 results are returned.
+    func testCreateVectorIndexWithDistanceMetric() throws {
+        let metrics: [DistanceMetric] = [.euclideanSquared, .euclidean, .cosine, .dot]
+        let metricNames = ["EUCLIDEAN_SQUARED", "EUCLIDEAN", "COSINE", "DOT"]
+        for i in 0..<metrics.count {
+            var config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+            config.metric = metrics[i];
+            try createWordsIndex(config: config)
+            
+            let rs = try executeWordsQuery(limit: 20, metric: metricNames[i])
+            let results = rs.allResults()
+            XCTAssertEqual(results.count, 20)
         }
     }
     
@@ -998,7 +993,8 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     7. Execute the query and check that 20 results are returned.
     ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
@@ -1033,41 +1029,13 @@ class VectorSearchTest: CBLTestCase {
     ///     2. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     3. Check that a CouchbaseLiteException is returned as the index doesn’t exist.
     func testVectorMatchOnNonExistingIndex() throws {
         self.expectError(domain: CBLError.domain, code: CBLError.missingIndex) {
             _ = try self.executeWordsQuery(limit: 20)
         }
-    }
-    
-    /// 22. TestVectorMatchDefaultLimit
-    /// Description
-    ///     Test that the number of rows returned is limited to the default value which is 3
-    ///     when using the vector_match query without the limit number specified.
-    /// Steps
-    ///     1. Copy database words_db.
-    ///     2. Register a custom logger to capture the INFO log.
-    ///     3. Create a vector index named "words_index" in _default.words collection.
-    ///         - expression: "vector"
-    ///         - dimensions: 300
-    ///         - centroids: 8
-    ///     4. Check that the index is created without an error returned.
-    ///     5. Create an SQL++ query.
-    ///         - SELECT meta().id, word
-    ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>)
-    ///     6. Check the explain() result of the query to ensure that the "words_index" is used.
-    ///     7. Execute the query and check that 3 results are returned.
-    ///     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
-    ///       doesn’t exist in the log.
-    ///     9. Reset the custom logger.
-    func testVectorMatchDefaultLimit() throws {
-        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
-        try createWordsIndex(config: config)
-        
-        let rs = try executeWordsQuery()
-        XCTAssertEqual(rs.allResults().count, 3)
     }
     
     /// 23. TestVectorMatchLimitBoundary
@@ -1085,7 +1053,8 @@ class VectorSearchTest: CBLTestCase {
     ///     4. Create an SQL++ query.
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT <limit>
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT <limit>
     ///         - limit: 1 and 10000
     ///     5. Check that the query can be created without an error.
     ///     6. Repeat step 4 with the limit: -1, 0, and 10001
@@ -1107,9 +1076,9 @@ class VectorSearchTest: CBLTestCase {
         }
     }
     
-    /// 24. TestVectorMatchWithAndExpression
+    /// 24. TestHybridVectorSearch
     /// Description
-    ///     Test that vector_match can be used in AND expression.
+    ///     Test a simple hybrid search with WHERE clause.
     /// Steps
     ///     1. Copy database words_db.
     ///     2. Register a custom logger to capture the INFO log.
@@ -1121,7 +1090,9 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT word, catid
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) AND catid = 'cat1' LIMIT 300
+    ///           WHERE catid = "cat1"
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 300
     ///     6. Check that the query can be created without an error.
     ///     7. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     8. Execute the query and check that the number of results returned is 50
@@ -1129,11 +1100,11 @@ class VectorSearchTest: CBLTestCase {
     ///     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
     ///       doesn’t exist in the log.
     ///     10. Reset the custom logger.
-    func testVectorMatchWithAndExpression() throws {
+    func TestHybridVectorSearch() throws {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        let rs = try executeWordsQuery(limit: 300, andExpr: "AND catid = 'cat1'")
+        let rs = try executeWordsQuery(limit: 300, whereExpression: "catid = 'cat1'")
         let results = rs.allResults()
         XCTAssertEqual(results.count, 50)
         for result in results {
@@ -1141,9 +1112,9 @@ class VectorSearchTest: CBLTestCase {
         }
     }
     
-    /// 25. TestVectorMatchWithMultipleAndExpression
+    /// 25. TestHybridVectorSearchWithAND
     /// Description
-    ///     Test that vector_match can be used in multiple AND expressions.
+    ///     Test hybrid search with multiple AND
     /// Steps
     ///     1. Copy database words_db.
     ///     2. Register a custom logger to capture the INFO log.
@@ -1155,7 +1126,9 @@ class VectorSearchTest: CBLTestCase {
     ///     5. Create an SQL++ query.
     ///         - SELECT word, catid
     ///           FROM _default.words
-    ///           WHERE (vector_match(words_index, <dinner vector>) AND word is valued) AND catid = 'cat1' LIMIT 300
+    ///           WHERE catid = "cat1" AND word is valued
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 300
     ///     6. Check that the query can be created without an error.
     ///     7. Check the explain() result of the query to ensure that the "words_index" is used.
     ///     8. Execute the query and check that the number of results returned is 50
@@ -1163,11 +1136,11 @@ class VectorSearchTest: CBLTestCase {
     ///     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
     ///       doesn’t exist in the log.
     ///     10. Reset the custom logger.
-    func testVectorMatchWithMultipleAndExpression() throws {
+    func TestHybridVectorSearchWithAND() throws {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        let rs = try executeWordsQuery(limit: 300, andExpr: "AND word is valued AND catid = 'cat1'")
+        let rs = try executeWordsQuery(limit: 300, whereExpression: "word is valued AND catid = 'cat1'")
         let results = rs.allResults()
         XCTAssertEqual(results.count, 50)
         for result in results {
@@ -1175,9 +1148,9 @@ class VectorSearchTest: CBLTestCase {
         }
     }
     
-    /// 26. TestInvalidVectorMatchWithOrExpression
+    /// 26. TestInvalidHybridVectorSearchWithOR
     /// Description
-    ///     Test that vector_match cannot be used with OR expression.
+    ///     Test that APPROX_VECTOR_DISTANCE cannot be used with OR expression.
     /// Steps
     ///     1. Copy database words_db.
     ///     2. Create a vector index named "words_index" in _default.words collection.
@@ -1188,14 +1161,16 @@ class VectorSearchTest: CBLTestCase {
     ///     4. Create an SQL++ query.
     ///         - SELECT word, catid
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) OR catid = 1 LIMIT 20
+    ///           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 10 OR catid = 'cat1'
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 20
     ///     5. Check that a CouchbaseLiteException is returned when creating the query.
-    func testInvalidVectorMatchWithOrExpression() throws {
+    func TestInvalidHybridVectorSearchWithOR() throws {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
         self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
-            _ = try self.executeWordsQuery(limit: 300, andExpr: "OR catid = 'cat1'")
+            _ = try self.executeWordsQuery(limit: 300, whereExpression: "APPROX_VECTOR_DISTANCE(vector, $vector) OR catid = 'cat1'")
         }
     }
      
@@ -1214,9 +1189,10 @@ class VectorSearchTest: CBLTestCase {
     ///         - centroids : 8
     ///     6. Check that the index is created without an error returned.
     ///     7. Create an SQL++ query:
-    ///         - SELECT meta().id, word, vector_distance(words_index)
-    ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 20
+    ///         - SELECT meta().id, word,
+    ///            FROM _default.words
+    ///            WHERE vector_match(words_index, <dinner vector>)
+    ///            LIMIT 20
     ///     8. Execute the query and check that 20 results are returned.
     ///     9. Check that the result also contains doc id = word49.
     func testIndexVectorInBase64() throws {
@@ -1247,7 +1223,8 @@ class VectorSearchTest: CBLTestCase {
     ///     4. Create an SQL++ query:
     ///         - SELECT meta().id, word
     ///           FROM _default.words
-    ///           WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+    ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
+    ///           LIMIT 300
     ///     5. Execute the query and check that 20 results are returned.
     ///     6. Repeat step 2 - 6 but change the numProbes to 1.
     ///     7. Verify the number of results returned in Step 5 is larger than Step 6.
@@ -1267,4 +1244,5 @@ class VectorSearchTest: CBLTestCase {
         
         XCTAssert(numResultsFor5Probes > numResultsFor1Probes)
     }
+    
 }

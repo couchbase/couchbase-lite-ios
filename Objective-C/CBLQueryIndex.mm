@@ -17,9 +17,10 @@
 //  limitations under the License.
 //
 
+#import "CBLCollection.h"
+#import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLQueryIndex+Internal.h"
-#import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 
 #ifdef COUCHBASE_ENTERPRISE

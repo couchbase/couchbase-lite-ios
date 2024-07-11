@@ -20,7 +20,7 @@
 #import <Foundation/Foundation.h>
 
 #ifdef COUCHBASE_ENTERPRISE
-#import <CouchbaseLite/CBLIndexUpdater.h>
+@class CBLIndexUpdater;
 #endif
 
 @class CBLCollection;

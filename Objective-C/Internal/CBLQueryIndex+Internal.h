@@ -18,9 +18,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CouchbaseLite/CBLCollection.h>
-#import <CouchbaseLite/CBLQueryIndex.h>
+#import "CBLQueryIndex.h"
 #import "c4Index.h"
+
+@class CBLCollection;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,10 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (id) mutex;
 
 - (instancetype) initWithC4Index: (C4Index*) c4index
-                          name: (NSString*) name
-                    collection: (CBLCollection*) collection;
+                            name: (NSString*) name
+                      collection: (CBLCollection*) collection;
 @end
-
-
 
 NS_ASSUME_NONNULL_END

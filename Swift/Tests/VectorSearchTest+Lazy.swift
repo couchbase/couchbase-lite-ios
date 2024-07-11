@@ -1,5 +1,5 @@
 //
-//  LazyVectorIndex.swift
+//  VectorSearchTest+Lazy.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc. All rights reserved.
@@ -19,27 +19,34 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
-/**
- * Test Spec :
- * https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0002-Lazy-Vector-Index.md
- *
- * Note:
- * - Tested in Objective-C
- *      - Test 4 TestGetExistingNonVectorIndex
- *      - Test 8 TestLazyVectorIndexNotAutoUpdatedChangedDocs
- *      - Test 9 TestLazyVectorIndexAutoUpdateDeletedDocs
- *      - Test 10 TestLazyVectorIndexAutoUpdatePurgedDocs
- *      - Test 11 TestIndexUpdaterBeginUpdateOnNonVectorIndex
- *      - Test 20 TestIndexUpdaterSetInvalidVectorDimensions
- *      - Test 22 TestIndexUpdaterFinishWithIncompletedUpdate
- *      - Test 23 TestIndexUpdaterCaughtUp
- *      - Test 24 TestNonFinishedIndexUpdaterNotUpdateIndex
- *      - Test 26 TestIndexUpdaterCallFinishTwice
- *      - Test 27 TestIndexUpdaterUseAfterFinished
- * - Test 6 TestGetIndexOnClosedDatabase is done in CollectionTest.testUseCollectionAPIWhenDatabaseIsClosed()
- * - Test 7 testInvalidCollection) is done in CollectionTest.testUseCollectionAPIOnDeletedCollection()
- */
-class VectorLazyIndexTest: VectorSearchTest {
+///
+/// Test Spec :
+/// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0002-Lazy-Vector-Index.md
+///
+/// Vesion: 2.0.1
+///
+/// Note:
+/// - Tested in Objective-C
+///      - Test 4 TestGetExistingNonVectorIndex
+///      - Test 8 TestLazyVectorIndexNotAutoUpdatedChangedDocs
+///      - Test 9 TestLazyVectorIndexAutoUpdateDeletedDocs
+///      - Test 10 TestLazyVectorIndexAutoUpdatePurgedDocs
+///      - Test 11 TestIndexUpdaterBeginUpdateOnNonVectorIndex
+///      - Test 20 TestIndexUpdaterSetInvalidVectorDimensions
+///      - Test 22 TestIndexUpdaterFinishWithIncompletedUpdate
+///      - Test 23 TestIndexUpdaterCaughtUp
+///      - Test 24 TestNonFinishedIndexUpdaterNotUpdateIndex
+///      - Test 26 TestIndexUpdaterCallFinishTwice
+///      - Test 27 TestIndexUpdaterUseAfterFinished
+/// - Test 6 TestGetIndexOnClosedDatabase is done in CollectionTest.testUseCollectionAPIWhenDatabaseIsClosed()
+/// - Test 7 testInvalidCollection) is done in CollectionTest.testUseCollectionAPIOnDeletedCollection()
+///
+class VectorSearchTest_Lazy : VectorSearchTest {
+    /// Override the default VectorSearch Expression
+    override func wordsQueryDefaultExpression() -> String{
+        return "word"
+    }
+    
     func wordsIndex() throws -> QueryIndex {
         let index = try wordsCollection.index(withName: wordsIndexName)
         XCTAssertNotNil(index)
@@ -622,7 +629,8 @@ class VectorLazyIndexTest: VectorSearchTest {
     /// 7. Execute a vector search query.
     ///     - SELECT word
     ///       FROM _default.words
-    ///       WHERE vector_match(words_index, <dinner vector>) LIMIT 300
+    ///       ORDER BY APPROX_VECTOR_DISTANCE(word, $dinnerVector)
+    ///       LIMIT 300
     /// 8. Check that there are 10 words returned.
     /// 9. Check that the word is in the word set from the step 5.
     func testIndexUpdaterSetFloatArrayVectors() throws {
