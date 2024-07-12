@@ -195,7 +195,9 @@ popd > /dev/null
 if [[ -z $NO_API_DOCS ]]; then
   # Generate API docs:
   echo "Generate API docs ..."
-  OBJC_UMBRELLA_HEADER=`find $OUTPUT_OBJC_XC_DIR -name "CouchbaseLite.h"`
+  OBJC_UMBRELLA_HEADER=$(find $OUTPUT_OBJC_XC_DIR -name "CouchbaseLite.h" -print -quit)
+  echo "Umbrella Doc: ${OBJC_UMBRELLA_HEADER}"
+  sed -i.bak 's|#import <CouchbaseLite/\(.*\)>|#import "\1"|g' "${OBJC_UMBRELLA_HEADER}"
   jazzy --clean --objc --umbrella-header ${OBJC_UMBRELLA_HEADER} --module CouchbaseLite --module-version "${API_DOC_VERSION}" --theme Scripts/Support/Docs/Theme --readme README.md --output ${OUTPUT_DOCS_DIR}/CouchbaseLite
   
   # >> Objective-C API
@@ -208,4 +210,3 @@ fi
 rm -rf "$BUILD_DIR"
 rm -rf "$OUTPUT_OBJC_XC_DIR"
 rm -rf "$OUTPUT_DOCS_DIR"
-

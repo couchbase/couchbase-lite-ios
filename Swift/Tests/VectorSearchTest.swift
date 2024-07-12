@@ -187,8 +187,8 @@ class VectorSearchTest: CBLTestCase {
 /// Test Spec:
 /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0001-Vector-Search.md
 ///
-/// Version: 2.0.9
-/// 
+/// Version: 2.1.0
+///
 class VectorSearchTest_Main: VectorSearchTest {
     
     /// 1. TestVectorIndexConfigurationDefaultValue
@@ -1161,7 +1161,7 @@ class VectorSearchTest_Main: VectorSearchTest {
     ///     4. Create an SQL++ query.
     ///         - SELECT word, catid
     ///           FROM _default.words
-    ///           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 10 OR catid = 'cat1'
+    ///           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 0.5 OR catid = 'cat1'
     ///           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
     ///           LIMIT 20
     ///     5. Check that a CouchbaseLiteException is returned when creating the query.
@@ -1170,7 +1170,7 @@ class VectorSearchTest_Main: VectorSearchTest {
         try createWordsIndex(config: config)
         
         self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
-            _ = try self.executeWordsQuery(limit: 300, whereExpression: "APPROX_VECTOR_DISTANCE(vector, $vector) OR catid = 'cat1'")
+            _ = try self.executeWordsQuery(limit: 300, whereExpression: "APPROX_VECTOR_DISTANCE(vector, $vector) < 0.5 OR catid = 'cat1'")
         }
     }
      

@@ -2160,7 +2160,6 @@
 		1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+Main.m"; sourceTree = "<group>"; };
 		1A4FE769225ED344009D5F43 /* MiscCppTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MiscCppTest.mm; sourceTree = "<group>"; };
 		1A53B2852966AB910010A73E /* FullTextIndexExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullTextIndexExpression.swift; sourceTree = "<group>"; };
-		1A5E51D824AAC70E002E0341 /* pull_request_build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = pull_request_build.sh; sourceTree = "<group>"; };
 		1A6084EB2875842A0037C66F /* CollectionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTest.swift; sourceTree = "<group>"; };
 		1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "QueryTest+Collection.m"; sourceTree = "<group>"; };
 		1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+PendingDocIds.swift"; sourceTree = "<group>"; };
@@ -3830,7 +3829,6 @@
 				1AF98EB827AD22C500B3EA5F /* generate_swift_release_zip.sh */,
 				9388CB9321BCDF8B005CA66D /* get_repo_version.sh */,
 				9388CB7621BCDF8B005CA66D /* prepare_cocoapods.sh */,
-				1A5E51D824AAC70E002E0341 /* pull_request_build.sh */,
 				40EF68102B71891A00F0CB50 /* remove_private_module.sh */,
 				9388CB9521BCDF8B005CA66D /* strip_frameworks.sh */,
 				9367E86E24948C3F00775F97 /* xctest_crash_log.sh */,

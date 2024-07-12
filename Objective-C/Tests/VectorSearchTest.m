@@ -159,7 +159,7 @@
     }
     
     if (metric) {
-        sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector, %@) ", vectorExpression, metric];
+        sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector, \"%@\") ", vectorExpression, metric];
     } else {
         sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector) ", vectorExpression];
     }
@@ -236,7 +236,7 @@
  * Test Spec:
  * https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0001-Vector-Search.md
  *
- * Version: 2.0.9
+ * Version: 2.1.0
  */
 @interface VectorSearchTest_Main : VectorSearchTest
 
@@ -1023,10 +1023,10 @@
  *          ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector, "<metric-name>")
  *          LIMIT 20
  *     5. Check the explain() result of the query to ensure that the "words_index" is used.
- *     6. Verify that the index was trained.
- *     7. Execute the query and check that 20 results are returned.
+ *     6. Execute the query and check that 20 results are returned.
+ *     7. Verify that the index was trained.
  */
-- (void) TestCreateVectorIndexWithDistanceMetric {
+- (void) testCreateVectorIndexWithDistanceMetric {
     NSArray<NSNumber*>*metrics = @[
         @(kCBLDistanceMetricEuclideanSquared),
         @(kCBLDistanceMetricEuclidean),
@@ -1295,7 +1295,7 @@
  *     4. Create an SQL++ query.
  *         - SELECT word, catid
  *           FROM _default.words
- *           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 10 OR catid = 'cat1'
+ *           WHERE APPROX_VECTOR_DISTANCE(vector, $dinerVector) < 0.5 OR catid = 'cat1'
  *           ORDER BY APPROX_VECTOR_DISTANCE(vector, $dinerVector)
  *           LIMIT 20
  *     5. Check that a CouchbaseLiteException is returned when creating the query.
@@ -1308,7 +1308,7 @@
         NSString* sql = [self wordsQueryStringWithLimit: 20
                                                  metric: nil
                                        vectorExpression: @"vector"
-                                            whereClause: @"APPROX_VECTOR_DISTANCE(vector, $vector) OR catid = 'cat1'"];
+                                            whereClause: @"APPROX_VECTOR_DISTANCE(vector, $vector) < 0.5 OR catid = 'cat1'"];
         return [self.wordDB createQuery: sql error: err] != nil;
     }];
 }
