@@ -1136,7 +1136,7 @@ class VectorSearchTest_Main: VectorSearchTest {
     ///     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
     ///       doesn’t exist in the log.
     ///     10. Reset the custom logger.
-    func TestHybridVectorSearchWithAND() throws {
+    func testHybridVectorSearchWithAND() throws {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
