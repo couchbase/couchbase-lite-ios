@@ -78,6 +78,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLQueryFunction.h>
 #import <CouchbaseLite/CBLQueryFullTextExpression.h>
 #import <CouchbaseLite/CBLQueryFullTextFunction.h>
+#import <CouchbaseLite/CBLQueryIndex.h>
 #import <CouchbaseLite/CBLQueryJoin.h>
 #import <CouchbaseLite/CBLQueryLimit.h>
 #import <CouchbaseLite/CBLQueryMeta.h>
@@ -110,7 +111,9 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLDatabaseConfiguration+Encryption.h>
 #import <CouchbaseLite/CBLDatabaseEndpoint.h>
 #import <CouchbaseLite/CBLEncryptionKey.h>
+#import <CouchbaseLite/CBLExtension.h>
 #import <CouchbaseLite/CBLIndexBuilder+Prediction.h>
+#import <CouchbaseLite/CBLIndexUpdater.h>
 #import <CouchbaseLite/CBLListenerAuthenticator.h>
 #import <CouchbaseLite/CBLListenerCertificateAuthenticator.h>
 #import <CouchbaseLite/CBLListenerPasswordAuthenticator.h>

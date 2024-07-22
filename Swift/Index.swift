@@ -28,6 +28,8 @@ public protocol Index { }
 /// A value index for regular queries.
 public final class ValueIndex: Index, CBLIndexConvertible {
     
+    // MARK: Internal
+    
     private let impl: CBLIndex
     
     init(items: [ValueIndexItem]) {
@@ -135,11 +137,15 @@ public class FullTextIndexItem {
 
 protocol CBLIndexConvertible {
     
+    // MARK: Internal
+    
     func toImpl() -> CBLIndex
     
 }
 
 extension Index {
+    
+    // MARK: Internal
     
     func toImpl() -> CBLIndex {
         if let index = self as? CBLIndexConvertible {

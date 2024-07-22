@@ -68,7 +68,7 @@ class DocumentExpirationTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             promise.fulfill()
         }
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testDocumentPurgedAfterExpiration() throws {
@@ -89,7 +89,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove();
@@ -115,7 +115,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()
@@ -157,7 +157,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
@@ -186,7 +186,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testExpiredDocumentPurgedAfterReopenDatabase() throws {
@@ -213,7 +213,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try self.defaultCollection!.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()
@@ -246,7 +246,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         XCTAssertNil(try self.defaultCollection!.document(id: doc.id))
         XCTAssertNil(try otherDB_defaultCollection.document(id: doc.id))
@@ -283,7 +283,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(1.0))
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
@@ -317,7 +317,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(-9.0))
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin < 3.0)
@@ -346,7 +346,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testSetExpirationThenDeletionAfterwards() throws {
@@ -374,7 +374,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.delete(document: doc)
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener
@@ -406,7 +406,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener

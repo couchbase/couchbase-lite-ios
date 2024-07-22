@@ -43,12 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Type Setters
 
 /**
- Gets a property's value. The object types are CBLBlob, CBLArray,
- CBLDictionary, NSNumber, or NSString based on the underlying data type; or nil if the
- property value is NSNull or the property doesn't exist.
+ Gets a property's value. The object types are CBLBlob, CBLArray, CBLDictionary,
+ NSNumber, NSString, or NSNull based on the underlying data type; or nil if the
+ the property doesn't exist.
  
  @param key The key.
- @return The object value or nil.
+ @return The value or nil.
  */
 - (nullable id) valueForKey: (NSString*)key;
 

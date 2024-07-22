@@ -33,7 +33,7 @@
         return;
     }
     
-    CBLLogInfo(Sync, @"%@: Starting backgrounding monitor...", self);
+    CBLLogInfo(Sync, @"%@ Starting backgrounding monitor...", self);
     NSFileProtectionType prot = self.fileProtection;
     if ([prot isEqual: NSFileProtectionComplete] ||
         [prot isEqual: NSFileProtectionCompleteUnlessOpen]) {
@@ -70,7 +70,7 @@
         return;
     }
     
-    CBLLogInfo(Sync, @"%@: Ending backgrounding monitor...", self);
+    CBLLogInfo(Sync, @"%@ Ending backgrounding monitor...", self);
     [NSNotificationCenter.defaultCenter removeObserver: self
                                                   name: UIApplicationProtectedDataWillBecomeUnavailable
                                                 object: nil];

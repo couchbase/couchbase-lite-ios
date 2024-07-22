@@ -16,9 +16,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+
 #import "CBLQueryObserver.h"
 #import "c4.h"
 #import "CBLChangeNotifier.h"
+#import "CBLContextManager.h"
 #import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
@@ -33,8 +35,9 @@
 @implementation CBLQueryObserver {
     CBLQuery* _query;
     NSDictionary* _columnNames;
-    C4QueryObserver* _obs;
+    C4QueryObserver* _c4obs;
     CBLChangeListenerToken<CBLQueryChange*>* _token;
+    void* _context;
 }
 
 #pragma mark - Constructor
@@ -52,9 +55,8 @@
         _columnNames = columnNames;
         _token = token;
         
-        // https://github.com/couchbase/couchbase-lite-core/wiki/Thread-Safety
-        // c4queryobs_create is thread-safe.
-        _obs = c4queryobs_create(query.c4query, liveQueryCallback, (__bridge void *)self);
+        _context = [[CBLContextManager shared] registerObject: self];
+        _c4obs = c4queryobs_create(query.c4query, liveQueryCallback, _context); // c4queryobs_create is thread-safe.
         
         [query.database addActiveStoppable: self];
     }
@@ -69,14 +71,12 @@
 
 - (void) start {
     CBL_LOCK(self) {
-        Assert(_query, @"QueryObserver cannot be restarted.");
+        Assert(_c4obs, @"QueryObserver cannot be restarted.");
         [_query.database safeBlock: ^{
-            c4queryobs_setEnabled(self->_obs, true);
+            c4queryobs_setEnabled(self->_c4obs, true);
         }];
     }
 }
-
-#pragma mark - Internal
 
 - (CBLQuery*) query {
     CBL_LOCK(self) {
@@ -86,57 +86,99 @@
 
 - (void) stop {
     CBL_LOCK(self) {
-        if (!_query) {
-            return;
-        }
+        if ([self isStopped]) { return; }
         
         [_query.database safeBlock: ^{
-            c4queryobs_setEnabled(self->_obs, false);
-            c4queryobs_free(self->_obs);
-            self->_obs = nil;
+            c4queryobs_setEnabled(self->_c4obs, false);
+            c4queryobs_free(self->_c4obs);
             [self->_query.database removeActiveStoppable: self];
         }];
         
+        [[CBLContextManager shared] unregisterObjectForPointer: _context];
+        _context = nil;
+        
+        _c4obs = nil;
         _query = nil; // Break circular reference cycle
         _token = nil; // Break circular reference cycle
     }
 }
 
+// Must call under self lock
+- (BOOL) isStopped {
+    return _c4obs == nil;
+}
+
+#ifdef DEBUG
+
+static NSTimeInterval sC4QueryObserverCallbackDelayInterval = 0;
+
++ (void) setC4QueryObserverCallbackDelayInterval: (NSTimeInterval)delay {
+    sC4QueryObserverCallbackDelayInterval = delay;
+}
+
+#endif
+
 #pragma mark - Private
 
-static void liveQueryCallback(C4QueryObserver *obs, C4Query *c4query, void *context) {
-    CBLQueryObserver* queryObs = (__bridge CBLQueryObserver*)context;
-    CBLQuery* query = queryObs.query;
+static void liveQueryCallback(C4QueryObserver *c4obs, C4Query *c4query, void *context) {
+#ifdef DEBUG
+    if (sC4QueryObserverCallbackDelayInterval > 0) {
+        [NSThread sleepForTimeInterval: sC4QueryObserverCallbackDelayInterval];
+    }
+#endif
+    
+    // Get and retain object:
+    id obj = [[CBLContextManager shared] objectForPointer: context];
+    CBLQueryObserver* obs = $castIf(CBLQueryObserver, obj);
+    
+    // Validate:
+    if (!obs || obs->_c4obs != c4obs) {
+        CBLLogVerbose(Query, @"Query observer context was already released, ignore observer callback");
+        return;
+    }
+    
+    // Check stopped:
+    CBLQuery* query = obs.query;
     if (!query) {
+        CBLLogVerbose(Query, @"%@: Query observer was already stopped, ignore observer callback", obs);
+        return;
+    }
+    
+    // MUST get the enumerator inside the callback as the c4obs could be deleted after the callback if called.
+    __block C4QueryEnumerator* enumerator = NULL;
+    __block C4Error c4error = {};
+    
+    [query.database safeBlock: ^{
+        enumerator = c4queryobs_getEnumerator(c4obs, true, &c4error);
+    }];
+    
+    if (!enumerator) {
+        CBLLogVerbose(Query, @"%@: Ignore an empty result (%d/%d)", obs, c4error.domain, c4error.code);
         return;
     }
     
     dispatch_async(query.database.queryQueue, ^{
-        [queryObs postQueryChange: obs];
+        [obs postQueryChange: enumerator];
     });
 };
 
-- (void) postQueryChange: (C4QueryObserver*)obs {
+- (void) postQueryChange: (C4QueryEnumerator*)enumerator {
+    CBLChangeListenerToken<CBLQueryChange*>* token;
+    CBLQuery* query;
     CBL_LOCK(self) {
-        if (!_query) {
+        if ([self isStopped]) {
+            c4queryenum_release( enumerator);
+            CBLLogVerbose(Query, @"%@: Query observer was already stopped, skip notification", self);
             return;
         }
-        
-        // Note: enumerator('result') will be released in ~QueryResultContext; no need to release it
-        __block C4Error c4error = {};
-        __block C4QueryEnumerator* result = NULL;
-        [_query.database safeBlock: ^{
-            result = c4queryobs_getEnumerator(obs, true, &c4error);
-        }];
-        
-        if (!result) {
-            CBLLogVerbose(Query, @"%@: Ignore an empty result (%d/%d)", self, c4error.domain, c4error.code);
-            return;
-        }
-        
-        CBLQueryResultSet* rs = [[CBLQueryResultSet alloc] initWithQuery: _query enumerator: result columnNames: _columnNames];
-        [_token postChange: [[CBLQueryChange alloc] initWithQuery: _query results: rs error: nil]];
+        token = _token;
+        query = _query;
     }
+    
+    CBLQueryResultSet* rs = [[CBLQueryResultSet alloc] initWithQuery: query
+                                                          enumerator: enumerator
+                                                         columnNames: _columnNames];
+    [token postChange: [[CBLQueryChange alloc] initWithQuery: query results: rs error: nil]];
 }
 
 @end

@@ -35,11 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /*
  Gets value at the given index. The object types are CBLBlob,
- CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying
- data type; or nil if the value is nil.
+ CBLArray, CBLDictionary, NSNumber, NSString, or NSNull based on
+ the underlying data type.
  
  @param index The index.
- @return The object or nil.
+ @return The value or nil.
  */
 - (nullable id) valueAtIndex: (NSUInteger)index;
 

@@ -45,11 +45,6 @@
 #import "CBLCert.h"
 #endif
 
-extern "C" {
-#import "MYAnonymousIdentity.h"
-#import "MYErrorUtils.h"
-}
-
 using namespace fleece;
 
 // Number of bytes to read from the socket at a time
@@ -994,8 +989,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
     if (trust != NULL) {
         if (SecTrustGetCertificateCount(trust) > 0) {
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000 || __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
-            if (@available(macOS 12.0, iOS 15.0, *)) {
+#if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
+            if (@available(iOS 15.0, *)) {
                 CFArrayRef certs = SecTrustCopyCertificateChain(trust);
                 SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
                 _replicator.serverCertificate = cert;
@@ -1003,7 +998,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             } else
 #endif
             {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+#pragma clang diagnostic pop
                 _replicator.serverCertificate = cert;
             }
         }
