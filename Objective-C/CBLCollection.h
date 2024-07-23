@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import <Foundation/Foundation.h>
 #import <CouchbaseLite/CBLCollectionChangeObservable.h>
 #import <CouchbaseLite/CBLIndexable.h>
 #import <CouchbaseLite/CBLCollectionTypes.h>
@@ -173,7 +174,7 @@ extern NSString* const kCBLDefaultCollectionName;
  
  @param document The document.
  @param error On return, the error if any.
- @return /True on success, false on failure.
+ @return True on success, false on failure.
  */
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 

@@ -39,8 +39,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The COUNT(expr) function.
-    public static func count(_ expression: ExpressionProtocol) -> ExpressionProtocol {
-        return QueryExpression(CBLQueryFunction.count(expression.toImpl()))
+    public static func count(_ expression: ExpressionProtocol? = nil) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.count(expression != nil ? expression!.toImpl() : nil))
     }
     
     /// Create a MIN(expr) function expression that returns the minimum value
@@ -259,7 +259,7 @@ public final class Function {
     /// Creates a TAN(expr) function that returns the tangent of the given numeric expression.
     ///
     /// - Parameter expression: The numeric expression.
-    /// - Returns:  The TAN(expr) function.
+    /// - Returns: The TAN(expr) function.
     public static func tan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(CBLQueryFunction.tan(expression.toImpl()))
     }

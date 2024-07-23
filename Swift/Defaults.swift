@@ -72,7 +72,7 @@ public extension ReplicatorConfiguration {
     /// [300] Max wait time between retry attempts in seconds
     /// @available(*, deprecated, message: "Use ReplicatorConfiguration.defaultMaxAttemptsWaitTime instead.")
     static let defaultMaxAttemptWaitTime: TimeInterval = 300
-    
+
     /// [true] Purge documents when a user loses access
     static let defaultEnableAutoPurge: Bool = true
 
@@ -88,11 +88,23 @@ public extension ReplicatorConfiguration {
 
 public extension VectorIndexConfiguration {
 
+    /// [false] Vectors are not lazily indexed, by default
+    static let defaultIsLazy: Bool = false
+
     /// [ScalarQuantizerType.SQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default
     static let defaultEncoding: ScalarQuantizerType = ScalarQuantizerType.SQ8
 
-    /// [DistanceMetric.euclidean] By default, vectors are compared using Euclidean metrics
-    static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclidean
+    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using Euclidean metrics
+    static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclideanSquared
+
+    /// [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters.
+    static let defaultMinTrainingSize: UInt32 = 0
+
+    /// [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters
+    static let defaultMaxTrainingSize: UInt32 = 0
+
+    /// [0] By default, the value will be determined based on the number of centroids.
+    static let defaultNumProbes: UInt32 = 0
 
 }
 

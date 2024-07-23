@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) stopListener: (CBLURLEndpointListener*)listener;
 
 // TLS Identity management
-- (CBLTLSIdentity*) tlsIdentity: (BOOL)isServer;
+- (nullable CBLTLSIdentity*) tlsIdentity: (BOOL)isServer;
 - (void) cleanupTLSIdentity: (BOOL)isServer;
 - (void) deleteFromKeyChain: (CBLTLSIdentity*)identity;
 

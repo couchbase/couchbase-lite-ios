@@ -39,7 +39,7 @@ import CouchbaseLiteSwift_Private
 /// - Cannot start with _ or %.
 /// - Both scope and collection names are case sensitive.
 ///
-/// ## CBLCollection Lifespan
+/// ## Collection Lifespan
 /// A `Collection` object and its reference remain valid until either
 /// the database is closed or the collection itself is deleted, in that case it will
 /// throw an NSError with the CBLError.notOpen code while accessing the collection APIs.
@@ -108,6 +108,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument) throws {
         try impl.save(document.impl as! CBLMutableDocument)
+        if (document.collection == nil) {
+            document.collection = self
+        }
     }
     
     /// Save a document into the collection with a specified concurrency control. When specifying
@@ -131,6 +134,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
             }
             throw err
         }
+        if (document.collection == nil) {
+            document.collection = self
+        }
         return result
     }
     
@@ -146,7 +152,6 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument,
               conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
-        
         var error: NSError?
         let result = impl.save(
             document.impl as! CBLMutableDocument,
@@ -158,6 +163,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
                 return false
             }
             throw err
+        }
+        if (document.collection == nil) {
+            document.collection = self
         }
         return result
     }
@@ -314,6 +322,20 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Delete an index by name.
     public func deleteIndex(forName name: String) throws {
         try impl.deleteIndex(withName: name)
+    }
+    
+    /// Get an index by name. Return nil if the index doesn't exists.
+    public func index(withName name: String) throws -> QueryIndex? {
+        var error: NSError?
+        let index = impl.index(withName: name, error: &error)
+        if let err = error {
+            throw err
+        }
+        
+        guard let indexImpl = index else {
+            return nil
+        }
+        return QueryIndex(indexImpl, collection: self)
     }
     
     // MARK: Equatable

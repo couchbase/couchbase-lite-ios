@@ -9,8 +9,8 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 
 
 ## Requirements
-- iOS 12.0+ | macOS 12.0+
 
+- iOS 12.0+ | macOS 12.0+
 
 ## Installation
 

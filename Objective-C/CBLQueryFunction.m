@@ -32,8 +32,10 @@
                                                     params: @[expression]];
 }
 
-+ (CBLQueryExpression*) count: (CBLQueryExpression*)expression {
-    CBLAssertNotNil(expression);
++ (CBLQueryExpression*) count: (nullable CBLQueryExpression*)expression {
+    if (expression == nil) {
+        expression = [CBLQueryExpression all];
+    }
     
     return [[CBLFunctionExpression alloc] initWithFunction: @"COUNT()"
                                                     params: @[expression]];

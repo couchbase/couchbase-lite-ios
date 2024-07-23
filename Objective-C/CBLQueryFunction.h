@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The COUNT(expr) function.
  */
-+ (CBLQueryExpression*) count: (CBLQueryExpression*)expression;
++ (CBLQueryExpression*) count: (nullable CBLQueryExpression*)expression;
 
 /** 
  Creates a MIN(expr) function expression that returns the minimum value

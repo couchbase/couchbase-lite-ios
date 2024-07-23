@@ -154,7 +154,12 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     ///
     /// - Returns: The Array representing all values.
     public func toArray() -> Array<Any> {
-        return impl.toArray()
+        var array: [Any] = []
+        for i in 0..<self.count {
+            let val = DataConverter.toPlainObject(self.value(at: i))
+            array.append(val != nil ? val! : NSNull())
+        }
+        return array
     }
     
     // MARK: ReadOnlyArrayFragment

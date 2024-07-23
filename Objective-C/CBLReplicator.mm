@@ -147,7 +147,21 @@ typedef enum {
 }
 
 - (NSString*) description {
-    return _replicatorID;
+    if (!_desc) {
+        BOOL isPull = _config.replicatorType == kCBLReplicatorTypePull || 
+                      _config.replicatorType == kCBLReplicatorTypePushAndPull;
+        BOOL isPush = _config.replicatorType == kCBLReplicatorTypePush ||
+                      _config.replicatorType == kCBLReplicatorTypePushAndPull;
+        
+        _desc = [NSString stringWithFormat: @"CBLReplicator[%@ (%@%@%@) %@]",
+                 _replicatorID,
+                 isPull ? @"<" : @"",
+                 _config.continuous ? @"*" : @"o",
+                 isPush ? @">" : @"",
+                 _config.target.description
+        ];
+    }
+    return _desc;
 }
 
 - (void) start {
@@ -156,9 +170,9 @@ typedef enum {
 
 - (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@: cols=%@ Starting...", self, _config.collections);
+        CBLLogInfo(Sync, @"%@ Collections[%@] Starting...", self, _config.collections);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
-            CBLWarn(Sync, @"%@: Replicator has already been started (state = %d, status = %d); ignored.",
+            CBLWarn(Sync, @"%@ Replicator has already been started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
             return;
         }
@@ -182,8 +196,7 @@ typedef enum {
             // Failed to create C4Replicator:
             NSError *error = nil;
             convertError(err, &error);
-            CBLWarnError(Sync, @"%@: Replicator cannot be created: %@",
-                         self, error.localizedDescription);
+            CBLWarnError(Sync, @"%@ Replicator cannot be created: %@", self, error.localizedDescription);
             status = {kC4Stopped, {}, err};
         }
         [self setProgressLevel: _progressLevel];
@@ -346,12 +359,12 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) stop {
     CBL_LOCK(self) {
         if (_state <= kCBLStateStopping) {
-            CBLWarn(Sync, @"%@: Replicator has been stopped or is stopping (state = %d, status = %d); ignore stop.",
+            CBLWarn(Sync, @"%@ Replicator has been stopped or is stopping (state = %d, status = %d); ignore stop.",
                     self,  _state, _rawStatus.level);
             return;
         }
         
-        CBLLogInfo(Sync, @"%@: Stopping...", self);
+        CBLLogInfo(Sync, @"%@ Stopping...", self);
         _state = kCBLStateStopping;
         
         Assert(_repl);
@@ -373,7 +386,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     [self endBackgroundingMonitor];
 #endif
 
-    CBLLogInfo(Sync, @"%@: Replicator is now stopped.", self);
+    CBLLogInfo(Sync, @"%@ Replicator is now stopped.", self);
 }
 
 - (void) safeBlock:(void (^)())block {
@@ -388,7 +401,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 #if TARGET_OS_IPHONE
     [self endCurrentBackgroundTask];
 #endif
-    CBLLogInfo(Sync, @"%@: Replicator is now idled.", self);
+    CBLLogInfo(Sync, @"%@ Replicator is now idled.", self);
 }
 
 #pragma mark - Server Certificate
@@ -461,7 +474,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     if (_repl) {
         BOOL success = c4repl_setProgressLevel(_repl, (C4ReplicatorProgressLevel)level, nullptr);
         assert(success);
-        CBLLogVerbose(Sync, @"%@: setProgressLevel to LiteCore; level = %d, status = %d", self, level, success);
+        CBLLogVerbose(Sync, @"%@ Set ProgressLevel to LiteCore; level = %d, status = %d", self, level, success);
     }
 }
 
@@ -483,7 +496,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         C4Error err = {};
         if (![self _setupC4Replicator: &err]) {
             convertError(err, error);
-            CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, err.domain, err.code);
+            CBLWarnError(Sync, @"%@ Replicator cannot be created: %d/%d", self, err.domain, err.code);
             return nil;
         }
     }
@@ -492,7 +505,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     C4SliceResult result = c4repl_getPendingDocIDs(_repl, collection.c4spec, &err);
     if (err.code > 0) {
         convertError(err, error);
-        CBLWarnError(Sync, @"Error while fetching pending documentIds: %d/%d", err.domain, err.code);
+        CBLWarnError(Sync, @"%@ Error while fetching pending documentIds: %d/%d", self, err.domain, err.code);
         return nil;
     }
 
@@ -533,7 +546,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
         C4Error err = {};
         if (![self _setupC4Replicator: &err]) {
             convertError(err, error);
-            CBLWarnError(Sync, @"%@: Replicator cannot be created: %d/%d", self, err.domain, err.code);
+            CBLWarnError(Sync, @"%@ Replicator cannot be created: %d/%d", self, err.domain, err.code);
             return NO;
         }
     }
@@ -543,7 +556,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     BOOL isPending = c4repl_isDocumentPending(_repl, docID, collection.c4spec, &err);
     if (err.code > 0) {
         convertError(err, error);
-        CBLWarnError(Sync, @"Error getting document pending status: %d/%d", err.domain, err.code);
+        CBLWarnError(Sync, @"%@ Error getting document pending status: %d/%d", self, err.domain, err.code);
         return false;
     }
 
@@ -564,7 +577,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     if (!remoteURL || _reachability)
         return;
     
-    CBLLogInfo(Sync, @"%@: Initialize reachability", self);
+    CBLLogInfo(Sync, @"%@ Initialize reachability", self);
     NSString* hostname = remoteURL.host;
     if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
         return;
@@ -583,7 +596,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 // Should be called from _dispatchQueue
 - (void) stopReachability {
     if (_reachability.isMonitoring) {
-        CBLLogInfo(Sync, @"%@: Stopping Reachability ...", self);
+        CBLLogInfo(Sync, @"%@ Stopping Reachability ...", self);
         [_reachability stop];
     }
 }
@@ -592,7 +605,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 - (void) reachabilityChanged {
     CBL_LOCK(self) {
         if (_reachability.isMonitoring && _reachability.reachable) {
-            CBLLogInfo(Sync, @"%@: Reachability reported server may now be reachable ...", self);
+            CBLLogInfo(Sync, @"%@ Reachability reported server may now be reachable ...", self);
             c4repl_setHostReachable(_repl, _reachability.reachable);
         }
     }
@@ -611,7 +624,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 // Called from statusChanged(), on the dispatch queue
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     CBL_LOCK(self) {
-        CBLDebug(Sync, @"%@: Received C4ReplicatorStatus Changed, status = %d (state = %d)",
+        CBLDebug(Sync, @"%@ Received C4ReplicatorStatus Changed, status = %d (state = %d)",
                  self, c4Status.level, _state);
         
         // Record raw status:
@@ -740,7 +753,7 @@ static void onDocsEnded(C4Replicator* repl,
 - (void) logErrorOnDocument: (CBLReplicatedDocument*)doc pushing: (BOOL)pushing {
     C4Error c4err = doc.c4Error;
     if (doc.c4Error.code)
-        CBLLogInfo(Sync, @"%@: %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
+        CBLLogInfo(Sync, @"%@ %serror %s '%@': %d/%d", self, (doc.isTransientError ? "transient " : ""),
                    (pushing ? "pushing" : "pulling"), doc.id, c4err.domain, c4err.code);
 }
 
@@ -774,7 +787,7 @@ static void onDocsEnded(C4Replicator* repl,
         }
     }
     
-    CBLLogInfo(Sync, @"%@: Resolve conflicting version of '%@'", self, doc.id);
+    CBLLogInfo(Sync, @"%@ Resolve conflicting version of '%@'", self, doc.id);
     
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
     Assert(c, kCBLErrorMessageCollectionNotFoundDuringConflict);
@@ -786,7 +799,7 @@ static void onDocsEnded(C4Replicator* repl,
     if (![c resolveConflictInDocument: doc.id
                  withConflictResolver: colConfig.conflictResolver
                                 error: &error]) {
-        CBLWarn(Sync, @"%@: Conflict resolution of '%@' failed: %@", self, doc.id, error);
+        CBLWarn(Sync, @"%@ Conflict resolution of '%@' failed: %@", self, doc.id, error);
     }
     
     [doc updateError: error];

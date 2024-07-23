@@ -1,8 +1,8 @@
 //
-//  CBLQueryObserver.h
+//  CBLQueryIndex+Internal.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,34 +18,22 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLQueryIndex.h"
+#import "c4Index.h"
 
-@protocol CBLListenerToken;
-@class CBLChangeListenerToken;
-@class CBLChangeNotifier;
-@class CBLQuery;
-@class CBLQueryChange;
+@class CBLCollection;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLQueryObserver : NSObject
+@interface CBLQueryIndex ()
 
-/** Initialize with a Query. */
-- (instancetype) initWithQuery: (CBLQuery*)query
-                   columnNames: (NSDictionary*)columnNames
-                         token: (CBLChangeListenerToken*)token;
+@property (nonatomic, readonly) C4Index* c4index;
 
-/** Starts the observer */
-- (void) start;
+- (id) mutex;
 
-/** Stops and frees the observer */
-- (void) stop;
-
-- (instancetype) init NS_UNAVAILABLE;
-
-#ifdef DEBUG
-+ (void) setC4QueryObserverCallbackDelayInterval: (NSTimeInterval)delay;
-#endif
-
+- (instancetype) initWithC4Index: (C4Index*) c4index
+                            name: (NSString*) name
+                      collection: (CBLCollection*) collection;
 @end
 
 NS_ASSUME_NONNULL_END

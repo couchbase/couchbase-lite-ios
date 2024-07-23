@@ -2,7 +2,7 @@
 //  CBLMutableDocument.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLJSON.h"
+#import "CBLLog+Internal.h"
 #import "CBLMisc.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
@@ -32,6 +33,13 @@
 using namespace fleece;
 
 @implementation CBLMutableDocument
+
++ (void) initialize {
+    if (self == [CBLMutableDocument class]) {
+        // Initialize logging
+        CBLAssertNotNil(CBLLog.sharedInstance);
+    }
+}
 
 #pragma mark - Initializer
 

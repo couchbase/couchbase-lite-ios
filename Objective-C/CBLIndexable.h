@@ -17,10 +17,14 @@
 //  limitations under the License.
 //
 
-#import <CouchbaseLite/CBLIndexConfiguration.h>
-#import <CouchbaseLite/CBLIndex.h>
+#import <Foundation/Foundation.h>
+
+@class CBLIndex;
+@class CBLIndexConfiguration;
+@class CBLQueryIndex;
 
 NS_ASSUME_NONNULL_BEGIN
+
 /** The Indexable interface defines a set of functions for managing the query indexes. */
 @protocol CBLIndexable <NSObject>
 
@@ -37,6 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Delete an index by name. */
 - (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
+
+/** Get an index object by name. */
+- (nullable CBLQueryIndex*) indexWithName: (NSString*)name
+                                    error: (NSError**)error NS_SWIFT_NOTHROW;
 
 @end
 

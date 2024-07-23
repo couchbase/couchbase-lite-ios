@@ -290,7 +290,7 @@
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [[CBLQueryMeta expiration]
-                                            greaterThan: [CBLQueryExpression double: future]]];
+                                            greaterThan: [CBLQueryExpression longLong: (long long)future]]];
     
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];

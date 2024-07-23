@@ -57,10 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint;
 
-- (id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
-                      method: (NSString*)method
-                        path: (nullable NSString*)path
-                        body: (nullable id)body;
+- (nullable id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
+                               method: (NSString*)method
+                                 path: (nullable NSString*)path
+                                 body: (nullable id)body;
 
 #pragma mark - Certifciate
 

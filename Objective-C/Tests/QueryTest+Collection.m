@@ -389,7 +389,7 @@
     CBLFullTextIndex* descIndex = [CBLIndexBuilder fullTextIndexWithItems: @[desc]];
     descIndex.ignoreAccents = NO;
     Assert([flowersCol createIndex: descIndex name: @"descIndex" error: &error],
-           @"Error when creating value index: %@", error);
+           @"Error when creating fts index: %@", error);
     
     NSString* qStr = @"SELECT f.name, f.description, c.color FROM test.flowers as f JOIN test.colors as c ON f.cid = c.cid WHERE match(f.descIndex, 'red') ORDER BY f.name";
     CBLQuery* q = [self.db createQuery: qStr error: &error];

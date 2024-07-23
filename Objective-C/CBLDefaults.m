@@ -64,9 +64,17 @@ const BOOL kCBLDefaultReplicatorAcceptParentCookies = NO;
 
 #pragma mark - CBLVectorIndexConfiguration
 
+const BOOL kCBLDefaultVectorIndexIsLazy = NO;
+
 const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding = kCBLSQ8;
 
-const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclidean;
+const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric = kCBLDistanceMetricEuclideanSquared;
+
+const unsigned int kCBLDefaultVectorIndexMinTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexMaxTrainingSize = 0;
+
+const unsigned int kCBLDefaultVectorIndexNumProbes = 0;
 
 #pragma mark - CBLURLEndpointListenerConfiguration
 
