@@ -164,6 +164,7 @@ static void liveQueryCallback(C4QueryObserver *c4obs, C4Query *c4query, void *co
 
 - (void) postQueryChange: (C4QueryEnumerator*)enumerator {
     CBLChangeListenerToken<CBLQueryChange*>* token;
+    CBLQuery* query;
     CBL_LOCK(self) {
         if ([self isStopped]) {
             c4queryenum_release( enumerator);
@@ -171,12 +172,13 @@ static void liveQueryCallback(C4QueryObserver *c4obs, C4Query *c4query, void *co
             return;
         }
         token = _token;
+        query = _query;
     }
     
-    CBLQueryResultSet* rs = [[CBLQueryResultSet alloc] initWithQuery: _query 
+    CBLQueryResultSet* rs = [[CBLQueryResultSet alloc] initWithQuery: query
                                                           enumerator: enumerator
                                                          columnNames: _columnNames];
-    [token postChange: [[CBLQueryChange alloc] initWithQuery: _query results: rs error: nil]];
+    [token postChange: [[CBLQueryChange alloc] initWithQuery: query results: rs error: nil]];
 }
 
 @end
