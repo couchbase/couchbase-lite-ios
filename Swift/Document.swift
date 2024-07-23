@@ -42,7 +42,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     }
     
     /// The collection that the document belongs to.
-    public let collection: Collection?
+    internal(set) public var collection: Collection?
     
     // MARK: Edit
     
