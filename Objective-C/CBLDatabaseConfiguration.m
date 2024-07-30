@@ -19,12 +19,14 @@
 
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDefaults.h"
 
 @implementation CBLDatabaseConfiguration {
     BOOL _readonly;
 }
 
 @synthesize directory=_directory;
+@synthesize isFullSync=_isFullSync;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
@@ -47,11 +49,13 @@
         
         if (config) {
             _directory = config.directory;
+            _isFullSync = config.isFullSync;
 #ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
 #endif
         } else
             _directory = [CBLDatabaseConfiguration defaultDirectory];
+            _isFullSync = kCBLDefaultDatabaseFullSync;
     }
     return self;
 }
@@ -62,6 +66,12 @@
     [self checkReadonly];
     
     _directory = directory;
+}
+
+- (void) setFullSync: (BOOL)isFullSync {
+    [self checkReadonly];
+    
+    _isFullSync = isFullSync;
 }
 
 #pragma mark - Internal

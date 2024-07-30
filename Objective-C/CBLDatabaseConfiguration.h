@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy) NSString* directory;
 
+@property (nonatomic) BOOL isFullSync;
+
 /**
  Initializes the CBLDatabaseConfiguration object.
  */
