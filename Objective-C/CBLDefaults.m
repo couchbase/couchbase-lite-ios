@@ -22,6 +22,9 @@
 
 #import "CBLDefaults.h"
 
+#pragma mark - CBLDatabaseConfiguration
+
+const BOOL kCBLDefaultDatabaseFullSync = NO;
 
 #pragma mark - CBLLogFileConfiguration
 

@@ -22,6 +22,11 @@
 
 #import "CBLReplicatorTypes.h"
 
+#pragma mark - CBLDatabaseConfiguration
+
+/** [NO] Full sync is off by default because the performance hit is seldom worth the benefit */
+extern const BOOL kCBLDefaultDatabaseFullSync;
+
 #pragma mark - CBLLogFileConfiguration
 
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
