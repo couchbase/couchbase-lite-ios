@@ -23,8 +23,7 @@ import Foundation
 public protocol QueryFactory {
     /// Creates a Query object from the given query string.
     ///
-    /// - Parameters:
-    ///     - query Query string
+    /// - Parameter query: Query string
     /// - Returns: A query created by the given query string.
     /// - Throws: An error on when the given query string is invalid.
     func createQuery(_ query: String) throws -> Query

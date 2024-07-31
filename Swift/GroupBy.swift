@@ -57,8 +57,8 @@ public final class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
         return self.limit(limit, offset: nil)
     }
     
-    ///  Creates and chains a Limit object to skip the returned results for the given offset
-    ///  position and to limit the number of results to not more than the given limit value.
+    /// Creates and chains a Limit object to skip the returned results for the given offset
+    /// position and to limit the number of results to not more than the given limit value.
     ///
     /// - Parameters:
     ///   - limit: The limit expression.

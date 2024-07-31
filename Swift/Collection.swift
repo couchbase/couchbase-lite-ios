@@ -38,7 +38,7 @@ import Foundation
 /// - Cannot start with _ or %.
 /// - Both scope and collection names are case sensitive.
 ///
-/// ## CBLCollection Lifespan
+/// ## Collection Lifespan
 /// A `Collection` object and its reference remain valid until either
 /// the database is closed or the collection itself is deleted, in that case it will
 /// throw an NSError with the CBLError.notOpen code while accessing the collection APIs.

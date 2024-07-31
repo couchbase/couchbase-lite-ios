@@ -19,14 +19,14 @@
 
 import Foundation
 
-/// A CBLScope represents a scope or namespace of the collections.
+/// A Scope represents a scope or namespace of the collections.
 ///
 /// The scope implicitly exists when there is at least one collection created under the scope.
 /// The default scope is exceptional in that it will always exists even there are no collections
 /// under it.
 ///
-/// `CBLScope` Lifespan
-/// A `CBLScope` object remain valid until either the database is closed or
+/// `Scope` Lifespan
+/// A `Scope` object remain valid until either the database is closed or
 /// the scope itself is invalidated as all collections in the scope have been deleted. 
 public final class Scope {
     
@@ -46,6 +46,9 @@ public final class Scope {
     }
     
     /// Get a collection in the scope by name. If the collection doesn't exist, a nil value will be returned.
+    /// - Parameter name: Collection name as String.
+    /// - Returns: Collection object or nil if it doesn't exist.
+    /// - Throws: An error on when database object is not available.
     public func collection(name: String) throws -> Collection? {
         return try db.collection(name: name, scope: impl.name)
     }

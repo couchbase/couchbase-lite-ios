@@ -35,8 +35,9 @@ public final class FullTextFunction {
     
     /// Creates a full-text match expression with the given full-text index name and the query text
     ///
-    /// - Parameter indexName: The index name.
-    /// - Parameter query: The query string.
+    /// - Parameters:
+    ///   - indexName: The index name.
+    ///   - query: The query string.
     /// - Returns: The full-text match function expression.
     @available(*, deprecated, message: "Use FullTextFunction.match(withIndex:query) instead.")
     public static func match(indexName: String, query: String) -> ExpressionProtocol {
@@ -58,10 +59,11 @@ public final class FullTextFunction {
         return QueryExpression(CBLQueryFullTextFunction.rank(withIndex: i.toImpl()))
     }
     
-    ///  Creates a full-text match() function  with the given full-text index expression and the query text
+    /// Creates a full-text match() function with the given full-text index expression and the query text
     ///
-    /// - Parameter index: The full-text index expression.
-    /// - Parameter query: The query string.
+    /// - Parameters:
+    ///   - indexName: TThe full-text index expression.
+    ///   - query: The query string.
     /// - Returns: The full-text match() function expression.
     public static func match(_ index: IndexExpressionProtocol, query: String) -> ExpressionProtocol {
         guard let i = index as? FullTextIndexExpression else {
