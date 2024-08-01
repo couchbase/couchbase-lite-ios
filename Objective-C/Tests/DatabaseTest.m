@@ -2835,13 +2835,13 @@
  */
 - (void) testSQLiteFullSyncConfig {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    AssertFalse(config.isFullSync);
+    AssertFalse(config.fullSync);
     
-    config.isFullSync = true;
-    Assert(config.isFullSync);
+    config.fullSync = true;
+    Assert(config.fullSync);
     
-    config.isFullSync = false;
-    AssertFalse(config.isFullSync);
+    config.fullSync = false;
+    AssertFalse(config.fullSync);
 }
 
 /**
@@ -2871,19 +2871,19 @@
                                                   error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
-    AssertFalse([db config].isFullSync);
+    AssertFalse([db config].fullSync);
     C4DatabaseConfig2 c4config = [db getC4DBConfig2: [db config]];
     AssertFalse((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
     
     [self closeDatabase: db];
     
-    config.isFullSync = true;
+    config.fullSync = true;
     db = [[CBLDatabase alloc] initWithName: dbName
                                     config: config
                                      error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
-    Assert([db config].isFullSync);
+    Assert([db config].fullSync);
     c4config = [db getC4DBConfig2: [db config]];
     Assert((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
 

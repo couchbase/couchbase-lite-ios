@@ -1544,13 +1544,13 @@ class DatabaseTest: CBLTestCase {
     ///     6. Get the config FullSync property and verify that it is false.
     func testSQLiteFullSyncConfig() {
         var config = DatabaseConfiguration()
-        XCTAssertFalse(config.isFullSync)
+        XCTAssertFalse(config.fullSync)
         
-        config.isFullSync = true
-        XCTAssert(config.isFullSync)
+        config.fullSync = true
+        XCTAssert(config.fullSync)
         
-        config.isFullSync = false
-        XCTAssertFalse(config.isFullSync)
+        config.fullSync = false
+        XCTAssertFalse(config.fullSync)
     }
     
     /// 2. TestDBWithFullSync
@@ -1573,11 +1573,11 @@ class DatabaseTest: CBLTestCase {
         var config = DatabaseConfiguration()
         config.directory = self.directory
         db = try Database(name: dbName, config: config)
-        XCTAssertFalse(DatabaseConfiguration(config: config).isFullSync)
+        XCTAssertFalse(DatabaseConfiguration(config: config).fullSync)
         
         db = nil
-        config.isFullSync = true
+        config.fullSync = true
         db = try Database(name: dbName, config: config)
-        XCTAssert(DatabaseConfiguration(config: config).isFullSync)
+        XCTAssert(DatabaseConfiguration(config: config).fullSync)
     }
 }

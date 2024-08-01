@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
  power failure will not cause the loss of any data.  FULL synchronous
  is very safe but it is also dramatically slower.
  */
-@property (nonatomic) BOOL isFullSync;
+@property (nonatomic) BOOL fullSync;
 
 /**
  Initializes the CBLDatabaseConfiguration object.

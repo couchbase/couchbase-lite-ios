@@ -35,7 +35,7 @@ public struct DatabaseConfiguration {
     /// Setting this mode true ensures that an operating system crash or
     /// power failure will not cause the loss of any data.  FULL synchronous
     /// is very safe but it is also dramatically slower.
-    public var isFullSync: Bool = defaultFullSync
+    public var fullSync: Bool = defaultFullSync
     
     #if COUCHBASE_ENTERPRISE
     /// The key to encrypt the database with.
@@ -51,7 +51,7 @@ public struct DatabaseConfiguration {
     public init(config: DatabaseConfiguration?) {
         if let c = config {
             self.directory = c.directory
-            self.isFullSync = c.isFullSync
+            self.fullSync = c.fullSync
             #if COUCHBASE_ENTERPRISE
             self.encryptionKey = c.encryptionKey
             #endif
@@ -63,7 +63,7 @@ public struct DatabaseConfiguration {
     func toImpl() -> CBLDatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
         config.directory = self.directory
-        config.isFullSync = self.isFullSync
+        config.fullSync = self.fullSync
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = self.encryptionKey?.impl
         #endif

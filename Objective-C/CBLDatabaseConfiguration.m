@@ -25,7 +25,7 @@
     BOOL _readonly;
 }
 
-@synthesize directory=_directory, isFullSync=_isFullSync;
+@synthesize directory=_directory, fullSync=_fullSync;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
@@ -48,12 +48,14 @@
         
         if (config) {
             _directory = config.directory;
-            _isFullSync = config.isFullSync;
+            _fullSync = config.fullSync;
 #ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
 #endif
-        } else
+        } else {
             _directory = [CBLDatabaseConfiguration defaultDirectory];
+            _fullSync = kCBLDefaultDatabaseFullSync;
+        }
     }
     return self;
 }
