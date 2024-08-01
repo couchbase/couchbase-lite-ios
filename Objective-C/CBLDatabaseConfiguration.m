@@ -25,8 +25,7 @@
     BOOL _readonly;
 }
 
-@synthesize directory=_directory;
-@synthesize isFullSync=_isFullSync;
+@synthesize directory=_directory, isFullSync=_isFullSync;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
@@ -55,7 +54,6 @@
 #endif
         } else
             _directory = [CBLDatabaseConfiguration defaultDirectory];
-            _isFullSync = kCBLDefaultDatabaseFullSync;
     }
     return self;
 }
@@ -66,12 +64,6 @@
     [self checkReadonly];
     
     _directory = directory;
-}
-
-- (void) setFullSync: (BOOL)isFullSync {
-    [self checkReadonly];
-    
-    _isFullSync = isFullSync;
 }
 
 #pragma mark - Internal
