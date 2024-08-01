@@ -2,7 +2,7 @@
 //  DatabaseTest.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -1526,5 +1526,58 @@ class DatabaseTest: CBLTestCase {
         #if COUCHBASE_ENTERPRISE
         XCTAssertNotNil(db.config.encryptionKey)
         #endif
+    }
+    
+    // MARK: Full Sync Option
+    /// Test Spec for Database Full Sync Option
+    /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0003-SQLite-Options.md
+    
+    /// 1. TestSQLiteFullSyncConfig
+    /// Description:
+    ///     Test that the FullSync default is as expected and that it's setter and getter work.
+    /// Steps
+    ///     1. Create a DatabaseConfiguration object.
+    ///     2. Get and check the value of the FullSync property: it should be false.
+    ///     3. Set the FullSync property true.
+    ///     4. Get the config FullSync property and verify that it is true.
+    ///     5. Set the FullSync property false.
+    ///     6. Get the config FullSync property and verify that it is false.
+    func testSQLiteFullSyncConfig() {
+        var config = DatabaseConfiguration()
+        XCTAssertFalse(config.fullSync)
+        
+        config.fullSync = true
+        XCTAssert(config.fullSync)
+        
+        config.fullSync = false
+        XCTAssertFalse(config.fullSync)
+    }
+    
+    /// 2. TestDBWithFullSync
+    /// Description:
+    ///     Test that the FullSync default is as expected and that it's setter and getter work.
+    /// Steps
+    ///     1. Create a DatabaseConfiguration object and set Full Sync false.
+    ///     2. Create a database with the config.
+    ///     3. Get the configuration object from the Database and verify that FullSync is false.
+    ///     4. Use c4db_config2 (perhaps necessary only for this test) to confirm that its config does not contain the kC4DB_DiskSyncFull flag. - done in Obj-C
+    ///     5. Set the config's FullSync property true.
+    ///     6. Create a database with the config.
+    ///     7. Get the configuration object from the Database and verify that FullSync is true.
+    ///     8. Use c4db_config2 to confirm that its config contains the kC4DB_DiskSyncFull flag. - done in Obj-C
+    func testDBWithFullSync() throws {
+        let dbName = "fullsyncdb"
+        try deleteDB(name: dbName)
+        XCTAssertFalse(Database.exists(withName: dbName, inDirectory: self.directory))
+        
+        var config = DatabaseConfiguration()
+        config.directory = self.directory
+        db = try Database(name: dbName, config: config)
+        XCTAssertFalse(DatabaseConfiguration(config: config).fullSync)
+        
+        db = nil
+        config.fullSync = true
+        db = try Database(name: dbName, config: config)
+        XCTAssert(DatabaseConfiguration(config: config).fullSync)
     }
 }

@@ -19,12 +19,13 @@
 
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDefaults.h"
 
 @implementation CBLDatabaseConfiguration {
     BOOL _readonly;
 }
 
-@synthesize directory=_directory;
+@synthesize directory=_directory, fullSync=_fullSync;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize encryptionKey=_encryptionKey;
@@ -47,11 +48,14 @@
         
         if (config) {
             _directory = config.directory;
+            _fullSync = config.fullSync;
 #ifdef COUCHBASE_ENTERPRISE
             _encryptionKey = config.encryptionKey;
 #endif
-        } else
+        } else {
             _directory = [CBLDatabaseConfiguration defaultDirectory];
+            _fullSync = kCBLDefaultDatabaseFullSync;
+        }
     }
     return self;
 }

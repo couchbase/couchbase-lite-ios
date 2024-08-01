@@ -91,6 +91,7 @@ _kCBLBlobContentTypeProperty
 _kCBLBlobDigestProperty
 _kCBLBlobLengthProperty
 _kCBLBlobType
+_kCBLDefaultDatabaseFullSync
 _kCBLDefaultCollectionName
 _kCBLDefaultFullTextIndexIgnoreAccents
 _kCBLDefaultListenerDisableTls

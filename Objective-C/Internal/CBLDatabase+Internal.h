@@ -46,7 +46,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// CBLDatabase:
 
-
 @interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
@@ -76,6 +75,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBLCollection*) defaultCollectionOrThrow;
 
 - (id) mutex;
+
+#pragma mark - Private for test
+
+- (const C4DatabaseConfig2*) getC4DBConfig;
 
 @end
 
