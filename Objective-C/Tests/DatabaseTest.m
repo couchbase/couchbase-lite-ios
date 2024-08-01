@@ -2852,11 +2852,11 @@
     1. Create a DatabaseConfiguration object and set Full Sync false.
     2. Create a database with the config.
     3. Get the configuration object from the Database and verify that FullSync is false.
-    4. Use c4db_config2 (perhaps necessary only for this test) to confirm that its config does not contain the kC4DB_DiskSyncFull flag
-    5. Set the config's FullSync property true
-    6. Create a database with the config
-    7. Get the configuration object from the Database and verify that FullSync is true
-    8. Use c4db_config2 to confirm that its config contains the kC4DB_DiskSyncFull flag
+    4. Use c4db_config2 (perhaps necessary only for this test) to confirm that its config does not contain the kC4DB_DiskSyncFull flag.
+    5. Set the config's FullSync property true.
+    6. Create a database with the config.
+    7. Get the configuration object from the Database and verify that FullSync is true.
+    8. Use c4db_config2 to confirm that its config contains the kC4DB_DiskSyncFull flag.
  */
 - (void) testDBWithFullSync {
     NSString* dbName = @"fullsyncdb";
@@ -2872,6 +2872,9 @@
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertFalse([db config].isFullSync);
+    C4DatabaseConfig2 c4config = [db getC4DBConfig2: [db config]];
+    AssertFalse((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+    
     [self closeDatabase: db];
     
     config.isFullSync = true;
@@ -2881,6 +2884,9 @@
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     Assert([db config].isFullSync);
+    c4config = [db getC4DBConfig2: [db config]];
+    Assert((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+
     [self closeDatabase: db];
 }
 
