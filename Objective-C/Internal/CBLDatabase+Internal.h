@@ -78,7 +78,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Private for test
 
-- (C4DatabaseConfig2) getC4DBConfig2: (CBLDatabaseConfiguration*) config;
+- (const C4DatabaseConfig2*) getC4DBConfig;
 
 @end
 

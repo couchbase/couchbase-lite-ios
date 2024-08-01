@@ -2872,8 +2872,7 @@
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertFalse([db config].fullSync);
-    C4DatabaseConfig2 c4config = [db getC4DBConfig2: [db config]];
-    AssertFalse((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+    AssertFalse(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
     
     [self closeDatabase: db];
     
@@ -2884,8 +2883,7 @@
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     Assert([db config].fullSync);
-    c4config = [db getC4DBConfig2: [db config]];
-    Assert((c4config.flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+    Assert(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
 
     [self closeDatabase: db];
 }

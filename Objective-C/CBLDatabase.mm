@@ -1154,8 +1154,8 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 
 #pragma mark - Private for test
 
-- (C4DatabaseConfig2) getC4DBConfig2: (CBLDatabaseConfiguration*) config {
-    return c4DatabaseConfig2(config);
+- (const C4DatabaseConfig2*) getC4DBConfig {
+    return c4db_getConfig2(_c4db);
 }
 
 @end
