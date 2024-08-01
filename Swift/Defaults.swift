@@ -22,6 +22,13 @@
 
 import Foundation
 
+public extension DatabaseConfiguration {
+
+    /// [false] Full sync is off by default because the performance hit is seldom worth the benefit
+    static let defaultFullSync: Bool = kCBLDefaultDatabaseFullSync.boolValue
+
+}
+
 public extension LogFileConfiguration {
     /// [false] Plaintext is not used, and instead binary encoding is used in log files
     static let defaultUsePlainText: Bool = kCBLDefaultLogFileUsePlainText.boolValue
