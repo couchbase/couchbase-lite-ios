@@ -1024,6 +1024,8 @@ static BOOL setupDatabaseDirectory(NSString *dir, NSError **outError)
 static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     C4DatabaseConfig2 c4config = kDBConfig;
 
+    if (config.fullSync)
+        c4config.flags |= kC4DB_DiskSyncFull;
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
@@ -1137,6 +1139,12 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     CBL_LOCK(_mutex) {
         return _activeStoppables.count;
     }
+}
+
+#pragma mark - Private for test
+
+- (const C4DatabaseConfig2*) getC4DBConfig {
+    return c4db_getConfig2(_c4db);
 }
 
 @end

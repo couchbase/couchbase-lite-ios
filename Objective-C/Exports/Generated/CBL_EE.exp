@@ -109,6 +109,7 @@ _kCBLCertAttrStateOrProvince
 _kCBLCertAttrSurname
 _kCBLCertAttrURL
 _kCBLDefaultCollectionName
+_kCBLDefaultDatabaseFullSync
 _kCBLDefaultFullTextIndexIgnoreAccents
 _kCBLDefaultListenerDisableTls
 _kCBLDefaultListenerEnableDeltaSync
