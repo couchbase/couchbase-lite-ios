@@ -27,14 +27,14 @@ public struct DatabaseConfiguration {
     /// Path to the directory to store the database in.
     public var directory: String = CBLDatabaseConfiguration().directory
     
-    /// As Couchbase Lite normally configures its databases, There is a very
+    /// As Couchbase Lite normally configures its databases, there is a very
     /// small (though non-zero) chance that a power failure at just the wrong
     /// time could cause the most recently committed transaction's changes to
     /// be lost. This would cause the database to appear as it did immediately
     /// before that transaction.
     ///
     /// Setting this mode true ensures that an operating system crash or
-    /// power failure will not cause the loss of any data.  FULL synchronous
+    /// power failure will not cause the loss of any data. FULL synchronous
     /// is very safe but it is also dramatically slower.
     public var fullSync: Bool = defaultFullSync
     
