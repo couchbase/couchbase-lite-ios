@@ -328,6 +328,37 @@
 }
 #endif
 
+- (void) testConcurrentCreateAndQuery {
+    NSError* outError;
+    const NSUInteger kNDocs = 10;
+    const NSUInteger kNConcurrents = 3;
+    __block NSArray* allObjects= @[];
+    
+    NSString* queryString = @"SELECT * FROM _";
+    CBLQuery* query = [self.db createQuery: queryString error: &outError];
+    
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        NSError* error;
+        if (rIndex % 2 == 0){
+            [self.db inBatch: &error usingBlock: ^{
+                NSError* err;
+                Assert([self createAndSaveDocs: kNDocs error: &err],
+                       @"Error creating docs: %@", err);
+                CBLQueryResultSet* rs = [query execute: &err];
+                allObjects = rs.allObjects;
+            }];
+        } else {
+            Assert([self createAndSaveDocs: kNDocs error: &error],
+                   @"Error creating docs: %@", error);
+            CBLQueryResultSet* rs = [query execute: &error];
+            allObjects = rs.allObjects;
+        }
+        
+    }];
+    AssertEqual(self.db.count, allObjects.count);
+}
+
 #pragma clang diagnostic pop
 
 @end
