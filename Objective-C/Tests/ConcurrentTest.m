@@ -292,7 +292,6 @@
     }];
 }
 
-#if 0
 - (void) testDatabaseChange {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
@@ -302,15 +301,13 @@
     }];
     
     [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
-        [_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
+        [self->_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
         [exp1 fulfill];
     }];
     
     [self waitForExpectations: @[exp2] timeout: 10.0]; // Test deadlock
 }
-#endif //TEMP
 
-#if 0 //TEMP
 - (void) testDocumentChange {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
@@ -320,13 +317,43 @@
     }];
     
     [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
-        [_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
+        [self->_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
         [exp1 fulfill];
     }];
     
     [self waitForExpectations: @[exp2] timeout: 10.0]; // Test deadlock
 }
-#endif
+
+- (void) testConcurrentCreateAndQuery {
+    NSError* outError;
+    const NSUInteger kNDocs = 10;
+    const NSUInteger kNConcurrents = 3;
+    __block NSArray* allObjects= @[];
+    
+    NSString* queryString = @"SELECT * FROM _";
+    CBLQuery* query = [self.db createQuery: queryString error: &outError];
+    
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        NSError* error;
+        if (rIndex % 2 == 0){
+            [self.db inBatch: &error usingBlock: ^{
+                NSError* err;
+                Assert([self createAndSaveDocs: kNDocs error: &err],
+                       @"Error creating docs: %@", err);
+                CBLQueryResultSet* rs = [query execute: &err];
+                allObjects = rs.allObjects;
+            }];
+        } else {
+            Assert([self createAndSaveDocs: kNDocs error: &error],
+                   @"Error creating docs: %@", error);
+            CBLQueryResultSet* rs = [query execute: &error];
+            allObjects = rs.allObjects;
+        }
+        
+    }];
+    AssertEqual(self.db.count, allObjects.count);
+}
 
 #pragma clang diagnostic pop
 
