@@ -155,11 +155,12 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
 #ifdef DEBUG
         // Check if user overrides the default callback log level:
         NSString* userLogLevel = [NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"];
+        os_log_t log = os_log_create("CouchbaseLite", "OSLogging");
         if (userLogLevel) {
             callbackLogLevel = string2level(userLogLevel);
         }
         if (callbackLogLevel != kC4LogWarning) {
-            NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
+            os_log(log, "CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
         }
 #endif
         
@@ -190,7 +191,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
                 C4LogDomain domain = c4log_getDomain(domainName, true);
                 C4LogLevel level = string2level(defaults[key]);
                 c4log_setLevel(domain, level);
-                NSLog(@"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]);
+                os_log(log, "CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[callbackLogLevel]);
             }
         }
 #endif

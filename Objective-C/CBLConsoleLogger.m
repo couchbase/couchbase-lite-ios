@@ -45,7 +45,8 @@
     
     NSString* levelName = CBLLog_GetLevelName(level);
     NSString* domainName = CBLLog_GetDomainName(domain);
-    NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);
+    os_log_t log = os_log_create("CouchbaseLite", "OSDebug");
+    os_log(log, "CouchbaseLite %@ %@: %@", domainName, levelName, message);
 }
 
 @end

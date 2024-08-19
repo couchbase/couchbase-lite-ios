@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <os/log.h>
 
 @protocol CBLLogger;
 @class CBLConsoleLogger;

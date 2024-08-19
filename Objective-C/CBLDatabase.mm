@@ -115,7 +115,8 @@ static const C4DatabaseConfig2 kDBConfig = {
  */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        NSLog(@"%@", [CBLVersion userAgent]);
+        os_log_t log = os_log_create("CouchbaseLite", "OSLogging");
+        os_log(log, "%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
     }
