@@ -39,11 +39,7 @@
 - (CBLDictionary*) predict: (CBLDictionary*)input {
     NSString* inputWord = [input stringForKey: @"word"];
     
-    if (!inputWord) {
-        os_log_t log = os_log_create("CouchbaseLite", "OSLogging");
-        os_log(log, "No word input !!!");
-        return nil;
-    }
+    assert(inputWord);
     
     CBLArray* result = [self vectorForWord: inputWord collection: @"words"];
     if (!result) {
