@@ -143,11 +143,13 @@ static NSDictionary* sOverrideProxySettings;
     // Create the CFHTTPMessage:
     CFHTTPMessageRef httpMsg;
     if (_proxyType == kCBLHTTPProxy && _useProxyCONNECT) {
-        NSURL *requestURL = [NSURL URLWithString: $sprintf(@"%@:%d", url.host, url.my_effectivePort)];
+        NSString *destination = $sprintf(@"%@:%d", url.host, url.my_effectivePort);
+        CFURLRef requestURL = CFURLCreateWithString(kCFAllocatorDefault, (__bridge CFStringRef)destination, false);
         httpMsg = CFHTTPMessageCreateRequest(NULL,
                                              CFSTR("CONNECT"),
-                                             (__bridge CFURLRef)requestURL,
+                                             requestURL,
                                              kCFHTTPVersion1_1);
+        CFRelease(requestURL);
     } else {
         httpMsg = CFHTTPMessageCreateRequest(NULL,
                                              (__bridge CFStringRef)_urlRequest.HTTPMethod,
