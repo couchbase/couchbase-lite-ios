@@ -30,7 +30,6 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
 #import "CBLMisc.h"
 #import "CBLQuery+Internal.h"
@@ -115,8 +114,8 @@ static const C4DatabaseConfig2 kDBConfig = {
  */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        os_log_t log = os_log_create("CouchbaseLite", "OSLogging");
-        os_log(log, "%@", [CBLVersion userAgent]);
+        os_log_t logger = os_log_create("com.couchbase.lite.ios", "UserAgent");
+        os_log(logger, "%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
     }

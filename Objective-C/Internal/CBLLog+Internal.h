@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import <os/log.h>
 #import "CBLLog.h"
 #import "CBLConsoleLogger.h"
 #import "CBLFileLogger.h"
