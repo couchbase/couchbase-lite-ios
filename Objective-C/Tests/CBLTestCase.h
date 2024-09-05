@@ -203,7 +203,9 @@ NS_ASSUME_NONNULL_BEGIN
  /// This expectation will allow overfill expectation.
  CBL-2363: Replicator might send extra idle status when its being stopped, which is not a bug
  */
-- (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description;
+- (XCTestExpectation*) allowOverfillExpectationWithDescription: (NSString*)description;
+
+- (void) logEverythingToFile: (NSString*)path;
 
 @end
 

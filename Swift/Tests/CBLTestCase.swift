@@ -80,6 +80,8 @@ class CBLTestCase: XCTestCase {
     override func setUp() {
         super.setUp()
         
+        logEverythingToFile("~/Desktop/Tests-iOS-cbllog");
+        
         try? deleteDB(name: databaseName);
         
         try? deleteDB(name: otherDatabaseName);
@@ -326,4 +328,17 @@ public func ==(lhs: [String: Any], rhs: [String: Any] ) -> Bool {
 /** Comparing JSON Array */
 public func ==(lhs: [Any], rhs: [Any] ) -> Bool {
     return NSArray(array: lhs).isEqual(to: rhs)
+}
+
+public func logEverythingToFile(_ path: String) {
+    let userDir = (path as NSString).expandingTildeInPath
+    let config = LogFileConfiguration(directory: userDir)
+    config.maxRotateCount = 1000
+    config.maxSize = 1024 * 1024
+    config.usePlainText = true
+    
+    Database.log.file.config = config
+    Database.log.file.level = .info
+    
+    Database.log.console.level = .info
 }

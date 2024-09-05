@@ -47,6 +47,9 @@
 - (void) setUp {
     [super setUp];
     
+    // Enable verbose logging for all tests
+    [self logEverythingToFile: @"~/Desktop/Tests-iOS-cbllog"];
+    
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];
     
@@ -438,6 +441,18 @@
     [self.db saveBlob: blob error: &err];
     
     return [self stringFromResource: @"rick_morty" ofType: @"json"];
+}
+
+- (void) logEverythingToFile: (NSString*)path {
+    NSString* userDir = [path stringByExpandingTildeInPath];
+    CBLLogFileConfiguration *config = [[CBLLogFileConfiguration alloc] initWithDirectory: userDir];
+    config.maxRotateCount = 1000;
+    config.maxSize = 1024 * 1024;
+    config.usePlainText = YES;
+    [CBLDatabase.log.file setConfig:config];
+    [CBLDatabase.log.file setLevel:kCBLLogLevelInfo];
+    
+    [CBLDatabase.log.console setLevel:kCBLLogLevelInfo];
 }
 
 #pragma clang diagnostic pop
