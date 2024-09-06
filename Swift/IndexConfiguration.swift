@@ -69,6 +69,38 @@ public struct ValueIndexConfiguration: IndexConfiguration, IndexConfigConvertabl
     }
 }
 
+/// Configuration for indexing property values within nested arrays in documents,
+/// intended for use with the UNNEST query.
+public struct ArrayIndexConfiguration: IndexConfiguration, IndexConfigConvertable {
+    /// Path to the array, which can be nested.
+    public let path: String
+    
+    ///  The expressions representing the values within the array to be indexed.
+    public let expressions: [String]?
+    
+    /// Initializes the configuration with paths to the nested array and the optional
+    /// expressions for the values within the arrays to be indexed.
+    /// - Parameter path Path to the array, which can be nested to be indexed.
+    /// - Note Use "[]" to represent a property that is an array of each nested array level.
+    ///     For a single array or the last level array, the "[]" is optional.
+    ///     For instance, use "contacts[].phones" to specify an array of phones within each contact.
+    /// - Parameter expressions An optional array of strings, where each string
+    ///     represents an expression defining the values within the array to be indexed.
+    ///     If the array specified by the path contains scalar values, this parameter can be null.
+    /// - Returns The ArrayIndexConfiguration object.
+    public init(path: String, _ expressions: [String]?) {
+        self.path = path
+        self.expressions = expressions
+    }
+    
+    // MARK: Internal
+    
+    func toImpl() -> CBLIndexConfiguration {
+        return CBLArrayIndexConfiguration(path:path, expressions: expressions)
+    }
+}
+
+
 // MARK: Internal
 
 protocol IndexConfigConvertable {
