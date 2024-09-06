@@ -96,7 +96,7 @@ public struct ArrayIndexConfiguration: IndexConfiguration, IndexConfigConvertabl
     // MARK: Internal
     
     func toImpl() -> CBLIndexConfiguration {
-        return CBLArrayIndexConfiguration(path:path, expressions: expressions)
+        return CBLArrayIndexConfiguration(path: path, expressions: expressions)
     }
 }
 
