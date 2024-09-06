@@ -27,16 +27,19 @@
 - (instancetype) initWithPath: (NSString*) path
                   expressions: (nullable NSArray<NSString*>*)expressions {
     
-    if(expressions){
+    if(!expressions){
+        self = [super initWithIndexType: kC4ArrayIndex
+                            expressions: @[@""]];
+    } else {
         for (NSString* expression in expressions) {
                 if (!expression) {
                     [NSException raise: NSInvalidArgumentException format: @"Expressions can't contain nil"];
             }
         }
+        self = [super initWithIndexType: kC4ArrayIndex
+                            expressions: expressions];
     }
     
-    self = [super initWithIndexType: kC4ArrayIndex
-                        expressions: expressions];
     if (self) {
         _path = path;
         _expressions = expressions;
