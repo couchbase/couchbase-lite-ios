@@ -155,12 +155,12 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
 #ifdef DEBUG
         // Check if user overrides the default callback log level:
         NSString* userLogLevel = [NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"];
-        oslogger = os_log_create("com.couchbase.lite.ios", "DebugBuild");
         if (userLogLevel) {
             callbackLogLevel = string2level(userLogLevel);
         }
         if (callbackLogLevel != kC4LogWarning) {
-            os_log(oslogger, "CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
+            NSString* message = [NSString stringWithFormat: @"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]];
+            [CBLConsoleLogger logWithInternal: message];
         }
 #endif
         

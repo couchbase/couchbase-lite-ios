@@ -114,8 +114,7 @@ static const C4DatabaseConfig2 kDBConfig = {
  */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        os_log_t logger = os_log_create("com.couchbase.lite.ios", "UserAgent");
-        os_log(logger, "%@", [CBLVersion userAgent]);
+        [CBLConsoleLogger logWithInternal:[CBLVersion userAgent]];
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
     }

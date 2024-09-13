@@ -25,6 +25,7 @@
 @synthesize level=_level, domains=_domains;
 
 static NSMutableDictionary<NSNumber *, os_log_t>* osLogDictionary;
+static os_log_t logger;
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level {
     self = [super init];
@@ -79,4 +80,17 @@ static os_log_type_t osLogTypeForLevel(CBLLogLevel level) {
     osLogDictionary[@(kCBLLogDomainListener)] = os_log_create("com.couchbase.lite.ios", "Listener");
     #endif
 }
+
++ (os_log_t) internalLogger {
+    if(!logger){
+        logger = os_log_create("com.couchbase.lite.ios", "Log");
+    }
+    return logger;
+}
+
++ (void) logWithInternal: (NSString*)message {
+    logger = [self internalLogger];
+    os_log(logger, "%@", message);
+}
+
 @end

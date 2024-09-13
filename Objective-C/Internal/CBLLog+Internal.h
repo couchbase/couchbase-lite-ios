@@ -36,6 +36,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level;
 
++ (os_log_t) internalLogger;
+
++ (void) logWithInternal: (nonnull NSString*)message;
+
 @end
 
 @interface CBLFileLogger ()
