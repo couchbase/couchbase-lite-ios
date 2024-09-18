@@ -49,11 +49,7 @@
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
     if (conflict.remoteDocument == nil || conflict.localDocument == nil)
         return nil;
-    else if (conflict.localDocument.generation > conflict.remoteDocument.generation)
-        return conflict.localDocument;
-    else if (conflict.localDocument.generation < conflict.remoteDocument.generation)
-        return conflict.remoteDocument;
-    else if ([conflict.localDocument.revisionID compare: conflict.remoteDocument.revisionID] > 0)
+    else if (conflict.localDocument.timestamp > conflict.remoteDocument.timestamp)
         return conflict.localDocument;
     else
         return conflict.remoteDocument;
