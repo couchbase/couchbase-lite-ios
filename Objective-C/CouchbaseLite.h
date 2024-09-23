@@ -27,6 +27,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 
 #import <CouchbaseLite/CBLArray.h>
 #import <CouchbaseLite/CBLArrayFragment.h>
+#import <CouchbaseLite/CBLArrayIndexConfiguration.h>
 #import <CouchbaseLite/CBLAuthenticator.h>
 #import <CouchbaseLite/CBLBasicAuthenticator.h>
 #import <CouchbaseLite/CBLBlob.h>
