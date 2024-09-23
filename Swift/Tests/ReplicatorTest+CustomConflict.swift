@@ -140,6 +140,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertNil(try defaultCollection!.document(id: "doc"))
     }
     
+    /** https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
+     Test 4. DefaultConflictResolverDeleteWins -> testConflictResolverDeletedLocalWins + testConflictResolverDeletedRemoteWins
+     */
     func testConflictResolverDeletedLocalWins() throws {
         let remoteData = ["key2": "value2"]
         try makeConflict(forID: "doc", withLocal: nil, withRemote: remoteData)
@@ -482,6 +485,9 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert(try defaultCollection!.document(id: docID)!.toDictionary() == remoteData)
     }
     
+    /** https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
+     Test 3. DefaultConflictResolverLastWriteWins -> default resolver
+     */
     func testConflictResolutionDefault() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]

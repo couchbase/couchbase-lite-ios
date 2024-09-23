@@ -2325,8 +2325,6 @@
     // Assert(doc._getRevisionHistory);
 }
 
-
-
 #pragma clang diagnostic pop
 
 @end
