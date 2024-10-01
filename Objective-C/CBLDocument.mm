@@ -29,6 +29,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
+#import <limits.h>
 
 using namespace fleece;
 
@@ -199,6 +200,16 @@ using namespace fleece;
     }
 }
 
+- (nullable NSString*) _getRevisionHistory {
+    CBL_LOCK(self) {
+        if (!_c4Doc) {
+            return nil;
+        } else {
+            return sliceResult2string(c4doc_getRevisionHistory(_c4Doc.rawDoc, UINT_MAX, nil, 0));
+        }
+    }
+}
+
 #pragma mark - Fleece Encoding
 
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
@@ -279,10 +290,9 @@ using namespace fleece;
     }
 }
 
-- (NSUInteger) generation {
-    // CBLMutableDocument overrides this
+- (NSTimeInterval) timestamp {
     CBL_LOCK(self) {
-        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+        return _c4Doc != nil ?  c4rev_getTimestamp(_c4Doc.revID) / 1000000000.0 : 0;
     }
 }
 
