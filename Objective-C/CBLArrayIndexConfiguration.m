@@ -30,11 +30,9 @@
     if(!expressions) {
         self = [super initWithIndexType: kC4ArrayIndex
                             expressions: @[@""]];
-    }
-    
-    if ([expressions count] == 0) {
+    } else if ([expressions count] == 0) {
         [NSException raise: NSInvalidArgumentException format:
-         @"Expressions cannot be empty "];
+         @"Empty expressions is not allowed, use nil instead"];
     }
     
     self = [super initWithIndexType: kC4ArrayIndex
@@ -55,7 +53,7 @@
 
 - (C4IndexOptions) indexOptions {
     C4IndexOptions c4options = { };
-    //c4options.unnestPath = _path;
+    c4options.unnestPath = [_path UTF8String];
     return c4options;
 }
 

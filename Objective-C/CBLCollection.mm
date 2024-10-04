@@ -473,151 +473,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
-#pragma mark - Internal
-
-- (BOOL) checkIsValid: (NSError**)error {
-    BOOL valid = c4coll_isValid(_c4col);
-    if (!valid) {
-        if (error)
-            *error = CBLCollectionErrorNotOpen;
-    }
-    
-    return valid;
-}
-
-- (BOOL) isValid {
-    return [self checkIsValid: nil];
-}
-
-- (BOOL) database: (CBLDatabase*)db isValid: (NSError**)error {
-    BOOL valid = db != nil;
-    if (!valid) {
-        if (error)
-            *error = CBLDatabaseErrorNotOpen;
-    }
-    
-    return valid;
-}
-
-- (C4CollectionSpec) c4spec {
-    // Convert to cString directly instead of using CBLStringBytes to avoid
-    // stack-use-after-scope problem when a small string is kept in the
-    // _local stack based buffer of the CBLStringBytes
-    C4Slice name = c4str([_name cStringUsingEncoding: NSUTF8StringEncoding]);
-    C4Slice scopeName = c4str([_scope.name cStringUsingEncoding: NSUTF8StringEncoding]);
-    return { .name = name, .scope = scopeName };
-}
-
-- (BOOL) isEqual: (id)object {
-    if (self == object)
-        return YES;
-    
-    CBLCollection* other = $castIf(CBLCollection, object);
-    if (!other)
-        return NO;
-    
-    if (!(other && [self.name isEqual: other.name] &&
-          [self.scope.name isEqual: other.scope.name] &&
-          [self.database.path isEqual: other.database.path])) {
-        return NO;
-    }
-    
-    if (!self.isValid || !other.isValid)
-        return NO;
-    
-    return YES;
-}
-
-- (id<CBLListenerToken>) addCollectionChangeListener: (void (^)(CBLCollectionChange*))listener
-                                               queue: (dispatch_queue_t)queue {
-    if (!_colChangeNotifier) {
-        _colChangeNotifier = [CBLChangeNotifier new];
-        C4Error c4err = {};
-        _colObs = c4dbobs_createOnCollection(_c4col, colObserverCallback, (__bridge void *)self, &c4err);
-        if (!_colObs) {
-            CBLWarn(Database, @"%@ Failed to create collection obs c4col=%p err=%d/%d",
-                    self, _c4col, c4err.domain, c4err.code);
-        }
-    }
-    
-    return [_colChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
-}
-
-static void colObserverCallback(C4CollectionObserver* obs, void* context) {
-    CBLCollection *c = (__bridge CBLCollection *)context;
-    dispatch_async(c.dispatchQueue, ^{
-        [c postCollectionChanged];
-    });
-}
-
-- (void) postCollectionChanged {
-    CBL_LOCK(_mutex) {
-        if (!_colObs || !_c4col)
-            return;
-        
-        const uint32_t kMaxChanges = 100u;
-        C4DatabaseChange changes[kMaxChanges];
-        bool external = false;
-        C4CollectionObservation obs = {};
-        NSMutableArray* docIDs = [NSMutableArray new];
-        do {
-            // Read changes in batches of kMaxChanges:
-            obs = c4dbobs_getChanges(_colObs, changes, kMaxChanges);
-            if (obs.numChanges == 0 || external != obs.external || docIDs.count > 1000) {
-                if(docIDs.count > 0) {
-                    CBLCollectionChange* change = [[CBLCollectionChange alloc] initWithCollection: self
-                                                                                      documentIDs: docIDs
-                                                                                       isExternal: external];
-                    [_colChangeNotifier postChange: change];
-                    docIDs = [NSMutableArray new];
-                }
-            }
-            
-            external = obs.external;
-            for(uint32_t i = 0; i < obs.numChanges; i++) {
-                NSString *docID =slice2string(changes[i].docID);
-                [docIDs addObject: docID];
-            }
-            c4dbobs_releaseChanges(changes, obs.numChanges);
-        } while(obs.numChanges > 0);
-    }
-}
-
-- (void) removeToken: (id)token {
-    CBL_LOCK(_mutex) {
-        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
-        if (t.context)
-            [self removeDocumentChangeListenerWithToken: token];
-        else {
-            if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
-                c4dbobs_free(_colObs);
-                _colObs = nil;
-                _colChangeNotifier = nil;
-            }
-        }
-    }
-}
-
-- (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
-    CBL_LOCK(_mutex) {
-        NSString* documentID = (NSString*)token.context;
-        CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
-        if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
-            [notifier stop];
-            [_docChangeNotifiers removeObjectForKey:documentID];
-        }
-    }
-}
-
-- (void) freeC4Observer {
-    c4dbobs_free(_colObs);
-    _colObs = nullptr;
-    _colChangeNotifier = nil;
-
-    [_docChangeNotifiers.allValues makeObjectsPerformSelector: @selector(stop)];
-    _docChangeNotifiers = nil;
-}
-
 #pragma mark - Document listener
 
 - (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
@@ -973,6 +828,173 @@ static void colObserverCallback(C4CollectionObserver* obs, void* context) {
         }
 
         return [[CBLQueryIndex alloc] initWithC4Index: c4index name: name collection: self];
+    }
+}
+
+#pragma mark - Internal
+
+- (BOOL) checkIsValid: (NSError**)error {
+    BOOL valid = c4coll_isValid(_c4col);
+    if (!valid) {
+        if (error)
+            *error = CBLCollectionErrorNotOpen;
+    }
+    
+    return valid;
+}
+
+- (BOOL) isValid {
+    return [self checkIsValid: nil];
+}
+
+- (BOOL) database: (CBLDatabase*)db isValid: (NSError**)error {
+    BOOL valid = db != nil;
+    if (!valid) {
+        if (error)
+            *error = CBLDatabaseErrorNotOpen;
+    }
+    
+    return valid;
+}
+
+- (C4CollectionSpec) c4spec {
+    // Convert to cString directly instead of using CBLStringBytes to avoid
+    // stack-use-after-scope problem when a small string is kept in the
+    // _local stack based buffer of the CBLStringBytes
+    C4Slice name = c4str([_name cStringUsingEncoding: NSUTF8StringEncoding]);
+    C4Slice scopeName = c4str([_scope.name cStringUsingEncoding: NSUTF8StringEncoding]);
+    return { .name = name, .scope = scopeName };
+}
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLCollection* other = $castIf(CBLCollection, object);
+    if (!other)
+        return NO;
+    
+    if (!(other && [self.name isEqual: other.name] &&
+          [self.scope.name isEqual: other.scope.name] &&
+          [self.database.path isEqual: other.database.path])) {
+        return NO;
+    }
+    
+    if (!self.isValid || !other.isValid)
+        return NO;
+    
+    return YES;
+}
+
+- (id<CBLListenerToken>) addCollectionChangeListener: (void (^)(CBLCollectionChange*))listener
+                                               queue: (dispatch_queue_t)queue {
+    if (!_colChangeNotifier) {
+        _colChangeNotifier = [CBLChangeNotifier new];
+        C4Error c4err = {};
+        _colObs = c4dbobs_createOnCollection(_c4col, colObserverCallback, (__bridge void *)self, &c4err);
+        if (!_colObs) {
+            CBLWarn(Database, @"%@ Failed to create collection obs c4col=%p err=%d/%d",
+                    self, _c4col, c4err.domain, c4err.code);
+        }
+    }
+    
+    return [_colChangeNotifier addChangeListenerWithQueue: queue listener: listener delegate: self];
+}
+
+static void colObserverCallback(C4CollectionObserver* obs, void* context) {
+    CBLCollection *c = (__bridge CBLCollection *)context;
+    dispatch_async(c.dispatchQueue, ^{
+        [c postCollectionChanged];
+    });
+}
+
+- (void) postCollectionChanged {
+    CBL_LOCK(_mutex) {
+        if (!_colObs || !_c4col)
+            return;
+        
+        const uint32_t kMaxChanges = 100u;
+        C4DatabaseChange changes[kMaxChanges];
+        bool external = false;
+        C4CollectionObservation obs = {};
+        NSMutableArray* docIDs = [NSMutableArray new];
+        do {
+            // Read changes in batches of kMaxChanges:
+            obs = c4dbobs_getChanges(_colObs, changes, kMaxChanges);
+            if (obs.numChanges == 0 || external != obs.external || docIDs.count > 1000) {
+                if(docIDs.count > 0) {
+                    CBLCollectionChange* change = [[CBLCollectionChange alloc] initWithCollection: self
+                                                                                      documentIDs: docIDs
+                                                                                       isExternal: external];
+                    [_colChangeNotifier postChange: change];
+                    docIDs = [NSMutableArray new];
+                }
+            }
+            
+            external = obs.external;
+            for(uint32_t i = 0; i < obs.numChanges; i++) {
+                NSString *docID =slice2string(changes[i].docID);
+                [docIDs addObject: docID];
+            }
+            c4dbobs_releaseChanges(changes, obs.numChanges);
+        } while(obs.numChanges > 0);
+    }
+}
+
+- (void) removeToken: (id)token {
+    CBL_LOCK(_mutex) {
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        if (t.context)
+            [self removeDocumentChangeListenerWithToken: token];
+        else {
+            if ([_colChangeNotifier removeChangeListenerWithToken: token] == 0) {
+                c4dbobs_free(_colObs);
+                _colObs = nil;
+                _colChangeNotifier = nil;
+            }
+        }
+    }
+}
+
+- (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
+    CBL_LOCK(_mutex) {
+        NSString* documentID = (NSString*)token.context;
+        CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
+        if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
+            [notifier stop];
+            [_docChangeNotifiers removeObjectForKey:documentID];
+        }
+    }
+}
+
+- (void) freeC4Observer {
+    c4dbobs_free(_colObs);
+    _colObs = nullptr;
+    _colChangeNotifier = nil;
+
+    [_docChangeNotifiers.allValues makeObjectsPerformSelector: @selector(stop)];
+    _docChangeNotifiers = nil;
+}
+
+- (nullable NSArray*) indexesInfo: (NSError**)error {
+    CBL_LOCK(_mutex) {
+        if (![self checkIsValid: error])
+            return nil;
+        
+        C4Error err = {};
+        C4SliceResult res = c4coll_getIndexesInfo(_c4col, &err);
+        if (err.code != 0){
+            convertError(err, error);
+            return nil;
+        }
+        
+        FLDoc doc = FLDoc_FromResultData(res, kFLTrusted, nullptr, nullslice);
+        FLSliceResult_Release(res);
+        
+        NSArray* indexes = FLValue_GetNSObject(FLDoc_GetRoot(doc), nullptr);
+        FLDoc_Release(doc);
+        
+        return indexes;
     }
 }
 
