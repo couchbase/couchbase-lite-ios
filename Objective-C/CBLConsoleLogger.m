@@ -19,17 +19,21 @@
 
 #import "CBLConsoleLogger.h"
 #import "CBLLog+Internal.h"
-#import "CBLLog+Admin.h"
 
 @implementation CBLConsoleLogger
 
-@synthesize level=_level, domains=_domains;
+@synthesize level=_level, domains=_domains, sysID=_sysID;
+
+static NSMutableDictionary<NSNumber *, os_log_t>* osLogDictionary;
+static os_log_t logger;
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level {
     self = [super init];
     if (self) {
         _level = level;
         _domains = kCBLLogDomainAll;
+        _sysID = [[NSBundle mainBundle] bundleIdentifier];
+        [self initializeOSLogDomains];
     }
     return self;
 }
@@ -43,9 +47,52 @@
     if (self.level > level || (self.domains & domain) == 0)
         return;
     
-    NSString* levelName = CBLLog_GetLevelName(level);
-    NSString* domainName = CBLLog_GetDomainName(domain);
-    NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);
+    os_log_t osLogDomain = osLogDictionary[@(domain)];
+    os_log_type_t osLogType = osLogTypeForLevel(level);
+    os_log_with_type(osLogDomain, osLogType, "%@", message);
+}
+
+static os_log_type_t osLogTypeForLevel(CBLLogLevel level) {
+    switch (level) {
+        case kCBLLogLevelDebug:
+            return OS_LOG_TYPE_DEBUG;
+        case kCBLLogLevelVerbose:
+            return OS_LOG_TYPE_INFO; // Map verbose to info
+        case kCBLLogLevelInfo:
+            return OS_LOG_TYPE_INFO;
+        case kCBLLogLevelWarning:
+            return OS_LOG_TYPE_ERROR; // Map warning to error
+        case kCBLLogLevelError:
+            return OS_LOG_TYPE_ERROR;
+        default:
+            return OS_LOG_TYPE_DEFAULT; // Default log type
+    }
+}
+
+- (void) initializeOSLogDomains {
+    osLogDictionary = [NSMutableDictionary dictionary];
+    
+    osLogDictionary[@(kCBLLogDomainDatabase)] = os_log_create([self.sysID UTF8String], "Database");
+    osLogDictionary[@(kCBLLogDomainQuery)] = os_log_create([self.sysID UTF8String], "Query");
+    osLogDictionary[@(kCBLLogDomainReplicator)] = os_log_create([self.sysID UTF8String], "Replicator");
+    osLogDictionary[@(kCBLLogDomainNetwork)] = os_log_create([self.sysID UTF8String], "Network");
+    
+    #ifdef COUCHBASE_ENTERPRISE
+    osLogDictionary[@(kCBLLogDomainListener)] = os_log_create([self.sysID UTF8String], "Listener");
+    #endif
+}
+
++ (os_log_t) internalLogger {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        logger = os_log_create("com.couchbase.lite.ios", "Internal");
+    });
+    return logger;
+}
+
++ (void) logWithInternal: (NSString*)message {
+    logger = [self internalLogger];
+    os_log(logger, "%@", message);
 }
 
 @end
