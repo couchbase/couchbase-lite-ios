@@ -360,7 +360,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let target = URLEndpoint(url: url)
         var config = ReplicatorConfiguration(target: target)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             config.addCollections([col1a, col1b])
         }
         
@@ -371,7 +371,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(config.collections.count, 1)
         XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             config.addCollection(col1b)
         }
     }
@@ -389,7 +389,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let target = URLEndpoint(url: url)
         var config = ReplicatorConfiguration(target: target)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             config.addCollections([col1a, col1b])
         }
         
@@ -400,7 +400,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(config.collections.count, 1)
         XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             config.addCollection(col1b)
         }
     }
