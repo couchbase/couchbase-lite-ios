@@ -28,6 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL isValid;
 
+- (nullable NSArray*) indexesInfo: (NSError**)error;
+
 @end
 
 NS_ASSUME_NONNULL_END
