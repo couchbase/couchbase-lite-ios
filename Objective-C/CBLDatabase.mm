@@ -114,7 +114,6 @@ static const C4DatabaseConfig2 kDBConfig = {
  */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        [CBLConsoleLogger logWithInternal:[CBLVersion userAgent]];
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
     }
@@ -124,6 +123,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 + (void) CBLInit {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        [CBLConsoleLogger logWithInternal:[CBLVersion userAgent]];
         [self checkFileLogging];
     });
 }

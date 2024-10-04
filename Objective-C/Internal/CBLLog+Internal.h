@@ -34,6 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLConsoleLogger ()
 
+@property (nonatomic, readonly) NSString* sysID;
+
 - (instancetype) initWithLogLevel: (CBLLogLevel)level;
 
 + (os_log_t) internalLogger;

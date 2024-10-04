@@ -22,7 +22,7 @@
 
 @implementation CBLConsoleLogger
 
-@synthesize level=_level, domains=_domains;
+@synthesize level=_level, domains=_domains, sysID=_sysID;
 
 static NSMutableDictionary<NSNumber *, os_log_t>* osLogDictionary;
 static os_log_t logger;
@@ -32,6 +32,7 @@ static os_log_t logger;
     if (self) {
         _level = level;
         _domains = kCBLLogDomainAll;
+        _sysID = [[NSBundle mainBundle] bundleIdentifier];
         [self initializeOSLogDomains];
     }
     return self;
@@ -70,21 +71,22 @@ static os_log_type_t osLogTypeForLevel(CBLLogLevel level) {
 
 - (void) initializeOSLogDomains {
     osLogDictionary = [NSMutableDictionary dictionary];
-        
-    osLogDictionary[@(kCBLLogDomainDatabase)] = os_log_create("com.couchbase.lite.ios", "Database");
-    osLogDictionary[@(kCBLLogDomainQuery)] = os_log_create("com.couchbase.lite.ios", "Query");
-    osLogDictionary[@(kCBLLogDomainReplicator)] = os_log_create("com.couchbase.lite.ios", "Replicator");
-    osLogDictionary[@(kCBLLogDomainNetwork)] = os_log_create("com.couchbase.lite.ios", "Network");
+    
+    osLogDictionary[@(kCBLLogDomainDatabase)] = os_log_create([self.sysID UTF8String], "Database");
+    osLogDictionary[@(kCBLLogDomainQuery)] = os_log_create([self.sysID UTF8String], "Query");
+    osLogDictionary[@(kCBLLogDomainReplicator)] = os_log_create([self.sysID UTF8String], "Replicator");
+    osLogDictionary[@(kCBLLogDomainNetwork)] = os_log_create([self.sysID UTF8String], "Network");
     
     #ifdef COUCHBASE_ENTERPRISE
-    osLogDictionary[@(kCBLLogDomainListener)] = os_log_create("com.couchbase.lite.ios", "Listener");
+    osLogDictionary[@(kCBLLogDomainListener)] = os_log_create([self.sysID UTF8String], "Listener");
     #endif
 }
 
 + (os_log_t) internalLogger {
-    if(!logger){
-        logger = os_log_create("com.couchbase.lite.ios", "Log");
-    }
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        logger = os_log_create("com.couchbase.lite.ios", "Internal");
+    });
     return logger;
 }
 
