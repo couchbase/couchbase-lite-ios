@@ -35,6 +35,10 @@ class UnnestArrayTest: CBLTestCase {
         expectException(exception: .invalidArgumentException) {
             _ = ArrayIndexConfiguration(path: "contacts", [])
         }
+        
+        expectException(exception: .invalidArgumentException) {
+            _ = ArrayIndexConfiguration(path: "contacts", [""])
+        }
     }
     
     /// 2. TestCreateArrayIndexWithPath

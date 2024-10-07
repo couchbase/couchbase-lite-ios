@@ -46,6 +46,10 @@
     [self expectException: NSInvalidArgumentException in:^{
         (void) [[CBLArrayIndexConfiguration alloc] initWithPath:@"contacts" expressions: @[]];
     }];
+    
+    [self expectException: NSInvalidArgumentException in:^{
+        (void) [[CBLArrayIndexConfiguration alloc] initWithPath:@"contacts" expressions: @[@""]];
+    }];
 }
 
 /**
