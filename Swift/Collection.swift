@@ -352,6 +352,10 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     
     // MARK: Internal
     
+    func indexesInfo() throws -> [[String: Any]]? {
+        return try impl.indexesInfo() as? [[String: Any]]
+    }
+    
     init(_ impl: CBLCollection, db: Database) {
         self.impl = impl
         self.database = db

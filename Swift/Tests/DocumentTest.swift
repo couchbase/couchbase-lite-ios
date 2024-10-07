@@ -1653,7 +1653,7 @@ class DocumentTest: CBLTestCase {
     
     func testUnsavedMutableDocumentToJSON() throws {
         let mDoc = try MutableDocument(id: "doc", json: "{\"unsaved\":\"doc\"}")
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mDoc.toJSON()
         }
     }
@@ -1732,7 +1732,7 @@ class DocumentTest: CBLTestCase {
     func testUnsavedBlob() throws {
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = blob.toJSON()
         }
     }
@@ -1751,7 +1751,7 @@ class DocumentTest: CBLTestCase {
         try self.db.saveBlob(blob: blob)
         
         var b: Blob?
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:"bl0b",
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1759,7 +1759,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: ["type":Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1767,7 +1767,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: 1234,
@@ -1775,7 +1775,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1783,7 +1783,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: 12,
                                                   Blob.blobContentType: "text/plain",

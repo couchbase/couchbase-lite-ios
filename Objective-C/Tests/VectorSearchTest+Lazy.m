@@ -1231,7 +1231,7 @@
 }
 
 /**
- * 26. TestIndexUpdaterCallFinishTwice
+ * 26. TestIndexUpdaterCallFinishTwice + 27. TestIndexUpdaterUseAfterFinished
  *
  * Description
  * Test that when calling IndexUpdater's finish() after it was finished,
@@ -1250,10 +1250,10 @@
  *     - Convert the vector result which is an array object to a platform's float array.
  *     - Call setVector() with the platform's float array at the index.
  * 4. Call finish() and check that the finish() is successfully called.
- * 5. Call finish() again and check that a CouchbaseLiteException with the code NotOpen is thrown.
+ * 5. Call finish() again and check that it throws exception.
  * 6. Count, getValue, setVector, skipVector throw exception.
  */
-- (void) testIndexUpdaterCallFinishTwice {
+- (void) testIndexUpdaterUseAfterFinished {
     [self createWordsIndexWithConfig: LAZY_VECTOR_INDEX_CONFIG(@"word", 300, 8)];
     
     NSError* error;
@@ -1266,6 +1266,11 @@
     NSArray<NSNumber*>* vector = [self vectorForWord: word];
     Assert([updater setVector: vector atIndex: 0 error: &error]);
     Assert([updater finishWithError: &error]);
+    
+    [self expectException: @"NSInternalInconsistencyException" in:^{
+        NSError* outError;
+        [updater finishWithError: &outError];
+    }];
     
     [self expectException: @"NSInternalInconsistencyException" in:^{
         [updater count];
@@ -1282,11 +1287,6 @@
         
     [self expectException: @"NSInternalInconsistencyException" in:^{
         [updater skipVectorAtIndex: 0];
-    }];
-    
-    [self expectException: @"NSInternalInconsistencyException" in:^{
-        NSError* outError;
-        [updater finishWithError: &outError];
     }];
 }
 

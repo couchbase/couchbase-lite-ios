@@ -274,11 +274,11 @@ class VectorSearchTest_Main: VectorSearchTest {
         let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 4096, centroids: 8)
         try wordsCollection.createIndex(withName: "words_index_2", config: config2)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             _ = VectorIndexConfiguration(expression: "vector", dimensions: 1, centroids: 8)
         }
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             _ = VectorIndexConfiguration(expression: "vector", dimensions: 4097, centroids: 8)
         }
     }
@@ -305,11 +305,11 @@ class VectorSearchTest_Main: VectorSearchTest {
         let config2 = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64000)
         try wordsCollection.createIndex(withName: "words_index_2", config: config2)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             _ = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 0)
         }
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             _ = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 64001)
         }
     }
@@ -806,7 +806,7 @@ class VectorSearchTest_Main: VectorSearchTest {
         for numberOfSubq in [0, 7] {
             try deleteWordsIndex()
             config.encoding = .productQuantizer(subquantizers: UInt32(numberOfSubq), bits: 8)
-            expectExcepion(exception: .invalidArgumentException) {
+            expectException(exception: .invalidArgumentException) {
                 try? self.createWordsIndex(config: config)
             }
         }
@@ -874,7 +874,7 @@ class VectorSearchTest_Main: VectorSearchTest {
         try deleteWordsIndex()
         config.minTrainingSize = 10
         config.maxTrainingSize = 9
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             try? self.createWordsIndex(config: config)
         }
     }
