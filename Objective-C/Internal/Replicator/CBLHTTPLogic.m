@@ -144,7 +144,7 @@ static NSDictionary* sOverrideProxySettings;
     CFHTTPMessageRef httpMsg;
     if (_proxyType == kCBLHTTPProxy && _useProxyCONNECT) {
         NSString *destination = $sprintf(@"%@:%d", url.host, url.my_effectivePort);
-        CFURLRef requestURL = CFURLCreateWithString(kCFAllocatorDefault, (__bridge CFStringRef)destination, false);
+        CFURLRef requestURL = CFURLCreateWithString(kCFAllocatorDefault, (__bridge CFStringRef)destination, NULL);
         httpMsg = CFHTTPMessageCreateRequest(NULL,
                                              CFSTR("CONNECT"),
                                              requestURL,
