@@ -27,6 +27,9 @@ public extension DatabaseConfiguration {
     /// [false] Full sync is off by default because the performance hit is seldom worth the benefit
     static let defaultFullSync: Bool = false
 
+    /// [false] Memory mapped database files are disabled by default. Always disabled for macOS.
+    static let defaultMmapEnabled: Bool = true
+
 }
 
 public extension LogFileConfiguration {
@@ -101,7 +104,7 @@ public extension VectorIndexConfiguration {
     /// [ScalarQuantizerType.SQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default
     static let defaultEncoding: ScalarQuantizerType = ScalarQuantizerType.SQ8
 
-    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using Euclidean metrics
+    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using Squared Euclidean metrics
     static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclideanSquared
 
     /// [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters.

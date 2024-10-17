@@ -33,6 +33,9 @@
 /** [NO] Full sync is off by default because the performance hit is seldom worth the benefit */
 extern const BOOL kCBLDefaultDatabaseFullSync;
 
+/** [NO] Memory mapped database files are disabled by default. Always disabled for macOS. */
+extern const BOOL kCBLDefaultDatabaseMmapEnabled;
+
 #pragma mark - CBLLogFileConfiguration
 
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
@@ -97,7 +100,7 @@ extern const BOOL kCBLDefaultVectorIndexIsLazy;
 /** [kCBLSQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default */
 extern const CBLScalarQuantizerType kCBLDefaultVectorIndexEncoding;
 
-/** [kCBLDistanceMetricEuclideanSquared] By default, vectors are compared using Euclidean metrics */
+/** [kCBLDistanceMetricEuclideanSquared] By default, vectors are compared using Squared Euclidean metrics */
 extern const CBLDistanceMetric kCBLDefaultVectorIndexDistanceMetric;
 
 /** [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters. */
