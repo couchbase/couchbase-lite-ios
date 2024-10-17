@@ -33,10 +33,10 @@
     } else if ([expressions count] == 0 || [expressions[0] length] == 0) {
         [NSException raise: NSInvalidArgumentException format:
          @"Empty expressions is not allowed, use nil instead"];
+    } else {
+        self = [super initWithIndexType: kC4ArrayIndex
+                            expressions: expressions];
     }
-    
-    self = [super initWithIndexType: kC4ArrayIndex
-                        expressions: expressions];
     
     if (self) {
         _path = path;
