@@ -22,17 +22,18 @@
 
 @implementation CBLConsoleLogger
 
-@synthesize level=_level, domains=_domains, sysID=_sysID;
+@synthesize level=_level, domains=_domains;
 
 static NSMutableDictionary<NSNumber *, os_log_t>* osLogDictionary;
 static os_log_t logger;
+static NSString* _sysID;
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level {
     self = [super init];
     if (self) {
         _level = level;
         _domains = kCBLLogDomainAll;
-        _sysID = [[NSBundle mainBundle] bundleIdentifier];
+        _sysID = [[NSBundle bundleForClass:[self class]] bundleIdentifier];
         [self initializeOSLogDomains];
     }
     return self;
@@ -72,20 +73,20 @@ static os_log_type_t osLogTypeForLevel(CBLLogLevel level) {
 - (void) initializeOSLogDomains {
     osLogDictionary = [NSMutableDictionary dictionary];
     
-    osLogDictionary[@(kCBLLogDomainDatabase)] = os_log_create([self.sysID UTF8String], "Database");
-    osLogDictionary[@(kCBLLogDomainQuery)] = os_log_create([self.sysID UTF8String], "Query");
-    osLogDictionary[@(kCBLLogDomainReplicator)] = os_log_create([self.sysID UTF8String], "Replicator");
-    osLogDictionary[@(kCBLLogDomainNetwork)] = os_log_create([self.sysID UTF8String], "Network");
+    osLogDictionary[@(kCBLLogDomainDatabase)] = os_log_create([_sysID UTF8String], "Database");
+    osLogDictionary[@(kCBLLogDomainQuery)] = os_log_create([_sysID UTF8String], "Query");
+    osLogDictionary[@(kCBLLogDomainReplicator)] = os_log_create([_sysID UTF8String], "Replicator");
+    osLogDictionary[@(kCBLLogDomainNetwork)] = os_log_create([_sysID UTF8String], "Network");
     
     #ifdef COUCHBASE_ENTERPRISE
-    osLogDictionary[@(kCBLLogDomainListener)] = os_log_create([self.sysID UTF8String], "Listener");
+    osLogDictionary[@(kCBLLogDomainListener)] = os_log_create([_sysID UTF8String], "Listener");
     #endif
 }
 
 + (os_log_t) internalLogger {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        logger = os_log_create("com.couchbase.lite.ios", "Internal");
+        logger = os_log_create([_sysID UTF8String], "Internal");
     });
     return logger;
 }
