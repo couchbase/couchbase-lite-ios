@@ -1531,7 +1531,7 @@ class DatabaseTest: CBLTestCase {
     }
     
     // MARK: Full Sync Option
-    /// Test Spec for Database Full Sync Option
+    /// Test Spec v1.0.0:
     /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0003-SQLite-Options.md
     
     /// 1. TestSQLiteFullSyncConfig
@@ -1575,11 +1575,60 @@ class DatabaseTest: CBLTestCase {
         var config = DatabaseConfiguration()
         config.directory = self.directory
         db = try Database(name: dbName, config: config)
-        XCTAssertFalse(DatabaseConfiguration(config: config).fullSync)
+        XCTAssertFalse(db.config.fullSync)
         
         db = nil
         config.fullSync = true
         db = try Database(name: dbName, config: config)
-        XCTAssert(DatabaseConfiguration(config: config).fullSync)
+        XCTAssert(db.config.fullSync)
     }
+    
+    // MARK: MMap
+    /// Test Spec v1.0.1:
+    /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0006-MMap-Config.md
+
+     /// 1. TestDefaultMMapConfig
+     /// Description
+     ///   Test that the mmapEnabled default value is as expected and that it's setter and getter work.
+     /// Steps
+     ///   1. Create a DatabaseConfiguration object.
+     ///   2. Get and check that the value of the mmapEnabled property is true.
+     ///   3. Set the mmapEnabled property to false and verify that the value is false.
+     ///   4. Set the mmapEnabled property to true, and verify that the mmap value is true.
+
+    func testDefaultMMapConfig() throws {
+        var config = DatabaseConfiguration()
+        XCTAssertTrue(config.mmapEnabled)
+        
+        config.mmapEnabled = false;
+        XCTAssertFalse(config.mmapEnabled)
+        
+        config.mmapEnabled = true;
+        XCTAssertTrue(config.mmapEnabled)
+    }
+
+    /// 2. TestDatabaseWithConfiguredMMap
+    /// Description
+    ///    Test that a Database respects the mmapEnabled property.
+    /// Steps
+    ///    1. Create a DatabaseConfiguration object and set mmapEnabled to false.
+    ///    2. Create a database with the config.
+    ///    3. Get the configuration object from the database and check that the mmapEnabled is false.
+    ///    4. Use c4db_config2 to confirm that its config contains the kC4DB_MmapDisabled flag - done in Obj-C
+    ///    5. Set the config's mmapEnabled property true
+    ///    6. Create a database with the config.
+    ///    7. Get the configuration object from the database and verify that mmapEnabled is true
+    ///    8. Use c4db_config2 to confirm that its config doesn't contains the kC4DB_MmapDisabled flag - done in Obj-C
+
+    func testDatabaseWithConfiguredMMap() throws {
+        var config = DatabaseConfiguration()
+        config.mmapEnabled = false;
+        let db1 = try Database(name: "mmap1", config: config)
+        XCTAssertFalse(db1.config.mmapEnabled)
+
+        config.mmapEnabled = true;
+        let db2 = try Database(name: "mmap2", config: config)
+        XCTAssert(db2.config.mmapEnabled)
+    }
+
 }
