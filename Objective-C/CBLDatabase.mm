@@ -30,7 +30,6 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
 #import "CBLMisc.h"
 #import "CBLQuery+Internal.h"
@@ -115,7 +114,6 @@ static const C4DatabaseConfig2 kDBConfig = {
  */
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
     }
@@ -125,6 +123,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 + (void) CBLInit {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        [CBLConsoleLogger logAlways:[CBLVersion userAgent]];
         [self checkFileLogging];
     });
 }
