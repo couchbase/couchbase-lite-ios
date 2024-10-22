@@ -123,7 +123,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 + (void) CBLInit {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        [CBLConsoleLogger logWithInternal:[CBLVersion userAgent]];
+        [CBLConsoleLogger logAlways:[CBLVersion userAgent]];
         [self checkFileLogging];
     });
 }

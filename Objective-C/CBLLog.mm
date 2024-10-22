@@ -160,7 +160,7 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
         }
         if (callbackLogLevel != kC4LogWarning) {
             NSString* message = [NSString stringWithFormat: @"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]];
-            [CBLConsoleLogger logWithInternal: message];
+            [CBLConsoleLogger logAlways: message];
         }
 #endif
         

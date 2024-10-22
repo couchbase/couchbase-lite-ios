@@ -25,7 +25,6 @@
 @synthesize level=_level, domains=_domains;
 
 static NSMutableDictionary<NSNumber *, os_log_t>* osLogDictionary;
-static os_log_t logger;
 static NSString* _sysID;
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level {
@@ -83,17 +82,8 @@ static os_log_type_t osLogTypeForLevel(CBLLogLevel level) {
     #endif
 }
 
-+ (os_log_t) internalLogger {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        logger = os_log_create([_sysID UTF8String], "Internal");
-    });
-    return logger;
-}
-
-+ (void) logWithInternal: (NSString*)message {
-    logger = [self internalLogger];
-    os_log(logger, "%@", message);
++ (void) logAlways: (NSString*)message {
+    os_log(osLogDictionary[@(kCBLLogDomainDatabase)], "%@", message);
 }
 
 @end
