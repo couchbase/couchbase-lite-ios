@@ -191,7 +191,8 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
                 C4LogDomain domain = c4log_getDomain(domainName, true);
                 C4LogLevel level = string2level(defaults[key]);
                 c4log_setLevel(domain, level);
-                os_log(oslogger, "CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]);
+                NSString* message = [NSString stringWithFormat: @"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]];
+                [CBLConsoleLogger logAlways: message];
             }
         }
 #endif
