@@ -2,7 +2,7 @@
 //  CBLC4Document.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -31,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Sequence of the selected revision. */
 @property (readonly, nonatomic) C4SequenceNumber sequence;
+
+/** Document ID of the selected revision. */
+@property (readonly, nonatomic) C4String docID;
 
 /** Revision ID of the selected revision. */
 @property (readonly, nonatomic) C4String revID;
