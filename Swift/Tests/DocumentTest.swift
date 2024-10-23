@@ -1855,4 +1855,31 @@ class DocumentTest: CBLTestCase {
             }
         }
     }
+    
+    // MARK: toJSONTimestamp & Revision history
+
+    //  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
+    
+    // 2. TestDocumentRevisionHistory
+    // Description
+    //  Test that the document's timestamp returns value as expected.
+    // Steps
+    //  1. Create a new document with id = "doc1"
+    //  2. Get document's _revisionIDs and check that the value returned is an empty array.
+    //  3. Save the document into the default collection.
+    //  4. Get document's _revisionIDs and check that the value returned is an array containing a
+    //      single revision id which is the revision id of the documnt.
+    //  5. Get the document id = "doc1" from the database.
+    //  6. Get document's _revisionIDs and check that the value returned is an array containing a
+    //      single revision id which is the revision id of the documnt.
+    func testDocumentRevisionHistory() throws {
+        let doc = MutableDocument(id: "doc1")
+        assert(doc._getRevisionHistory() == nil)
+        
+        try defaultCollection!.save(document: doc)
+        assert(doc._getRevisionHistory() != nil)
+        
+        let remoteDoc = try defaultCollection!.document(id: "doc1")!;
+        assert(doc._getRevisionHistory() != nil)
+    }
 }
