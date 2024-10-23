@@ -2292,8 +2292,8 @@
     Assert([defaultCollection saveDocument:doc error: &err]);
     Assert(doc._getRevisionHistory);
     
-    CBLDocument* remoteDoc = [defaultCollection documentWithID: @"doc1" error: &err];
-    Assert(remoteDoc._getRevisionHistory);
+    doc = [[defaultCollection documentWithID: @"doc1" error: &err] toMutable];
+    Assert(doc._getRevisionHistory);
 }
 
 #pragma clang diagnostic pop

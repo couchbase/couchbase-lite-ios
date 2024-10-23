@@ -1879,7 +1879,7 @@ class DocumentTest: CBLTestCase {
         try defaultCollection!.save(document: doc)
         assert(doc._getRevisionHistory() != nil)
         
-        let remoteDoc = try defaultCollection!.document(id: "doc1")!;
+        let remoteDoc = try defaultCollection!.document(id: "doc1")!.toMutable();
         assert(doc._getRevisionHistory() != nil)
     }
 }
