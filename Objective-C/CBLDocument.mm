@@ -29,6 +29,7 @@
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 #import "CBLErrorMessage.h"
+#import <limits.h>
 
 using namespace fleece;
 
@@ -196,6 +197,16 @@ using namespace fleece;
 - (void) replaceC4Doc: (CBLC4Document*)c4doc {
     CBL_LOCK(self) {
         _c4Doc = c4doc;
+    }
+}
+
+- (nullable NSString*) _getRevisionHistory {
+    CBL_LOCK(self) {
+        if (!_c4Doc) {
+            return nil;
+        } else {
+            return sliceResult2string(c4doc_getRevisionHistory(_c4Doc.rawDoc, UINT_MAX, nil, 0));
+        }
     }
 }
 
