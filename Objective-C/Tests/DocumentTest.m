@@ -2262,6 +2262,40 @@
     }];
 }
 
+#pragma mark - Revision history
+
+/**  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md  */
+
+/**
+ 2. TestDocumentRevisionHistory
+ Description
+    Test that the document's timestamp returns value as expected.
+ Steps
+    1. Create a new document with id = "doc1"
+    2. Get document's _revisionIDs and check that the value returned is an empty array.
+    3. Save the document into the default collection.
+    4. Get document's _revisionIDs and check that the value returned is an array containing a
+        single revision id which is the revision id of the documnt.
+    5. Get the document id = "doc1" from the database.
+    6. Get document's _revisionIDs and check that the value returned is an array containing a
+        single revision id which is the revision id of the documnt.
+ */
+- (void) testDocumentRevisionHistory {
+    NSError* err;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &err];
+    AssertNil(err);
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    Assert(doc);
+    AssertNil(doc._getRevisionHistory);
+    
+    Assert([defaultCollection saveDocument:doc error: &err]);
+    Assert(doc._getRevisionHistory);
+    
+    doc = [[defaultCollection documentWithID: @"doc1" error: &err] toMutable];
+    Assert(doc._getRevisionHistory);
+}
+
 #pragma clang diagnostic pop
 
 @end
