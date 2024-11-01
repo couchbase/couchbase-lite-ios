@@ -268,7 +268,7 @@ class DictionaryTest: CBLTestCase {
         mDoc = doc!.toMutable()
         mDict = dict!.toMutable()
         mDict.setValue("newValueAppended", forKey: "newKeyAppended")
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mDict.toJSON()
         }
         mDoc.setValue(mDict, forKey: "dict")
@@ -282,7 +282,7 @@ class DictionaryTest: CBLTestCase {
     
     func testUnsavedMutableDictionaryToJSON() throws {
         let mDict = try MutableDictionaryObject(json: "{\"unsaved\":\"dict\"}")
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mDict.toJSON()
         }
     }

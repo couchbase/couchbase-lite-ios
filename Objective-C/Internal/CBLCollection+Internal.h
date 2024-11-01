@@ -21,6 +21,7 @@
 #import "CBLCollection.h"
 #import "CBLChangeListenerToken.h"
 #import "CBLDatabase.h"
+#import "c4.h"
 
 #define CBLCollectionErrorNotOpen [NSError errorWithDomain: CBLErrorDomain \
                                     code: CBLErrorNotOpen \
@@ -61,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
                              error: (NSError**)outError;
 
 - (BOOL) checkIsValid: (NSError**)error;
+
+- (nullable NSArray*) indexesInfo: (NSError**)error;
 
 @end
 

@@ -100,9 +100,9 @@ using namespace fleece;
     return self;
 }
 
-/* internal */ - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
-                                                  dict: (nullable CBLDictionary*)dict
-{
+#pragma mark - Internal
+- (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
+                                   dict: (nullable CBLDictionary*)dict {
     self = [self initWithCollection: doc.collection
                          documentID: doc.id
                               c4Doc: doc.c4Doc];
@@ -111,7 +111,6 @@ using namespace fleece;
             _dict = [dict mutableCopy];
     }
     return self;
-    
 }
 
 #pragma mark - Edit

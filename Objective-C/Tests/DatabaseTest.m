@@ -2818,6 +2818,141 @@
     [token remove];
 }
 
+#pragma mark - Full Sync Option
+
+/** 
+ Test Spec v1.0.0: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0003-SQLite-Options.md
+ */
+
+/**
+ 1. TestSQLiteFullSyncConfig
+ Description
+    Test that the FullSync default is as expected and that it's setter and getter work.
+ Steps
+    1. Create a DatabaseConfiguration object.
+    2. Get and check the value of the FullSync property: it should be false.
+    3. Set the FullSync property true.
+    4. Get the config FullSync property and verify that it is true.
+    5. Set the FullSync property false.
+    6. Get the config FullSync property and verify that it is false.
+ */
+- (void) testSQLiteFullSyncConfig {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    AssertFalse(config.fullSync);
+    
+    config.fullSync = true;
+    Assert(config.fullSync);
+    
+    config.fullSync = false;
+    AssertFalse(config.fullSync);
+}
+
+/**
+ 2. TestDBWithFullSync
+ Description
+    Test that a Database respects the FullSync property.
+ Steps
+    1. Create a DatabaseConfiguration object and set Full Sync false.
+    2. Create a database with the config.
+    3. Get the configuration object from the Database and verify that FullSync is false.
+    4. Use c4db_config2 (perhaps necessary only for this test) to confirm that its config does not contain the kC4DB_DiskSyncFull flag.
+    5. Set the config's FullSync property true.
+    6. Create a database with the config.
+    7. Get the configuration object from the Database and verify that FullSync is true.
+    8. Use c4db_config2 to confirm that its config contains the kC4DB_DiskSyncFull flag.
+ */
+- (void) testDBWithFullSync {
+    NSString* dbName = @"fullsyncdb";
+    [CBLDatabase deleteDatabase: dbName inDirectory: self.directory error: nil];
+    AssertFalse([CBLDatabase databaseExists: dbName inDirectory: self.directory]);
+    
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = self.directory;
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: dbName
+                                                 config: config
+                                                  error: &error];
+    AssertNil(error);
+    AssertNotNil(db, @"Couldn't open db: %@", error);
+    AssertFalse([db config].fullSync);
+    AssertFalse(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+    
+    [self closeDatabase: db];
+    
+    config.fullSync = true;
+    db = [[CBLDatabase alloc] initWithName: dbName
+                                    config: config
+                                     error: &error];
+    AssertNil(error);
+    AssertNotNil(db, @"Couldn't open db: %@", error);
+    Assert([db config].fullSync);
+    Assert(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
+
+    [self closeDatabase: db];
+}
+
+#pragma mark - MMap
+/** Test Spec v1.0.1:
+    https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0006-MMap-Config.md
+ */
+
+/**
+ 1. TestDefaultMMapConfig
+ Description
+    Test that the mmapEnabled default value is as expected and that it's setter and getter work.
+ Steps
+    1. Create a DatabaseConfiguration object.
+    2. Get and check that the value of the mmapEnabled property is true.
+    3. Set the mmapEnabled property to false and verify that the value is false.
+    4. Set the mmapEnabled property to true, and verify that the mmap value is true.
+ */
+
+- (void) testDefaultMMapConfig {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    Assert(config.mmapEnabled);
+    
+    config.mmapEnabled = false;
+    AssertFalse(config.mmapEnabled);
+    
+    config.mmapEnabled = true;
+    Assert(config.mmapEnabled);
+}
+
+/**
+2. TestDatabaseWithConfiguredMMap
+Description
+    Test that a Database respects the mmapEnabled property.
+Steps
+    1. Create a DatabaseConfiguration object and set mmapEnabled to false.
+    2. Create a database with the config.
+    3. Get the configuration object from the database and check that the mmapEnabled is false.
+    4. Use c4db_config2 to confirm that its config contains the kC4DB_MmapDisabled flag
+    5. Set the config's mmapEnabled property true
+    6. Create a database with the config.
+    7. Get the configuration object from the database and verify that mmapEnabled is true
+    8. Use c4db_config2 to confirm that its config doesn't contains the kC4DB_MmapDisabled flag
+ */
+
+- (void) testDatabaseWithConfiguredMMap {
+    NSError* err;
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    
+    config.mmapEnabled = false;
+    CBLDatabase* db1 = [[CBLDatabase alloc] initWithName: @"mmap1" config: config error:&err];
+    CBLDatabaseConfiguration* tempConfig = [db1 config];
+    AssertFalse(tempConfig.mmapEnabled);
+    Assert(([db1 getC4DBConfig]->flags & kC4DB_MmapDisabled) == kC4DB_MmapDisabled);
+    
+    config.mmapEnabled = true;
+    CBLDatabase* db2 = [[CBLDatabase alloc] initWithName: @"mmap2" config: config error:&err];
+    tempConfig = [db2 config];
+    Assert(tempConfig.mmapEnabled);
+    AssertFalse(([db2 getC4DBConfig]->flags & kC4DB_MmapDisabled) == kC4DB_MmapDisabled);
+    
+    db1 = nil;
+    db2 = nil;
+}
+
 #pragma clang diagnostic pop
 
 @end

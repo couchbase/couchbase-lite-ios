@@ -235,7 +235,7 @@ class ArrayTest: CBLTestCase {
     func testUnsavedMutableArrayToJSON() throws {
         let json = "[{\"unsaved\":\"mutableDoc\"}]"
         var mArray = try MutableArrayObject(json: json)
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mArray.toJSON()
         }
         
@@ -244,7 +244,7 @@ class ArrayTest: CBLTestCase {
         try saveDocument(mDoc)
         
         mArray = mDoc.array(forKey: "array")!
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mArray.toJSON()
         }
     }
@@ -278,7 +278,7 @@ class ArrayTest: CBLTestCase {
         var blob = mDoc.blob(forKey: "origin")
         
         // before save it should throw the exception
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             print("\(blob!.content?.count ?? 0)")
         }
         try self.db.saveDocument(mDoc)

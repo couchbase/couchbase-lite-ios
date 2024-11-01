@@ -21,6 +21,7 @@
 #  Classes:
 .objc_class_name_CBLArray
 .objc_class_name_CBLAuthenticator
+.objc_class_name_CBLArrayIndexConfiguration
 .objc_class_name_CBLBasicAuthenticator
 .objc_class_name_CBLBlob
 .objc_class_name_CBLCollection
@@ -91,6 +92,7 @@ _kCBLBlobContentTypeProperty
 _kCBLBlobDigestProperty
 _kCBLBlobLengthProperty
 _kCBLBlobType
+_kCBLDefaultDatabaseFullSync
 _kCBLDefaultCollectionName
 _kCBLDefaultFullTextIndexIgnoreAccents
 _kCBLDefaultLogFileMaxRotateCount

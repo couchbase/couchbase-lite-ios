@@ -42,7 +42,7 @@
     return self;
 }
 
-- (NSString*) getIndexSpecs {
+- (NSString*) getIndexSpecs {  
     return [_expressions componentsJoinedByString: @","];
 }
 

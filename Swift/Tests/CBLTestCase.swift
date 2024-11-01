@@ -274,7 +274,7 @@ class CBLTestCase: XCTestCase {
         }
     }
     
-    func expectExcepion(exception: NSExceptionName, block: @escaping () -> Void) {
+    func expectException(exception: NSExceptionName, block: @escaping () -> Void) {
         var exceptionThrown = false
         do {
             try CBLTestHelper.catchException {

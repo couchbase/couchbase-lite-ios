@@ -1653,7 +1653,7 @@ class DocumentTest: CBLTestCase {
     
     func testUnsavedMutableDocumentToJSON() throws {
         let mDoc = try MutableDocument(id: "doc", json: "{\"unsaved\":\"doc\"}")
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = mDoc.toJSON()
         }
     }
@@ -1732,7 +1732,7 @@ class DocumentTest: CBLTestCase {
     func testUnsavedBlob() throws {
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
-        expectExcepion(exception: .internalInconsistencyException) {
+        expectException(exception: .internalInconsistencyException) {
             let _ = blob.toJSON()
         }
     }
@@ -1751,7 +1751,7 @@ class DocumentTest: CBLTestCase {
         try self.db.saveBlob(blob: blob)
         
         var b: Blob?
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:"bl0b",
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1759,7 +1759,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: ["type":Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1767,7 +1767,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: 1234,
@@ -1775,7 +1775,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: blob.digest! as String,
                                                   Blob.blobContentType: "text/plain",
@@ -1783,7 +1783,7 @@ class DocumentTest: CBLTestCase {
         }
         XCTAssertNil(b)
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             b = try! self.db.getBlob(properties: [Blob.typeProperty:Blob.blobType,
                                                   Blob.blobDigestProperty: 12,
                                                   Blob.blobContentType: "text/plain",
@@ -1854,5 +1854,32 @@ class DocumentTest: CBLTestCase {
                 print("Failed to convert JSON to dictionary: \(error.localizedDescription)")
             }
         }
+    }
+    
+    // MARK: toJSONTimestamp & Revision history
+
+    //  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
+    
+    // 2. TestDocumentRevisionHistory
+    // Description
+    //  Test that the document's timestamp returns value as expected.
+    // Steps
+    //  1. Create a new document with id = "doc1"
+    //  2. Get document's _revisionIDs and check that the value returned is an empty array.
+    //  3. Save the document into the default collection.
+    //  4. Get document's _revisionIDs and check that the value returned is an array containing a
+    //      single revision id which is the revision id of the documnt.
+    //  5. Get the document id = "doc1" from the database.
+    //  6. Get document's _revisionIDs and check that the value returned is an array containing a
+    //      single revision id which is the revision id of the documnt.
+    func testDocumentRevisionHistory() throws {
+        let doc = MutableDocument(id: "doc1")
+        assert(doc._getRevisionHistory() == nil)
+        
+        try defaultCollection!.save(document: doc)
+        assert(doc._getRevisionHistory() != nil)
+        
+        let remoteDoc = try defaultCollection!.document(id: "doc1")!.toMutable();
+        assert(doc._getRevisionHistory() != nil)
     }
 }

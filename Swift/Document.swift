@@ -45,6 +45,13 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     /// The collection that the document belongs to.
     internal(set) public var collection: Collection?
     
+    // MARK: Unsupported - Internal use for testing
+    
+    /// <Unsupported API> Internally used for testing purpose.
+    public func _getRevisionHistory() -> String? {
+        return impl._getRevisionHistory()
+    }
+    
     // MARK: Edit
     
     /// Returns a mutable copy of the document.

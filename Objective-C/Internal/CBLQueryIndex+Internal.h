@@ -34,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithC4Index: (C4Index*) c4index
                             name: (NSString*) name
                       collection: (CBLCollection*) collection;
+
 @end
 
 NS_ASSUME_NONNULL_END
