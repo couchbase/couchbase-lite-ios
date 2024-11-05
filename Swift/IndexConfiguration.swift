@@ -88,7 +88,7 @@ public struct ArrayIndexConfiguration: IndexConfiguration, IndexConfigConvertabl
     ///     represents an expression defining the values within the array to be indexed.
     ///     If the array specified by the path contains scalar values, this parameter can be null.
     /// - Returns The ArrayIndexConfiguration object.
-    public init(path: String, _ expressions: [String]? = nil) {
+    public init(path: String, expressions: [String]? = nil) {
         if let expressions = expressions {
                 if expressions.isEmpty || (expressions.count == 1 && expressions[0].isEmpty) {
                     NSException(name: .invalidArgumentException,
