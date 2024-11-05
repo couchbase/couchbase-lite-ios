@@ -33,11 +33,11 @@ class UnnestArrayTest: CBLTestCase {
     ///     2. Check that an invalid arument exception is thrown.
     func testArrayIndexConfigInvalidExpressions() throws {
         expectException(exception: .invalidArgumentException) {
-            _ = ArrayIndexConfiguration(path: "contacts", [])
+            _ = ArrayIndexConfiguration(path: "contacts", expressions: [])
         }
         
         expectException(exception: .invalidArgumentException) {
-            _ = ArrayIndexConfiguration(path: "contacts", [""])
+            _ = ArrayIndexConfiguration(path: "contacts", expressions: [""])
         }
     }
     
@@ -76,7 +76,7 @@ class UnnestArrayTest: CBLTestCase {
     func testCreateArrayIndexWithPathAndExpressions() throws {
         let profiles = try db.createCollection(name: "profiles")
         try loadJSONResource("profiles_100", collection: profiles)
-        let config = ArrayIndexConfiguration(path: "contacts", ["address.city", "address.state"])
+        let config = ArrayIndexConfiguration(path: "contacts",expressions: ["address.city", "address.state"])
         try profiles.createIndex(withName: "contacts", config: config)
         let indexes = try profiles.indexesInfo()
         XCTAssertEqual(indexes!.count, 1)
