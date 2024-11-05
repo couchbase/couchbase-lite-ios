@@ -93,6 +93,7 @@ _kCBLBlobDigestProperty
 _kCBLBlobLengthProperty
 _kCBLBlobType
 _kCBLDefaultDatabaseFullSync
+_kCBLDefaultDatabaseMmapEnabled
 _kCBLDefaultCollectionName
 _kCBLDefaultFullTextIndexIgnoreAccents
 _kCBLDefaultLogFileMaxRotateCount
