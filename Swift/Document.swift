@@ -33,6 +33,10 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return impl.revisionID
     }
     
+    public var timestamp: Double {
+        return impl.timestamp
+    }
+    
     /// Sequence number of the document in the database.
     /// This indicates how recently the document has been changed: every time any document is updated,
     /// the database assigns it the next sequential sequence number. Thus, if a document's `sequence`
@@ -47,7 +51,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     
     // MARK: Unsupported - Internal use for testing
     
-    /// <Unsupported API> Internally used for testing purpose.
+    /// <Unsupported API> Internal used for testing purpose.
     public func _getRevisionHistory() -> String? {
         return impl._getRevisionHistory()
     }

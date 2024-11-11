@@ -201,16 +201,12 @@ using namespace fleece;
 }
 
 - (nullable NSString*) _getRevisionHistory {
-    if (!_collection) {
-        return nil;
-    }
-    
     CBL_LOCK(self) {
-        C4Error err;
-        C4Document* doc = c4coll_getDoc(_collection.c4col, _c4Doc.docID, true, kDocGetAll, &err);
-        NSString* revHistory = doc ? sliceResult2string(c4doc_getRevisionHistory(doc, UINT_MAX, nil, 0)) : nil;
-        c4doc_release(doc);
-        return revHistory;
+        if (!_c4Doc) {
+            return nil;
+        } else {
+            return sliceResult2string(c4doc_getRevisionHistory(_c4Doc.rawDoc, UINT_MAX, nil, 0));
+        }
     }
 }
 
@@ -294,10 +290,9 @@ using namespace fleece;
     }
 }
 
-- (NSUInteger) generation {
-    // CBLMutableDocument overrides this
+- (NSTimeInterval) timestamp {
     CBL_LOCK(self) {
-        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+        return _c4Doc != nil ?  c4rev_getTimestamp(_c4Doc.revID) / 1000000000.0 : 0;
     }
 }
 

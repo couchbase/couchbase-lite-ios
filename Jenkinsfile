@@ -2,7 +2,7 @@ pipeline {
     options {
         disableConcurrentBuilds() 
     }
-    agent { label 'mobile-builder-ios-pull-request'  }
+    agent { label 'sonoma'  }
     stages {
         stage('Cleanup'){
             steps {

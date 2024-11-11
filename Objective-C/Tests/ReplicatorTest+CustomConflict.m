@@ -184,6 +184,10 @@
                                                                   error: &error].sequence);
 }
 
+/** https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md 
+ Test 4. DefaultConflictResolverDeleteWins -> testConflictResolverDeletedLocalWins + testConflictResolverDeletedRemoteWins
+ */
+
 - (void) testConflictResolverDeletedLocalWins {
     NSString* docId = @"doc";
     NSDictionary* remoteData = @{@"key2": @"value2"};
@@ -612,11 +616,13 @@
     AssertEqual(count, 1u);
 }
 
+/** https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
+ Test 3. DefaultConflictResolverLastWriteWins -> default resolver
+ */
 - (void) testConflictResolutionDefault {
     NSError* error;
     NSDictionary* localData = @{@"name": @"local"};
     NSDictionary* remoteData = @{@"name": @"remote"};
-    NSMutableArray* conflictedDocs = [NSMutableArray array];
     
     // Higher generation-id
     NSString* docID = @"doc1";
@@ -624,20 +630,16 @@
     CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
     [doc setValue: @"value1" forKey: @"key1"];
     [self saveDocument: doc];
-    [conflictedDocs addObject: @[[self.db documentWithID: docID],
-                                 [self.otherDB documentWithID: docID]]];
     
     // Delete local
     docID = @"doc2";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.db deleteDocument: [self.db documentWithID: docID] error: &error];
-    [conflictedDocs addObject: @[[NSNull null], [self.otherDB documentWithID: docID]]];
     
     // Delete remote
     docID = @"doc3";
     [self makeConflictFor: docID withLocal: localData withRemote: remoteData];
     [self.otherDB deleteDocument: [self.otherDB documentWithID: docID] error: &error];
-    [conflictedDocs addObject: @[[self.db documentWithID: docID], [NSNull null]]];
     
     // Delete local but higher remote generation.
     docID = @"doc4";
@@ -648,7 +650,6 @@
     [self.otherDB saveDocument: doc error: &error];
     [doc setValue: @"value4" forKey: @"key4"];
     [self.otherDB saveDocument: doc error: &error];
-    [conflictedDocs addObject: @[[NSNull null], [self.otherDB documentWithID: docID]]];
     
     CBLReplicatorConfiguration* pullConfig = [self config:kCBLReplicatorTypePull];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
