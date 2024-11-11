@@ -20,6 +20,7 @@
 framework module CouchbaseLiteSwift_Private {
     header "CBLArray.h"
     header "CBLArrayFragment.h"
+    header "CBLArrayIndexConfiguration.h"
     header "CBLAuthenticator.h"
     header "CBLBasicAuthenticator.h"
     header "CBLBlob.h"

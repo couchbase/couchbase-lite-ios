@@ -195,7 +195,7 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         
         let index = try wordsIndex()
         
-        expectExcepion(exception: .invalidArgumentException) {
+        expectException(exception: .invalidArgumentException) {
             _ = try? index.beginUpdate(limit: 0)
         }
     }
@@ -774,55 +774,55 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         let updater = try index.beginUpdate(limit: 10)!
         XCTAssertEqual(updater.count, 1)
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.string(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.int(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.int64(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.float(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.double(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.boolean(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.date(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.blob(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.dictionary(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.array(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             _ = updater.value(at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             try! updater.setVector([1.0, 2.0, 3.0], at: 1)
         }
         
-        expectExcepion(exception: .rangeException) {
+        expectException(exception: .rangeException) {
             updater.skipVector(at: 1)
         }
     }

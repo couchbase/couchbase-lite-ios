@@ -30,6 +30,28 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy) NSString* directory;
 
+/** 
+ As Couchbase Lite normally configures its databases, there is a very
+ small (though non-zero) chance that a power failure at just the wrong
+ time could cause the most recently committed transaction's changes to
+ be lost. This would cause the database to appear as it did immediately
+ before that transaction.
+ 
+ Setting this mode true ensures that an operating system crash or
+ power failure will not cause the loss of any data. FULL synchronous
+ is very safe but it is also dramatically slower.
+ */
+@property (nonatomic) BOOL fullSync;
+
+/**
+ Enables or disables memory-mapped I/O. By default, memory-mapped I/O is enabled.
+ Disabling it may affect database performance. Typically, there is no need to modify this setting.
+
+ @note: Memory-mapped I/O is always disabled to prevent database corruption on macOS.
+ As a result, setting this configuration has no effect on the macOS platform.
+ */
+@property (nonatomic) BOOL mmapEnabled;
+
 /**
  Initializes the CBLDatabaseConfiguration object.
  */

@@ -58,6 +58,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Return document data as JSON String. */
 - (NSString*) toJSON;
 
+/** <Unsupported API> Internally used for testing purpose. */
+- (nullable NSString*) _getRevisionHistory;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -25,14 +25,6 @@
 
 @implementation CollectionTest
 
-- (void) setUp {
-    [super setUp];
-}
-
-- (void) tearDown {
-    [super tearDown];
-}
-
 - (void) testGetNonExistingDoc {
     NSError* error = nil;
     CBLCollection* col = [self.db defaultCollection: &error];

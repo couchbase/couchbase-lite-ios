@@ -2,7 +2,7 @@
 //  CBLC4Document.mm
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -47,6 +47,10 @@
 
 - (C4SequenceNumber) sequence {
     return _rawDoc->selectedRev.sequence;
+}
+
+- (C4String) docID {
+    return _rawDoc->docID;
 }
 
 - (C4String) revID {

@@ -27,7 +27,8 @@
 - (instancetype) initWithExpression: (NSArray<NSString*>*)expressions
                       ignoreAccents: (BOOL)ignoreAccents
                            language: (NSString* __nullable)language {
-    self = [super initWithIndexType: kC4FullTextIndex expressions: expressions];
+    self = [super initWithIndexType: kC4FullTextIndex
+                        expressions: expressions];
     if (self) {
         // there is no default 'ignoreAccents', since its NOT an optional argument.
         _ignoreAccents = ignoreAccents;

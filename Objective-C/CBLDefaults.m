@@ -22,6 +22,12 @@
 
 #import "CBLDefaults.h"
 
+#pragma mark - CBLDatabaseConfiguration
+
+const BOOL kCBLDefaultDatabaseFullSync = NO;
+
+const BOOL kCBLDefaultDatabaseMmapEnabled = YES;
+
 #pragma mark - CBLLogFileConfiguration
 
 const BOOL kCBLDefaultLogFileUsePlaintext = NO;

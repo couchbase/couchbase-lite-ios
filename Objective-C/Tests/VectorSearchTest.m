@@ -124,7 +124,7 @@
     return ![_logger containsString: @"Untrained index; queries may be slow"];
 }
 
-- (void) createVectorIndexInCollection: (CBLCollection*)collection
+- (void) createVectorIndexInCollection: (CBLCollection*)collection 
                                   name: (NSString*)name
                                 config: (CBLVectorIndexConfiguration*)config {
     Assert([collection createIndexWithName: name config: config error: nil]);
@@ -180,9 +180,9 @@
                                       whereClause: (NSString*)whereClause
                                     checkTraining: (BOOL) checkTraining {
     NSError* error;
-    NSString* sql = [self wordsQueryStringWithLimit: limit
+    NSString* sql = [self wordsQueryStringWithLimit: limit 
                                              metric: metric
-                                   vectorExpression: vectorExpression
+                                   vectorExpression: vectorExpression 
                                         whereClause: whereClause];
     CBLQuery* query = [_wordDB createQuery: sql error: &error];
     AssertNotNil(query);
@@ -205,7 +205,7 @@
 }
 
 - (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit {
-    return [self executeWordsQueryWithLimit: limit
+    return [self executeWordsQueryWithLimit: limit 
                                      metric: nil
                            vectorExpression: nil
                                 whereClause: nil
@@ -213,7 +213,7 @@
 }
 
 - (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSUInteger)limit {
-    return [self executeWordsQueryWithLimit: limit
+    return [self executeWordsQueryWithLimit: limit 
                                      metric: nil
                            vectorExpression: nil
                                 whereClause: nil
@@ -398,7 +398,7 @@
  *           LIMIT 20
  *     7. Check the explain() result of the query to ensure that the "words_index" is used.
  *     8. Execute the query and check that 20 results are returned.
- *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *     9. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
  *       doesn’t exist in the log.
  *     10. Reset the custom logger.
  */
@@ -430,7 +430,7 @@
  *           LIMIT 350
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 300 results are returned.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
  *       doesn’t exist in the log.
  *     9. Update the documents:
  *         - Create _default.words.word301 with the content from _default.extwords.word1
@@ -500,7 +500,7 @@
  *           LIMIT 350
  *     7. Execute the query and check that 296 results are returned, and the results
  *        do not include document word1, word2, word3, and word4.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
  *       doesn’t exist in the log.
  *     9. Update an already index vector with an invalid vector.
  *         - Update _default.words word5 with "vector" = null.
@@ -745,7 +745,7 @@
  *           LIMIT 20
  *     6. Check the explain() result of the query to ensure that the "words_index" is used.
  *     7. Execute the query and check that 20 results are returned.
- *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow”
+ *     8. Verify that the index was trained by checking that the “Untrained index; queries may be slow” 
  *       doesn’t exist in the log.
  *     9. Delete the "words_index".
  *     10. Reset the custom logger.
@@ -1353,7 +1353,7 @@
     AssertNotNil(wordMap[@"word49"]);
 }
 
-/**
+/** 
  * 28. TestNumProbes
  *
  * Description
@@ -1408,7 +1408,7 @@
     CBLVectorIndexConfiguration* config = [[CBLVectorIndexConfiguration alloc] initWithExpression: @"vector"
                                                                                        dimensions: 300
                                                                                         centroids: 20];
-    /*
+    /* 
      type = 3 (SQ)
      bits = 8
     */
