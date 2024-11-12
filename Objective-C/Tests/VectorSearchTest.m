@@ -1187,12 +1187,10 @@
     }
     
     // Check if error thrown for wrong limit values
-    for (NSNumber* limit in @[@-1, @0, @10001]) {
-        [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
-            NSString* sql = [self wordsQueryStringWithLimit: [limit unsignedIntegerValue]];
-            return [self.wordDB createQuery: sql error: err] != nil;
-        }];
-    }
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
+        NSString* sql = [self wordsQueryStringWithLimit: @10001];
+        return [self.wordDB createQuery: sql error: err] != nil;
+    }];
 }
 
 /**

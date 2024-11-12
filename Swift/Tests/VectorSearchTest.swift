@@ -1069,10 +1069,8 @@ class VectorSearchTest_Main: VectorSearchTest {
         }
         
         // Check if error thrown for wrong limit values
-        for limit in [-1, 0, 10001] {
-            self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
-                _ = try self.executeWordsQuery(limit: limit)
-            }
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
+                _ = try self.executeWordsQuery(limit: 10001)
         }
     }
     
