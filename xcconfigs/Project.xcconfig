@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-CBL_VERSION_STRING                 = 3.2.0
+CBL_VERSION_STRING                 = 3.2.1
 CBL_BUILD_NUMBER                   = 0
 CBL_COPYRIGHT_YEAR                 = 2021
 
