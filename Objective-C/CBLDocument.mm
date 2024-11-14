@@ -201,12 +201,16 @@ using namespace fleece;
 }
 
 - (nullable NSString*) _getRevisionHistory {
+    if (!_collection) {
+        return nil;
+    }
+    
     CBL_LOCK(self) {
-        if (!_c4Doc) {
-            return nil;
-        } else {
-            return sliceResult2string(c4doc_getRevisionHistory(_c4Doc.rawDoc, UINT_MAX, nil, 0));
-        }
+        C4Error err;
+        C4Document* doc = c4coll_getDoc(_collection.c4col, _c4Doc.docID, true, kDocGetAll, &err);
+        NSString* revHistory = doc ? sliceResult2string(c4doc_getRevisionHistory(doc, UINT_MAX, nil, 0)) : nil;
+        c4doc_release(doc);
+        return revHistory;
     }
 }
 

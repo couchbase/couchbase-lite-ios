@@ -2320,9 +2320,8 @@
     Assert([defaultCollection saveDocument:doc error: &err]);
     Assert(doc._getRevisionHistory);
     
-    // Fails from LiteCore,only 1 rev, no rev history
-    // doc = [[defaultCollection documentWithID: @"doc1" error: &err] toMutable];
-    // Assert(doc._getRevisionHistory);
+    doc = [[defaultCollection documentWithID: @"doc1" error: &err] toMutable];
+    Assert(doc._getRevisionHistory);
 }
 
 #pragma clang diagnostic pop

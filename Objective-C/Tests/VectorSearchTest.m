@@ -1188,7 +1188,7 @@
     
     // Check if error thrown for wrong limit values
     [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
-        NSString* sql = [self wordsQueryStringWithLimit: @10001];
+        NSString* sql = [self wordsQueryStringWithLimit: 10001];
         return [self.wordDB createQuery: sql error: err] != nil;
     }];
 }

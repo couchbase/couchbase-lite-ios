@@ -598,14 +598,6 @@
 
 #pragma mark Save Conflict Handler
 
-- (NSTimeInterval) checkTimestampUpdated:(CBLDocument*) doc
-                                        :(NSTimeInterval) oldTimestamp {
-    NSTimeInterval docTimestamp = doc.timestamp;
-    Assert(docTimestamp > oldTimestamp);
-    
-    return docTimestamp;
-}
-
 - (void) testConflictHandler {
     NSError* error;
     NSString* docID = @"doc1";

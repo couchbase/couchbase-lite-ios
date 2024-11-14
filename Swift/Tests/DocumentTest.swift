@@ -1901,8 +1901,7 @@ class DocumentTest: CBLTestCase {
         try defaultCollection!.save(document: doc)
         assert(doc._getRevisionHistory() != nil)
         
-        // Fails from LiteCore,only 1 rev, no rev history
-        // doc = try defaultCollection!.document(id: "doc1")!.toMutable();
-        // asser(doc._getRevisionHistory() != nil)
+        doc = try defaultCollection!.document(id: "doc1")!.toMutable();
+        assert(doc._getRevisionHistory() != nil)
     }
 }
