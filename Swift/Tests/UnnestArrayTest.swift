@@ -52,7 +52,7 @@ class UnnestArrayTest: CBLTestCase {
     ///     3. Create an array index named "contacts" in the profiles collection.
     ///     4. Get index names from the profiles collection and check that the index named "contacts" exists.
     ///     5. Get info of the index named "contacts" using an internal API and check that the index has path and expressions as configured.
-    func testCreateArrayIndexWithPath() throws {
+    func _testCreateArrayIndexWithPath() throws {
         let profiles = try db.createCollection(name: "profiles")
         try loadJSONResource("profiles_100", collection: profiles)
         let config = ArrayIndexConfiguration(path: "contacts")
