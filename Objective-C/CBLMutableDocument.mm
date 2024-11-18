@@ -195,13 +195,6 @@ using namespace fleece;
     return true;
 }
 
-// TODO: This value is incorrect after the document is saved as self.changed
-// doesn't get reset. However this is currently being used during replication's
-// conflict resolution so the generation value is correct in that circumstance.
-- (NSUInteger) generation {
-    return super.generation + !!self.changed;
-}
-
 - (NSString*) generateID {
     char docID[kC4GeneratedIDLength + 1];
     c4doc_generateID(docID, sizeof(docID));

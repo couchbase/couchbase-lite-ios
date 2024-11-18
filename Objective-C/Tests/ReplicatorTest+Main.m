@@ -2011,10 +2011,10 @@
 
 - (void) testReplicatedDocument {
     C4DocumentEnded end;
-    end.docID = c4str("docID");
-    end.revID = c4str("revID");
+    end.docID = C4STR("docID");
+    end.revID = C4STR("revID");
     end.flags = kRevDeleted;
-    end.error = c4error_make(1, kC4ErrorBusy, c4str("error"));
+    end.error = c4error_make(1, kC4ErrorBusy, C4STR("error"));
     end.errorIsTransient = true;
     end.collectionSpec = kC4DefaultCollectionSpec;
     

@@ -294,10 +294,9 @@ using namespace fleece;
     }
 }
 
-- (NSUInteger) generation {
-    // CBLMutableDocument overrides this
+- (NSTimeInterval) timestamp {
     CBL_LOCK(self) {
-        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+        return _c4Doc != nil ?  c4rev_getTimestamp(_c4Doc.revID) / 1000000000.0 : 0;
     }
 }
 
