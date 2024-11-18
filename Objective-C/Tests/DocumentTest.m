@@ -2262,6 +2262,22 @@
     }];
 }
 
+- (void) testMutableDocumentCopy {
+    NSError* err;
+    CBLCollection* defaultCollection = [self.db defaultCollection: &err];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc setString: @"first" forKey: @"one"];
+    CBLMutableDocument* docCopy = [doc copy];
+    AssertEqual([docCopy stringForKey:@"one"], @"first");
+    
+    [doc setString: @"second" forKey: @"two"];
+    Assert([defaultCollection saveDocument:doc error: &err]);
+    docCopy = [[[defaultCollection documentWithID: @"doc1" error: &err] toMutable] copy];
+    AssertEqual([docCopy stringForKey:@"one"], @"first");
+    AssertEqual([docCopy stringForKey:@"two"], @"second");
+}
+
 #pragma mark - Timestamp & Revision history
 
 /**  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md  */

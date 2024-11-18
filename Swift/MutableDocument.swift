@@ -97,7 +97,15 @@ public final class MutableDocument : Document, MutableDictionaryProtocol {
     /// Returns the same MutableDocument object.
     ///
     /// - Returns: The MutableDocument object.
+    @available(*, deprecated, message: "Use mutableDocument.copy() instead.")
     public override func toMutable() -> MutableDocument {
+        return self;
+    }
+    
+    /// Returns the same MutableDocument object.
+    ///
+    /// - Returns: The MutableDocument object.
+    public func copy() -> MutableDocument {
         return self;
     }
     

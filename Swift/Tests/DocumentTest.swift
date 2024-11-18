@@ -1856,6 +1856,19 @@ class DocumentTest: CBLTestCase {
         }
     }
     
+    func testCopy() throws {
+        let doc = MutableDocument(id: "doc1")
+        doc.setValue("first", forKey: "one")
+        var docCopy = doc.copy()
+        assert(docCopy.value(forKey: "one") as! String == "first")
+        
+        doc.setValue("second", forKey: "two")
+        try defaultCollection!.save(document: doc)
+        docCopy = try defaultCollection!.document(id: "doc1")!.toMutable().copy()
+        assert(docCopy.value(forKey: "one") as! String == "first")
+        assert(docCopy.value(forKey: "two") as! String == "second")
+    }
+    
     // MARK: toJSONTimestamp & Revision history
 
     //  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md

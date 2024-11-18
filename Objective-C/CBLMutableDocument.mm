@@ -119,6 +119,10 @@ using namespace fleece;
     return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: _dict];
 }
 
+- (CBLMutableDocument*) copy {
+    return [self mutableCopyWithZone: nil];
+}
+
 #pragma mark - CBLMutableDictionary
 
 - (void) setValue: (nullable id)value forKey: (NSString*)key {

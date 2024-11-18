@@ -110,6 +110,12 @@ NS_ASSUME_NONNULL_BEGIN
                                 json: (NSString*)json
                                error: (NSError**)error;
 
+/**
+ Returns a mutable copy of the document.
+ 
+ @return The CBLMutableDocument object.
+ */
+- (CBLMutableDocument*) copy;
 @end
 
 NS_ASSUME_NONNULL_END
