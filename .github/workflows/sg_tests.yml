@@ -2,9 +2,9 @@ name: Sync gateway tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, release/3.2 ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, release/3.2 ]
 
 jobs:
   downloadAndRunSG:
@@ -18,7 +18,7 @@ jobs:
       
       - name: Download SGW
         run: |
-          curl -o sg.zip http://packages.couchbase.com/releases/couchbase-sync-gateway/3.1.0/couchbase-sync-gateway-enterprise_3.1.0_x86_64.zip
+          curl -o sg.zip http://packages.couchbase.com/releases/couchbase-sync-gateway/3.2.1/couchbase-sync-gateway-enterprise_3.2.1_x86_64.zip
           tar -zxvf sg.zip
           echo "${PWD}/couchbase-sync-gateway/bin" >> $GITHUB_PATH
           echo "$PATH"
