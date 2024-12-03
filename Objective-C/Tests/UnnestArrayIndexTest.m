@@ -66,7 +66,7 @@
     5. Get info of the index named "contacts" using an internal API and check that the index has path and expressions as configured.
  */
 
-- (void) _testCreateArrayIndexWithPath {
+- (void) testCreateArrayIndexWithPath {
     NSError* err;
     CBLCollection* profiles = [self.db createCollectionWithName: @"profiles" scope: nil error: &err];
     [self loadJSONResource: @"profiles_100" toCollection: profiles];
