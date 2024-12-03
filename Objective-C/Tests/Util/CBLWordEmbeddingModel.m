@@ -39,10 +39,7 @@
 - (CBLDictionary*) predict: (CBLDictionary*)input {
     NSString* inputWord = [input stringForKey: @"word"];
     
-    if (!inputWord) {
-        NSLog(@"No word input !!!");
-        return nil;
-    }
+    assert(inputWord);
     
     CBLArray* result = [self vectorForWord: inputWord collection: @"words"];
     if (!result) {

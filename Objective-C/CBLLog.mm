@@ -18,7 +18,6 @@
 //
 
 #import "CBLLog.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
 #import "CBLLog+Logging.h"
 #import "CBLLog+Swift.h"
@@ -44,6 +43,7 @@ static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERR
 
 @implementation CBLLog {
     CBLLogLevel _callbackLogLevel;
+    os_log_t oslogger;
 }
 
 @synthesize console=_console, file=_file, custom=_custom;
@@ -159,7 +159,8 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
             callbackLogLevel = string2level(userLogLevel);
         }
         if (callbackLogLevel != kC4LogWarning) {
-            NSLog(@"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]);
+            NSString* message = [NSString stringWithFormat: @"CouchbaseLite minimum log level is %s", kLevelNames[callbackLogLevel]];
+            [CBLConsoleLogger logAlways: message];
         }
 #endif
         
@@ -190,7 +191,8 @@ static void sendToCallbackLogger(C4LogDomain d, C4LogLevel l, NSString* message)
                 C4LogDomain domain = c4log_getDomain(domainName, true);
                 C4LogLevel level = string2level(defaults[key]);
                 c4log_setLevel(domain, level);
-                NSLog(@"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]);
+                NSString* message = [NSString stringWithFormat: @"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]];
+                [CBLConsoleLogger logAlways: message];
             }
         }
 #endif
@@ -281,34 +283,6 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     
     // Now log to console and custom logger:
     sendToCallbackLogger(domain, level, nsmsg);
-}
-
-NSString* CBLLog_GetLevelName(CBLLogLevel level) {
-    return [NSString stringWithUTF8String: kLevelNames[level]];
-}
-
-NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
-    switch (domain) {
-        case kCBLLogDomainDatabase:
-            return @"Database";
-            break;
-        case kCBLLogDomainQuery:
-            return @"Query";
-            break;
-        case kCBLLogDomainReplicator:
-            return @"Replicator";
-            break;
-        case kCBLLogDomainNetwork:
-            return @"Network";
-            break;
-#ifdef COUCHBASE_ENTERPRISE
-        case kCBLLogDomainListener:
-            return @"Listener";
-            break;
-#endif
-        default:
-            return @"Database";
-    }
 }
 
 @implementation CBLCustomLogger {
