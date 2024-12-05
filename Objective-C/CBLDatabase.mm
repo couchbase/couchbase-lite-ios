@@ -32,6 +32,7 @@
 #import "CBLIndex+Internal.h"
 #import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
+#import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+N1QL.h"
@@ -118,6 +119,9 @@ static const C4DatabaseConfig2 kDBConfig = {
         NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
+        
+        // WIP
+        //CBLAssertNotNil(CBLLogSinks.sharedInstance);
     }
 }
 
@@ -135,6 +139,13 @@ static const C4DatabaseConfig2 kDBConfig = {
         CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
                 "Log files required for product support are not being generated.");
     }
+    
+// WIP
+//    if (!CBLLogSinks.sharedInstance.file) {
+//        CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
+//                "Log files required for product support are not being generated.");
+//    }
+    
 }
 
 - (instancetype) initWithName: (NSString*)name
