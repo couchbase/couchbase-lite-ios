@@ -30,7 +30,6 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
 #import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
@@ -119,9 +118,6 @@ static const C4DatabaseConfig2 kDBConfig = {
         NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
         CBLAssertNotNil(CBLLog.sharedInstance);
-        
-        // WIP
-        //CBLAssertNotNil(CBLLogSinks.sharedInstance);
     }
 }
 

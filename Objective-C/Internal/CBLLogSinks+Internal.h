@@ -6,14 +6,31 @@
 //  Copyright © 2024 Couchbase. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "CBLLogSinks.h"
+#import "CBLLogTypes.h"
+#import "CBLConsoleLogSink.h"
+#import "CBLCustomLogSink.h"
+#import "CBLFileLogSink.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLLogSinks ()
 
-+ (instancetype) sharedInstance;
++ (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
+
+@end
+
+@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
+
+@end
+
+@interface CBLCustomLogSink () <CBLLogSinkProtocol>
+
+@end
+
+@interface CBLFileLogSink ()
+
++ (void) setup: (nullable CBLFileLogSink*)logSink;
 
 @end
 

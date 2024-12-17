@@ -38,6 +38,8 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLConflict.h>
 #import <CouchbaseLite/CBLConflictResolver.h>
 #import <CouchbaseLite/CBLConsoleLogger.h>
+#import <CouchbaseLite/CBLConsoleLogSink.h>
+#import <CouchbaseLite/CBLCustomLogSink.h>
 #import <CouchbaseLite/CBLDatabase.h>
 #import <CouchbaseLite/CBLDatabaseChange.h>
 #import <CouchbaseLite/CBLDatabaseConfiguration.h>
@@ -52,6 +54,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLEndpoint.h>
 #import <CouchbaseLite/CBLErrors.h>
 #import <CouchbaseLite/CBLFileLogger.h>
+#import <CouchbaseLite/CBLFileLogSink.h>
 #import <CouchbaseLite/CBLFragment.h>
 #import <CouchbaseLite/CBLFullTextIndex.h>
 #import <CouchbaseLite/CBLIndex.h>
@@ -59,12 +62,9 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLIndexBuilder.h>
 #import <CouchbaseLite/CBLListenerToken.h>
 #import <CouchbaseLite/CBLLog.h>
-#import <CouchbaseLite/CBLLogSinkProtocol.h>
-#import <CouchbaseLite/CBLLogSinks.h>
-#import <CouchbaseLite/CBLConsoleLogSink.h>
-#import <CouchbaseLite/CBLCustomLogSink.h>
-#import <CouchbaseLite/CBLFileLogSink.h>
 #import <CouchbaseLite/CBLLogger.h>
+#import <CouchbaseLite/CBLLogSinks.h>
+#import <CouchbaseLite/CBLLogTypes.h>
 #import <CouchbaseLite/CBLLogFileConfiguration.h>
 #import <CouchbaseLite/CBLQueryChange.h>
 #import <CouchbaseLite/CBLMutableArray.h>

@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import <CBLLogSinkProtocol.h>
+#import <CouchbaseLite/CBLLogTypes.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

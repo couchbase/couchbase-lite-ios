@@ -27,13 +27,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype) sharedInstance;
 
-- (void) synchronizeCallbackLogLevel;
-
 @end
 
 @interface CBLConsoleLogger ()
 
-- (instancetype) initWithLogLevel: (CBLLogLevel)level;
+- (instancetype) initWithDefault;
 
 @end
 
