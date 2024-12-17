@@ -2,30 +2,42 @@
 //  CBLLogSinks.h
 //  CouchbaseLite
 //
-//  Created by Vlad Velicu on 02/12/2024.
-//  Copyright © 2024 Couchbase. All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLConsoleLogSink.h"
-#import "CBLFileLogSink.h"
-#import "CBLCustomLogSink.h"
+
+@class CBLConsoleLogSink;
+@class CBLCustomLogSink;
+@class CBLFileLogSink;
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// LogSinks API for managing different log sink configurations.
 @interface CBLLogSinks : NSObject
 
-@property (nonatomic, nullable) CBLConsoleLogSink* console;
+/// The console log sink (default is enabled with warning level).
+@property (class, nonatomic, nullable) CBLConsoleLogSink *console;
 
-@property (nonatomic, nullable) CBLFileLogSink* file;
+/// The file log sink (default is nil).
+@property (class, nonatomic, nullable) CBLFileLogSink *file;
 
-@property (nonatomic, nullable) CBLCustomLogSink* custom;
+/// The custom log sink (default is nil).
+@property (class, nonatomic, nullable) CBLCustomLogSink *custom;
 
-- (void)setConsoleSink: (CBLConsoleLogSink*) console;
-
-- (void)setFileSink: (CBLFileLogSink*) file;
-
-- (void)setCustomSink: (CBLCustomLogSink*)custom;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end
 

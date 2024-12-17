@@ -1,144 +1,165 @@
 //
-//  CBLLogSinks.m
+//  CBLLogSinks.mm
 //  CouchbaseLite
 //
-//  Created by Vlad Velicu on 02/12/2024.
-//  Copyright © 2024 Couchbase. All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
-
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
 #import "CBLLogSinks+Internal.h"
 #import "CBLLog+Logging.h"
+#import "CBLStringBytes.h"
 
-extern "C" {
-#import "ExceptionUtils.h"
-}
+C4LogDomain kCBL_LogDomainDatabase;
+C4LogDomain kCBL_LogDomainQuery;
+C4LogDomain kCBL_LogDomainSync;
+C4LogDomain kCBL_LogDomainWebSocket;
+C4LogDomain kCBL_LogDomainListener;
 
-static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
-static CBLLogLevel _sDomainsLevel = kCBLLogLevelNone;
-static CBLLogLevel _sCallbackLevel = kCBLLogLevelNone;
+static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener"];
+static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
+static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"ERROR", @"none"];
 
-static CBLConsoleLogSink* _sConsole = nil;
-static CBLCustomLogSink* _sCustom = nil;
-static CBLFileLogSink* _sFile = nil;
+static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
+static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
+
+static CBLConsoleLogSink* _console = nil;
+static CBLCustomLogSink* _custom = nil;
+static CBLFileLogSink* _file = nil;
+
+// Note:
+//
+// This class is implemented with a minimum logging. The interface defines
+// define console, custom, and file property as nonatomic so the expectation
+// is not to settting up the log sinks object concurrently. However, at least,
+// the lock to access console and custom is required to avoid crash from accessing
+// garbage objects as LiteCore's log callback may be called from a background thread.
 
 @implementation CBLLogSinks
 
-@synthesize console = _console, file = _file, custom = _custom;
++ (void)initialize {
+    if (self == [CBLLogSinks class]) {
+        [self init];
+    }
+}
+
 NSDictionary* domainDictionary = nil;
 
-- (instancetype) init {
-    self = [super init];
-    if (self) {
-        updateLogLevels();
-    }
-    return self;
++ (void) init {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // Cache log domain for logging from the platforms:
+        kCBL_LogDomainDatabase  = c4log_getDomain("DB", true);
+        kCBL_LogDomainQuery  = c4log_getDomain("Query", true);
+        kCBL_LogDomainSync  = c4log_getDomain("Sync", true);
+        kCBL_LogDomainWebSocket  = c4log_getDomain("WS", true);
+        kCBL_LogDomainListener  = c4log_getDomain("Listener", true);
+        
+        // Create the default warning console log:
+        self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
+    });
 }
 
-- (void) setConsoleSink: (CBLConsoleLogSink*) console {
-    _console = console;
-    updateLogLevels();
++ (void) setConsole:(CBLConsoleLogSink*)console {
+    CBL_LOCK(self) {
+        _console = console;
+    }
+    [self updateLogLevels];
 }
 
-- (void) setFileSink: (CBLFileLogSink*) file {
-    if(file.level != _file.level) {
-        c4log_setBinaryFileLevel((C4LogLevel)file.level);
++ (CBLConsoleLogSink*) console {
+    CBL_LOCK(self) {
+        return _console;
     }
+}
+
++ (void) setCustom: (CBLCustomLogSink*) custom {
+    CBL_LOCK(self) {
+        _custom = custom;
+    }
+    [self updateLogLevels];
+}
+
++ (CBLCustomLogSink*) custom {
+    CBL_LOCK(self) {
+        return _custom;
+    }
+}
+
++ (void) setFile: (CBLFileLogSink*) file {
     _file = file;
-    updateLogLevels();
+    [CBLFileLogSink setup: file];
+    [self updateLogLevels];
 }
 
-- (void) setCustomSink: (CBLCustomLogSink*) custom {
-    _custom = custom;
-    updateLogLevels();
++ (CBLFileLogSink*) file {
+    return _file;
 }
 
-
-- (void)setConsole:(CBLConsoleLogSink*)console {
-    _console = console;
-    updateLogLevels();
-}
-
-static void c4Callback(C4LogDomain d, C4LogLevel l, const char *msg, va_list args) {
-    NSString* message = [NSString stringWithUTF8String: msg];
++ (void) updateLogLevels {
+    CBLConsoleLogSink* console = self.console;
+    CBLLogLevel consoleLevel = console != nil ? console.level : kCBLLogLevelNone;
     
-    CBLLogSinks* sinks = [CBLLogSinks sharedInstance];
+    CBLCustomLogSink* custom = self.custom;
+    CBLLogLevel customLevel = custom.logSink != nil ? custom.level : kCBLLogLevelNone;
     
-    CBLLogLevel level = (CBLLogLevel)l;
-    CBLLogDomain domain = toCBLLogDomain(d);
+    CBLFileLogSink* file = self.file;
+    CBLLogLevel fileLevel = file != nil ? file.level : kCBLLogLevelNone;
     
-    logConsoleSink(sinks.console, level, domain, message);
-    logCustomSink(sinks.custom, level, domain, message);
-}
-
-static void logConsoleSink(CBLConsoleLogSink* console, CBLLogLevel level, CBLLogDomain domain, NSString* msg){
-    if (level < console.level || (console.domain & domain) == 0) {
-        return;
-    }
-    NSString* levelName = CBLLog_GetLevelName(level);
-    NSString* domainName = CBLLog_GetDomainName(domain);
-    NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, msg);
-}
-
-static void logCustomSink(CBLCustomLogSink* custom, CBLLogLevel level, CBLLogDomain domain, NSString* msg) {
-    if (custom.logSink == nil || level < custom.level || (custom.domain & domain) == 0) {
-        return;
-    }
-    [custom.logSink writeLog:level domain:domain message:msg];
-}
-
-static void updateLogLevels() {
-    CBLLogLevel customLevel = (_sCustom.logSink != nil) ? _sCustom.level : kCBLLogLevelNone;
-    CBLLogLevel callbackLevel = std::min(_sConsole.level, customLevel);
-    CBLLogLevel domainsLevel = std::min(callbackLevel, _sFile.level);
+    CBLLogLevel callbackLevel = std::min(consoleLevel, customLevel);
+    CBLLogLevel domainsLevel = std::min(callbackLevel, fileLevel);
     C4LogLevel c4Level = (C4LogLevel)domainsLevel;
     
-    if(_sDomainsLevel != domainsLevel) {
-        const NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener"];
+    if (_domainsLevel != domainsLevel) {
         for (NSString* domain in c4Domains) {
-            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], true);
+            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], false);
             if (c4domain)
                 c4log_setLevel(c4domain, c4Level);
         }
         
-        const NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
         for (NSString* domain in platformDomains) {
             C4LogDomain c4domain = c4log_getDomain([domain UTF8String], false);
             if (c4domain)
                 c4log_setLevel(c4domain, c4Level);
         }
-        _sDomainsLevel = domainsLevel;
+        _domainsLevel = domainsLevel;
     }
     
-    if (_sCallbackLevel != callbackLevel) {
+    if (_callbackLevel != callbackLevel) {
         c4log_writeToCallback(c4Level, &c4Callback, true);
-        _sCallbackLevel = callbackLevel;
+        _callbackLevel = callbackLevel;
     }
 }
 
-// unused yet
-static void log(C4LogDomain d, C4LogLevel l, const char *msg) {
+static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg, va_list args) {
     NSString* message = [NSString stringWithUTF8String: msg];
-    
-    CBLLogSinks* sinks = [CBLLogSinks sharedInstance];
-    
-    CBLLogLevel level = (CBLLogLevel)l;
-    CBLLogDomain domain = toCBLLogDomain(d);
-    
-    logConsoleSink(sinks.console, level, domain, message);
-    logCustomSink(sinks.custom, level, domain, message);
-    
-    c4log(d, l, "%s", msg);
+    CBLLogLevel level = (CBLLogLevel) c4level;
+    CBLLogDomain domain = toCBLLogDomain(c4domain);
+    [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
+    [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
-#pragma mark - Internal
-+ (instancetype) sharedInstance {
-    static CBLLogSinks* sharedInstance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sharedInstance = [[self alloc] init];
-    });
-    return sharedInstance;
++ (void) writeCBLLog: (C4LogDomain)c4domain level: (C4LogLevel)c4level message: (NSString*)message {
+    CBLLogLevel level = (CBLLogLevel) c4level;
+    CBLLogDomain domain = toCBLLogDomain(c4domain);
+    
+    CBLStringBytes c4msg(message);
+    c4slog(c4domain, c4level, c4msg);
+    
+    [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
+    [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
+
 
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
@@ -161,34 +182,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
     NSNumber* mapped = [domainDictionary objectForKey: domainName];
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
-}
-
-static NSString* CBLLog_GetLevelName(CBLLogLevel level) {
-    return [NSString stringWithUTF8String: kLevelNames[level]];
-}
-
-static NSString* CBLLog_GetDomainName(CBLLogDomain domain) {
-    switch (domain) {
-        case kCBLLogDomainDatabase:
-            return @"Database";
-            break;
-        case kCBLLogDomainQuery:
-            return @"Query";
-            break;
-        case kCBLLogDomainReplicator:
-            return @"Replicator";
-            break;
-        case kCBLLogDomainNetwork:
-            return @"Network";
-            break;
-#ifdef COUCHBASE_ENTERPRISE
-        case kCBLLogDomainListener:
-            return @"Listener";
-            break;
-#endif
-        default:
-            return @"Database";
-    }
 }
 
 @end
