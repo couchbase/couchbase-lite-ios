@@ -1479,10 +1479,6 @@
 		9388CC3321C18672005CA66D /* CBLLog+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93C50F0F21C068F300C7E980 /* CBLLog+Internal.h */; };
 		9388CC3421C18673005CA66D /* CBLLog+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93C50F0F21C068F300C7E980 /* CBLLog+Internal.h */; };
 		9388CC3521C18674005CA66D /* CBLLog+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93C50F0F21C068F300C7E980 /* CBLLog+Internal.h */; };
-		9388CC3621C186DD005CA66D /* CBLLog+Admin.h in Headers */ = {isa = PBXBuildFile; fileRef = 274D6C272011529D00DAB7DD /* CBLLog+Admin.h */; };
-		9388CC3721C186DE005CA66D /* CBLLog+Admin.h in Headers */ = {isa = PBXBuildFile; fileRef = 274D6C272011529D00DAB7DD /* CBLLog+Admin.h */; };
-		9388CC3821C186DF005CA66D /* CBLLog+Admin.h in Headers */ = {isa = PBXBuildFile; fileRef = 274D6C272011529D00DAB7DD /* CBLLog+Admin.h */; };
-		9388CC3921C186DF005CA66D /* CBLLog+Admin.h in Headers */ = {isa = PBXBuildFile; fileRef = 274D6C272011529D00DAB7DD /* CBLLog+Admin.h */; };
 		9388CC3A21C18784005CA66D /* CBLLog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBE721BF7195005CA66D /* CBLLog.mm */; };
 		9388CC3B21C18786005CA66D /* CBLLog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBE721BF7195005CA66D /* CBLLog.mm */; };
 		9388CC3C21C18787005CA66D /* CBLLog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBE721BF7195005CA66D /* CBLLog.mm */; };
@@ -2240,7 +2236,6 @@
 		270AB2BB2073EF57009A4596 /* CBLChangeNotifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLChangeNotifier.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
 		27476651201912B5007B39D1 /* CBLErrors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLErrors.h; sourceTree = "<group>"; };
-		274D6C272011529D00DAB7DD /* CBLLog+Admin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLog+Admin.h"; sourceTree = "<group>"; };
 		275229C51E776BC100E630FA /* CBLReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReplicator.h; sourceTree = "<group>"; };
 		275229C61E776BC100E630FA /* CBLReplicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLReplicator.mm; sourceTree = "<group>"; };
 		2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPLogic.h; sourceTree = "<group>"; };
@@ -3953,7 +3948,6 @@
 		9388CC1021BF9E54005CA66D /* Log */ = {
 			isa = PBXGroup;
 			children = (
-				274D6C272011529D00DAB7DD /* CBLLog+Admin.h */,
 				93C50F0F21C068F300C7E980 /* CBLLog+Internal.h */,
 				934F4C9C1E241FB500F90659 /* CBLLog+Logging.h */,
 				9388CC5721C25FDE005CA66D /* CBLLog+Swift.h */,
@@ -4443,7 +4437,6 @@
 				1AAFB66C284A260A00878453 /* CBLCollectionChange.h in Headers */,
 				9388CC0621BF750E005CA66D /* CBLFileLogger.h in Headers */,
 				9381960B1EC112010032CC51 /* CBLMutableDictionary.h in Headers */,
-				9388CC3721C186DE005CA66D /* CBLLog+Admin.h in Headers */,
 				9381960D1EC112130032CC51 /* CBLArray.h in Headers */,
 				93CED8D420488DC400E6F0A4 /* CBLBlob+Swift.h in Headers */,
 				9381961F1EC11A8C0032CC51 /* CBLDictionary+Swift.h in Headers */,
@@ -4726,7 +4719,6 @@
 				40FC1C0B2B928ADC00394276 /* CBLListenerPasswordAuthenticator+Internal.h in Headers */,
 				9343EFF7207D611600F19A89 /* CBLQueryCollation.h in Headers */,
 				9343EFF8207D611600F19A89 /* CBLArrayFragment.h in Headers */,
-				9388CC3821C186DF005CA66D /* CBLLog+Admin.h in Headers */,
 				9343EFF9207D611600F19A89 /* CBLIndex.h in Headers */,
 				935A58D021AFAD31009A29CB /* CBLDocumentReplication+Internal.h in Headers */,
 				9343EFFB207D611600F19A89 /* CBLData.h in Headers */,
@@ -4935,7 +4927,6 @@
 				9343F116207D61AB00F19A89 /* CBLReplicator+Internal.h in Headers */,
 				9343F117207D61AB00F19A89 /* CBLC4Document.h in Headers */,
 				9343F118207D61AB00F19A89 /* CBLJSON.h in Headers */,
-				9388CC3921C186DF005CA66D /* CBLLog+Admin.h in Headers */,
 				9343F119207D61AB00F19A89 /* CBLCoreBridge.h in Headers */,
 				935A58D121AFAD31009A29CB /* CBLDocumentReplication+Internal.h in Headers */,
 				1A3470EC266F69280042C6BA /* CBLIndexConfiguration+Internal.h in Headers */,
@@ -5047,7 +5038,6 @@
 				9388CC0521BF750E005CA66D /* CBLFileLogger.h in Headers */,
 				9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */,
 				1A3470C1266F3E7C0042C6BA /* CBLIndexConfiguration.h in Headers */,
-				9388CC3621C186DD005CA66D /* CBLLog+Admin.h in Headers */,
 				6932D48D2954640000D28C18 /* CBLQueryFullTextIndexExpression.h in Headers */,
 				937F01E11EFB269300060D64 /* CBLAuthenticator.h in Headers */,
 				934F4CB51E241FB500F90659 /* CBLPrefix.h in Headers */,
