@@ -25,6 +25,7 @@
 
 // For bridging custom logger between Swift and Objective-C
 // without making CBLLogger protocol public
+__attribute__((deprecated("Use CBLCustomLogSink instead.")))
 @interface CBLCustomLogger : NSObject <CBLLogger>
 - (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger;
 @end

@@ -19,6 +19,8 @@
 
 #import <CouchbaseLite/CBLLogTypes.h>
 
+__attribute__((deprecated("Use CBLLogSinkProtocol instead.")))
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
