@@ -1,8 +1,8 @@
 //
-//  CBLLog+Admin.h
+//  CustomLogger.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,20 +17,19 @@
 //  limitations under the License.
 //
 
-#import "CBLLogger.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#import <Foundation/Foundation.h>
+#import "CouchbaseLite.h"
 
 NS_ASSUME_NONNULL_BEGIN
-    
-NSString* CBLLog_GetLevelName(CBLLogLevel level);
-    
-NSString* CBLLog_GetDomainName(CBLLogDomain domain);
-    
-NS_ASSUME_NONNULL_END
 
-#ifdef __cplusplus
-}
-#endif
+@interface CustomLogger : NSObject <CBLLogSinkProtocol>
+
+@property (nonatomic, readonly) NSArray* lines;
+
+- (void) reset;
+
+- (BOOL) containsString: (NSString *)string;
+
+@end
+
+NS_ASSUME_NONNULL_END

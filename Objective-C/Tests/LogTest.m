@@ -21,20 +21,12 @@
 #import "CBLLog+Logging.h"
 #import "CustomLogger.h"
 
-@interface FileLoggerBackup: NSObject
-
-@property (nonatomic, nullable) CBLLogFileConfiguration* config;
-
-@property (nonatomic) CBLLogLevel level;
-
-@end
-
 @interface LogTest : CBLTestCase
 
 @end
 
 @implementation LogTest {
-    FileLoggerBackup* _backup;
+    CBLFileLogSink* _backup;
     CBLLogLevel _backupConsoleLevel;
     CBLLogDomain _backupConsoleDomain;
     NSString* logFileDirectory;
@@ -46,9 +38,9 @@
 
 - (void) setUp {
     [super setUp];
-    [self backupLoggerConfig];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
+    [self backupLoggerConfig];
 }
 
 - (void) tearDown {
@@ -57,33 +49,24 @@
     [self restoreLoggerConfig];
 }
 
-- (CBLLogFileConfiguration*) logFileConfig {
-    return [[CBLLogFileConfiguration alloc] initWithDirectory: logFileDirectory];
-}
-
 - (void) backupLoggerConfig {
-    _backup = [[FileLoggerBackup alloc] init];
-    _backup.level = CBLDatabase.log.file.level;
-    _backup.config = CBLDatabase.log.file.config;
-    _backupConsoleLevel = CBLDatabase.log.console.level;
-    _backupConsoleDomain = CBLDatabase.log.console.domains;
+    _backup = [[CBLFileLogSink alloc] initWithLevel: CBLLogSinks.file.level directory: logFileDirectory];
+    _backupConsoleLevel = CBLLogSinks.console.level;
+    _backupConsoleDomain = CBLLogSinks.console.domain;
 }
 
 - (void) restoreLoggerConfig {
     if (_backup) {
-        CBLDatabase.log.file.level = _backup.level;
-        CBLDatabase.log.file.config = _backup.config;
+        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel:_backup.level directory:_backup.directory];
         _backup = nil;
     }
-    CBLDatabase.log.custom = nil;
-    CBLDatabase.log.console.level = _backupConsoleLevel;
-    CBLDatabase.log.console.domains = _backupConsoleDomain;
-    
+    CBLLogSinks.custom = nil;
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel:_backupConsoleLevel domain:_backupConsoleDomain];
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
-                             properties: (nullable NSArray<NSURLResourceKey>*)keys
-                           onlyInfoLogs: (BOOL)onlyInfo {
+                                      properties: (nullable NSArray<NSURLResourceKey>*)keys
+                                    onlyInfoLogs: (BOOL)onlyInfo {
     AssertNotNil(directory);
     NSURL* path = [NSURL fileURLWithPath: directory];
     AssertNotNil(path);
@@ -121,7 +104,8 @@
     CBLWarnError(Database, @"%@", string);
 }
 
-- (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (NSString*)path {
+- (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (nullable NSString*)path {
+    if (!path) return NO;
     NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
     NSError* error;
     for (NSURL* url in files) {
@@ -139,12 +123,11 @@
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLDatabase.log.custom = customLogger;
     
     for (NSUInteger i = 5; i >= 1; i--) {
+        CBLCustomLogSink* customSink = [[CBLCustomLogSink alloc] initWithLevel: (CBLLogLevel)i logSink: customLogger];
         [customLogger reset];
-        customLogger.level = (CBLLogLevel)i;
-        CBLDatabase.log.custom = customLogger;
+        CBLLogSinks.custom = customSink;
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -154,12 +137,8 @@
 }
 
 - (void) testFileLoggingLevels {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    
     for (NSUInteger i = 5; i >= 1; i--) {
-        CBLDatabase.log.file.level = (CBLLogLevel)i;
+        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: (CBLLogLevel)i directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -167,10 +146,10 @@
     }
     
     NSError* error;
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: config.directory
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _backup.directory
                                                                          error: &error];
     for (NSString* file in files) {
-        NSString* log = [config.directory stringByAppendingPathComponent: file];
+        NSString* log = [_backup.directory stringByAppendingPathComponent: file];
         NSString* content = [NSString stringWithContentsOfFile: log
                                                       encoding: NSUTF8StringEncoding
                                                          error: &error];
@@ -191,12 +170,10 @@
 }
 
 - (void) testFileLoggingDefaultBinaryFormat {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelInfo;
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory];
     
     CBLLogInfo(Database, @"TEST INFO");
-    NSArray* files = [self getLogsInDirectory: config.directory
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
     NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
@@ -227,18 +204,12 @@
 }
 
 - (void) testFileLoggingUsePlainText {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    AssertEqual(config.usePlainText, kCBLDefaultLogFileUsePlaintext);
-    config.usePlainText = YES;
-    Assert(config.usePlainText);
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelInfo;
-    Assert(CBLDatabase.log.file.config.usePlainText);
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
     
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
     
-    NSArray* files = [self getLogsInDirectory: config.directory
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory
                                    properties: @[NSFileModificationDate]
                                  onlyInfoLogs: YES];
     NSArray* sorted = [files sortedArrayUsingComparator: ^NSComparisonResult(NSURL* url1,
@@ -268,13 +239,11 @@
 }
 
 - (void) testFileLoggingLogFilename {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelDebug;
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug directory: logFileDirectory];
     
     NSString* regex = @"cbl_(debug|verbose|info|warning|error)_\\d+\\.cbllog";
     NSPredicate* predicate = [NSPredicate predicateWithFormat: @"SELF MATCHES %@", regex];
-    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     for (NSURL* file in files) {
         Assert([predicate evaluateWithObject: file.lastPathComponent]);
     }
@@ -283,16 +252,14 @@
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
     CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelNone;
-    CBLDatabase.log.custom = customLogger;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelNone logSink: customLogger];
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
     CBLWarnError(Database, @"TEST ERROR");
     AssertEqual(customLogger.lines.count, 0);
     
-    customLogger.level = kCBLLogLevelVerbose;
-    CBLDatabase.log.custom = customLogger;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
@@ -301,58 +268,46 @@
 }
 
 - (void) testFileLoggingMaxSize {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    config.usePlainText = YES;
-    AssertEqual(config.maxSize, kCBLDefaultLogFileMaxSize);
-    AssertEqual(config.maxRotateCount, kCBLDefaultLogFileMaxRotateCount);
-    config.maxSize = 1024;
-    AssertEqual(config.maxSize, 1024);
-    config.maxRotateCount = 2;
-    AssertEqual(config.maxRotateCount, 2);
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelDebug;
-    AssertEqual(CBLDatabase.log.file.config.maxSize, 1024);
-    AssertEqual(CBLDatabase.log.file.config.maxRotateCount, 2);
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory];
+    AssertEqual(CBLLogSinks.file.maxFileSize, (NSInteger)kCBLDefaultFileLogSinkMaxSize);
+    AssertEqual(CBLLogSinks.file.maxKeptFiles, (NSUInteger)kCBLDefaultFileLogSinkMaxKeptFiles);
+    AssertEqual(CBLLogSinks.file.usePlaintext, kCBLDefaultLogFileUsePlaintext);
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug directory: logFileDirectory usePlaintext: YES maxKeptFiles: 2 maxFileSize: 1024];
+    AssertEqual(CBLLogSinks.file.maxFileSize, 1024);
+    AssertEqual(CBLLogSinks.file.maxKeptFiles, 2);
     
     // this should create three files, as the 1KB + 1KB + extra ~400-500Bytes.
     [self writeOneKiloByteOfLog];
     [self writeOneKiloByteOfLog];
     
-    NSUInteger totalFilesShouldBeInDirectory = (CBLDatabase.log.file.config.maxRotateCount + 1) * 5;
+    NSUInteger totalFilesShouldBeInDirectory = CBLLogSinks.file.maxKeptFiles * 5;
 #if !DEBUG
     totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1;
 #endif
-    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     AssertEqual(files.count, totalFilesShouldBeInDirectory);
 }
 
-- (void) testFileLoggingDisableLogging {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelNone;
-    
+- (void) testFileLoggingDisabled {
+    CBLLogSinks.file = nil;
+
     NSString* inputString = [[NSUUID UUID] UUIDString];
     [self writeAllLogs: inputString];
     
-    AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: CBLLogSinks.file.directory]);
 }
 
 - (void) testFileLoggingReEnableLogging {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    CBLLogSinks.file = nil;
     
     NSString* inputString = [[NSUUID UUID] UUIDString];
     [self writeAllLogs: inputString];
     
-    AssertFalse([self isKeywordPresentInAnyLog: inputString path: config.directory]);
+    AssertFalse([self isKeywordPresentInAnyLog: inputString path: CBLLogSinks.file.directory]);
     
-    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
     [self writeAllLogs: inputString];
-    
-    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
     for (NSURL* url in files) {
         if ([url.lastPathComponent hasPrefix: @"cbl_debug_"]) {
@@ -367,13 +322,10 @@
 }
 
 - (void) testFileLoggingHeader {
-    CBLLogFileConfiguration* config = [self logFileConfig];
-    config.usePlainText = YES;
-    CBLDatabase.log.file.config = config;
-    CBLDatabase.log.file.level = kCBLLogLevelVerbose;
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
     
     [self writeOneKiloByteOfLog];
-    NSArray* files = [self getLogsInDirectory: config.directory properties: nil onlyInfoLogs: NO];
+    NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
     for (NSURL* url in files) {
         NSString* contents = [NSString stringWithContentsOfURL: url
@@ -394,10 +346,8 @@
 
 - (void) testNonASCII {
     CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelVerbose;
-    CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose domain: kCBLLogDomainAll];
     NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
@@ -423,11 +373,10 @@
 
 - (void) testPercentEscape {
     CustomLogger* customLogger = [[CustomLogger alloc] init];
-    customLogger.level = kCBLLogLevelInfo;
-    CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelInfo logSink: customLogger];
+   
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelInfo domain: kCBLLogDomainAll];
+
     CBLLogInfo(Database, @"Hello %%s there");
     
     BOOL found = NO;
@@ -440,11 +389,5 @@
 }
 
 #pragma clang diagnostic pop
-
-@end
-
-@implementation FileLoggerBackup
-
-@synthesize config=_config, level=_level;
 
 @end

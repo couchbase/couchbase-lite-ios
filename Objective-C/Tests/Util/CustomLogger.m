@@ -23,12 +23,9 @@
     NSMutableArray* _lines;
 }
 
-@synthesize level=_level;
-
 - (instancetype) init {
     self = [super init];
     if (self) {
-        _level = kCBLLogLevelNone;
         _lines = [NSMutableArray new];
     }
     return self;
@@ -51,8 +48,8 @@
     return NO;
 }
 
-- (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    [_lines addObject: message];        
+- (void) writeLogWithLevel:(CBLLogLevel)level domain:(CBLLogDomain)domain message:(NSString *)message {
+    [_lines addObject: message];
 }
 
 @end
