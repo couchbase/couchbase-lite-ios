@@ -19,33 +19,61 @@
 
 #import "CBLConsoleLogger.h"
 #import "CBLLog+Internal.h"
-#import "CBLLog+Admin.h"
+#import "CBLLogSinks+Internal.h"
 
 @implementation CBLConsoleLogger
 
 @synthesize level=_level, domains=_domains;
 
-- (instancetype) initWithLogLevel: (CBLLogLevel)level {
+- (instancetype) initWithDefault {
     self = [super init];
     if (self) {
-        _level = level;
+        _level = kCBLLogLevelWarning;
         _domains = kCBLLogDomainAll;
     }
     return self;
 }
 
 - (void) setLevel: (CBLLogLevel)level {
-    _level = level;
-    [[CBLLog sharedInstance] synchronizeCallbackLogLevel];
+    CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        _level = level;
+        [self updateConsoleLogSink];
+    }
 }
 
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    if (self.level > level || (self.domains & domain) == 0)
-        return;
-    
-    NSString* levelName = CBLLog_GetLevelName(level);
-    NSString* domainName = CBLLog_GetDomainName(domain);
-    NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);
+- (CBLLogLevel) level {
+    CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        return _level;
+    }
+}
+
+- (void) setDomains: (CBLLogDomain)domains {
+    CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        _domains = domains;
+        [self updateConsoleLogSink];
+    }
+}
+
+- (CBLLogDomain) domains {
+    [CBLLogSinks checkLogApiVersion: LogAPIOld];
+    CBL_LOCK(self) {
+        return _domains;
+    }
+}
+
+- (void) updateConsoleLogSink {
+    CBLConsoleLogSink* console = [[CBLConsoleLogSink alloc] initWithLevel: _level  domain: _domains];
+    [CBLLogSinks setConsole: console];
+}
+
+- (void) logWithLevel: (CBLLogLevel)level
+               domain: (CBLLogDomain)domain
+              message: (nonnull NSString*)message
+{
+    // Do nothing: Logging is an internal functionality.
 }
 
 @end

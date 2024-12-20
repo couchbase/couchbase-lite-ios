@@ -30,8 +30,8 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
+#import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+N1QL.h"
@@ -131,7 +131,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 /** Check and show warning if file logging is not configured. */
 + (void) checkFileLogging {
-    if (!CBLDatabase.log.file.config) {
+    if (!CBLDatabase.log.file.config || !CBLLogSinks.file) {
         CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
                 "Log files required for product support are not being generated.");
     }

@@ -21,6 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+__attribute__((deprecated("Use CBLFileLogSink instead.")))
 /**
  Log file configuration.
  */

@@ -22,9 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CustomLogger : NSObject <CBLLogger>
-
-@property (nonatomic) CBLLogLevel level;
+@interface CustomLogger : NSObject <CBLLogSinkProtocol>
 
 @property (nonatomic, readonly) NSArray* lines;
 

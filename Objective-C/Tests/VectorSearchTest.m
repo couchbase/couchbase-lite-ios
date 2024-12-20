@@ -76,12 +76,11 @@
     AssertNotNil(_wordDB);
     
     _logger = [[CustomLogger alloc] init];
-    _logger.level = kCBLLogLevelInfo;
-    CBLDatabase.log.custom = _logger;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelInfo logSink: _logger];
 }
 
 - (void) tearDown {
-    CBLDatabase.log.custom = nil;
+    CBLLogSinks.custom = nil;
     
     _wordsCollection = nil;
     _extWordsCollection = nil;
