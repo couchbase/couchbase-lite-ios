@@ -1,5 +1,5 @@
 //
-//  CustomLogger.h
+//  CustomLoggerOld.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -22,7 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CustomLogger : NSObject <CBLLogger>
+@interface CustomLoggerOld : NSObject <CBLLogger>
 
 @property (nonatomic) CBLLogLevel level;
 
@@ -35,3 +35,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+
