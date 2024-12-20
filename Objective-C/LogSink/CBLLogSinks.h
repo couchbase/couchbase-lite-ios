@@ -1,5 +1,5 @@
 //
-//  CBLLogger.h
+//  CBLLogSinks.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
@@ -17,20 +17,27 @@
 //  limitations under the License.
 //
 
-#import <CouchbaseLite/CBLLogTypes.h>
+#import <Foundation/Foundation.h>
+
+@class CBLConsoleLogSink;
+@class CBLCustomLogSink;
+@class CBLFileLogSink;
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Logger protocol
- */
-@protocol CBLLogger <NSObject>
+/// LogSinks API for managing different log sink configurations.
+@interface CBLLogSinks : NSObject
 
-/** The minimum log level to be logged. */
-@property (readonly, nonatomic) CBLLogLevel level;
+/// The console log sink (default is enabled with warning level).
+@property (class, nonatomic, nullable) CBLConsoleLogSink *console;
 
-/** The callback log method. */
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message;
+/// The file log sink (default is nil).
+@property (class, nonatomic, nullable) CBLFileLogSink *file;
+
+/// The custom log sink (default is nil).
+@property (class, nonatomic, nullable) CBLCustomLogSink *custom;
+
+- (instancetype)init NS_UNAVAILABLE;
 
 @end
 

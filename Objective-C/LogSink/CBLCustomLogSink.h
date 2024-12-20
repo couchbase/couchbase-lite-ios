@@ -1,5 +1,5 @@
 //
-//  CBLLogger.h
+//  CBLCustomLogSink.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
@@ -17,20 +17,22 @@
 //  limitations under the License.
 //
 
+#import <Foundation/Foundation.h>
 #import <CouchbaseLite/CBLLogTypes.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Logger protocol
- */
-@protocol CBLLogger <NSObject>
+@interface CBLCustomLogSink : NSObject
 
-/** The minimum log level to be logged. */
-@property (readonly, nonatomic) CBLLogLevel level;
+/** The minimum log level of the log messages to be logged. The default log level for console logger is warning. */
+@property (nonatomic, readonly) CBLLogLevel level;
 
-/** The callback log method. */
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message;
+/** The set of log domains of the log messages to be logged. By default, the log messages of all domains will be logged. */
+@property (nonatomic, readonly) CBLLogDomain domain;
+
+@property (nonatomic, readonly) id<CBLLogSinkProtocol> logSink;
+
+- (instancetype) initWithLevel: (CBLLogLevel) level logSink: (id<CBLLogSinkProtocol>) logSink;
 
 @end
 
