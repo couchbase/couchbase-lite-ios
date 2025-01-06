@@ -7,7 +7,6 @@
 //
 
 #import "CBLLogSinks.h"
-#import "CBLLogTypes.h"
 #import "CBLConsoleLogSink.h"
 #import "CBLCustomLogSink.h"
 #import "CBLFileLogSink.h"

@@ -18,7 +18,6 @@
 //
 
 #import "CBLCustomLogSink.h"
-#import "CBLLogTypes.h"
 #import "CBLLogSinks+Internal.h"
 
 @implementation CBLCustomLogSink

@@ -1820,6 +1820,7 @@
 		AEAFDD982D15EC3B00BA5C9C /* LogTestOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */; };
 		AEAFDD992D15EC3B00BA5C9C /* LogTestOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */; };
 		AEAFDD9A2D15EC3B00BA5C9C /* LogTestOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */; };
+		AEAFDDD32D2C4B1A00BA5C9C /* CustomLoggerOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD8D2D15EBC400BA5C9C /* CustomLoggerOld.m */; };
 		AEC806B72C89EA68001C9723 /* CBLArrayIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = AEC806B52C89EA68001C9723 /* CBLArrayIndexConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEC806B82C89EA68001C9723 /* CBLArrayIndexConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = AEC806B62C89EA68001C9723 /* CBLArrayIndexConfiguration.m */; };
 		AEC806B92C89EA68001C9723 /* CBLArrayIndexConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = AEC806B62C89EA68001C9723 /* CBLArrayIndexConfiguration.m */; };
@@ -5666,7 +5667,6 @@
 					};
 					938CF9ED1E442A3E00291631 = {
 						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = N2Q372V7W2;
 						ProvisioningStyle = Automatic;
 					};
 					938CFA051E442A3E00291631 = {
@@ -6990,6 +6990,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AEAFDDD32D2C4B1A00BA5C9C /* CustomLoggerOld.m in Sources */,
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
 				1AF555D522948BDF0077DF6D /* QueryTest+Main.m in Sources */,
 				1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */,
@@ -7733,6 +7734,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL_ObjC_Tests_iOS_App.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -7925,6 +7928,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL_ObjC_Tests_iOS_App.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -9289,6 +9294,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL_ObjC_Tests_iOS_App.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -9307,6 +9314,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL_ObjC_Tests_iOS_App.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",

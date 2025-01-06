@@ -18,7 +18,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CouchbaseLite.h"
+#import <CouchbaseLite/CBLLogTypes.h>
+#import <CouchbaseLite/CBLLogger.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
