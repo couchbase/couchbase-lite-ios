@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-__attribute__((deprecated("Use CBLLogSinks instead.")))
+__deprecated_msg("Use CBLLogSinks instead.");
 /**
  Log allows to configure console and file logger or to set a custom logger.
  */

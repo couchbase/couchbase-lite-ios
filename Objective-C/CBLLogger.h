@@ -19,13 +19,12 @@
 
 #import <CouchbaseLite/CBLLogTypes.h>
 
-__attribute__((deprecated("Use CBLLogSinkProtocol instead.")))
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
  Logger protocol
  */
+__deprecated_msg("Use CBLLogSinkProtocol instead.");
 @protocol CBLLogger <NSObject>
 
 /** The minimum log level to be logged. */
