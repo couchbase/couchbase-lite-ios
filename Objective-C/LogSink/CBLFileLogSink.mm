@@ -70,7 +70,7 @@
             .log_level = (C4LogLevel)logSink.level,
             .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
             .max_size_bytes = logSink.maxFileSize,
-            .use_plaintext = logSink.usePlaintext,
+            .use_plaintext = static_cast<bool>(logSink.usePlaintext),
             .header = CBLStringBytes([CBLVersion userAgent])
         };
     } else {

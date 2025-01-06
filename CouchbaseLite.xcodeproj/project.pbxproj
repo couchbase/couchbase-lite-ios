@@ -1776,13 +1776,13 @@
 		AE83D0852C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */; };
 		AE83D0862C0637ED0055D2CF /* CBLIndexUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		AE83D0872C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */; };
-		AEA74F242CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */; };
+		AEA74F242CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
 		AEA74F252CFE030E005F4810 /* CBLConsoleLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */; };
+		AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
 		AEA74F272CFE030E005F4810 /* CBLConsoleLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		AEA74F282CFE030E005F4810 /* CBLConsoleLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		AEA74F292CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */; };
-		AEA74F2A2CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */; };
+		AEA74F292CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
+		AEA74F2A2CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
 		AEA74F2B2CFE030E005F4810 /* CBLConsoleLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA74F2E2CFE0581005F4810 /* CBLFileLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F2C2CFE0581005F4810 /* CBLFileLogSink.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		AEA74F2F2CFE0581005F4810 /* CBLFileLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F2D2CFE0581005F4810 /* CBLFileLogSink.mm */; };
@@ -2854,7 +2854,7 @@
 		AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexUpdater.h; sourceTree = "<group>"; };
 		AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLIndexUpdater.mm; sourceTree = "<group>"; };
 		AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConsoleLogSink.h; sourceTree = "<group>"; };
-		AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConsoleLogSink.m; sourceTree = "<group>"; };
+		AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLConsoleLogSink.mm; sourceTree = "<group>"; };
 		AEA74F2C2CFE0581005F4810 /* CBLFileLogSink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLFileLogSink.h; sourceTree = "<group>"; };
 		AEA74F2D2CFE0581005F4810 /* CBLFileLogSink.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLFileLogSink.mm; sourceTree = "<group>"; };
 		AEA74F362CFE0B23005F4810 /* CBLLogSinks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLLogSinks.h; sourceTree = "<group>"; };
@@ -4431,7 +4431,7 @@
 			isa = PBXGroup;
 			children = (
 				AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */,
-				AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.m */,
+				AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */,
 				AEA74F402CFE0BC3005F4810 /* CBLCustomLogSink.h */,
 				AEA74F412CFE0BC3005F4810 /* CBLCustomLogSink.m */,
 				AEA74F2C2CFE0581005F4810 /* CBLFileLogSink.h */,
@@ -6274,7 +6274,7 @@
 				939B1B5D2009C04100FAA3CB /* CBLQueryVariableExpression.m in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
-				AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */,
+				AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
 				9380D2661F0D7BF7007DD84A /* GroupByRouter.swift in Sources */,
 				93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */,
 				27D721BD1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */,
@@ -6428,7 +6428,7 @@
 				9343EF3E207D611600F19A89 /* CBLAggregateExpression.m in Sources */,
 				9343EF3F207D611600F19A89 /* CBLJSON.mm in Sources */,
 				9343EF40207D611600F19A89 /* CBLParseDate.c in Sources */,
-				AEA74F2A2CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */,
+				AEA74F2A2CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
 				9343EF41207D611600F19A89 /* CBLQueryResultSet.mm in Sources */,
 				9343EF42207D611600F19A89 /* CBLDatabaseChange.m in Sources */,
 				9343EF43207D611600F19A89 /* CBLQueryOrdering.m in Sources */,
@@ -6647,7 +6647,7 @@
 				9343F049207D61AB00F19A89 /* CBLFragment.m in Sources */,
 				9343F04A207D61AB00F19A89 /* CBLQueryArrayExpression.m in Sources */,
 				9343F04B207D61AB00F19A89 /* Join.swift in Sources */,
-				AEA74F292CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */,
+				AEA74F292CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
 				1A3470C8266F3E7C0042C6BA /* CBLIndexConfiguration.m in Sources */,
 				40FC1B4E2B92872900394276 /* CBLDatabase+Encryption.mm in Sources */,
 				9343F04C207D61AB00F19A89 /* OrderByRouter.swift in Sources */,
@@ -7048,7 +7048,7 @@
 				9383A5861F1EE7C00083053D /* CBLQueryResultSet.mm in Sources */,
 				93E17F0C1ED3AC8100671CA1 /* CBLDatabaseChange.m in Sources */,
 				9388CC0921BF750E005CA66D /* CBLFileLogger.mm in Sources */,
-				AEA74F242CFE030E005F4810 /* CBLConsoleLogSink.m in Sources */,
+				AEA74F242CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
 				AEC806B82C89EA68001C9723 /* CBLArrayIndexConfiguration.m in Sources */,
 				933208171E77415E000D9993 /* CBLQueryOrdering.m in Sources */,
 				931C14541EAABCE70094F9B2 /* CBLFragment.m in Sources */,
