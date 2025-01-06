@@ -28,7 +28,6 @@ C4LogDomain kCBL_LogDomainListener;
 
 static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener"];
 static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
-static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"ERROR", @"none"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
 static CBLLogLevel _callbackLevel = kCBLLogLevelNone;

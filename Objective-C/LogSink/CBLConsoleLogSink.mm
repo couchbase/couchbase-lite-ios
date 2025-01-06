@@ -20,6 +20,8 @@
 #import "CBLConsoleLogSink.h"
 #import "CBLLogSinks+Internal.h"
 
+static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"ERROR", @"none"];
+
 @implementation CBLConsoleLogSink
 
 @synthesize level=_level, domain=_domain;
@@ -42,7 +44,6 @@
         return;
     }
     
-    static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"ERROR", @"None"];
     NSString* levelName = logLevelNames[level];
     NSString* domainName = [self domainName: domain];
     NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);
