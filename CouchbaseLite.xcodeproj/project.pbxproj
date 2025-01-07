@@ -175,8 +175,8 @@
 		1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
 		1AA6744C227924130018CC6D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
 		1AA6744D227924130018CC6D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
-		1AA91DC622B0356000BF0BDE /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
-		1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
+		1AA91DC622B0356000BF0BDE /* CustomLoggerOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */; };
+		1AA91DC722B0356000BF0BDE /* CustomLoggerOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */; };
 		1AAB273D22739EBB0037A880 /* CBLConflict.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273B22739EBB0037A880 /* CBLConflict.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1AAB273E22739EBB0037A880 /* CBLConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAB273C22739EBB0037A880 /* CBLConflict.m */; };
 		1AAB27412273AB420037A880 /* CBLConflict+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAB273F2273AB420037A880 /* CBLConflict+Internal.h */; };
@@ -1498,8 +1498,8 @@
 		9388CC4E21C25141005CA66D /* ConsoleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC4C21C25141005CA66D /* ConsoleLogger.swift */; };
 		9388CC5021C2514C005CA66D /* FileLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC4F21C2514C005CA66D /* FileLogger.swift */; };
 		9388CC5121C2514C005CA66D /* FileLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC4F21C2514C005CA66D /* FileLogger.swift */; };
-		9388CC5521C25CC7005CA66D /* LogTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTest.swift */; };
-		9388CC5621C25CCB005CA66D /* LogTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTest.swift */; };
+		9388CC5521C25CC7005CA66D /* LogTestOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTestOld.swift */; };
+		9388CC5621C25CCB005CA66D /* LogTestOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTestOld.swift */; };
 		9388CC5821C25FDE005CA66D /* CBLLog+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 9388CC5721C25FDE005CA66D /* CBLLog+Swift.h */; };
 		9388CC5921C25FDE005CA66D /* CBLLog+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 9388CC5721C25FDE005CA66D /* CBLLog+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		9388CC5A21C25FDE005CA66D /* CBLLog+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 9388CC5721C25FDE005CA66D /* CBLLog+Swift.h */; };
@@ -1611,12 +1611,12 @@
 		93BB1CA3246BB2D3004FFA00 /* DocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */; };
 		93BB1CA4246BB2D3004FFA00 /* DocumentExpirationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */; };
 		93BB1CA5246BB2D3004FFA00 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
-		93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTest.swift */; };
+		93BB1CA6246BB2D3004FFA00 /* LogTestOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTestOld.swift */; };
 		93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */; };
 		93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */; };
 		93BB1CA9246BB2D4004FFA00 /* DocumentExpirationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */; };
 		93BB1CAA246BB2D4004FFA00 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
-		93BB1CAB246BB2D4004FFA00 /* LogTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTest.swift */; };
+		93BB1CAB246BB2D4004FFA00 /* LogTestOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9388CC5221C25C9E005CA66D /* LogTestOld.swift */; };
 		93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F141ED4ED4000671CA1 /* NotificationTest.swift */; };
 		93BB1CAE246BB2DC004FFA00 /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */; };
 		93BB1CAF246BB2DE004FFA00 /* NotificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F141ED4ED4000671CA1 /* NotificationTest.swift */; };
@@ -1626,9 +1626,9 @@
 		93BB1CB3246BB2EC004FFA00 /* ReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */; };
 		93BB1CB4246BB2ED004FFA00 /* ReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */; };
 		93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
-		93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
+		93BB1CB7246BB2F3004FFA00 /* CustomLoggerOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */; };
 		93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */; };
-		93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLogger.swift */; };
+		93BB1CBA246BB2F4004FFA00 /* CustomLoggerOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */; };
 		93BB1CBB246BB300004FFA00 /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
 		93BB1CBC246BB301004FFA00 /* CBLTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C2CDD1F4FC0D20010316F /* CBLTestHelper.m */; };
 		93BB726B1E446FC500427251 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
@@ -1821,6 +1821,16 @@
 		AEAFDD992D15EC3B00BA5C9C /* LogTestOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */; };
 		AEAFDD9A2D15EC3B00BA5C9C /* LogTestOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */; };
 		AEAFDDD32D2C4B1A00BA5C9C /* CustomLoggerOld.m in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDD8D2D15EBC400BA5C9C /* CustomLoggerOld.m */; };
+		AEAFDDD62D2D61AF00BA5C9C /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDD52D2D61AF00BA5C9C /* LogSinks.swift */; };
+		AEAFDDD72D2D61AF00BA5C9C /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDD52D2D61AF00BA5C9C /* LogSinks.swift */; };
+		AEAFDDD92D2D61C700BA5C9C /* ConsoleLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDD82D2D61C700BA5C9C /* ConsoleLogSink.swift */; };
+		AEAFDDDA2D2D61C700BA5C9C /* ConsoleLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDD82D2D61C700BA5C9C /* ConsoleLogSink.swift */; };
+		AEAFDDDC2D2D61D500BA5C9C /* FileLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDDB2D2D61D500BA5C9C /* FileLogSink.swift */; };
+		AEAFDDDD2D2D61D500BA5C9C /* FileLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDDB2D2D61D500BA5C9C /* FileLogSink.swift */; };
+		AEAFDDDF2D2D61E500BA5C9C /* CustomLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDDE2D2D61E500BA5C9C /* CustomLogSink.swift */; };
+		AEAFDDE02D2D61E500BA5C9C /* CustomLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDDE2D2D61E500BA5C9C /* CustomLogSink.swift */; };
+		AEAFDDFE2D2D62FD00BA5C9C /* LogSinkProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDFD2D2D62FD00BA5C9C /* LogSinkProtocol.swift */; };
+		AEAFDDFF2D2D62FD00BA5C9C /* LogSinkProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAFDDFD2D2D62FD00BA5C9C /* LogSinkProtocol.swift */; };
 		AEC806B72C89EA68001C9723 /* CBLArrayIndexConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = AEC806B52C89EA68001C9723 /* CBLArrayIndexConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEC806B82C89EA68001C9723 /* CBLArrayIndexConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = AEC806B62C89EA68001C9723 /* CBLArrayIndexConfiguration.m */; };
 		AEC806B92C89EA68001C9723 /* CBLArrayIndexConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = AEC806B62C89EA68001C9723 /* CBLArrayIndexConfiguration.m */; };
@@ -2243,7 +2253,7 @@
 		1AA3D77122AB06E10098E16B /* CustomLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomLogger.h; sourceTree = "<group>"; };
 		1AA3D77222AB06E10098E16B /* CustomLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomLogger.m; sourceTree = "<group>"; };
 		1AA6744E227925D20018CC6D /* QueryTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QueryTest.h; sourceTree = "<group>"; };
-		1AA91DC522B0356000BF0BDE /* CustomLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogger.swift; sourceTree = "<group>"; };
+		1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLoggerOld.swift; sourceTree = "<group>"; };
 		1AAB2736227373EB0037A880 /* CBLConflictResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		1AAB273B22739EBB0037A880 /* CBLConflict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflict.h; sourceTree = "<group>"; };
 		1AAB273C22739EBB0037A880 /* CBLConflict.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflict.m; sourceTree = "<group>"; };
@@ -2718,7 +2728,7 @@
 		9388CC4921C25135005CA66D /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		9388CC4C21C25141005CA66D /* ConsoleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogger.swift; sourceTree = "<group>"; };
 		9388CC4F21C2514C005CA66D /* FileLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLogger.swift; sourceTree = "<group>"; };
-		9388CC5221C25C9E005CA66D /* LogTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTest.swift; sourceTree = "<group>"; };
+		9388CC5221C25C9E005CA66D /* LogTestOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTestOld.swift; sourceTree = "<group>"; };
 		9388CC5721C25FDE005CA66D /* CBLLog+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLog+Swift.h"; sourceTree = "<group>"; };
 		938B3690200745FE004485D8 /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		938B36A3200745FE004485D8 /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
@@ -2866,6 +2876,11 @@
 		AEAFDD8C2D15EBC400BA5C9C /* CustomLoggerOld.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomLoggerOld.h; sourceTree = "<group>"; };
 		AEAFDD8D2D15EBC400BA5C9C /* CustomLoggerOld.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomLoggerOld.m; sourceTree = "<group>"; };
 		AEAFDD962D15EC3000BA5C9C /* LogTestOld.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LogTestOld.m; sourceTree = "<group>"; };
+		AEAFDDD52D2D61AF00BA5C9C /* LogSinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSinks.swift; sourceTree = "<group>"; };
+		AEAFDDD82D2D61C700BA5C9C /* ConsoleLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogSink.swift; sourceTree = "<group>"; };
+		AEAFDDDB2D2D61D500BA5C9C /* FileLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLogSink.swift; sourceTree = "<group>"; };
+		AEAFDDDE2D2D61E500BA5C9C /* CustomLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogSink.swift; sourceTree = "<group>"; };
+		AEAFDDFD2D2D62FD00BA5C9C /* LogSinkProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSinkProtocol.swift; sourceTree = "<group>"; };
 		AEC806B52C89EA68001C9723 /* CBLArrayIndexConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLArrayIndexConfiguration.h; sourceTree = "<group>"; };
 		AEC806B62C89EA68001C9723 /* CBLArrayIndexConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLArrayIndexConfiguration.m; sourceTree = "<group>"; };
 		AECA897C2CADADAA00C7B6BE /* UnnestArrayTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnestArrayTest.swift; sourceTree = "<group>"; };
@@ -3095,6 +3110,7 @@
 		275F92631E4D2FD7007FD5A2 /* Swift */ = {
 			isa = PBXGroup;
 			children = (
+				AEAFDDD42D2D618500BA5C9C /* LogSink */,
 				9338BED21ED5473300634873 /* Database */,
 				938195F31EC10B780032CC51 /* Document */,
 				938CDF071E807E98002EE790 /* Query */,
@@ -3138,7 +3154,7 @@
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				93C50E9F21BDFB7C00C7E980 /* DocumentExpirationTest.swift */,
 				93F74A8A1EC5549C001289F8 /* FragmentTest.swift */,
-				9388CC5221C25C9E005CA66D /* LogTest.swift */,
+				9388CC5221C25C9E005CA66D /* LogTestOld.swift */,
 				93E17F141ED4ED4000671CA1 /* NotificationTest.swift */,
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */,
@@ -3155,7 +3171,7 @@
 				AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */,
 				406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */,
 				AECA897C2CADADAA00C7B6BE /* UnnestArrayTest.swift */,
-				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
+				1AA91DC522B0356000BF0BDE /* CustomLoggerOld.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
 			);
@@ -4440,6 +4456,18 @@
 				AEA74F362CFE0B23005F4810 /* CBLLogSinks.h */,
 				AEA74F372CFE0B23005F4810 /* CBLLogSinks.mm */,
 				4009842A2D10F48E0029F26E /* CBLLogTypes.h */,
+			);
+			path = LogSink;
+			sourceTree = "<group>";
+		};
+		AEAFDDD42D2D618500BA5C9C /* LogSink */ = {
+			isa = PBXGroup;
+			children = (
+				AEAFDDD52D2D61AF00BA5C9C /* LogSinks.swift */,
+				AEAFDDD82D2D61C700BA5C9C /* ConsoleLogSink.swift */,
+				AEAFDDDB2D2D61D500BA5C9C /* FileLogSink.swift */,
+				AEAFDDDE2D2D61E500BA5C9C /* CustomLogSink.swift */,
+				AEAFDDFD2D2D62FD00BA5C9C /* LogSinkProtocol.swift */,
 			);
 			path = LogSink;
 			sourceTree = "<group>";
@@ -6128,6 +6156,7 @@
 				937A693F1F1065610058277F /* CBLQueryMeta.m in Sources */,
 				9388CC4721C250D1005CA66D /* Log.swift in Sources */,
 				93248DE82005E72A00C15B00 /* Endpoint.swift in Sources */,
+				AEAFDDDA2D2D61C700BA5C9C /* ConsoleLogSink.swift in Sources */,
 				9380D2641F0D7BD6007DD84A /* GroupBy.swift in Sources */,
 				27D7219C1F8E97F400AA4458 /* CBLFleece.mm in Sources */,
 				1A3F5556274345AA0088ECF1 /* Errors.swift in Sources */,
@@ -6160,6 +6189,7 @@
 				9322DCAB1F0F0E0200C4ACF7 /* Ordering.swift in Sources */,
 				27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */,
 				1ACAB8C8266723AE00B4F8E5 /* main.m in Sources */,
+				AEAFDDDF2D2D61E500BA5C9C /* CustomLogSink.swift in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
 				9384D8431FC405D200FE89D8 /* CBLQueryFullTextFunction.m in Sources */,
 				93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */,
@@ -6213,6 +6243,7 @@
 				27F9619C1ED8D9440060F804 /* CBLReachability.m in Sources */,
 				9384D84E1FC4163100FE89D8 /* FullTextExpression.swift in Sources */,
 				1A2AB75622BBFDB6000B9325 /* CBLConflictResolver.m in Sources */,
+				AEAFDDFE2D2D62FD00BA5C9C /* LogSinkProtocol.swift in Sources */,
 				AEA74F442CFE0BC3005F4810 /* CBLCustomLogSink.m in Sources */,
 				9381962E1EC15F4A0032CC51 /* CBLData.mm in Sources */,
 				1A416032227D0AD40061A567 /* ConflictResolver.swift in Sources */,
@@ -6273,6 +6304,7 @@
 				937F01DE1EFB1A2900060D64 /* CBLSessionAuthenticator.m in Sources */,
 				939B1B5D2009C04100FAA3CB /* CBLQueryVariableExpression.m in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
+				AEAFDDD72D2D61AF00BA5C9C /* LogSinks.swift in Sources */,
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
 				AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
 				9380D2661F0D7BF7007DD84A /* GroupByRouter.swift in Sources */,
@@ -6300,6 +6332,7 @@
 				93EC42CE1FB3801E00D54BB4 /* CBLFullTextIndex.m in Sources */,
 				9381962A1EC152410032CC51 /* Document.swift in Sources */,
 				1A3470C6266F3E7C0042C6BA /* CBLIndexConfiguration.m in Sources */,
+				AEAFDDDD2D2D61D500BA5C9C /* FileLogSink.swift in Sources */,
 				9380D2731F0DBD79007DD84A /* SelectResult.swift in Sources */,
 				93B503661E64B083002C4680 /* CBLStringBytes.mm in Sources */,
 				1AAB2785227793E40037A880 /* CBLConflict.m in Sources */,
@@ -6327,7 +6360,7 @@
 				AECA897D2CADADAA00C7B6BE /* UnnestArrayTest.swift in Sources */,
 				1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */,
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
-				9388CC5521C25CC7005CA66D /* LogTest.swift in Sources */,
+				9388CC5521C25CC7005CA66D /* LogTestOld.swift in Sources */,
 				1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */,
@@ -6336,7 +6369,7 @@
 				93C50EA021BDFB7C00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 				AEAFDD952D15EBEE00BA5C9C /* CustomLoggerOld.m in Sources */,
-				1AA91DC622B0356000BF0BDE /* CustomLogger.swift in Sources */,
+				1AA91DC622B0356000BF0BDE /* CustomLoggerOld.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6370,7 +6403,7 @@
 				1A6084FA28758AE20037C66F /* CollectionTest.swift in Sources */,
 				93BB1CB1246BB2E4004FFA00 /* PredictiveQueryTest.swift in Sources */,
 				AECA89802CADADAA00C7B6BE /* UnnestArrayTest.swift in Sources */,
-				93BB1CBA246BB2F4004FFA00 /* CustomLogger.swift in Sources */,
+				93BB1CBA246BB2F4004FFA00 /* CustomLoggerOld.swift in Sources */,
 				1A13DD4428B882BA00BC1084 /* URLEndpointListenerTest+Collection.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93BB1C9F246BB2C5004FFA00 /* DatabaseEncryptionTest.swift in Sources */,
@@ -6383,7 +6416,7 @@
 				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
-				93BB1CAB246BB2D4004FFA00 /* LogTest.swift in Sources */,
+				93BB1CAB246BB2D4004FFA00 /* LogTestOld.swift in Sources */,
 				93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */,
 				93BB1CBC246BB301004FFA00 /* CBLTestHelper.m in Sources */,
 				93BB1CB2246BB2E8004FFA00 /* PredictiveQueryTest+CoreML.swift in Sources */,
@@ -6587,6 +6620,7 @@
 				1AEF05A1283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				4017E46C2BED6E5400A438EE /* CBLContextManager.m in Sources */,
 				9343F028207D61AB00F19A89 /* CBLIndexBuilder.m in Sources */,
+				AEAFDDD62D2D61AF00BA5C9C /* LogSinks.swift in Sources */,
 				1A3471502671C8800042C6BA /* CBLFullTextIndexConfiguration.m in Sources */,
 				9388CC4E21C25141005CA66D /* ConsoleLogger.swift in Sources */,
 				40FC1C2B2B928B5000394276 /* CBLNoneVectorEncoding.mm in Sources */,
@@ -6632,6 +6666,7 @@
 				9343F03F207D61AB00F19A89 /* CBLReplicatorChange.m in Sources */,
 				9343F040207D61AB00F19A89 /* CBLTrustCheck.mm in Sources */,
 				9343F041207D61AB00F19A89 /* DocumentFragment.swift in Sources */,
+				AEAFDDFF2D2D62FD00BA5C9C /* LogSinkProtocol.swift in Sources */,
 				40FC1B6A2B9287BD00394276 /* CBLURLEndpointListener.mm in Sources */,
 				40FC1C7F2B92D0F000394276 /* CBLClientCertificateAuthenticator.mm in Sources */,
 				40FC1C332B928BB100394276 /* CBLMessageSocket.mm in Sources */,
@@ -6684,6 +6719,7 @@
 				9343F062207D61AB00F19A89 /* ArrayExpressionIn.swift in Sources */,
 				40FC1C582B928C1600394276 /* URLEndpointListener.swift in Sources */,
 				1AA2EDFB28A676E100DEB47E /* CBLConflictResolverBridge.m in Sources */,
+				AEAFDDE02D2D61E500BA5C9C /* CustomLogSink.swift in Sources */,
 				1AAFB66A284A260A00878453 /* CBLCollectionChange.m in Sources */,
 				40FC1BF52B928A4F00394276 /* CBLDatabase+Prediction.m in Sources */,
 				400AAFDE2C2A843B00DB6223 /* CBLExtension.mm in Sources */,
@@ -6710,9 +6746,11 @@
 				9343F072207D61AB00F19A89 /* CBLCoreBridge.mm in Sources */,
 				9343F073207D61AB00F19A89 /* CBLAggregateExpression.m in Sources */,
 				40FC1BED2B928A4F00394276 /* CBLCoreMLPredictiveModel.m in Sources */,
+				AEAFDDD92D2D61C700BA5C9C /* ConsoleLogSink.swift in Sources */,
 				9343F074207D61AB00F19A89 /* CBLDocument.mm in Sources */,
 				9343F075207D61AB00F19A89 /* DataConverter.swift in Sources */,
 				AEA74F392CFE0B23005F4810 /* CBLLogSinks.mm in Sources */,
+				AEAFDDDC2D2D61D500BA5C9C /* FileLogSink.swift in Sources */,
 				40FC1BF42B928A4F00394276 /* CBLVectorEncoding.mm in Sources */,
 				9343F076207D61AB00F19A89 /* MutableDictionaryObject.swift in Sources */,
 				9343F077207D61AB00F19A89 /* DictionaryObject.swift in Sources */,
@@ -6941,14 +6979,14 @@
 				1A8F850B2893F330008C4333 /* QueryTest+Collection.swift in Sources */,
 				93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
-				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
+				1AA91DC722B0356000BF0BDE /* CustomLoggerOld.swift in Sources */,
 				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				1AA3D6C222A1A41F0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93AE16E4221DC93D00539C05 /* PredictiveQueryTest+CoreML.swift in Sources */,
 				9343F196207D636300F19A89 /* DictionaryTest.swift in Sources */,
-				9388CC5621C25CCB005CA66D /* LogTest.swift in Sources */,
+				9388CC5621C25CCB005CA66D /* LogTestOld.swift in Sources */,
 				AE5803A42B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */,
 				AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
@@ -7193,8 +7231,8 @@
 				93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */,
 				AECA897E2CADADAA00C7B6BE /* UnnestArrayTest.swift in Sources */,
 				1A6084F728758ADF0037C66F /* CollectionTest.swift in Sources */,
-				93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */,
-				93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */,
+				93BB1CA6246BB2D3004FFA00 /* LogTestOld.swift in Sources */,
+				93BB1CB7246BB2F3004FFA00 /* CustomLoggerOld.swift in Sources */,
 				1A93FB0A24F737330015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				93BB1C99246BB2AB004FFA00 /* ArrayTest.swift in Sources */,
 				93BB1C9D246BB2BE004FFA00 /* DatabaseTest.swift in Sources */,

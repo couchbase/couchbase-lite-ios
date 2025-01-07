@@ -20,7 +20,7 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
-class LogTest: CBLTestCase {
+class LogTestOld: CBLTestCase {
     
     var logFileDirectory: String!
     
@@ -116,7 +116,7 @@ class LogTest: CBLTestCase {
     
     func testCustomLoggingLevels() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerOld()
         Database.log.custom = customLogger
         
         for i in (1...5).reversed() {
@@ -255,7 +255,7 @@ class LogTest: CBLTestCase {
     
     func testEnableAndDisableCustomLogging() throws {
         Log.log(domain: .database, level: .info, message: "IGNORE")
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerOld()
         Database.log.custom = customLogger
         
         customLogger.level = .none
@@ -367,7 +367,7 @@ class LogTest: CBLTestCase {
     }
     
     func testNonASCII() throws {
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerOld()
         customLogger.level = .verbose
         Database.log.custom = customLogger
         Database.log.console.domains = .all
@@ -395,7 +395,7 @@ class LogTest: CBLTestCase {
     }
     
     func testPercentEscape() throws {
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerOld()
         customLogger.level = .info
         Database.log.custom = customLogger
         Database.log.console.domains = .all

@@ -1,14 +1,13 @@
 //
-//  Logger.swift
+//  CustomLogSink.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc. All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
+//  Licensed under the Couchbase License Agreement (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
+//  https://info.couchbase.com/rs/302-GJY-034/images/2017-10-30_License_Agreement.pdf
 //
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +17,18 @@
 //
 
 import Foundation
+import CouchbaseLiteSwift_Private
 
-/// Logger protocol
-public protocol Logger {
+public struct CustomLogSink {
     
-    /// The minimum log level to be logged.
-    var level: LogLevel { get }
+    /// The minimum log level to be logged..
+    public let level: LogLevel
     
     /// The callback log function.
-    func log(level: LogLevel, domain: LogDomains, message: String)
+    public let logSink: LogSinkProtocol
     
+    public init(level: LogLevel, logSink: LogSinkProtocol) {
+        self.level = level
+        self.logSink = logSink
+    }
 }

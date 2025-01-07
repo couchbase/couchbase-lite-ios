@@ -34,7 +34,7 @@ class VectorSearchTest: CBLTestCase {
     
     let wordPredictiveModelName = "WordEmbedding";
     
-    var logger: CustomLogger!
+    var logger: CustomLoggerOld!
     
     var wordDB: Database!
     
@@ -61,7 +61,7 @@ class VectorSearchTest: CBLTestCase {
         wordsCollection = try! wordDB.collection(name: wordsCollectionName)!
         extWordsCollection = try! wordDB.collection(name: extWordsCollectionName)!
         
-        logger = CustomLogger()
+        logger = CustomLoggerOld()
         logger.level = .info
         Database.log.custom = logger
     }

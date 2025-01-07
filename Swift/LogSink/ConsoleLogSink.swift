@@ -1,14 +1,13 @@
 //
-//  ConsoleLogger.swift
+//  ConsoleLogSink.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc. All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
+//  Licensed under the Couchbase License Agreement (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
+//  https://info.couchbase.com/rs/302-GJY-034/images/2017-10-30_License_Agreement.pdf
 //
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,30 +17,19 @@
 //
 
 import Foundation
-import CouchbaseLiteSwift_Private
 
-/// Console logger for writing log messages to the system console.
-
-public class ConsoleLogger {
+public struct ConsoleLogSink {
     
     /// The minimum log level of the log messages to be logged. The default log level for
     /// console logger is warning.
-    public var level: LogLevel = .warning {
-        didSet {
-            CBLDatabase.log().console.level = CBLLogLevel(rawValue: UInt(level.rawValue))!
-        }
-    }
+    public let level: LogLevel
     
     /// The set of log domains of the log messages to be logged. By default, the log
     /// messages of all domains will be logged.
-    public var domains: LogDomains = .all {
-        didSet {
-            CBLDatabase.log().console.domains = CBLLogDomain(rawValue: UInt(domains.rawValue))
-        }
+    public let domain: LogDomains
+    
+    public init(level: LogLevel, domain: LogDomains = .all) {
+        self.level = level
+        self.domain = domain
     }
-    
-    // MARK: Internal
-    
-    init() { }
-    
 }

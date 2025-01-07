@@ -20,7 +20,7 @@
 import Foundation
 import CouchbaseLiteSwift
 
-class CustomLogger: Logger {
+class CustomLoggerOld: Logger {
     
     var lines: [String] = []
     
@@ -30,7 +30,7 @@ class CustomLogger: Logger {
         lines.removeAll()
     }
     
-    func log(level: LogLevel, domain: LogDomain, message: String) {
+    func log(level: LogLevel, domain: LogDomains, message: String) {
         lines.append(message)
     }
     

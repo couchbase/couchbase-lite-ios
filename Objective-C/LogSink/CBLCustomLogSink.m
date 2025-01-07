@@ -22,12 +22,11 @@
 
 @implementation CBLCustomLogSink
 
-@synthesize level = _level, domain=_domain, logSink = _logSink, version=_version;
+@synthesize level = _level, logSink = _logSink, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logSink: (id<CBLLogSinkProtocol>)logSink {
     self = [super init];
     if (self) {
-        _domain = kCBLLogDomainAll;
         _level = level;
         _logSink = logSink;
         _version = kCBLLogAPINew;
@@ -36,10 +35,12 @@
 }
 
 - (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    if (level < self.level || (self.domain & domain) == 0) {
+    if (level < self.level) {
         return;
     }
-    [self.logSink writeLogWithLevel: level domain: domain message: message];
+    [self.logSink writeLogWithLevel: level
+                             domain: kCBLLogDomainAll
+                            message: message];
 }
 
 @end

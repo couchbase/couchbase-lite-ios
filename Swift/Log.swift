@@ -37,7 +37,7 @@ public class Log {
                 let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
                 CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
                     let l = LogLevel(rawValue: UInt8(level.rawValue))!
-                    let d = LogDomain(rawValue: UInt8(domain.rawValue))!
+                    let d = LogDomains(rawValue: UInt8(domain.rawValue))
                     logger.log(level: l, domain: d, message: message)
                 }
             } else {
@@ -52,7 +52,7 @@ public class Log {
     
     // For Unit Tests
     
-    static func log(domain: LogDomain, level: LogLevel, message: String) {
+    static func log(domain: LogDomains, level: LogLevel, message: String) {
         let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
         CBLDatabase.log().log(to: cDomain, level: cLevel, message: message)

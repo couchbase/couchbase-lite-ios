@@ -338,7 +338,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     
     func testConflictResolverWrongDocID() throws {
         // use this to verify the logs generated during the conflict resolution.
-        let customLogger = CustomLogger()
+        let customLogger = CustomLoggerOld()
         customLogger.level = .warning
         Database.log.custom = customLogger
         
