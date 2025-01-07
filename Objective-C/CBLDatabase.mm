@@ -126,12 +126,13 @@ static const C4DatabaseConfig2 kDBConfig = {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         [self checkFileLogging];
+        [CBLLogSinks setVAPI: LogAPINone];
     });
 }
 
 /** Check and show warning if file logging is not configured. */
 + (void) checkFileLogging {
-    if (!CBLDatabase.log.file.config || !CBLLogSinks.file) {
+    if (!CBLLogSinks.file) {
         CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
                 "Log files required for product support are not being generated.");
     }

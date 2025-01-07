@@ -25,6 +25,7 @@
 @synthesize level = _level, domain=_domain, logSink = _logSink;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logSink: (id<CBLLogSinkProtocol>)logSink {
+    [CBLLogSinks checkLogApiVersion: LogAPINew];
     self = [super init];
     if (self) {
         _domain = kCBLLogDomainAll;

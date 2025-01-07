@@ -29,15 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLLogSinks : NSObject
 
 /// The console log sink (default is enabled with warning level).
-@property (class, nonatomic, nullable) CBLConsoleLogSink *console;
+@property (class, nonatomic, nullable) CBLConsoleLogSink* console;
 
 /// The file log sink (default is nil).
-@property (class, nonatomic, nullable) CBLFileLogSink *file;
+@property (class, nonatomic, nullable) CBLFileLogSink* file;
 
 /// The custom log sink (default is nil).
-@property (class, nonatomic, nullable) CBLCustomLogSink *custom;
+@property (class, nonatomic, nullable) CBLCustomLogSink* custom;
 
-- (instancetype)init NS_UNAVAILABLE;
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

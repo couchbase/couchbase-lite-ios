@@ -27,6 +27,7 @@
 @synthesize level=_level, config=_config;
 
 - (instancetype) initWithDefault {
+    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     self = [super init];
     if (self) {
         _level = kCBLLogLevelNone;
@@ -36,7 +37,6 @@
 
 - (void) setLevel: (CBLLogLevel)level {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         if (_level != level) {
             _level = level;
             [self updateFileLogSink];
@@ -44,9 +44,14 @@
     }
 }
 
+- (CBLLogLevel) level {
+    CBL_LOCK(self) {
+        return _level;
+    }
+}
+
 - (void) setConfig: (CBLLogFileConfiguration*)config {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         if (_config != config) {
             if (config) {
                 // Copy and mark as READONLY
@@ -58,16 +63,25 @@
     }
 }
 
-- (void) updateFileLogSink {
-    CBLFileLogSink* logSink;
-    if (_config) {
-        logSink = [[CBLFileLogSink alloc] initWithLevel: _level
-                                              directory: _config.directory
-                                           usePlaintext: _config.usePlainText
-                                           maxKeptFiles: _config.maxRotateCount + 1
-                                            maxFileSize: _config.maxSize];
+- (CBLLogFileConfiguration*) config {
+    CBL_LOCK(self) {
+        return _config;
     }
-    CBLLogSinks.file = logSink;
+}
+
+- (void) updateFileLogSink {
+    [CBLLogSinks setVAPI: LogAPINew];
+    if(_config) {
+        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: _level
+                                                       directory: _config.directory
+                                                    usePlaintext: _config.usePlainText
+                                                    maxKeptFiles: _config.maxRotateCount + 1
+                                                     maxFileSize: _config.maxSize
+                           ];
+    } else {
+        CBLLogSinks.file = nil;
+    }
+    [CBLLogSinks setVAPI: LogAPIOld];
 }
 
 - (void) logWithLevel: (CBLLogLevel)level

@@ -31,8 +31,7 @@ static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
 static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
-static LogAPI _vAPI = LogAPINone;
-static BOOL isInitialized = YES;
+static LogAPI _vAPI = LogAPINew;
 
 static CBLConsoleLogSink* _console = nil;
 static CBLCustomLogSink* _custom = nil;
@@ -47,13 +46,6 @@ static CBLFileLogSink* _file = nil;
 // garbage objects as LiteCore's log callback may be called from a background thread.
 
 @implementation CBLLogSinks
-
-+ (void) initialize {
-    if (self == [CBLLogSinks class]) {
-        [self init];
-        isInitialized = NO;
-    }
-}
 
 NSDictionary* domainDictionary = nil;
 
@@ -74,7 +66,6 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setConsole:(CBLConsoleLogSink*)console {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
         _console = console;
     }
     [self updateLogLevels];
@@ -82,14 +73,12 @@ NSDictionary* domainDictionary = nil;
 
 + (CBLConsoleLogSink*) console {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
         return _console;
     }
 }
 
 + (void) setCustom: (CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
         _custom = custom;
     }
     [self updateLogLevels];
@@ -97,14 +86,12 @@ NSDictionary* domainDictionary = nil;
 
 + (CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
         return _custom;
     }
 }
 
 + (void) setFile: (CBLFileLogSink*) file {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
     }
     
     _file = file;
@@ -114,7 +101,6 @@ NSDictionary* domainDictionary = nil;
 
 + (CBLFileLogSink*) file {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: LogAPINew];
         return _file;
     }
 }
@@ -166,10 +152,8 @@ static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg
     CBLLogLevel level = (CBLLogLevel) c4level;
     CBLLogDomain domain = toCBLLogDomain(c4domain);
     
-    CBLStringBytes c4msg(message);
-    c4slog(c4domain, c4level, c4msg);
-    
     [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
+    [CBLLogSinks.file writeLogWithLevel: level domain: domain message :message];
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
@@ -197,9 +181,17 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
 }
 
-+ (void)checkLogApiVersion: (LogAPI)version {
-    if (!isInitialized)
-        return;
+#pragma mark - Internal
+
++ (LogAPI) vAPI {
+    return _vAPI;
+}
+
++ (void) setVAPI: (LogAPI) api {
+    _vAPI = api;
+}
+
++ (void) checkLogApiVersion: (LogAPI)version {
     if (_vAPI == LogAPINone) {
         _vAPI = version;
     } else if (_vAPI != version) {

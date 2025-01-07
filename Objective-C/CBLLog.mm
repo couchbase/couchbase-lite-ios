@@ -51,13 +51,17 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
 - (instancetype) initWithDefault {
     self = [super init];
     if (self) {
+        // Initialize new logging system
         [CBLLogSinks init];
+        [CBLLogSinks setVAPI: LogAPINone];
         
         // Create console logger:
         _console = [[CBLConsoleLogger alloc] initWithDefault];
         
         // Create file logger:
         _file = [[CBLFileLogger alloc] initWithDefault];
+        
+        [CBLLogSinks setVAPI: LogAPINone];
     }
     return self;
 }
@@ -66,14 +70,12 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
 
 - (void) setCustom: (id<CBLLogger>)custom {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         _custom = custom;
-        CBLCustomLogSink *customSink;
-        if (custom) {
-            CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: custom];
-            customSink = [[CBLCustomLogSink alloc] initWithLevel: custom.level logSink: bridge];
-        }
-        CBLLogSinks.custom = customSink;
+        
+        [CBLLogSinks setVAPI: LogAPINew];
+        CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: custom];
+        CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: custom.level logSink: bridge];
+        [CBLLogSinks setVAPI: LogAPIOld];
     }
 }
 
@@ -93,7 +95,14 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     va_start(args, msg);
     
     NSString *formatted = [[NSString alloc] initWithFormat: msg arguments: args];
-    [CBLLogSinks writeCBLLog: domain level: level message: formatted];
+    
+    if ([CBLLogSinks vAPI] == LogAPIOld) {
+        [CBLLogSinks setVAPI: LogAPINew];
+        [CBLLogSinks writeCBLLog: domain level: level message: formatted];
+        [CBLLogSinks setVAPI: LogAPIOld];
+    } else {
+        [CBLLogSinks writeCBLLog: domain level: level message: formatted];
+    }
 }
 
 #pragma mark - CBLLog+Swift
@@ -136,6 +145,7 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
 }
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger {
+    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     self = [super init];
     if (self) {
         _level = level;
@@ -145,7 +155,6 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
 }
 
 - (CBLLogLevel) level {
-    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     return _level;
 }
 

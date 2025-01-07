@@ -31,6 +31,7 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
 }
 
 - (instancetype) initWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
+    [CBLLogSinks checkLogApiVersion: LogAPINew];
     self = [super init];
     if (self) {
         _level = level;

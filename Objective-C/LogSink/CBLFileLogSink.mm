@@ -17,8 +17,9 @@
 //  limitations under the License.
 //
 
-#import "CBLFileLogSink.h"
 #import "CBLDefaults.h"
+#import "CBLFileLogSink.h"
+#import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
@@ -43,6 +44,7 @@
                   maxKeptFiles: (uint64_t) maxKeptFiles
                    maxFileSize: (NSInteger) maxFileSize
 {
+    [CBLLogSinks checkLogApiVersion: LogAPINew];
     self = [super init];
     if (self) {
         CBLAssertNotNil(directory);
@@ -83,6 +85,34 @@
         convertError(c4err, &error);
         CBLWarnError(Database, @"Cannot enable file logging: %@", error);
     }
+}
+
+- (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
+    C4LogLevel c4level = (C4LogLevel)level;
+    C4LogDomain c4domain;
+    switch (domain) {
+        case kCBLLogDomainDatabase:
+            c4domain = kCBL_LogDomainDatabase;
+            break;
+        case kCBLLogDomainQuery:
+            c4domain = kCBL_LogDomainQuery;
+            break;
+        case kCBLLogDomainReplicator:
+            c4domain = kCBL_LogDomainSync;
+            break;
+        case kCBLLogDomainNetwork:
+            c4domain = kCBL_LogDomainWebSocket;
+            break;
+#ifdef COUCHBASE_ENTERPRISE
+        case kCBLLogDomainListener:
+            c4domain = kCBL_LogDomainListener;
+            break;
+#endif
+        default:
+            c4domain = kCBL_LogDomainDatabase;
+    }
+        CBLStringBytes c4msg(message);
+        c4slog(c4domain, c4level, c4msg);
 }
 
 + (BOOL) setupLogDirectory: (NSString*)directory error: (NSError**)outError {
