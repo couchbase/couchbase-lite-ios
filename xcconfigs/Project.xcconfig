@@ -17,9 +17,9 @@
 //  limitations under the License.
 //
 
-CBL_VERSION_STRING                 = 3.2.0
+CBL_VERSION_STRING                 = 4.0.0
 CBL_BUILD_NUMBER                   = 0
-CBL_COPYRIGHT_YEAR                 = 2021
+CBL_COPYRIGHT_YEAR                 = 2025
 
 IPHONEOS_DEPLOYMENT_TARGET         = 12.0
 MACOSX_DEPLOYMENT_TARGET           = 12.0
