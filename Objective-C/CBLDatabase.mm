@@ -132,8 +132,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 /** Check and show warning if file logging is not configured. */
 + (void) checkFileLogging {
     if (!CBLLogSinks.file) {
-        CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
-                "Log files required for product support are not being generated.");
+        CBLWarn(Database, @"File logging is disabled. Log files required for product support are not being generated.");
     }
 }
 
