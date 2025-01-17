@@ -69,14 +69,13 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
 #pragma mark - Public
 
 - (void) setCustom: (id<CBLLogger>)custom {
+    LogAPI version;
     CBL_LOCK(self) {
         _custom = custom;
-        
-        [CBLLogSinks setVAPI: LogAPINew];
-        CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: custom];
-        CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: custom.level logSink: bridge];
-        [CBLLogSinks setVAPI: LogAPIOld];
+        version = [CBLLogSinks vAPI];
     }
+    [self updateCustomLogSink];
+    [CBLLogSinks setVAPI: version];
 }
 
 #pragma mark - Internal
@@ -90,19 +89,22 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
     return sharedInstance;
 }
 
+- (void) updateCustomLogSink {
+    [CBLLogSinks setVAPI: LogAPINew];
+    CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: _custom];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: _custom.level logSink: bridge];
+}
+
 void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     va_list args;
     va_start(args, msg);
     
     NSString *formatted = [[NSString alloc] initWithFormat: msg arguments: args];
     
-    if ([CBLLogSinks vAPI] == LogAPIOld) {
-        [CBLLogSinks setVAPI: LogAPINew];
-        [CBLLogSinks writeCBLLog: domain level: level message: formatted];
-        [CBLLogSinks setVAPI: LogAPIOld];
-    } else {
-        [CBLLogSinks writeCBLLog: domain level: level message: formatted];
-    }
+    LogAPI version = [CBLLogSinks vAPI];
+    [CBLLogSinks setVAPI: LogAPINew];
+    [CBLLogSinks writeCBLLog: domain level: level message: formatted];
+    [CBLLogSinks setVAPI: version];
 }
 
 #pragma mark - CBLLog+Swift

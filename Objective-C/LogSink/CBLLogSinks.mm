@@ -31,7 +31,6 @@ static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
 static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
-static LogAPI _vAPI = LogAPINew;
 
 static CBLConsoleLogSink* _console = nil;
 static CBLCustomLogSink* _custom = nil;
@@ -47,6 +46,7 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
+static LogAPI _vAPI = LogAPINone;
 NSDictionary* domainDictionary = nil;
 
 + (void) init {
@@ -92,10 +92,9 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setFile: (CBLFileLogSink*) file {
     CBL_LOCK(self) {
+        _file = file;
+        [CBLFileLogSink setup: file];
     }
-    
-    _file = file;
-    [CBLFileLogSink setup: file];
     [self updateLogLevels];
 }
 

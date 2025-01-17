@@ -327,7 +327,7 @@
 - (void) testNonASCII {
     CustomLogger* customLogger = [[CustomLogger alloc] init];
     CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose domain: kCBLLogDomainAll];
+    
     NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
@@ -349,13 +349,13 @@
         }
     }
     Assert(found);
+    
+    CBLLogSinks.custom = nil;
 }
 
 - (void) testPercentEscape {
     CustomLogger* customLogger = [[CustomLogger alloc] init];
     CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelInfo logSink: customLogger];
-   
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelInfo domain: kCBLLogDomainAll];
 
     CBLLogInfo(Database, @"Hello %%s there");
     
@@ -366,6 +366,8 @@
         }
     }
     Assert(found);
+    
+    CBLLogSinks.custom = nil;
 }
 
 #pragma clang diagnostic pop

@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import "CBLDefaults.h"
 #import "CBLFileLogger.h"
 #import "CBLLog+Internal.h"
 #import "CBLLogFileConfiguration+Internal.h"
@@ -36,12 +37,15 @@
 }
 
 - (void) setLevel: (CBLLogLevel)level {
+    LogAPI version;
     CBL_LOCK(self) {
+        version = [CBLLogSinks vAPI];
         if (_level != level) {
             _level = level;
-            [self updateFileLogSink];
         }
     }
+    [self updateFileLogSink];
+    [CBLLogSinks setVAPI: version];
 }
 
 - (CBLLogLevel) level {
@@ -51,16 +55,19 @@
 }
 
 - (void) setConfig: (CBLLogFileConfiguration*)config {
+    LogAPI version;
     CBL_LOCK(self) {
+        version = [CBLLogSinks vAPI];
         if (_config != config) {
             if (config) {
                 // Copy and mark as READONLY
                 config = [[CBLLogFileConfiguration alloc] initWithConfig: config readonly: YES];
             }
             _config = config;
-            [self updateFileLogSink];
         }
     }
+    [self updateFileLogSink];
+    [CBLLogSinks setVAPI: version];
 }
 
 - (CBLLogFileConfiguration*) config {
@@ -72,16 +79,16 @@
 - (void) updateFileLogSink {
     [CBLLogSinks setVAPI: LogAPINew];
     if(_config) {
+        NSInteger maxRotateCount = (_config.maxRotateCount > 0) ? _config.maxRotateCount : kCBLDefaultLogFileMaxRotateCount;
         CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: _level
                                                        directory: _config.directory
                                                     usePlaintext: _config.usePlainText
-                                                    maxKeptFiles: _config.maxRotateCount + 1
+                                                    maxKeptFiles: maxRotateCount + 1
                                                      maxFileSize: _config.maxSize
                            ];
     } else {
         CBLLogSinks.file = nil;
     }
-    [CBLLogSinks setVAPI: LogAPIOld];
 }
 
 - (void) logWithLevel: (CBLLogLevel)level

@@ -114,7 +114,6 @@
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
-    CBLDatabase.log.custom = customLogger;
     
     for (NSUInteger i = 5; i >= 1; i--) {
         [customLogger reset];
@@ -371,8 +370,7 @@
     CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
     customLogger.level = kCBLLogLevelVerbose;
     CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
-    CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    
     NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
@@ -400,9 +398,7 @@
     CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
     customLogger.level = kCBLLogLevelInfo;
     CBLDatabase.log.custom = customLogger;
-    CBLDatabase.log.console.domains = kCBLLogDomainAll;
     
-    CBLDatabase.log.console.level = kCBLLogLevelInfo;
     CBLLogInfo(Database, @"Hello %%s there");
     
     BOOL found = NO;

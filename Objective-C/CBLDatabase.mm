@@ -126,7 +126,6 @@ static const C4DatabaseConfig2 kDBConfig = {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         [self checkFileLogging];
-        [CBLLogSinks setVAPI: LogAPINone];
     });
 }
 
