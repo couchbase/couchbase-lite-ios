@@ -26,9 +26,6 @@
 @end
 
 @implementation LogTest {
-    CBLFileLogSink* _backup;
-    CBLLogLevel _backupConsoleLevel;
-    CBLLogDomain _backupConsoleDomain;
     NSString* logFileDirectory;
 }
 
@@ -40,28 +37,11 @@
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
-    [self backupLoggerConfig];
 }
 
 - (void) tearDown {
     [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
-    [self restoreLoggerConfig];
-}
-
-- (void) backupLoggerConfig {
-    _backup = [[CBLFileLogSink alloc] initWithLevel: CBLLogSinks.file.level directory: logFileDirectory];
-    _backupConsoleLevel = CBLLogSinks.console.level;
-    _backupConsoleDomain = CBLLogSinks.console.domain;
-}
-
-- (void) restoreLoggerConfig {
-    if (_backup) {
-        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel:_backup.level directory:_backup.directory];
-        _backup = nil;
-    }
-    CBLLogSinks.custom = nil;
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel:_backupConsoleLevel domain:_backupConsoleDomain];
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
@@ -146,10 +126,10 @@
     }
     
     NSError* error;
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _backup.directory
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: logFileDirectory
                                                                          error: &error];
     for (NSString* file in files) {
-        NSString* log = [_backup.directory stringByAppendingPathComponent: file];
+        NSString* log = [logFileDirectory stringByAppendingPathComponent: file];
         NSString* content = [NSString stringWithContentsOfFile: log
                                                       encoding: NSUTF8StringEncoding
                                                          error: &error];

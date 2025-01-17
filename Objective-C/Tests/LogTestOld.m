@@ -34,9 +34,6 @@
 @end
 
 @implementation LogTestOld {
-    FileLoggerBackup* _backup;
-    CBLLogLevel _backupConsoleLevel;
-    CBLLogDomain _backupConsoleDomain;
     NSString* logFileDirectory;
 }
 
@@ -48,37 +45,15 @@
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
-    [self backupLoggerConfig];
 }
 
 - (void) tearDown {
     [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
-    [self restoreLoggerConfig];
 }
 
 - (CBLLogFileConfiguration*) logFileConfig {
     return [[CBLLogFileConfiguration alloc] initWithDirectory: logFileDirectory];
-}
-
-- (void) backupLoggerConfig {
-    _backup = [[FileLoggerBackup alloc] init];
-    _backup.level = CBLDatabase.log.file.level;
-    _backup.config = CBLDatabase.log.file.config;
-    _backupConsoleLevel = CBLDatabase.log.console.level;
-    _backupConsoleDomain = CBLDatabase.log.console.domains;
-}
-
-- (void) restoreLoggerConfig {
-    if (_backup) {
-        CBLDatabase.log.file.level = _backup.level;
-        CBLDatabase.log.file.config = _backup.config;
-        _backup = nil;
-    }
-    CBLDatabase.log.custom = nil;
-    CBLDatabase.log.console.level = _backupConsoleLevel;
-    CBLDatabase.log.console.domains = _backupConsoleDomain;
-    
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
