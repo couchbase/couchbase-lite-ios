@@ -93,8 +93,8 @@ NSDictionary* domainDictionary = nil;
 + (void) setFile: (CBLFileLogSink*) file {
     CBL_LOCK(self) {
         _file = file;
-        [CBLFileLogSink setup: file];
     }
+    [CBLFileLogSink setup: file];
     [self updateLogLevels];
 }
 

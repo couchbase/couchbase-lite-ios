@@ -38,8 +38,8 @@
 - (void) setLevel: (CBLLogLevel)level {
     LogAPI version;
     CBL_LOCK(self) {
-        _level = level;
         version = [CBLLogSinks vAPI];
+        _level = level;
     }
     
     [self updateConsoleLogSink];
@@ -55,8 +55,8 @@
 - (void) setDomains: (CBLLogDomain)domains {
     LogAPI version;
     CBL_LOCK(self) {
-        _domains = domains;
         version = [CBLLogSinks vAPI];
+        _domains = domains;
     }
     [self updateConsoleLogSink];
     [CBLLogSinks setVAPI: version];

@@ -53,6 +53,7 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
     if (self) {
         // Initialize new logging system
         [CBLLogSinks init];
+        
         [CBLLogSinks setVAPI: LogAPINone];
         
         // Create console logger:
@@ -61,7 +62,7 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
         // Create file logger:
         _file = [[CBLFileLogger alloc] initWithDefault];
         
-        [CBLLogSinks setVAPI: LogAPINone];
+        [CBLLogSinks setVAPI: LogAPINew];
     }
     return self;
 }
@@ -71,8 +72,8 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
 - (void) setCustom: (id<CBLLogger>)custom {
     LogAPI version;
     CBL_LOCK(self) {
-        _custom = custom;
         version = [CBLLogSinks vAPI];
+        _custom = custom;
     }
     [self updateCustomLogSink];
     [CBLLogSinks setVAPI: version];

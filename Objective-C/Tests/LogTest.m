@@ -27,6 +27,7 @@
 
 @implementation LogTest {
     NSString* logFileDirectory;
+    CBLFileLogSink* _backup;
 }
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
@@ -37,11 +38,16 @@
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
+    _backup = CBLLogSinks.file;
 }
 
 - (void) tearDown {
     [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
+    CBLLogSinks.file = _backup;
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
+    CBLLogSinks.custom = nil;
+    _backup = nil;
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
@@ -368,6 +374,12 @@
     Assert(found);
     
     CBLLogSinks.custom = nil;
+}
+
+- (void) testUseBothApi {
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        CBLDatabase.log.console.level = kCBLLogLevelVerbose;
+    }];
 }
 
 #pragma clang diagnostic pop

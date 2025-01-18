@@ -29,11 +29,20 @@
 
 @end
 
+@implementation FileLoggerBackup
+
+@synthesize config=_config, level=_level;
+
+@end
+
 @interface LogTestOld : CBLTestCase
 
 @end
 
 @implementation LogTestOld {
+    FileLoggerBackup* _backup;
+    CBLLogLevel _backupConsoleLevel;
+    CBLLogDomain _backupConsoleDomain;
     NSString* logFileDirectory;
 }
 
@@ -45,11 +54,22 @@
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
+    _backup = [[FileLoggerBackup alloc] init];
+    _backup.level = CBLDatabase.log.file.level;
+    _backup.config = CBLDatabase.log.file.config;
 }
 
 - (void) tearDown {
     [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
+    
+    CBLDatabase.log.file.level = _backup.level;
+    CBLDatabase.log.file.config = _backup.config;
+    CBLDatabase.log.console.level = _backupConsoleLevel;
+    CBLDatabase.log.console.domains = _backupConsoleDomain;
+    
+    _backup = nil;
+    CBLDatabase.log.custom = nil;
 }
 
 - (CBLLogFileConfiguration*) logFileConfig {
@@ -410,12 +430,12 @@
     Assert(found);
 }
 
+- (void) testUseBothApi {
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
+    }];
+}
+
 #pragma clang diagnostic pop
-
-@end
-
-@implementation FileLoggerBackup
-
-@synthesize config=_config, level=_level;
 
 @end
