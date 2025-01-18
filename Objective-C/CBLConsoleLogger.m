@@ -26,7 +26,6 @@
 @synthesize level=_level, domains=_domains;
 
 - (instancetype) initWithDefault {
-    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     self = [super init];
     if (self) {
         _level = kCBLLogLevelWarning;
@@ -39,6 +38,7 @@
     LogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         _level = level;
     }
     
@@ -48,6 +48,7 @@
 
 - (CBLLogLevel) level {
     CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         return _level;
     }
 }
@@ -56,6 +57,7 @@
     LogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         _domains = domains;
     }
     [self updateConsoleLogSink];
@@ -64,6 +66,7 @@
 
 - (CBLLogDomain) domains {
     CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         return _domains;
     }
 }

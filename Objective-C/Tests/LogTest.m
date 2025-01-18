@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
 #import "CustomLogger.h"
+#import "CBLLogSinks+Internal.h"
 
 @interface LogTest : CBLTestCase
 
@@ -48,6 +49,10 @@
     CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
     CBLLogSinks.custom = nil;
     _backup = nil;
+}
+
++ (void) tearDown {
+    [CBLLogSinks setVAPI: LogAPINone];
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory

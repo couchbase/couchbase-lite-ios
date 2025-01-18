@@ -19,6 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
+#import "CBLLogSinks+Internal.h"
 #import "CustomLoggerOld.h"
 
 @interface FileLoggerBackup: NSObject
@@ -70,6 +71,10 @@
     
     _backup = nil;
     CBLDatabase.log.custom = nil;
+}
+
++ (void) tearDown {
+    [CBLLogSinks setVAPI: LogAPINone];
 }
 
 - (CBLLogFileConfiguration*) logFileConfig {

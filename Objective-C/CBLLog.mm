@@ -25,7 +25,6 @@
 
 // For bridging custom logger between Swift and Objective-C
 // without making CBLLogger protocol public
-__deprecated_msg("Use CBLCustomLogSink instead.");
 @interface CBLCustomLogger : NSObject <CBLLogger>
 - (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger;
 @end
@@ -62,17 +61,25 @@ __deprecated_msg("Use CBLCustomLogSink instead.");
         // Create file logger:
         _file = [[CBLFileLogger alloc] initWithDefault];
         
-        [CBLLogSinks setVAPI: LogAPINew];
+        [CBLLogSinks setVAPI: LogAPINone];
     }
     return self;
 }
 
 #pragma mark - Public
 
+- (id<CBLLogger>) custom {
+    CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        return _custom;
+    }
+}
+
 - (void) setCustom: (id<CBLLogger>)custom {
     LogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         _custom = custom;
     }
     [self updateCustomLogSink];
@@ -148,7 +155,6 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
 }
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logger: (CBLCustomLoggerBlock)logger {
-    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     self = [super init];
     if (self) {
         _level = level;

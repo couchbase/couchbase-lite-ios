@@ -28,7 +28,6 @@
 @synthesize level=_level, config=_config;
 
 - (instancetype) initWithDefault {
-    [CBLLogSinks checkLogApiVersion: LogAPIOld];
     self = [super init];
     if (self) {
         _level = kCBLLogLevelNone;
@@ -40,6 +39,7 @@
     LogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         if (_level != level) {
             _level = level;
         }
@@ -50,6 +50,7 @@
 
 - (CBLLogLevel) level {
     CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         return _level;
     }
 }
@@ -58,6 +59,7 @@
     LogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         if (_config != config) {
             if (config) {
                 // Copy and mark as READONLY
@@ -72,6 +74,7 @@
 
 - (CBLLogFileConfiguration*) config {
     CBL_LOCK(self) {
+        [CBLLogSinks checkLogApiVersion: LogAPIOld];
         return _config;
     }
 }
