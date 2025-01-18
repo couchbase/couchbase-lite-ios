@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 #include "c4.h"
 #import "CollectionUtils.h"
+#import "CBLLogSinks+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"
@@ -88,6 +89,10 @@
         XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
     }
     [super tearDown];
+}
+
++ (void) tearDown {
+    [CBLLogSinks setVAPI: LogAPINone];
 }
 
 - (NSString*) directory {
