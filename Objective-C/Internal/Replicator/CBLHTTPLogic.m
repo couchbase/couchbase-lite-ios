@@ -105,7 +105,7 @@ static NSDictionary* sOverrideProxySettings;
 #if TARGET_OS_IPHONE
                     @"iOS",
 #else
-                    @"Mac OS X",
+                    @"macOS",
 #endif
                     process.operatingSystemVersionString];
 }

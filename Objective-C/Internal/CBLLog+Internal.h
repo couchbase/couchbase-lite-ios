@@ -17,6 +17,7 @@
 //  limitations under the License.
 //
 
+#import <os/log.h>
 #import "CBLLog.h"
 #import "CBLConsoleLogger.h"
 #import "CBLFileLogger.h"
@@ -34,6 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLConsoleLogger ()
 
 - (instancetype) initWithLogLevel: (CBLLogLevel)level;
+
++ (void) logAlways: (nonnull NSString*)message;
 
 @end
 
