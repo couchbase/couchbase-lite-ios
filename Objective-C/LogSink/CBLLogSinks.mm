@@ -46,7 +46,7 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
-static LogAPI _vAPI = LogAPINone;
+static LogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
 
 + (void) init {
