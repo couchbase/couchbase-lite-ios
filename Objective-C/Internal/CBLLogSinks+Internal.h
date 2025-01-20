@@ -23,19 +23,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, LogAPI) {
-    LogAPINone,
-    LogAPIOld,
-    LogAPINew,
+typedef NS_ENUM(NSUInteger, CBLLogAPI) {
+    kCBLLogAPINone,
+    kCBLLogAPIOld,
+    kCBLLogAPINew,
 };
 
 @interface CBLLogSinks ()
 
-@property (class, nonatomic) LogAPI vAPI;
+@property (class, nonatomic) CBLLogAPI vAPI;
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
-+ (void) checkLogApiVersion: (LogAPI) version;
++ (void) checkLogApiVersion: (CBLLogAPI) version;
 
 @end
 

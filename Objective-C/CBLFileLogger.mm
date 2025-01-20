@@ -36,10 +36,10 @@
 }
 
 - (void) setLevel: (CBLLogLevel)level {
-    LogAPI version;
+    CBLLogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         if (_level != level) {
             _level = level;
         }
@@ -50,16 +50,16 @@
 
 - (CBLLogLevel) level {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         return _level;
     }
 }
 
 - (void) setConfig: (CBLLogFileConfiguration*)config {
-    LogAPI version;
+    CBLLogAPI version;
     CBL_LOCK(self) {
         version = [CBLLogSinks vAPI];
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         if (_config != config) {
             if (config) {
                 // Copy and mark as READONLY
@@ -74,13 +74,13 @@
 
 - (CBLLogFileConfiguration*) config {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: LogAPIOld];
+        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         return _config;
     }
 }
 
 - (void) updateFileLogSink {
-    [CBLLogSinks setVAPI: LogAPINew];
+    [CBLLogSinks setVAPI: kCBLLogAPINew];
     if(_config) {
         NSInteger maxRotateCount = (_config.maxRotateCount > 0) ? _config.maxRotateCount : kCBLDefaultLogFileMaxRotateCount;
         CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: _level

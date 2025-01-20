@@ -44,7 +44,7 @@
                   maxKeptFiles: (uint64_t) maxKeptFiles
                    maxFileSize: (NSInteger) maxFileSize
 {
-    [CBLLogSinks checkLogApiVersion: LogAPINew];
+    [CBLLogSinks checkLogApiVersion: kCBLLogAPINew];
     self = [super init];
     if (self) {
         CBLAssertNotNil(directory);

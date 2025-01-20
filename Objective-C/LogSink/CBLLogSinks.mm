@@ -46,7 +46,7 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
-static LogAPI _vAPI;
+static CBLLogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
 
 + (void) init {
@@ -62,7 +62,7 @@ NSDictionary* domainDictionary = nil;
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
         
-        [self setVAPI: LogAPINone];
+        [self setVAPI: kCBLLogAPINone];
     });
 }
 
@@ -184,16 +184,18 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
 
 #pragma mark - Internal
 
-+ (LogAPI) vAPI {
++ (CBLLogAPI) vAPI {
     return _vAPI;
 }
 
-+ (void) setVAPI: (LogAPI) api {
-    _vAPI = api;
++ (void) setVAPI: (CBLLogAPI)version {
+    CBL_LOCK(self) {
+        _vAPI = version;
+    }
 }
 
-+ (void) checkLogApiVersion: (LogAPI)version {
-    if (_vAPI == LogAPINone) {
++ (void) checkLogApiVersion: (CBLLogAPI)version {
+    if (_vAPI == kCBLLogAPINone) {
         _vAPI = version;
     } else if (_vAPI != version) {
         [NSException raise: NSInternalInconsistencyException
