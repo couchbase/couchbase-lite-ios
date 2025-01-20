@@ -61,6 +61,8 @@ NSDictionary* domainDictionary = nil;
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
+        
+        [self setVAPI: LogAPINone];
     });
 }
 

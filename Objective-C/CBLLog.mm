@@ -53,15 +53,11 @@
         // Initialize new logging system
         [CBLLogSinks init];
         
-        [CBLLogSinks setVAPI: LogAPINone];
-        
         // Create console logger:
         _console = [[CBLConsoleLogger alloc] initWithDefault];
         
         // Create file logger:
         _file = [[CBLFileLogger alloc] initWithDefault];
-        
-        [CBLLogSinks setVAPI: LogAPINone];
     }
     return self;
 }
