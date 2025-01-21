@@ -67,8 +67,8 @@ NSDictionary* domainDictionary = nil;
 }
 
 + (void) setConsole:(CBLConsoleLogSink*)console {
-    [self checkLogApiVersion: console];
     CBL_LOCK(self) {
+        [self checkLogApiVersion: console];
         _console = console;
     }
     [self updateLogLevels];
@@ -81,8 +81,8 @@ NSDictionary* domainDictionary = nil;
 }
 
 + (void) setCustom: (CBLCustomLogSink*) custom {
-    [self checkLogApiVersion: custom];
     CBL_LOCK(self) {
+        [self checkLogApiVersion: custom];
         _custom = custom;
     }
     [self updateLogLevels];
@@ -95,8 +95,8 @@ NSDictionary* domainDictionary = nil;
 }
 
 + (void) setFile: (CBLFileLogSink*) file {
-    [self checkLogApiVersion: file];
     CBL_LOCK(self) {
+        [self checkLogApiVersion: file];
         _file = file;
     }
     [CBLFileLogSink setup: file];
