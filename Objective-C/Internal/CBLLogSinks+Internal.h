@@ -29,25 +29,33 @@ typedef NS_ENUM(NSUInteger, CBLLogAPI) {
     kCBLLogAPINew,
 };
 
+@protocol CBLLogApiSource <NSObject>
+
+@property (nonatomic) CBLLogAPI version;
+
+@end
+
 @interface CBLLogSinks ()
 
 @property (class, nonatomic) CBLLogAPI vAPI;
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
-+ (void) checkLogApiVersion: (CBLLogAPI) version;
++ (void) resetApiVersion;
+
++ (void) checkLogApiVersion: (id<CBLLogApiSource>) source;
 
 @end
 
-@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
+@interface CBLConsoleLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
 
 @end
 
-@interface CBLCustomLogSink () <CBLLogSinkProtocol>
+@interface CBLCustomLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
 
 @end
 
-@interface CBLFileLogSink () <CBLLogSinkProtocol>
+@interface CBLFileLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
 
 + (void) setup: (nullable CBLFileLogSink*)logSink;
 

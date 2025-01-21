@@ -92,7 +92,7 @@
 }
 
 + (void) tearDown {
-    [CBLLogSinks setVAPI: kCBLLogAPINone];
+    [CBLLogSinks resetApiVersion];
 }
 
 - (NSString*) directory {

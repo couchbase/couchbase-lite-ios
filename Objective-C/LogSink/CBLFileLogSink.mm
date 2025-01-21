@@ -27,7 +27,7 @@
 
 @implementation CBLFileLogSink
 
-@synthesize level=_level, directory=_directory, usePlaintext=_usePlaintext, maxKeptFiles=_maxKeptFiles, maxFileSize=_maxFileSize;
+@synthesize level=_level, directory=_directory, usePlaintext=_usePlaintext, maxKeptFiles=_maxKeptFiles, maxFileSize=_maxFileSize, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level
                      directory: (NSString*)directory {
@@ -44,7 +44,6 @@
                   maxKeptFiles: (uint64_t) maxKeptFiles
                    maxFileSize: (NSInteger) maxFileSize
 {
-    [CBLLogSinks checkLogApiVersion: kCBLLogAPINew];
     self = [super init];
     if (self) {
         CBLAssertNotNil(directory);
@@ -53,6 +52,7 @@
         _usePlaintext = usePlaintext;
         _maxKeptFiles = maxKeptFiles;
         _maxFileSize = maxFileSize;
+        _version = kCBLLogAPINew;
     }
     return self;
 }

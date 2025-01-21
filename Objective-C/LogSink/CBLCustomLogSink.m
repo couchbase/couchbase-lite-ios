@@ -22,15 +22,15 @@
 
 @implementation CBLCustomLogSink
 
-@synthesize level = _level, domain=_domain, logSink = _logSink;
+@synthesize level = _level, domain=_domain, logSink = _logSink, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logSink: (id<CBLLogSinkProtocol>)logSink {
-    [CBLLogSinks checkLogApiVersion: kCBLLogAPINew];
     self = [super init];
     if (self) {
         _domain = kCBLLogDomainAll;
         _level = level;
         _logSink = logSink;
+        _version = kCBLLogAPINew;
     }
     return self;
 }

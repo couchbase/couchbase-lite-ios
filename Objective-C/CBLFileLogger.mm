@@ -36,30 +36,22 @@
 }
 
 - (void) setLevel: (CBLLogLevel)level {
-    CBLLogAPI version;
     CBL_LOCK(self) {
-        version = [CBLLogSinks vAPI];
-        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         if (_level != level) {
             _level = level;
+            [self updateFileLogSink];
         }
     }
-    [self updateFileLogSink];
-    [CBLLogSinks setVAPI: version];
 }
 
 - (CBLLogLevel) level {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         return _level;
     }
 }
 
 - (void) setConfig: (CBLLogFileConfiguration*)config {
-    CBLLogAPI version;
     CBL_LOCK(self) {
-        version = [CBLLogSinks vAPI];
-        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         if (_config != config) {
             if (config) {
                 // Copy and mark as READONLY
@@ -67,30 +59,36 @@
             }
             _config = config;
         }
+        [self updateFileLogSink];
     }
-    [self updateFileLogSink];
-    [CBLLogSinks setVAPI: version];
 }
 
 - (CBLLogFileConfiguration*) config {
     CBL_LOCK(self) {
-        [CBLLogSinks checkLogApiVersion: kCBLLogAPIOld];
         return _config;
     }
 }
 
 - (void) updateFileLogSink {
-    [CBLLogSinks setVAPI: kCBLLogAPINew];
     if(_config) {
         NSInteger maxRotateCount = (_config.maxRotateCount > 0) ? _config.maxRotateCount : kCBLDefaultLogFileMaxRotateCount;
-        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: _level
-                                                       directory: _config.directory
-                                                    usePlaintext: _config.usePlainText
-                                                    maxKeptFiles: maxRotateCount + 1
-                                                     maxFileSize: _config.maxSize
-                           ];
+        CBLFileLogSink* sink = [[CBLFileLogSink alloc] initWithLevel: _level
+                                                           directory: _config.directory
+                                                        usePlaintext: _config.usePlainText
+                                                        maxKeptFiles: maxRotateCount + 1
+                                                         maxFileSize: _config.maxSize
+                                ];
+        sink.version = kCBLLogAPIOld;
+        CBLLogSinks.file = sink;
     } else {
-        CBLLogSinks.file = nil;
+        CBLFileLogSink* sink = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelNone
+                                                           directory: @""
+                                                        usePlaintext: false
+                                                        maxKeptFiles: 0
+                                                         maxFileSize: 0
+                                ];
+        sink.version = kCBLLogAPIOld;
+        CBLLogSinks.file = sink;
     }
 }
 

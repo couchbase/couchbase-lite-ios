@@ -62,11 +62,12 @@ NSDictionary* domainDictionary = nil;
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
         
-        [self setVAPI: kCBLLogAPINone];
+        [self resetApiVersion];
     });
 }
 
 + (void) setConsole:(CBLConsoleLogSink*)console {
+    [self checkLogApiVersion: console];
     CBL_LOCK(self) {
         _console = console;
     }
@@ -80,6 +81,7 @@ NSDictionary* domainDictionary = nil;
 }
 
 + (void) setCustom: (CBLCustomLogSink*) custom {
+    [self checkLogApiVersion: custom];
     CBL_LOCK(self) {
         _custom = custom;
     }
@@ -93,6 +95,7 @@ NSDictionary* domainDictionary = nil;
 }
 
 + (void) setFile: (CBLFileLogSink*) file {
+    [self checkLogApiVersion: file];
     CBL_LOCK(self) {
         _file = file;
     }
@@ -194,7 +197,12 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     }
 }
 
-+ (void) checkLogApiVersion: (CBLLogAPI)version {
++ (void) resetApiVersion {
+    _vAPI = kCBLLogAPINone;
+}
+
++ (void) checkLogApiVersion: (id<CBLLogApiSource>) source {
+    CBLLogAPI version = source ? source.version :  kCBLLogAPINew;
     if (_vAPI == kCBLLogAPINone) {
         _vAPI = version;
     } else if (_vAPI != version) {
