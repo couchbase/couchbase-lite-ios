@@ -148,7 +148,8 @@
 }
 
 - (void) testFileLoggingDefaultBinaryFormat {
-    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory];
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo
+                                                   directory: logFileDirectory];
     
     CBLLogInfo(Database, @"TEST INFO");
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory
@@ -182,7 +183,11 @@
 }
 
 - (void) testFileLoggingUsePlainText {
-    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo
+                                                   directory: logFileDirectory
+                                                usePlaintext: YES
+                                                maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
+                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
     
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
@@ -250,7 +255,11 @@
     AssertEqual(CBLLogSinks.file.maxFileSize, (NSInteger)kCBLDefaultFileLogSinkMaxSize);
     AssertEqual(CBLLogSinks.file.maxKeptFiles, (NSUInteger)kCBLDefaultFileLogSinkMaxKeptFiles);
     AssertEqual(CBLLogSinks.file.usePlaintext, kCBLDefaultLogFileUsePlaintext);
-    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug directory: logFileDirectory usePlaintext: YES maxKeptFiles: 2 maxFileSize: 1024];
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug
+                                                   directory: logFileDirectory
+                                                usePlaintext: YES
+                                                maxKeptFiles: 2
+                                                 maxFileSize: 1024];
     AssertEqual(CBLLogSinks.file.maxFileSize, 1024);
     AssertEqual(CBLLogSinks.file.maxKeptFiles, 2);
     
@@ -296,8 +305,11 @@
 }
 
 - (void) testFileLoggingHeader {
-    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
-    
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
+                                                   directory: logFileDirectory
+                                                usePlaintext: YES
+                                                maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
+                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
     [self writeOneKiloByteOfLog];
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
