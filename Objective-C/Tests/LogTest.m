@@ -27,7 +27,8 @@
 
 @implementation LogTest {
     NSString* logFileDirectory;
-    CBLFileLogSink* _backup;
+    CBLFileLogSink* _fileBackup;
+    CBLConsoleLogSink* _consoleBackup;
 }
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
@@ -38,21 +39,24 @@
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
-    _backup = CBLLogSinks.file;
+    _fileBackup = CBLLogSinks.file;
+    _consoleBackup = CBLLogSinks.console;
 }
 
 - (void) tearDown {
-    [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
-    CBLLogSinks.file = _backup;
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
+    CBLLogSinks.file = _fileBackup;
+    CBLLogSinks.console = _consoleBackup;
+
     CBLLogSinks.custom = nil;
-    _backup = nil;
+    _fileBackup = nil;
+    _consoleBackup = nil;
+    [super tearDown];
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory
-                                      properties: (nullable NSArray<NSURLResourceKey>*)keys
-                                    onlyInfoLogs: (BOOL)onlyInfo {
+                             properties: (nullable NSArray<NSURLResourceKey>*)keys
+                           onlyInfoLogs: (BOOL)onlyInfo {
     AssertNotNil(directory);
     NSURL* path = [NSURL fileURLWithPath: directory];
     AssertNotNil(path);
@@ -124,7 +128,11 @@
 
 - (void) testFileLoggingLevels {
     for (NSUInteger i = 5; i >= 1; i--) {
-        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: (CBLLogLevel)i directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
+        CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: (CBLLogLevel)i
+                                                       directory: logFileDirectory
+                                                    usePlaintext: YES
+                                                    maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
+                                                     maxFileSize: kCBLDefaultLogFileMaxSize];
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -291,7 +299,11 @@
     
     AssertFalse([self isKeywordPresentInAnyLog: inputString path: CBLLogSinks.file.directory]);
     
-    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose directory: logFileDirectory usePlaintext: YES maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles maxFileSize: kCBLDefaultLogFileMaxSize];
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
+                                                   directory: logFileDirectory
+                                                usePlaintext: YES
+                                                maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
+                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
     [self writeAllLogs: inputString];
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
@@ -377,6 +389,8 @@
 }
 
 - (void) testUseBothApi {
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     }];

@@ -37,8 +37,6 @@ typedef NS_ENUM(NSUInteger, CBLLogAPI) {
 
 @interface CBLLogSinks ()
 
-@property (class, nonatomic) CBLLogAPI vAPI;
-
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
 + (void) resetApiVersion;

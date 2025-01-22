@@ -60,7 +60,6 @@
 }
 
 - (void) tearDown {
-    [super tearDown];
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
     
     CBLDatabase.log.file.level = _backup.level;
@@ -70,6 +69,7 @@
     
     _backup = nil;
     CBLDatabase.log.custom = nil;
+    [super tearDown];
 }
 
 - (CBLLogFileConfiguration*) logFileConfig {
@@ -431,6 +431,9 @@
 }
 
 - (void) testUseBothApi {
+    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    customLogger.level = kCBLLogLevelVerbose;
+    CBLDatabase.log.custom = customLogger;
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
     }];

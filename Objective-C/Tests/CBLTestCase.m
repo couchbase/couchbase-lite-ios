@@ -59,9 +59,14 @@
                @"Error deleting CouchbaseLite folder: %@", error);
     }
     [self initDB];
+    
+    // Debug logging to be made before this, if any
+    [CBLLogSinks resetApiVersion];
 }
 
 - (void) tearDown {
+    [CBLLogSinks resetApiVersion];
+    
     if (_db) {
         NSError* error;
         Assert([_db close: &error], @"Failed to close db: %@", error);
@@ -89,10 +94,6 @@
         XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
     }
     [super tearDown];
-}
-
-+ (void) tearDown {
-    [CBLLogSinks resetApiVersion];
 }
 
 - (NSString*) directory {

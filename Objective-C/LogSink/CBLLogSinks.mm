@@ -66,7 +66,7 @@ NSDictionary* domainDictionary = nil;
     });
 }
 
-+ (void) setConsole:(CBLConsoleLogSink*)console {
++ (void) setConsole:(nullable CBLConsoleLogSink*)console {
     CBL_LOCK(self) {
         [self checkLogApiVersion: console];
         _console = console;
@@ -80,7 +80,7 @@ NSDictionary* domainDictionary = nil;
     }
 }
 
-+ (void) setCustom: (CBLCustomLogSink*) custom {
++ (void) setCustom: (nullable CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
         [self checkLogApiVersion: custom];
         _custom = custom;
@@ -94,7 +94,7 @@ NSDictionary* domainDictionary = nil;
     }
 }
 
-+ (void) setFile: (CBLFileLogSink*) file {
++ (void) setFile: (nullable CBLFileLogSink*) file {
     CBL_LOCK(self) {
         [self checkLogApiVersion: file];
         _file = file;
@@ -186,16 +186,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
 }
 
 #pragma mark - Internal
-
-+ (CBLLogAPI) vAPI {
-    return _vAPI;
-}
-
-+ (void) setVAPI: (CBLLogAPI)version {
-    CBL_LOCK(self) {
-        _vAPI = version;
-    }
-}
 
 + (void) resetApiVersion {
     _vAPI = kCBLLogAPINone;
