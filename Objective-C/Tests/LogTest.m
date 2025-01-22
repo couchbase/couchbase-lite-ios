@@ -94,22 +94,6 @@
     CBLWarnError(Database, @"%@", string);
 }
 
-- (BOOL) isKeywordPresentInAnyLog: (NSString*)keyword path: (nullable NSString*)path {
-    if (!path) return NO;
-    NSArray* files = [self getLogsInDirectory: path properties: nil onlyInfoLogs: NO];
-    NSError* error;
-    for (NSURL* url in files) {
-        NSString* contents = [NSString stringWithContentsOfURL: url
-                                                      encoding: NSASCIIStringEncoding
-                                                         error: &error];
-        AssertNil(error);
-        if ([contents rangeOfString: keyword].location != NSNotFound) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
     CustomLogger* customLogger = [[CustomLogger alloc] init];
@@ -282,22 +266,14 @@
     AssertEqual(files.count, totalFilesShouldBeInDirectory);
 }
 
-- (void) testFileLoggingDisabled {
-    CBLLogSinks.file = nil;
-
-    NSString* inputString = [[NSUUID UUID] UUIDString];
-    [self writeAllLogs: inputString];
-    
-    AssertFalse([self isKeywordPresentInAnyLog: inputString path: CBLLogSinks.file.directory]);
-}
-
 - (void) testFileLoggingReEnableLogging {
     CBLLogSinks.file = nil;
+    AssertNil(CBLLogSinks.file.directory);
     
     NSString* inputString = [[NSUUID UUID] UUIDString];
     [self writeAllLogs: inputString];
     
-    AssertFalse([self isKeywordPresentInAnyLog: inputString path: CBLLogSinks.file.directory]);
+    AssertNil(CBLLogSinks.file.directory);
     
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
                                                    directory: logFileDirectory
