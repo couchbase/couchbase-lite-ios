@@ -1,5 +1,5 @@
 //
-//  CustomLogger.m
+//  CustomLoggerOld.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2019 Couchbase, Inc All rights reserved.
@@ -17,9 +17,9 @@
 //  limitations under the License.
 //
 
-#import "CustomLogger.h"
+#import "CustomLoggerOld.h"
 
-@implementation CustomLogger {
+@implementation CustomLoggerOld {
     NSMutableArray* _lines;
 }
 
@@ -52,7 +52,7 @@
 }
 
 - (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    [_lines addObject: message];        
+    [_lines addObject: message];
 }
 
 @end
