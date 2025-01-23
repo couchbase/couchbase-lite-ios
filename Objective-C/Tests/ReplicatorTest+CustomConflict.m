@@ -450,8 +450,7 @@
 -  (void) testConflictResolverWrongDocID {
     // Enable Logging to check whether the logs are printing
     CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: custom];
     
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
@@ -498,7 +497,7 @@
                          wrongDocID, docId];
     Assert([custom.lines containsObject: warning]);
     [replicator removeChangeListenerWithToken: token];
-    CBLDatabase.log.custom = nil;
+    CBLLogSinks.custom = nil;
 }
 
 - (void) testConflictResolverDifferentDBDoc {
@@ -824,8 +823,8 @@
 - (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: custom];
+
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
     XCTestExpectation* expFirstDocResolve = [self expectationWithDescription:@"wait for first conflict to resolve"];
@@ -894,7 +893,7 @@
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
     
-    CBLDatabase.log.custom = nil;
+    CBLLogSinks.custom = nil;
 }
 
 - (void) testConflictResolverReturningBlobFromDifferentDB {

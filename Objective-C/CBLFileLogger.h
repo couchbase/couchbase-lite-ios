@@ -24,6 +24,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+__deprecated_msg("Use CBLFileLogSink instead.");
 /**
  File logger used for writing log messages to files. To enable the file logger,
  setup the log file configuration and specifiy the log level as desired.

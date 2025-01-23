@@ -1,5 +1,5 @@
 //
-//  CBLConsoleLogger.h
+//  CBLCustomLogSink.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
@@ -18,24 +18,21 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CouchbaseLite/CBLLogger.h>
+#import <CouchbaseLite/CBLLogTypes.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-__deprecated_msg("Use CBLConsoleLogSink instead.");
-/** Console logger for writing log messages to the system console. */
-@interface CBLConsoleLogger : NSObject <CBLLogger>
+@interface CBLCustomLogSink : NSObject
 
-/** The minimum log level of the log messages to be logged. The default log level for
-    console logger is warning. */
-@property (nonatomic) CBLLogLevel level;
+/** The minimum log level of the log messages to be logged. The default log level for console logger is warning. */
+@property (nonatomic, readonly) CBLLogLevel level;
 
-/** The set of log domains of the log messages to be logged. By default, the log
-    messages of all domains will be logged. */
-@property (nonatomic) CBLLogDomain domains;
+/** The set of log domains of the log messages to be logged. By default, the log messages of all domains will be logged. */
+@property (nonatomic, readonly) CBLLogDomain domain;
 
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
+@property (nonatomic, readonly) id<CBLLogSinkProtocol> logSink;
+
+- (instancetype) initWithLevel: (CBLLogLevel) level logSink: (id<CBLLogSinkProtocol>) logSink;
 
 @end
 
