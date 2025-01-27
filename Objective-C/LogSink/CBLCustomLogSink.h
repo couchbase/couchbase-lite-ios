@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** The minimum log level of the log messages to be logged. The default log level for console logger is warning. */
 @property (nonatomic, readonly) CBLLogLevel level;
 
+/** The logging callback function. */
 @property (nonatomic, readonly) id<CBLLogSinkProtocol> logSink;
 
 - (instancetype) initWithLevel: (CBLLogLevel) level logSink: (id<CBLLogSinkProtocol>) logSink;

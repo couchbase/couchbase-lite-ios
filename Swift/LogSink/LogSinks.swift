@@ -21,12 +21,19 @@ import CouchbaseLiteSwift_Private
 
 public class LogSinks {
     
+    /// The console log sink instance.
+    /// - Note: Enabled with warning level by default
     public static var console: ConsoleLogSink? = .init(level: .warning)
     
+    /// The file log sink instance.
+    /// - Note: Disabled by default
     public static var file: FileLogSink?
     
+    /// The custom log sink instance.
+    /// - Note: Disabled by default
     public static var custom: CustomLogSink?
     
+    // MARK: Private
     private init (_ impl: CBLLogSinks) {
         self.impl = impl
     }

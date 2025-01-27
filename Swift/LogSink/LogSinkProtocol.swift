@@ -35,16 +35,16 @@ public struct LogDomains: OptionSet {
     }
 
     // Individual domains
-    public static let database   = LogDomains(rawValue: 1 << 0) // 1
-    public static let query      = LogDomains(rawValue: 1 << 1) // 2
-    public static let replicator = LogDomains(rawValue: 1 << 2) // 4
-    public static let network    = LogDomains(rawValue: 1 << 3) // 8
+    public static let database   = LogDomains(rawValue: 1 << 0)
+    public static let query      = LogDomains(rawValue: 1 << 1)
+    public static let replicator = LogDomains(rawValue: 1 << 2)
+    public static let network    = LogDomains(rawValue: 1 << 3)
 
     #if COUCHBASE_ENTERPRISE
-    public static let listener   = LogDomains(rawValue: 1 << 4) // 16
-    public static let all: LogDomains = [.database, .query, .replicator, .network, .listener] // 31
+    public static let listener   = LogDomains(rawValue: 1 << 4)
+    public static let all: LogDomains = [.database, .query, .replicator, .network, .listener]
     #else
-    public static let all: LogDomains = [.database, .query, .replicator, .network] // 15
+    public static let all: LogDomains = [.database, .query, .replicator, .network]
     #endif
 }
 

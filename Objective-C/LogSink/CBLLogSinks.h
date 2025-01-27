@@ -25,16 +25,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// LogSinks API for managing different log sink configurations.
+/** LogSinks API for managing different log sink configurations.
+ */
 @interface CBLLogSinks : NSObject
 
-/// The console log sink (default is enabled with warning level).
+/** The console log sink instance.
+ @Note: Enabled with warning level by default
+ */
 @property (class, nonatomic, nullable) CBLConsoleLogSink* console;
 
-/// The file log sink (default is nil).
+/** The file log sink instance.
+ @Note: Disabled by default
+ */
 @property (class, nonatomic, nullable) CBLFileLogSink* file;
 
-/// The custom log sink (default is nil).
+/** The custom log sink instance.
+ @Note: Disabled by default
+ */
 @property (class, nonatomic, nullable) CBLCustomLogSink* custom;
 
 - (instancetype) init NS_UNAVAILABLE;
