@@ -44,13 +44,13 @@ NS_ASSUME_NONNULL_BEGIN
  The maximum size of a log file before being rotated in bytes.
  The default is ``kCBLDefaultMaxKeptFiles``
  */
-@property (nonatomic, readonly) NSUInteger maxKeptFiles;
+@property (nonatomic, readonly) NSInteger maxKeptFiles;
 
 /**
  The Max number of rotated log files to keep.
  The default value is ``kCBLDefaultMaxFileSize``
  */
-@property (nonatomic, readonly) NSInteger maxFileSize;
+@property (nonatomic, readonly) NSUInteger maxFileSize;
 
 - (instancetype) initWithLevel: (CBLLogLevel) level
                      directory: (NSString*) directory;
@@ -58,8 +58,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithLevel: (CBLLogLevel) level
                      directory: (NSString*) directory
                   usePlaintext: (BOOL) usePlainText
-                  maxKeptFiles: (uint64_t) maxKeptFiles
-                   maxFileSize: (NSInteger) maxFileSize;
+                  maxKeptFiles: (NSInteger) maxKeptFiles
+                   maxFileSize: (NSUInteger) maxFileSize;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

@@ -17,7 +17,6 @@
 //
 
 import Foundation
-import CouchbaseLiteSwift_Private
 
 public struct CustomLogSink {
     

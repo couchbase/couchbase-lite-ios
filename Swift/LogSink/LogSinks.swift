@@ -18,24 +18,37 @@
 
 import Foundation
 import CouchbaseLiteSwift_Private
+import CouchbaseLite
 
 public class LogSinks {
     
     /// The console log sink instance.
     /// - Note: Enabled with warning level by default
-    public static var console: ConsoleLogSink? = .init(level: .warning)
-    
+    public static var console: ConsoleLogSink? = .init(level: .warning) {
+        didSet {
+            CBLLogSinks.console = CBLConsoleLogSink(level: CBLLogLevel(rawValue: UInt((self.console!.level.rawValue)))!,
+                                                    domain: CBLLogDomain(rawValue: UInt((self.console!.domain.rawValue))))
+        }
+    }
     /// The file log sink instance.
     /// - Note: Disabled by default
-    public static var file: FileLogSink?
+    public static var file: FileLogSink? = nil {
+        didSet {
+            CBLLogSinks.file = CBLFileLogSink(level: CBLLogLevel(rawValue: UInt((self.file!.level.rawValue)))!,
+                                              directory: self.file!.directory,
+                                              usePlaintext: self.file!.usePlaintext,
+                                              maxKeptFiles: self.file!.maxKeptFiles,
+                                              maxFileSize: self.file!.maxFileSize)
+        }
+    }
     
     /// The custom log sink instance.
     /// - Note: Disabled by default
-    public static var custom: CustomLogSink?
-    
-    // MARK: Private
-    private init (_ impl: CBLLogSinks) {
-        self.impl = impl
+    public static var custom: CustomLogSink? = nil {
+        didSet {
+            CBLLogSinks.custom = CBLCustomLogSink(level: CBLLogLevel(rawValue: UInt((self.custom!.level.rawValue)))!,
+                                                  logSink: self.custom!.logSink as! CBLLogSinkProtocol)
+        }
     }
-    private let impl: CBLLogSinks
+
 }

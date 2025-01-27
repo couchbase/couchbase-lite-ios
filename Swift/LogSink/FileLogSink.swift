@@ -33,13 +33,13 @@ public struct FileLogSink {
     
     /// The maximum size of a log file before being rotated in bytes.
     /// The default is ``defaultMaxKeptFiles``
-    public let maxKeptFiles: UInt
+    public let maxKeptFiles: Int
     
     /// The max number of rotated log files to keep.
     /// The default value is ``defaultMaxSize``
-    public let maxFileSize: UInt64
+    public let maxFileSize: UInt
     
-    public init(level: LogLevel, directory: String, usePlainText: Bool = defaultUsePlaintext, maxKeptFiles: UInt = defaultMaxKeptFiles, maxFileSize: UInt64 = defaultMaxSize) {
+    public init(level: LogLevel, directory: String, usePlainText: Bool = defaultUsePlaintext, maxKeptFiles: Int = defaultMaxKeptFiles, maxFileSize: UInt = defaultMaxSize) {
         self.level = level
         self.directory = directory
         self.usePlaintext = usePlainText

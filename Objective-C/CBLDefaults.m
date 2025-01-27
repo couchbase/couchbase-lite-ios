@@ -42,9 +42,9 @@ const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
 
 const BOOL kCBLDefaultFileLogSinkUsePlaintext = NO;
 
-const uint64_t kCBLDefaultFileLogSinkMaxSize = 524288;
-
 const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles = 2;
+
+const NSUInteger kCBLDefaultFileLogSinkMaxSize = 524288;
 
 #pragma mark - CBLFullTextIndexConfiguration
 

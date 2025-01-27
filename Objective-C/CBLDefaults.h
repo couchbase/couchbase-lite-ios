@@ -55,11 +55,11 @@ extern const NSInteger kCBLDefaultLogFileMaxRotateCount;
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
 extern const BOOL kCBLDefaultFileLogSinkUsePlaintext;
 
-/** [524288] 512 KiB for the size of a log file */
-extern const uint64_t kCBLDefaultFileLogSinkMaxSize;
-
 /** [2] 2 files preserved during each log rotation */
 extern const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles;
+
+/** [524288] 512 KiB for the size of a log file */
+extern const NSUInteger kCBLDefaultFileLogSinkMaxSize;
 
 #pragma mark - CBLFullTextIndexConfiguration
 

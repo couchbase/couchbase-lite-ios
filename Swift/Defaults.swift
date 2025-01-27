@@ -54,11 +54,11 @@ public extension FileLogSink {
     /// [false] Plaintext is not used, and instead binary encoding is used in log files
     static let defaultUsePlaintext: Bool = false
 
-    /// [524288] 512 KiB for the size of a log file
-    static let defaultMaxSize: UInt64 = 524288
-
     /// [2] 2 files preserved during each log rotation
-    static let defaultMaxKeptFiles: UInt = 2
+    static let defaultMaxKeptFiles: Int = 2
+    
+    /// [524288] 512 KiB for the size of a log file
+    static let defaultMaxSize: UInt = 524288
 
 }
 
