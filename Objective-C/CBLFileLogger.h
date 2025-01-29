@@ -33,7 +33,6 @@ NS_ASSUME_NONNULL_BEGIN
  to configure the logger. Once configured, the logger object ignores any changes you make to the
  CBLLogFileConfiguration object.
  */
-__deprecated_msg("Use CBLFileLogSink instead.");
 @interface CBLFileLogger : NSObject <CBLLogger>
 
 /**
