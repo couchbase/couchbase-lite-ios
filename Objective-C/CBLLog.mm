@@ -133,7 +133,10 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
 }
 
 - (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     self.custom = [[CBLCustomLogger alloc] initWithLevel: level logger: logger];
+#pragma clang diagnostic pop
 }
 
 @end

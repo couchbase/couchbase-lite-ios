@@ -22,7 +22,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-__deprecated_msg("Use CBLConsoleLogSink instead.");
 /** Console logger for writing log messages to the system console. */
 @interface CBLConsoleLogger : NSObject <CBLLogger>
 
