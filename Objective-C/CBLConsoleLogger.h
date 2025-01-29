@@ -22,8 +22,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-__deprecated_msg("Use CBLConsoleLogSink instead.");
 /** Console logger for writing log messages to the system console. */
+__deprecated_msg("Use CBLConsoleLogSink instead.");
 @interface CBLConsoleLogger : NSObject <CBLLogger>
 
 /** The minimum log level of the log messages to be logged. The default log level for
