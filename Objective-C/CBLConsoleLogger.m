@@ -64,7 +64,6 @@
     CBLConsoleLogSink* sink = [[CBLConsoleLogSink alloc] initWithLevel: _level domains: _domains];
     sink.version = kCBLLogAPIOld;
     CBLLogSinks.console = sink;
-    
 }
 
 - (void) logWithLevel: (CBLLogLevel)level

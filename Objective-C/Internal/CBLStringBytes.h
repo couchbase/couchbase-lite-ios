@@ -29,13 +29,12 @@
     - Since the slice may point directly into the NSString, if the string is mutable do not
       mutate it while the stringBytes object is in scope! (Releasing the string is OK, as
       stringBytes retains it.)
-    - Dissable the inline storage If the CBLStringBytes is used outside the scope that is created as
+    - Disable the inline storage If the CBLStringBytes is used outside the scope that is created as
       the inline storage (_local) is a stack base storage.
  */
 struct CBLStringBytes {
     CBLStringBytes(NSString* str = nil, bool useLocalBuffer = true)
-    : _useLocalBuffer(useLocalBuffer)
-    {
+    : _useLocalBuffer(useLocalBuffer) {
         *this = str;
     }
 

@@ -65,7 +65,7 @@ public class LogSinks {
         }
     }
     
-    /// For brigging between swift and objective custom log sink.
+    /// For bridging between swift and objective custom log sink.
     private class CustomLogSinkBridge : NSObject, CBLLogSinkProtocol {
         let logSink: LogSinkProtocol
         
@@ -80,8 +80,8 @@ public class LogSinks {
         }
     }
     
-    /// <Unsupported API> Internally used for testing purpose.
-    public static func _resetApiVersion() {
+    /// Internally used for testing purpose.
+    static func _resetApiVersion() {
         CBLLogSinks.resetApiVersion()
     }
 }

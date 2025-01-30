@@ -19,7 +19,7 @@
 
 import XCTest
 import Foundation
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 extension String {
     func toJSONObj() -> Any {
@@ -80,8 +80,6 @@ class CBLTestCase: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        LogSinks._resetApiVersion()
-        
         try? deleteDB(name: databaseName);
         
         try? deleteDB(name: otherDatabaseName);
@@ -92,6 +90,8 @@ class CBLTestCase: XCTestCase {
         XCTAssertTrue(!FileManager.default.fileExists(atPath: self.directory))
         
         try! initDB()
+        
+        LogSinks._resetApiVersion()
     }
     
     override func tearDown() {

@@ -177,8 +177,8 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     return self;
 }
 
-- (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domains message: (NSString*)message {
-    [_logger logWithLevel: level domain: domains message: message];
+- (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
+    [_logger logWithLevel: level domain: domain message: message];
 }
 
 @end
