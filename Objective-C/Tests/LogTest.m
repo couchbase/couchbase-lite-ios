@@ -2,7 +2,7 @@
 //  LogTest.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
-#import "CustomLogger.h"
+#import "CBLTestCustomLogSink.h"
 
 @interface LogTest : CBLTestCase
 
@@ -96,17 +96,15 @@
 
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    
     for (NSUInteger i = 5; i >= 1; i--) {
-        CBLCustomLogSink* customSink = [[CBLCustomLogSink alloc] initWithLevel: (CBLLogLevel)i logSink: customLogger];
-        [customLogger reset];
+        CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+        CBLCustomLogSink* customSink = [[CBLCustomLogSink alloc] initWithLevel: (CBLLogLevel)i logSink: logSink];
         CBLLogSinks.custom = customSink;
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
         CBLWarnError(Database, @"TEST ERROR");
-        AssertEqual(customLogger.lines.count, 5 - i);
+        AssertEqual(logSink.lines.count, 5 - i);
     }
 }
 
@@ -234,26 +232,26 @@
 
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelNone logSink: customLogger];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelNone logSink: logSink];
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
     CBLWarnError(Database, @"TEST ERROR");
-    AssertEqual(customLogger.lines.count, 0);
+    AssertEqual(logSink.lines.count, 0);
     
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: logSink];
     CBLLogVerbose(Database, @"TEST VERBOSE");
     CBLLogInfo(Database, @"TEST INFO");
     CBLWarn(Database, @"TEST WARNING");
     CBLWarnError(Database, @"TEST ERROR");
-    AssertEqual(customLogger.lines.count, 4);
+    AssertEqual(logSink.lines.count, 4);
 }
 
 - (void) testFileLoggingMaxSize {
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory];
-    AssertEqual(CBLLogSinks.file.maxFileSize, (NSInteger)kCBLDefaultFileLogSinkMaxSize);
-    AssertEqual(CBLLogSinks.file.maxKeptFiles, (NSUInteger)kCBLDefaultFileLogSinkMaxKeptFiles);
+    AssertEqual(CBLLogSinks.file.maxFileSize, kCBLDefaultFileLogSinkMaxSize);
+    AssertEqual(CBLLogSinks.file.maxKeptFiles, kCBLDefaultFileLogSinkMaxKeptFiles);
     AssertEqual(CBLLogSinks.file.usePlaintext, kCBLDefaultLogFileUsePlaintext);
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug
                                                    directory: logFileDirectory
@@ -331,8 +329,8 @@
 }
 
 - (void) testNonASCII {
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: logSink];
     
     NSString* hebrew = @"מזג האוויר נחמד היום"; // The weather is nice today.
     CBLMutableDocument* document = [self createDocument: @"doc1"];
@@ -349,7 +347,7 @@
     AssertEqual([[rs allObjects] count], 1u);
     NSString* expectedHebrew = [NSString stringWithFormat: @"[{\"hebrew\":\"%@\"}]", hebrew];
     BOOL found = NO;
-    for (NSString* line in customLogger.lines) {
+    for (NSString* line in logSink.lines) {
         if ([line containsString: expectedHebrew]) {
             found = YES;
         }
@@ -360,13 +358,13 @@
 }
 
 - (void) testPercentEscape {
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelInfo logSink: customLogger];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelInfo logSink: logSink];
 
     CBLLogInfo(Database, @"Hello %%s there");
     
     BOOL found = NO;
-    for (NSString* line in customLogger.lines) {
+    for (NSString* line in logSink.lines) {
         if ([line containsString:  @"Hello %s there"]) {
             found = YES;
         }
@@ -377,8 +375,8 @@
 }
 
 - (void) testUseBothApi {
-    CustomLogger* customLogger = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: customLogger];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: logSink];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         CBLDatabase.log.console.level = kCBLLogLevelVerbose;
     }];

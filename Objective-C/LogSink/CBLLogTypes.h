@@ -2,7 +2,7 @@
 //  CBLLogTypes.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,25 +19,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Log domain.
- */
+/** Log domain options. */
 typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
     kCBLLogDomainDatabase       = 1 << 0, ///< Database domain.
     kCBLLogDomainQuery          = 1 << 1, ///< Query domain.
     kCBLLogDomainReplicator     = 1 << 2, ///< Replicator domain.
     kCBLLogDomainNetwork        = 1 << 3, ///< Network domain.
 #ifdef COUCHBASE_ENTERPRISE
-    kCBLLogDomainListener       = 1 << 4,  ///< Listener domain.
+    kCBLLogDomainListener       = 1 << 4, ///< Listener domain.
     kCBLLogDomainAll            = kCBLLogDomainDatabase | kCBLLogDomainQuery | kCBLLogDomainReplicator | kCBLLogDomainNetwork | kCBLLogDomainListener, ///< All domains
 #else
     kCBLLogDomainAll            = kCBLLogDomainDatabase | kCBLLogDomainQuery | kCBLLogDomainReplicator | kCBLLogDomainNetwork, ///< All domains
 #endif
 };
 
-/**
- Log level.
- */
+/** Log level. */
 typedef NS_ENUM(NSUInteger, CBLLogLevel) {
     kCBLLogLevelDebug,      ///< Debug log messages. Only present in debug builds of CouchbaseLite.
     kCBLLogLevelVerbose,    ///< Verbose log messages.
@@ -46,11 +42,5 @@ typedef NS_ENUM(NSUInteger, CBLLogLevel) {
     kCBLLogLevelError,      ///< Error log messages.
     kCBLLogLevelNone        ///< Disabling log messages of a given log domain.
 };
-
-@protocol CBLLogSinkProtocol <NSObject>
-
-- (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message;
-
-@end
 
 NS_ASSUME_NONNULL_END

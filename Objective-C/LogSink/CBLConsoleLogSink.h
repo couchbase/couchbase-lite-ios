@@ -2,7 +2,7 @@
 //  CBLConsoleLogSink.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -22,19 +22,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** A log sink that writes log messages to the console. */
 @interface CBLConsoleLogSink : NSObject
 
-/** The minimum log level of the log messages to be logged. The default log level for
-    console logger is warning. */
+/** The minimum log level of the log messages to be logged. The default log level is warning. */
 @property (nonatomic, readonly) CBLLogLevel level;
 
-/** The set of log domains of the log messages to be logged. By default, the log
-    messages of all domains will be logged. */
-@property (nonatomic, readonly) CBLLogDomain domain;
+/** The set of log domains of the log messages to be logged. The default is all domains. */
+@property (nonatomic, readonly) CBLLogDomain domains;
 
+/**
+ Initializes a console log sink with a specified log level.
+ 
+ @param level The minimum log level.
+ */
 - (instancetype) initWithLevel: (CBLLogLevel)level;
 
-- (instancetype) initWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain;
+/**
+ Initializes a console log sink with a specified log level and log domains.
+ 
+ @param level The minimum log level.
+ @param domains The set of log domains.
+ */
+- (instancetype) initWithLevel: (CBLLogLevel)level domains: (CBLLogDomain)domains;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
