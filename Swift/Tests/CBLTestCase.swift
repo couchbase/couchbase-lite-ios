@@ -80,6 +80,8 @@ class CBLTestCase: XCTestCase {
     override func setUp() {
         super.setUp()
         
+        LogSinks._resetApiVersion()
+        
         try? deleteDB(name: databaseName);
         
         try? deleteDB(name: otherDatabaseName);
@@ -97,6 +99,8 @@ class CBLTestCase: XCTestCase {
         self.otherDB_defaultCollection = nil
         try! db.close()
         try! otherDB?.close()
+        
+        LogSinks._resetApiVersion()
         
         super.tearDown()
     }

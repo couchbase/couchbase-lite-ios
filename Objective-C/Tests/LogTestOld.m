@@ -1,5 +1,5 @@
 //
-//  LogTest.m
+//  LogTestOld.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2018 Couchbase, Inc All rights reserved.
@@ -19,19 +19,24 @@
 
 #import "CBLTestCase.h"
 #import "CBLLog+Logging.h"
-#import "CustomLoggerOld.h"
+
+@interface CustomLogger : NSObject <CBLLogger>
+
+@property (nonatomic) CBLLogLevel level;
+
+@property (nonatomic, readonly) NSArray* lines;
+
+- (void) reset;
+
+- (BOOL) containsString: (NSString *)string;
+
+@end
 
 @interface FileLoggerBackup: NSObject
 
 @property (nonatomic, nullable) CBLLogFileConfiguration* config;
 
 @property (nonatomic) CBLLogLevel level;
-
-@end
-
-@implementation FileLoggerBackup
-
-@synthesize config=_config, level=_level;
 
 @end
 
@@ -133,7 +138,7 @@
 
 - (void) testCustomLoggingLevels {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     
     for (NSUInteger i = 5; i >= 1; i--) {
         [customLogger reset];
@@ -276,7 +281,7 @@
 
 - (void) testEnableAndDisableCustomLogging {
     CBLLogInfo(Database, @"IGNORE");
-    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelNone;
     CBLDatabase.log.custom = customLogger;
     CBLLogVerbose(Database, @"TEST VERBOSE");
@@ -387,7 +392,7 @@
 }
 
 - (void) testNonASCII {
-    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelVerbose;
     CBLDatabase.log.custom = customLogger;
     
@@ -415,7 +420,7 @@
 }
 
 - (void) testPercentEscape {
-    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelInfo;
     CBLDatabase.log.custom = customLogger;
     
@@ -431,7 +436,7 @@
 }
 
 - (void) testUseBothApi {
-    CustomLoggerOld* customLogger = [[CustomLoggerOld alloc] init];
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
     customLogger.level = kCBLLogLevelVerbose;
     CBLDatabase.log.custom = customLogger;
     [self expectException: @"NSInternalInconsistencyException" in: ^{
@@ -440,5 +445,49 @@
 }
 
 #pragma clang diagnostic pop
+
+@end
+
+@implementation FileLoggerBackup
+
+@synthesize config=_config, level=_level;
+
+@end
+
+@implementation CustomLogger {
+    NSMutableArray* _lines;
+}
+
+@synthesize level=_level;
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _level = kCBLLogLevelNone;
+        _lines = [NSMutableArray new];
+    }
+    return self;
+}
+
+- (NSArray*) lines {
+    return _lines;
+}
+
+- (void) reset {
+    [_lines removeAllObjects];
+}
+
+- (BOOL) containsString: (NSString *)string {
+    for (NSString* line in _lines) {
+        if ([line containsString: string]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
+    [_lines addObject: message];
+}
 
 @end

@@ -2,7 +2,7 @@
 //  CBLFileLogSink.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -22,44 +22,47 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** A log sink that writes log messages to files. */
 @interface CBLFileLogSink : NSObject
 
-/**
- The minimum log level of the log messages to be logged. The default log level for
- file logger is kCBLLogLevelNone which means no logging.
- */
+/** The minimum log level for log messages. Default is `kCBLLogLevelNone`, meaning no logging. */
 @property (nonatomic, readonly) CBLLogLevel level;
 
-/**
- The directory to store the log files.
- */
+/** The directory where log files will be stored. */
 @property (nonatomic, copy, readonly) NSString* directory;
 
-/**
- To use plain text file format instead of the default binary format.
- */
+/** To use plain text file format instead of the default binary format. */
 @property (nonatomic, readonly) BOOL usePlaintext;
 
-/**
- The maximum size of a log file before being rotated in bytes.
- The default is ``kCBLDefaultMaxKeptFiles``
- */
-@property (nonatomic, readonly) NSUInteger maxKeptFiles;
+/** The maximum number of log files to keep. Default is `kCBLDefaultMaxKeptFiles`. */
+@property (nonatomic, readonly) NSInteger maxKeptFiles;
+
+/** The maximum size of a log file before rotation. Default is `kCBLDefaultMaxFileSize`. */
+@property (nonatomic, readonly) long long maxFileSize;
 
 /**
- The Max number of rotated log files to keep.
- The default value is ``kCBLDefaultMaxFileSize``
+ Initializes with log level and directory.
+ 
+ @param level The minimum log level.
+ @param directory The log file directory.
  */
-@property (nonatomic, readonly) NSInteger maxFileSize;
-
 - (instancetype) initWithLevel: (CBLLogLevel) level
                      directory: (NSString*) directory;
 
-- (instancetype) initWithLevel: (CBLLogLevel) level
-                     directory: (NSString*) directory
-                  usePlaintext: (BOOL) usePlainText
-                  maxKeptFiles: (uint64_t) maxKeptFiles
-                   maxFileSize: (NSInteger) maxFileSize;
+/**
+ Initializes with full configuration options.
+
+ @param level The minimum log level.
+ @param directory The log file directory.
+ @param usePlainText Whether to use plain text format.
+ @param maxKeptFiles The maximum number of log files.
+ @param maxFileSize The maximum size of a log file.
+ */
+- (instancetype) initWithLevel: (CBLLogLevel)level
+                     directory: (NSString*)directory
+                  usePlaintext: (BOOL)usePlainText
+                  maxKeptFiles: (NSInteger)maxKeptFiles
+                   maxFileSize: (long long)maxFileSize;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
