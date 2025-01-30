@@ -20,7 +20,7 @@
 #import "CBLTestCase.h"
 #include "c4.h"
 #import "CollectionUtils.h"
-#import "CBLLogSinks+Internal.h"
+#import "CBLLogSinks+Reset.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"

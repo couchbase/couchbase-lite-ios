@@ -1,8 +1,8 @@
 //
-//  CustomLoggerOld.m
+//  CBLTestCustomLogSink.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,18 +17,15 @@
 //  limitations under the License.
 //
 
-#import "CustomLoggerOld.h"
+#import "CBLTestCustomLogSink.h"
 
-@implementation CustomLoggerOld {
+@implementation CBLTestCustomLogSink {
     NSMutableArray* _lines;
 }
-
-@synthesize level=_level;
 
 - (instancetype) init {
     self = [super init];
     if (self) {
-        _level = kCBLLogLevelNone;
         _lines = [NSMutableArray new];
     }
     return self;
@@ -36,10 +33,6 @@
 
 - (NSArray*) lines {
     return _lines;
-}
-
-- (void) reset {
-    [_lines removeAllObjects];
 }
 
 - (BOOL) containsString: (NSString *)string {
@@ -51,7 +44,11 @@
     return NO;
 }
 
-- (void)logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
+- (void) reset {
+    [_lines removeAllObjects];
+}
+
+- (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
     [_lines addObject: message];
 }
 
