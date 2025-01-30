@@ -2,7 +2,7 @@
 //  CBLCustomLogSink.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -22,12 +22,18 @@
 
 @implementation CBLCustomLogSink
 
-@synthesize level = _level, domain=_domain, logSink = _logSink, version=_version;
+@synthesize level = _level, domains=_domains, logSink = _logSink, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logSink: (id<CBLLogSinkProtocol>)logSink {
+    return [self initWithLevel:level domains:kCBLLogDomainAll logSink: logSink];
+}
+
+- (instancetype) initWithLevel: (CBLLogLevel)level
+                       domains: (CBLLogDomain)domains
+                       logSink: (id<CBLLogSinkProtocol>)logSink {
     self = [super init];
     if (self) {
-        _domain = kCBLLogDomainAll;
+        _domains = domains;
         _level = level;
         _logSink = logSink;
         _version = kCBLLogAPINew;
@@ -36,7 +42,7 @@
 }
 
 - (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    if (level < self.level || (self.domain & domain) == 0) {
+    if (level < _level || (_domains & domain) == 0) {
         return;
     }
     [self.logSink writeLogWithLevel: level domain: domain message: message];

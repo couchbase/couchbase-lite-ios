@@ -2,7 +2,7 @@
 //  CBLConsoleLogSink.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -24,24 +24,24 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
 
 @implementation CBLConsoleLogSink
 
-@synthesize level=_level, domain=_domain, version=_version;
+@synthesize level=_level, domains=_domains, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level {
-    return [self initWithLevel: level domain: kCBLLogDomainAll];
+    return [self initWithLevel: level domains: kCBLLogDomainAll];
 }
 
-- (instancetype) initWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
+- (instancetype) initWithLevel: (CBLLogLevel)level domains: (CBLLogDomain)domains {
     self = [super init];
     if (self) {
         _level = level;
-        _domain = domain;
+        _domains = domains;
         _version = kCBLLogAPINew;
     }
     return self;
 }
 
 - (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message { 
-    if (level < self.level || (self.domain & domain) == 0) {
+    if (level < _level || (_domains & domain) == 0) {
         return;
     }
     

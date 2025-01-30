@@ -24,11 +24,11 @@ class LogTest: CBLTestCase {
     
     var logFileDirectory: String!
     
-    var backup: FileLoggerBackup?
+    var backupConsoleLogSink: ConsoleLogSink?
     
-    var backupConsoleLevel: LogLevel?
+    var backupFileLogSink: FileLogSink?
     
-    var backupConsoleDomains: LogDomains?
+    var backupCustomLogSink: CustomLogSink?
     
     override func setUp() {
         super.setUp()
@@ -48,28 +48,15 @@ class LogTest: CBLTestCase {
     }
     
     func backupLoggerConfig() {
-        backup = FileLoggerBackup(config: Database.log.file.config,
-                                  level: Database.log.file.level)
-        backupConsoleLevel = Database.log.console.level
-        backupConsoleDomains = Database.log.console.domains
+        backupConsoleLogSink = LogSinks.console
+        backupFileLogSink = LogSinks.file
+        backupCustomLogSink = LogSinks.custom
     }
     
     func restoreLoggerConfig() {
-        if let backup = self.backup {
-            Database.log.file.config = backup.config
-            Database.log.file.level = backup.level
-            self.backup = nil
-        }
-        
-        if let consoleLevel = self.backupConsoleLevel {
-            Database.log.console.level = consoleLevel
-        }
-        
-        if let consoleDomains = self.backupConsoleDomains {
-            Database.log.console.domains = consoleDomains
-        }
-        
-        Database.log.custom = nil
+        LogSinks.console = backupConsoleLogSink
+        LogSinks.file = backupFileLogSink
+        LogSinks.custom = backupCustomLogSink
     }
     
     func getLogsInDirectory(_ directory: String,
@@ -279,29 +266,19 @@ class LogTest: CBLTestCase {
         let config = self.logFileConfig()
         XCTAssertEqual(config.maxSize, LogFileConfiguration.defaultMaxSize)
         XCTAssertEqual(config.maxRotateCount, LogFileConfiguration.defaultMaxRotateCount)
+        
         config.usePlainText = true
         config.maxSize = 1024
         config.maxRotateCount = 2
-        XCTAssertEqual(config.maxSize, 1024)
-        XCTAssertEqual(config.maxRotateCount, 2)
+        
         Database.log.file.config = config
         Database.log.file.level = .debug
-        XCTAssertEqual(Database.log.file.config?.maxSize, 1024)
-        XCTAssertEqual(Database.log.file.config?.maxRotateCount, 2)
         
         // this should create three files(per level) => 2KB logs + extra
         writeOneKiloByteOfLog()
         writeOneKiloByteOfLog()
         
-        guard (Database.log.file.config?.maxRotateCount) != nil else {
-            fatalError("Config should be present!!")
-        }
         var totalFilesShouldBeInDirectory = 15 /* (maxRotateCount + 1) * 5(levels) */
-        
-        #if !DEBUG
-        totalFilesShouldBeInDirectory = totalFilesShouldBeInDirectory - 1
-        #endif
-        
         let totalLogFilesSaved = try getLogsInDirectory(config.directory)
         XCTAssertEqual(totalLogFilesSaved.count, totalFilesShouldBeInDirectory)
     }

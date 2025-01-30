@@ -2,7 +2,7 @@
 //  CBLFileLogSink.mm
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -38,11 +38,11 @@
                    maxFileSize: kCBLDefaultFileLogSinkMaxSize];
 }
 
-- (instancetype) initWithLevel: (CBLLogLevel) level
-                     directory: (NSString*) directory
-                  usePlaintext: (BOOL) usePlaintext
-                  maxKeptFiles: (uint64_t) maxKeptFiles
-                   maxFileSize: (NSInteger) maxFileSize
+- (instancetype) initWithLevel: (CBLLogLevel)level
+                     directory: (NSString*)directory
+                  usePlaintext: (BOOL)usePlaintext
+                  maxKeptFiles: (NSInteger)maxKeptFiles
+                   maxFileSize: (long long)maxFileSize
 {
     self = [super init];
     if (self) {
@@ -60,20 +60,27 @@
 + (void) setup: (CBLFileLogSink*)logSink {
     NSError* error;
     
+    CBLStringBytes directory;
+    CBLStringBytes header;
+    
     C4LogFileOptions options {};
+    
     if (logSink) {
-        if (![self setupLogDirectory: logSink.directory error: &error]) {
+        if (logSink.directory.length > 0 && ![self setupLogDirectory: logSink.directory error: &error]) {
             CBLWarnError(Database, @"Cannot setup log directory at %@: %@", logSink.directory, error);
             return;
         }
         
+        directory = CBLStringBytes(logSink.directory, false);
+        header = CBLStringBytes([CBLVersion userAgent], false);
+        
         options = {
-            .base_path = CBLStringBytes(logSink.directory),
+            .base_path = directory,
             .log_level = (C4LogLevel)logSink.level,
             .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
             .max_size_bytes = logSink.maxFileSize,
             .use_plaintext = static_cast<bool>(logSink.usePlaintext),
-            .header = CBLStringBytes([CBLVersion userAgent])
+            .header = header
         };
     } else {
         options.log_level = kC4LogNone;

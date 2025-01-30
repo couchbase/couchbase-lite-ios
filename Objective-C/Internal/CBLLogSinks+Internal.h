@@ -39,8 +39,6 @@ typedef NS_ENUM(NSUInteger, CBLLogAPI) {
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
-+ (void) resetApiVersion;
-
 + (void) checkLogApiVersion: (id<CBLLogApiSource>) source;
 
 @end
