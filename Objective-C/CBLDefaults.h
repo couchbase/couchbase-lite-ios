@@ -56,7 +56,7 @@ extern const NSInteger kCBLDefaultLogFileMaxRotateCount;
 extern const BOOL kCBLDefaultFileLogSinkUsePlaintext;
 
 /** [524288] 512 KiB for the size of a log file */
-extern const uint64_t kCBLDefaultFileLogSinkMaxSize;
+extern const long long kCBLDefaultFileLogSinkMaxSize;
 
 /** [2] 2 files preserved during each log rotation */
 extern const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles;

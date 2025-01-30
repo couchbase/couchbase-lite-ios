@@ -1,8 +1,8 @@
 //
-//  CustomLoggerOld.h
+//  CBLTestCustomLogSink.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,23 +18,18 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CouchbaseLite/CBLLogTypes.h>
-#import <CouchbaseLite/CBLLogger.h>
+#import "CBLCustomLogSink.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CustomLoggerOld : NSObject <CBLLogger>
-
-@property (nonatomic) CBLLogLevel level;
+@interface CBLTestCustomLogSink : NSObject <CBLLogSinkProtocol>
 
 @property (nonatomic, readonly) NSArray* lines;
 
-- (void) reset;
-
 - (BOOL) containsString: (NSString *)string;
+
+- (void) reset;
 
 @end
 
 NS_ASSUME_NONNULL_END
-
-

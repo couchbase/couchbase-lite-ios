@@ -19,10 +19,9 @@
 
 #import "ReplicatorTest.h"
 #import "CBLDocument+Internal.h"
-#import "CustomLogger.h"
-#import "CBLReplicator+Internal.h"
 #import "CBLErrorMessage.h"
-#import "CBLDocument+Internal.h"
+#import "CBLReplicator+Internal.h"
+#import "CBLTestCustomLogSink.h"
 
 @interface ReplicatorTest_CustomConflict : ReplicatorTest
 @end
@@ -52,12 +51,6 @@
     AssertEqualObjects(config.conflictResolver, resolver);
     AssertNotNil(repl.config.conflictResolver);
     AssertEqualObjects(repl.config.conflictResolver, resolver);
-    
-//      memory leak with checking exception!
-//    // check whether conflict resolver can be edited after setting to replicator
-//    [self expectException: @"NSInternalInconsistencyException" in: ^{
-//        repl.config.conflictResolver = nil;
-//    }];
 }
 
 #pragma mark - Tests with replication
@@ -449,8 +442,8 @@
 
 -  (void) testConflictResolverWrongDocID {
     // Enable Logging to check whether the logs are printing
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: custom];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: logSink];
     
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
@@ -495,7 +488,7 @@
     NSString* warning = [NSString stringWithFormat: @"The document ID of the resolved document '%@'"
                          " is not matching with the document ID of the conflicting document '%@'.",
                          wrongDocID, docId];
-    Assert([custom.lines containsObject: warning]);
+    Assert([logSink.lines containsObject: warning]);
     [replicator removeChangeListenerWithToken: token];
     CBLLogSinks.custom = nil;
 }
@@ -822,8 +815,8 @@
 // CBL-1710: Update to use setProgressLevel API in Replicator
 - (void) testDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: custom];
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: logSink];
 
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
@@ -887,7 +880,7 @@
     AssertEqualObjects([doc toDictionary], localData);
     
     // 7
-    Assert([custom.lines containsObject: @"Unable to select conflicting revision for doc1, "
+    Assert([logSink.lines containsObject: @"Unable to select conflicting revision for doc1, "
             "the conflict may have been resolved..."]);
     
     [replicator removeChangeListenerWithToken: changeToken];
