@@ -1063,7 +1063,7 @@ class VectorSearchTest_Main: VectorSearchTest {
         let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
         try createWordsIndex(config: config)
         
-        // Check valid query with 1 and 10000 set limit
+        // Check valid query with -1, 0, 1 and 10000 set limit
         for limit in [-1, 0, 1, 10000] {
             _ = try executeWordsQuery(limit: limit)
         }
