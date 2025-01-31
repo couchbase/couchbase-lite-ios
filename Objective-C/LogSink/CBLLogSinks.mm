@@ -50,7 +50,7 @@ static CBLFileLogSink* _file = nil;
 static CBLLogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
 
-+ (void) init {
++ (void) initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // Cache log domain for logging from the platforms:
