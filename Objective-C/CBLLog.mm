@@ -51,7 +51,7 @@
     self = [super init];
     if (self) {
         // Initialize new logging system
-        [CBLLogSinks init];
+        CBLAssertNotNil(CBLLogSinks.self);
         
         // Create console logger:
         _console = [[CBLConsoleLogger alloc] initWithDefault];
