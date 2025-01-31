@@ -143,7 +143,7 @@
     return @"vector";
 }
 
-- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit
+- (NSString*) wordsQueryStringWithLimit: (NSInteger)limit
                                  metric: (nullable NSString*)metric
                        vectorExpression: (nullable NSString*)vectorExpression
                             whereClause: (nullable NSString*)whereClause {
@@ -163,17 +163,16 @@
         sql = [sql stringByAppendingFormat: @"ORDER BY APPROX_VECTOR_DISTANCE(%@, $vector) ", vectorExpression];
     }
     
-    
-    sql = [sql stringByAppendingFormat: @"LIMIT %lu", (unsigned long)limit];
-    
+    sql = [sql stringByAppendingFormat: @"LIMIT %ld", (long)limit];
+
     return sql;
 }
 
-- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit {
+- (NSString*) wordsQueryStringWithLimit: (NSInteger)limit {
     return [self wordsQueryStringWithLimit: limit metric: nil vectorExpression: nil whereClause: nil];
 }
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSInteger)limit
                                            metric: (NSString*)metric
                                  vectorExpression: (NSString*)vectorExpression
                                       whereClause: (NSString*)whereClause
@@ -203,16 +202,16 @@
     return rs;
 }
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit {
-    return [self executeWordsQueryWithLimit: limit 
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSInteger)limit {
+    return [self executeWordsQueryWithLimit: limit
                                      metric: nil
                            vectorExpression: nil
                                 whereClause: nil
                               checkTraining: true];
 }
 
-- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSUInteger)limit {
-    return [self executeWordsQueryWithLimit: limit 
+- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSInteger)limit {
+    return [self executeWordsQueryWithLimit: limit
                                      metric: nil
                            vectorExpression: nil
                                 whereClause: nil
@@ -1177,21 +1176,19 @@
     CBLVectorIndexConfiguration* config = VECTOR_INDEX_CONFIG(@"vector", 300, 8);
     [self createWordsIndexWithConfig: config];
     
-    // Check valid query with 1 and 10000 set limit
-    for (NSNumber* limit in @[@1, @10000]) {
+    // Check valid query with -1, 0, 1 and 10000 set limit
+    for (NSNumber* limit in @[@-1, @0, @1, @10000]) {
         NSError* error;
-        NSString* sql = [self wordsQueryStringWithLimit: [limit unsignedIntegerValue]];
+        NSString* sql = [self wordsQueryStringWithLimit: [limit integerValue]];
         Assert([self.wordDB createQuery: sql error: &error]);
         AssertNil(error);
     }
     
     // Check if error thrown for wrong limit values
-    for (NSNumber* limit in @[@-1, @0, @10001]) {
-        [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
-            NSString* sql = [self wordsQueryStringWithLimit: [limit unsignedIntegerValue]];
-            return [self.wordDB createQuery: sql error: err] != nil;
-        }];
-    }
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidQuery in: ^BOOL(NSError** err) {
+        NSString* sql = [self wordsQueryStringWithLimit: 10001];
+        return [self.wordDB createQuery: sql error: err] != nil;
+    }];
 }
 
 /**
