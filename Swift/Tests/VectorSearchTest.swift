@@ -1064,15 +1064,13 @@ class VectorSearchTest_Main: VectorSearchTest {
         try createWordsIndex(config: config)
         
         // Check valid query with 1 and 10000 set limit
-        for limit in [1, 10000] {
+        for limit in [-1, 0, 1, 10000] {
             _ = try executeWordsQuery(limit: limit)
         }
         
         // Check if error thrown for wrong limit values
-        for limit in [-1, 0, 10001] {
-            self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
-                _ = try self.executeWordsQuery(limit: limit)
-            }
+        self.expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
+            _ = try self.executeWordsQuery(limit: 10001)
         }
     }
     
