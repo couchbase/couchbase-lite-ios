@@ -2,7 +2,7 @@
 //  CBLValueIndexConfiguration.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -28,9 +28,26 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLValueIndexConfiguration : CBLIndexConfiguration
 
 /**
- Constructor for creating a value index by using an array of expression strings.
+ A predicate expression defining conditions for indexing documents.
+ Only documents satisfying the predicate are included, enabling partial indexes.
+ */
+@property (nonatomic, readonly, nullable) NSString* where;
+
+/**
+ Initializes a value index by using an array of expression strings.
+ @param expressions The array of expression strings.
+ @return The value index configuration object.
  */
 - (instancetype) initWithExpression: (NSArray<NSString*>*)expressions;
+
+/**
+ Initializes a value index with an array of expression strings and an optional where clause for a partial index.
+ @param expressions The array of expression strings.
+ @param where Optional where clause for partial indexing.
+ @return The value index configuration object.
+ */
+- (instancetype) initWithExpression: (NSArray<NSString*>*)expressions
+                              where: (nullable NSString*)where;
 
 @end
 
