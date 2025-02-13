@@ -1,8 +1,8 @@
 //
-//  CBLLog+Admin.h
+//  ConsoleLogSink.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,20 +17,19 @@
 //  limitations under the License.
 //
 
-#import "CBLLogger.h"
+import Foundation
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-NS_ASSUME_NONNULL_BEGIN
+/// A log sink that writes log messages to the console.
+public struct ConsoleLogSink {
+    /// The minimum log level of the log messages to be logged.
+    public let level: LogLevel
     
-NSString* CBLLog_GetLevelName(CBLLogLevel level);
+    /// The set of log domains of the log messages to be logged.
+    public let domains: LogDomains
     
-NSString* CBLLog_GetDomainName(CBLLogDomain domain);
-    
-NS_ASSUME_NONNULL_END
-
-#ifdef __cplusplus
+    /// Initializes a ConsoleLogSink with the specified log level and optional log domains.
+    public init(level: LogLevel, domains: LogDomains = .all) {
+        self.level = level
+        self.domains = domains
+    }
 }
-#endif

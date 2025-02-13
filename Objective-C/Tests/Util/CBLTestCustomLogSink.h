@@ -1,8 +1,8 @@
 //
-//  CBLLogger.h
+//  CBLTestCustomLogSink.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,20 +17,18 @@
 //  limitations under the License.
 //
 
-#import <CouchbaseLite/CBLLogTypes.h>
+#import <Foundation/Foundation.h>
+#import "CBLCustomLogSink.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Logger protocol
- */
-@protocol CBLLogger <NSObject>
+@interface CBLTestCustomLogSink : NSObject <CBLLogSinkProtocol>
 
-/** The minimum log level to be logged. */
-@property (readonly, nonatomic) CBLLogLevel level;
+@property (nonatomic, readonly) NSArray* lines;
 
-/** The callback log method. */
-- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message;
+- (BOOL) containsString: (NSString *)string;
+
+- (void) reset;
 
 @end
 

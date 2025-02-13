@@ -49,6 +49,19 @@ public extension LogFileConfiguration {
 
 }
 
+public extension FileLogSink {
+
+    /// [false] Plaintext is not used, and instead binary encoding is used in log files
+    static let defaultUsePlaintext: Bool = false
+
+    /// [2] 2 files preserved during each log rotation
+    static let defaultMaxKeptFiles: Int32 = 2
+    
+    /// [524288] 512 KiB for the size of a log file
+    static let defaultMaxSize: Int64 = 524288
+
+}
+
 public extension FullTextIndexConfiguration {
 
     /// [false] Accents and ligatures are not ignored when indexing via full text search

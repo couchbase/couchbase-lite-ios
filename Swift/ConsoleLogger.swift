@@ -33,9 +33,6 @@ public struct LogDomains: OptionSet {
         self.rawValue = rawValue
     }
     
-    /// All domains.
-    public static let all = LogDomains(rawValue: Int(LogDomain.all.rawValue))
-    
     /// Database domain.
     public static let database = LogDomains(rawValue: Int(LogDomain.database.rawValue))
     
@@ -48,6 +45,15 @@ public struct LogDomains: OptionSet {
     /// Network domain.
     public static let network = LogDomains(rawValue: Int(LogDomain.network.rawValue))
     
+#if COUCHBASE_ENTERPRISE
+    /// Listener domain.
+    public static let listener = LogDomains(rawValue: Int(LogDomain.listener.rawValue))
+    
+    /// All domains.
+    public static let all: LogDomains = [.database, .query, .replicator, .network, .listener]
+#else
+    public static let all: LogDomains = [.database, .query, .replicator, .network]
+#endif
 }
 
 public class ConsoleLogger {

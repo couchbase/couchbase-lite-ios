@@ -21,14 +21,12 @@ import Foundation
 
 /// Log domain.
 ///
-/// all:        All log domains.
 /// database:   Database domain.
 /// query:      Query domain.
 /// replicator: Replicator domain.
 /// network:    Network domain.
 /// listener:   Listener domain.
 public enum LogDomain: UInt8 {
-    case all            = 31
     case database       = 1
     case query          = 2
     case replicator     = 4

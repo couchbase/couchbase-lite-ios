@@ -21,10 +21,6 @@
 
 using namespace fleece;
 
-CBLStringBytes::CBLStringBytes(__unsafe_unretained NSString* str) {
-    *this = str;
-}
-
 void CBLStringBytes::operator= (__unsafe_unretained NSString* str) {
     if (!str) {
         bytes = nullslice;
@@ -42,7 +38,7 @@ void CBLStringBytes::operator= (__unsafe_unretained NSString* str) {
 
     NSUInteger byteCount;
     NSUInteger length = str.length;
-    if (length <= sizeof(_local)) {
+    if (_useLocalBuffer && length <= sizeof(_local)) {
         // Next try to copy the UTF-8 into a smallish stack-based buffer:
         NSRange remaining;
         BOOL ok = [str getBytes: _local maxLength: sizeof(_local) usedLength: &byteCount

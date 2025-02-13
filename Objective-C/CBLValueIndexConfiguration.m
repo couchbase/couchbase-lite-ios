@@ -2,7 +2,7 @@
 //  CBLValueIndexConfiguration.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -22,8 +22,25 @@
 
 @implementation CBLValueIndexConfiguration
 
+@synthesize where=_where;
+
 - (instancetype) initWithExpression: (NSArray<NSString*>*)expressions {
-    return [super initWithIndexType: kC4ValueIndex expressions: expressions];
+    return [self initWithExpression: expressions where: nil];
+}
+
+- (instancetype) initWithExpression: (NSArray<NSString*>*)expressions
+                              where: (nullable NSString*)where {
+    self = [super initWithIndexType: kC4ValueIndex expressions: expressions];
+    if (self) {
+        _where = where;
+    }
+    return self;
+}
+
+- (C4IndexOptions) indexOptions {
+    C4IndexOptions c4options = { };
+    c4options.where = _where.UTF8String;
+    return c4options;
 }
 
 @end
