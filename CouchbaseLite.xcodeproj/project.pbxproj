@@ -1846,6 +1846,14 @@
 		AECA89802CADADAA00C7B6BE /* UnnestArrayTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AECA897C2CADADAA00C7B6BE /* UnnestArrayTest.swift */; };
 		AECD5A162C0E21D900B1247E /* CBLIndexUpdater+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */; };
 		AECD5A172C0E21D900B1247E /* CBLIndexUpdater+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */; };
+		AEFEED752D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		AEFEED762D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		AEFEED772D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		AEFEED782D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		AEFEED7A2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
+		AEFEED7B2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
+		AEFEED7C2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
+		AEFEED7D2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2886,6 +2894,8 @@
 		AECA897C2CADADAA00C7B6BE /* UnnestArrayTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnestArrayTest.swift; sourceTree = "<group>"; };
 		AECD59F92C0E137200B1247E /* CBLQueryIndex+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQueryIndex+Internal.h"; sourceTree = "<group>"; };
 		AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLIndexUpdater+Internal.h"; sourceTree = "<group>"; };
+		AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PartialIndexTest.m; sourceTree = "<group>"; };
+		AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialIndexTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3172,6 +3182,7 @@
 				AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */,
 				406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */,
 				AECA897C2CADADAA00C7B6BE /* UnnestArrayTest.swift */,
+				AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */,
 				1AA91DC522B0356000BF0BDE /* CustomLogger.swift */,
 				93249D81246B99FD000A8A6E /* iOS */,
 				939B79241E679017009A70EF /* Info.plist */,
@@ -4254,6 +4265,7 @@
 				AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */,
 				40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */,
 				AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */,
+				AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -6351,6 +6363,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AEFEED7B2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				1AC7546F2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
@@ -6428,6 +6441,7 @@
 				AE5803A52B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */,
 				AE5803D92B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
+				AEFEED7D2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				406F8E002C27F0AB000223FC /* VectorSearchTest+Lazy.swift in Sources */,
@@ -6893,6 +6907,7 @@
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
 				9369A6AE207DD0FD009B5B83 /* DatabaseEncryptionTest.m in Sources */,
 				9343F146207D61EC00F19A89 /* QueryTest.m in Sources */,
+				AEFEED772D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				1A4160D82283694B0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6930,6 +6945,7 @@
 				40AA729E2C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m in Sources */,
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
+				AEFEED782D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
 				9343F177207D633300F19A89 /* DictionaryTest.m in Sources */,
 				93EB25CD21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
@@ -6991,6 +7007,7 @@
 				AE5803A42B99C67D001A1BE3 /* VectorSearchTest.swift in Sources */,
 				AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
+				AEFEED7C2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 				406F8DFF2C27F0A9000223FC /* VectorSearchTest+Lazy.swift in Sources */,
@@ -7045,6 +7062,7 @@
 				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				1ABA63AF28813A8A005835E7 /* ReplicatorTest+Collection.m in Sources */,
+				AEFEED762D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				1A621D792887DCFC0017F905 /* QueryTest+Collection.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
 				AE5F25592CAC310800AAB7F4 /* UnnestArrayIndexTest.m in Sources */,
@@ -7212,6 +7230,7 @@
 				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				40086B532B803B2B00DA6770 /* CBLBlockConflictResolver.m in Sources */,
+				AEFEED752D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7225,6 +7244,7 @@
 				93BB1CA2246BB2D3004FFA00 /* DictionaryTest.swift in Sources */,
 				93BB1CB5246BB2F3004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				93BB1CA5246BB2D3004FFA00 /* FragmentTest.swift in Sources */,
+				AEFEED7A2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				1A8F85082893F317008C4333 /* QueryTest+Collection.swift in Sources */,
 				93BB1CAE246BB2DC004FFA00 /* QueryTest.swift in Sources */,
 				93BB1CAD246BB2DC004FFA00 /* NotificationTest.swift in Sources */,
