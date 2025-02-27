@@ -24,6 +24,7 @@
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLDocumentReplication
+.objc_class_name_CBLEncoder
 .objc_class_name_CBLEncryptionKey
 .objc_class_name_CBLExtension
 .objc_class_name_CBLFileLogSink
