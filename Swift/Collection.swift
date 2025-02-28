@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import Combine
 import CouchbaseLiteSwift_Private
 
 /// A `Collection` represent a collection which is a container for documents.
@@ -300,6 +301,42 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         }
         
         return ListenerToken(token)
+    }
+    
+    // MARK: Combine Publisher
+    
+    @available(iOS 13.0, *)
+    public func publish(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
+        let subject = PassthroughSubject<CollectionChange, Never>()
+        var token: ListenerToken?
+        
+        token = self.addChangeListener(queue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCompletion: { _ in
+                token?.remove()
+            })
+            .eraseToAnyPublisher()
+    }
+    
+    @available(iOS 13.0, *)
+    public func publish(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
+        let subject = PassthroughSubject<DocumentChange, Never>()
+        var token: ListenerToken?
+
+        token = self.addDocumentChangeListener(id: id, queue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCompletion: { _ in
+                token?.remove()
+            })
+            .eraseToAnyPublisher()
     }
     
     // MARK: Indexable
