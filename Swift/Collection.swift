@@ -306,7 +306,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     // MARK: Combine Publisher
     
     @available(iOS 13.0, *)
-    public func publish(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
+    public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
         let subject = PassthroughSubject<CollectionChange, Never>()
         var token: ListenerToken?
         
@@ -323,7 +323,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     }
     
     @available(iOS 13.0, *)
-    public func publish(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
+    public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
         let subject = PassthroughSubject<DocumentChange, Never>()
         var token: ListenerToken?
 

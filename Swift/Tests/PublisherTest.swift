@@ -29,7 +29,7 @@ class PublisherTest: CBLTestCase {
     func testCollectionPublisherAddsListener() throws {
         let expectation = self.expectation(description: "Got the change")
         
-        cancellable = defaultCollection!.publish()
+        cancellable = defaultCollection!.changePublisher()
             .sink { change in
                 XCTAssertFalse(change.documentIDs.isEmpty, "THE change")
                 expectation.fulfill()
@@ -42,7 +42,7 @@ class PublisherTest: CBLTestCase {
     }
             
     func testCollectionChangePublisherRemovesListener() throws {
-        cancellable = defaultCollection!.publish()
+        cancellable = defaultCollection!.changePublisher()
             .sink { _ in }
         XCTAssertNotNil(cancellable)
         cancellable = nil
@@ -51,7 +51,7 @@ class PublisherTest: CBLTestCase {
     func testDocumentPublisherAddsListener() throws {
         let expectation = self.expectation(description: "Got the change")
         
-        cancellable = defaultCollection!.publish(for: "doc1")
+        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
                 XCTAssertEqual(change.documentID, "doc1")
                 expectation.fulfill()
@@ -64,7 +64,7 @@ class PublisherTest: CBLTestCase {
     }
             
     func testDocumentChangePublisherRemovesListener() throws {
-        cancellable = defaultCollection!.publish(for: "doc1")
+        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { _ in }
         XCTAssertNotNil(cancellable)
         cancellable = nil
