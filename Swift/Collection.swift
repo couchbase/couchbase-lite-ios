@@ -308,34 +308,42 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
         let subject = PassthroughSubject<CollectionChange, Never>()
-        var token: ListenerToken?
         
-        token = self.addChangeListener(queue: queue) { change in
+        let token = self.addChangeListener(queue: queue) { change in
             subject.send(change)
         }
 
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCompletion: { _ in
-                token?.remove()
-            })
+            .handleEvents(
+                receiveCompletion: { _ in
+                    token.remove()
+                },
+                receiveCancel: {
+                    token.remove()
+                }
+            )
             .eraseToAnyPublisher()
     }
     
     @available(iOS 13.0, *)
     public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
         let subject = PassthroughSubject<DocumentChange, Never>()
-        var token: ListenerToken?
 
-        token = self.addDocumentChangeListener(id: id, queue: queue) { change in
+        let token = self.addDocumentChangeListener(id: id, queue: queue) { change in
             subject.send(change)
         }
 
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCompletion: { _ in
-                token?.remove()
-            })
+            .handleEvents(
+                receiveCompletion: { _ in
+                    token.remove()
+                },
+                receiveCancel: {
+                    token.remove()
+                }
+            )
             .eraseToAnyPublisher()
     }
     
