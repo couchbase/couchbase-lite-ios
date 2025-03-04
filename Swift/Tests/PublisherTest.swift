@@ -41,12 +41,14 @@ class PublisherTest: CBLTestCase {
         
         defaultCollection!.changePublisher()
             .sink { change in
+                XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
                 changeExpectation.fulfill()
             }
             .store(in: &cancellables)
 
         defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
+                XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
                 documentExpectation.fulfill()
             }
             .store(in: &cancellables)
