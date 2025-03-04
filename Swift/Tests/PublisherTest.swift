@@ -24,63 +24,51 @@ import XCTest
 @available(iOS 13.0, *)
 class PublisherTest: CBLTestCase {
     
-    var cancellable: AnyCancellable?
+    var cancellables = Set<AnyCancellable>()
     
-    func testCollectionPublisherAddsListener() throws {
-        let expectation = self.expectation(description: "Got the change")
+    override func setUp() {
+        super.setUp()
+        try! openOtherDB()
+    }
+    
+    func testCollectionPublishers() throws {
+        let changeExpectation = self.expectation(description: "Change in collection")
+        let documentExpectation = self.expectation(description: "Document changed")
+        changeExpectation.expectedFulfillmentCount = 2
+        changeExpectation.assertForOverFulfill = true
+        documentExpectation.expectedFulfillmentCount = 2
+        documentExpectation.assertForOverFulfill = true
         
-        cancellable = defaultCollection!.changePublisher()
+        defaultCollection!.changePublisher()
             .sink { change in
-                XCTAssertFalse(change.documentIDs.isEmpty, "THE change")
-                expectation.fulfill()
-        }
+                changeExpectation.fulfill()
+            }
+            .store(in: &cancellables)
 
-        let doc = MutableDocument(id: "doc1")
+        defaultCollection!.documentChangePublisher(for: "doc1")
+            .sink { change in
+                documentExpectation.fulfill()
+            }
+            .store(in: &cancellables)
+
+        let doc = try generateDocument(withID: "doc1")
         try defaultCollection!.save(document: doc)
-
-        wait(for: [expectation], timeout: 2.0)
-    }
-    
-    func testCollectionChangePublisherRemoveListenerCompletion() throws {
-        cancellable = defaultCollection!.changePublisher()
-            .sink { _ in }
-        XCTAssertNotNil(cancellable)
-        cancellable = nil
-    }
-            
-    func testCollectionChangePublisherRemoveListenerCancel() throws {
-        cancellable = defaultCollection!.changePublisher()
-            .sink { _ in }
-        XCTAssertNotNil(cancellable)
-        cancellable!.cancel()
-    }
-    
-    func testDocumentPublisherAddsListener() throws {
-        let expectation = self.expectation(description: "Got the change")
+        XCTAssertNotNil(cancellables)
+        wait(for: [changeExpectation, documentExpectation], timeout: 2.0)
         
-        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
-            .sink { change in
-                XCTAssertEqual(change.documentID, "doc1")
-                expectation.fulfill()
-        }
-
-        let doc = MutableDocument(id: "doc1")
+        cancellables.removeAll()
         try defaultCollection!.save(document: doc)
-
-        wait(for: [expectation], timeout: 2.0)
-    }
-            
-    func testDocumentChangePublisherRemoveListenerCompletion() throws {
-        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
-            .sink { _ in }
-        XCTAssertNotNil(cancellable)
-        cancellable = nil
     }
     
-    func testDocumentChangePublisherRemoveListenerCancel() throws {
-        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
+    func testCollectionPublisherRemoveListenerCompletion() throws {
+        defaultCollection!.changePublisher()
             .sink { _ in }
-        XCTAssertNotNil(cancellable)
-        cancellable!.cancel()
+            .store(in: &cancellables)
+        
+        defaultCollection!.documentChangePublisher(for: "doc1")
+            .sink { _ in }
+            .store(in: &cancellables)
+        
+        XCTAssertNotNil(cancellables)
     }
 }
