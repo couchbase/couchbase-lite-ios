@@ -40,12 +40,19 @@ class PublisherTest: CBLTestCase {
 
         wait(for: [expectation], timeout: 2.0)
     }
-            
-    func testCollectionChangePublisherRemovesListener() throws {
+    
+    func testCollectionChangePublisherRemoveListenerCompletion() throws {
         cancellable = defaultCollection!.changePublisher()
             .sink { _ in }
         XCTAssertNotNil(cancellable)
         cancellable = nil
+    }
+            
+    func testCollectionChangePublisherRemoveListenerCancel() throws {
+        cancellable = defaultCollection!.changePublisher()
+            .sink { _ in }
+        XCTAssertNotNil(cancellable)
+        cancellable!.cancel()
     }
     
     func testDocumentPublisherAddsListener() throws {
@@ -63,10 +70,17 @@ class PublisherTest: CBLTestCase {
         wait(for: [expectation], timeout: 2.0)
     }
             
-    func testDocumentChangePublisherRemovesListener() throws {
+    func testDocumentChangePublisherRemoveListenerCompletion() throws {
         cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { _ in }
         XCTAssertNotNil(cancellable)
         cancellable = nil
+    }
+    
+    func testDocumentChangePublisherRemoveListenerCancel() throws {
+        cancellable = defaultCollection!.documentChangePublisher(for: "doc1")
+            .sink { _ in }
+        XCTAssertNotNil(cancellable)
+        cancellable!.cancel()
     }
 }
