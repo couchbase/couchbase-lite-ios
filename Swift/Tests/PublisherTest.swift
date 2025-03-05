@@ -31,34 +31,46 @@ class PublisherTest: CBLTestCase {
         try! openOtherDB()
     }
     
-    func testCollectionPublishers() throws {
-        let changeExpectation = self.expectation(description: "Change in collection")
-        let documentExpectation = self.expectation(description: "Document changed")
-        changeExpectation.expectedFulfillmentCount = 2
-        changeExpectation.assertForOverFulfill = true
-        documentExpectation.expectedFulfillmentCount = 2
-        documentExpectation.assertForOverFulfill = true
+    override func tearDown() {
+        cancellables.removeAll()
+        super.tearDown()
+    }
+    
+    func testCollectionChangePublisher() throws {
+        let expect = self.expectation(description: "Collection changed")
+        expect.expectedFulfillmentCount = 2
         
         defaultCollection!.changePublisher()
             .sink { change in
                 XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
-                changeExpectation.fulfill()
+                expect.fulfill()
             }
             .store(in: &cancellables)
+        
+        // it also saves the document into the db
+        let doc = try generateDocument(withID: "doc1")
+        
+        try defaultCollection!.save(document: doc)
+        XCTAssertNotNil(cancellables)
+        waitForExpectations(timeout: 2.0)
+    }
+    
+    func testCollectionDocumentChangePublisher() throws {
+        let expect = self.expectation(description: "Document changed")
+        expect.expectedFulfillmentCount = 2
 
         defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
                 XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
-                documentExpectation.fulfill()
+                expect.fulfill()
             }
             .store(in: &cancellables)
 
+        // it also saves the document into the db
         let doc = try generateDocument(withID: "doc1")
+        
         try defaultCollection!.save(document: doc)
         XCTAssertNotNil(cancellables)
-        wait(for: [changeExpectation, documentExpectation], timeout: 2.0)
-        
-        cancellables.removeAll()
-        try defaultCollection!.save(document: doc)
+        waitForExpectations(timeout: 2.0)
     }
 }
