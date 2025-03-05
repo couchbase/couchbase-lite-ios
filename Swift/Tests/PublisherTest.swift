@@ -61,16 +61,4 @@ class PublisherTest: CBLTestCase {
         cancellables.removeAll()
         try defaultCollection!.save(document: doc)
     }
-    
-    func testCollectionPublisherRemoveListenerCompletion() throws {
-        defaultCollection!.changePublisher()
-            .sink { _ in }
-            .store(in: &cancellables)
-        
-        defaultCollection!.documentChangePublisher(for: "doc1")
-            .sink { _ in }
-            .store(in: &cancellables)
-        
-        XCTAssertNotNil(cancellables)
-    }
 }

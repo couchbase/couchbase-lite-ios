@@ -315,14 +315,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
 
         return subject
             .receive(on: queue)
-            .handleEvents(
-                receiveCompletion: { _ in
-                    token.remove()
-                },
-                receiveCancel: {
-                    token.remove()
-                }
-            )
+            .handleEvents(receiveCancel: { token.remove() })
             .eraseToAnyPublisher()
     }
     
@@ -336,14 +329,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
 
         return subject
             .receive(on: queue)
-            .handleEvents(
-                receiveCompletion: { _ in
-                    token.remove()
-                },
-                receiveCancel: {
-                    token.remove()
-                }
-            )
+            .handleEvents(receiveCancel: { token.remove() })
             .eraseToAnyPublisher()
     }
     
