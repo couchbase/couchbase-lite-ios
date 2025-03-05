@@ -42,7 +42,7 @@ class PublisherTest: CBLTestCase {
         
         defaultCollection!.changePublisher()
             .sink { change in
-                XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
+                XCTAssert(change.documentIDs.first == "doc1")
                 expect.fulfill()
             }
             .store(in: &cancellables)
@@ -61,7 +61,7 @@ class PublisherTest: CBLTestCase {
 
         defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
-                XCTAssertNotNil(try! self.defaultCollection!.document(id: "doc1"))
+                XCTAssert(change.documentID == "doc1")
                 expect.fulfill()
             }
             .store(in: &cancellables)
