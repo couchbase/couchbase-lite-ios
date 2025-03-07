@@ -51,7 +51,7 @@ class PublisherTest: CBLTestCase {
         let doc = try generateDocument(withID: "doc1")
         
         try defaultCollection!.save(document: doc)
-        XCTAssertNotNil(cancellables)
+        XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: 2.0)
     }
     
@@ -70,7 +70,7 @@ class PublisherTest: CBLTestCase {
         let doc = try generateDocument(withID: "doc1")
         
         try defaultCollection!.save(document: doc)
-        XCTAssertNotNil(cancellables)
+        XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: 2.0)
     }
 }
