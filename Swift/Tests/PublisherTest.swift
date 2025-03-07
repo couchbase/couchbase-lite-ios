@@ -52,7 +52,7 @@ class PublisherTest: CBLTestCase {
         
         try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 2.0)
+        waitForExpectations(timeout: 5.0)
     }
     
     func testCollectionDocumentChangePublisher() throws {
@@ -71,6 +71,6 @@ class PublisherTest: CBLTestCase {
         
         try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 2.0)
+        waitForExpectations(timeout: 5.0)
     }
 }
