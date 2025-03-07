@@ -25,6 +25,7 @@ import XCTest
 class PublisherTest: CBLTestCase {
     
     var cancellables = Set<AnyCancellable>()
+    var replicator: Replicator?
     
     override func setUp() {
         super.setUp()
@@ -39,14 +40,14 @@ class PublisherTest: CBLTestCase {
     func testCollectionChangePublisher() throws {
         let expect = self.expectation(description: "Collection changed")
         expect.expectedFulfillmentCount = 2
-        
+
         defaultCollection!.changePublisher()
             .sink { change in
                 XCTAssert(change.documentIDs.first == "doc1")
                 expect.fulfill()
             }
             .store(in: &cancellables)
-        
+
         // it also saves the document into the db
         let doc = try generateDocument(withID: "doc1")
         
@@ -72,5 +73,54 @@ class PublisherTest: CBLTestCase {
         try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: 10.0)
+    }
+    
+    func testReplicatorChangePublisher() throws {
+        let expect = self.expectation(description: "Replicator changed")
+        // Replicator will go through min 3 states: connecting, busy and completed. Thus, we expect a min of 3 events.
+        expect.expectedFulfillmentCount = 3
+        try createDocNumbered(defaultCollection!, start: 0, num: 10)
+        
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = ReplicatorConfiguration(target: target)
+        config.replicatorType = .push
+        config.addCollection(defaultCollection!)
+        let replicator = Replicator(config: config)
+        
+        replicator.changePublisher()
+            .sink { change in
+                expect.fulfill()
+            }
+            .store(in: &cancellables)
+        
+        self.replicator = replicator
+        replicator.start()
+        
+        XCTAssert(cancellables.count == 1)
+        waitForExpectations(timeout: 5.0)
+    }
+    
+    func testReplicatorDocumentPublisher() throws {
+        let expect = self.expectation(description: "Documents replicated")
+        try createDocNumbered(defaultCollection!, start: 0, num: 10)
+        
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = ReplicatorConfiguration(target: target)
+        config.replicatorType = .push
+        config.addCollection(defaultCollection!)
+        let replicator = Replicator(config: config)
+        
+        replicator.documentReplicationPublisher()
+            .first()
+            .sink { change in
+                XCTAssert(change.documents.count == 10)
+                expect.fulfill()
+            }
+            .store(in: &cancellables)
+        
+        replicator.start()
+        
+        XCTAssert(cancellables.count == 1)
+        waitForExpectations(timeout: 5.0)
     }
 }
