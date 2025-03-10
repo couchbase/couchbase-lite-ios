@@ -75,6 +75,7 @@ class PublisherTest: CBLTestCase {
         waitForExpectations(timeout: 10.0)
     }
     
+#if COUCHBASE_ENTERPRISE
     func testReplicatorChangePublisher() throws {
         // Replicator will go through min 3 states: connecting, busy, stopped. Thus, we expect a min of 3 events to fulfill the expectation.
         var activity: Set<Replicator.ActivityLevel> = []
@@ -129,4 +130,5 @@ class PublisherTest: CBLTestCase {
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: 10.0)
     }
+#endif
 }
