@@ -578,7 +578,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-// call on db-lock(c4doc_create/update)
+// call on db-lock(c4coll_create/update)
 - (BOOL) saveDocument: (CBLDocument*)document
                  into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
