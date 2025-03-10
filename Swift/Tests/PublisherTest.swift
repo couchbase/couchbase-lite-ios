@@ -77,7 +77,7 @@ class PublisherTest: CBLTestCase {
     
 #if COUCHBASE_ENTERPRISE
     func testReplicatorChangePublisher() throws {
-        // Replicator will go through min 3 states: connecting, busy, stopped. Thus, we expect a min of 3 events to fulfill the expectation.
+        // Replicator will go through a minimum of 3 states: connecting, busy, stopped. Will only then fulfill.
         var activity: Set<Replicator.ActivityLevel> = []
         let expect = self.expectation(description: "Replicator changed")
         
