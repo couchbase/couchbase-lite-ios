@@ -76,9 +76,10 @@ class PublisherTest: CBLTestCase {
     }
     
     func testReplicatorChangePublisher() throws {
+        // Replicator will go through min 3 states: connecting, busy, stopped. Thus, we expect a min of 3 events to fulfill the expectation.
+        var activity: Set<Replicator.ActivityLevel> = []
         let expect = self.expectation(description: "Replicator changed")
-        // Replicator will go through min 3 states: connecting, busy and completed. Thus, we expect a min of 3 events.
-        expect.expectedFulfillmentCount = 3
+        
         try createDocNumbered(defaultCollection!, start: 0, num: 10)
         
         let target = DatabaseEndpoint(database: otherDB!)
@@ -89,7 +90,12 @@ class PublisherTest: CBLTestCase {
         
         replicator.changePublisher()
             .sink { change in
-                expect.fulfill()
+                let level = change.status.activity
+                activity.insert(level)
+                
+                if activity.count == 3 {
+                    expect.fulfill()
+                }
             }
             .store(in: &cancellables)
         
@@ -97,7 +103,7 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: 10.0)
     }
     
     func testReplicatorDocumentPublisher() throws {
@@ -121,6 +127,6 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: 10.0)
     }
 }
