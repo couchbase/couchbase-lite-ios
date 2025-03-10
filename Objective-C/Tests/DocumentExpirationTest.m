@@ -126,7 +126,7 @@
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentNotShowUpInQueryAfterExpiration {
@@ -159,7 +159,7 @@
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) verifyQueryResultCount: (NSUInteger)count deletedCount: (NSUInteger)deletedCount {
@@ -212,7 +212,7 @@
     Assert(purgeTime - begin >= 2.0);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testSetExpirationAndThenCloseDatabase {
@@ -274,7 +274,7 @@
     [self waitForExpectationsWithTimeout: 5 handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testExpiredDocumentPurgedOnDifferentDBInstance {
@@ -314,7 +314,7 @@
     AssertNil([otherDB documentWithID: doc.id]);
     
     // Remove listener
-    [otherDB removeChangeListenerWithToken: token];
+    [token remove];
     
     // Close otherDB
     Assert([otherDB close: nil]);
@@ -358,7 +358,7 @@
     Assert(purgeTime - begin >= 2.0);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testOverrideExpirationWithCloserDate {
@@ -397,7 +397,7 @@
     Assert(purgeTime - begin < 3.0);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testRemoveExpirationDate {
@@ -476,7 +476,7 @@
     AssertEqual(count, 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testSetExpirationOnDeletedDocument {
@@ -518,7 +518,7 @@
     AssertEqual(count, 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testPurgeImmediately {
@@ -558,7 +558,7 @@
     Assert(delta < 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testWhetherDatabaseEventTrigged {
@@ -586,7 +586,7 @@
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 #pragma clang diagnostic pop

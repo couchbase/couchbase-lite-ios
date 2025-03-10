@@ -437,7 +437,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     @finally {
         if (replicator.status.activity != kCBLReplicatorStopped)
             [replicator stop];
-        [replicator removeChangeListenerWithToken: token];
+        [token remove];
     }
     
     // Workaround:
@@ -478,7 +478,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.progress.completed >= progress && change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
-            [wReplicator removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     
@@ -492,7 +492,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
-            [wReplicator removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     

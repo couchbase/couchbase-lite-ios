@@ -1887,7 +1887,7 @@ class QueryTest: CBLTestCase {
         try! self.createDoc(numbered: -1, of: 100)
         
         wait(for: [x2], timeout: expTimeout)
-        query.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     func testLiveQueryNoUpdate() throws {
@@ -1907,7 +1907,7 @@ class QueryTest: CBLTestCase {
         
         wait(for: [x1], timeout: 5.0)
         XCTAssertEqual(count, 1)
-        q.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     // When adding a second listener after the first listener is notified, the second listener
@@ -1949,8 +1949,8 @@ class QueryTest: CBLTestCase {
         }        
         
         wait(for: [x2], timeout: 2.0)
-        query.removeChangeListener(withToken: token)
-        query.removeChangeListener(withToken: token2)
+        token.remove()
+        token2.remove()
         XCTAssertEqual(count, 1)
         XCTAssertEqual(count2, 1)
     }
@@ -1982,7 +1982,7 @@ class QueryTest: CBLTestCase {
             try! self.defaultCollection!.purge(id: "doc1")
         }
         wait(for: [x1], timeout: 10.0)
-        query.removeChangeListener(withToken: token)
+        token.remove()
         XCTAssertEqual(count, 2)
     }
     
@@ -2000,7 +2000,7 @@ class QueryTest: CBLTestCase {
         let x1 = expectation(description: "1st change")
         let x2 = expectation(description: "2nd change")
         var count1 = 0;
-        let token1 = query.addChangeListener { (change) in
+        let token = query.addChangeListener { (change) in
             count1 = count1 + 1
             guard let results = change.results else {
                 XCTFail("Results are empty")
@@ -2058,8 +2058,8 @@ class QueryTest: CBLTestCase {
         
         wait(for: [x2, y2], timeout: 5.0)
         
-        query.removeChangeListener(withToken: token1)
-        query.removeChangeListener(withToken: token2)
+        token.remove()
+        token2.remove()
         XCTAssertEqual(count1, 2)
         XCTAssertEqual(count2, 2)
     }
