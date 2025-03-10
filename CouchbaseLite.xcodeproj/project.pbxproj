@@ -1792,6 +1792,10 @@
 		AE83D0852C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */; };
 		AE83D0862C0637ED0055D2CF /* CBLIndexUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		AE83D0872C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */; };
+		AE9D61A12D6F453C00A6EB82 /* PublisherTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */; };
+		AE9D61A22D6F453C00A6EB82 /* PublisherTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */; };
+		AE9D61A32D6F453C00A6EB82 /* PublisherTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */; };
+		AE9D61A42D6F453C00A6EB82 /* PublisherTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */; };
 		AEA74F242CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
 		AEA74F252CFE030E005F4810 /* CBLConsoleLogSink.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */ = {isa = PBXBuildFile; fileRef = AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */; };
@@ -2879,6 +2883,7 @@
 		AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UnnestArrayIndexTest.m; sourceTree = "<group>"; };
 		AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexUpdater.h; sourceTree = "<group>"; };
 		AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLIndexUpdater.mm; sourceTree = "<group>"; };
+		AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherTest.swift; sourceTree = "<group>"; };
 		AEA74F222CFE030E005F4810 /* CBLConsoleLogSink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConsoleLogSink.h; sourceTree = "<group>"; };
 		AEA74F232CFE030E005F4810 /* CBLConsoleLogSink.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLConsoleLogSink.mm; sourceTree = "<group>"; };
 		AEA74F2C2CFE0581005F4810 /* CBLFileLogSink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLFileLogSink.h; sourceTree = "<group>"; };
@@ -3172,6 +3177,7 @@
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93EB25A321CDCC160006FB88 /* PredictiveQueryTest.swift */,
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
+				AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
 				1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
@@ -6377,6 +6383,7 @@
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
 				9388CC5521C25CC7005CA66D /* LogTest.swift in Sources */,
 				1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				AE9D61A32D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
@@ -6442,6 +6449,7 @@
 				AE5803D92B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
 				AEFEED7D2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
+				AE9D61A42D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				406F8E002C27F0AB000223FC /* VectorSearchTest+Lazy.swift in Sources */,
@@ -7008,6 +7016,7 @@
 				AE5803D82B9B5B2A001A1BE3 /* WordEmbeddingModel.swift in Sources */,
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				AEFEED7C2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
+				AE9D61A22D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 				406F8DFF2C27F0A9000223FC /* VectorSearchTest+Lazy.swift in Sources */,
@@ -7253,6 +7262,7 @@
 				93BB1CA6246BB2D3004FFA00 /* LogTest.swift in Sources */,
 				93BB1CB7246BB2F3004FFA00 /* CustomLogger.swift in Sources */,
 				1A93FB0A24F737330015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				AE9D61A12D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93BB1C99246BB2AB004FFA00 /* ArrayTest.swift in Sources */,
 				40938A0E2D4AFA5900691393 /* LogSinkTest.swift in Sources */,
 				93BB1C9D246BB2BE004FFA00 /* DatabaseTest.swift in Sources */,
@@ -8790,6 +8800,7 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Debug;
 		};
@@ -8799,6 +8810,7 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Debug_EE;
 		};
@@ -8808,6 +8820,7 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Release;
 		};
@@ -8817,6 +8830,7 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Release_EE;
 		};
