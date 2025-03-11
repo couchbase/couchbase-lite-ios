@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import Combine
 import CouchbaseLiteSwift_Private
 
 /// A database query.
@@ -122,6 +123,19 @@ public class Query {
         
         tokens.add(listenerToken)
         return listenerToken
+    }
+
+    public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<QueryChange, Never> {
+        let subject = PassthroughSubject<QueryChange, Never>()
+        
+        let token = self.addChangeListener(withQueue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCancel: { token.remove() })
+            .eraseToAnyPublisher()
     }
     
     /// Removes a change listener wih the given listener token.
