@@ -18,6 +18,7 @@
 //
 
 import Foundation
+import Combine
 import CouchbaseLiteSwift_Private
 
 
@@ -194,6 +195,36 @@ public final class Replicator {
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
         impl.removeChangeListener(with: token.impl)
+    }
+    
+    // MARK: Combine Publisher
+    
+    @available(iOS 13.0, *)
+    public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<ReplicatorChange, Never> {
+        let subject = PassthroughSubject<ReplicatorChange, Never>()
+        
+        let token = self.addChangeListener(withQueue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCancel: { token.remove()})
+            .eraseToAnyPublisher()
+    }
+    
+    @available(iOS 13.0, *)
+    public func documentReplicationPublisher(on queue: DispatchQueue = .main) -> AnyPublisher<DocumentReplication, Never> {
+        let subject = PassthroughSubject<DocumentReplication, Never>()
+        
+        let token = self.addDocumentReplicationListener(withQueue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCancel: { token.remove() })
+            .eraseToAnyPublisher()
     }
     
     /// Get pending document ids for default collection. If the default collection is not part of
