@@ -305,6 +305,12 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     
     // MARK: Combine Publisher
     
+    /// Returns a Combine publisher that emits `CollectionChange` events when documents
+    /// in the collection are changed.
+    ///
+    /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<CollectionChange, Never>` that emits collection changes.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
         let subject = PassthroughSubject<CollectionChange, Never>()
@@ -319,6 +325,14 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
             .eraseToAnyPublisher()
     }
     
+    /// Returns a Combine publisher that emits `DocumentChange` events when a specific document
+    /// changes.
+    ///
+    /// - Parameters:
+    ///   - id: The document ID to observe.
+    ///   - queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<DocumentChange, Never>` that emits document changes.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
         let subject = PassthroughSubject<DocumentChange, Never>()

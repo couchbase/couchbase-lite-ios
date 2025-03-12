@@ -199,6 +199,13 @@ public final class Replicator {
     
     // MARK: Combine Publisher
     
+    /// Returns a Combine publisher that emits `ReplicatorChange` events when
+    /// the replicator's status changes.
+    /// 
+    /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<ReplicatorChange, Never>` that emits
+    ///            replicator state changes.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<ReplicatorChange, Never> {
         let subject = PassthroughSubject<ReplicatorChange, Never>()
@@ -213,6 +220,13 @@ public final class Replicator {
             .eraseToAnyPublisher()
     }
     
+    /// Returns a Combine publisher that emits `DocumentReplication` events when
+    /// documents are pushed or pulled during replication.
+    ///
+    /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<DocumentReplication, Never>` that emits
+    ///            document replication events.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func documentReplicationPublisher(on queue: DispatchQueue = .main) -> AnyPublisher<DocumentReplication, Never> {
         let subject = PassthroughSubject<DocumentReplication, Never>()
