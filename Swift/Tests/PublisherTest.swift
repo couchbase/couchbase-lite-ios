@@ -22,7 +22,7 @@ import XCTest
 @testable import CouchbaseLiteSwift
 
 @available(iOS 13.0, *)
-class PublisherTest: QueryTest {
+class PublisherTest: CBLTestCase {
     
     var cancellables = Set<AnyCancellable>()
     var replicator: Replicator?
