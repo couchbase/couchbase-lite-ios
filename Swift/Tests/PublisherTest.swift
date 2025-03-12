@@ -53,7 +53,7 @@ class PublisherTest: CBLTestCase {
         
         try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testCollectionDocumentChangePublisher() throws {
@@ -72,7 +72,7 @@ class PublisherTest: CBLTestCase {
         
         try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
 #if COUCHBASE_ENTERPRISE
@@ -104,7 +104,7 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testReplicatorDocumentPublisher() throws {
@@ -128,7 +128,38 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: expTimeout)
     }
 #endif
+    
+    func testQueryChangePublisher() throws {
+        let expect1 = self.expectation(description: "10 rows")
+        let expect2 = self.expectation(description: "11 rows")
+        expect1.assertForOverFulfill = true
+        expect2.assertForOverFulfill = true
+        
+        try createDocNumbered(defaultCollection!, start: 0, num: 10)
+        let query = try self.db.createQuery("select * from _ where number1 < 10")
+        
+        query.changePublisher()
+            .sink { change in
+                XCTAssertNotNil(change.query)
+                XCTAssertNil(change.error)
+                let rows = Array(change.results!)
+
+                switch rows.count {
+                    case 10: expect1.fulfill()
+                    case 11: expect2.fulfill()
+                    default: XCTFail("Unexpected number of results: \(rows.count)")
+                }
+            }
+            .store(in: &cancellables)
+        
+        XCTAssert(cancellables.count == 1)
+        
+        wait(for: [expect1], timeout: expTimeout)
+        try createDocNumbered(defaultCollection!, start: -1, num: 10)
+        
+        wait(for: [expect2], timeout: expTimeout)
+    }
 }
