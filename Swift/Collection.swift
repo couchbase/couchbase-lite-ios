@@ -310,7 +310,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     ///
     /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
     /// - Returns: A `PassthroughSubject<CollectionChange, Never>` that emits collection changes.
-    /// - Note: Only available on  iOS 13.0 and later.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
         let subject = PassthroughSubject<CollectionChange, Never>()
@@ -332,7 +332,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     ///   - id: The document ID to observe.
     ///   - queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
     /// - Returns: A `PassthroughSubject<DocumentChange, Never>` that emits document changes.
-    /// - Note: Only available on  iOS 13.0 and later.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
         let subject = PassthroughSubject<DocumentChange, Never>()

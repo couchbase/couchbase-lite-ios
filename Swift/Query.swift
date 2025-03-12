@@ -132,7 +132,7 @@ public class Query {
     ///
     /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
     /// - Returns: A `PassthroughSubject<QueryChange, Never>` that emits query changes
-    /// - Note: Only available on  iOS 13.0 and later.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<QueryChange, Never> {
         let subject = PassthroughSubject<QueryChange, Never>()

@@ -205,7 +205,7 @@ public final class Replicator {
     /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
     /// - Returns: A `PassthroughSubject<ReplicatorChange, Never>` that emits
     ///            replicator state changes.
-    /// - Note: Only available on  iOS 13.0 and later.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<ReplicatorChange, Never> {
         let subject = PassthroughSubject<ReplicatorChange, Never>()
@@ -226,7 +226,7 @@ public final class Replicator {
     /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
     /// - Returns: A `PassthroughSubject<DocumentReplication, Never>` that emits
     ///            document replication events.
-    /// - Note: Only available on  iOS 13.0 and later.
+    /// - Note: Only available on iOS 13.0 and later.
     @available(iOS 13.0, *)
     public func documentReplicationPublisher(on queue: DispatchQueue = .main) -> AnyPublisher<DocumentReplication, Never> {
         let subject = PassthroughSubject<DocumentReplication, Never>()
