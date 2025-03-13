@@ -6,15 +6,15 @@
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
-import XCTest
 import CouchbaseLiteSwift
+import XCTest
 
 @DocumentModel
 class Person: Codable, CustomDebugStringConvertible {
     @DocumentId var id: String?
-    let name: String
-    let age: UInt
-    let hobbies: [Hobby]
+    var name: String
+    var age: UInt
+    var hobbies: [Hobby]
     
     init(name: String, age: UInt, hobbies: [Hobby]) {
         self.name = name
@@ -46,7 +46,7 @@ enum HobbyFrequency: String, Codable, CustomDebugStringConvertible {
 }
 
 class CodableTest: CBLTestCase {
-    func testEncodeAndDecode() throws {
+    func testSaveAndLoad() throws {
         let person = Person(name: "Steve", age: 36, hobbies: [
             Hobby(name: "reading", frequency: .daily),
             Hobby(name: "coding", frequency: .daily),
@@ -77,7 +77,7 @@ class CodableTest: CBLTestCase {
         XCTAssert(personDecoded.hobbies == person.hobbies)
     }
     
-    func testDecodeResult() throws {
+    func testDecodeQueryResult() throws {
         let person = Person(name: "Steve", age: 36, hobbies: [
             Hobby(name: "reading", frequency: .daily),
             Hobby(name: "coding", frequency: .daily),
@@ -96,7 +96,7 @@ class CodableTest: CBLTestCase {
         XCTAssert(resultPerson.hobbies == person.hobbies)
     }
     
-    func testDecodeResultSet() throws {
+    func testDecodeQueryResultSet() throws {
         let steve = Person(name: "Steve", age: 36, hobbies: [
             Hobby(name: "reading", frequency: .daily),
             Hobby(name: "coding", frequency: .daily),
@@ -118,7 +118,7 @@ class CodableTest: CBLTestCase {
         let people = [
             steve,
             hermione,
-            simon,
+            simon
         ]
         
         let collection = try db.defaultCollection()
@@ -131,5 +131,61 @@ class CodableTest: CBLTestCase {
         
         let resultSetPeople = try resultSet.data(as: Person.self)
         XCTAssert(resultSetPeople.elementsEqual(people, by: { $0.name == $1.name && $0.age == $1.age && $0.hobbies == $1.hobbies }))
+    }
+    
+    func testDelete() throws {
+        let person = Person(name: "Steve", age: 36, hobbies: [
+            Hobby(name: "reading", frequency: .daily),
+            Hobby(name: "coding", frequency: .daily),
+            Hobby(name: "cycling", frequency: .weekly)
+        ])
+        
+        let collection = try db.defaultCollection()
+        try collection.saveDocument(from: person)
+        try collection.deleteDocument(for: person)
+    }
+    
+    func testSaveWithConflictHandler() throws {
+        let person1 = Person(name: "Steve", age: 36, hobbies: [
+            Hobby(name: "reading", frequency: .daily),
+            Hobby(name: "coding", frequency: .daily),
+            Hobby(name: "cycling", frequency: .weekly)
+        ])
+        
+        let collection = try db.defaultCollection()
+        try collection.saveDocument(from: person1)
+        
+        // Get another copy of person
+        let person2 = try collection.document(id: person1.id!, as: Person.self)!
+        
+        // Make conflicting changes to each copy
+        person1.age = 37
+        person2.hobbies.removeAll(where: { $0.name == "cycling" })
+        
+        try collection.saveDocument(from: person1)
+        
+        let resolved = try collection.saveDocument(from: person2) { newPerson, _ -> Bool in
+            newPerson.name = "John"
+            newPerson.age = 31
+            newPerson.hobbies.append(Hobby(name: "jogging", frequency: .weekly))
+            return true
+        }
+        XCTAssert(resolved)
+        
+        let finalPerson = try collection.document(id: person1.id!, as: Person.self)!
+        XCTAssert(finalPerson.name == "John")
+        XCTAssertEqual(finalPerson.name, "John")
+        XCTAssertEqual(finalPerson.age, 31)
+        XCTAssertEqual(finalPerson.hobbies, [
+            Hobby(name: "reading", frequency: .daily),
+            Hobby(name: "coding", frequency: .daily),
+            Hobby(name: "jogging", frequency: .weekly)
+        ])
+        
+        // Actually, the conflict handler's `newPerson` *IS* `person2`, so `person2` was updated by the changes we made
+        // in the conflict handler
+        XCTAssertEqual(person2.name, finalPerson.name)
+        XCTAssertEqual(person2.age, finalPerson.age)
+        XCTAssertEqual(person2.hobbies, finalPerson.hobbies)
     }
 }

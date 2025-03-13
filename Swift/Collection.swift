@@ -202,10 +202,10 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// the collection. The specified conflict handler will be used if conflict happens.
     public func saveDocument<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
         try withDocument(from: object) { document in
-            try save(document: document) { _, remoteDocument in
+            try save(document: document) { _, existingDocument in
                 do {
-                    let remoteVal = remoteDocument != nil ? try T.init(from: DocumentDecoder(document: remoteDocument!.toMutable())) : nil
-                    let result = conflictHandler(object, remoteVal)
+                    let existingVal = existingDocument != nil ? try T.init(from: DocumentDecoder(document: existingDocument!.toMutable())) : nil
+                    let result = conflictHandler(object, existingVal)
                     if result {
                         // If the conflictHandler returns true, the `object: T` may have been modified, so
                         // use DocumentEncoder to update its referenced MutableDocument.
