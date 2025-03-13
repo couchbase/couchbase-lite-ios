@@ -7,73 +7,83 @@
 //
 
 #import "fleece/Fleece.hh"
+#import "CBLFleece.hh"
+#import "MRoot.hh"
 #import "CBLEncoder.h"
 #import "CBLCoreBridge.h"
+#import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDocument+Internal.h"
+
+using namespace fleece;
 
 @implementation CBLEncoder {
-    std::unique_ptr<fleece::Encoder> _encoder;
+    FLEncoder _encoder;
+    CBLDatabase* _db;
+    std::unique_ptr<C4Transaction> _transaction;
+    NSError* _error;
 }
 
-- (instancetype)init {
-    self = [super init];
-    return self;
-}
-
-- (instancetype) initWithFLEncoder:(FLEncoder)enc {
+- (nullable instancetype)initWithDB:(nonnull CBLDatabase *)db error:(NSError**)error {
     self = [super init];
     if (self) {
-        _encoder = std::make_unique<fleece::Encoder>(enc);
+        _encoder = c4db_getSharedFleeceEncoder(db.c4db);
+        _db = db;
+        _transaction = std::make_unique<C4Transaction>(db.c4db);
+        if (!_transaction->begin()) {
+            convertError(_transaction->error(), error);
+            return nil;
+        }
     }
     return self;
 }
 
-- (nonnull instancetype)initWithSharedKeys:(nonnull FLSharedKeys)sk {
-    self = [super init];
-    if (self) {
-        _encoder = std::make_unique<fleece::Encoder>(sk);
-    }
-    return self;
-}
-
-- (nonnull instancetype)initWithDB:(nonnull CBLDatabase *)db {
-    self = [super init];
-    if (self) {
-        auto shared = c4db_getSharedFleeceEncoder(db.c4db);
-        _encoder = std::make_unique<fleece::Encoder>(shared);
-    }
-    return self;
+- (void)setExtraInfo:(CBLEncoderContext *)context {
+    void* flcontext = [context get];
+    FLEncoder_SetExtraInfo(_encoder, flcontext);
 }
 
 - (bool)beginArray:(NSUInteger)reserve {
-    return _encoder->beginArray(reserve);
+    return FLEncoder_BeginArray(_encoder, reserve);
 }
 
 - (bool)beginDict:(NSUInteger)reserve { 
-    return _encoder->beginDict(reserve);
+    return FLEncoder_BeginDict(_encoder, reserve);
 }
 
 - (bool)endArray { 
-    return _encoder->endArray();
+    return FLEncoder_EndArray(_encoder);
 }
 
 - (bool)endDict { 
-    return _encoder->endDict();
+    return FLEncoder_EndDict(_encoder);
 }
 
-- (nullable NSData *)finish { 
-    auto r = _encoder->finish();
-    auto sr = C4SliceResult { r.buf, r.size };
-    return sliceResult2data(sr);
+- (nullable NSData *)finish {
+    C4SliceResult data = FLEncoder_Finish(_encoder, nullptr);
+    _transaction->end(true);
+    return sliceResult2data(data);
 }
 
-- (void)reset { 
-    _encoder.reset();
+- (bool)finishInto:(CBLDocument *)document {
+    FLDoc fldoc = FLEncoder_FinishDoc(_encoder, nullptr);
+    Doc doc { fldoc };
+    Dict fleeceData = doc.asDict();
+    _transaction->end(true);
+    if (!fleeceData) {
+        return false;
+    }
+    [document setFleece: (FLDict)fleeceData];
+    return true;
+}
+
+- (void)reset {
+    FLEncoder_Reset(_encoder);
 }
 
 - (NSString*)getError {
-    const char *cstr = _encoder->errorMessage();
+    const char *cstr = FLEncoder_GetErrorMessage(_encoder);
     if (cstr == NULL) {
         return nil;
     }
@@ -81,17 +91,45 @@
     return str;
 }
 
-- (bool)write:(nonnull id)obj { 
-    return _encoder->writeNSObject(obj);
+- (bool)write:(nonnull id)obj {
+    return FLEncoder_WriteNSObject(_encoder, obj);
 }
 
 - (bool)writeKey:(nonnull NSString *)key {
-    return _encoder->writeKey(c4str(key.UTF8String));
+    return FLEncoder_WriteKey(_encoder, c4str(key.UTF8String));
 }
 
+@end
+
+@implementation CBLEncoderContext {
+    CBLDatabase* _database;
+    NSError* _error;
+    bool _hasAttachment;
+    FLEncoderContext _context;
+}
+
+- (instancetype) initWithDB:(CBLDatabase *)db {
+    self = [super init];
+    if (self) {
+        _database = db;
+        _error = nil;
+        _hasAttachment = false;
+        _context = { .database = _database, .encodingError = _error, .outHasAttachment = &_hasAttachment };
+    }
+    return self;
+}
+
+- (nonnull void*)get {
+    return &_context;
+}
+
+- (void) reset {
+    _error = nil;
+    _hasAttachment = false;
+}
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    return [[[self class] alloc] initWithFLEncoder: _encoder->operator _FLEncoder *()];
+    return [[[self class] alloc] initWithDB: _database];
 }
 
 @end

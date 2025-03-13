@@ -1858,16 +1858,28 @@
 		AEFEED7B2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
 		AEFEED7C2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
 		AEFEED7D2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */; };
+		EA4BEC9B2D7885D100F08291 /* FleeceEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4BEC9A2D7885CC00F08291 /* FleeceEncoder.swift */; };
+		EA4BEC9C2D7885D100F08291 /* FleeceEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4BEC9A2D7885CC00F08291 /* FleeceEncoder.swift */; };
+		EA60E25D2D81E22C00DDB1A9 /* QueryResultDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60E25C2D81E22800DDB1A9 /* QueryResultDecoder.swift */; };
+		EA60E25E2D81E22C00DDB1A9 /* QueryResultDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60E25C2D81E22800DDB1A9 /* QueryResultDecoder.swift */; };
+		EA60E2602D81E92700DDB1A9 /* QueryResultSetDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60E25F2D81E92300DDB1A9 /* QueryResultSetDecoder.swift */; };
+		EA60E2612D81E92700DDB1A9 /* QueryResultSetDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60E25F2D81E92300DDB1A9 /* QueryResultSetDecoder.swift */; };
+		EA7999872D70C62D002C8D71 /* CodableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999862D70C624002C8D71 /* CodableTest.swift */; };
+		EA7999882D70C62D002C8D71 /* CodableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999862D70C624002C8D71 /* CodableTest.swift */; };
+		EA7999892D70C62D002C8D71 /* CodableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999862D70C624002C8D71 /* CodableTest.swift */; };
+		EA79998A2D70C62D002C8D71 /* CodableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999862D70C624002C8D71 /* CodableTest.swift */; };
+		EA7999992D70F712002C8D71 /* DocumentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999982D70F70E002C8D71 /* DocumentModel.swift */; };
+		EA79999A2D70F712002C8D71 /* DocumentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7999982D70F70E002C8D71 /* DocumentModel.swift */; };
+		EA8731552D7B2C710091E90F /* FleeceDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8731542D7B2C6D0091E90F /* FleeceDecoder.swift */; };
+		EA8731562D7B2C710091E90F /* FleeceDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8731542D7B2C6D0091E90F /* FleeceDecoder.swift */; };
 		EAD5BA312D5B90E200AB8123 /* CBLEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EAD5BA352D5B913700AB8123 /* CBLEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EAD5BA382D5B92AF00AB8123 /* CBLEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA372D5B92AD00AB8123 /* CBLEncoder.mm */; };
 		EAD5BA392D5B92F100AB8123 /* CBLEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA372D5B92AD00AB8123 /* CBLEncoder.mm */; };
-		EAD5BA3B2D5B93A300AB8123 /* FleeceEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3A2D5B93A200AB8123 /* FleeceEncoder.swift */; };
-		EAD5BA3E2D5B93C100AB8123 /* FleeceDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* FleeceDecoder.swift */; };
-		EAD5BA3F2D5B93D100AB8123 /* FleeceEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3A2D5B93A200AB8123 /* FleeceEncoder.swift */; };
-		EAD5BA402D5B93D500AB8123 /* FleeceDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* FleeceDecoder.swift */; };
-		EAD5BA422D5B9B5D00AB8123 /* FleeceEncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA412D5B9B5400AB8123 /* FleeceEncodable.swift */; };
-		EAD5BA432D5B9B5D00AB8123 /* FleeceEncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA412D5B9B5400AB8123 /* FleeceEncodable.swift */; };
+		EAD5BA3B2D5B93A300AB8123 /* DocumentEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3A2D5B93A200AB8123 /* DocumentEncoder.swift */; };
+		EAD5BA3E2D5B93C100AB8123 /* DocumentDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */; };
+		EAD5BA3F2D5B93D100AB8123 /* DocumentEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3A2D5B93A200AB8123 /* DocumentEncoder.swift */; };
+		EAD5BA402D5B93D500AB8123 /* DocumentDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2911,11 +2923,17 @@
 		AECD5A0F2C0E21D900B1247E /* CBLIndexUpdater+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLIndexUpdater+Internal.h"; sourceTree = "<group>"; };
 		AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PartialIndexTest.m; sourceTree = "<group>"; };
 		AEFEED792D4AB994008AF4C2 /* PartialIndexTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialIndexTest.swift; sourceTree = "<group>"; };
+		EA4BEC9A2D7885CC00F08291 /* FleeceEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceEncoder.swift; sourceTree = "<group>"; };
+		EA60E25C2D81E22800DDB1A9 /* QueryResultDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryResultDecoder.swift; sourceTree = "<group>"; };
+		EA60E25F2D81E92300DDB1A9 /* QueryResultSetDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryResultSetDecoder.swift; sourceTree = "<group>"; };
+		EA7999862D70C624002C8D71 /* CodableTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableTest.swift; sourceTree = "<group>"; };
+		EA7999912D70E2FD002C8D71 /* CBLMacros */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CBLMacros; sourceTree = SOURCE_ROOT; };
+		EA7999982D70F70E002C8D71 /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
+		EA8731542D7B2C6D0091E90F /* FleeceDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceDecoder.swift; sourceTree = "<group>"; };
 		EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLEncoder.h; sourceTree = "<group>"; };
 		EAD5BA372D5B92AD00AB8123 /* CBLEncoder.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLEncoder.mm; sourceTree = "<group>"; };
-		EAD5BA3A2D5B93A200AB8123 /* FleeceEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceEncoder.swift; sourceTree = "<group>"; };
-		EAD5BA3D2D5B93C000AB8123 /* FleeceDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceDecoder.swift; sourceTree = "<group>"; };
-		EAD5BA412D5B9B5400AB8123 /* FleeceEncodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceEncodable.swift; sourceTree = "<group>"; };
+		EAD5BA3A2D5B93A200AB8123 /* DocumentEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEncoder.swift; sourceTree = "<group>"; };
+		EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDecoder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3140,6 +3158,7 @@
 		275F92631E4D2FD7007FD5A2 /* Swift */ = {
 			isa = PBXGroup;
 			children = (
+				EA7999912D70E2FD002C8D71 /* CBLMacros */,
 				EAD5BA3C2D5B93A700AB8123 /* Codable */,
 				9338BED21ED5473300634873 /* Database */,
 				938195F31EC10B780032CC51 /* Document */,
@@ -3177,6 +3196,7 @@
 				934C2CDA1F4FC0610010316F /* Bridge */,
 				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
+				EA7999862D70C624002C8D71 /* CodableTest.swift */,
 				1A6084EB2875842A0037C66F /* CollectionTest.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				9369A6B6207DEB5F009B5B83 /* DatabaseEncryptionTest.swift */,
@@ -4518,9 +4538,13 @@
 		EAD5BA3C2D5B93A700AB8123 /* Codable */ = {
 			isa = PBXGroup;
 			children = (
-				EAD5BA412D5B9B5400AB8123 /* FleeceEncodable.swift */,
-				EAD5BA3A2D5B93A200AB8123 /* FleeceEncoder.swift */,
-				EAD5BA3D2D5B93C000AB8123 /* FleeceDecoder.swift */,
+				EA60E25F2D81E92300DDB1A9 /* QueryResultSetDecoder.swift */,
+				EA60E25C2D81E22800DDB1A9 /* QueryResultDecoder.swift */,
+				EA8731542D7B2C6D0091E90F /* FleeceDecoder.swift */,
+				EA4BEC9A2D7885CC00F08291 /* FleeceEncoder.swift */,
+				EA7999982D70F70E002C8D71 /* DocumentModel.swift */,
+				EAD5BA3A2D5B93A200AB8123 /* DocumentEncoder.swift */,
+				EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */,
 			);
 			name = Codable;
 			sourceTree = "<group>";
@@ -5358,6 +5382,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				EA7999932D70E3F0002C8D71 /* PBXTargetDependency */,
 				9308F40E1E64B24700F53EE4 /* PBXTargetDependency */,
 			);
 			name = CBL_Swift;
@@ -6200,8 +6225,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EAD5BA3E2D5B93C100AB8123 /* FleeceDecoder.swift in Sources */,
-				EAD5BA3B2D5B93A300AB8123 /* FleeceEncoder.swift in Sources */,
+				EAD5BA3E2D5B93C100AB8123 /* DocumentDecoder.swift in Sources */,
+				EAD5BA3B2D5B93A300AB8123 /* DocumentEncoder.swift in Sources */,
 				EAD5BA392D5B92F100AB8123 /* CBLEncoder.mm in Sources */,
 				69ABB5EA2976A5CA00DA0229 /* CBLDNSService.mm in Sources */,
 				1A34714E2671C8800042C6BA /* CBLFullTextIndexConfiguration.m in Sources */,
@@ -6258,7 +6283,6 @@
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				935A58BB21AFA34D009A29CB /* CBLDocumentReplication.mm in Sources */,
 				AEA74F302CFE0581005F4810 /* CBLFileLogSink.mm in Sources */,
-				EAD5BA422D5B9B5D00AB8123 /* FleeceEncodable.swift in Sources */,
 				1A1612B4283E29E600AA4987 /* CBLCollectionConfiguration.m in Sources */,
 				934A27A81F30E62F003946A7 /* CBLUnaryExpression.m in Sources */,
 				93EB261B21DDC34C0006FB88 /* IndexBuilder.swift in Sources */,
@@ -6280,6 +6304,7 @@
 				93EC42E91FB3930E00D54BB4 /* CBLQueryArrayExpression.m in Sources */,
 				93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */,
 				401D7FED2C3F8F5300DAAB62 /* Collection.swift in Sources */,
+				EA4BEC9C2D7885D100F08291 /* FleeceEncoder.swift in Sources */,
 				1AEF059F283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
 				1A8E2FB828FF75D500E141A8 /* CBLDefaults.m in Sources */,
@@ -6325,6 +6350,7 @@
 				938E38841F3A5BB4006806C7 /* CBLQueryCollation.m in Sources */,
 				401D7FC42C3F82C300DAAB62 /* CBLQueryIndex.mm in Sources */,
 				9384D80C1FC3F75700FE89D8 /* CBLQueryArrayFunction.m in Sources */,
+				EA60E2602D81E92700DDB1A9 /* QueryResultSetDecoder.swift in Sources */,
 				93AF51C41E80A6FC00E200F0 /* CBLQueryOrdering.m in Sources */,
 				93DB7FEF1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m in Sources */,
 				1AAFB68F284A266F00878453 /* Scope.swift in Sources */,
@@ -6348,6 +6374,7 @@
 				9384D8631FC4163D00FE89D8 /* FullTextFunction.swift in Sources */,
 				1A8E2FB328FF756600E141A8 /* Defaults.swift in Sources */,
 				9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */,
+				EA8731552D7B2C710091E90F /* FleeceDecoder.swift in Sources */,
 				1A3471632671C9230042C6BA /* CBLValueIndexConfiguration.m in Sources */,
 				93AF51C71E80A70900E200F0 /* CBLQuery.mm in Sources */,
 				93DECEB6200A6EAA00F44953 /* ValueExpression.swift in Sources */,
@@ -6370,6 +6397,7 @@
 				409389EA2D4AB81700691393 /* LogSinks.swift in Sources */,
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
 				AEA74F262CFE030E005F4810 /* CBLConsoleLogSink.mm in Sources */,
+				EA79999A2D70F712002C8D71 /* DocumentModel.swift in Sources */,
 				9380D2661F0D7BF7007DD84A /* GroupByRouter.swift in Sources */,
 				93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */,
 				27D721BD1F904B2500AA4458 /* CBLNewDictionary.mm in Sources */,
@@ -6396,6 +6424,7 @@
 				9381962A1EC152410032CC51 /* Document.swift in Sources */,
 				1A3470C6266F3E7C0042C6BA /* CBLIndexConfiguration.m in Sources */,
 				9380D2731F0DBD79007DD84A /* SelectResult.swift in Sources */,
+				EA60E25E2D81E22C00DDB1A9 /* QueryResultDecoder.swift in Sources */,
 				93B503661E64B083002C4680 /* CBLStringBytes.mm in Sources */,
 				1AAB2785227793E40037A880 /* CBLConflict.m in Sources */,
 				1AA2EDFA28A676E100DEB47E /* CBLConflictResolverBridge.m in Sources */,
@@ -6427,6 +6456,7 @@
 				1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				AE9D61A32D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
+				EA7999882D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				1A8DD7DA21C9876E00741C47 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
@@ -6481,6 +6511,7 @@
 				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
+				EA7999892D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				93BB1CAB246BB2D4004FFA00 /* LogTest.swift in Sources */,
 				93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */,
 				93BB1CBC246BB301004FFA00 /* CBLTestHelper.m in Sources */,
@@ -6652,8 +6683,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EAD5BA402D5B93D500AB8123 /* FleeceDecoder.swift in Sources */,
-				EAD5BA3F2D5B93D100AB8123 /* FleeceEncoder.swift in Sources */,
+				EAD5BA402D5B93D500AB8123 /* DocumentDecoder.swift in Sources */,
+				EAD5BA3F2D5B93D100AB8123 /* DocumentEncoder.swift in Sources */,
 				EAD5BA382D5B92AF00AB8123 /* CBLEncoder.mm in Sources */,
 				AE83D0872C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */,
 				40FC1C5C2B928C1600394276 /* ListenerPasswordAuthenticator.swift in Sources */,
@@ -6756,8 +6787,10 @@
 				40FC1B4E2B92872900394276 /* CBLDatabase+Encryption.mm in Sources */,
 				9343F04C207D61AB00F19A89 /* OrderByRouter.swift in Sources */,
 				40FC1C6C2B928C1600394276 /* Prediction.swift in Sources */,
+				EA4BEC9B2D7885D100F08291 /* FleeceEncoder.swift in Sources */,
 				9343F04D207D61AB00F19A89 /* CBLParameterExpression.m in Sources */,
 				AEA74F432CFE0BC3005F4810 /* CBLCustomLogSink.m in Sources */,
+				EA7999992D70F712002C8D71 /* DocumentModel.swift in Sources */,
 				409389F32D4AB99900691393 /* FileLogSink.swift in Sources */,
 				9343F04E207D61AB00F19A89 /* HavingRouter.swift in Sources */,
 				40FC1C5D2B928C1600394276 /* ListenerAuthenticator.swift in Sources */,
@@ -6830,7 +6863,6 @@
 				9343F07A207D61AB00F19A89 /* ExceptionUtils.m in Sources */,
 				40FC1B622B9287BD00394276 /* CBLListenerCertificateAuthenticator.m in Sources */,
 				40FC1BF12B928A4F00394276 /* CBLIndexBuilder+Prediction.m in Sources */,
-				EAD5BA432D5B9B5D00AB8123 /* FleeceEncodable.swift in Sources */,
 				9343F07B207D61AB00F19A89 /* CBLMisc.m in Sources */,
 				9343F07C207D61AB00F19A89 /* ReplicatorConfiguration.swift in Sources */,
 				40FC1C012B928AB200394276 /* CBLCert.mm in Sources */,
@@ -6847,11 +6879,14 @@
 				1AEF05A62833900800D5DDEA /* CBLScope.mm in Sources */,
 				9343F084207D61AB00F19A89 /* CBLQuery.mm in Sources */,
 				1ACAB8CA266723AE00B4F8E5 /* main.m in Sources */,
+				EA8731562D7B2C710091E90F /* FleeceDecoder.swift in Sources */,
 				9343F085207D61AB00F19A89 /* ValueExpression.swift in Sources */,
 				9343F086207D61AB00F19A89 /* CBLMutableDocument.mm in Sources */,
 				40FC1C022B928AB200394276 /* CBLKeyChain.mm in Sources */,
 				9343F087207D61AB00F19A89 /* CBLFunctionExpression.m in Sources */,
+				EA60E25D2D81E22C00DDB1A9 /* QueryResultDecoder.swift in Sources */,
 				9343F088207D61AB00F19A89 /* MYLogging.m in Sources */,
+				EA60E2612D81E92700DDB1A9 /* QueryResultSetDecoder.swift in Sources */,
 				9343F089207D61AB00F19A89 /* CBLBinaryExpression.m in Sources */,
 				9343F08A207D61AB00F19A89 /* ArrayObject.swift in Sources */,
 				40FC1C692B928C1600394276 /* Function+Vector.swift in Sources */,
@@ -7052,6 +7087,7 @@
 				934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
 				1AA91DC722B0356000BF0BDE /* CustomLogger.swift in Sources */,
 				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
+				EA79998A2D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,
 				9343F195207D636300F19A89 /* QueryTest.swift in Sources */,
 				1AA3D6C222A1A41F0098E16B /* ReplicatorTest+CustomConflict.swift in Sources */,
@@ -7310,6 +7346,7 @@
 				1A93FB0A24F737330015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				AE9D61A12D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93BB1C99246BB2AB004FFA00 /* ArrayTest.swift in Sources */,
+				EA7999872D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				40938A0E2D4AFA5900691393 /* LogSinkTest.swift in Sources */,
 				93BB1C9D246BB2BE004FFA00 /* DatabaseTest.swift in Sources */,
 				93BB1C9B246BB2BA004FFA00 /* CBLTestCase.swift in Sources */,
@@ -7461,6 +7498,10 @@
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 93BB1CBD246BB603004FFA00 /* PBXContainerItemProxy */;
+		};
+		EA7999932D70E3F0002C8D71 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = EA7999922D70E3F0002C8D71 /* CBLMacros */;
 		};
 /* End PBXTargetDependency section */
 
@@ -7799,6 +7840,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug_EE;
 		};
@@ -7995,6 +8037,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release_EE;
 		};
@@ -9472,6 +9515,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
@@ -9479,6 +9523,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release;
 		};
@@ -10341,6 +10386,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EA7999922D70E3F0002C8D71 /* CBLMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CBLMacros;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9398D9091E03434200464432 /* Project object */;
 }

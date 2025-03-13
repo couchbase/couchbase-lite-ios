@@ -2,141 +2,150 @@
 //  FleeceEncoder.swift
 //  CouchbaseLite
 //
-//  Created by Callum Birks on 10/02/2025.
+//  Created by Callum Birks on 05/03/2025.
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
-import Foundation
 import CouchbaseLiteSwift_Private
 
-public class FleeceEncoder: Encoder {
-    fileprivate var _encoder: CBLEncoder
-    
-    init() {
-        _encoder = CBLEncoder()
-    }
-    
-    init(withDB db: CBLDatabase) {
-        _encoder = CBLEncoder(db: db)
-    }
+internal class FleeceEncoder : Encoder {
+    internal let _encoder: CBLEncoder
+    private let _context: CBLEncoderContext
     
     public var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] = [:]
+
+    init(db: Database) throws {
+        _encoder = try CBLEncoder(db: db.impl)
+        _context = CBLEncoderContext(db: db.impl)
+        _encoder.setExtraInfo(_context)
+    }
     
-    public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
-        return KeyedEncodingContainer(try! KeyedContainer<Key>(encoder: self))
+    public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
+        KeyedEncodingContainer(try! DictEncodingContainer(encoder: self))
     }
     
     public func unkeyedContainer() -> any UnkeyedEncodingContainer {
-        return try! UnkeyedContainer(encoder: self)
+        try! ArrayEncodingContainer(encoder: self)
     }
     
     public func singleValueContainer() -> any SingleValueEncodingContainer {
-        return SingleValueContainer(encoder: self)
+        FleeceSingleValueEncodingContainer(encoder: self)
     }
 
-    func beginDict() throws {
-        if !_encoder.beginDict(10) {
-            let errorMsg = _encoder.getError() ?? "Failed to open dictionary"
-            throw Error.invalidOperation(Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+    func writeKey<Key: CodingKey>(_ key: Key) throws {
+        try writeKey(key.stringValue)
+    }
+    
+    func writeKey(_ key: String) throws {
+        if !_encoder.writeKey(key) {
+            let errorMsg = _encoder.getError() ?? "Failed to write key"
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
         }
     }
     
-    func endDict() throws {
-        if !_encoder.endDict() {
-            let errorMsg = _encoder.getError() ?? "Failed to end dictionary"
-            throw Error.invalidOperation(Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+    func writeValue<T>(_ value: T) throws where T: Encodable {
+        switch value {
+        case let bool as Bool:
+            try _writeNSObject(NSNumber(booleanLiteral: bool))
+        case let int as Int:
+            try _writeNSObject(int as NSNumber)
+        case let uint as UInt:
+            try _writeNSObject(uint as NSNumber)
+        case let float as Float:
+            try _writeNSObject(float as NSNumber)
+        case let double as Double:
+            try _writeNSObject(double as NSNumber)
+        case let string as String:
+            try _writeNSObject(string as NSString)
+        case let data as Data:
+            try _writeNSObject(data as NSData)
+        case let array as Array<any Encodable>:
+            try beginArray(reserve: array.count)
+            for element in array {
+                try writeValue(element)
+            }
+            try endArray()
+        case let dict as Dictionary<String, any Encodable>:
+            try beginDict(reserve: dict.count)
+            for (key, value) in dict {
+                try writeKey(key)
+                try writeValue(value)
+            }
+            try endDict()
+        case let blob as Blob:
+            try _writeNSObject(blob.impl)
+        case let object as NSObject:
+            try _writeNSObject(object)
+        default:
+            try value.encode(to: self)
         }
     }
     
-    func beginArray() throws {
-        if !_encoder.beginArray(10) {
+    func writeNil() throws {
+        try _writeNSObject(NSNull())
+    }
+
+    func beginArray(reserve: Int = 10) throws {
+        if !_encoder.beginArray(UInt(reserve)) {
             let errorMsg = _encoder.getError() ?? "Failed to begin array"
-            throw Error.invalidOperation(Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+        }
+    }
+    
+    func beginDict(reserve: Int = 10) throws {
+        if !_encoder.beginDict(UInt(reserve)) {
+            let errorMsg = _encoder.getError() ?? "Failed to begin dictionary"
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
         }
     }
     
     func endArray() throws {
         if !_encoder.endArray() {
             let errorMsg = _encoder.getError() ?? "Failed to end array"
-            throw Error.invalidOperation(Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
         }
     }
     
-    func writeKey<Key>(_ key: Key) throws where Key: CodingKey {
-        codingPath.append(key)
-        if !_encoder.writeKey(key.stringValue) {
-            let errorMsg = _encoder.getError() ?? "Failed to encode key"
-            throw Error.invalidKey(key, Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+    func endDict() throws {
+        if !_encoder.endDict() {
+            let errorMsg = _encoder.getError() ?? "Failed to end dictionary"
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
         }
     }
     
-    func writeValue<T>(_ value: T) throws where T: Encodable {
-        if let v = value as? FleeceEncodable {
-            try writeValue(v)
-        } else {
-            throw Error.typeNotConformingToFleeceEncodable(T.self)
-        }
-    }
-    
-    func writeValue<T>(_ value: T) throws where T: FleeceEncodable {
-        if !_encoder.write(value.asNSObject()) {
-            let errorMsg = _encoder.getError() ?? "Failed to encode value"
-            throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: codingPath, debugDescription: errorMsg))
-        }
-    }
-    
-    func writeNil() throws {
-        if !_encoder.write(NSNull()) {
-            let errorMsg = _encoder.getError() ?? "Failed to encode nil"
-            throw Error.invalidValue(NSNull(), Error.Context(codingPath: codingPath, debugDescription: errorMsg))
+    private func _writeNSObject(_ value: NSObject) throws {
+        if !_encoder.write(value) {
+            let errorMsg = _encoder.getError() ?? "Failed to write NSObject"
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
         }
     }
 }
 
-private enum ContainerType {
-    case array
-    case dict
-}
 
-private class ContainerCloser {
+internal class ArrayEncodingContainer: UnkeyedEncodingContainer {
     var encoder: FleeceEncoder
-    let type: ContainerType
-    
-    init(encoder: FleeceEncoder, type: ContainerType) {
-        self.encoder = encoder
-        self.type = type
-    }
-    
-    deinit {
-        if self.type == .array {
-            try! self.encoder.endArray()
-        } else {
-            try! self.encoder.endDict()
-        }
-    }
-}
-
-private struct UnkeyedContainer: UnkeyedEncodingContainer {
-    var encoder: FleeceEncoder
-    var codingPath: [CodingKey]
+    var codingPath: [CodingKey] { return [] }
     var count: Int = 0
-    var closer: ContainerCloser
     
     init(encoder: FleeceEncoder) throws {
         self.encoder = encoder
-        closer = ContainerCloser(encoder: self.encoder, type: .array)
-        codingPath = encoder.codingPath
         try encoder.beginArray()
     }
     
-    mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
-        return KeyedEncodingContainer(try! KeyedContainer(encoder: encoder))
+    deinit {
+        try! self.encoder.endArray()
     }
     
-    mutating func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
-        return try! UnkeyedContainer(encoder: encoder)
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        count += 1
+        return KeyedEncodingContainer(try! DictEncodingContainer(encoder: encoder))
+    }
+    
+    func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
+        count += 1
+        return try! ArrayEncodingContainer(encoder: encoder)
     }
     
     func superEncoder() -> any Encoder {
@@ -144,93 +153,73 @@ private struct UnkeyedContainer: UnkeyedEncodingContainer {
     }
     
     func encodeNil() throws {
+        count += 1
+        try encoder.writeNil()
+    }
+    
+    func encode<T>(_ value: T) throws where T: Encodable {
+        count += 1
+        try encoder.writeValue(value)
+    }
+}
+
+internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
+    var encoder: FleeceEncoder
+    var codingPath: [CodingKey] = []
+    
+    init(encoder: FleeceEncoder) throws {
+        self.encoder = encoder
+        try self.encoder.beginDict()
+    }
+    
+    deinit {
+        try! self.encoder.endDict()
+    }
+    
+    func encodeNil(forKey key: Key) throws {
+        try encoder.writeKey(key)
+        try encoder.writeNil()
+        codingPath.append(key)
+    }
+
+    func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
+        try encoder.writeKey(key)
+        try encoder.writeValue(value)
+        codingPath.append(key)
+    }
+    
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        try! encoder.writeKey(key)
+        let container = try! DictEncodingContainer<NestedKey>(encoder: encoder)
+        codingPath.append(key)
+        return KeyedEncodingContainer(container)
+    }
+    
+    func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
+        try! encoder.writeKey(key)
+        let container = try! ArrayEncodingContainer(encoder: encoder)
+        codingPath.append(key)
+        return container
+    }
+    
+    func superEncoder() -> any Encoder {
+        encoder
+    }
+    
+    func superEncoder(forKey key: Key) -> any Encoder {
+        encoder
+    }
+}
+
+internal struct FleeceSingleValueEncodingContainer: SingleValueEncodingContainer {
+    var codingPath: [any CodingKey] { return [] }
+    var encoder: FleeceEncoder
+    
+    func encodeNil() throws {
         try encoder.writeNil()
     }
     
     func encode<T>(_ value: T) throws where T: Encodable {
         try encoder.writeValue(value)
-    }
-}
-
-private struct KeyedContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
-    var encoder: FleeceEncoder
-    var codingPath: [CodingKey] = []
-    var closer: ContainerCloser
-    
-    init(encoder: FleeceEncoder) throws {
-        self.encoder = encoder
-        closer = ContainerCloser(encoder: self.encoder, type: .dict)
-        try self.encoder.beginDict()
-    }
-    
-    mutating func encodeNil(forKey key: Key) throws {
-        codingPath.append(key)
-        try encoder.writeKey(key)
-        try encoder.writeNil()
-    }
-
-    public mutating func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
-        codingPath.append(key)
-        try encoder.writeKey(key)
-        try encoder.writeValue(value)
-    }
-    
-    mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
-        codingPath.append(key)
-        try! encoder.writeKey(key)
-        
-        return KeyedEncodingContainer(try! KeyedContainer<NestedKey>(encoder: encoder))
-    }
-    
-    mutating func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
-        codingPath.append(key)
-        try! encoder.writeKey(key)
-        
-        return try! UnkeyedContainer(encoder: encoder)
-    }
-    
-    mutating func superEncoder() -> any Encoder {
-        encoder
-    }
-    
-    mutating func superEncoder(forKey key: Key) -> any Encoder {
-        encoder
-    }
-}
-
-private struct SingleValueContainer : SingleValueEncodingContainer {
-    var codingPath: [any CodingKey] = []
-    var encoder: FleeceEncoder
-    
-    init(encoder: FleeceEncoder) {
-        self.encoder = encoder
-    }
-    
-    mutating func encodeNil() throws {
-        try encoder.writeNil()
-    }
-    
-    mutating func encode<T>(_ value: T) throws where T: Encodable {
-        try encoder.writeValue(value)
-    }
-}
-
-enum Error: Swift.Error {
-    case typeNotConformingToFleeceEncodable(Encodable.Type)
-    case typeNotConformingToEncodable(Any.Type)
-    case invalidKey(CodingKey, Error.Context)
-    case invalidValue(Any, Error.Context)
-    case invalidOperation(Error.Context)
-}
-
-extension Error {
-    struct Context {
-        let debugDescription: String
-        let codingPath: [CodingKey]
-        
-        init(codingPath: [CodingKey], debugDescription: String) {
-            self.codingPath = codingPath
-            self.debugDescription = debugDescription
-        }
     }
 }

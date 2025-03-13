@@ -40,6 +40,7 @@
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLDocumentReplication
+.objc_class_name_CBLEncoder
 .objc_class_name_CBLFileLogger
 .objc_class_name_CBLFileLogSink
 .objc_class_name_CBLFragment
@@ -89,7 +90,6 @@
 .objc_class_name_CBLValueIndex
 .objc_class_name_CBLValueIndexConfiguration
 .objc_class_name_CBLValueIndexItem
-.objc_class_name_CBLEncoder
 
 # Constants:
 _CBLErrorDomain

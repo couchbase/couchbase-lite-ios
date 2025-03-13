@@ -7,19 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "fleece/Fleece.h"
 #import "CBLDatabase.h"
+#import "CBLDictionary.h"
 
 @class CBLEncoder;
+@class CBLEncoderContext;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLEncoder : NSObject <NSCopying>
+@interface CBLEncoder : NSObject
 
-- (instancetype) init;
-- (instancetype) initWithFLEncoder: (FLEncoder)enc;
-- (instancetype) initWithSharedKeys: (FLSharedKeys)sk;
-- (instancetype) initWithDB: (CBLDatabase*)db;
+- (nullable instancetype) initWithDB: (CBLDatabase*)db
+                 error: (NSError**)error;
+
+- (void) setExtraInfo: (CBLEncoderContext*)context;
 
 - (void) reset;
 - (nullable NSString*) getError;
@@ -33,6 +34,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool) endDict;
 
 - (nullable NSData*) finish;
+- (bool) finishInto: (CBLDocument*)document;
+
+@end
+
+@interface CBLEncoderContext : NSObject <NSCopying>
+
+- (instancetype) initWithDB: (CBLDatabase*)db;
+- (nonnull void*) get;
+- (void) reset;
 
 @end
 

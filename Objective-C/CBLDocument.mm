@@ -36,7 +36,6 @@ using namespace fleece;
 @implementation CBLDocument
 {
     std::unique_ptr<MRoot<id>> _root;
-    NSError* _encodingError;
 }
 
 @synthesize id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
@@ -146,6 +145,11 @@ using namespace fleece;
     return [_dict toJSON];
 }
 
+- (void)setFleece:(FLDict)data {
+    _fleeceData = data;
+    [self updateDictionary];
+}
+
 #pragma mark - Internal
 
 - (C4Database*) c4db {
@@ -217,17 +221,17 @@ using namespace fleece;
 #pragma mark - Fleece Encoding
 
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags error:(NSError**)outError {
-    _encodingError = nil;
     auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
     bool hasAttachment = false;
-    FLEncoderContext ctx = { .document = self, .outHasAttachment = &hasAttachment };
+    NSError* encodingError = nil;
+    FLEncoderContext ctx = { .database = self.collection.database, .outHasAttachment = &hasAttachment, .encodingError = encodingError };
     FLEncoder_SetExtraInfo(encoder, &ctx);
     [_dict fl_encodeToFLEncoder: encoder];
-    if (_encodingError != nil) {
+    if (encodingError != nil) {
         FLEncoder_Reset(encoder);
         if (outError)
-            *outError = _encodingError;
-        _encodingError = nil;
+            *outError = encodingError;
+        encodingError = nil;
         return {};
     }
     FLError flErr;
@@ -248,12 +252,6 @@ using namespace fleece;
         *outRevFlags |= hasAttachment ? kRevHasAttachments : 0;
     
     return body;
-}
-
-// Objects being encoded can call this
-- (void) setEncodingError: (NSError*)error {
-    if (!_encodingError)
-        _encodingError = error;
 }
 
 #pragma mark - For Replication's conflict resolution

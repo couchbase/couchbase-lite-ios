@@ -68,6 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+- (void) setFleece: (FLDict)data;
+
 - (instancetype) initWithCollection: (nullable CBLCollection*)collection
                          documentID: (NSString*)documentID
                               c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
@@ -98,8 +100,6 @@ NS_ASSUME_NONNULL_BEGIN
 //  - error: On return, the error if any.
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
                                error: (NSError**)outError;
-
-- (void) setEncodingError: (NSError*)error;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;

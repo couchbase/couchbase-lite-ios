@@ -1,0 +1,190 @@
+//
+//  FleeceEncoder.swift
+//  CouchbaseLite
+//
+//  Created by Callum Birks on 10/02/2025.
+//  Copyright © 2025 Couchbase. All rights reserved.
+//
+
+import Foundation
+import CouchbaseLiteSwift_Private
+
+internal class DocumentEncoder: Encoder {
+    fileprivate var _encoder: FleeceEncoder
+    
+    internal var document: MutableDocument? = nil
+    
+    init(db: Database) throws {
+        _encoder = try FleeceEncoder(db: db)
+    }
+    
+    /// Encode a `DocumentEncodable` and set the resulting body on its `__ref.document`.
+    internal static func encode(_ value: any DocumentEncodable, withDB database: Database) throws {
+        let encoder = try DocumentEncoder(db: database)
+        try value.encode(to: encoder)
+        try encoder.finish()
+    }
+    
+    public var codingPath: [any CodingKey] { return _encoder.codingPath }
+    
+    public var userInfo: [CodingUserInfoKey: Any] { return [:] }
+    
+    public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
+        KeyedEncodingContainer(try! DocumentEncodingContainer(encoder: self))
+    }
+    
+    public func unkeyedContainer() -> any UnkeyedEncodingContainer {
+        ImpossibleUnkeyedContainer(encoder: self)
+    }
+    
+    public func singleValueContainer() -> any SingleValueEncodingContainer {
+        FleeceSingleValueEncodingContainer(encoder: _encoder)
+    }
+    
+    /// Finish encoding and write the resulting dict into self.document
+    func finish() throws {
+        if !_encoder._encoder.finish(into: document!.impl) {
+            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: codingPath, debugDescription: "Failed to finish encoding"))
+        }
+    }
+}
+
+// This class mostly just delegates to FleeceEncoder, but also has an important override for encoding DocumentId
+private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
+    var encoder: DocumentEncoder
+    var codingPath: [CodingKey] = []
+    
+    init(encoder: DocumentEncoder) throws {
+        self.encoder = encoder
+        try self.encoder._encoder.beginDict()
+    }
+    
+    deinit {
+        try! self.encoder._encoder.endDict()
+    }
+    
+    func encodeNil(forKey key: Key) throws {
+        try encoder._encoder.writeKey(key)
+        try encoder._encoder.writeNil()
+        codingPath.append(key)
+    }
+    
+    // Override for DocumentId to skip encoding id, so it can set encoder.document
+    func encode(_ value: DocumentId, forKey key: Key) throws {
+        try value.encode(to: encoder)
+    }
+
+    func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
+        if value is DocumentId {
+            try encode(value as! DocumentId, forKey: key)
+            return
+        }
+        try encoder._encoder.writeKey(key)
+        try encoder._encoder.writeValue(value)
+        codingPath.append(key)
+    }
+    
+    // Nested containers use FleeceEncoder, because they don't need the override for DocumentId
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        try! encoder._encoder.writeKey(key)
+        let container = try! DictEncodingContainer<NestedKey>(encoder: encoder._encoder)
+        codingPath.append(key)
+        return KeyedEncodingContainer(container)
+    }
+    
+    func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
+        try! encoder._encoder.writeKey(key)
+        let container = try! ArrayEncodingContainer(encoder: encoder._encoder)
+        codingPath.append(key)
+        return container
+    }
+    
+    func superEncoder() -> any Encoder {
+        encoder
+    }
+    
+    func superEncoder(forKey key: Key) -> any Encoder {
+        encoder
+    }
+}
+
+enum EncoderError: Swift.Error {
+    case typeNotConformingToFleeceEncodable(Encodable.Type)
+    case typeNotConformingToEncodable(Any.Type)
+    case invalidKey(CodingKey, EncoderError.Context)
+    case invalidValue(Any, EncoderError.Context)
+    case invalidOperation(EncoderError.Context)
+    case requiresKeyedContainer
+}
+
+extension EncoderError {
+    struct Context {
+        let debugDescription: String
+        let codingPath: [CodingKey]
+        
+        init(codingPath: [CodingKey], debugDescription: String) {
+            self.codingPath = codingPath
+            self.debugDescription = debugDescription
+        }
+    }
+}
+
+// MARK: - Impossible State Containers
+
+private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
+    let encoder: DocumentEncoder
+    
+    var codingPath: [any CodingKey] { return [] }
+    
+    var count: Int { return 0 }
+    
+    func encodeNil() throws {
+        throw EncoderError.requiresKeyedContainer
+    }
+    
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        KeyedEncodingContainer(ImpossibleKeyedContainer(encoder: encoder))
+    }
+    
+    func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
+        return self
+    }
+    
+    func superEncoder() -> any Encoder {
+        encoder
+    }
+    
+    func encode<T>(_ value: T) throws where T : Encodable {
+        throw EncoderError.requiresKeyedContainer
+    }
+}
+
+private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
+    let encoder: DocumentEncoder
+    
+    var codingPath: [any CodingKey] { return [] }
+    
+    func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
+        throw EncoderError.requiresKeyedContainer
+    }
+    
+    func encodeNil(forKey key: Key) throws {
+        throw EncoderError.requiresKeyedContainer
+    }
+    
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        return KeyedEncodingContainer(ImpossibleKeyedContainer<NestedKey>(encoder: encoder))
+    }
+    
+    func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
+        return ImpossibleUnkeyedContainer(encoder: encoder)
+    }
+    
+    func superEncoder() -> any Encoder {
+        encoder
+    }
+    
+    func superEncoder(forKey key: Key) -> any Encoder {
+        encoder
+    }
+}

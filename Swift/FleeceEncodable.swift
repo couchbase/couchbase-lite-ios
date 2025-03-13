@@ -2,116 +2,72 @@
 //  FleeceEncodable.swift
 //  CouchbaseLite
 //
-//  Created by Callum Birks on 11/02/2025.
+//  Created by Callum Birks on 05/03/2025.
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
-public protocol FleeceEncodable : Encodable {
-    func asNSObject() -> NSObject
+import CouchbaseLiteSwift_Private
+
+public protocol FleeceEncodable {
+    func encode(to encoder: FleeceEncoder) throws
 }
 
-extension Bool: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return NSNumber(booleanLiteral: self)
+extension Bool : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeBool(self)
     }
 }
 
-extension Int: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Int : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeInt(self)
     }
 }
 
-extension UInt: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension UInt : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeUInt(self)
     }
 }
 
-extension Int8: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Float : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeFloat(self)
     }
 }
 
-extension UInt8: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Double : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeDouble(self)
     }
 }
 
-extension Int16: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension String : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeString(self)
     }
 }
 
-extension UInt16: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Data : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeData(self)
     }
 }
 
-extension Int32: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Array<any FleeceEncodable> : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeArray(self)
     }
 }
 
-extension UInt32: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
+extension Dictionary<String, any FleeceEncodable> : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeDictionary(self)
     }
 }
 
-extension Int64: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
-    }
-}
-
-extension UInt64: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
-    }
-}
-
-extension Float: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
-    }
-}
-
-extension Double: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSNumber
-    }
-}
-
-extension String: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSString
-    }
-}
-
-extension Data: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSData
-    }
-}
-
-extension Array: FleeceEncodable where Element: FleeceEncodable {
-    public func asNSObject() -> NSObject {
-        return self as NSArray
-    }
-}
-
-extension Blob: FleeceEncodable {
-    public func encode(to encoder: any Encoder) throws {
-        throw Error.typeNotConformingToEncodable(Blob.self)
-    }
-    
-    public func asNSObject() -> NSObject {
-        return self.impl
+extension Blob : FleeceEncodable {
+    public func encode(to encoder: FleeceEncoder) throws {
+        try encoder.writeBlob(self)
     }
 }

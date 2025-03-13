@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSArray*) indexesInfo: (NSError**)error;
 
+- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
+
 @end
 
 NS_ASSUME_NONNULL_END

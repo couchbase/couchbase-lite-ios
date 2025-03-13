@@ -146,7 +146,7 @@ class ArrayTest: CBLTestCase {
         let data = arrayOfAllTypes()
         let array = MutableArrayObject()
         for _ in 0...11 {
-            array.addValue(NSNull())
+            array.addValue(nil)
         }
         array.setBoolean(data[0] as! Bool, at: 0)
         array.setString(data[1] as? String, at: 1)
@@ -179,7 +179,7 @@ class ArrayTest: CBLTestCase {
         let data = arrayOfAllTypes()
         let array = MutableArrayObject()
         for _ in 0...11 {
-            array.addValue(NSNull())
+            array.addValue(nil)
         }
         array.insertBoolean(data[0] as! Bool, at: 0)
         array.insertString(data[1] as? String, at: 1)
