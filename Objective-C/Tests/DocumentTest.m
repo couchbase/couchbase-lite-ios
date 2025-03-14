@@ -1577,6 +1577,19 @@
            @"Purging error: %@", error);
 }
 
+-(void) testDeleteDocumentWithDifferentCollectionInstace {
+    NSError* error;
+    CBLCollection* defaultCollection1 = [self.db defaultCollection: &error];
+    CBLCollection* defaultCollection2 = [self.db defaultCollection: &error];
+    
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    [self saveDocument: doc1];
+    
+    // Get using 1, delete using 2
+    doc1 = [[defaultCollection1 documentWithID: doc1.id error:&error] toMutable];
+    [defaultCollection2 deleteDocument:doc1 error:&error];
+}
+
 - (void) testReopenDB {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @"str" forKey: @"string"];

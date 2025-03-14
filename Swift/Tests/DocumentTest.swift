@@ -1306,6 +1306,16 @@ class DocumentTest: CBLTestCase {
         try defaultCollection!.purge(id: doc2.id)
     }
     
+    func testDeleteDocumentWithDifferentCollectionInstace() throws {
+        var doc1 = createDocument("doc1")
+        try saveDocument(doc1)
+        let defaultCollection2 = try db.defaultCollection()
+        
+        // Get using 1, delete using 2
+        doc1 = try defaultCollection!.document(id: doc1.id)!.toMutable()
+        try defaultCollection2.delete(document: doc1)
+    }
+    
     func testReopenDB() throws {
         let doc = createDocument("doc1")
         doc.setValue("str", forKey: "string")
