@@ -6,16 +6,19 @@
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
-@attached(extension, conformances: DocumentObject, names: named(__ref))
-public macro DocumentModel() = #externalMacro(module: "CBLSwiftMacros", type: "DocumentModelMacro")
-
-public protocol DocumentObject {
-    var __ref: DocumentId { get }
+internal func getDocumentRef(object: any AnyObject) -> DocumentId? {
+    let mirror = Mirror(reflecting: object)
+    for child in mirror.children {
+        if let docID = child.value as? DocumentId {
+            return docID
+        }
+    }
+    return nil
 }
 
-public typealias DocumentEncodable = Encodable & DocumentObject
-public typealias DocumentDecodable = Decodable & DocumentObject
-public typealias DocumentCodable = Codable & DocumentObject
+public typealias DocumentEncodable = Encodable & AnyObject
+public typealias DocumentDecodable = Decodable & AnyObject
+public typealias DocumentCodable = Codable & AnyObject
 
 @propertyWrapper
 public final class DocumentId: Codable {

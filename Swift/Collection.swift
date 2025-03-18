@@ -227,7 +227,9 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Call a callback with the MutableDocument which was created (or fetched from the object if existing).
     /// If the callback returns `false`, this indicates it failed, and the `MutableDocument` which was attached to `object` will be reset.
     internal func withDocument<T: DocumentEncodable>(from object: T, _ fn: (MutableDocument) throws -> Bool) throws -> Bool {
-        let docRef = object.__ref
+        guard let docRef = getDocumentRef(object: object) else {
+            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot encode object into document: No @DocumentId found on the object"])
+        }
         var documentIsNew = false
         
         if docRef.document == nil {
@@ -346,7 +348,10 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// the collection.
     /// If the object is not linked to a document in the collection, the NotFound error will be thrown.
     public func purgeDocument<T: DocumentEncodable>(for object: T) throws {
-        guard let docID = object.__ref.docID else {
+        guard let docRef = getDocumentRef(object: object) else {
+            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot purge document for object: No @DocumentId found on the object"])
+        }
+        guard let docID = docRef.docID else {
             throw NSError(domain: CBLErrorDomain, code: CBLErrorNotFound)
         }
         try purge(id: docID)

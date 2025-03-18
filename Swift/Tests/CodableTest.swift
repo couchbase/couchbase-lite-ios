@@ -13,7 +13,6 @@ protocol DictionaryEquatable {
     func eq(dict: any DictionaryProtocol) -> Bool
 }
 
-@DocumentModel
 class Profile: Codable {
     @DocumentId var pid: String?
     var name: ProfileName
