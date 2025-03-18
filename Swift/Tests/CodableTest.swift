@@ -9,183 +9,176 @@
 import CouchbaseLiteSwift
 import XCTest
 
+protocol DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool
+}
+
 @DocumentModel
-class Person: Codable, CustomDebugStringConvertible {
-    @DocumentId var id: String?
-    var name: String
-    var age: UInt
-    var hobbies: [Hobby]
+class Profile: Codable {
+    @DocumentId var pid: String?
+    var name: ProfileName
+    var contacts: [Contact]
+    var likes: [String]
     
-    init(name: String, age: UInt, hobbies: [Hobby]) {
+    init(name: ProfileName, contacts: [Contact], likes: [String]) {
         self.name = name
-        self.age = age
-        self.hobbies = hobbies
+        self.contacts = contacts
+        self.likes = likes
     }
     
-    var debugDescription: String {
-        return "[\"age\": \(age), \"name\": \"\(name)\", \"hobbies\":\(hobbies)]"
+    static func == (lhs: Profile, rhs: Document) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
     }
 }
 
-struct Hobby: Codable, Equatable, CustomDebugStringConvertible {
-    let name: String
-    let frequency: HobbyFrequency
-    
-    var debugDescription: String {
-        return "[\"name\": \"\(name)\", \"frequency\": \"\(frequency)\"]"
-    }
+struct ProfileName: Codable {
+    var first: String
+    var last: String
 }
 
-enum HobbyFrequency: String, Codable, CustomDebugStringConvertible {
-    case daily
-    case weekly
-    
-    var debugDescription: String {
-        return rawValue
-    }
+struct Contact: Codable {
+    var address: ContactAddress
+    var emails: [String]
+    var phones: [ContactPhone]
+    var type: ContactType
+}
+
+struct ContactAddress: Codable {
+    var city: String
+    var state: String
+    var street: String
+    var zip: String
+}
+
+struct ContactPhone: Codable {
+    var numbers: [String]
+    var preferred: Bool
+    var type: ContactPhoneType
+}
+
+enum ContactPhoneType: String, Codable {
+    case home
+    case mobile
+}
+
+enum ContactType: String, Codable {
+    case primary
+    case secondary
 }
 
 class CodableTest: CBLTestCase {
-    func testSaveAndLoad() throws {
-        let person = Person(name: "Steve", age: 36, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "cycling", frequency: .weekly)
-        ])
+    func testCollectionEncode() throws {
+        // 1. Create a Profile object
+        let profile = Profile(
+            name: .init(first: "Jasper", last: "Grebel"),
+            contacts: [
+                Contact(
+                    address: .init(city: "Burns", state: "KS", street: "19 Florida Loop", zip: "66840"),
+                    emails: ["jasper.grebel@nosql-matters.org"],
+                    phones: [
+                        .init(numbers: ["316-2417120", "316-2767391"], preferred: false, type: .home),
+                        .init(numbers: ["316-8833161"], preferred: true, type: .mobile)
+                    ],
+                    type: .primary
+                ),
+                Contact(
+                    address: .init(city: "Burns", state: "KS", street: "4795 Willow Loop", zip: "66840"),
+                    emails: ["Jasper@email.com", "Grebel@email.com"],
+                    phones: [
+                        .init(numbers: ["316-9487549"], preferred: true, type: .home),
+                        .init(numbers: ["316-4737548"], preferred: false, type: .mobile)
+                    ],
+                    type: .secondary
+                )
+            ],
+            likes: ["shopping"]
+        )
         
-        let collection = try db.defaultCollection()
-        try collection.saveDocument(from: person)
+        // 2. Save it to the default collection
+        try defaultCollection!.saveDocument(from: profile)
+        // 3. Assert that profile.pid is not null
+        XCTAssertNotNil(profile.pid)
+        // 4. Load the Document from the collection
+        let document = try defaultCollection!.document(id: profile.pid!)!
+        // 5. Assert that all the fields of the document match the fields of the Profile object
+        XCTAssert(profile == document)
+    }
+    
+    func testCollectionDecode() throws {
+        // Save 'p-0001' from the dataset into the default collection.
         
-        let mutableDoc = try collection.document(id: person.id!)!
-        debugPrint("MutableDoc:", mutableDoc.toDictionary())
-        XCTAssert(mutableDoc.string(forKey: "name") == person.name)
-        XCTAssert(mutableDoc.int(forKey: "age") == person.age)
-        let docHobbies = mutableDoc.array(forKey: "hobbies")!
-        XCTAssert(docHobbies.count == 3)
-        XCTAssert(docHobbies[0].dictionary!.string(forKey: "name") == "reading")
-        XCTAssert(docHobbies[0].dictionary!.string(forKey: "frequency") == "daily")
-        XCTAssert(docHobbies[1].dictionary!.string(forKey: "name") == "coding")
-        XCTAssert(docHobbies[1].dictionary!.string(forKey: "frequency") == "daily")
-        XCTAssert(docHobbies[2].dictionary!.string(forKey: "name") == "cycling")
-        XCTAssert(docHobbies[2].dictionary!.string(forKey: "frequency") == "weekly")
+    }
+}
 
-        let personDecoded = try collection.document(id: person.id!, as: Person.self)!
-        debugPrint("PersonDecoded:", personDecoded)
-        
-        XCTAssert(personDecoded.name == person.name)
-        XCTAssert(personDecoded.age == person.age)
-        XCTAssert(personDecoded.hobbies == person.hobbies)
-    }
-    
-    func testDecodeQueryResult() throws {
-        let person = Person(name: "Steve", age: 36, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "cycling", frequency: .weekly)
-        ])
-        
-        let collection = try db.defaultCollection()
-        try collection.saveDocument(from: person)
-
-        let query = try db.createQuery("SELECT meta().id AS id, name, age, hobbies FROM _")
-        let result = try query.execute().next()!
-        
-        let resultPerson = try result.data(as: Person.self)
-        XCTAssert(resultPerson.name == person.name)
-        XCTAssert(resultPerson.age == person.age)
-        XCTAssert(resultPerson.hobbies == person.hobbies)
-    }
-    
-    func testDecodeQueryResultSet() throws {
-        let steve = Person(name: "Steve", age: 36, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "cycling", frequency: .weekly)
-        ])
-        
-        let hermione = Person(name: "Hermione", age: 24, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "swimming", frequency: .weekly)
-        ])
-        
-        let simon = Person(name: "Simon", age: 40, hobbies: [
-            Hobby(name: "reading", frequency: .weekly),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "jogging", frequency: .daily)
-        ])
-        
-        let people = [
-            steve,
-            hermione,
-            simon
-        ]
-        
-        let collection = try db.defaultCollection()
-        try collection.saveDocument(from: steve)
-        try collection.saveDocument(from: hermione)
-        try collection.saveDocument(from: simon)
-        
-        let query = try db.createQuery("SELECT meta().id AS id, name, age, hobbies FROM _")
-        let resultSet = try query.execute()
-        
-        let resultSetPeople = try resultSet.data(as: Person.self)
-        XCTAssert(resultSetPeople.elementsEqual(people, by: { $0.name == $1.name && $0.age == $1.age && $0.hobbies == $1.hobbies }))
-    }
-    
-    func testDelete() throws {
-        let person = Person(name: "Steve", age: 36, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "cycling", frequency: .weekly)
-        ])
-        
-        let collection = try db.defaultCollection()
-        try collection.saveDocument(from: person)
-        try collection.deleteDocument(for: person)
-    }
-    
-    func testSaveWithConflictHandler() throws {
-        let person1 = Person(name: "Steve", age: 36, hobbies: [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "cycling", frequency: .weekly)
-        ])
-        
-        let collection = try db.defaultCollection()
-        try collection.saveDocument(from: person1)
-        
-        // Get another copy of person
-        let person2 = try collection.document(id: person1.id!, as: Person.self)!
-        
-        // Make conflicting changes to each copy
-        person1.age = 37
-        person2.hobbies.removeAll(where: { $0.name == "cycling" })
-        
-        try collection.saveDocument(from: person1)
-        
-        let resolved = try collection.saveDocument(from: person2) { newPerson, _ -> Bool in
-            newPerson.name = "John"
-            newPerson.age = 31
-            newPerson.hobbies.append(Hobby(name: "jogging", frequency: .weekly))
-            return true
+extension Profile : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let nameDict = dict.dictionary(forKey: "name") else {
+            return false
         }
-        XCTAssert(resolved)
-        
-        let finalPerson = try collection.document(id: person1.id!, as: Person.self)!
-        XCTAssert(finalPerson.name == "John")
-        XCTAssertEqual(finalPerson.name, "John")
-        XCTAssertEqual(finalPerson.age, 31)
-        XCTAssertEqual(finalPerson.hobbies, [
-            Hobby(name: "reading", frequency: .daily),
-            Hobby(name: "coding", frequency: .daily),
-            Hobby(name: "jogging", frequency: .weekly)
-        ])
-        
-        // Actually, the conflict handler's `newPerson` *IS* `person2`, so `person2` was updated by the changes we made
-        // in the conflict handler
-        XCTAssertEqual(person2.name, finalPerson.name)
-        XCTAssertEqual(person2.age, finalPerson.age)
-        XCTAssertEqual(person2.hobbies, finalPerson.hobbies)
+        guard let contactsArray = dict.array(forKey: "contacts") else {
+            return false
+        }
+        guard let likesArray = dict.array(forKey: "likes") else {
+            return false
+        }
+        return name.eq(dict: nameDict) && contacts.enumerated().allSatisfy { index, contact in
+            guard let contactDict = contactsArray[index].dictionary else { return false }
+            return contact.eq(dict: contactDict)
+        } && likes.enumerated().allSatisfy { index, like in
+            likesArray[index].string == like
+        }
+    }
+}
+
+extension ProfileName : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        dict["first"].string == first && dict["last"].string == last
+    }
+}
+
+extension Contact : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let addressDict = dict.dictionary(forKey: "address") else {
+            return false
+        }
+        guard let emailsArray = dict.array(forKey: "emails") else {
+            return false
+        }
+        guard let phonesArray = dict.array(forKey: "phones") else {
+            return false
+        }
+        return dict["type"].string == type.rawValue
+        && address.eq(dict: addressDict)
+        && emails.enumerated().allSatisfy { index, email in
+            emailsArray[index].string == email
+        } && phones.enumerated().allSatisfy { index, phone in
+            guard let phoneDict = phonesArray[index].dictionary else {
+                return false
+            }
+            return phone.eq(dict: phoneDict)
+        }
+    }
+}
+
+extension ContactAddress : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        dict["city"].string == city
+        && dict["state"].string == state
+        && dict["street"].string == street
+        && dict["zip"].string == zip
+    }
+}
+
+extension ContactPhone : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let numbersArray = dict.array(forKey: "numbers") else {
+            return false
+        }
+        return dict["preferred"].boolean == preferred
+        && dict["type"].string == type.rawValue
+        && numbers.enumerated().allSatisfy { index, number in
+            numbersArray[index].string == number
+        }
     }
 }

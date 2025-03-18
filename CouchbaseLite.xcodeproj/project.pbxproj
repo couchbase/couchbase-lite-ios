@@ -2927,7 +2927,6 @@
 		EA60E25C2D81E22800DDB1A9 /* QueryResultDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryResultDecoder.swift; sourceTree = "<group>"; };
 		EA60E25F2D81E92300DDB1A9 /* QueryResultSetDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryResultSetDecoder.swift; sourceTree = "<group>"; };
 		EA7999862D70C624002C8D71 /* CodableTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableTest.swift; sourceTree = "<group>"; };
-		EA7999912D70E2FD002C8D71 /* CBLMacros */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CBLMacros; sourceTree = SOURCE_ROOT; };
 		EA7999982D70F70E002C8D71 /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
 		EA8731542D7B2C6D0091E90F /* FleeceDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleeceDecoder.swift; sourceTree = "<group>"; };
 		EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLEncoder.h; sourceTree = "<group>"; };
@@ -3158,7 +3157,6 @@
 		275F92631E4D2FD7007FD5A2 /* Swift */ = {
 			isa = PBXGroup;
 			children = (
-				EA7999912D70E2FD002C8D71 /* CBLMacros */,
 				EAD5BA3C2D5B93A700AB8123 /* Codable */,
 				9338BED21ED5473300634873 /* Database */,
 				938195F31EC10B780032CC51 /* Document */,
@@ -5382,7 +5380,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				EA7999932D70E3F0002C8D71 /* PBXTargetDependency */,
 				9308F40E1E64B24700F53EE4 /* PBXTargetDependency */,
 			);
 			name = CBL_Swift;
@@ -5820,6 +5817,8 @@
 				Base,
 			);
 			mainGroup = 9398D9081E03434200464432;
+			packageReferences = (
+			);
 			productRefGroup = 9398D9131E03434200464432 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -7498,10 +7497,6 @@
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL_Swift */;
 			targetProxy = 93BB1CBD246BB603004FFA00 /* PBXContainerItemProxy */;
-		};
-		EA7999932D70E3F0002C8D71 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = EA7999922D70E3F0002C8D71 /* CBLMacros */;
 		};
 /* End PBXTargetDependency section */
 
@@ -10386,13 +10381,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		EA7999922D70E3F0002C8D71 /* CBLMacros */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = CBLMacros;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9398D9091E03434200464432 /* Project object */;
 }

@@ -200,6 +200,8 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     
     /// Save a document represented by the specified encodable model object into
     /// the collection. The specified conflict handler will be used if conflict happens.
+    /// Any changes to the object which is the first conflictHandler argument will change
+    /// the `from: object` which was passed in.
     public func saveDocument<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
         try withDocument(from: object) { document in
             try save(document: document) { _, existingDocument in
@@ -224,7 +226,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Encode a `DocumentEncodable` into a MutableDocument (and store it inside the `DocumentEncodable`).
     /// Call a callback with the MutableDocument which was created (or fetched from the object if existing).
     /// If the callback returns `false`, this indicates it failed, and the `MutableDocument` which was attached to `object` will be reset.
-    private func withDocument<T: DocumentEncodable>(from object: T, _ fn: (MutableDocument) throws -> Bool) throws -> Bool {
+    internal func withDocument<T: DocumentEncodable>(from object: T, _ fn: (MutableDocument) throws -> Bool) throws -> Bool {
         let docRef = object.__ref
         var documentIsNew = false
         
@@ -249,6 +251,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         
         do {
             try DocumentEncoder.encode(object, withDB: database)
+            // Call the closure passed in
             let result = try fn(docRef.document!)
             // If the callback returned false, saving failed, so reset the attached document
             if !result && documentIsNew {

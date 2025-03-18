@@ -7,7 +7,7 @@
 //
 
 @attached(extension, conformances: DocumentObject, names: named(__ref))
-public macro DocumentModel() = #externalMacro(module: "CBLMacrosMacros", type: "DocumentMacro")
+public macro DocumentModel() = #externalMacro(module: "CBLSwiftMacros", type: "DocumentModelMacro")
 
 public protocol DocumentObject {
     var __ref: DocumentId { get }
@@ -15,7 +15,7 @@ public protocol DocumentObject {
 
 public typealias DocumentEncodable = Encodable & DocumentObject
 public typealias DocumentDecodable = Decodable & DocumentObject
-public typealias DocumentCodable = DocumentEncodable & DocumentDecodable
+public typealias DocumentCodable = Codable & DocumentObject
 
 @propertyWrapper
 public final class DocumentId: Codable {
