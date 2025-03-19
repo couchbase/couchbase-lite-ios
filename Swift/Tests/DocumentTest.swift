@@ -1307,13 +1307,15 @@ class DocumentTest: CBLTestCase {
     }
     
     func testDeleteDocumentWithDifferentCollectionInstace() throws {
-        var doc1 = createDocument("doc1")
-        try saveDocument(doc1)
-        let defaultCollection2 = try db.defaultCollection()
+        let col1 = try db.createCollection(name: "col1")
+        let col2 = try db.collection(name: "col1")
+        var doc = createDocument("doc")
+        try col1.save(document: doc)
         
-        // Get using 1, delete using 2
-        doc1 = try defaultCollection!.document(id: doc1.id)!.toMutable()
-        try defaultCollection2.delete(document: doc1)
+        // Get using 2
+        doc = try col2!.document(id: "doc")!.toMutable()
+        // Delete using 1
+        try col1.delete(document: doc)
     }
     
     func testReopenDB() throws {

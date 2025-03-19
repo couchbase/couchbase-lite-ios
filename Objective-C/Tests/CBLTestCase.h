@@ -29,6 +29,7 @@
 #define Assert                  XCTAssert
 #define AssertNil               XCTAssertNil
 #define AssertNotNil            XCTAssertNotNil
+#define AssertNotEqual          XCTAssertNotEqual
 #define AssertEqual             XCTAssertEqual
 #define AssertEqualObjects      XCTAssertEqualObjects
 #define AssertNotEqualObjects   XCTAssertNotEqualObjects

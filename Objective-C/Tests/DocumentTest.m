@@ -1579,15 +1579,15 @@
 
 -(void) testDeleteDocumentWithDifferentCollectionInstace {
     NSError* error;
-    CBLCollection* defaultCollection1 = [self.db defaultCollection: &error];
-    CBLCollection* defaultCollection2 = [self.db defaultCollection: &error];
-    
+    CBLCollection* col1 = [self.db createCollectionWithName: @"col1" scope: nil error: &error];
+    CBLCollection* col2 = [self.db collectionWithName: @"col1" scope: nil error: &error];
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: col1];
     
-    // Get using 1, delete using 2
-    doc1 = [[defaultCollection1 documentWithID: doc1.id error:&error] toMutable];
-    [defaultCollection2 deleteDocument:doc1 error:&error];
+    // Get using 2
+    doc1 = [[col2 documentWithID: doc1.id error: &error] toMutable];
+    // Delete using 1
+    Assert([col1 deleteDocument: doc1 error: &error]);
 }
 
 - (void) testReopenDB {
@@ -2273,6 +2273,34 @@
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
         return [colB saveDocument: doc error: e];
     }];
+}
+
+// https://jira.issues.couchbase.com/browse/CBL-6844
+- (void) testDocRefEquality {
+    NSError* error;
+    CBLDatabase* db1 = [self openDBNamed: self.db.name error: &error];
+    CBLDatabase* db2 = [self openDBNamed: self.db.name error: &error];
+    
+    CBLCollection* col1 = [db1 createCollectionWithName:@"col" scope: nil error: nil];
+    CBLCollection* col2 = [db2 collectionWithName:@"col" scope: nil error: nil];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [col1 saveDocument:doc error: &error];
+    
+    CBLDocument* doc1 = [col1 documentWithID: @"doc" error:&error];
+    CBLDocument* doc2 = [col2 documentWithID: @"doc" error:&error];
+    
+    AssertNotEqual(doc1, doc2);
+    AssertEqualObjects(doc1, doc2);
+    Assert([doc1 isEqual: doc2]);
+    
+    AssertNotEqual(col1, col2);
+    AssertEqualObjects(col1, col2);
+    Assert([col1 isEqual: col2]);
+    
+    AssertNotEqual(db1, db2);
+    AssertNotEqualObjects(db1, db2);
+    AssertFalse([db1 isEqual: db2]);
 }
 
 #pragma mark - Revision history
