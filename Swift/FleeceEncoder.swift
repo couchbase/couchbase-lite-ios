@@ -41,7 +41,7 @@ internal class FleeceEncoder : Encoder {
     func writeKey(_ key: String) throws {
         if !_encoder.writeKey(key) {
             let errorMsg = _encoder.getError() ?? "Failed to write key"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
     
@@ -90,35 +90,35 @@ internal class FleeceEncoder : Encoder {
     func beginArray(reserve: Int = 10) throws {
         if !_encoder.beginArray(UInt(reserve)) {
             let errorMsg = _encoder.getError() ?? "Failed to begin array"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
     
     func beginDict(reserve: Int = 10) throws {
         if !_encoder.beginDict(UInt(reserve)) {
             let errorMsg = _encoder.getError() ?? "Failed to begin dictionary"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
     
     func endArray() throws {
         if !_encoder.endArray() {
             let errorMsg = _encoder.getError() ?? "Failed to end array"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
     
     func endDict() throws {
         if !_encoder.endDict() {
             let errorMsg = _encoder.getError() ?? "Failed to end dictionary"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
     
     private func _writeNSObject(_ value: NSObject) throws {
         if !_encoder.write(value) {
-            let errorMsg = _encoder.getError() ?? "Failed to write NSObject"
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: [], debugDescription: errorMsg))
+            let errorMsg = _encoder.getError() ?? "Failed to write object \(String(describing: value))"
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
 }
@@ -179,26 +179,22 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
     func encodeNil(forKey key: Key) throws {
         try encoder.writeKey(key)
         try encoder.writeNil()
-        codingPath.append(key)
     }
 
     func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
         try encoder.writeKey(key)
         try encoder.writeValue(value)
-        codingPath.append(key)
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
         try! encoder.writeKey(key)
         let container = try! DictEncodingContainer<NestedKey>(encoder: encoder)
-        codingPath.append(key)
         return KeyedEncodingContainer(container)
     }
     
     func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
         try! encoder.writeKey(key)
         let container = try! ArrayEncodingContainer(encoder: encoder)
-        codingPath.append(key)
         return container
     }
     

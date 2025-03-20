@@ -14,7 +14,7 @@ internal struct QueryResultSetDecoder: Decoder {
     var userInfo: [CodingUserInfoKey : Any] = [:]
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        throw DecodingError.requiresUnkeyedContainer
+        throw CBLError.create(CBLError.decodingError, description: "ResultSet decoding requires an unkeyed container")
     }
     
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
@@ -23,7 +23,7 @@ internal struct QueryResultSetDecoder: Decoder {
     }
     
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
-        throw DecodingError.requiresUnkeyedContainer
+        throw CBLError.create(CBLError.decodingError, description: "ResultSet decoding requires an unkeyed container")
     }
 }
 
@@ -50,7 +50,7 @@ private struct QueryResultSetDecodingContainer : UnkeyedDecodingContainer {
     
     mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         guard let next = self.next else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No value for index \(currentIndex)"))
+            throw CBLError.create(CBLError.decodingError, description: "No value at index \(currentIndex) in ResultSet")
         }
         let decoder = QueryResultDecoder(queryResult: next)
         let val = try T.init(from: decoder)
@@ -60,14 +60,14 @@ private struct QueryResultSetDecodingContainer : UnkeyedDecodingContainer {
     }
     
     mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No nested container at index \(currentIndex)"))
+        throw CBLError.create(CBLError.decodingError, description: "No nested container in ResultSet")
     }
     
     mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
-        throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No nested container at index \(currentIndex)"))
+        throw CBLError.create(CBLError.decodingError, description: "No nested container in ResultSet")
     }
     
     mutating func superDecoder() throws -> any Decoder {
-        throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No super container at index \(currentIndex)"))
+        throw CBLError.create(CBLError.decodingError, description: "No nested container in ResultSet")
     }
 }

@@ -44,7 +44,8 @@ internal class DocumentEncoder: Encoder {
     /// Finish encoding and write the resulting dict into self.document
     func finish() throws {
         if !_encoder._encoder.finish(into: document!.impl) {
-            throw EncoderError.invalidOperation(EncoderError.Context(codingPath: codingPath, debugDescription: "Failed to finish encoding"))
+            let errorMsg = _encoder._encoder.getError() ?? "Failed to finish encoding"
+            throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
     }
 }
@@ -108,27 +109,6 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
 }
 
-enum EncoderError: Swift.Error {
-    case typeNotConformingToFleeceEncodable(Encodable.Type)
-    case typeNotConformingToEncodable(Any.Type)
-    case invalidKey(CodingKey, EncoderError.Context)
-    case invalidValue(Any, EncoderError.Context)
-    case invalidOperation(EncoderError.Context)
-    case requiresKeyedContainer
-}
-
-extension EncoderError {
-    struct Context {
-        let debugDescription: String
-        let codingPath: [CodingKey]
-        
-        init(codingPath: [CodingKey], debugDescription: String) {
-            self.codingPath = codingPath
-            self.debugDescription = debugDescription
-        }
-    }
-}
-
 // MARK: - Impossible State Containers
 
 private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
@@ -139,7 +119,7 @@ private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
     var count: Int { return 0 }
     
     func encodeNil() throws {
-        throw EncoderError.requiresKeyedContainer
+        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -155,7 +135,7 @@ private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
     }
     
     func encode<T>(_ value: T) throws where T : Encodable {
-        throw EncoderError.requiresKeyedContainer
+        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
 }
 
@@ -165,11 +145,11 @@ private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerP
     var codingPath: [any CodingKey] { return [] }
     
     func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-        throw EncoderError.requiresKeyedContainer
+        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
     
     func encodeNil(forKey key: Key) throws {
-        throw EncoderError.requiresKeyedContainer
+        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {

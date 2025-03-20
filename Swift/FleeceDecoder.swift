@@ -22,7 +22,7 @@ internal class FleeceDecoder: Decoder {
         case .dictionary(let dictionaryObject):
             KeyedDecodingContainer(FleeceDictDecodingContainer(decoder: self, dict: dictionaryObject))
         default:
-            throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: codingPath, debugDescription: "Value \(fleeceValue) is not a keyed container"))
+            throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) is not a keyed container")
         }
     }
     
@@ -31,16 +31,16 @@ internal class FleeceDecoder: Decoder {
         case .array(let arrayObject):
             FleeceArrayDecodingContainer(decoder: self, array: arrayObject)
         default:
-            throw DecodingError.typeMismatch([Any].self, .init(codingPath: codingPath, debugDescription: "Value \(fleeceValue) is not an unkeyed container"))
+            throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) is not an unkeyed container")
         }
     }
     
     public func singleValueContainer() throws -> any SingleValueDecodingContainer {
         switch fleeceValue {
         case .array:
-            throw DecodingError.typeMismatch(Any.self, .init(codingPath: codingPath, debugDescription: "Value \(fleeceValue) cannot be decoded as a single value"))
+            throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) cannot be decoded as a single value")
         case .dictionary:
-            throw DecodingError.typeMismatch(Any.self, .init(codingPath: codingPath, debugDescription: "Value \(fleeceValue) cannot be decoded as a single value"))
+            throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) cannot be decoded as a single value")
         default:
             SingleValueContainer(decoder: self)
         }
@@ -69,12 +69,12 @@ internal struct FleeceDictDecodingContainer<Key: CodingKey>: KeyedDecodingContai
                 return false
             }
         }
-        throw DecodingError.keyNotFound(key, .init(codingPath: codingPath, debugDescription: "Key not found"))
+        throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
     }
     
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
         guard let value = dict.value(forKey: key.stringValue) else {
-            throw DecodingError.keyNotFound(key, .init(codingPath: codingPath, debugDescription: "Key not found"))
+            throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
             fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
@@ -84,30 +84,42 @@ internal struct FleeceDictDecodingContainer<Key: CodingKey>: KeyedDecodingContai
     }
     
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
-        guard let nested = dict.dictionary(forKey: key.stringValue) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No dictionary for key '\(key.stringValue)'"))
+        guard let nestedValue = dict.value(forKey: key.stringValue) else {
+            throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
+        }
+        guard let nested = nestedValue as? DictionaryObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for key '\(key.stringValue)': expected dictionary, found \(String(describing: nestedValue))")
         }
         return KeyedDecodingContainer(FleeceDictDecodingContainer<NestedKey>(decoder: decoder, dict: nested))
     }
     
     func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
-        guard let nested = dict.array(forKey: key.stringValue) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No array for key '\(key.stringValue)'"))
+        guard let nestedValue = dict.value(forKey: key.stringValue) else {
+            throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
+        }
+        guard let nested = nestedValue as? ArrayObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for key '\(key.stringValue)': expected array, found \(String(describing: nestedValue))")
         }
         return FleeceArrayDecodingContainer(decoder: decoder, array: nested)
     }
     
     func superDecoder() throws -> any Decoder {
-        guard let nested = dict.dictionary(forKey: "super") else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No dictionary for key 'super'"))
+        guard let nestedValue = dict.value(forKey: "super") else {
+            throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key 'super'")
+        }
+        guard let nested = nestedValue as? DictionaryObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for key 'super': expected dictionary, found \(String(describing: nestedValue))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: .dictionary(nested))
         return valueDecoder
     }
 
     func superDecoder(forKey key: Key) throws -> any Decoder {
-        guard let nested = dict.dictionary(forKey: key.stringValue) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No value for key '\(key.stringValue)'"))
+        guard let nestedValue = dict.value(forKey: key.stringValue) else {
+            throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
+        }
+        guard let nested = nestedValue as? DictionaryObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for key '\(key.stringValue)': expected dictionary, found \(String(describing: nestedValue))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: .dictionary(nested))
         return valueDecoder
@@ -135,12 +147,12 @@ internal struct FleeceArrayDecodingContainer: UnkeyedDecodingContainer {
                 return false
             }
         }
-        throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No value at index \(currentIndex)"))
+        throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
     }
     
     mutating func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
         guard let value = array.value(at: currentIndex) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No value at index \(currentIndex)"))
+            throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
             fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
@@ -153,24 +165,33 @@ internal struct FleeceArrayDecodingContainer: UnkeyedDecodingContainer {
     }
 
     mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
-        guard let nested = array.dictionary(at: currentIndex) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No dictionary at index \(currentIndex)"))
+        guard let nestedValue = array.value(at: currentIndex) else {
+            throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
+        }
+        guard let nested = nestedValue as? DictionaryObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for index \(currentIndex): expected dictionary, found \(String(describing: nestedValue))")
         }
         currentIndex += 1
         return KeyedDecodingContainer(FleeceDictDecodingContainer(decoder: decoder, dict: nested))
     }
     
     mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
-        guard let nested = array.array(at: currentIndex) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No array at index \(currentIndex)"))
+        guard let nestedValue = array.value(at: currentIndex) else {
+            throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
+        }
+        guard let nested = nestedValue as? ArrayObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for index \(currentIndex): expected array, found \(String(describing: nestedValue))")
         }
         currentIndex += 1
         return FleeceArrayDecodingContainer(decoder: decoder, array: nested)
     }
     
     mutating func superDecoder() throws -> any Decoder {
-        guard let nested = array.dictionary(at: currentIndex) else {
-            throw DecodingError.valueNotFound(.init(codingPath: codingPath, debugDescription: "No dictionary at index \(currentIndex)"))
+        guard let nestedValue = array.value(at: currentIndex) else {
+            throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
+        }
+        guard let nested = nestedValue as? DictionaryObject else {
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch for index \(currentIndex): expected dictionary, found \(String(describing: nestedValue))")
         }
         currentIndex += 1
         let valueDecoder = FleeceDecoder(fleeceValue: .dictionary(nested))
@@ -197,7 +218,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .bool(let bool):
             bool
         default:
-            throw DecodingError.typeMismatch(Bool.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode Bool but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Bool but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -206,7 +227,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .int(let int):
             int
         default:
-            throw DecodingError.typeMismatch(Int.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode Int but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -215,7 +236,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .uint(let uint):
             uint
         default:
-            throw DecodingError.typeMismatch(UInt.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode UInt but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -224,7 +245,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .float(let float):
             float
         default:
-            throw DecodingError.typeMismatch(Float.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode Float but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Float but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -233,7 +254,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .double(let double):
             double
         default:
-            throw DecodingError.typeMismatch(Double.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode Double but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Double but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -242,7 +263,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .string(let string):
             string
         default:
-            throw DecodingError.typeMismatch(String.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode String but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected String but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -251,7 +272,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .data(let data):
             data
         default:
-            throw DecodingError.typeMismatch(Data.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode Data but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Data but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -260,7 +281,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case .blob(let blob):
             blob
         default:
-            throw DecodingError.typeMismatch(Blob.self, .init(codingPath: codingPath, debugDescription: "Expected to decode Blob but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Blob but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -283,7 +304,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         case is Blob.Type:
             return try decode(Blob.self) as! T
         default:
-            throw DecodingError.typeMismatch(T.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode \(T.self) but found \(String(describing: decoder.fleeceValue))"))
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected \(T.self) but found \(String(describing: decoder.fleeceValue))")
         }
     }
 }
@@ -330,8 +351,21 @@ enum FleeceValue {
         }
     }
     
+    // This function will first try to strictly cast the `value` as the type `T`, or
+    // whatever the appropriate representation for the type `T` is.
+    // If `T` is none of the strict types in this list, it will defer to the
+    // looser `init` above which will just succeed on the first successful
+    // cast of `value`.
+    //
+    // The reason for attempting strict casting first is because, for example, most UInt can be
+    // casted to Int. For any type which can be `as` casted to another, only loose casting would
+    // mean it could get constructed as the wrong type.
+    //
+    // The early skip in this function exists to avoid going through every branch of both strict
+    // and loose casting for user-defined structs.
+    //
     init?<T>(_ value: Any, as type: T.Type) {
-        // Early skip for types which are stored as Array or Dict (such as enum or struct)
+        // Early skip for types which are stored as Array or Dict (such as struct)
         if let array = value as? ArrayObject {
             self = .array(array)
             return
