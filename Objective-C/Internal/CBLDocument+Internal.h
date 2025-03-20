@@ -79,6 +79,17 @@ NS_ASSUME_NONNULL_BEGIN
                          revisionID: (NSString*)revisionID
                                body: (nullable FLDict)body;
 
+/// Load a document from the collection, with a specific revision.
+/// If `orLatest` is TRUE, will load the latest revision if the specified revision does not exist.
+/// Errors:
+/// - `CBLErrorNotFound` if the document ID does not exist in the collection
+/// - `CBLErrorNotFound` if the revision ID does not exist for that document, and `orLatest` was false.
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                           orLatest: (BOOL)orLatest
+                              error: (NSError**)error;
+
 - (nullable instancetype) initWithCollection: (CBLCollection*)collection
                                   documentID: (NSString*)documentID
                               includeDeleted: (BOOL)includeDeleted

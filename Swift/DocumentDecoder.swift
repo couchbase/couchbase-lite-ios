@@ -7,9 +7,9 @@
 //
 
 internal struct DocumentDecoder: Decoder {
-    internal let document: MutableDocument
+    internal let document: Document
     
-    internal init(document: MutableDocument) {
+    internal init(document: Document) {
         self.document = document
     }
     
@@ -52,14 +52,14 @@ private struct DocumentDecodingContainer<Key: CodingKey> : KeyedDecodingContaine
     }
     
     // Specialisation for DocumentId to take self.document instead of decoding id
-    func decode(_ type: DocumentId.Type, forKey key: Key) throws -> DocumentId {
-        return try DocumentId(from: decoder)
+    func decode(_ type: DocumentID.Type, forKey key: Key) throws -> DocumentID {
+        return try DocumentID(from: decoder)
     }
 
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
         // The above override for DocumentId doesn't always work, so we need to double check
-        if type is DocumentId.Type {
-            return try decode(DocumentId.self, forKey: key) as! T
+        if type is DocumentID.Type {
+            return try decode(DocumentID.self, forKey: key) as! T
         }
         guard let value = decoder.document.value(forKey: key.stringValue) else {
             throw CBLError.create(CBLError.decodingError, description: "Document is missing field '\(key.stringValue)'")

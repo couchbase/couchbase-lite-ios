@@ -93,6 +93,18 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         return nil
     }
     
+    internal func document(id: String, revID: String, orLatest: Bool = false) throws -> Document? {
+        var error: NSError?
+        let doc = impl.document(withID: id, revID: revID, orLatest: orLatest, error: &error)
+        if let err = error {
+            throw err
+        }
+        if let implDoc = doc {
+            return Document(implDoc, collection: self)
+        }
+        return nil
+    }
+    
     public func document<T: DocumentDecodable>(id: String, as type: T.Type) throws -> T? {
         guard let doc = try document(id: id)?.toMutable() else {
             return nil
@@ -204,14 +216,14 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// the `from: object` which was passed in.
     public func saveDocument<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
         try withDocument(from: object) { document in
-            try save(document: document) { _, existingDocument in
+            try save(document: document) { newDocument, existingDocument in
                 do {
-                    let existingVal = existingDocument != nil ? try T.init(from: DocumentDecoder(document: existingDocument!.toMutable())) : nil
+                    let existingVal = existingDocument != nil ? try T.init(from: DocumentDecoder(document: existingDocument!)) : nil
                     let result = conflictHandler(object, existingVal)
                     if result {
                         // If the conflictHandler returns true, the `object: T` may have been modified, so
                         // use DocumentEncoder to update its referenced MutableDocument.
-                        let encoder = try DocumentEncoder(db: self.database)
+                        let encoder = try DocumentEncoder(db: self.database, document: newDocument)
                         try object.encode(to: encoder)
                         try encoder.finish()
                     }
@@ -228,45 +240,46 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// If the callback returns `false`, this indicates it failed, and the `MutableDocument` which was attached to `object` will be reset.
     internal func withDocument<T: DocumentEncodable>(from object: T, _ fn: (MutableDocument) throws -> Bool) throws -> Bool {
         guard let docRef = getDocumentRef(object: object) else {
-            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot encode object into document: No @DocumentId found on the object"])
+            throw CBLError.create(CBLError.invalidParameter, description: "Cannot encode \(String(describing: T.self)) into document: No @DocumentId field found")
         }
-        var documentIsNew = false
         
-        if docRef.document == nil {
-            documentIsNew = true
-            // Try to fetch the existing document, otherwise create a new MutableDocument
-            if let id = docRef.docID {
-                if let doc = try document(id: id)?.toMutable() {
-                    docRef.document = doc
+        let document: MutableDocument
+        
+        // Load existing (as reference by `object.@DocumentId`) or create new document
+        if let docID = docRef.docID {
+            if let revID = docRef.revID {
+                // Try and load the existing document at the given revision, or the current revision
+                if let doc = try self.document(id: docID, revID: revID, orLatest: true)?.toMutable() {
+                    document = doc
                 } else {
-                    let doc = MutableDocument(id: id)
-                    docRef.document = doc
+                    document = MutableDocument(id: docID)
                 }
             } else {
-                let doc = MutableDocument()
-                docRef.document = doc
+                // Try and load the existing document current revision
+                if let doc = try self.document(id: docID)?.toMutable() {
+                    document = doc
+                } else {
+                    document = MutableDocument(id: docID)
+                }
             }
+        } else {
+            document = MutableDocument()
         }
         
-        // Set collection on the CBLDocument. Important when assigning the encoded fleece dict to the MutableDocument.
-        try self.impl.prepare(docRef.document!.impl)
+        // Because of SharedKeys, encoding will fail if CBLDocument.collection is not set.
+        try impl.prepare(document.impl)
         
-        do {
-            try DocumentEncoder.encode(object, withDB: database)
-            // Call the closure passed in
-            let result = try fn(docRef.document!)
-            // If the callback returned false, saving failed, so reset the attached document
-            if !result && documentIsNew {
-                docRef.document = nil
-            }
-            return result
-        } catch {
-            // If encoding or the callback failed, and the document wasn't attached to the object before, reset the document on the object
-            if documentIsNew {
-                docRef.document = nil
-            }
-            throw error
+        // Encode `object` into `document`.
+        let encoder = try DocumentEncoder(db: database, document: document)
+        try object.encode(to: encoder)
+        try encoder.finish()
+        // Call the closure passed in
+        let result = try fn(document)
+        // If the closure returned true, its operation succeeded, so attach the revID from `document` to `object`.
+        if result {
+            docRef.revID = document.revisionID
         }
+        return result
     }
     
     /// Delete a document from the collection. The default concurrency control, lastWriteWins, will be used

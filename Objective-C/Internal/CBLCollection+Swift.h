@@ -32,6 +32,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
 
+/// Load a document with the given docID, at the given revision.
+/// Will load the latest revision if `orLatest` is true AND the revision specified by `revID` does not exist.
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID
+                                   revID: (NSString*)revID
+                                orLatest: (BOOL)orLatest
+                                   error: (NSError**)error NS_SWIFT_NOTHROW;
+
 @end
 
 NS_ASSUME_NONNULL_END

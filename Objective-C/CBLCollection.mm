@@ -252,6 +252,30 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID revID: (NSString*)revID orLatest: (BOOL)orLatest error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    CBLAssertNotNil(revID);
+    
+    CBL_LOCK(_mutex) {
+        if (![self checkIsValid: error])
+            return nil;
+        
+        NSError* err = nil;
+        CBLDocument* doc = [[CBLDocument alloc] initWithCollection: self
+                                                        documentID: documentID
+                                                        revisionID: revID
+                                                          orLatest: orLatest
+                                                             error: &err];
+        
+        if (!doc && err.code != CBLErrorNotFound) {
+            if (error)
+                *error = err;
+        }
+        
+        return doc;
+    }
+}
+
 #pragma mark - Subscript
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {

@@ -6,10 +6,10 @@
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
-internal func getDocumentRef(object: any AnyObject) -> DocumentId? {
+internal func getDocumentRef(object: any AnyObject) -> DocumentID? {
     let mirror = Mirror(reflecting: object)
     for child in mirror.children {
-        if let docID = child.value as? DocumentId {
+        if let docID = child.value as? DocumentID {
             return docID
         }
     }
@@ -21,23 +21,23 @@ public typealias DocumentDecodable = Decodable & AnyObject
 public typealias DocumentCodable = Codable & AnyObject
 
 @propertyWrapper
-public final class DocumentId: Codable {
+public final class DocumentID: Codable {
     internal var docID: String?
-    internal var document: MutableDocument?
+    internal var revID: String?
 
     public var wrappedValue: String? {
         get {
-            return document == nil ? docID : document!.id
+            docID
         }
         set {
-            if document != nil {
-                fatalError("Cannot change the document ID")
+            if revID != nil {
+                fatalError("Cannot change the document ID of an existing document")
             }
             docID = newValue
         }
     }
 
-    public var projectedValue: DocumentId { self }
+    public var projectedValue: DocumentID { self }
 
     public init(wrappedValue: String?) {
         docID = wrappedValue
@@ -47,7 +47,7 @@ public final class DocumentId: Codable {
         if let dec = decoder as? DocumentDecoder {
             // If decoder has a document, we should assign it to self
             self.init(wrappedValue: dec.document.id)
-            self.document = dec.document
+            self.revID = dec.document.revisionID
         } else {
             // Otherwise, try to decode the ID string.
             let id = try String?.init(from: decoder)
@@ -56,15 +56,9 @@ public final class DocumentId: Codable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        if let enc = encoder as? DocumentEncoder {
-            if let doc = document {
-                enc.document = doc
-                return
-            } else {
-                document = MutableDocument(id: docID)
-                enc.document = document!
-                return
-            }
+        if encoder is DocumentEncoder {
+            // Doc ID doesn't get encoded to document fields
+            return
         }
         // If encoder is not DocumentEncoder, encode the ID string.
         try docID?.encode(to: encoder)

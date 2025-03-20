@@ -14,7 +14,7 @@ protocol DictionaryEquatable {
 }
 
 class Profile: Codable, Equatable {
-    @DocumentId var pid: String?
+    @DocumentID var pid: String?
     var name: ProfileName
     var contacts: [Contact]
     var likes: [String]

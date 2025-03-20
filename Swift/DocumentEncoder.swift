@@ -11,18 +11,11 @@ import CouchbaseLiteSwift_Private
 
 internal class DocumentEncoder: Encoder {
     fileprivate var _encoder: FleeceEncoder
+    private var _document: MutableDocument
     
-    internal var document: MutableDocument? = nil
-    
-    init(db: Database) throws {
+    init(db: Database, document: MutableDocument) throws {
         _encoder = try FleeceEncoder(db: db)
-    }
-    
-    /// Encode a `DocumentEncodable` and set the resulting body on its `__ref.document`.
-    internal static func encode(_ value: any DocumentEncodable, withDB database: Database) throws {
-        let encoder = try DocumentEncoder(db: database)
-        try value.encode(to: encoder)
-        try encoder.finish()
+        _document = document
     }
     
     public var codingPath: [any CodingKey] { return _encoder.codingPath }
@@ -43,7 +36,7 @@ internal class DocumentEncoder: Encoder {
     
     /// Finish encoding and write the resulting dict into self.document
     func finish() throws {
-        if !_encoder._encoder.finish(into: document!.impl) {
+        if !_encoder._encoder.finish(into: _document.impl) {
             let errorMsg = _encoder._encoder.getError() ?? "Failed to finish encoding"
             throw CBLError.create(CBLError.encodingError, description: errorMsg)
         }
@@ -71,13 +64,13 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
     
     // Override for DocumentId to skip encoding id, so it can set encoder.document
-    func encode(_ value: DocumentId, forKey key: Key) throws {
+    func encode(_ value: DocumentID, forKey key: Key) throws {
         try value.encode(to: encoder)
     }
 
     func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
-        if value is DocumentId {
-            try encode(value as! DocumentId, forKey: key)
+        if value is DocumentID {
+            try encode(value as! DocumentID, forKey: key)
             return
         }
         try encoder._encoder.writeKey(key)

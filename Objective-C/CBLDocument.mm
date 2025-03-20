@@ -76,6 +76,53 @@ using namespace fleece;
 
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
+                               body: (FLDict)body {
+    NSParameterAssert(documentID != nil);
+    NSParameterAssert(collection != nil);
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
+    if (self) {
+        _fleeceData = body;
+        [self updateDictionary];
+    }
+    return self;
+}
+
+- (instancetype) initWithCollection: (CBLCollection *)collection
+                         documentID:(NSString *)documentID
+                         revisionID:(NSString *)revisionID
+                           orLatest:(BOOL)orLatest
+                              error:(NSError *__autoreleasing  _Nullable *)outError {
+    NSParameterAssert(documentID != nil);
+    NSParameterAssert(revisionID != nil);
+    NSParameterAssert(collection != nil);
+    self = [self initWithCollection: collection documentID: documentID c4Doc: nil];
+    if (self) {
+        _revID = revisionID;
+        CBLStringBytes docId(documentID);
+        C4Error err = {};
+        auto doc = c4coll_getDoc(collection.c4col, docId, true, kDocGetAll, &err);
+        if (!doc) {
+            convertError(err, outError);
+            return nil;
+        }
+        
+        CBLStringBytes revId(revisionID);
+        if (!c4doc_selectRevision(doc, revId, true, &err)) {
+            if (orLatest) {
+                c4doc_selectCurrentRevision(doc);
+            } else {
+                convertError(err, outError);
+                return nil;
+            }
+        }
+        
+        [self setC4Doc: [CBLC4Document document: doc]];
+    }
+    return self;
+}
+
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
                      includeDeleted: (BOOL)includeDeleted
                               error: (NSError**)outError {
     return [self initWithCollection: collection
