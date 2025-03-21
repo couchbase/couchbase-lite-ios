@@ -1577,19 +1577,6 @@
            @"Purging error: %@", error);
 }
 
--(void) testDeleteDocumentWithDifferentCollectionInstace {
-    NSError* error;
-    CBLCollection* col1 = [self.db createCollectionWithName: @"col1" scope: nil error: &error];
-    CBLCollection* col2 = [self.db collectionWithName: @"col1" scope: nil error: &error];
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    [self saveDocument: doc1 collection: col1];
-    
-    // Get using 2
-    doc1 = [[col2 documentWithID: doc1.id error: &error] toMutable];
-    // Delete using 1
-    Assert([col1 deleteDocument: doc1 error: &error]);
-}
-
 - (void) testReopenDB {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @"str" forKey: @"string"];
@@ -2272,6 +2259,34 @@
     doc = [[colA documentWithID: @"doc1" error: &error] toMutable];
     [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in:^BOOL(NSError** e) {
         return [colB saveDocument: doc error: e];
+    }];
+}
+
+- (void) withOperation: (BOOL (^)(CBLCollection*, CBLMutableDocument*, NSError*)) operation {
+    NSError* error;
+    CBLCollection* col1 = [self.db createCollectionWithName: @"col1" scope: nil error: &error];
+    CBLCollection* col2 = [self.db collectionWithName: @"col1" scope: nil error: &error];
+    
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    [self saveDocument: doc1 collection: col1];
+    
+    // Get using 2
+    doc1 = [[col2 documentWithID: doc1.id error: &error] toMutable];
+    // Perform operation (Save, Delete, or Purge) using 1
+    Assert(operation(col1, doc1, error));
+}
+
+- (void) testDocumentWithDifferentCollectionInstance {
+    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col saveDocument: doc error: &error];
+    }];
+    
+    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col deleteDocument: doc error: &error];
+    }];
+    
+    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col purgeDocument: doc error: &error];
     }];
 }
 

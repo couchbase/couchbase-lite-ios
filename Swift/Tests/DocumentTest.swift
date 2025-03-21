@@ -1868,6 +1868,26 @@ class DocumentTest: CBLTestCase {
         }
     }
     
+    func withOperation(_ operation: @escaping (Collection, MutableDocument) throws -> Void) {
+        let col1 = try! db.createCollection(name: "col1", scope: nil)
+        let col2 = try! db.collection(name: "col1", scope: nil)
+
+        var doc = createDocument("doc1")
+        try! saveDocument(doc, collection: col1)
+
+        // Get document using 2
+        doc = try! col2!.document(id: doc.id)!.toMutable()
+
+        // Perform operation (Save, Delete, or Purge) using 1
+        try! operation(col1, doc)
+    }
+
+    func testDocumentWithDifferentCollectionInstance() {
+        withOperation { try! $0.save(document: $1) }
+        withOperation { try! $0.delete(document: $1) }
+        withOperation { try! $0.purge(document: $1) }
+    }
+
     // MARK: toJSONTimestamp & Revision history
 
     //  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
