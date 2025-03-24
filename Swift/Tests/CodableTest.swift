@@ -29,13 +29,52 @@ class Profile: Codable, Equatable {
         lhs.name == rhs.name && lhs.contacts.elementsEqual(rhs.contacts) && lhs.likes.elementsEqual(rhs.likes)
     }
 
-    static func == (lhs: Profile, rhs: Document) -> Bool {
+    static func == (lhs: Profile, rhs: DictionaryProtocol) -> Bool {
         // use DictionaryEquatable protocol to test equality
         return lhs.eq(dict: rhs)
     }
     
-    static func == (lhs: Document, rhs: Profile) -> Bool {
+    static func == (lhs: DictionaryProtocol, rhs: Profile) -> Bool {
         return rhs.eq(dict: lhs)
+    }
+}
+
+class Person : Profile {
+    @DocumentID var id: String?
+    var age: Int
+    
+    init(name: ProfileName, contacts: [Contact], likes: [String], age: Int) {
+        self.age = age
+        super.init(name: name, contacts: contacts, likes: likes)
+    }
+    
+    init(profile: Profile, age: Int) {
+        self.age = age
+        super.init(name: profile.name, contacts: profile.contacts, likes: profile.likes)
+    }
+    
+    required init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.age = try container.decode(Int.self, forKey: .age)
+        let superDecoder = try container.superDecoder()
+        try super.init(from: superDecoder)
+    }
+    
+    override func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(age, forKey: .age)
+        let superEncoder = container.superEncoder()
+        try super.encode(to: superEncoder)
+    }
+    
+    enum CodingKeys : String, CodingKey {
+        case age
+    }
+    
+    static func == (lhs: Person, rhs: DictionaryProtocol) -> Bool {
+        return lhs.age == rhs["age"].value as? Int
+        && rhs.contains(key: "super")
+        && (lhs as Profile) == (rhs["super"].dictionary!)
     }
 }
 
@@ -217,6 +256,20 @@ class CodableTest: CBLTestCase {
         expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
             let _ = try result.data(as: Profile.self)
         }
+    }
+    
+    func testCollectionEncodeSubclass() throws {
+        // 1. Create a Person object with ID 'person-001'
+        let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        var person = Person(profile: profile, age: 26)
+        person.id = "person-001"
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: person)
+        // 3. Load the document from the collection
+        let document = try defaultCollection!.document(id: "person-001")!
+        debugPrint(document.toDictionary())
+        // 4. Assert that all of the fields match
+        XCTAssert(person == document)
     }
 }
 

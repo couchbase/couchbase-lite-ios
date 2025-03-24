@@ -199,11 +199,13 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
     }
     
     func superEncoder() -> any Encoder {
-        encoder
+        try! encoder.writeKey("super")
+        return encoder
     }
     
     func superEncoder(forKey key: Key) -> any Encoder {
-        encoder
+        try! encoder.writeKey(key)
+        return encoder
     }
 }
 

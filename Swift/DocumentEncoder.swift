@@ -94,11 +94,13 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
     
     func superEncoder() -> any Encoder {
-        encoder
+        try! encoder._encoder.writeKey("super")
+        return encoder._encoder
     }
     
     func superEncoder(forKey key: Key) -> any Encoder {
-        encoder
+        try! encoder._encoder.writeKey(key)
+        return encoder._encoder
     }
 }
 
