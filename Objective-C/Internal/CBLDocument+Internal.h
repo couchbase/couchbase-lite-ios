@@ -83,11 +83,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// If `orLatest` is TRUE, will load the latest revision if the specified revision does not exist.
 /// Errors:
 /// - `CBLErrorNotFound` if the document ID does not exist in the collection
-/// - `CBLErrorNotFound` if the revision ID does not exist for that document, and `orLatest` was false.
+/// - `CBLErrorNotFound` if the revision ID does not exist for that document
 - (instancetype) initWithCollection: (CBLCollection*)collection
                          documentID: (NSString*)documentID
                          revisionID: (NSString*)revisionID
-                           orLatest: (BOOL)orLatest
                               error: (NSError**)error;
 
 - (nullable instancetype) initWithCollection: (CBLCollection*)collection

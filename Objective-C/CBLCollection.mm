@@ -252,7 +252,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID revID: (NSString*)revID orLatest: (BOOL)orLatest error: (NSError**)error {
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID revID: (NSString*)revID error: (NSError**)error {
     CBLAssertNotNil(documentID);
     CBLAssertNotNil(revID);
     
@@ -264,7 +264,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         CBLDocument* doc = [[CBLDocument alloc] initWithCollection: self
                                                         documentID: documentID
                                                         revisionID: revID
-                                                          orLatest: orLatest
                                                              error: &err];
         
         if (!doc && err.code != CBLErrorNotFound) {

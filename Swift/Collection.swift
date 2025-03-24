@@ -93,9 +93,9 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         return nil
     }
     
-    internal func document(id: String, revID: String, orLatest: Bool = false) throws -> Document? {
+    internal func document(id: String, revID: String) throws -> Document? {
         var error: NSError?
-        let doc = impl.document(withID: id, revID: revID, orLatest: orLatest, error: &error)
+        let doc = impl.document(withID: id, revID: revID, error: &error)
         if let err = error {
             throw err
         }
@@ -110,7 +110,11 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
             return nil
         }
         let decoder = DocumentDecoder(document: doc)
-        return try T(from: decoder)
+        let object = try T(from: decoder)
+        if getDocumentRef(object: object) == nil {
+            throw CBLError.create(CBLError.invalidParameter, description: "Type \(String(describing: type)) is missing a @DocumentId field")
+        }
+        return object
     }
     
     /// Gets document fragment object by the given document ID.
@@ -248,10 +252,12 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         // Load existing (as reference by `object.@DocumentId`) or create new document
         if let docID = docRef.docID {
             if let revID = docRef.revID {
-                // Try and load the existing document at the given revision, or the current revision
-                if let doc = try self.document(id: docID, revID: revID, orLatest: true)?.toMutable() {
+                // Try and load the existing document at the given revision
+                if let doc = try self.document(id: docID, revID: revID)?.toMutable() {
                     document = doc
                 } else {
+                    // If the revID did not exist, create a new doc and later
+                    // let conflict resolution process resolve it
                     document = MutableDocument(id: docID)
                 }
             } else {

@@ -90,7 +90,6 @@ using namespace fleece;
 - (instancetype) initWithCollection: (CBLCollection *)collection
                          documentID:(NSString *)documentID
                          revisionID:(NSString *)revisionID
-                           orLatest:(BOOL)orLatest
                               error:(NSError *__autoreleasing  _Nullable *)outError {
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
@@ -108,12 +107,8 @@ using namespace fleece;
         
         CBLStringBytes revId(revisionID);
         if (!c4doc_selectRevision(doc, revId, true, &err)) {
-            if (orLatest) {
-                c4doc_selectCurrentRevision(doc);
-            } else {
-                convertError(err, outError);
-                return nil;
-            }
+            convertError(err, outError);
+            return nil;
         }
         
         [self setC4Doc: [CBLC4Document document: doc]];
