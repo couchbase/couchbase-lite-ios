@@ -281,8 +281,9 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         try encoder.finish()
         // Call the closure passed in
         let result = try fn(document)
-        // If the closure returned true, its operation succeeded, so attach the revID from `document` to `object`.
+        // If the closure returned true, its operation succeeded, so attach the IDs from `document` to `object`.
         if result {
+            docRef.docID = document.id
             docRef.revID = document.revisionID
         }
         return result

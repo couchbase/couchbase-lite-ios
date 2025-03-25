@@ -61,7 +61,6 @@ public final class DocumentID: Codable {
             return
         }
         // If encoder is not DocumentEncoder, encode the ID string.
-        try docID?.encode(to: encoder)
         if let docID = docID {
             try docID.encode(to: encoder)
         } else {

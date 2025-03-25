@@ -6,6 +6,8 @@
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
 
+import CouchbaseLiteSwift_Private
+
 internal class FleeceDecoder: Decoder {
     let fleeceValue: FleeceValue
     
@@ -15,8 +17,8 @@ internal class FleeceDecoder: Decoder {
     
     public var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey: Any] = [:]
-    
+    public var userInfo: [CodingUserInfoKey : Any] { return [:] }
+
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         switch fleeceValue {
         case .dictionary(let dictionaryObject):
@@ -252,9 +254,22 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Double.Type) throws -> Double {
         switch decoder.fleeceValue {
         case .double(let double):
-            double
+            return double
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Double but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: Date.Type) throws -> Date {
+        switch decoder.fleeceValue {
+        case .string(let string):
+            if let date = ISO8601DateFormatter().date(from: string) {
+                return date
+            } else {
+                throw CBLError.create(CBLError.decodingError, description: "Failed to parse ISO8601 Date from '\(string)'")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Date encoded as String but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -299,6 +314,8 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
             return try decode(Double.self) as! T
         case is String.Type:
             return try decode(String.self) as! T
+        case is Date.Type:
+            return try decode(Date.self) as! T
         case is Data.Type:
             return try decode(Data.self) as! T
         case is Blob.Type:

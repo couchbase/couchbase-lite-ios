@@ -76,6 +76,10 @@ internal class FleeceEncoder : Encoder {
             try endDict()
         case let blob as Blob:
             try _writeNSObject(blob.impl)
+        case let date as Date:
+            let formatter = ISO8601DateFormatter()
+            let string = formatter.string(from: date)
+            try _writeNSObject(string as NSString)
         case let object as NSObject:
             try _writeNSObject(object)
         default:

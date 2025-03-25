@@ -48,8 +48,8 @@ public final class ResultSet : Sequence, IteratorProtocol {
     ///
     /// @warning This function may take a long time and consume a large amount of memory
     /// depending on the data size and the number of results.
-    public func data<T: Decodable>(as type: T.Type) throws -> Array<T> {
-        let decoder = QueryResultSetDecoder(resultSet: self)
+    public func data<T: Decodable>(as type: T.Type, dataKey: String? = nil) throws -> Array<T> {
+        let decoder = QueryResultSetDecoder(resultSet: self, dataKey: dataKey)
         return try Array<T>.init(from: decoder)
     }
     

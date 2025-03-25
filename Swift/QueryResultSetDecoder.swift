@@ -5,21 +5,28 @@
 //  Created by Callum Birks on 12/03/2025.
 //  Copyright © 2025 Couchbase. All rights reserved.
 //
+import CouchbaseLiteSwift_Private
 
 internal struct QueryResultSetDecoder: Decoder {
     let resultSet: ResultSet
+    let dataKey: String?
+    
+    init(resultSet: ResultSet, dataKey: String? = nil) {
+        self.resultSet = resultSet
+        self.dataKey = dataKey
+    }
     
     var codingPath: [any CodingKey] = []
     
-    var userInfo: [CodingUserInfoKey : Any] = [:]
-    
+    public var userInfo: [CodingUserInfoKey : Any] { [:] }
+
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         throw CBLError.create(CBLError.decodingError, description: "ResultSet decoding requires an unkeyed container")
     }
     
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         let first = resultSet.next()
-        return QueryResultSetDecodingContainer(resultSet: resultSet, next: first)
+        return QueryResultSetDecodingContainer(resultSet: resultSet, dataKey: dataKey, next: first)
     }
     
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
@@ -29,10 +36,12 @@ internal struct QueryResultSetDecoder: Decoder {
 
 private struct QueryResultSetDecodingContainer : UnkeyedDecodingContainer {
     let resultSet: ResultSet
+    let dataKey: String?
     var next: Result?
     
-    init(resultSet: ResultSet, next: Result?) {
+    init(resultSet: ResultSet, dataKey: String?, next: Result?) {
         self.resultSet = resultSet
+        self.dataKey = dataKey
         self.next = next
     }
     
@@ -52,7 +61,7 @@ private struct QueryResultSetDecodingContainer : UnkeyedDecodingContainer {
         guard let next = self.next else {
             throw CBLError.create(CBLError.decodingError, description: "No value at index \(currentIndex) in ResultSet")
         }
-        let decoder = QueryResultDecoder(queryResult: next)
+        let decoder = QueryResultDecoder(queryResult: next, dataKey: dataKey)
         let val = try T.init(from: decoder)
         currentIndex += 1
         self.next = resultSet.next()

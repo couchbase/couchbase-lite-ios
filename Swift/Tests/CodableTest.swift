@@ -19,7 +19,8 @@ class Profile: Codable, Equatable {
     var contacts: [Contact]
     var likes: [String]
     
-    init(name: ProfileName, contacts: [Contact], likes: [String]) {
+    init(pid: String? = nil, name: ProfileName, contacts: [Contact], likes: [String]) {
+        self.pid = pid
         self.name = name
         self.contacts = contacts
         self.likes = likes
@@ -43,12 +44,14 @@ class Person : Profile {
     @DocumentID var id: String?
     var age: Int
     
-    init(name: ProfileName, contacts: [Contact], likes: [String], age: Int) {
+    init(id: String? = nil, age: Int, name: ProfileName, contacts: [Contact], likes: [String]) {
+        self.id = id
         self.age = age
         super.init(name: name, contacts: contacts, likes: likes)
     }
     
-    init(profile: Profile, age: Int) {
+    init(id: String? = nil, profile: Profile, age: Int) {
+        self.id = id
         self.age = age
         super.init(name: profile.name, contacts: profile.contacts, likes: profile.likes)
     }
@@ -78,16 +81,163 @@ class Person : Profile {
     }
 }
 
+// Contains nested Profile object
+class Car : Codable {
+    @DocumentID var id: String?
+    var name: String
+    var driver: Profile
+    var topSpeed: Float
+    var acceleration: Double
+    
+    init(id: String? = nil, name: String, driver: Profile, topSpeed: Float, acceleration: Double) {
+        self.id = id
+        self.name = name
+        self.driver = driver
+        self.topSpeed = topSpeed
+        self.acceleration = acceleration
+    }
+    
+    static func == (lhs: Car, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Car) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+// Contains array-nested Profile objects
+class Household : Codable {
+    @DocumentID var id: String?
+    var address: ContactAddress
+    var profiles: [Profile]
+    
+    init(id: String? = nil, address: ContactAddress, profiles: [Profile]) {
+        self.id = id
+        self.address = address
+        self.profiles = profiles
+    }
+    
+    static func == (lhs: Household, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Household) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+// Contains a Blob
+class Report : Codable {
+    @DocumentID var id: String?
+    var title: String
+    var filed: Bool
+    var body: Blob
+    
+    init(id: String? = nil, title: String, filed: Bool, body: Blob) {
+        self.id = id
+        self.title = title
+        self.filed = filed
+        self.body = body
+    }
+    
+    static func == (lhs: Report, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Report) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+// Contains Blob nested via another struct
+class ReportFile : Codable {
+    @DocumentID var id: String?
+    var dateFiled: Date
+    var report: Report
+    
+    init(id: String? = nil, dateFiled: Date, report: Report) {
+        self.id = id
+        self.dateFiled = dateFiled
+        self.report = report
+    }
+    
+    static func == (lhs: ReportFile, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: ReportFile) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+// Contains Blobs nested in array
+class Note : Codable {
+    @DocumentID var id: String?
+    var title: String
+    var content: String
+    var attachments: [Blob]
+    
+    init(id: String? = nil, title: String, content: String, attachments: [Blob]) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.attachments = attachments
+    }
+    
+    static func == (lhs: Note, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Note) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+// Contains nil values and nested nil values
+class Favourites : Codable {
+    @DocumentID var id: String?
+    var colour: String?
+    var animal: Animal?
+    
+    static func == (lhs: Favourites, rhs: DictionaryProtocol) -> Bool {
+        // use DictionaryEquatable protocol to test equality
+        return lhs.eq(dict: rhs)
+    }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Favourites) -> Bool {
+        return rhs.eq(dict: lhs)
+    }
+}
+
+struct Animal : Codable {
+    var name: String
+    // nil if the animal has no legs
+    var legs: Int?
+}
+
 struct ProfileName: Codable, Equatable {
     var first: String
     var last: String
 }
 
-struct Contact: Codable, Equatable {
+class Contact: Codable, Equatable {
     var address: ContactAddress
     var emails: [String]
     var phones: [ContactPhone]
     var type: ContactType
+    
+    static func == (lhs: Contact, rhs: Contact) -> Bool {
+        lhs.address == rhs.address
+        && lhs.emails == rhs.emails
+        && lhs.phones == rhs.phones
+        && lhs.type == rhs.type
+    }
 }
 
 struct ContactAddress: Codable, Equatable {
@@ -114,6 +264,7 @@ enum ContactType: String, Codable {
 }
 
 class CodableTest: CBLTestCase {
+    // 1. TestCollectionEncode
     func testCollectionEncode() throws {
         // 1. Create a Profile object
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
@@ -127,6 +278,7 @@ class CodableTest: CBLTestCase {
         XCTAssert(profile == document)
     }
     
+    // 2. TestCollectionDecode
     func testCollectionDecode() throws {
         // 1. Save 'p-0001' from the dataset into the default collection.
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
@@ -141,6 +293,7 @@ class CodableTest: CBLTestCase {
         XCTAssert(profile! == document)
     }
     
+    // 3. TestCollectionUpdate
     func testCollectionUpdate() throws {
         // 1. Save 'p-0001' from the dataset into the default collection.
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
@@ -162,8 +315,17 @@ class CodableTest: CBLTestCase {
         document = try defaultCollection!.document(id: "p-0001")!
         // 8. Assert the field values of the Document match the Profile object
         XCTAssert(document == profile)
+        // 9. Modify the object further
+        profile.name = .init(first: "Jane", last: "Doe")
+        // 10. Save the modifications
+        try defaultCollection!.saveDocument(from: profile)
+        // 11. Load the document
+        document = try defaultCollection!.document(id: "p-0001")!
+        // 12. Assert the field values match
+        XCTAssert(document == profile)
     }
     
+    // 4. TestCollectionDelete
     func testCollectionDelete() throws {
         // 1. Create a Profile object
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
@@ -181,6 +343,7 @@ class CodableTest: CBLTestCase {
         XCTAssert(profile == document)
     }
     
+    // 5. TestCollectionSaveWithConflictHandler
     func testCollectionSaveWithConflictHandler() throws {
         // 1. Create a Profile object
         let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
@@ -210,11 +373,52 @@ class CodableTest: CBLTestCase {
         XCTAssert(document == profile2)
     }
     
+    // 6. TestCollectionSaveWithLastWriteWins
+    func testCollectionSaveWithLastWriteWins() throws {
+        // 1. Create a Profile object
+        let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        // 2. Save it to the default collection
+        try defaultCollection!.saveDocument(from: profile1)
+        // 3. Get another reference to the object
+        let profile2 = try defaultCollection!.document(id: profile1.pid!, as: Profile.self)!
+        // 4. Modify the first reference, and save it
+        profile1.likes = ["hiking", "reading"]
+        try defaultCollection!.saveDocument(from: profile1)
+        // 5. Modify the second reference, and save it with ConcurrencyControl.lastWriteWins
+        profile2.name = .init(first: "Updated", last: "Profile")
+        let resolved = try defaultCollection!.saveDocument(from: profile2, concurrencyControl: .lastWriteWins)
+        XCTAssert(resolved)
+        // 6. Fetch the Document and assert all fields match the second object reference
+        let document = try defaultCollection!.document(id: profile1.pid!)!
+        XCTAssert(document == profile2)
+    }
+    
+    // 7. TestCollectionSaveWithFailOnConflict
+    func testCollectionSaveWithFailOnConflict() throws {
+        // 1. Create a Profile object
+        let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        // 2. Save it to the default collection
+        try defaultCollection!.saveDocument(from: profile1)
+        // 3. Get another reference to the object
+        let profile2 = try defaultCollection!.document(id: profile1.pid!, as: Profile.self)!
+        // 4. Modify the first reference, and save it
+        profile1.likes = ["hiking", "reading"]
+        try defaultCollection!.saveDocument(from: profile1)
+        // 5. Modify the second reference, and save it with ConcurrencyControl.lastWriteWins
+        profile2.name = .init(first: "Updated", last: "Profile")
+        let resolved = try defaultCollection!.saveDocument(from: profile2, concurrencyControl: .failOnConflict)
+        XCTAssertFalse(resolved)
+        // 6. Fetch the Document and assert all fields match the first object reference
+        let document = try defaultCollection!.document(id: profile1.pid!)!
+        XCTAssert(document == profile1)
+    }
+    
+    // 8. TestQueryResultDecode
     func testQueryResultDecode() throws {
         // 1. Save 'p-0001' from the dataset
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
         // 2. Create a query to fetch the document
-        let query = try db.createQuery("SELECT meta().id AS pid, * FROM _ LIMIT 1")
+        let query = try db.createQuery("SELECT meta().id AS pid, name, contacts, likes FROM _ LIMIT 1")
         // 3. Execute the query and get the Profile object from the Result
         let result = try query.execute().next()!
         debugPrint(result.keys)
@@ -226,11 +430,29 @@ class CodableTest: CBLTestCase {
         XCTAssert(profile == document)
     }
     
+    // 9. TestQueryResultDecodeWithDataKey
+    func testQueryResultDecodeWithDataKey() throws {
+        // 1. Save 'p-0001' from the dataset
+        try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
+        // 2. Create a query to fetch the document
+        let query = try db.createQuery("SELECT meta().id AS pid, * FROM _ LIMIT 1")
+        // 3. Execute the query and get the Profile object from the Result
+        let result = try query.execute().next()!
+        debugPrint(result.keys)
+        let profile = try result.data(as: Profile.self, dataKey: "_")
+        // 4. Assert that Profile.pid is not null and is 'p-0001'
+        XCTAssertEqual(profile.pid, "p-0001")
+        // 5. Assert that the field values of the object match the source document
+        let document = try defaultCollection!.document(id: "p-0001")!
+        XCTAssert(profile == document)
+    }
+    
+    // 10. TestQueryResultSetDecode
     func testQueryResultSetDecode() throws {
         // 1. Save 'p-0001', 'p-0002', 'p-0003' from the dataset
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 3, idKey: "pid")
         // 2. Create a query to fetch the documents
-        let query = try db.createQuery("SELECT meta().id AS pid, * FROM _ ORDER BY meta().id")
+        let query = try db.createQuery("SELECT meta().id AS pid, name, contacts, likes FROM _ ORDER BY meta().id")
         // 3. Execute the query and get the array of Profile objects from the ResultSet
         let resultSet = try query.execute()
         let profiles = try resultSet.data(as: Profile.self)
@@ -245,6 +467,27 @@ class CodableTest: CBLTestCase {
         }
     }
     
+    // 11. TestQueryResultSetDecodeWithDataKey
+    func testQueryResultSetDecodeWithDataKey() throws {
+        // 1. Save 'p-0001', 'p-0002', 'p-0003' from the dataset
+        try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 3, idKey: "pid")
+        // 2. Create a query to fetch the documents
+        let query = try db.createQuery("SELECT meta().id AS pid, * FROM _ ORDER BY meta().id")
+        // 3. Execute the query and get the array of Profile objects from the ResultSet
+        let resultSet = try query.execute()
+        let profiles = try resultSet.data(as: Profile.self, dataKey: "_")
+        // 4. For each element of the resulting array
+        for (index, profile) in profiles.enumerated() {
+            let docID = "p-\(String(format: "%04d", index + 1))"
+            // 1. Assert the Profile.pid matches
+            XCTAssertEqual(profile.pid, docID)
+            // 2. Assert the field values match the source document
+            let document = try defaultCollection!.document(id: docID)!
+            XCTAssert(profile == document)
+        }
+    }
+    
+    // 12. TestQueryResultDecodeMissingID
     func testQueryResultDecodeMissingID() throws {
         // 1. Save 'p-0001' from the dataset
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
@@ -258,10 +501,115 @@ class CodableTest: CBLTestCase {
         }
     }
     
+    // 13. TestQueryResultDecodeMissingField
+    func testQueryResultDecodeMissingField() throws {
+        // 1. Save 'p-0001' from the dataset
+        try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
+        // 2. Create a query to fetch the document, with field 'name' missing
+        let query = try db.createQuery("SELECT meta().id AS pid, contacts, likes FROM _ LIMIT 1")
+        // 3. Execute the query
+        let result = try query.execute().next()!
+        // 4. Assert that decoding into Profile object fails with an error
+        expectError(domain: CBLError.domain, code: CBLError.invalidQuery) {
+            let _ = try result.data(as: Profile.self)
+        }
+    }
+    
+    // 14. TestQueryResultDecodeNonDocumentModel
+    func testQueryResultDecodeNonDocumentModel() throws {
+        // 1. Save 'p-0001' from the dataset
+        try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 1, idKey: "pid")
+        // 2. Create a query to fetch a Contact object from the document
+        let query = try db.createQuery("SELECT contacts[0] AS contact FROM _ LIMIT 1")
+        // 3. Execute the query
+        let result = try query.execute().next()!
+        debugPrint(result.keys)
+        // 4. Assert that decoding the Result into Contact succeeds
+        let contact = try result.data(as: Contact.self, dataKey: "contact")
+        // 5. Assert the fields match the same Contact object from the source document
+        let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        XCTAssertEqual(contact, profile.contacts[0])
+    }
+    
+    // 15. TestCollectionDecodeIncorrectSchema
+    func testCollectionDecodeIncorrectSchema() throws {
+        // 1. Save a document into the default collection with these fields
+        let profileJSON = """
+        {
+            "name": {
+                "first": "Lue",
+                "last": "Laserna"
+            },
+            "contacts": 5,
+            "likes": [
+                "chatting"
+            ]
+        }
+        """
+        let doc = try MutableDocument(json: profileJSON)
+        try defaultCollection!.save(document: doc)
+        // 2. Assert that `Collection.document(id, as: Profile.self)` throws `decodingError`
+        expectError(domain: CBLError.domain, code: CBLError.decodingError) {
+            let _ = try self.defaultCollection!.document(id: doc.id, as: Profile.self)
+        }
+    }
+    
+    // 16. TestCollectionEncodeNonDocumentModel
+    func testCollectionEncodeNonDocumentModel() throws {
+        // 1. Create a Contact object
+        let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        let contact = profile.contacts[0]
+        // 2. Call Collection.saveDocument(from object)
+        // 3. Assert the call to save failed with `InvalidParameter`
+        expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
+            try self.defaultCollection!.saveDocument(from: contact)
+        }
+    }
+    
+    // 17. TestCollectionEncodeGeneratedId
+    func testCollectionEncodeGeneratedId() throws {
+        // 1. Create a Profile object with pid = nil
+        var profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        profile.pid = nil
+        // 2. Save it to the default collection
+        try defaultCollection!.saveDocument(from: profile)
+        // 3. Assert that profile.pid is not null
+        XCTAssertNotNil(profile.pid)
+        // 4. Load the Document from the collection and assert it is not null
+        let document = try defaultCollection!.document(id: profile.pid!)
+        XCTAssertNotNil(document)
+    }
+    
+    // 18. TestCollectionEncodeNested
+    func testCollectionEncodeNested() throws {
+        // 1. Create a Car object with ID 'car-001'.
+        let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        let car = Car(id: "car-001", name: "Mini Cooper", driver: profile, topSpeed: 130.0, acceleration: 17.1)
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: car)
+        // 3. Load the Document from the collection
+        let carDoc = try defaultCollection!.document(id: "car-001")!
+        // 4. Assert that all the fields match
+    }
+    
+    // 19. TestCollectionEncodeArrayNested
+    func testCollectionEncodeArrayNested() throws {
+        // 1. Create a Household object with ID 'house-001'.
+        let profiles = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 4)
+        let house = Household(id: "house-001", address: profiles.first!.contacts[0].address, profiles: profiles)
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: house)
+        // 3. Load the Document from the collection
+        let document = try defaultCollection!.document(id: "house-001")!
+        // 4. Assert that all the fields match
+        XCTAssert(document == house)
+    }
+    
+    // 20. TestCollectionEncodeSubclass
     func testCollectionEncodeSubclass() throws {
         // 1. Create a Person object with ID 'person-001'
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
-        var person = Person(profile: profile, age: 26)
+        let person = Person(profile: profile, age: 26)
         person.id = "person-001"
         // 2. Save the object to the default collection
         try defaultCollection!.saveDocument(from: person)
@@ -270,6 +618,66 @@ class CodableTest: CBLTestCase {
         debugPrint(document.toDictionary())
         // 4. Assert that all of the fields match
         XCTAssert(person == document)
+    }
+    
+    // 21. TestCollectionEncodeAndDecodeBlob
+    func testCollectionEncodeAndDecodeBlob() throws {
+        // 1. Create a Report object with a Blob
+        let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
+        let report = Report(title: "My Report", filed: false, body: body)
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: report)
+        // 3. Load the Document from the collection
+        let document = try defaultCollection!.document(id: report.id!)!
+        // 4. Load the Blob from the document
+        let docBlob = document.blob(forKey: "body")!
+        // 5. Assert the Document Blob contents are identical to the source
+        XCTAssertEqual(docBlob, body)
+        // 6. Load the object from the collection
+        let loadedReport = try defaultCollection!.document(id: report.id!, as: Report.self)!
+        // 7. Assert the loaded object Blob is identical to the source
+        XCTAssertEqual(loadedReport.body, body)
+    }
+    
+    // 22. TestCollectionEncodeAndDecodeNestedBlob
+    func testCollectionEncodeAndDecodeNestedBlob() throws {
+        // 1. Create a ReportFile object
+        let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
+        let report = Report(title: "My Report", filed: false, body: body)
+        let reportFile = ReportFile(dateFiled: Date.now, report: report)
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: reportFile)
+        // 3. Load the Document from the collection
+        let document = try defaultCollection!.document(id: reportFile.id!)!
+        // 4. Load the nested Blob from the document
+        let docBlob = document["report"]["body"].blob
+        // 5. Assert the Document Blob contents are identical to the source
+        XCTAssertEqual(docBlob, body)
+        // 6. Load the object from the collection
+        let loadedReportFile = try defaultCollection!.document(id: reportFile.id!, as: ReportFile.self)!
+        // 7. Assert the loaded object nested Blob is identical to the source
+        XCTAssertEqual(loadedReportFile.report.body, body)
+    }
+    
+    // 23. TestCollectionEncodeAndDecodeArrayNestedBlob
+    func testCollectionEncodeAndDecodeArrayNestedBlob() throws {
+        // 1. Create a Note object with array of 3 blobs
+        let att1 = Blob(contentType: "application/json", data: Data("{ \"key\": \"value\" }".utf8))
+        let att2 = Blob(contentType: "image/jpeg", data: Data())
+        let att3 = Blob(contentType: "text/plain", data: Data("Hello, world!".utf8))
+        let note = Note(title: "My Note", content: "These are my notes", attachments: [att1, att2, att3])
+        // 2. Save the object to the default collection
+        try defaultCollection!.saveDocument(from: note)
+        // 3. Load the Document from the collection
+        let document = try defaultCollection!.document(id: note.id!)!
+        // 4. Load the array of Blobs from the document
+        let attachments = document.array(forKey: "attachments")!.toArray() as! Array<Blob>
+        // 5. Assert the blobs are identical to the source blobs
+        XCTAssert(attachments.elementsEqual([att1, att2, att3]))
+        // 6. Load the object from the collection
+        let loadedNote = try defaultCollection!.document(id: note.id!, as: Note.self)!
+        // 7. Assert that the loadedNote blobs are identical to the source
+        XCTAssert(loadedNote.attachments.elementsEqual([att1, att2, att3]))
     }
 }
 
@@ -289,6 +697,101 @@ extension Profile : DictionaryEquatable {
             return contact.eq(dict: contactDict)
         } && likes.enumerated().allSatisfy { index, like in
             likesArray[index].string == like
+        }
+    }
+}
+
+extension Car : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let profileDict = dict.dictionary(forKey: "driver") else {
+            return false
+        }
+        return name == dict.string(forKey: "name")
+        && driver.eq(dict: profileDict)
+        && topSpeed == dict.float(forKey: "topSpeed")
+        && acceleration == dict.double(forKey: "acceleration")
+    }
+}
+
+extension Household : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let addressDict = dict.dictionary(forKey: "address") else {
+            return false
+        }
+        guard let profilesArray = dict.array(forKey: "profiles") else {
+            return false
+        }
+        return address.eq(dict: addressDict)
+        && profiles.enumerated().allSatisfy { index, profile in
+            guard let profileDict = profilesArray.dictionary(at: index) else {
+                return false
+            }
+            return profile.eq(dict: profileDict)
+        }
+    }
+}
+
+extension Report : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        title == dict.string(forKey: "title")
+        && filed == dict.boolean(forKey: "filed")
+        && body == dict.blob(forKey: "body")
+    }
+}
+
+extension ReportFile : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let reportDict = dict.dictionary(forKey: "report") else {
+            return false
+        }
+        
+        return dateFiled == dict.date(forKey: "dateFiled")
+        && report.eq(dict: reportDict)
+    }
+}
+
+extension Note : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        guard let attachmentArray = dict.array(forKey: "attachments") else {
+            return false
+        }
+        
+        return title == dict.string(forKey: "title")
+        && content == dict.string(forKey: "content")
+        && attachments.enumerated().allSatisfy { index, attachment in
+            guard let blob = attachmentArray.blob(at: index) else {
+                return false
+            }
+            
+            return attachment == blob
+        }
+    }
+}
+
+extension Favourites : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        if !dict.contains(key: "colour") || !dict.contains(key: "animal") {
+            return false
+        }
+        
+        if let animalDict = dict.dictionary(forKey: "animal") {
+            return colour == dict.string(forKey: "colour")
+            && animal?.eq(dict: animalDict) ?? false
+        } else {
+            return colour == dict.string(forKey: "colour")
+            && animal == nil && dict.value(forKey: "animal") is NSNull
+        }
+    }
+}
+
+extension Animal : DictionaryEquatable {
+    func eq(dict: any DictionaryProtocol) -> Bool {
+        if legs == nil {
+            name == dict.string(forKey: "name")
+            && dict.value(forKey: "legs") is NSNull
+        } else {
+            name == dict.string(forKey: "name")
+            && legs! == dict.int(forKey: "legs")
         }
     }
 }

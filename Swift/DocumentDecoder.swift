@@ -15,7 +15,7 @@ internal struct DocumentDecoder: Decoder {
     
     public var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey : Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] { [:] }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         KeyedDecodingContainer(DocumentDecodingContainer(decoder: self))
@@ -68,6 +68,11 @@ private struct DocumentDecodingContainer<Key: CodingKey> : KeyedDecodingContaine
             fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: fleeceValue)
+        // Override to avoid default Date decode implementation
+        if type is Date.Type {
+            let container = try valueDecoder.singleValueContainer()
+            return try container.decode(type)
+        }
         return try T.init(from: valueDecoder)
     }
 

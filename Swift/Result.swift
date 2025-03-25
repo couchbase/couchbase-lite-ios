@@ -164,8 +164,8 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     /// MutableDocument associated with the model will be retrieved during the save time.
     /// As a result, the document may not be the same document during the
     /// query time if the document has been changed.
-    public func data<T: Decodable>(as type: T.Type) throws -> T {
-        let decoder = QueryResultDecoder(queryResult: self)
+    public func data<T: Decodable>(as type: T.Type, dataKey: String? = nil) throws -> T {
+        let decoder = QueryResultDecoder(queryResult: self, dataKey: dataKey)
         return try T.init(from: decoder)
     }
     

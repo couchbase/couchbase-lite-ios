@@ -10,13 +10,19 @@ import CouchbaseLiteSwift_Private
 
 internal struct QueryResultDecoder: Decoder {
     let queryResult: Result
+    let dataKey: String?
+    
+    init(queryResult: Result, dataKey: String? = nil) {
+        self.queryResult = queryResult
+        self.dataKey = dataKey
+    }
     
     var codingPath: [any CodingKey] = []
     
-    var userInfo: [CodingUserInfoKey : Any] = [:]
-    
+    public var userInfo: [CodingUserInfoKey : Any] { [:] }
+
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        KeyedDecodingContainer(QueryResultDecodingContainer(queryResult: queryResult))
+        KeyedDecodingContainer(QueryResultDecodingContainer(queryResult: queryResult, dataKey: dataKey))
     }
     
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
@@ -66,6 +72,11 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
             fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: fleeceValue)
+        // Override to avoid default Date decode implementation
+        if type is Date.Type {
+            let container = try valueDecoder.singleValueContainer()
+            return try container.decode(type)
+        }
         return try T(from: valueDecoder)
     }
     

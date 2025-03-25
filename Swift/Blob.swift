@@ -147,3 +147,18 @@ public final class Blob: Equatable, Hashable {
     
 }
 
+extension Blob: Codable {
+    public convenience init(from decoder: any Decoder) throws {
+        guard decoder is DocumentDecoder || decoder is FleeceDecoder || decoder is QueryResultDecoder else {
+            throw CBLError.create(CBLError.decodingError, description: "Cannot decode Blob from non-CBL decoder")
+        }
+        var container = try decoder.singleValueContainer()
+        let blob = try container.decode(Blob.self)
+        self.init(blob.impl)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        // DocumentEncoder and FleeceEncoder don't call upon this method, they defer to [CBLBlob fl_encodeToFLEncoder], so we can just throw.
+        throw CBLError.create(CBLError.encodingError, description: "Cannot encode Blob into non-CBL encoder")
+    }
+}
