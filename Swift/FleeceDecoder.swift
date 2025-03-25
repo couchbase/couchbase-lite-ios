@@ -22,7 +22,7 @@ internal class FleeceDecoder: Decoder {
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         switch fleeceValue {
         case .dictionary(let dictionaryObject):
-            KeyedDecodingContainer(FleeceDictDecodingContainer(decoder: self, dict: dictionaryObject))
+            KeyedDecodingContainer(FleeceDictDecodingContainer<Key>(decoder: self, dict: dictionaryObject))
         default:
             throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) is not a keyed container")
         }
