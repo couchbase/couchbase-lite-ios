@@ -1880,6 +1880,10 @@
 		EAD5BA3E2D5B93C100AB8123 /* DocumentDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */; };
 		EAD5BA3F2D5B93D100AB8123 /* DocumentEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3A2D5B93A200AB8123 /* DocumentEncoder.swift */; };
 		EAD5BA402D5B93D500AB8123 /* DocumentDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA3D2D5B93C000AB8123 /* DocumentDecoder.swift */; };
+		EADC3CFE2D92E78000875416 /* CBLEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */; };
+		EADC3CFF2D92E79000875416 /* CBLEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA372D5B92AD00AB8123 /* CBLEncoder.mm */; };
+		EADC3D002D92E79D00875416 /* CBLEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = EAD5BA302D5B90E100AB8123 /* CBLEncoder.h */; };
+		EADC3D012D92E7A500875416 /* CBLEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = EAD5BA372D5B92AD00AB8123 /* CBLEncoder.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -4842,6 +4846,7 @@
 				9343EFCD207D611600F19A89 /* CBLMutableDictionaryFragment.h in Headers */,
 				9388CC0721BF750E005CA66D /* CBLFileLogger.h in Headers */,
 				40FC1B5E2B9287BD00394276 /* CBLURLEndpointListener.h in Headers */,
+				EADC3CFE2D92E78000875416 /* CBLEncoder.h in Headers */,
 				9343EFCE207D611600F19A89 /* CBLQuantifiedExpression.h in Headers */,
 				9343EFCF207D611600F19A89 /* CBLQueryResultSet+Internal.h in Headers */,
 				9343EFD0207D611600F19A89 /* CBLURLEndpoint+Internal.h in Headers */,
@@ -5260,6 +5265,7 @@
 				934F4CA91E241FB500F90659 /* CBLCoreBridge.h in Headers */,
 				9384D8091FC3F75700FE89D8 /* CBLQueryArrayFunction.h in Headers */,
 				274B4F8121A4D51100B2B4E6 /* CBLQuery+JSON.h in Headers */,
+				EADC3D002D92E79D00875416 /* CBLEncoder.h in Headers */,
 				AEC806B72C89EA68001C9723 /* CBLArrayIndexConfiguration.h in Headers */,
 				931C14661EAAD6610094F9B2 /* CBLMutableDictionaryFragment.h in Headers */,
 				934A27B71F30E810003946A7 /* CBLQuantifiedExpression.h in Headers */,
@@ -6532,6 +6538,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EADC3CFF2D92E79000875416 /* CBLEncoder.mm in Sources */,
 				1AC7EC2D249DA24E00978C2E /* Foundation+CBL.mm in Sources */,
 				9343EF2F207D611600F19A89 /* CBLDatabase.mm in Sources */,
 				1A1612B5283E29E600AA4987 /* CBLCollectionConfiguration.m in Sources */,
@@ -7171,6 +7178,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EADC3D012D92E7A500875416 /* CBLEncoder.mm in Sources */,
 				9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */,
 				1A3471622671C9230042C6BA /* CBLValueIndexConfiguration.m in Sources */,
 				69002EBA234E693F00776107 /* CBLErrorMessage.m in Sources */,
