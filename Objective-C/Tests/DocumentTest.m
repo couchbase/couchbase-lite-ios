@@ -2262,6 +2262,62 @@
     }];
 }
 
+- (void) useDifferentCollectionInstaceForDocument: (BOOL (^)(CBLCollection*, CBLMutableDocument*, NSError*)) operation {
+    NSError* error;
+    CBLCollection* col1 = [self.db createCollectionWithName: @"col1" scope: nil error: &error];
+    CBLCollection* col2 = [self.db collectionWithName: @"col1" scope: nil error: &error];
+    
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [self saveDocument: doc collection: col1];
+    
+    // Get using 2
+    doc = [[col2 documentWithID: doc.id error: &error] toMutable];
+    // Perform operation (Save, Delete, or Purge) using 1
+    Assert(operation(col1, doc, error));
+}
+
+- (void) testDocumentWithDifferentCollectionInstance {
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col saveDocument: doc error: &error];
+    }];
+    
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col deleteDocument: doc error: &error];
+    }];
+    
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+        return [col purgeDocument: doc error: &error];
+    }];
+}
+
+// https://jira.issues.couchbase.com/browse/CBL-6844
+- (void) testDocRefEquality {
+    NSError* error;
+    CBLDatabase* db1 = [self openDBNamed: self.db.name error: &error];
+    CBLDatabase* db2 = [self openDBNamed: self.db.name error: &error];
+    
+    CBLCollection* col1 = [db1 createCollectionWithName:@"col" scope: nil error: nil];
+    CBLCollection* col2 = [db2 collectionWithName:@"col" scope: nil error: nil];
+    
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
+    [col1 saveDocument:doc error: &error];
+    
+    CBLDocument* doc1 = [col1 documentWithID: @"doc" error:&error];
+    CBLDocument* doc2 = [col2 documentWithID: @"doc" error:&error];
+    
+    AssertNotEqual(doc1, doc2);
+    AssertEqualObjects(doc1, doc2);
+    Assert([doc1 isEqual: doc2]);
+    
+    AssertNotEqual(col1, col2);
+    AssertEqualObjects(col1, col2);
+    Assert([col1 isEqual: col2]);
+    
+    AssertNotEqual(db1, db2);
+    AssertNotEqualObjects(db1, db2);
+    AssertFalse([db1 isEqual: db2]);
+}
+
 #pragma mark - Revision history
 
 /**  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md  */
