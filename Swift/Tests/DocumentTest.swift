@@ -1306,18 +1306,6 @@ class DocumentTest: CBLTestCase {
         try defaultCollection!.purge(id: doc2.id)
     }
     
-    func testDeleteDocumentWithDifferentCollectionInstace() throws {
-        let col1 = try db.createCollection(name: "col1")
-        let col2 = try db.collection(name: "col1")
-        var doc = createDocument("doc")
-        try col1.save(document: doc)
-        
-        // Get using 2
-        doc = try col2!.document(id: "doc")!.toMutable()
-        // Delete using 1
-        try col1.delete(document: doc)
-    }
-    
     func testReopenDB() throws {
         let doc = createDocument("doc1")
         doc.setValue("str", forKey: "string")
@@ -1868,7 +1856,7 @@ class DocumentTest: CBLTestCase {
         }
     }
     
-    func withOperation(_ operation: @escaping (Collection, MutableDocument) throws -> Void) {
+    func useDifferentCollectionInstaceForDocument(_ operation: @escaping (Collection, MutableDocument) throws -> Void) {
         let col1 = try! db.createCollection(name: "col1", scope: nil)
         let col2 = try! db.collection(name: "col1", scope: nil)
 
@@ -1883,9 +1871,9 @@ class DocumentTest: CBLTestCase {
     }
 
     func testDocumentWithDifferentCollectionInstance() {
-        withOperation { try! $0.save(document: $1) }
-        withOperation { try! $0.delete(document: $1) }
-        withOperation { try! $0.purge(document: $1) }
+        useDifferentCollectionInstaceForDocument { try! $0.save(document: $1) }
+        useDifferentCollectionInstaceForDocument { try! $0.delete(document: $1) }
+        useDifferentCollectionInstaceForDocument { try! $0.purge(document: $1) }
     }
 
     // MARK: toJSONTimestamp & Revision history

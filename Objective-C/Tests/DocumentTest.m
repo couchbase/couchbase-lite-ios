@@ -2262,30 +2262,30 @@
     }];
 }
 
-- (void) withOperation: (BOOL (^)(CBLCollection*, CBLMutableDocument*, NSError*)) operation {
+- (void) useDifferentCollectionInstaceForDocument: (BOOL (^)(CBLCollection*, CBLMutableDocument*, NSError*)) operation {
     NSError* error;
     CBLCollection* col1 = [self.db createCollectionWithName: @"col1" scope: nil error: &error];
     CBLCollection* col2 = [self.db collectionWithName: @"col1" scope: nil error: &error];
     
-    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
-    [self saveDocument: doc1 collection: col1];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    [self saveDocument: doc collection: col1];
     
     // Get using 2
-    doc1 = [[col2 documentWithID: doc1.id error: &error] toMutable];
+    doc = [[col2 documentWithID: doc.id error: &error] toMutable];
     // Perform operation (Save, Delete, or Purge) using 1
-    Assert(operation(col1, doc1, error));
+    Assert(operation(col1, doc, error));
 }
 
 - (void) testDocumentWithDifferentCollectionInstance {
-    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
         return [col saveDocument: doc error: &error];
     }];
     
-    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
         return [col deleteDocument: doc error: &error];
     }];
     
-    [self withOperation:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
+    [self useDifferentCollectionInstaceForDocument:^BOOL(CBLCollection* col, CBLMutableDocument* doc, NSError* error) {
         return [col purgeDocument: doc error: &error];
     }];
 }
