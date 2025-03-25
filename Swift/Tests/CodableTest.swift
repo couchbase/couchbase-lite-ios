@@ -27,7 +27,7 @@ class Profile: Codable, Equatable {
     }
     
     static func == (lhs: Profile, rhs: Profile) -> Bool {
-        lhs.name == rhs.name && lhs.contacts.elementsEqual(rhs.contacts) && lhs.likes.elementsEqual(rhs.likes)
+        return lhs.name == rhs.name && lhs.contacts.elementsEqual(rhs.contacts) && lhs.likes.elementsEqual(rhs.likes)
     }
 
     static func == (lhs: Profile, rhs: DictionaryProtocol) -> Bool {
@@ -233,7 +233,7 @@ class Contact: Codable, Equatable {
     var type: ContactType
     
     static func == (lhs: Contact, rhs: Contact) -> Bool {
-        lhs.address == rhs.address
+        return lhs.address == rhs.address
         && lhs.emails == rhs.emails
         && lhs.phones == rhs.phones
         && lhs.type == rhs.type
@@ -696,7 +696,7 @@ extension Profile : DictionaryEquatable {
             guard let contactDict = contactsArray[index].dictionary else { return false }
             return contact.eq(dict: contactDict)
         } && likes.enumerated().allSatisfy { index, like in
-            likesArray[index].string == like
+            return likesArray[index].string == like
         }
     }
 }
@@ -733,7 +733,7 @@ extension Household : DictionaryEquatable {
 
 extension Report : DictionaryEquatable {
     func eq(dict: any DictionaryProtocol) -> Bool {
-        title == dict.string(forKey: "title")
+        return title == dict.string(forKey: "title")
         && filed == dict.boolean(forKey: "filed")
         && body == dict.blob(forKey: "body")
     }
@@ -787,10 +787,10 @@ extension Favourites : DictionaryEquatable {
 extension Animal : DictionaryEquatable {
     func eq(dict: any DictionaryProtocol) -> Bool {
         if legs == nil {
-            name == dict.string(forKey: "name")
+            return name == dict.string(forKey: "name")
             && dict.value(forKey: "legs") is NSNull
         } else {
-            name == dict.string(forKey: "name")
+            return name == dict.string(forKey: "name")
             && legs! == dict.int(forKey: "legs")
         }
     }
@@ -798,7 +798,7 @@ extension Animal : DictionaryEquatable {
 
 extension ProfileName : DictionaryEquatable {
     func eq(dict: any DictionaryProtocol) -> Bool {
-        dict["first"].string == first && dict["last"].string == last
+        return dict["first"].string == first && dict["last"].string == last
     }
 }
 
@@ -816,7 +816,7 @@ extension Contact : DictionaryEquatable {
         return dict["type"].string == type.rawValue
         && address.eq(dict: addressDict)
         && emails.enumerated().allSatisfy { index, email in
-            emailsArray[index].string == email
+            return emailsArray[index].string == email
         } && phones.enumerated().allSatisfy { index, phone in
             guard let phoneDict = phonesArray[index].dictionary else {
                 return false
@@ -828,7 +828,7 @@ extension Contact : DictionaryEquatable {
 
 extension ContactAddress : DictionaryEquatable {
     func eq(dict: any DictionaryProtocol) -> Bool {
-        dict["city"].string == city
+        return dict["city"].string == city
         && dict["state"].string == state
         && dict["street"].string == street
         && dict["zip"].string == zip
@@ -843,7 +843,7 @@ extension ContactPhone : DictionaryEquatable {
         return dict["preferred"].boolean == preferred
         && dict["type"].string == type.rawValue
         && numbers.enumerated().allSatisfy { index, number in
-            numbersArray[index].string == number
+            return numbersArray[index].string == number
         }
     }
 }
