@@ -569,7 +569,7 @@ class CodableTest: CBLTestCase {
     // 17. TestCollectionEncodeGeneratedId
     func testCollectionEncodeGeneratedId() throws {
         // 1. Create a Profile object with pid = nil
-        var profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
+        let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         profile.pid = nil
         // 2. Save it to the default collection
         try defaultCollection!.saveDocument(from: profile)
@@ -588,8 +588,9 @@ class CodableTest: CBLTestCase {
         // 2. Save the object to the default collection
         try defaultCollection!.saveDocument(from: car)
         // 3. Load the Document from the collection
-        let carDoc = try defaultCollection!.document(id: "car-001")!
+        let document = try defaultCollection!.document(id: "car-001")!
         // 4. Assert that all the fields match
+        XCTAssert(document == car)
     }
     
     // 19. TestCollectionEncodeArrayNested
@@ -617,7 +618,7 @@ class CodableTest: CBLTestCase {
         let document = try defaultCollection!.document(id: "person-001")!
         debugPrint(document.toDictionary())
         // 4. Assert that all of the fields match
-        XCTAssert(person == document)
+        XCTAssert(document == person)
     }
     
     // 21. TestCollectionEncodeAndDecodeBlob
@@ -644,7 +645,7 @@ class CodableTest: CBLTestCase {
         // 1. Create a ReportFile object
         let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
         let report = Report(title: "My Report", filed: false, body: body)
-        let reportFile = ReportFile(dateFiled: Date.now, report: report)
+        let reportFile = ReportFile(dateFiled: Date(), report: report)
         // 2. Save the object to the default collection
         try defaultCollection!.saveDocument(from: reportFile)
         // 3. Load the Document from the collection
