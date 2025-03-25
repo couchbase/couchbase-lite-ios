@@ -15,10 +15,10 @@ internal struct DocumentDecoder: Decoder {
     
     public var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey : Any] { [:] }
+    public var userInfo: [CodingUserInfoKey : Any] { return [:] }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        KeyedDecodingContainer(DocumentDecodingContainer(decoder: self))
+        return KeyedDecodingContainer(DocumentDecodingContainer(decoder: self))
     }
     
     public func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
@@ -37,7 +37,7 @@ private struct DocumentDecodingContainer<Key: CodingKey> : KeyedDecodingContaine
     var allKeys: [Key] { return decoder.document.keys.compactMap { Key(stringValue: $0) }}
     
     func contains(_ key: Key) -> Bool {
-        decoder.document.contains(key: key.stringValue)
+        return decoder.document.contains(key: key.stringValue)
     }
     
     func decodeNil(forKey key: Key) throws -> Bool {

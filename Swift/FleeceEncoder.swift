@@ -14,7 +14,7 @@ internal class FleeceEncoder : Encoder {
     
     public var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey : Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] { return [:] }
 
     init(db: Database) throws {
         _encoder = try CBLEncoder(db: db.impl)
@@ -23,19 +23,19 @@ internal class FleeceEncoder : Encoder {
     }
     
     public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        KeyedEncodingContainer(try! DictEncodingContainer(encoder: self))
+        return KeyedEncodingContainer(try! DictEncodingContainer(encoder: self))
     }
     
     public func unkeyedContainer() -> any UnkeyedEncodingContainer {
-        try! ArrayEncodingContainer(encoder: self)
+        return try! ArrayEncodingContainer(encoder: self)
     }
     
     public func singleValueContainer() -> any SingleValueEncodingContainer {
-        FleeceSingleValueEncodingContainer(encoder: self)
+        return FleeceSingleValueEncodingContainer(encoder: self)
     }
 
     func writeKey<Key: CodingKey>(_ key: Key) throws {
-        try writeKey(key.stringValue)
+        return try writeKey(key.stringValue)
     }
     
     func writeKey(_ key: String) throws {

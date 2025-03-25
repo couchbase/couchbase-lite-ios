@@ -27,7 +27,7 @@ public final class DocumentID: Codable {
 
     public var wrappedValue: String? {
         get {
-            docID
+            return docID
         }
         set {
             if revID != nil {
@@ -36,8 +36,6 @@ public final class DocumentID: Codable {
             docID = newValue
         }
     }
-
-    public var projectedValue: DocumentID { self }
 
     public init(wrappedValue: String?) {
         docID = wrappedValue

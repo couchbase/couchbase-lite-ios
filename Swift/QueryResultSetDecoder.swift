@@ -18,7 +18,7 @@ internal struct QueryResultSetDecoder: Decoder {
     
     var codingPath: [any CodingKey] = []
     
-    public var userInfo: [CodingUserInfoKey : Any] { [:] }
+    public var userInfo: [CodingUserInfoKey : Any] { return [:] }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         throw CBLError.create(CBLError.decodingError, description: "ResultSet decoding requires an unkeyed container")
@@ -47,14 +47,14 @@ private struct QueryResultSetDecodingContainer : UnkeyedDecodingContainer {
     
     var codingPath: [any CodingKey] = []
     
-    var count: Int? { nil }
+    var count: Int? { return nil }
     
-    var isAtEnd: Bool { next == nil }
+    var isAtEnd: Bool { return next == nil }
     
     var currentIndex: Int = 0
     
     func decodeNil() throws -> Bool {
-        false
+        return false
     }
     
     mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {

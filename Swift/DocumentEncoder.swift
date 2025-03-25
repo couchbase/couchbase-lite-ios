@@ -23,15 +23,15 @@ internal class DocumentEncoder: Encoder {
     public var userInfo: [CodingUserInfoKey: Any] { return [:] }
     
     public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
-        KeyedEncodingContainer(try! DocumentEncodingContainer(encoder: self))
+        return KeyedEncodingContainer(try! DocumentEncodingContainer(encoder: self))
     }
     
     public func unkeyedContainer() -> any UnkeyedEncodingContainer {
-        ImpossibleUnkeyedContainer(encoder: self)
+        return ImpossibleUnkeyedContainer(encoder: self)
     }
     
     public func singleValueContainer() -> any SingleValueEncodingContainer {
-        FleeceSingleValueEncodingContainer(encoder: _encoder)
+        return FleeceSingleValueEncodingContainer(encoder: _encoder)
     }
     
     /// Finish encoding and write the resulting dict into self.document
@@ -118,7 +118,7 @@ private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        KeyedEncodingContainer(ImpossibleKeyedContainer(encoder: encoder))
+        return KeyedEncodingContainer(ImpossibleKeyedContainer<NestedKey>(encoder: encoder))
     }
     
     func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
@@ -126,7 +126,7 @@ private struct ImpossibleUnkeyedContainer: UnkeyedEncodingContainer {
     }
     
     func superEncoder() -> any Encoder {
-        encoder
+        return encoder
     }
     
     func encode<T>(_ value: T) throws where T : Encodable {
@@ -156,10 +156,10 @@ private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
     
     func superEncoder() -> any Encoder {
-        encoder
+        return encoder
     }
     
     func superEncoder(forKey key: Key) -> any Encoder {
-        encoder
+        return encoder
     }
 }

@@ -22,7 +22,7 @@ internal class FleeceDecoder: Decoder {
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         switch fleeceValue {
         case .dictionary(let dictionaryObject):
-            KeyedDecodingContainer(FleeceDictDecodingContainer<Key>(decoder: self, dict: dictionaryObject))
+            return KeyedDecodingContainer(FleeceDictDecodingContainer<Key>(decoder: self, dict: dictionaryObject))
         default:
             throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) is not a keyed container")
         }
@@ -31,7 +31,7 @@ internal class FleeceDecoder: Decoder {
     public func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         switch fleeceValue {
         case .array(let arrayObject):
-            FleeceArrayDecodingContainer(decoder: self, array: arrayObject)
+            return FleeceArrayDecodingContainer(decoder: self, array: arrayObject)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) is not an unkeyed container")
         }
@@ -44,7 +44,7 @@ internal class FleeceDecoder: Decoder {
         case .dictionary:
             throw CBLError.create(CBLError.decodingError, description: "Value \(fleeceValue) cannot be decoded as a single value")
         default:
-            SingleValueContainer(decoder: self)
+            return SingleValueContainer(decoder: self)
         }
     }
 }
@@ -56,11 +56,11 @@ internal struct FleeceDictDecodingContainer<Key: CodingKey>: KeyedDecodingContai
     var codingPath: [CodingKey] = []
 
     func contains(_ key: Key) -> Bool {
-        dict.contains(key: key.stringValue)
+        return dict.contains(key: key.stringValue)
     }
     
     var allKeys: [Key] {
-        dict.keys.compactMap { Key(stringValue: $0) }
+        return dict.keys.compactMap { Key(stringValue: $0) }
     }
     
     func decodeNil(forKey key: Key) throws -> Bool {
@@ -209,16 +209,16 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decodeNil() -> Bool {
         switch decoder.fleeceValue {
         case .null:
-            true
+            return true
         default:
-            false
+            return false
         }
     }
     
     func decode(_ type: Bool.Type) throws -> Bool {
         switch decoder.fleeceValue {
         case .bool(let bool):
-            bool
+            return bool
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Bool but found \(String(describing: decoder.fleeceValue))")
         }
@@ -227,7 +227,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Int.Type) throws -> Int {
         switch decoder.fleeceValue {
         case .int(let int):
-            int
+            return int
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int but found \(String(describing: decoder.fleeceValue))")
         }
@@ -236,7 +236,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: UInt.Type) throws -> UInt {
         switch decoder.fleeceValue {
         case .uint(let uint):
-            uint
+            return uint
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt but found \(String(describing: decoder.fleeceValue))")
         }
@@ -245,7 +245,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Float.Type) throws -> Float {
         switch decoder.fleeceValue {
         case .float(let float):
-            float
+            return float
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Float but found \(String(describing: decoder.fleeceValue))")
         }
@@ -276,7 +276,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: String.Type) throws -> String {
         switch decoder.fleeceValue {
         case .string(let string):
-            string
+            return string
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected String but found \(String(describing: decoder.fleeceValue))")
         }
@@ -285,7 +285,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Data.Type) throws -> Data {
         switch decoder.fleeceValue {
         case .data(let data):
-            data
+            return data
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Data but found \(String(describing: decoder.fleeceValue))")
         }
@@ -294,7 +294,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Blob.Type) throws -> Blob {
         switch decoder.fleeceValue {
         case .blob(let blob):
-            blob
+            return blob
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Blob but found \(String(describing: decoder.fleeceValue))")
         }
