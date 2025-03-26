@@ -402,10 +402,6 @@ class CodableTest: CBLTestCase {
         profile2.name = .init(first: "Updated", last: "Profile")
         let resolved = try defaultCollection!.saveDocument(from: profile2) { newProfile, existingProfile in
             // Inside the conflict handler, modify the object and return true
-            debugPrint("existingProfile", existingProfile ?? "nil")
-            debugPrint("profile1", profile1)
-            debugPrint("newProfile", newProfile)
-            debugPrint("profile2", profile2)
             XCTAssert(existingProfile == profile1)
             XCTAssert(newProfile == profile2)
             newProfile.name = .init(first: "Conflict", last: "Resolved")
