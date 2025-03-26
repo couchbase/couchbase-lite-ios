@@ -79,6 +79,12 @@ class Person : Profile {
         && rhs.contains(key: "super")
         && (lhs as Profile) == (rhs["super"].dictionary!)
     }
+    
+    static func == (lhs: DictionaryProtocol, rhs: Person) -> Bool {
+        return rhs.age == lhs["age"].value as? Int
+        && lhs.contains(key: "super")
+        && (rhs as Profile) == (lhs["super"].dictionary!)
+    }
 }
 
 // Contains nested Profile object
@@ -618,7 +624,7 @@ class CodableTest: CBLTestCase {
         let document = try defaultCollection!.document(id: "person-001")!
         debugPrint(document.toDictionary())
         // 4. Assert that all of the fields match
-        XCTAssert(document == person)
+        XCTAssert(person == document)
     }
     
     // 21. TestCollectionEncodeAndDecodeBlob
