@@ -85,10 +85,15 @@ class Person : Profile {
         && lhs.contains(key: "super")
         && (rhs as Profile) == (lhs["super"].dictionary!)
     }
+    
+    static func == (lhs: Person, rhs: Person) -> Bool {
+        return lhs.age == rhs.age
+        && (lhs as Profile) == (rhs as Profile)
+    }
 }
 
 // Contains nested Profile object
-class Car : Codable {
+class Car : Codable, Equatable {
     @DocumentID var id: String?
     var name: String
     var driver: Profile
@@ -111,10 +116,17 @@ class Car : Codable {
     static func == (lhs: DictionaryProtocol, rhs: Car) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: Car, rhs: Car) -> Bool {
+        return lhs.name == rhs.name
+        && lhs.driver == rhs.driver
+        && lhs.topSpeed == rhs.topSpeed
+        && lhs.acceleration == rhs.acceleration
+    }
 }
 
 // Contains array-nested Profile objects
-class Household : Codable {
+class Household : Codable, Equatable {
     @DocumentID var id: String?
     var address: ContactAddress
     var profiles: [Profile]
@@ -133,10 +145,15 @@ class Household : Codable {
     static func == (lhs: DictionaryProtocol, rhs: Household) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: Household, rhs: Household) -> Bool {
+        return lhs.address == rhs.address
+        && lhs.profiles.elementsEqual(rhs.profiles)
+    }
 }
 
 // Contains a Blob
-class Report : Codable {
+class Report : Codable, Equatable {
     @DocumentID var id: String?
     var title: String
     var filed: Bool
@@ -157,10 +174,16 @@ class Report : Codable {
     static func == (lhs: DictionaryProtocol, rhs: Report) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: Report, rhs: Report) -> Bool {
+        return lhs.title == rhs.title
+        && lhs.filed == rhs.filed
+        && lhs.body == rhs.body
+    }
 }
 
 // Contains Blob nested via another struct
-class ReportFile : Codable {
+class ReportFile : Codable, Equatable {
     @DocumentID var id: String?
     var dateFiled: Date
     var report: Report
@@ -179,10 +202,15 @@ class ReportFile : Codable {
     static func == (lhs: DictionaryProtocol, rhs: ReportFile) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: ReportFile, rhs: ReportFile) -> Bool {
+        lhs.dateFiled == rhs.dateFiled
+        && lhs.report == rhs.report
+    }
 }
 
 // Contains Blobs nested in array
-class Note : Codable {
+class Note : Codable, Equatable {
     @DocumentID var id: String?
     var title: String
     var content: String
@@ -203,10 +231,16 @@ class Note : Codable {
     static func == (lhs: DictionaryProtocol, rhs: Note) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: Note, rhs: Note) -> Bool {
+        return lhs.title == rhs.title
+        && lhs.content == rhs.content
+        && lhs.attachments.elementsEqual(rhs.attachments)
+    }
 }
 
 // Contains nil values and nested nil values
-class Favourites : Codable {
+class Favourites : Codable, Equatable {
     @DocumentID var id: String?
     var colour: String?
     var animal: Animal?
@@ -219,9 +253,13 @@ class Favourites : Codable {
     static func == (lhs: DictionaryProtocol, rhs: Favourites) -> Bool {
         return rhs.eq(dict: lhs)
     }
+    
+    static func == (lhs: Favourites, rhs: Favourites) -> Bool {
+        return lhs.colour == rhs.colour && lhs.animal == rhs.animal
+    }
 }
 
-struct Animal : Codable {
+struct Animal : Codable, Equatable {
     var name: String
     // nil if the animal has no legs
     var legs: Int?
@@ -240,8 +278,8 @@ class Contact: Codable, Equatable {
     
     static func == (lhs: Contact, rhs: Contact) -> Bool {
         return lhs.address == rhs.address
-        && lhs.emails == rhs.emails
-        && lhs.phones == rhs.phones
+        && lhs.emails.elementsEqual(rhs.emails)
+        && lhs.phones.elementsEqual(rhs.phones)
         && lhs.type == rhs.type
     }
 }
@@ -259,12 +297,12 @@ struct ContactPhone: Codable, Equatable {
     var type: ContactPhoneType
 }
 
-enum ContactPhoneType: String, Codable {
+enum ContactPhoneType: String, Codable, Equatable {
     case home
     case mobile
 }
 
-enum ContactType: String, Codable {
+enum ContactType: String, Codable, Equatable {
     case primary
     case secondary
 }
@@ -364,6 +402,10 @@ class CodableTest: CBLTestCase {
         profile2.name = .init(first: "Updated", last: "Profile")
         let resolved = try defaultCollection!.saveDocument(from: profile2) { newProfile, existingProfile in
             // Inside the conflict handler, modify the object and return true
+            debugPrint("existingProfile", existingProfile ?? "nil")
+            debugPrint("profile1", profile1)
+            debugPrint("newProfile", newProfile)
+            debugPrint("profile2", profile2)
             XCTAssert(existingProfile == profile1)
             XCTAssert(newProfile == profile2)
             newProfile.name = .init(first: "Conflict", last: "Resolved")
@@ -427,7 +469,6 @@ class CodableTest: CBLTestCase {
         let query = try db.createQuery("SELECT meta().id AS pid, name, contacts, likes FROM _ LIMIT 1")
         // 3. Execute the query and get the Profile object from the Result
         let result = try query.execute().next()!
-        debugPrint(result.keys)
         let profile = try result.data(as: Profile.self)
         // 4. Assert that Profile.pid is not null and is 'p-0001'
         XCTAssertEqual(profile.pid, "p-0001")
@@ -444,7 +485,6 @@ class CodableTest: CBLTestCase {
         let query = try db.createQuery("SELECT meta().id AS pid, * FROM _ LIMIT 1")
         // 3. Execute the query and get the Profile object from the Result
         let result = try query.execute().next()!
-        debugPrint(result.keys)
         let profile = try result.data(as: Profile.self, dataKey: "_")
         // 4. Assert that Profile.pid is not null and is 'p-0001'
         XCTAssertEqual(profile.pid, "p-0001")
@@ -529,7 +569,6 @@ class CodableTest: CBLTestCase {
         let query = try db.createQuery("SELECT contacts[0] AS contact FROM _ LIMIT 1")
         // 3. Execute the query
         let result = try query.execute().next()!
-        debugPrint(result.keys)
         // 4. Assert that decoding the Result into Contact succeeds
         let contact = try result.data(as: Contact.self, dataKey: "contact")
         // 5. Assert the fields match the same Contact object from the source document
@@ -622,7 +661,6 @@ class CodableTest: CBLTestCase {
         try defaultCollection!.saveDocument(from: person)
         // 3. Load the document from the collection
         let document = try defaultCollection!.document(id: "person-001")!
-        debugPrint(document.toDictionary())
         // 4. Assert that all of the fields match
         XCTAssert(person == document)
     }
