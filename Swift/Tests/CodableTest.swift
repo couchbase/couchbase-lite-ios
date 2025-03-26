@@ -364,8 +364,8 @@ class CodableTest: CBLTestCase {
         profile2.name = .init(first: "Updated", last: "Profile")
         let resolved = try defaultCollection!.saveDocument(from: profile2) { newProfile, existingProfile in
             // Inside the conflict handler, modify the object and return true
-            XCTAssertEqual(existingProfile, profile1)
-            XCTAssertEqual(newProfile, profile2)
+            XCTAssert(existingProfile == profile1)
+            XCTAssert(newProfile == profile2)
             newProfile.name = .init(first: "Conflict", last: "Resolved")
             newProfile.likes = ["cooking", "swimming"]
             return true
@@ -534,7 +534,7 @@ class CodableTest: CBLTestCase {
         let contact = try result.data(as: Contact.self, dataKey: "contact")
         // 5. Assert the fields match the same Contact object from the source document
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
-        XCTAssertEqual(contact, profile.contacts[0])
+        XCTAssert(contact == profile.contacts[0])
     }
     
     // 15. TestCollectionDecodeIncorrectSchema
