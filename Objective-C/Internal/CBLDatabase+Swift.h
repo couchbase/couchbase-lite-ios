@@ -23,4 +23,6 @@
 
 - (BOOL) inBatch: (NSError**)error usingBlockWithError: (void (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT;
 
+- (BOOL) withTransaction: (NSError**)error usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT;
+
 @end

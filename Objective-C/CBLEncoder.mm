@@ -21,7 +21,6 @@ using namespace fleece;
 @implementation CBLEncoder {
     FLEncoder _encoder;
     CBLDatabase* _db;
-    std::unique_ptr<C4Transaction> _transaction;
     NSError* _error;
 }
 
@@ -30,11 +29,6 @@ using namespace fleece;
     if (self) {
         _encoder = c4db_getSharedFleeceEncoder(db.c4db);
         _db = db;
-        _transaction = std::make_unique<C4Transaction>(db.c4db);
-        if (!_transaction->begin()) {
-            convertError(_transaction->error(), error);
-            return nil;
-        }
     }
     return self;
 }
@@ -62,7 +56,6 @@ using namespace fleece;
 
 - (nullable NSData *)finish {
     C4SliceResult data = FLEncoder_Finish(_encoder, nullptr);
-    _transaction->end(true);
     return sliceResult2data(data);
 }
 
@@ -70,7 +63,6 @@ using namespace fleece;
     FLDoc fldoc = FLEncoder_FinishDoc(_encoder, nullptr);
     Doc doc { fldoc };
     Dict fleeceData = doc.asDict();
-    _transaction->end(true);
     if (!fleeceData) {
         return false;
     }

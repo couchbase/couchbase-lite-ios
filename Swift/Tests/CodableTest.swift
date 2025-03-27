@@ -42,15 +42,15 @@ class Profile: Codable, Equatable {
 
 class Person : Profile {
     @DocumentID var id: String?
-    var age: Int
+    var age: Int64
     
-    init(id: String? = nil, age: Int, name: ProfileName, contacts: [Contact], likes: [String]) {
+    init(id: String? = nil, age: Int64, name: ProfileName, contacts: [Contact], likes: [String]) {
         self.id = id
         self.age = age
         super.init(name: name, contacts: contacts, likes: likes)
     }
     
-    init(id: String? = nil, profile: Profile, age: Int) {
+    init(id: String? = nil, profile: Profile, age: Int64) {
         self.id = id
         self.age = age
         super.init(name: profile.name, contacts: profile.contacts, likes: profile.likes)
@@ -58,7 +58,7 @@ class Person : Profile {
     
     required init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.age = try container.decode(Int.self, forKey: .age)
+        self.age = try container.decode(Int64.self, forKey: .age)
         let superDecoder = try container.superDecoder()
         try super.init(from: superDecoder)
     }
@@ -75,13 +75,13 @@ class Person : Profile {
     }
     
     static func == (lhs: Person, rhs: DictionaryProtocol) -> Bool {
-        return lhs.age == rhs["age"].value as? Int
+        return lhs.age == rhs["age"].value as? Int64
         && rhs.contains(key: "super")
         && (lhs as Profile) == (rhs["super"].dictionary!)
     }
     
     static func == (lhs: DictionaryProtocol, rhs: Person) -> Bool {
-        return rhs.age == lhs["age"].value as? Int
+        return rhs.age == lhs["age"].value as? Int64
         && lhs.contains(key: "super")
         && (rhs as Profile) == (lhs["super"].dictionary!)
     }
@@ -494,7 +494,7 @@ class CodableTest: CBLTestCase {
         // 1. Save 'p-0001', 'p-0002', 'p-0003' from the dataset
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 3, idKey: "pid")
         // 2. Create a query to fetch the documents
-        let query = try db.createQuery("SELECT meta().id AS pid, name, contacts, likes FROM _ ORDER BY meta().id")
+        let query = try db.createQuery("SELECT meta().id AS pid, names, contacts, likes FROM _ ORDER BY meta().id")
         // 3. Execute the query and get the array of Profile objects from the ResultSet
         let resultSet = try query.execute()
         let profiles = try resultSet.data(as: Profile.self)

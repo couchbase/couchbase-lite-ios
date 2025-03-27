@@ -106,7 +106,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     }
     
     public func document<T: DocumentDecodable>(id: String, as type: T.Type) throws -> T? {
-        guard let doc = try document(id: id)?.toMutable() else {
+        guard let doc = try document(id: id) else {
             return nil
         }
         let decoder = DocumentDecoder(document: doc)
@@ -275,18 +275,22 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         // Because of SharedKeys, encoding will fail if CBLDocument.collection is not set.
         try impl.prepare(document.impl)
         
-        // Encode `object` into `document`.
-        let encoder = try DocumentEncoder(db: database, document: document)
-        try object.encode(to: encoder)
-        try encoder.finish()
-        // Call the closure passed in
-        let result = try fn(document)
+        let result = try impl.db.withTransaction {
+            // Encode `object` into `document`.
+            let encoder = try DocumentEncoder(db: database, document: document)
+            try object.encode(to: encoder)
+            try encoder.finish()
+            // Call the closure passed in (i.e. save)
+            return try fn(document)
+        }
+        
         // If the closure returned true, its operation succeeded, so attach the IDs from `document` to `object`.
         if result {
             docRef.docID = document.id
             docRef.revID = document.revisionID
         }
         return result
+
     }
     
     /// Delete a document from the collection. The default concurrency control, lastWriteWins, will be used

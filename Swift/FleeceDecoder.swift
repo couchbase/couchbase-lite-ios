@@ -282,21 +282,38 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         }
     }
     
-    func decode(_ type: Data.Type) throws -> Data {
-        switch decoder.fleeceValue {
-        case .data(let data):
-            return data
-        default:
-            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Data but found \(String(describing: decoder.fleeceValue))")
-        }
-    }
-    
     func decode(_ type: Blob.Type) throws -> Blob {
         switch decoder.fleeceValue {
         case .blob(let blob):
             return blob
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Blob but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: Array<any Decodable>.Type) throws -> Array<any Decodable> {
+        switch decoder.fleeceValue {
+        case .array(let array):
+            if let array = array.toArray() as? Array<any Decodable> {
+                return array
+            } else {
+                fatalError("Failed to decode array \(String(describing: array.toArray())) as Decodable")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Array but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: Dictionary<String, any Decodable>.Type) throws -> Dictionary<String, any Decodable> {
+        switch decoder.fleeceValue {
+        case .dictionary(let dict):
+            if let dict = dict.toDictionary() as? Dictionary<String, any Decodable> {
+                return dict
+            } else {
+                fatalError("Failed to decode dictionary \(String(describing: dict.toDictionary())) as Decodable")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Dictionary but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -316,10 +333,12 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
             return try decode(String.self) as! T
         case is Date.Type:
             return try decode(Date.self) as! T
-        case is Data.Type:
-            return try decode(Data.self) as! T
         case is Blob.Type:
             return try decode(Blob.self) as! T
+        case is Array<any Decodable>.Type:
+            return try decode(Array<any Decodable>.self) as! T
+        case is Dictionary<String, any Decodable>.Type:
+            return try decode(Dictionary<String, any Decodable>.self) as! T
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected \(T.self) but found \(String(describing: decoder.fleeceValue))")
         }
@@ -334,7 +353,6 @@ enum FleeceValue {
     case float(Float)
     case double(Double)
     case string(String)
-    case data(Data)
     case blob(Blob)
     case array(ArrayObject)
     case dictionary(DictionaryObject)
@@ -355,8 +373,6 @@ enum FleeceValue {
             self = .double(double)
         case let string as String:
             self = .string(string)
-        case let data as Data:
-            self = .data(data)
         case let blob as Blob:
             self = .blob(blob)
         case let array as ArrayObject:
@@ -405,8 +421,6 @@ enum FleeceValue {
             if let v = value as? Double { self = .double(v) } else { return nil }
         case is String.Type:
             if let v = value as? String { self = .string(v) } else { return nil }
-        case is Data.Type:
-            if let v = value as? Data { self = .data(v) } else { return nil }
         case is Blob.Type:
             if value is Blob { self = .blob(value as! Blob) } else { return nil }
         case is Array<any Decodable>.Type:

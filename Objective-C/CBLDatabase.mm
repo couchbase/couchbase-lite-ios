@@ -357,6 +357,43 @@ static const C4DatabaseConfig2 kDBConfig = {
     return [self inBatch: outError usingBlockWithError: ^(NSError **) { block(); }];
 }
 
+- (BOOL) withTransaction: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT {
+    CBLAssertNotNil(block);
+    
+    CBL_LOCK(_mutex) {
+        [self mustBeOpen];
+        
+        C4Transaction transaction(_c4db);
+        if (outError)
+            *outError = nil;
+        
+        if (!transaction.begin())
+            return convertError(transaction.error(), outError);
+        
+        NSError* err = nil;
+        BOOL result = block(&err);
+        if (err) {
+            // if swift throws an error, `err` will be populated
+            transaction.abort();
+            return createError(CBLErrorUnexpectedError,
+                               [NSString stringWithFormat: @"%@", err.localizedDescription],
+                               outError);
+        }
+        if (!result) {
+            // If the closure returns false, abort transaction
+            transaction.abort();
+            return false;
+        }
+        
+        if (!transaction.commit())
+            return convertError(transaction.error(), outError);
+    }
+    
+    [self postDatabaseChanged];
+    
+    return YES;
+}
+
 #pragma mark - DATABASE MAINTENANCE
 
 - (BOOL) close: (NSError**)outError {
