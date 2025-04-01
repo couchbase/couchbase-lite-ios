@@ -23,6 +23,7 @@
 
 - (BOOL) inBatch: (NSError**)error usingBlockWithError: (void (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT;
 
-- (BOOL) withTransaction: (NSError**)error usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT;
+/// The same as ``CBLDatabase/inBatch:usingBlockWithError:`` but the 'block' can return false to signal that the transaction should be aborted.
+- (BOOL) maybeBatch: (NSError**)error usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT NS_SWIFT_NOTHROW;
 
 @end

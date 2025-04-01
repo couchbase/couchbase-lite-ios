@@ -357,7 +357,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     return [self inBatch: outError usingBlockWithError: ^(NSError **) { block(); }];
 }
 
-- (BOOL) withTransaction: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block NS_REFINED_FOR_SWIFT {
+- (BOOL) maybeBatch: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block {
     CBLAssertNotNil(block);
     
     CBL_LOCK(_mutex) {

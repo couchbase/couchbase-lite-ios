@@ -402,7 +402,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
                 NSError *error;
                 // Note: Installing blob in the database also updates the digest property.
                 if (![self installInDatabase: database error: &error]) {
-                    encContext->encodingError = error;
+                    if (encContext->encodingError) {
+                        *encContext->encodingError = error;
+                    }
                     return;
                 }
             }

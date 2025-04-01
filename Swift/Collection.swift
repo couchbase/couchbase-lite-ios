@@ -275,7 +275,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         // Because of SharedKeys, encoding will fail if CBLDocument.collection is not set.
         try impl.prepare(document.impl)
         
-        let result = try impl.db.withTransaction {
+        let result = try database.maybeBatch { () throws -> Bool in
             // Encode `object` into `document`.
             let encoder = try DocumentEncoder(db: database, document: document)
             try object.encode(to: encoder)

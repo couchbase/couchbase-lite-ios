@@ -87,7 +87,7 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithCollection: (CBLCollection *)collection
+- (instancetype) initWithCollection:(CBLCollection *)collection
                          documentID:(NSString *)documentID
                          revisionID:(NSString *)revisionID
                               error:(NSError *__autoreleasing  _Nullable *)outError {
@@ -266,7 +266,7 @@ using namespace fleece;
     auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
     bool hasAttachment = false;
     NSError* encodingError = nil;
-    FLEncoderContext ctx = { .database = self.collection.database, .outHasAttachment = &hasAttachment, .encodingError = encodingError };
+    FLEncoderContext ctx = { .database = self.collection.database, .outHasAttachment = &hasAttachment, .encodingError = &encodingError };
     FLEncoder_SetExtraInfo(encoder, &ctx);
     [_dict fl_encodeToFLEncoder: encoder];
     if (encodingError != nil) {

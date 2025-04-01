@@ -494,7 +494,7 @@ class CodableTest: CBLTestCase {
         // 1. Save 'p-0001', 'p-0002', 'p-0003' from the dataset
         try loadJSONResource("profiles_100", collection: defaultCollection!, limit: 3, idKey: "pid")
         // 2. Create a query to fetch the documents
-        let query = try db.createQuery("SELECT meta().id AS pid, names, contacts, likes FROM _ ORDER BY meta().id")
+        let query = try db.createQuery("SELECT meta().id AS pid, name, contacts, likes FROM _ ORDER BY meta().id")
         // 3. Execute the query and get the array of Profile objects from the ResultSet
         let resultSet = try query.execute()
         let profiles = try resultSet.data(as: Profile.self)
