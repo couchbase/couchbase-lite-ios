@@ -112,7 +112,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
         let decoder = DocumentDecoder(document: doc)
         let object = try T(from: decoder)
         if getDocumentRef(object: object) == nil {
-            throw CBLError.create(CBLError.invalidParameter, description: "Type \(String(describing: type)) is missing a @DocumentId field")
+            throw CBLError.create(CBLError.invalidParameter, description: "Type \(String(describing: type)) is missing a @DocumentID field")
         }
         return object
     }
@@ -373,7 +373,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// If the object is not linked to a document in the collection, the NotFound error will be thrown.
     public func purgeDocument<T: DocumentEncodable>(for object: T) throws {
         guard let docRef = getDocumentRef(object: object) else {
-            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot purge document for object: No @DocumentId found on the object"])
+            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot purge document for object: No @DocumentID found on the object"])
         }
         guard let docID = docRef.docID else {
             throw NSError(domain: CBLErrorDomain, code: CBLErrorNotFound)

@@ -2,8 +2,19 @@
 //  CBLEncoder.mm
 //  CouchbaseLite
 //
-//  Created by Callum Birks on 10/02/2025.
-//  Copyright © 2025 Couchbase. All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "fleece/Fleece.hh"
@@ -54,20 +65,29 @@ using namespace fleece;
     return FLEncoder_EndDict(_encoder);
 }
 
-- (nullable NSData *)finish {
-    C4SliceResult data = FLEncoder_Finish(_encoder, nullptr);
+- (nullable NSData *)finish:(NSError**)outError {
+    FLError error {};
+    C4SliceResult data = FLEncoder_Finish(_encoder, &error);
+    if (!data) {
+        convertError(error, outError);
+        return nil;
+    }
     return sliceResult2data(data);
 }
 
-- (bool)finishInto:(CBLDocument *)document {
-    FLDoc fldoc = FLEncoder_FinishDoc(_encoder, nullptr);
+- (BOOL)finishIntoDocument:(CBLDocument*)document error:(NSError**)outError {
+    FLError error {};
+    FLDoc fldoc = FLEncoder_FinishDoc(_encoder, &error);
+    if (!fldoc) {
+        return convertError(error, outError);
+    }
     Doc doc { fldoc };
     Dict fleeceData = doc.asDict();
     if (!fleeceData) {
-        return false;
+        return NO;
     }
     [document setFleece: (FLDict)fleeceData];
-    return true;
+    return YES;
 }
 
 - (void)reset {
@@ -118,10 +138,6 @@ using namespace fleece;
 - (void) reset {
     _error = nil;
     _hasAttachment = false;
-}
-
-- (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    return [[[self class] alloc] initWithDB: _database];
 }
 
 @end

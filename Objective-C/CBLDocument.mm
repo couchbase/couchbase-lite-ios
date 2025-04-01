@@ -87,10 +87,10 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithCollection:(CBLCollection *)collection
-                         documentID:(NSString *)documentID
-                         revisionID:(NSString *)revisionID
-                              error:(NSError *__autoreleasing  _Nullable *)outError {
+- (instancetype) initWithCollection: (CBLCollection *)collection
+                         documentID: (NSString *)documentID
+                         revisionID: (NSString *)revisionID
+                              error: (NSError *__autoreleasing  _Nullable *)outError {
     NSParameterAssert(documentID != nil);
     NSParameterAssert(revisionID != nil);
     NSParameterAssert(collection != nil);
