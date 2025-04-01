@@ -42,15 +42,15 @@ class Profile: Codable, Equatable {
 
 class Person : Profile {
     @DocumentID var id: String?
-    var age: Int64
+    var age: Int32
     
-    init(id: String? = nil, age: Int64, name: ProfileName, contacts: [Contact], likes: [String]) {
+    init(id: String? = nil, age: Int32, name: ProfileName, contacts: [Contact], likes: [String]) {
         self.id = id
         self.age = age
         super.init(name: name, contacts: contacts, likes: likes)
     }
     
-    init(id: String? = nil, profile: Profile, age: Int64) {
+    init(id: String? = nil, profile: Profile, age: Int32) {
         self.id = id
         self.age = age
         super.init(name: profile.name, contacts: profile.contacts, likes: profile.likes)
@@ -58,7 +58,7 @@ class Person : Profile {
     
     required init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.age = try container.decode(Int64.self, forKey: .age)
+        self.age = try container.decode(Int32.self, forKey: .age)
         let superDecoder = try container.superDecoder()
         try super.init(from: superDecoder)
     }
@@ -75,13 +75,13 @@ class Person : Profile {
     }
     
     static func == (lhs: Person, rhs: DictionaryProtocol) -> Bool {
-        return lhs.age == rhs["age"].value as? Int64
+        return lhs.age == rhs["age"].value as? Int32
         && rhs.contains(key: "super")
         && (lhs as Profile) == (rhs["super"].dictionary!)
     }
     
     static func == (lhs: DictionaryProtocol, rhs: Person) -> Bool {
-        return rhs.age == lhs["age"].value as? Int64
+        return rhs.age == lhs["age"].value as? Int32
         && lhs.contains(key: "super")
         && (rhs as Profile) == (lhs["super"].dictionary!)
     }
@@ -126,15 +126,18 @@ class Car : Codable, Equatable {
 }
 
 // Contains array-nested Profile objects
+// Also contains a Dictionary object
 class Household : Codable, Equatable {
     @DocumentID var id: String?
     var address: ContactAddress
     var profiles: [Profile]
+    var pets: [String : Animal]
     
-    init(id: String? = nil, address: ContactAddress, profiles: [Profile]) {
+    init(id: String? = nil, address: ContactAddress, profiles: [Profile], pets: [String : Animal]) {
         self.id = id
         self.address = address
         self.profiles = profiles
+        self.pets = pets
     }
     
     static func == (lhs: Household, rhs: DictionaryProtocol) -> Bool {
@@ -149,6 +152,7 @@ class Household : Codable, Equatable {
     static func == (lhs: Household, rhs: Household) -> Bool {
         return lhs.address == rhs.address
         && lhs.profiles.elementsEqual(rhs.profiles)
+        && lhs.pets == rhs.pets
     }
 }
 
@@ -638,13 +642,19 @@ class CodableTest: CBLTestCase {
     func testCollectionEncodeArrayNested() throws {
         // 1. Create a Household object with ID 'house-001'.
         let profiles = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 4)
-        let house = Household(id: "house-001", address: profiles.first!.contacts[0].address, profiles: profiles)
+        let house = Household(id: "house-001", address: profiles.first!.contacts[0].address, profiles: profiles, pets: [
+            "Mischief" : Animal(name: "Cat", legs: 4),
+            "Henry" : Animal(name: "Dog", legs: 4),
+            "Serena" : Animal(name: "Fish", legs: nil)
+        ])
         // 2. Save the object to the default collection
         try defaultCollection!.saveDocument(from: house)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: "house-001")!
         // 4. Assert that all the fields match
         XCTAssert(document == house)
+        let loadedHouse = try defaultCollection!.document(id: "house-001", as: Household.self)!
+        XCTAssert(house == loadedHouse)
     }
     
     // 20. TestCollectionEncodeSubclass
@@ -659,6 +669,8 @@ class CodableTest: CBLTestCase {
         let document = try defaultCollection!.document(id: "person-001")!
         // 4. Assert that all of the fields match
         XCTAssert(person == document)
+        let loadedPerson = try defaultCollection!.document(id: "person-001", as: Person.self)!
+        XCTAssert(person == loadedPerson)
     }
     
     // 21. TestCollectionEncodeAndDecodeBlob

@@ -244,12 +244,82 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
         }
     }
     
+    func decode(_ type: Int16.Type) throws -> Int16 {
+        switch decoder.fleeceValue {
+        case .int(let int):
+            if int >= Int16.min && int <= Int16.max {
+                return Int16(int)
+            } else {
+                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int16 but found \(String(describing: decoder.fleeceValue))")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int16 but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: Int32.Type) throws -> Int32 {
+        switch decoder.fleeceValue {
+        case .int(let int):
+            if int >= Int32.min && int <= Int32.max {
+                return Int32(int)
+            } else {
+                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int32 but found \(String(describing: decoder.fleeceValue))")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int32 but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: Int64.Type) throws -> Int64 {
+        switch decoder.fleeceValue {
+        case .int(let int):
+            return Int64(int)
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int64 but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
     func decode(_ type: UInt.Type) throws -> UInt {
         switch decoder.fleeceValue {
         case .uint(let uint):
             return uint
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: UInt16.Type) throws -> UInt16 {
+        switch decoder.fleeceValue {
+        case .uint(let uint):
+            if uint <= UInt16.max {
+                return UInt16(uint)
+            } else {
+                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt16 but found \(String(describing: decoder.fleeceValue))")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt16 but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: UInt32.Type) throws -> UInt32 {
+        switch decoder.fleeceValue {
+        case .uint(let uint):
+            if uint <= UInt32.max {
+                return UInt32(uint)
+            } else {
+                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt32 but found \(String(describing: decoder.fleeceValue))")
+            }
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt32 but found \(String(describing: decoder.fleeceValue))")
+        }
+    }
+    
+    func decode(_ type: UInt64.Type) throws -> UInt64 {
+        switch decoder.fleeceValue {
+        case .uint(let uint):
+            return UInt64(uint)
+        default:
+            throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt64 but found \(String(describing: decoder.fleeceValue))")
         }
     }
     
@@ -334,8 +404,24 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
             return try decode(Bool.self) as! T
         case is Int.Type:
             return try decode(Int.self) as! T
+        case is Int8.Type:
+            return try decode(Int8.self) as! T
+        case is Int16.Type:
+            return try decode(Int16.self) as! T
+        case is Int32.Type:
+            return try decode(Int32.self) as! T
+        case is Int64.Type:
+            return try decode(Int64.self) as! T
         case is UInt.Type:
             return try decode(UInt.self) as! T
+        case is UInt8.Type:
+            return try decode(UInt8.self) as! T
+        case is UInt16.Type:
+            return try decode(UInt16.self) as! T
+        case is UInt32.Type:
+            return try decode(UInt32.self) as! T
+        case is UInt64.Type:
+            return try decode(UInt64.self) as! T
         case is Float.Type:
             return try decode(Float.self) as! T
         case is Double.Type:

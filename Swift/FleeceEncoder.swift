@@ -58,41 +58,43 @@ internal class FleeceEncoder : Encoder {
     
     func writeValue<T>(_ value: T) throws where T: Encodable {
         switch value {
-        case let bool as Bool:
-            try _writeNSObject(NSNumber(booleanLiteral: bool))
-        case let int as Int:
-            try _writeNSObject(int as NSNumber)
-        case let uint as UInt:
-            try _writeNSObject(uint as NSNumber)
-        case let float as Float:
-            try _writeNSObject(float as NSNumber)
-        case let double as Double:
-            try _writeNSObject(double as NSNumber)
-        case let string as String:
-            try _writeNSObject(string as NSString)
-        case let data as Data:
-            try _writeNSObject(data as NSData)
-        case let array as Array<any Encodable>:
+        case is Bool:
+            try _writeNSObject(NSNumber(booleanLiteral: value as! Bool))
+        case is Int:
+            try _writeNSObject(NSNumber(value: value as! Int))
+        case is UInt:
+            try _writeNSObject(value as! UInt as NSNumber)
+        case is Float:
+            try _writeNSObject(value as! Float as NSNumber)
+        case is Double:
+            try _writeNSObject(value as! Double as NSNumber)
+        case is String:
+            try _writeNSObject(value as! String as NSString)
+        case is Data:
+            throw CBLError.create(CBLError.encodingError, description: "Cannot encode raw Data, use Blob instead")
+        case is Array<any Encodable>:
+            let array = value as! Array<any Encodable>
             try beginArray(reserve: array.count)
             for element in array {
                 try writeValue(element)
             }
             try endArray()
-        case let dict as Dictionary<String, any Encodable>:
+        case is Dictionary<String, any Encodable>:
+            let dict = value as! Dictionary<String, any Encodable>
             try beginDict(reserve: dict.count)
             for (key, value) in dict {
                 try writeKey(key)
                 try writeValue(value)
             }
             try endDict()
-        case let blob as Blob:
-            try _writeNSObject(blob.impl)
-        case let date as Date:
+        case is Blob:
+            try _writeNSObject((value as! Blob).impl)
+        case is Date:
             let formatter = ISO8601DateFormatter()
-            let string = formatter.string(from: date)
+            let string = formatter.string(from: value as! Date)
             try _writeNSObject(string as NSString)
-        case let object as NSObject:
-            try _writeNSObject(object)
+        case is NSObject:
+            try _writeNSObject(value as! NSObject)
         default:
             try value.encode(to: self)
         }
