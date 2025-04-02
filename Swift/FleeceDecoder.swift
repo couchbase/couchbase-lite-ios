@@ -247,11 +247,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Int16.Type) throws -> Int16 {
         switch decoder.fleeceValue {
         case .int(let int):
-            if int >= Int16.min && int <= Int16.max {
-                return Int16(int)
-            } else {
-                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int16 but found \(String(describing: decoder.fleeceValue))")
-            }
+            return Int16(int)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int16 but found \(String(describing: decoder.fleeceValue))")
         }
@@ -260,11 +256,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Int32.Type) throws -> Int32 {
         switch decoder.fleeceValue {
         case .int(let int):
-            if int >= Int32.min && int <= Int32.max {
-                return Int32(int)
-            } else {
-                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int32 but found \(String(describing: decoder.fleeceValue))")
-            }
+            return Int32(int)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int32 but found \(String(describing: decoder.fleeceValue))")
         }
@@ -291,11 +283,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: UInt16.Type) throws -> UInt16 {
         switch decoder.fleeceValue {
         case .uint(let uint):
-            if uint <= UInt16.max {
-                return UInt16(uint)
-            } else {
-                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt16 but found \(String(describing: decoder.fleeceValue))")
-            }
+            return UInt16(uint)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt16 but found \(String(describing: decoder.fleeceValue))")
         }
@@ -304,11 +292,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: UInt32.Type) throws -> UInt32 {
         switch decoder.fleeceValue {
         case .uint(let uint):
-            if uint <= UInt32.max {
-                return UInt32(uint)
-            } else {
-                throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt32 but found \(String(describing: decoder.fleeceValue))")
-            }
+            return UInt32(uint)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt32 but found \(String(describing: decoder.fleeceValue))")
         }
