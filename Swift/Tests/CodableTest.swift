@@ -265,6 +265,52 @@ class Favourites : Codable, Equatable {
     }
 }
 
+class Calculation : Codable, Equatable {
+    @DocumentID var id: String?
+    var inputA: Int16
+    var inputB: Int16
+    var op: String
+    var output: Int32
+    
+    init(id: String? = nil, inputA: Int16, inputB: Int16, op: String, output: Int32) {
+        self.id = id
+        self.inputA = inputA
+        self.inputB = inputB
+        self.op = op
+        self.output = output
+    }
+    
+    static func == (lhs: Calculation, rhs: Calculation) -> Bool {
+        return lhs.inputA == rhs.inputA
+        && lhs.inputB == rhs.inputB
+        && lhs.op == rhs.op
+        && lhs.output == rhs.output
+    }
+}
+
+class LargeCalculation : Codable, Equatable {
+    @DocumentID var id: String?
+    var inputA: Int64
+    var inputB: Int64
+    var op: String
+    var output: Int64
+    
+    init(id: String? = nil, inputA: Int64, inputB: Int64, op: String, output: Int64) {
+        self.id = id
+        self.inputA = inputA
+        self.inputB = inputB
+        self.op = op
+        self.output = output
+    }
+    
+    static func == (lhs: LargeCalculation, rhs: LargeCalculation) -> Bool {
+        return lhs.inputA == rhs.inputA
+        && lhs.inputB == rhs.inputB
+        && lhs.op == rhs.op
+        && lhs.output == rhs.output
+    }
+}
+
 struct Animal : Codable, Equatable {
     var name: String
     // nil if the animal has no legs
@@ -733,6 +779,12 @@ class CodableTest: CBLTestCase {
         let loadedNote = try defaultCollection!.document(id: note.id!, as: Note.self)!
         // 7. Assert that the loadedNote blobs are identical to the source
         XCTAssert(loadedNote.attachments.elementsEqual([att1, att2, att3]))
+    }
+    
+    func testCollectionDecodeMismatchIntSizes() throws {
+        let largeCalc = LargeCalculation(inputA: Int64.max, inputB: Int64.min, op: "add", output: 0)
+        try defaultCollection!.saveDocument(from: largeCalc)
+        let calc = try defaultCollection!.document(id: largeCalc.id!, as: Calculation.self)
     }
 }
 
