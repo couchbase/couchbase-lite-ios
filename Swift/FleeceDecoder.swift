@@ -238,7 +238,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Int.Type) throws -> Int {
         switch decoder.fleeceValue {
         case .int(let int):
-            return int
+            return Int(int)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Int but found \(String(describing: decoder.fleeceValue))")
         }
@@ -282,7 +282,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: UInt.Type) throws -> UInt {
         switch decoder.fleeceValue {
         case .uint(let uint):
-            return uint
+            return UInt(uint)
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected UInt but found \(String(describing: decoder.fleeceValue))")
         }
@@ -445,8 +445,8 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
 enum FleeceValue {
     case null
     case bool(Bool)
-    case int(Int)
-    case uint(UInt)
+    case int(Int64)
+    case uint(UInt64)
     case float(Float)
     case double(Double)
     case string(String)
@@ -460,9 +460,9 @@ enum FleeceValue {
             self = .null
         case let bool as Bool:
             self = .bool(bool)
-        case let int as Int:
+        case let int as Int64:
             self = .int(int)
-        case let uint as UInt:
+        case let uint as UInt64:
             self = .uint(uint)
         case let float as Float:
             self = .float(float)
@@ -509,9 +509,21 @@ enum FleeceValue {
         case is Bool.Type:
             if let v = value as? Bool { self = .bool(v) } else { return nil }
         case is Int.Type:
-            if let v = value as? Int { self = .int(v) } else { return nil }
+            if let v = value as? Int64 { self = .int(v) } else { return nil }
+        case is Int16.Type:
+            if let v = value as? Int16 { self = .int(Int64(v)) } else { return nil }
+        case is Int32.Type:
+            if let v = value as? Int32 { self = .int(Int64(v)) } else { return nil }
+        case is Int64.Type:
+            if let v = value as? Int64 { self = .int(v) } else { return nil }
         case is UInt.Type:
-            if let v = value as? UInt { self = .uint(v) } else { return nil }
+            if let v = value as? UInt64 { self = .uint(v) } else { return nil }
+        case is UInt16.Type:
+            if let v = value as? UInt16 { self = .uint(UInt64(v)) } else { return nil }
+        case is UInt32.Type:
+            if let v = value as? UInt32 { self = .uint(UInt64(v)) } else { return nil }
+        case is UInt64.Type:
+            if let v = value as? UInt64 { self = .uint(v) } else { return nil }
         case is Float.Type:
             if let v = value as? Float { self = .float(v) } else { return nil }
         case is Double.Type:
