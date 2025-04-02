@@ -152,7 +152,9 @@ class Household : Codable, Equatable {
     static func == (lhs: Household, rhs: Household) -> Bool {
         return lhs.address == rhs.address
         && lhs.profiles.elementsEqual(rhs.profiles)
-        && lhs.pets == rhs.pets
+        && lhs.pets.allSatisfy { key, value in
+            return rhs.pets.keys.contains(key) && rhs.pets[key]! == value
+        }
     }
 }
 
