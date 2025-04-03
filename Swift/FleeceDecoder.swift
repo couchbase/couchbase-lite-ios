@@ -90,7 +90,7 @@ internal struct FleeceDictDecodingContainer<Key: CodingKey>: KeyedDecodingContai
             throw CBLError.create(CBLError.decodingError, description: "Dictionary is missing key '\(key.stringValue)'")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
-            fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
+            throw CBLError.create(CBLError.decodingError, description: "Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: fleeceValue)
         return try T(from: valueDecoder)
@@ -168,7 +168,7 @@ internal struct FleeceArrayDecodingContainer: UnkeyedDecodingContainer {
             throw CBLError.create(CBLError.decodingError, description: "Array is missing index \(currentIndex)")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
-            fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
+            throw CBLError.create(CBLError.decodingError, description: "Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: fleeceValue)
         
@@ -362,7 +362,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
             if let array = array.toArray() as? Array<any Decodable> {
                 return array
             } else {
-                fatalError("Failed to decode array \(String(describing: array.toArray())) as Decodable")
+                throw CBLError.create(CBLError.decodingError, description: "Failed to decode array \(String(describing: array.toArray())) as Decodable")
             }
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Array but found \(String(describing: decoder.fleeceValue))")
@@ -375,7 +375,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
             if let dict = dict.toDictionary() as? Dictionary<String, any Decodable> {
                 return dict
             } else {
-                fatalError("Failed to decode dictionary \(String(describing: dict.toDictionary())) as Decodable")
+                throw CBLError.create(CBLError.decodingError, description: "Failed to decode dictionary \(String(describing: dict.toDictionary())) as Decodable")
             }
         default:
             throw CBLError.create(CBLError.decodingError, description: "Type mismatch: expected Dictionary but found \(String(describing: decoder.fleeceValue))")

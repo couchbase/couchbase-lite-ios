@@ -784,7 +784,9 @@ class CodableTest: CBLTestCase {
     func testCollectionDecodeMismatchIntSizes() throws {
         let largeCalc = LargeCalculation(inputA: Int64.max, inputB: Int64.min, op: "add", output: 0)
         try defaultCollection!.saveDocument(from: largeCalc)
-        let calc = try defaultCollection!.document(id: largeCalc.id!, as: Calculation.self)
+        expectError(domain: CBLError.domain, code: CBLError.decodingError) {
+            let _ = try self.defaultCollection!.document(id: largeCalc.id!, as: Calculation.self)
+        }
     }
 }
 

@@ -80,7 +80,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field '\(key.stringValue)'")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
-            fatalError("Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
+            throw CBLError.create(CBLError.decodingError, description: "Failed to initialize FleeceValue<\(T.self)> with \(String(describing: value))")
         }
         let valueDecoder = FleeceDecoder(fleeceValue: fleeceValue)
         // Override to avoid default Date decode implementation
