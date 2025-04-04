@@ -68,6 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+- (void) setFleece: (FLDict)data;
+
 - (instancetype) initWithCollection: (nullable CBLCollection*)collection
                          documentID: (NSString*)documentID
                               c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
@@ -76,6 +78,16 @@ NS_ASSUME_NONNULL_BEGIN
                          documentID: (NSString*)documentID
                          revisionID: (NSString*)revisionID
                                body: (nullable FLDict)body;
+
+/// Load a document from the collection, with a specific revision.
+/// If `orLatest` is TRUE, will load the latest revision if the specified revision does not exist.
+/// Errors:
+/// - `CBLErrorNotFound` if the document ID does not exist in the collection
+/// - `CBLErrorNotFound` if the revision ID does not exist for that document
+- (instancetype) initWithCollection: (CBLCollection*)collection
+                         documentID: (NSString*)documentID
+                         revisionID: (NSString*)revisionID
+                              error: (NSError**)error;
 
 - (nullable instancetype) initWithCollection: (CBLCollection*)collection
                                   documentID: (NSString*)documentID
@@ -98,8 +110,6 @@ NS_ASSUME_NONNULL_BEGIN
 //  - error: On return, the error if any.
 - (FLSliceResult) encodeWithRevFlags: (C4RevisionFlags*)outRevFlags
                                error: (NSError**)outError;
-
-- (void) setEncodingError: (NSError*)error;
 
 // Replace c4doc without updating the document data
 - (void) replaceC4Doc: (nullable CBLC4Document*)c4doc;

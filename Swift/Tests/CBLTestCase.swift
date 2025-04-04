@@ -224,17 +224,44 @@ class CBLTestCase: XCTestCase {
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
     
+    func decodeFromJSONResource<T: Decodable>(_ name: String, as type: T.Type, limit: Int? = nil) throws -> Array<T> {
+        let contents = try stringFromResource(name: name, ofType: "json")
+        var n = 0
+        var result: Array<T> = []
+        contents.enumerateLines(invoking: { (line: String, stop: inout Bool) in
+            n += 1
+            let decoder = JSONDecoder()
+            result.append(try! decoder.decode(T.self, from: line.data(using: String.Encoding.utf8)!))
+            if n == limit {
+                stop = true
+            }
+        })
+        return result
+    }
+    
     func loadJSONResource(_ name: String, collection: Collection) throws {
+        try loadJSONResource(name, collection: collection, limit: Int.max)
+    }
+    
+    func loadJSONResource(_ name: String, collection: Collection, limit: Int, idKey: String? = nil) throws {
         try autoreleasepool {
             let contents = try stringFromResource(name: name, ofType: "json")
             var n = 0
             contents.enumerateLines(invoking: { (line: String, stop: inout Bool) in
                 n += 1
                 let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
-                let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
-                let docID = String(format: "doc-%03llu", n)
+                var dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
+                let docID: String
+                if let idKey = idKey {
+                    docID = dict.removeValue(forKey: idKey) as! String
+                } else {
+                    docID = String(format: "doc-%03llu", n)
+                }
                 let doc = MutableDocument(id: docID, data: dict)
                 try! collection.save(document: doc)
+                if n == limit {
+                    stop = true
+                }
             })
         }
     }

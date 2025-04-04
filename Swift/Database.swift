@@ -284,6 +284,14 @@ public final class Database {
         }
     }
     
+    /// The same as ``inBatch(using:)``, but the closure can return a Bool.
+    /// If the closure returns `false`, the transaction will be aborted, and this function will return false.
+    internal func maybeBatch(using block: () throws -> Bool ) throws -> Bool {
+        return try impl.maybeBatch {
+            return try block()
+        }
+    }
+    
     /// Sets an expiration date on a document in the default collection.
     /// After this time the document will be purged from the default collection.
     ///
@@ -590,5 +598,25 @@ extension CBLDatabase {
                 errPtr?.pointee = error as NSError
             }
         })
+    }
+    
+    /// The same as `inBatch(() -> Void)`, but the closure can return a Bool.
+    /// If the closure returns `false`, the transaction will be aborted, and this function will return false.
+    internal func maybeBatch(block: () throws -> Bool) throws -> Bool {
+        var err: NSError? = nil
+        guard __maybeBatch(&err, usingBlockWithError: { (errPtr) -> Bool in
+            do {
+                return try block()
+            } catch {
+                errPtr?.pointee = error as NSError
+                return false
+            }
+        }) else {
+            if let err = err {
+                throw err
+            }
+            return false
+        }
+        return true
     }
 }

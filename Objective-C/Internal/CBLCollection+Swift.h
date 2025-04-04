@@ -30,6 +30,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSArray*) indexesInfo: (NSError**)error;
 
+- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error;
+
+/// Load a document with the given docID, at the given revision.
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID
+                                   revID: (NSString*)revID
+                                   error: (NSError**)error NS_SWIFT_NOTHROW;
+
 @end
 
 NS_ASSUME_NONNULL_END
