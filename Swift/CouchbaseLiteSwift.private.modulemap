@@ -44,6 +44,7 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLDocumentFragment.h"
     header "CBLDocumentReplication.h"
     header "CBLEdition.h"
+    header "CBLEncoder.h"
     header "CBLEndpoint.h"
     header "CBLErrors.h"
     header "CBLFileLogger.h"
