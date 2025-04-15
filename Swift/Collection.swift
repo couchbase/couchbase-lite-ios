@@ -199,7 +199,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Save a document represented by the specified encodable model object into
     /// the collection. The default last-write-wins concurrency control will be used
     /// if conflict happens.
-    public func saveDocument<T: DocumentEncodable>(from object: T) throws {
+    public func save<T: DocumentEncodable>(from object: T) throws {
         let _ = try withDocument(from: object) { document in
             try save(document: document)
             return true
@@ -208,7 +208,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     
     /// Save a document represented by the specified encodable model object into
     /// the collection. The specified concurrency control will be used if conflict happens.
-    public func saveDocument<T: DocumentEncodable>(from object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
+    public func save<T: DocumentEncodable>(from object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
         try withDocument(from: object) { document in
             try save(document: document, concurrencyControl: concurrencyControl)
         }
@@ -218,7 +218,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// the collection. The specified conflict handler will be used if conflict happens.
     /// Any changes to the object which is the first conflictHandler argument will change
     /// the `from: object` which was passed in.
-    public func saveDocument<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
+    public func save<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
         try withDocument(from: object) { document in
             try save(document: document) { newDocument, existingDocument in
                 do {
@@ -334,7 +334,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Delete a document represented by the specified encodable model object from
     /// the collection. The default last-write-wins concurrency control will be used
     /// if conflict happens.
-    public func deleteDocument<T: DocumentEncodable>(for object: T) throws {
+    public func delete<T: DocumentEncodable>(for object: T) throws {
         let _ = try withDocument(from: object) { document in
             try self.delete(document: document)
             return true
@@ -344,7 +344,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Delete a document represented by the specified encodable model object from
     /// the collection. The specified concurrency control will be used
     /// if conflict happens.
-    public func deleteDocument<T: DocumentEncodable>(for object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
+    public func delete<T: DocumentEncodable>(for object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
         try withDocument(from: object) { document in
             try self.delete(document: document, concurrencyControl: concurrencyControl)
         }
@@ -371,7 +371,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// Purge a document represented by the specified encodable model object from
     /// the collection.
     /// If the object is not linked to a document in the collection, the NotFound error will be thrown.
-    public func purgeDocument<T: DocumentEncodable>(for object: T) throws {
+    public func purge<T: DocumentEncodable>(for object: T) throws {
         guard let docRef = getDocumentRef(object: object) else {
             throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot purge document for object: No @DocumentID found on the object"])
         }
