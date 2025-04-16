@@ -365,7 +365,7 @@ class CodableTest: CBLTestCase {
         // 1. Create a Profile object
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 3. Assert that profile.pid is not null
         XCTAssertNotNil(profile.pid)
         // 4. Load the Document from the collection
@@ -406,7 +406,7 @@ class CodableTest: CBLTestCase {
         profile.contacts[0].phones[0].numbers.removeLast()
         profile.contacts[1].phones[0].numbers[0] = "+1234567890"
         // 6. Save the modifications
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 7. Load the Document
         document = try defaultCollection!.document(id: "p-0001")!
         // 8. Assert the field values of the Document match the Profile object
@@ -414,7 +414,7 @@ class CodableTest: CBLTestCase {
         // 9. Modify the object further
         profile.name = .init(first: "Jane", last: "Doe")
         // 10. Save the modifications
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 11. Load the document
         document = try defaultCollection!.document(id: "p-0001")!
         // 12. Assert the field values match
@@ -426,14 +426,14 @@ class CodableTest: CBLTestCase {
         // 1. Create a Profile object
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 3. Delete it via the object
-        try defaultCollection!.deleteDocument(for: profile)
+        try defaultCollection!.delete(for: profile)
         // 4. Assert it is deleted
         XCTAssertNil(try defaultCollection!.document(id: profile.pid!))
         // 5. Modify the Profile object, then save it again
         profile.likes = ["hiking", "reading"]
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 6. Fetch the Document and assert that all fields match
         let document = try defaultCollection!.document(id: profile.pid!)!
         XCTAssert(profile == document)
@@ -444,15 +444,15 @@ class CodableTest: CBLTestCase {
         // 1. Create a Profile object
         let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 3. Get another reference to the object
         let profile2 = try defaultCollection!.document(id: profile1.pid!, as: Profile.self)!
         // 4. Modify the first reference, and save it
         profile1.likes = ["hiking", "reading"]
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 5. Modify the second reference, and save it with conflictHandler
         profile2.name = .init(first: "Updated", last: "Profile")
-        let resolved = try defaultCollection!.saveDocument(from: profile2) { newProfile, existingProfile in
+        let resolved = try defaultCollection!.save(from: profile2) { newProfile, existingProfile in
             // Inside the conflict handler, modify the object and return true
             XCTAssert(existingProfile == profile1)
             XCTAssert(newProfile == profile2)
@@ -474,15 +474,15 @@ class CodableTest: CBLTestCase {
         // 1. Create a Profile object
         let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 3. Get another reference to the object
         let profile2 = try defaultCollection!.document(id: profile1.pid!, as: Profile.self)!
         // 4. Modify the first reference, and save it
         profile1.likes = ["hiking", "reading"]
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 5. Modify the second reference, and save it with ConcurrencyControl.lastWriteWins
         profile2.name = .init(first: "Updated", last: "Profile")
-        let resolved = try defaultCollection!.saveDocument(from: profile2, concurrencyControl: .lastWriteWins)
+        let resolved = try defaultCollection!.save(from: profile2, concurrencyControl: .lastWriteWins)
         XCTAssert(resolved)
         // 6. Fetch the Document and assert all fields match the second object reference
         let document = try defaultCollection!.document(id: profile1.pid!)!
@@ -494,15 +494,15 @@ class CodableTest: CBLTestCase {
         // 1. Create a Profile object
         let profile1 = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 3. Get another reference to the object
         let profile2 = try defaultCollection!.document(id: profile1.pid!, as: Profile.self)!
         // 4. Modify the first reference, and save it
         profile1.likes = ["hiking", "reading"]
-        try defaultCollection!.saveDocument(from: profile1)
+        try defaultCollection!.save(from: profile1)
         // 5. Modify the second reference, and save it with ConcurrencyControl.lastWriteWins
         profile2.name = .init(first: "Updated", last: "Profile")
-        let resolved = try defaultCollection!.saveDocument(from: profile2, concurrencyControl: .failOnConflict)
+        let resolved = try defaultCollection!.save(from: profile2, concurrencyControl: .failOnConflict)
         XCTAssertFalse(resolved)
         // 6. Fetch the Document and assert all fields match the first object reference
         let document = try defaultCollection!.document(id: profile1.pid!)!
@@ -655,7 +655,7 @@ class CodableTest: CBLTestCase {
         // 2. Call Collection.saveDocument(from object)
         // 3. Assert the call to save failed with `InvalidParameter`
         expectError(domain: CBLError.domain, code: CBLError.invalidParameter) {
-            try self.defaultCollection!.saveDocument(from: contact)
+            try self.defaultCollection!.save(from: contact)
         }
     }
     
@@ -665,7 +665,7 @@ class CodableTest: CBLTestCase {
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         profile.pid = nil
         // 2. Save it to the default collection
-        try defaultCollection!.saveDocument(from: profile)
+        try defaultCollection!.save(from: profile)
         // 3. Assert that profile.pid is not null
         XCTAssertNotNil(profile.pid)
         // 4. Load the Document from the collection and assert it is not null
@@ -679,7 +679,7 @@ class CodableTest: CBLTestCase {
         let profile = try decodeFromJSONResource("profiles_100", as: Profile.self, limit: 1).first!
         let car = Car(id: "car-001", name: "Mini Cooper", driver: profile, topSpeed: 130.0, acceleration: 17.1)
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: car)
+        try defaultCollection!.save(from: car)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: "car-001")!
         // 4. Assert that all the fields match
@@ -696,7 +696,7 @@ class CodableTest: CBLTestCase {
             "Serena" : Animal(name: "Fish", legs: nil)
         ])
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: house)
+        try defaultCollection!.save(from: house)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: "house-001")!
         // 4. Assert that all the fields match
@@ -712,7 +712,7 @@ class CodableTest: CBLTestCase {
         let person = Person(profile: profile, age: 26)
         person.id = "person-001"
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: person)
+        try defaultCollection!.save(from: person)
         // 3. Load the document from the collection
         let document = try defaultCollection!.document(id: "person-001")!
         // 4. Assert that all of the fields match
@@ -727,7 +727,7 @@ class CodableTest: CBLTestCase {
         let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
         let report = Report(title: "My Report", filed: false, body: body)
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: report)
+        try defaultCollection!.save(from: report)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: report.id!)!
         // 4. Load the Blob from the document
@@ -747,7 +747,7 @@ class CodableTest: CBLTestCase {
         let report = Report(title: "My Report", filed: false, body: body)
         let reportFile = ReportFile(dateFiled: Date(), report: report)
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: reportFile)
+        try defaultCollection!.save(from: reportFile)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: reportFile.id!)!
         // 4. Load the nested Blob from the document
@@ -768,7 +768,7 @@ class CodableTest: CBLTestCase {
         let att3 = Blob(contentType: "text/plain", data: Data("Hello, world!".utf8))
         let note = Note(title: "My Note", content: "These are my notes", attachments: [att1, att2, att3])
         // 2. Save the object to the default collection
-        try defaultCollection!.saveDocument(from: note)
+        try defaultCollection!.save(from: note)
         // 3. Load the Document from the collection
         let document = try defaultCollection!.document(id: note.id!)!
         // 4. Load the array of Blobs from the document
@@ -783,7 +783,7 @@ class CodableTest: CBLTestCase {
     
     func testCollectionDecodeMismatchIntSizes() throws {
         let largeCalc = LargeCalculation(inputA: Int64.max, inputB: Int64.min, op: "add", output: 0)
-        try defaultCollection!.saveDocument(from: largeCalc)
+        try defaultCollection!.save(from: largeCalc)
         expectError(domain: CBLError.domain, code: CBLError.decodingError) {
             let _ = try self.defaultCollection!.document(id: largeCalc.id!, as: Calculation.self)
         }
