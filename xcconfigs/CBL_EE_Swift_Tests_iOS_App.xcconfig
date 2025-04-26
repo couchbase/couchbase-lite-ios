@@ -18,11 +18,7 @@
 //
 
 #include "CBL_EE_Common.xcconfig"
+#include "CBL_Swift_Tests_iOS_App.xcconfig"
 
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
-CODE_SIGN_IDENTITY = iPhone Developer
-INFOPLIST_FILE = $(SRCROOT)/Swift/Tests/iOS/Info.plist
-LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-swift-ios-tests-app
-PRODUCT_NAME = CBL-EE Swift Tests
-SDKROOT = iphoneos
+PRODUCT_NAME = CBL-EE_Swift_Tests

@@ -45,6 +45,10 @@
 #import "CBLCert.h"
 #endif
 
+extern "C" {
+#import "MYErrorUtils.h"
+}
+
 using namespace fleece;
 
 // Number of bytes to read from the socket at a time
@@ -64,6 +68,8 @@ struct PendingWrite {
     size_t bytesWritten {0};
     void (^completionHandler)();
 };
+
+NSString * const kCBLWebSocketUseTLSServerAuthCallback = @"serverAuthCallback";
 
 @interface CBLWebSocket () <NSStreamDelegate, DNSServiceDelegate>
 
@@ -86,16 +92,18 @@ struct PendingWrite {
     NSOutputStream* _out;
     uint8_t* _readBuffer;
     std::vector<PendingWrite> _pendingWrites;
-    bool _checkSSLCert;
+    
+    bool _shouldCheckSSLCert;
+    
     bool _hasBytes, _hasSpace;
     size_t _receivedBytesPending;
     bool _gotResponseHeaders;
     BOOL _connectingToProxy;
     BOOL _connectedThruProxy;
     
-    CBLReplicator* _replicator;
-    CBLDatabase* _db;
-    NSURL* _remoteURL;
+    __weak id<CBLWebSocketContext> __nullable _context;
+    id<CBLCookieStore> __nullable _cookieStore;
+    NSURL* __nullable _cookieURL;
     
     NSArray* _clientIdentity;
     
@@ -139,10 +147,12 @@ static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece, vo
             c4socket_closed(s, {LiteCoreDomain, kC4NetErrInvalidURL});
             return;
         }
+        
+        id<CBLWebSocketContext> wsContext = (__bridge id<CBLWebSocketContext>)context;
         auto socket = [[CBLWebSocket alloc] initWithURL: url
                                                c4socket: s
                                                 options: optionsFleece
-                                                context: context];
+                                                context: wsContext];
         c4Socket_setNativeHandle(s, (__bridge void*)socket);
         socket->_keepMeAlive = socket;          // Prevents dealloc until doDispose is called
         [socket start];
@@ -172,18 +182,17 @@ static void doDispose(C4Socket* s) {
 - (instancetype) initWithURL: (NSURL*)url
                     c4socket: (C4Socket*)c4socket
                      options: (slice)options
-                     context: (void*)context {
+                     context: (nullable id<CBLWebSocketContext>)context {
     self = [super init];
     if (self) {
         _c4socket = c4socket;
         _options = AllocedDict(options);
-        _replicator = (__bridge CBLReplicator*)context;
-        // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        _db = _replicator.config.database;
-#pragma clang diagnostic pop
-        _remoteURL = $castIf(CBLURLEndpoint, _replicator.config.target).url;
+        
+        _context = context;
+        _cookieStore = [context cookieStoreForWebsocket: self];
+        _cookieURL = [context cookieURLForWebSocket: self];
+        if (!_cookieURL) { _cookieURL = url; }
+        
         _readBuffer = (uint8_t*)malloc(kReadBufferSize);
         
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
@@ -207,7 +216,7 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _sockfd = -1;
-        _networkInterface = _replicator.config.networkInterface;
+        _networkInterface = [context networkInterfaceForWebsocket: self];
         if (_networkInterface) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
@@ -264,7 +273,7 @@ static void doDispose(C4Socket* s) {
 }
 
 - (void) clearHTTPState {
-    _gotResponseHeaders = _checkSSLCert = false;
+    _gotResponseHeaders = _shouldCheckSSLCert = false;
     if (_httpResponse)
         CFRelease(_httpResponse);
     _httpResponse = CFHTTPMessageCreateEmpty(NULL, false);
@@ -608,40 +617,46 @@ static inline NSError* posixError(int errNo, NSString* msg) {
 // This gets called again after connecting to a proxy, to configure the TLS settings for the
 // actual server.
 - (void) configureTLS {
-    _checkSSLCert = false;
+    _shouldCheckSSLCert = false;
+    
     if (_logic.useTLS) {
         CBLLogVerbose(WebSocket, @"%@: Enabling TLS...", self);
+        
+        _shouldCheckSSLCert = true;
+        
         NSMutableDictionary* settings = [NSMutableDictionary dictionary];
-        if (_connectedThruProxy)
-            [settings setObject: _logic.directHost
-                         forKey: (__bridge id)kCFStreamSSLPeerName];
-        
-        if (_options[kC4ReplicatorOptionPinnedServerCert])
-            [settings setObject: @NO
-                         forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
-        
-#ifdef COUCHBASE_ENTERPRISE
-        if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool())
-            [settings setObject: @NO
-                         forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
-#endif
-        
-        if (_clientIdentity)
-            [settings setObject: _clientIdentity
-                         forKey: (__bridge id)kCFStreamSSLCertificates];
-        
-        if (![_in setProperty: settings
-                       forKey: (__bridge NSString *)kCFStreamPropertySSLSettings]) {
-            CBLWarnError(WebSocket, @"%@: Failed to set SSL settings", self);
+        if (_connectedThruProxy) {
+            [settings setObject: _logic.directHost forKey: (__bridge id)kCFStreamSSLPeerName];
         }
         
-        _checkSSLCert = true;
+        // Disable the default certificate validation process using system's CA certs
+        if ([self usesCustomTLSCertValidation]) {
+            [settings setObject: @NO forKey: (__bridge id)kCFStreamSSLValidatesCertificateChain];
+        }
+        
+        if (_clientIdentity) {
+            [settings setObject: _clientIdentity forKey: (__bridge id)kCFStreamSSLCertificates];
+        }
+        
+        if (![_in setProperty: settings forKey: (__bridge NSString*)kCFStreamPropertySSLSettings]) {
+            CBLWarnError(WebSocket, @"%@: Failed to set SSL settings", self);
+        }
         
         // When using client proxy, the stream will be reset after setting
         // the SSL properties. Make sure to update the _hasSpace flag to reflect
         // the current status of the stream.
         _hasSpace = _out.hasSpaceAvailable;
     }
+}
+
+- (BOOL) usesCustomTLSCertValidation {
+    return (
+            !!_options[kC4ReplicatorOptionPinnedServerCert]
+#ifdef COUCHBASE_ENTERPRISE
+            || _options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool()
+            || _options[kC4ReplicatorOptionAcceptAllCerts].asBool()
+#endif
+    );
 }
 
 // Sends the initial WebSocket HTTP handshake request.
@@ -672,20 +687,22 @@ static inline NSError* posixError(int errNo, NSString* msg) {
     if (sessionCookie.buf)
         [cookies appendFormat: @"%@;", sessionCookie.asNSString()];
     
-    NSError* error = nil;
-    NSString* cookie = [_db getCookies: _remoteURL error: &error];
-    if (error) {
-        // in case database is not open: CBL-2657
-        CBLWarn(Sync, @"%@: Error while fetching cookies: %@", self, error);
-        [self closeWithError: error];
-        return;
+    if (_cookieStore) {
+        NSError* error = nil;
+        NSString* cookie = [_cookieStore getCookies: _cookieURL error: &error];
+        if (error) {
+            // in case database is not open: CBL-2657
+            CBLWarn(Sync, @"%@: Error while fetching cookies: %@", self, error);
+            [self closeWithError: error];
+            return;
+        }
+        
+        if (cookie.length > 0)
+            [cookies appendString: cookie];
+        
+        if (cookies.length > 0)
+            [_logic setValue: cookies forHTTPHeaderField: @"Cookie"];
     }
-    
-    if (cookie.length > 0)
-        [cookies appendString: cookie];
-    
-    if (cookies.length > 0)
-        [_logic setValue: cookies forHTTPHeaderField: @"Cookie"];
     
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
@@ -752,21 +769,31 @@ static inline NSError* posixError(int errNo, NSString* msg) {
 - (void) receivedHTTPResponse: (CFHTTPMessageRef)httpResponse {
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
-    
     NSString* cookie = headers[@"Set-Cookie"];
     if (cookie.length > 0) {
-        NSArray* cookies = [CBLWebSocket parseCookies: cookie];
-        
-        // Save to LiteCore
-        bool acceptParentDomain = _options[kC4ReplicatorOptionAcceptParentDomainCookies].asBool();
-        for (NSString* cookieStr in cookies) {
-            [_db saveCookie: cookieStr url: _remoteURL acceptParentDomain: acceptParentDomain];
-        }
-        
-        if (cookies.count > 0) {
-            NSMutableDictionary* newHeaders = [headers mutableCopy];
-            newHeaders[@"Set-Cookie"] = cookies;
-            headers = newHeaders;
+        if (_cookieStore) {
+            NSArray* cookies = [CBLWebSocket parseCookies: cookie];
+            
+            // Save to LiteCore
+            bool acceptParentDomain = _options[kC4ReplicatorOptionAcceptParentDomainCookies].asBool();
+            for (NSString* cookieStr in cookies) {
+                NSError* error;
+                if (![_cookieStore saveCookie: cookieStr
+                                          url: _cookieURL
+                           acceptParentDomain: acceptParentDomain
+                                        error: &error]) {
+                    CBLWarn(WebSocket, @"%@: Cannot save cookie for URL %@ : %@",
+                            self, _cookieURL.absoluteString, error.localizedDescription);
+                }
+            }
+            
+            if (cookies.count > 0) {
+                NSMutableDictionary* newHeaders = [headers mutableCopy];
+                newHeaders[@"Set-Cookie"] = cookies;
+                headers = newHeaders;
+            }
+        } else {
+            CBLWarn(WebSocket, @"%@: Received cookies but no cookie store is set", self);
         }
     }
     
@@ -930,85 +957,101 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     }];
 }
 
-#pragma mark - NSSTREAM SUPPORT:
+#pragma mark - TLS Support:
 
-- (SecTrustRef) copyTrustFromReadStream {
+// Do not release trust from the read stream as it's not actually copied.
+// The read stream will release the trust when it's being release.
+- (SecTrustRef) getTrustFromReadStream {
     return (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_in,
                                                   kCFStreamPropertySSLPeerTrust);
 }
 
+// Notify the received cert and verify the cert if using custom verification logic
 - (BOOL) checkSSLCert {
-    _checkSSLCert = false;
+    _shouldCheckSSLCert = NO;
     
-    SecTrustRef trust = [self copyTrustFromReadStream];
+    SecTrustRef trust = [self getTrustFromReadStream];
     Assert(trust);
     
-    [self updateServerCertificateFromTrust: trust];
+    SecCertificateRef cert = [self certificateFromTrust: trust];
+    [self notifyServerCertificateReceived: cert];
+
+    NSError* error = nil;
+    if ([self usesCustomTLSCertValidation]) {
+        if (![self validateTrust:trust error:&error]) {
+            [self closeWithError: error];
+            return NO;
+        }
+    }
+    
+    NSData* certData = (NSData*) CFBridgingRelease(SecCertificateCopyData(cert));
+    CFRelease(cert);
+    
+    // The hostname to open a socket to; proxy hostname, if a proxy is used.
+    CBLStringBytes directHostName(_logic.directHost);
+    
+    if (!c4socket_gotPeerCertificate(_c4socket, data2slice(certData), directHostName)) {
+        NSString* mesg = @"TLS handshake failed: certificate rejected by verification callback";
+        CBLWarn(WebSocket, @"%@: %@", self, mesg);
+        MYReturnError(&error, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain, @"%@", mesg);
+        [self closeWithError: error];
+        return NO;
+    }
+    
+    CBLLogVerbose(WebSocket, @"%@: TLS handshake succeeded", self);
+    return YES;
+}
+
+- (BOOL) validateTrust: (SecTrustRef)trust error: (NSError**)error {
+#ifdef COUCHBASE_ENTERPRISE
+    if (_options[kC4ReplicatorOptionAcceptAllCerts])
+        return true;
+#endif
     
     NSURL* url = _logic.URL;
-    auto check = [[CBLTrustCheck alloc] initWithTrust: trust
-                                                 host: url.host
-                                                 port: url.port.shortValue];
-    CFRelease(trust);
+    CBLTrustCheck* check = [[CBLTrustCheck alloc] initWithTrust: trust host: url.host port: url.port.shortValue];
     
-#ifdef COUCHBASE_ENTERPRISE
-    BOOL acceptOnlySelfSignedCert = _options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool();
-#endif
-    Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
-    if (pin) {
-        check.pinnedCertData = slice(pin.asData()).copiedNSData();
-        Assert(check.pinnedCertData, @"Invalid value for replicator %s property (must be NSData)",
-               kC4ReplicatorOptionPinnedServerCert);
+    NSURLCredential* credentials = nil;
+    Value pinnedCert = _options[kC4ReplicatorOptionPinnedServerCert];
+    if (pinnedCert) {
+        check.pinnedCertData = slice(pinnedCert.asData()).copiedNSData();
+        credentials = [check checkTrust: error];
     }
 #ifdef COUCHBASE_ENTERPRISE
-    else if (!acceptOnlySelfSignedCert)  {
-        // CFStream validates the certs (kCFStreamSSLValidatesCertificateChain = true)
-        return true;
+    else if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool()) {
+        check.acceptOnlySelfSignedCert = YES;
+        credentials = [check checkTrust: error];
     }
 #endif
-    
-    NSError* error;
-#ifdef COUCHBASE_ENTERPRISE
-    NSURLCredential* credentials = !pin && acceptOnlySelfSignedCert ?
-    [check acceptOnlySelfSignedCert: &error] :
-    [check checkTrust: &error];
-#else
-    NSURLCredential* credentials = [check checkTrust: &error];
-#endif
-    
     if (!credentials) {
-        CBLWarn(WebSocket, @"%@: TLS handshake failed: %@", self, error.localizedDescription);
-        [self closeWithError: error];
+        CBLWarn(WebSocket, @"%@: TLS handshake failed: certificate verification error: %@", self, (*error).localizedDescription);
         return false;
-    } else
-        CBLLogVerbose(WebSocket, @"%@: TLS handshake succeeded", self);
-    
+    }
     return true;
 }
 
-- (void) updateServerCertificateFromTrust: (SecTrustRef)trust {
-    if (trust != NULL) {
-        if (SecTrustGetCertificateCount(trust) > 0) {
-#if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
-            if (@available(iOS 15.0, *)) {
-                CFArrayRef certs = SecTrustCopyCertificateChain(trust);
-                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
-                _replicator.serverCertificate = cert;
-                CFRelease(certs);
-            } else
-#endif
-            {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
-#pragma clang diagnostic pop
-                _replicator.serverCertificate = cert;
-            }
-        }
-        else
-            CBLWarn(WebSocket, @"%@: SecTrust has no certificates", self); // Shouldn't happen
+- (SecCertificateRef) certificateFromTrust: (SecTrustRef)trust {
+    CFArrayRef certs = SecTrustCopyCertificateChain(trust);
+    SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, 0);
+    CFRetain(cert);
+    CFRelease(certs);
+    return cert;
+}
+
+- (void) notifyServerCertificateFromStream {
+    SecTrustRef trust = [self getTrustFromReadStream];
+    if (trust) {
+        SecCertificateRef cert = [self certificateFromTrust: trust];
+        [self notifyServerCertificateReceived: cert];
+        CFRelease(cert);
     }
 }
+
+- (void) notifyServerCertificateReceived: (SecCertificateRef)cert {
+    [_context webSocket: self didReceiveServerCert: cert];
+}
+
+#pragma mark - NSStream
 
 // Asynchronously sends data over the socket, and calls the completion handler block afterwards.
 - (void) writeData: (NSData*)data completionHandler: (void (^)())completionHandler {
@@ -1018,7 +1061,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void) doWrite {
-    if (_checkSSLCert && ![self checkSSLCert])
+    if (_shouldCheckSSLCert && ![self checkSSLCert])
         return;
     
     while (!_pendingWrites.empty()) {
@@ -1069,7 +1112,7 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
         case NSStreamEventHasBytesAvailable:
             Assert(stream == _in);
             CBLLogVerbose(WebSocket, @"%@: HasBytesAvailable", self);
-            if (_checkSSLCert && ![self checkSSLCert])
+            if (_shouldCheckSSLCert && ![self checkSSLCert])
                 break;
             _hasBytes = true;
             if (!self.readThrottled)
@@ -1087,10 +1130,8 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
             break;
         case NSStreamEventErrorOccurred:
             CBLLogVerbose(WebSocket, @"%@: Error Encountered on %@", self, stream);
-            if (_checkSSLCert) {
-                SecTrustRef trust = [self copyTrustFromReadStream];
-                [self updateServerCertificateFromTrust:
-                 (trust != NULL ? (SecTrustRef) CFAutorelease(trust) : NULL)];
+            if (_shouldCheckSSLCert) {
+                [self notifyServerCertificateFromStream];
             }
             [self closeWithError: stream.streamError];
             break;
@@ -1102,11 +1143,18 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 - (void) disconnect {
     CBLLogVerbose(WebSocket, @"%@: Disconnect", self);
     if (_in || _out) {
-        _in.delegate = _out.delegate = nil;
-        [_in close];
-        [_out close];
+        NSInputStream* inStream = _in;
+        NSOutputStream* outStream = _out;
+        
         _in = nil;
         _out = nil;
+        
+        inStream.delegate = nil;
+        outStream.delegate = nil;
+
+        [inStream close];
+        [outStream close];
+        
         self.sockfd = -1; // NOTE: Socket was closed by the streams
     }
     
