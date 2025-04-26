@@ -33,7 +33,7 @@
     int _c4ObjectCount;
 }
 
-@synthesize db=_db, otherDB=_otherDB;
+@synthesize db=_db, otherDB=_otherDB, disableObjectLeakCheck=_disableObjectLeakCheck;
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
@@ -78,21 +78,24 @@
         Assert([_otherDB close: &error], @"Failed to close otherdb: %@", error);
         _otherDB = nil;
     }
-
-    // Wait a little while for objects to be cleaned up:
-    int leaks = 0;
-    for (int i = 0; i < 20; i++) {
-        leaks = c4_getObjectCount() - _c4ObjectCount;
-        if (leaks == 0)
-            break;
-        else
-            [NSThread sleepForTimeInterval: 0.1];
+    
+    if (!_disableObjectLeakCheck) {
+        // Wait a little while for objects to be cleaned up:
+        int leaks = 0;
+        for (int i = 0; i < 20; i++) {
+            leaks = c4_getObjectCount() - _c4ObjectCount;
+            if (leaks == 0)
+                break;
+            else
+                [NSThread sleepForTimeInterval: 0.1];
+        }
+        if (leaks) {
+            fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ****\n");
+            c4_dumpInstances();
+            XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
+        }
     }
-    if (leaks) {
-        fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ****\n");
-        c4_dumpInstances();
-        XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
-    }
+    
     [super tearDown];
 }
 

@@ -978,7 +978,10 @@ static void throwIfNotOpenError(NSError* error) {
     }
 }
 
-- (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url acceptParentDomain: (BOOL)acceptParentDomain {
+- (BOOL) saveCookie: (NSString*)cookie
+                url: (NSURL*)url
+ acceptParentDomain: (BOOL)acceptParentDomain
+              error: (NSError**)error {
     CBL_LOCK(_mutex) {
         C4Error err = {};
         CBLStringBytes header(cookie);
@@ -986,6 +989,7 @@ static void throwIfNotOpenError(NSError* error) {
         CBLStringBytes path(url.path.stringByDeletingLastPathComponent);
         if (!c4db_setCookie(_c4db, header, host, path, acceptParentDomain, &err)) {
             CBLWarnError(WebSocket, @"Cannot save cookie %d/%d", err.domain, err.code);
+            convertError(err, error);
             return NO;
         }
         return YES;

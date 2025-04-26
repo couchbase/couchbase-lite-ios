@@ -22,6 +22,7 @@
 #import "fleece/Fleece.h"
 #import "CBLBlob.h"
 #import "CBLChangeListenerToken.h"
+#import "CBLCookieStore.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabaseChange.h"
@@ -46,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// CBLDatabase:
 
-@interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken>
+@interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken, CBLCookieStore>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
@@ -68,9 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 // This is currently used for creating a CBLDictionary as an input of the predict()
 // method of the PredictiveModel.
 - (instancetype) initWithC4Database: (C4Database*)c4db;
-
-- (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
-- (BOOL) saveCookie: (NSString*)cookie url: (NSURL*)url acceptParentDomain: (BOOL)acceptParentDomain;
 
 - (CBLCollection*) defaultCollectionOrThrow;
 - (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block;

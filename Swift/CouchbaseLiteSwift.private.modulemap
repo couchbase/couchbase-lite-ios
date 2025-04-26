@@ -95,6 +95,7 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLReplicator.h"
     header "CBLReplicatorChange.h"
     header "CBLReplicatorConfiguration.h"
+    header "CBLReplicatorStatus.h"
     header "CBLReplicatorTypes.h"
     header "CBLScope.h"
     header "CBLSessionAuthenticator.h"
