@@ -18,31 +18,16 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CouchbaseLite/CBLReplicatorTypes.h>
 
 @class CBLCollection;
 @class CBLDatabase;
 @class CBLDocumentReplication;
 @class CBLReplicatorChange;
 @class CBLReplicatorConfiguration;
+@class CBLReplicatorStatus;
 @protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
-
-/** Combined activity level and progress of a replicator. */
-@interface CBLReplicatorStatus: NSObject
-
-/** The current activity level. */
-@property (readonly, nonatomic) CBLReplicatorActivityLevel activity;
-
-/** The current progress of the replicator. */
-@property (readonly, nonatomic) CBLReplicatorProgress progress;
-
-/** The current error of the replicator. */
-@property (readonly, nonatomic, nullable) NSError* error;
-
-@end
-
 
 /**
  A replicator for replicating document changes between a local database and a target database.
