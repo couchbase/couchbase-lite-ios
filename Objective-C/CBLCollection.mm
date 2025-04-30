@@ -578,7 +578,11 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-// call on db-lock(c4doc_create/update)
+// call on db-lock(c4coll_create/update)
+
+// c4doc_update requires document exclusive lock.
+// It's OK to not lock the c4doc here. We don't allow the document to be saved
+// on a different database instance.
 - (BOOL) saveDocument: (CBLDocument*)document
                  into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
@@ -722,6 +726,9 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
+// c4doc_save requires document exclusive lock.
+// It's OK to not lock the c4doc here. We don't allow the document to be saved
+// on a different database instance.
 - (BOOL) saveResolvedDocument: (CBLDocument*)resolvedDoc
                  withLocalDoc: (CBLDocument*)localDoc
                     remoteDoc: (CBLDocument*)remoteDoc
