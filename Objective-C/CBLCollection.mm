@@ -627,7 +627,9 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
     if (!document.collection) {
         document.collection = self;
-    } else if (document.collection != self) {
+    } else if (!(document.collection.name == self.name &&
+                 document.collection.scope.name == self.scope.name &&
+                 document.collection.database == self.database)) {
         return createError(CBLErrorInvalidParameter,
                            kCBLErrorMessageDocumentAnotherCollection, error);
     }
