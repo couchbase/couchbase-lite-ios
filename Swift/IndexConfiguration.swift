@@ -2,7 +2,7 @@
 //  IndexConfiguration.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2021 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -28,6 +28,10 @@ public struct FullTextIndexConfiguration: IndexConfiguration, IndexConfigConvert
     /// Gets the expressions to use to create the index.
     public let expressions: [String]
     
+    /// A predicate expression defining conditions for indexing documents.
+    /// Only documents satisfying the predicate are included, enabling partial indexes.
+    public let `where`: String?
+    
     /// Set the true value to ignore accents/diacritical marks.
     /// The default value is ``FullTextIndexConfiguration.defaultIgnoreAccents``.
     public let ignoreAccents: Bool
@@ -36,19 +40,25 @@ public struct FullTextIndexConfiguration: IndexConfiguration, IndexConfigConvert
     /// Setting the language code affects how word breaks and word stems are parsed.
     /// Without setting the value, the current locale's language will be used. Setting
     /// a nil or "" value to disable the language features.
-    public var language: String?
+    public let language: String?
     
-    /// Constructor for creating a full-text index by using an array of N1QL expression strings
-    public init(_ expressions: [String], ignoreAccents: Bool? = FullTextIndexConfiguration.defaultIgnoreAccents, language: String? = nil) {
+    /// Initializes a full-text index using an array of N1QL expression strings, with an optional where clause for partial indexing.
+    ///  - Parameter expressions The array of expression strings.
+    ///  - Parameter ignoreAccents Optional to ignore accents/diacritical marks.
+    ///  - Parameter language Optional language code which is an ISO-639 language such as "en", "fr", etc.
+    ///  - Parameter where Optional where clause for partial indexing.
+    ///  - Returns The value index configuration object.
+    public init(_ expressions: [String], where: String? = nil, ignoreAccents: Bool? = FullTextIndexConfiguration.defaultIgnoreAccents, language: String? = nil) {
         self.expressions = expressions
         self.ignoreAccents = ignoreAccents ?? FullTextIndexConfiguration.defaultIgnoreAccents
         self.language = language
+        self.where = `where`
     }
     
     // MARK: Internal
     
     func toImpl() -> CBLIndexConfiguration {
-        return CBLFullTextIndexConfiguration(expression: expressions, ignoreAccents: ignoreAccents, language: language)
+        return CBLFullTextIndexConfiguration(expression: expressions, where: `where`, ignoreAccents: ignoreAccents, language: language)
     }
 }
 
@@ -57,15 +67,24 @@ public struct ValueIndexConfiguration: IndexConfiguration, IndexConfigConvertabl
     /// Gets the expressions to use to create the index.
     public let expressions: [String]
     
-    /// Constructor for creating a value index by using an array of N1QL expression strings.
-    public init(_ expressions: [String]) {
+    
+    /// A predicate expression defining conditions for indexing documents.
+    /// Only documents satisfying the predicate are included, enabling partial indexes.
+    public let `where`: String?
+    
+    /// Initializes a value index using an array of N1QL expression strings, with an optional where clause for partial indexing.
+    ///  - Parameter expressions The array of expression strings.
+    ///  - Parameter where Optional where clause for partial indexing.
+    ///  - Returns The value index configuration object.
+    public init(_ expressions: [String], where: String? = nil) {
         self.expressions = expressions
+        self.where = `where`
     }
     
     // MARK: Internal
     
     func toImpl() -> CBLIndexConfiguration {
-        return CBLValueIndexConfiguration(expression: expressions)
+        return CBLValueIndexConfiguration(expression: expressions, where: `where`)
     }
 }
 
