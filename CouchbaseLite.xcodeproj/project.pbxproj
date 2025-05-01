@@ -9007,6 +9007,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL_EE_ObjC_Tests_iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
@@ -9017,6 +9018,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL_EE_ObjC_Tests_iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
@@ -9027,6 +9029,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL_EE_ObjC_Tests_iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};
@@ -9037,6 +9040,7 @@
 			baseConfigurationReference = 932C69DD2453636100C382FB /* CBL_EE_ObjC_Tests_iOS.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests";
 			};

@@ -24,11 +24,11 @@ class LogTest: CBLTestCase {
     
     var logFileDirectory: String!
     
-    var backupConsoleLogSink: ConsoleLogSink?
-    
-    var backupFileLogSink: FileLogSink?
-    
-    var backupCustomLogSink: CustomLogSink?
+    var backup: FileLoggerBackup?
+
+    var backupConsoleLevel: LogLevel?
+
+    var backupConsoleDomains: LogDomains?
     
     override func setUp() {
         super.setUp()
@@ -48,15 +48,28 @@ class LogTest: CBLTestCase {
     }
     
     func backupLoggerConfig() {
-        backupConsoleLogSink = LogSinks.console
-        backupFileLogSink = LogSinks.file
-        backupCustomLogSink = LogSinks.custom
+        backup = FileLoggerBackup(config: Database.log.file.config,
+                                  level: Database.log.file.level)
+        backupConsoleLevel = Database.log.console.level
+        backupConsoleDomains = Database.log.console.domains
     }
     
     func restoreLoggerConfig() {
-        LogSinks.console = backupConsoleLogSink
-        LogSinks.file = backupFileLogSink
-        LogSinks.custom = backupCustomLogSink
+        if let backup = self.backup {
+            Database.log.file.config = backup.config
+            Database.log.file.level = backup.level
+            self.backup = nil
+        }
+        
+        if let consoleLevel = self.backupConsoleLevel {
+            Database.log.console.level = consoleLevel
+        }
+        
+        if let consoleDomains = self.backupConsoleDomains {
+            Database.log.console.domains = consoleDomains
+        }
+        
+        Database.log.custom = nil
     }
     
     func getLogsInDirectory(_ directory: String,
@@ -116,8 +129,6 @@ class LogTest: CBLTestCase {
             Log.log(domain: .database, level: .error, message: "TEST ERROR")
             XCTAssertEqual(customLogger.lines.count, 5 - i)
         }
-        
-        Database.log.custom = nil
     }
     
     func testFileLoggingLevels() throws {

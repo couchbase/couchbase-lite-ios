@@ -286,33 +286,31 @@ class LogSinkTest: CBLTestCase {
     }
     
     func testReEnableFileLogSink() throws {
-        LogSinks.file = FileLogSink(level: .verbose,
-                                    directory: logFileDirectory,
-                                    usePlainText: true)
-        
-        // Disable:
-        LogSinks.file = FileLogSink(level: .none,
-                                    directory: logFileDirectory,
-                                    usePlainText: true)
-        
+        var count = 0
         let message = UUID().uuidString
-        writeAllLogs(message)
-        XCTAssertFalse(try isKeywordPresentInAnyLog(message, path: logFileDirectory))
-        
-        // Reenable:
         LogSinks.file = FileLogSink(level: .verbose,
                                     directory: logFileDirectory,
                                     usePlainText: true)
+        writeAllLogs(message)
         
+        // Disable file logging
+        LogSinks.file = nil
+        writeAllLogs(message)
+        
+        // Re-enable file logging
+        LogSinks.file = FileLogSink(level: .verbose,
+                                    directory: logFileDirectory,
+                                    usePlainText: true)
         writeAllLogs(message)
         
         for file in try getLogsInDirectory(logFileDirectory) {
-            if file.lastPathComponent.starts(with: "cbl_debug_") {
-                continue
-            }
             let contents = try String(contentsOf: file, encoding: .ascii)
-            XCTAssert(contents.contains(message))
+            if contents.contains(message) {
+                count += 1
+            }
         }
+        
+        XCTAssertEqual(count, 8)
     }
     
     func testLogFileHeader() throws {

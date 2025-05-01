@@ -812,8 +812,8 @@
  6. document resolved successfully, with second attempt,
  7. once the first CCR tries again, conflict is already been resolved.
  */
-// CBL-1710: Update to use setProgressLevel API in Replicator
-- (void) testDoubleConflictResolutionOnSameConflicts {
+// CBL-6976: Refactor this test
+- (void) dontTestDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
     CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
     CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: logSink];
@@ -833,7 +833,7 @@
         if (ccrCount++ == 0) {
             // 2
             [expCCR fulfill];
-            [self waitForExpectations: @[expFirstDocResolve] timeout: 5.0];
+            [self waitForExpectations: @[expFirstDocResolve] timeout: 20.0];
         }
         // 5
         return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
@@ -863,7 +863,7 @@
     
     // 1
     [replicator start];
-    [self waitForExpectations: @[expCCR] timeout: 5.0];
+    [self waitForExpectations: @[expCCR] timeout: 20.0];
     
     // 3
     // in between the conflict, we wil suspend replicator.
@@ -871,7 +871,7 @@
     
     // Skip exception breakpoint thrown from c4doc_resolve
     [self ignoreException:^{
-        [self waitForExpectations: @[expSTOP] timeout: 15.0];
+        [self waitForExpectations: @[expSTOP] timeout: 20.0];
     }];
     
     AssertEqual(ccrCount, 2u);

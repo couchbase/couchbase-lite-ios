@@ -274,13 +274,20 @@
 }
 
 - (void) testFileLoggingReEnableLogging {
-    CBLLogSinks.file = nil;
-    AssertNil(CBLLogSinks.file.directory);
-    
     NSString* inputString = [[NSUUID UUID] UUIDString];
+    NSInteger count = 0;
+    CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
+                                                   directory: logFileDirectory
+                                                usePlaintext: YES
+                                                maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
+                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
     [self writeAllLogs: inputString];
     
-    AssertNil(CBLLogSinks.file.directory);
+    // Disable file logging
+    CBLLogSinks.file = nil;
+    [self writeAllLogs: inputString];
+    
+    // Re-enable file logging
     
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
                                                    directory: logFileDirectory
@@ -291,15 +298,14 @@
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
     for (NSURL* url in files) {
-        if ([url.lastPathComponent hasPrefix: @"cbl_debug_"]) {
-            continue;
-        }
         NSString* contents = [NSString stringWithContentsOfURL: url
                                                       encoding: NSASCIIStringEncoding
                                                          error: &error];
         AssertNil(error);
-        Assert([contents rangeOfString: inputString].location != NSNotFound);
+        if ([contents rangeOfString: inputString].location != NSNotFound) count++;
     }
+    
+    AssertEqual(count, 8);
 }
 
 - (void) testFileLoggingHeader {
