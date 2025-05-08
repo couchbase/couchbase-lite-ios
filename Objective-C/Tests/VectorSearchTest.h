@@ -54,22 +54,22 @@ NS_ASSUME_NONNULL_BEGIN
 /** For the test subclasses to override the default vector expression. */
 - (NSString*) wordsQueryDefaultExpression;
 
-- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit
+- (NSString*) wordsQueryStringWithLimit: (NSInteger)limit
                                  metric: (nullable NSString*)metric
                        vectorExpression: (nullable NSString*)vectorExpression
                             whereClause: (nullable NSString*)whereClause;
 
-- (NSString*) wordsQueryStringWithLimit: (NSUInteger)limit;
+- (NSString*) wordsQueryStringWithLimit: (NSInteger)limit;
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSInteger)limit
                                            metric: (nullable NSString*)metric
                                  vectorExpression: (nullable NSString*)vectorExpression
                                       whereClause: (nullable NSString*)whereClause
                                     checkTraining: (BOOL) checkTraining;
 
-- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSUInteger)limit;
+- (CBLQueryResultSet*) executeWordsQueryWithLimit: (NSInteger)limit;
 
-- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSUInteger)limit;
+- (CBLQueryResultSet*) executeWordsQueryNoTrainingCheckWithLimit: (NSInteger)limit;
 
 - (NSDictionary<NSString*, NSString*>*) toDocIDWordMap: (CBLQueryResultSet*)resultSet;
 

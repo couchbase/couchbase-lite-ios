@@ -1,8 +1,8 @@
 //
-//  CustomLogger.h
+//  CBLLogSinks.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2019 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,19 +18,26 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CouchbaseLite.h"
+
+@class CBLConsoleLogSink;
+@class CBLCustomLogSink;
+@class CBLFileLogSink;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CustomLogger : NSObject <CBLLogger>
+/** A static container for managing the three log sinks used by Couchbase Lite. */
+@interface CBLLogSinks : NSObject
 
-@property (nonatomic) CBLLogLevel level;
+/** The console log sink, enabled by default with a warning level. */
+@property (class, nonatomic, nullable) CBLConsoleLogSink* console;
 
-@property (nonatomic, readonly) NSArray* lines;
+/** The file log sink, disabled by default. */
+@property (class, nonatomic, nullable) CBLFileLogSink* file;
 
-- (void) reset;
+/** The custom log sink, disabled by default. */
+@property (class, nonatomic, nullable) CBLCustomLogSink* custom;
 
-- (BOOL) containsString: (NSString *)string;
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

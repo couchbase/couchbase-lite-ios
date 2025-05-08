@@ -17,7 +17,9 @@
 //  limitations under the License.
 //
 
+import CouchbaseLiteSwift_Private
 import Foundation
+import Combine
 import CouchbaseLiteSwift_Private
 
 /// A `Collection` represent a collection which is a container for documents.
@@ -54,8 +56,7 @@ import CouchbaseLiteSwift_Private
 /// collection-aware code should avoid them and use the new Collection API instead.
 /// These legacy functions are deprecated and will be removed eventually.
 ///
-public final class Collection : CollectionChangeObservable, Indexable, Equatable, Hashable {
-    
+public final class Collection: CollectionChangeObservable, Indexable, Equatable, Hashable {
     /// The default scope name constant
     public static let defaultCollectionName: String = kCBLDefaultCollectionName
     
@@ -92,6 +93,30 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         return nil
     }
     
+    internal func document(id: String, revID: String) throws -> Document? {
+        var error: NSError?
+        let doc = impl.document(withID: id, revID: revID, error: &error)
+        if let err = error {
+            throw err
+        }
+        if let implDoc = doc {
+            return Document(implDoc, collection: self)
+        }
+        return nil
+    }
+    
+    public func document<T: DocumentDecodable>(id: String, as type: T.Type) throws -> T? {
+        guard let doc = try document(id: id) else {
+            return nil
+        }
+        let decoder = DocumentDecoder(document: doc)
+        let object = try T(from: decoder)
+        if getDocumentRef(object: object) == nil {
+            throw CBLError.create(CBLError.invalidParameter, description: "Type \(String(describing: type)) is missing a @DocumentID field")
+        }
+        return object
+    }
+    
     /// Gets document fragment object by the given document ID.
     public subscript(key: String) -> DocumentFragment {
         return DocumentFragment(impl[key], collection: self)
@@ -108,7 +133,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func save(document: MutableDocument) throws {
         try impl.save(document.impl as! CBLMutableDocument)
-        if (document.collection == nil) {
+        if document.collection == nil {
             document.collection = self
         }
     }
@@ -134,7 +159,7 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
             }
             throw err
         }
-        if (document.collection == nil) {
+        if document.collection == nil {
             document.collection = self
         }
         return result
@@ -151,11 +176,12 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// Throws an NSError with the CBLError.notOpen code, if the collection is deleted or
     /// the database is closed.
     public func save(document: MutableDocument,
-              conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool {
+                     conflictHandler: @escaping (MutableDocument, Document?) -> Bool) throws -> Bool
+    {
         var error: NSError?
         let result = impl.save(
             document.impl as! CBLMutableDocument,
-            conflictHandler: { (cur: CBLMutableDocument, old: CBLDocument?) -> Bool in
+            conflictHandler: { (_: CBLMutableDocument, old: CBLDocument?) -> Bool in
                 return conflictHandler(document, old != nil ? Document(old!, collection: self) : nil)
             }, error: &error)
         if let err = error {
@@ -164,10 +190,107 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
             }
             throw err
         }
-        if (document.collection == nil) {
+        if document.collection == nil {
             document.collection = self
         }
         return result
+    }
+    
+    /// Save a document represented by the specified encodable model object into
+    /// the collection. The default last-write-wins concurrency control will be used
+    /// if conflict happens.
+    public func save<T: DocumentEncodable>(from object: T) throws {
+        let _ = try withDocument(from: object) { document in
+            try save(document: document)
+            return true
+        }
+    }
+    
+    /// Save a document represented by the specified encodable model object into
+    /// the collection. The specified concurrency control will be used if conflict happens.
+    public func save<T: DocumentEncodable>(from object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        try withDocument(from: object) { document in
+            try save(document: document, concurrencyControl: concurrencyControl)
+        }
+    }
+    
+    /// Save a document represented by the specified encodable model object into
+    /// the collection. The specified conflict handler will be used if conflict happens.
+    /// Any changes to the object which is the first conflictHandler argument will change
+    /// the `from: object` which was passed in.
+    public func save<T: DocumentCodable>(from object: T, conflictHandler: @escaping (T, T?) -> Bool) throws -> Bool {
+        try withDocument(from: object) { document in
+            try save(document: document) { newDocument, existingDocument in
+                do {
+                    let existingVal = existingDocument != nil ? try T.init(from: DocumentDecoder(document: existingDocument!)) : nil
+                    let result = conflictHandler(object, existingVal)
+                    if result {
+                        // If the conflictHandler returns true, the `object: T` may have been modified, so
+                        // use DocumentEncoder to update its referenced MutableDocument.
+                        let encoder = try DocumentEncoder(db: self.database, document: newDocument)
+                        try object.encode(to: encoder)
+                        try encoder.finish()
+                    }
+                    return result
+                } catch {
+                    return false
+                }
+            }
+        }
+    }
+    
+    /// Encode a `DocumentEncodable` into a MutableDocument (and store it inside the `DocumentEncodable`).
+    /// Call a callback with the MutableDocument which was created (or fetched from the object if existing).
+    /// If the callback returns `false`, this indicates it failed, and the `MutableDocument` which was attached to `object` will be reset.
+    internal func withDocument<T: DocumentEncodable>(from object: T, _ fn: (MutableDocument) throws -> Bool) throws -> Bool {
+        guard let docRef = getDocumentRef(object: object) else {
+            throw CBLError.create(CBLError.invalidParameter, description: "Cannot encode \(String(describing: T.self)) into document: No @DocumentId field found")
+        }
+        
+        let document: MutableDocument
+        
+        // Load existing (as reference by `object.@DocumentId`) or create new document
+        if let docID = docRef.docID {
+            if let revID = docRef.revID {
+                // Try and load the existing document at the given revision
+                if let doc = try self.document(id: docID, revID: revID)?.toMutable() {
+                    document = doc
+                } else {
+                    // If the revID did not exist, create a new doc and later
+                    // let conflict resolution process resolve it
+                    document = MutableDocument(id: docID)
+                }
+            } else {
+                // Try and load the existing document current revision
+                if let doc = try self.document(id: docID)?.toMutable() {
+                    document = doc
+                } else {
+                    document = MutableDocument(id: docID)
+                }
+            }
+        } else {
+            document = MutableDocument()
+        }
+        
+        // Because of SharedKeys, encoding will fail if CBLDocument.collection is not set.
+        try impl.prepare(document.impl)
+        
+        let result = try database.maybeBatch { () throws -> Bool in
+            // Encode `object` into `document`.
+            let encoder = try DocumentEncoder(db: database, document: document)
+            try object.encode(to: encoder)
+            try encoder.finish()
+            // Call the closure passed in (i.e. save)
+            return try fn(document)
+        }
+        
+        // If the closure returned true, its operation succeeded, so attach the IDs from `document` to `object`.
+        if result {
+            docRef.docID = document.id
+            docRef.revID = document.revisionID
+        }
+        return result
+
     }
     
     /// Delete a document from the collection. The default concurrency control, lastWriteWins, will be used
@@ -208,6 +331,25 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
         return result
     }
     
+    /// Delete a document represented by the specified encodable model object from
+    /// the collection. The default last-write-wins concurrency control will be used
+    /// if conflict happens.
+    public func delete<T: DocumentEncodable>(for object: T) throws {
+        let _ = try withDocument(from: object) { document in
+            try self.delete(document: document)
+            return true
+        }
+    }
+    
+    /// Delete a document represented by the specified encodable model object from
+    /// the collection. The specified concurrency control will be used
+    /// if conflict happens.
+    public func delete<T: DocumentEncodable>(for object: T, concurrencyControl: ConcurrencyControl) throws -> Bool {
+        try withDocument(from: object) { document in
+            try self.delete(document: document, concurrencyControl: concurrencyControl)
+        }
+    }
+    
     /// When purging a document, the collection instance of the document and this collection instance
     /// must be the same, otherwise, the InvalidParameter error will be thrown.
     ///
@@ -224,6 +366,19 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     /// the database is closed.
     public func purge(id: String) throws {
         try impl.purgeDocument(withID: id)
+    }
+    
+    /// Purge a document represented by the specified encodable model object from
+    /// the collection.
+    /// If the object is not linked to a document in the collection, the NotFound error will be thrown.
+    public func purge<T: DocumentEncodable>(for object: T) throws {
+        guard let docRef = getDocumentRef(object: object) else {
+            throw NSError(domain: CBLErrorDomain, code: CBLErrorInvalidParameter, userInfo: [NSLocalizedDescriptionKey : "Cannot purge document for object: No @DocumentID found on the object"])
+        }
+        guard let docID = docRef.docID else {
+            throw NSError(domain: CBLErrorDomain, code: CBLErrorNotFound)
+        }
+        try purge(id: docID)
     }
     
     // MARK: Document Expiry
@@ -256,8 +411,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     @discardableResult public func addDocumentChangeListener(id: String,
-                                   listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
-        return self.addDocumentChangeListener(id: id, queue: nil, listener: listener)
+                                                             listener: @escaping (DocumentChange) -> Void) -> ListenerToken
+    {
+        return addDocumentChangeListener(id: id, queue: nil, listener: listener)
     }
     
     /// Add a change listener to listen to change events occurring to a document of the given document id.
@@ -266,9 +422,9 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     @discardableResult public func addDocumentChangeListener(id: String, queue: DispatchQueue?,
-                                   listener: @escaping (DocumentChange) -> Void) -> ListenerToken {
-        let token = impl.addDocumentChangeListener(withID: id, queue: queue)
-        { [weak self] (change) in
+                                                             listener: @escaping (DocumentChange) -> Void) -> ListenerToken
+    {
+        let token = impl.addDocumentChangeListener(withID: id, queue: queue) { [weak self] change in
             guard let self = self else {
                 Log.log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
                 return
@@ -282,10 +438,10 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     
     /// Add a change listener to listen to change events occurring to any documents in the collection.
     /// To remove the listener, call remove() function on the returned listener token
-    ///.
+    /// .
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     @discardableResult public func addChangeListener(listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
-        return self.addChangeListener(queue: nil, listener: listener)
+        return addChangeListener(queue: nil, listener: listener)
     }
      
     /// Add a change listener to listen to change events occurring to any documents in the collection.
@@ -294,12 +450,57 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     ///
     /// If the collection is deleted or the database is closed, a warning message will be logged.
     @discardableResult public func addChangeListener(queue: DispatchQueue?,
-                                  listener: @escaping (CollectionChange) -> Void) -> ListenerToken {
-        let token = impl.addChangeListener(with: queue) { [unowned self] (change) in
+                                                     listener: @escaping (CollectionChange) -> Void) -> ListenerToken
+    {
+        let token = impl.addChangeListener(with: queue) { [unowned self] change in
             listener(CollectionChange(collection: self, documentIDs: change.documentIDs))
         }
         
         return ListenerToken(token)
+    }
+    
+    // MARK: Combine Publisher
+    
+    /// Returns a Combine publisher that emits `CollectionChange` events when documents
+    /// in the collection are changed.
+    ///
+    /// - Parameter queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<CollectionChange, Never>` that emits collection changes.
+    /// - Note: Only available on iOS 13.0 and later.
+    @available(iOS 13.0, *)
+    public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
+        let subject = PassthroughSubject<CollectionChange, Never>()
+        
+        let token = self.addChangeListener(queue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCancel: { token.remove() })
+            .eraseToAnyPublisher()
+    }
+    
+    /// Returns a Combine publisher that emits `DocumentChange` events when a specific document
+    /// changes.
+    ///
+    /// - Parameters:
+    ///   - id: The document ID to observe.
+    ///   - queue: The `DispatchQueue` for event delivery. Defaults to the main queue.
+    /// - Returns: A `PassthroughSubject<DocumentChange, Never>` that emits document changes.
+    /// - Note: Only available on iOS 13.0 and later.
+    @available(iOS 13.0, *)
+    public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
+        let subject = PassthroughSubject<DocumentChange, Never>()
+
+        let token = self.addDocumentChangeListener(id: id, queue: queue) { change in
+            subject.send(change)
+        }
+
+        return subject
+            .receive(on: queue)
+            .handleEvents(receiveCancel: { token.remove() })
+            .eraseToAnyPublisher()
     }
     
     // MARK: Indexable
@@ -365,4 +566,4 @@ public final class Collection : CollectionChangeObservable, Indexable, Equatable
     var isValid: Bool { impl.isValid }
     
     let impl: CBLCollection
-} 
+}

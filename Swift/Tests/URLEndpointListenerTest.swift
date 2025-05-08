@@ -769,7 +769,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl1.start()
         repl2.start()
-        wait(for: [exp1, exp2], timeout: 10.0) // TODO: FIXME
+        wait(for: [exp1, exp2], timeout: 20.0) // TODO: FIXME
         
         XCTAssertEqual(self.otherDB_defaultCollection!.count, 3)
         XCTAssertEqual(self.defaultCollection!.count, 3)

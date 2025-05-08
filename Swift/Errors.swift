@@ -24,6 +24,10 @@ import CouchbaseLiteSwift_Private
 public struct CBLError {
     public static let domain = CBLErrorDomain
     
+    internal static func create(_ code: Int, description: String) -> NSError {
+        NSError(domain: domain, code: code, userInfo: [NSLocalizedDescriptionKey : description])
+    }
+
     /// Internal assertion failure
     public static let assertionFailed       = 1
     
@@ -237,5 +241,10 @@ public struct CBLError {
     
     /// Invalid JSON string error
     public static let invalidJSON                 = 17001
+    
+    /// Error while decoding `Decodable` type
+    public static let decodingError               = 18001
+    /// Error while encoding `Encodable` type
+    public static let encodingError               = 18002
 }
 

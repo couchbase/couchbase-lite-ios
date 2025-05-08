@@ -31,14 +31,17 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLLog : NSObject
 
 /** Console logger writing log messages to the system console. */
-@property (readonly, nonatomic) CBLConsoleLogger* console;
+@property (readonly, nonatomic) CBLConsoleLogger* console
+__deprecated_msg("Use CBLLogSinks.console instead.");
 
 /** File logger writing log messages to files. */
-@property (readonly, nonatomic) CBLFileLogger* file;
+@property (readonly, nonatomic) CBLFileLogger* file
+__deprecated_msg("Use CBLLogSinks.file instead.");
 
 /** For setting a custom logger. Changing the log level of the assigned custom logger will require
  the custom logger to be reassigned so that the change can be affected. */
-@property (nonatomic, nullable) id<CBLLogger> custom;
+@property (nonatomic, nullable) id<CBLLogger> custom
+__deprecated_msg("Use CBLLogSinks.custom instead.");
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

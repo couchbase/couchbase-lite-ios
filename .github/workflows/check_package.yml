@@ -23,7 +23,7 @@ jobs:
         git clone https://github.com/couchbaselabs/couchbase-lite-ios-release-verify.git
     - name: Validate
       run: |
-        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -ce
+        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -vs 1.0.0 --ce
   
   build-5_8:
     name: Swift 5.8
@@ -43,4 +43,4 @@ jobs:
         git clone https://github.com/couchbaselabs/couchbase-lite-ios-release-verify.git
     - name: Validate
       run: |
-        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -ce
+        ./couchbase-lite-ios-release-verify/Scripts/verify_spm.sh -b ${{ github.head_ref }} -vs 1.0.0 --ce

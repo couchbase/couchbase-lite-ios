@@ -148,6 +148,27 @@ public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
         return value(at: index) as? DictionaryObject
     }
     
+    /// Get a query’s result as a decodable model object.
+    ///
+    /// The decodable model type is not necessary to be a DocumentDecodable and can
+    /// be implemented as a struct instead of class when being decoded from the query’s /// result.
+    ///
+    /// To decode the result as a document model (DocumentDecodable) object for modifying
+    /// and saving into the collection later, the query’s result needs to contain the
+    /// document ID field by including`meta().id` as <document-id-field-name> in the
+    /// select statement of the query such as `SELECT meta().id as id, name FROM
+    /// _default.users`. If the query’s result doesn’t exist, the model
+    /// object can still be decoded but cannot be used to save into the collection.
+    ///
+    /// @note When saving a document model decoded from the query’s result, the
+    /// MutableDocument associated with the model will be retrieved during the save time.
+    /// As a result, the document may not be the same document during the
+    /// query time if the document has been changed.
+    public func data<T: Decodable>(as type: T.Type, dataKey: String? = nil) throws -> T {
+        let decoder = QueryResultDecoder(queryResult: self, dataKey: dataKey)
+        return try T.init(from: decoder)
+    }
+    
     /// Gets all values as an Array. The value types of the values contained
     /// in the returned Array object are Array, Blob, Dictionary, Number types,
     /// NSNull, and String.

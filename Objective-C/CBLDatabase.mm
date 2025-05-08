@@ -30,8 +30,8 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Admin.h"
 #import "CBLLog+Internal.h"
+#import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+N1QL.h"
@@ -131,9 +131,8 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 /** Check and show warning if file logging is not configured. */
 + (void) checkFileLogging {
-    if (!CBLDatabase.log.file.config) {
-        CBLWarn(Database, @"Database.log.file.config is nil, meaning file logging is disabled. "
-                "Log files required for product support are not being generated.");
+    if (!CBLLogSinks.file) {
+        CBLWarn(Database, @"File logging is disabled. Log files required for product support are not being generated.");
     }
 }
 
@@ -356,6 +355,43 @@ static const C4DatabaseConfig2 kDBConfig = {
     CBLAssertNotNil(block);
     
     return [self inBatch: outError usingBlockWithError: ^(NSError **) { block(); }];
+}
+
+- (BOOL) maybeBatch: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block {
+    CBLAssertNotNil(block);
+    
+    CBL_LOCK(_mutex) {
+        [self mustBeOpen];
+        
+        C4Transaction transaction(_c4db);
+        if (outError)
+            *outError = nil;
+        
+        if (!transaction.begin())
+            return convertError(transaction.error(), outError);
+        
+        NSError* err = nil;
+        BOOL result = block(&err);
+        if (err) {
+            // if swift throws an error, `err` will be populated
+            transaction.abort();
+            return createError(CBLErrorUnexpectedError,
+                               [NSString stringWithFormat: @"%@", err.localizedDescription],
+                               outError);
+        }
+        if (!result) {
+            // If the closure returns false, abort transaction
+            transaction.abort();
+            return false;
+        }
+        
+        if (!transaction.commit())
+            return convertError(transaction.error(), outError);
+    }
+    
+    [self postDatabaseChanged];
+    
+    return YES;
 }
 
 #pragma mark - DATABASE MAINTENANCE

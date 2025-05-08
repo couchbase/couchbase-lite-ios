@@ -252,6 +252,29 @@ NSString* const kCBLDefaultCollectionName = @"_default";
     }
 }
 
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID revID: (NSString*)revID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    CBLAssertNotNil(revID);
+    
+    CBL_LOCK(_mutex) {
+        if (![self checkIsValid: error])
+            return nil;
+        
+        NSError* err = nil;
+        CBLDocument* doc = [[CBLDocument alloc] initWithCollection: self
+                                                        documentID: documentID
+                                                        revisionID: revID
+                                                             error: &err];
+        
+        if (!doc && err.code != CBLErrorNotFound) {
+            if (error)
+                *error = err;
+        }
+        
+        return doc;
+    }
+}
+
 #pragma mark - Subscript
 
 - (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
@@ -578,7 +601,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 }
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-// call on db-lock(c4doc_create/update)
+// call on db-lock(c4coll_create/update)
 - (BOOL) saveDocument: (CBLDocument*)document
                  into: (C4Document**)outDoc
      withBaseDocument: (nullable C4Document*)base
@@ -627,7 +650,9 @@ NSString* const kCBLDefaultCollectionName = @"_default";
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
     if (!document.collection) {
         document.collection = self;
-    } else if (document.collection != self) {
+    } else if (!(document.collection.name == self.name &&
+                 document.collection.scope.name == self.scope.name &&
+                 document.collection.database == self.database)) {
         return createError(CBLErrorInvalidParameter,
                            kCBLErrorMessageDocumentAnotherCollection, error);
     }

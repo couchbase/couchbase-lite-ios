@@ -390,8 +390,8 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
     if (outHasAttachment)
         *outHasAttachment = true;
     
-    if (encContext->document) {
-        CBLDatabase* database = encContext->document.collection.database;
+    if (encContext->database) {
+        CBLDatabase* database = encContext->database;
         [self checkBlobFromSameDatabase: database];
 
         CBL_LOCK(self) {
@@ -402,7 +402,9 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
                 NSError *error;
                 // Note: Installing blob in the database also updates the digest property.
                 if (![self installInDatabase: database error: &error]) {
-                    [encContext->document setEncodingError: error];
+                    if (encContext->encodingError) {
+                        *encContext->encodingError = error;
+                    }
                     return;
                 }
             }

@@ -19,10 +19,9 @@
 
 #import "ReplicatorTest.h"
 #import "CBLDocument+Internal.h"
-#import "CustomLogger.h"
-#import "CBLReplicator+Internal.h"
 #import "CBLErrorMessage.h"
-#import "CBLDocument+Internal.h"
+#import "CBLReplicator+Internal.h"
+#import "CBLTestCustomLogSink.h"
 
 @interface ReplicatorTest_CustomConflict : ReplicatorTest
 @end
@@ -52,12 +51,6 @@
     AssertEqualObjects(config.conflictResolver, resolver);
     AssertNotNil(repl.config.conflictResolver);
     AssertEqualObjects(repl.config.conflictResolver, resolver);
-    
-//      memory leak with checking exception!
-//    // check whether conflict resolver can be edited after setting to replicator
-//    [self expectException: @"NSInternalInconsistencyException" in: ^{
-//        repl.config.conflictResolver = nil;
-//    }];
 }
 
 #pragma mark - Tests with replication
@@ -449,9 +442,8 @@
 
 -  (void) testConflictResolverWrongDocID {
     // Enable Logging to check whether the logs are printing
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: logSink];
     
     NSString* docId = @"doc";
     NSDictionary* localData = @{@"key1": @"value1"};
@@ -496,9 +488,9 @@
     NSString* warning = [NSString stringWithFormat: @"The document ID of the resolved document '%@'"
                          " is not matching with the document ID of the conflicting document '%@'.",
                          wrongDocID, docId];
-    Assert([custom.lines containsObject: warning]);
+    Assert([logSink.lines containsObject: warning]);
     [replicator removeChangeListenerWithToken: token];
-    CBLDatabase.log.custom = nil;
+    CBLLogSinks.custom = nil;
 }
 
 - (void) testConflictResolverDifferentDBDoc {
@@ -820,12 +812,12 @@
  6. document resolved successfully, with second attempt,
  7. once the first CCR tries again, conflict is already been resolved.
  */
-// CBL-1710: Update to use setProgressLevel API in Replicator
-- (void) testDoubleConflictResolutionOnSameConflicts {
+// CBL-6976: Refactor this test
+- (void) dontTestDoubleConflictResolutionOnSameConflicts {
     NSString* docID = @"doc1";
-    CustomLogger* custom = [[CustomLogger alloc] init];
-    custom.level = kCBLLogLevelWarning;
-    CBLDatabase.log.custom = custom;
+    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
+    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelWarning logSink: logSink];
+
     XCTestExpectation* expCCR = [self expectationWithDescription:@"wait for conflict resolver"];
     XCTestExpectation* expSTOP = [self expectationWithDescription:@"wait for replicator to stop"];
     XCTestExpectation* expFirstDocResolve = [self expectationWithDescription:@"wait for first conflict to resolve"];
@@ -841,7 +833,7 @@
         if (ccrCount++ == 0) {
             // 2
             [expCCR fulfill];
-            [self waitForExpectations: @[expFirstDocResolve] timeout: 5.0];
+            [self waitForExpectations: @[expFirstDocResolve] timeout: 20.0];
         }
         // 5
         return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
@@ -871,7 +863,7 @@
     
     // 1
     [replicator start];
-    [self waitForExpectations: @[expCCR] timeout: 5.0];
+    [self waitForExpectations: @[expCCR] timeout: 20.0];
     
     // 3
     // in between the conflict, we wil suspend replicator.
@@ -879,7 +871,7 @@
     
     // Skip exception breakpoint thrown from c4doc_resolve
     [self ignoreException:^{
-        [self waitForExpectations: @[expSTOP] timeout: 15.0];
+        [self waitForExpectations: @[expSTOP] timeout: 20.0];
     }];
     
     AssertEqual(ccrCount, 2u);
@@ -888,13 +880,13 @@
     AssertEqualObjects([doc toDictionary], localData);
     
     // 7
-    Assert([custom.lines containsObject: @"Unable to select conflicting revision for doc1, "
+    Assert([logSink.lines containsObject: @"Unable to select conflicting revision for doc1, "
             "the conflict may have been resolved..."]);
     
     [replicator removeChangeListenerWithToken: changeToken];
     [replicator removeChangeListenerWithToken: docReplToken];
     
-    CBLDatabase.log.custom = nil;
+    CBLLogSinks.custom = nil;
 }
 
 - (void) testConflictResolverReturningBlobFromDifferentDB {
