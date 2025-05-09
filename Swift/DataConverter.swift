@@ -25,34 +25,16 @@ import CouchbaseLiteSwift_Private
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
         case let impl as CBLMutableDictionary:
-            if let dict = impl.swiftObject {
-                return dict
-            }
             return MutableDictionaryObject(impl)
         case let impl as CBLMutableArray:
-            if let array = impl.swiftObject {
-                return array
-            }
             return MutableArrayObject(impl)
         case let impl as CBLDictionary:
-            if let dict = impl.swiftObject {
-                return dict
-            }
             return DictionaryObject(impl)
         case let impl as CBLNewDictionary:
-            if let dict = impl.swiftObject {
-                return dict
-            }
             return DictionaryObject(impl)
         case let impl as CBLArray:
-            if let array = impl.swiftObject {
-                return array
-            }
             return ArrayObject(impl)
         case let impl as CBLBlob:
-            if let blob = impl.swiftObject {
-                return blob
-            }
             return Blob(impl)
         default:
             return value

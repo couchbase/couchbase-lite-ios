@@ -136,11 +136,6 @@ public final class Blob: Equatable, Hashable {
     
     init(_ impl: CBLBlob) {
         self.impl = impl
-        impl.swiftObject = self
-    }
-    
-    deinit {
-        impl.swiftObject = nil
     }
     
     let impl: CBLBlob
