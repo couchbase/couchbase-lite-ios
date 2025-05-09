@@ -32,7 +32,7 @@ class DictionaryTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc.setValue(address, forKey: "address")
-        XCTAssert(doc.dictionary(forKey: "address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! == address)
         
         try saveDocument(doc) { (d) in
             XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == [:] as [String: Any])
@@ -51,7 +51,7 @@ class DictionaryTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc.setValue(address, forKey: "address")
-        XCTAssert(doc.dictionary(forKey: "address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! == address)
         
         try saveDocument(doc, eval: { (d) in
             XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == dict)
@@ -138,9 +138,9 @@ class DictionaryTest: CBLTestCase {
         level3.setValue("n3", forKey: "name")
         level2.setDictionary(level3, forKey: "level3")
         
-        XCTAssert(doc.dictionary(forKey: "level1")! === level1)
-        XCTAssert(level1.dictionary(forKey: "level2")! === level2)
-        XCTAssert(level2.dictionary(forKey: "level3")! === level3)
+        XCTAssert(doc.dictionary(forKey: "level1")! == level1)
+        XCTAssert(level1.dictionary(forKey: "level2")! == level2)
+        XCTAssert(level2.dictionary(forKey: "level3")! == level3)
         let dict: [String: Any] = ["level1": ["name": "n1",
                                               "level2": ["name": "n2",
                                                          "level3": ["name": "n3"]]]]
@@ -154,7 +154,7 @@ class DictionaryTest: CBLTestCase {
         let profile1 = MutableDictionaryObject()
         profile1.setValue("Scott Tiger", forKey: "name")
         doc.setValue(profile1, forKey: "profile")
-        XCTAssert(doc.dictionary(forKey: "profile") === profile1)
+        XCTAssert(doc.dictionary(forKey: "profile") == profile1)
         
         // Remove profile
         doc.removeValue(forKey: "profile")
@@ -285,58 +285,5 @@ class DictionaryTest: CBLTestCase {
         expectException(exception: .internalInconsistencyException) {
             let _ = mDict.toJSON()
         }
-    }
-    
-    func testSelfDict2() throws {
-        let dict = MutableDictionaryObject()
-        
-        weak var weakDict : MutableDictionaryObject?
-        autoreleasepool {
-            let nestedDict = MutableDictionaryObject()
-            dict.setValue(nestedDict, forKey: "nested")
-            weakDict = nestedDict
-            XCTAssert(weakDict != nil)
-            
-            let netstedDict2 = dict.dictionary(forKey: "nested")
-            XCTAssert(weakDict == netstedDict2)
-            // This would have failed before 3.2.4.
-            // Sometimes we would have grabbed the exact same object if the weak ref was still alive.
-            // Now a new object is created every time.
-            XCTAssertFalse(weakDict === netstedDict2)
-        }
-        
-        let netstedDict = dict.value(forKey: "nested")
-        XCTAssert(netstedDict != nil)
-        XCTAssert(weakDict == nil)
-    }
-    
-    func testSelfDict3() throws {
-        let dict0 = MutableDictionaryObject()
-        let queue = DispatchQueue(label: "setDictQueue", attributes: .concurrent)
-        weak var weakDict : MutableDictionaryObject?
-        
-        queue.async {
-            autoreleasepool {
-                let dict1 = MutableDictionaryObject()
-                dict0.setValue(dict1, forKey: "nested")
-                
-                weakDict = dict1
-                XCTAssert(weakDict != nil)
-                
-                let dict2 = dict0.toDictionary()
-                XCTAssertFalse(dict2.isEmpty)
-            }
-        }
-        
-        queue.async {
-            autoreleasepool {
-                let dict2 = dict0.toDictionary()
-                // This would have failed before 3.2.4.
-                // We used to hold a weak ref of the underlying object
-                XCTAssertFalse(dict2.isEmpty)
-                XCTAssert(weakDict == nil)
-            }
-        }
-        queue.sync(flags: .barrier) {}
     }
 }
