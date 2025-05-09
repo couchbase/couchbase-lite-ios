@@ -286,4 +286,57 @@ class DictionaryTest: CBLTestCase {
             let _ = mDict.toJSON()
         }
     }
+    
+    func testSelfDict2() throws {
+        let dict = MutableDictionaryObject()
+        
+        weak var weakDict : MutableDictionaryObject?
+        autoreleasepool {
+            let nestedDict = MutableDictionaryObject()
+            dict.setValue(nestedDict, forKey: "nested")
+            weakDict = nestedDict
+            XCTAssert(weakDict != nil)
+            
+            let netstedDict2 = dict.dictionary(forKey: "nested")
+            XCTAssert(weakDict == netstedDict2)
+            // This would have failed before 3.2.4.
+            // Sometimes we would have grabbed the exact same object if the weak ref was still alive.
+            // Now a new object is created every time.
+            XCTAssertFalse(weakDict === netstedDict2)
+        }
+        
+        let netstedDict = dict.value(forKey: "nested")
+        XCTAssert(netstedDict != nil)
+        XCTAssert(weakDict == nil)
+    }
+    
+    func testSelfDict3() throws {
+        let dict0 = MutableDictionaryObject()
+        let queue = DispatchQueue(label: "setDictQueue", attributes: .concurrent)
+        weak var weakDict : MutableDictionaryObject?
+        
+        queue.async {
+            autoreleasepool {
+                let dict1 = MutableDictionaryObject()
+                dict0.setValue(dict1, forKey: "nested")
+                
+                weakDict = dict1
+                XCTAssert(weakDict != nil)
+                
+                let dict2 = dict0.toDictionary()
+                XCTAssertFalse(dict2.isEmpty)
+            }
+        }
+        
+        queue.async {
+            autoreleasepool {
+                let dict2 = dict0.toDictionary()
+                // This would have failed before 3.2.4.
+                // We used to hold a weak ref of the underlying object
+                XCTAssertFalse(dict2.isEmpty)
+                XCTAssert(weakDict == nil)
+            }
+        }
+        queue.sync(flags: .barrier) {}
+    }
 }
