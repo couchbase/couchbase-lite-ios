@@ -1092,19 +1092,14 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
-        // Both shipping address and billing address are still the same instance:
-        let shipping = doc.dictionary(forKey: "shipping")!
-        let billing = doc.dictionary(forKey: "billing")!
-        XCTAssert(shipping == address)
-        XCTAssert(billing == address)
-        
         // After save: both shipping and billing address are now independent to each other
         let savedDoc = try defaultCollection!.document(id: doc.id)!
         let savedShipping = savedDoc.dictionary(forKey: "shipping")!
         let savedBilling = savedDoc.dictionary(forKey: "billing")!
-        XCTAssert(savedShipping != address)
-        XCTAssert(savedBilling != address)
-        XCTAssert(savedShipping != savedBilling)
+        XCTAssertNotIdentical(savedShipping, address)
+        XCTAssertEqual(savedShipping, address)
+        XCTAssertNotIdentical(savedBilling, address)
+        XCTAssertEqual(savedBilling, address)
     }
     
     func testSetArrayToMultipleKeys() throws {
