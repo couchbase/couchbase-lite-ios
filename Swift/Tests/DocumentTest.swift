@@ -823,14 +823,20 @@ class DocumentTest: CBLTestCase {
         let blobs = members.array(at: 3)!
         XCTAssertEqual(blobs.count, 1)
         XCTAssertEqual(blobs.blob(at: 0), blob)
-        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
         
         // Update with a new array:
         let nuArray = ["d", "e", "f"]
         doc.setValue(nuArray, forKey: "members")
         
-        // Check whether the old members array is still accessible:
-        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
+        // Check whether the old members array is still accessible. Needs unnest because [Any] comparison differs between Swift versions:
+        let arr = members.toArray()
+        XCTAssertEqual(arr.count, 4)
+        XCTAssertEqual(arr[0] as! String, "a")
+        XCTAssertEqual(arr[1] as! String, "b")
+        XCTAssertEqual(arr[2] as! String, "c")
+        let blobArr = arr[3] as! [Blob]
+        XCTAssertEqual(blobArr.count, 1)
+        XCTAssertEqual(blobArr[0], blob)
         
         // The old members array should be detached:
         let nuMembers = doc.array(forKey: "members")!
