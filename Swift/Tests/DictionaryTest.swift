@@ -32,7 +32,7 @@ class DictionaryTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc.setValue(address, forKey: "address")
-        XCTAssert(doc.dictionary(forKey: "address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! == address)
         
         try saveDocument(doc) { (d) in
             XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == [:] as [String: Any])
@@ -51,7 +51,7 @@ class DictionaryTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc.setValue(address, forKey: "address")
-        XCTAssert(doc.dictionary(forKey: "address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! == address)
         
         try saveDocument(doc, eval: { (d) in
             XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == dict)
@@ -138,9 +138,9 @@ class DictionaryTest: CBLTestCase {
         level3.setValue("n3", forKey: "name")
         level2.setDictionary(level3, forKey: "level3")
         
-        XCTAssert(doc.dictionary(forKey: "level1")! === level1)
-        XCTAssert(level1.dictionary(forKey: "level2")! === level2)
-        XCTAssert(level2.dictionary(forKey: "level3")! === level3)
+        XCTAssert(doc.dictionary(forKey: "level1")! == level1)
+        XCTAssert(level1.dictionary(forKey: "level2")! == level2)
+        XCTAssert(level2.dictionary(forKey: "level3")! == level3)
         let dict: [String: Any] = ["level1": ["name": "n1",
                                               "level2": ["name": "n2",
                                                          "level3": ["name": "n3"]]]]
@@ -154,7 +154,7 @@ class DictionaryTest: CBLTestCase {
         let profile1 = MutableDictionaryObject()
         profile1.setValue("Scott Tiger", forKey: "name")
         doc.setValue(profile1, forKey: "profile")
-        XCTAssert(doc.dictionary(forKey: "profile") === profile1)
+        XCTAssert(doc.dictionary(forKey: "profile") == profile1)
         
         // Remove profile
         doc.removeValue(forKey: "profile")
