@@ -773,7 +773,6 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(address.string(forKey: "state"), "CA")
         let attachments = address.dictionary(forKey: "attachments")!
         XCTAssertEqual(attachments.blob(forKey: "attach1"), blob)
-        XCTAssertTrue(address.toDictionary() == dict)
         
         // Update with a new dictionary:
         let nuDict = ["street": "1 Second street",
@@ -781,11 +780,13 @@ class DocumentTest: CBLTestCase {
                       "state": "CA"]
         doc.setValue(nuDict, forKey: "address")
         
-        // Check whether the old address dictionary is still accessible:
-        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
-        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
-        XCTAssertEqual(address.string(forKey: "state"), "CA")
-        XCTAssertTrue(address.toDictionary() == dict)
+        // Check whether the old members array is still accessible. Needs unnest because [Any] comparison differs between Swift versions:
+        let oldDict = address.toDictionary()
+        XCTAssertEqual(oldDict["street"] as! String, "1 Main street")
+        XCTAssertEqual(oldDict["city"] as! String, "Mountain View")
+        XCTAssertEqual(oldDict["state"] as! String, "CA")
+        let blobDict = oldDict["attachments"] as! [String: Any]
+        XCTAssertEqual(blobDict["attach1"] as! Blob, blob)
         
         // The old address dictionary should be detached:
         let nuAddress = doc.dictionary(forKey: "address")!
