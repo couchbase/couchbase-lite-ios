@@ -21,23 +21,32 @@
 #import <Security/SecTrust.h>
 #import "CBLReplicatorConfiguration.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface CBLTrustCheck : NSObject
 
-+ (void) setAnchorCerts: (NSArray*)certs
-              onlyThese: (BOOL)onlyThese;
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
 
 - (instancetype) initWithChallenge: (NSURLAuthenticationChallenge*)challenge;
 
-- (instancetype) initWithTrust: (SecTrustRef)trust
-                          host: (NSString*)host
-                          port: (uint16_t)port;
+- (instancetype) initWithTrust: (SecTrustRef)trust;
 
-@property (copy, atomic) NSData* pinnedCertData;
+- (instancetype) initWithTrust: (SecTrustRef)trust host: (nullable NSString*)host port: (uint16_t)port;
 
-- (NSURLCredential*) checkTrust: (NSError**)outError;
+@property (nonatomic, nullable) NSData* pinnedCertData;
 
 #ifdef COUCHBASE_ENTERPRISE
-- (NSURLCredential*) acceptOnlySelfSignedCert: (NSError**)outError;
+
+@property (nonatomic) BOOL acceptOnlySelfSignedCert;
+
+@property (nonatomic) NSArray* rootCerts;
+
 #endif
 
+- (nullable NSURLCredential*) checkTrust: (NSError**)outError;
+
+- (void) forceTrusted;
+
 @end
+
+NS_ASSUME_NONNULL_END

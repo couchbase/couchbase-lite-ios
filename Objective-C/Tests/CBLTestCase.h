@@ -94,6 +94,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) BOOL keyChainAccessAllowed;
 
+@property (nonatomic) BOOL disableObjectLeakCheck;
+
 /** Returns the database path for a given db file and its directory */
 - (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir;
 

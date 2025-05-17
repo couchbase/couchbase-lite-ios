@@ -37,6 +37,10 @@ extern "C" {
 
 @synthesize pinnedCertData=_pinnedCertData;
 
+#ifdef COUCHBASE_ENTERPRISE
+@synthesize acceptOnlySelfSignedCert=_acceptOnlySelfSignedCert, rootCerts=_rootCerts;
+#endif
+
 static NSArray* sAnchorCerts;
 static BOOL sOnlyTrustAnchorCerts;
 
@@ -47,9 +51,8 @@ static BOOL sOnlyTrustAnchorCerts;
     }
 }
 
-- (instancetype) initWithTrust: (SecTrustRef)trust host: (NSString*)host port: (uint16_t)port {
+- (instancetype) initWithTrust: (SecTrustRef)trust host: (nullable NSString*)host port: (uint16_t)port {
     NSParameterAssert(trust);
-    NSParameterAssert(host);
     self = [super init];
     if (self) {
         _trust = (SecTrustRef)CFRetain(trust);
@@ -59,11 +62,13 @@ static BOOL sOnlyTrustAnchorCerts;
     return self;
 }
 
+- (instancetype) initWithTrust: (SecTrustRef)trust {
+    return [self initWithTrust: trust host: nil port: 0];
+}
+
 - (instancetype) initWithChallenge: (NSURLAuthenticationChallenge*)challenge {
     NSURLProtectionSpace* space = challenge.protectionSpace;
-    return [self initWithTrust: space.serverTrust
-                          host: space.host
-                          port: (uint16_t)space.port];
+    return [self initWithTrust: space.serverTrust host: space.host port: (uint16_t)space.port];
 }
 
 - (void) dealloc {
@@ -71,10 +76,12 @@ static BOOL sOnlyTrustAnchorCerts;
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@:%d]", self.class, _host, _port];
+    NSString* port = _port > 0 ? [NSString stringWithFormat: @"%d", _port] : @"";
+    return [NSString stringWithFormat: @"%@[%@:%@]", self.class, (_host ?: @""), port];
 }
 
-// Checks whether the reported problems with a SecTrust are OK for us
+// Checks whether the reported problems with a SecTrust are OK.
+// Currently do not accept any problems.
 - (BOOL) shouldAcceptProblems: (NSError**)outError {
     NSDictionary* resultDict = CFBridgingRelease(SecTrustCopyResult(_trust));
     NSArray* detailsArray = resultDict[@"TrustResultDetails"];
@@ -83,19 +90,20 @@ static BOOL sOnlyTrustAnchorCerts;
         for (NSString* problem in details) {
             // Check each problem with this cert and decide if it's acceptable:
             if ([problem isEqualToString: @"SSLHostname"]
-                    || [problem isEqualToString: @"AnchorTrusted"]
-#if !TARGET_OS_IPHONE
-                    || ([problem isEqualToString: @"StatusCodes"]   // used in older macOS
-                         && [details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
-#endif
+        #if !TARGET_OS_IPHONE
+                || ([problem isEqualToString: @"StatusCodes"] &&
+                    [details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
+        #endif
             ) {
+                MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                                  @"Server TLS certificate has a hostname mismatch.");
+            } else if ([problem isEqualToString: @"AnchorTrusted"]) {
                 MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                              @"Server has self-signed or unknown root SSL certificate!!");
-                return NO;
+                              @"Server TLS certificate has an unknown root or is self-signed.");
             } else {
                 // Any other problem:
                 MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-                              @"Server SSL certificate is untrustworthy");
+                              @"Server TLS certificate is untrusted (problem = %@)", problem);
                 return NO;
             }
         }
@@ -104,24 +112,22 @@ static BOOL sOnlyTrustAnchorCerts;
 }
 
 // Updates a SecTrust's result to kSecTrustResultProceed
-- (BOOL) forceTrusted {
+- (void) forceTrusted {
     CFDataRef exception = SecTrustCopyExceptions(_trust);
-    if (!exception)
-        return NO;
+    if (!exception) {
+        return; // Already trust
+    }
     SecTrustSetExceptions(_trust, exception);
     CFRelease(exception);
-
-   
+    
     CFErrorRef error;
     BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
-    if (!trusted)
+    if (!trusted) {
         CBLWarnError(Sync, @"Failed to force trust");
-    
-    return trusted;
+    }
 }
 
-
-- (NSURLCredential*) checkTrust: (NSError**)outError {
+- (nullable NSURLCredential*) checkTrust: (NSError**)outError {
     // Register any global anchor certificates:
     @synchronized(self) {
         if (sAnchorCerts.count > 0) {
@@ -130,34 +136,43 @@ static BOOL sOnlyTrustAnchorCerts;
         }
     }
     
+#ifdef COUCHBASE_ENTERPRISE
+    if (_rootCerts.count > 0) {
+        SecTrustSetAnchorCertificates(_trust, (__bridge CFArrayRef)_rootCerts);
+        SecTrustSetAnchorCertificatesOnly(_trust, true);
+    }
+#endif
+    
     // Credential:
     NSURLCredential* credential = [NSURLCredential credentialForTrust: _trust];
     
     // Evaluate trust:
     SecTrustResultType result;
-    OSStatus err;
-
-    CFErrorRef error;
-    BOOL trusted = SecTrustEvaluateWithError(_trust, &error);
+    OSStatus osStatus;
+    CFErrorRef cferr;
+    BOOL trusted = SecTrustEvaluateWithError(_trust, &cferr);
     if (!trusted) {
-        NSError* cferr = (__bridge NSError*)error;
-        CBLLogVerbose(Sync, @"SecTrustEvaluateWithError failed(%ld). %@. Evaluating trust result...", (long)cferr.code, (cferr).localizedDescription);
+        NSError* error = (__bridge NSError*)cferr;
+        CBLLogVerbose(Sync, @"%@: Trust evaluation returned (continuing checks) (%ld) : %@",
+                      self, (long)error.code, error.localizedDescription);
     }
-    err = SecTrustGetTrustResult(_trust, &result);
     
-    if (err) {
-        CBLWarn(Default, @"%@: SecTrustEvaluate failed with err %d", self, (int)err);
-        MYReturnError(outError, err, NSOSStatusErrorDomain, @"Error evaluating certificate");
+    osStatus = SecTrustGetTrustResult(_trust, &result);
+    if (osStatus) {
+        CBLWarn(Default, @"%@: Failed to get trust result (%d)", self, (int)osStatus);
+        MYReturnError(outError, osStatus, NSOSStatusErrorDomain, @"Failed to get trust result.");
         return nil;
     }
-    if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified
-                                         && result != kSecTrustResultRecoverableTrustFailure) {
+    
+    if (result != kSecTrustResultProceed &&
+        result != kSecTrustResultUnspecified &&
+        result != kSecTrustResultRecoverableTrustFailure) {
         MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-                      @"Server SSL certificate is untrustworthy");
+                      @"Server TLS certificate is untrusted.");
         return nil;
     }
-
-    // If using cert-pinning, accept cert iff it matches the pin:
+    
+    // If using pinned cert, accept cert if it matches the pinned cert:
     if (_pinnedCertData) {
         CFIndex count = SecTrustGetCertificateCount(_trust);
 #if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
@@ -187,16 +202,34 @@ static BOOL sOnlyTrustAnchorCerts;
                 }
             }
         }
-
         MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                      @"Server SSL Certificates does not match pinned cert");
+                      @"Server TLS Certificate does not match the pinned cert.");
         return nil;
     }
-
+#ifdef COUCHBASE_ENTERPRISE
+    else if (_acceptOnlySelfSignedCert) {
+        NSError* err;
+        BOOL isSelfSigned = [self isSelfSignedCert: &err];
+        if (err) {
+            MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                          @"Invalid server TLS certificate.");
+            return nil;
+        }
+        
+        if (!isSelfSigned) {
+            MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                @"Server TLS certificate is not self-signed as required.");
+            return nil;
+        }
+        [self forceTrusted];
+        return credential;
+    }
+#endif
+    
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
-        return credential;          // explicitly trusted
+        return credential;          // Explicitly trusted
     } else if ([self shouldAcceptProblems: outError]) {
-        [self forceTrusted];        // self-signed or host mismatch but we'll accept it anyway
+        [self forceTrusted];        // Allow hostname mismatched when verifying with root certs
         return credential;
     } else {
         return nil;
@@ -233,29 +266,6 @@ static BOOL sOnlyTrustAnchorCerts;
     BOOL isSelfSigned = c4cert_isSelfSigned(c4cert);
     c4cert_release(c4cert);
     return isSelfSigned;
-}
-
-- (NSURLCredential*) acceptOnlySelfSignedCert: (NSError**)outError {
-    // Credential:
-    NSURLCredential* credential = [NSURLCredential credentialForTrust: _trust];
-    
-    // Check if the certificate is a self-signed cert:
-    NSError* error;
-    BOOL isSelfSigned = [self isSelfSignedCert: &error];
-    if (error) {
-        MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-                      @"Server SSL certificate is invalid");
-        return nil;
-    }
-    
-    if (!isSelfSigned) {
-        MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-            @"Server SSL certificate is not self-signed");
-        return nil;
-    }
-    
-    [self forceTrusted];
-    return credential;
 }
 
 #endif

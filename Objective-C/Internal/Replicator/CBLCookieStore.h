@@ -1,8 +1,8 @@
 //
-//  CBL_EE_ObjC_Tests_iOS_App.xcconfig
+//  CBLCookieStore.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,8 +17,19 @@
 //  limitations under the License.
 //
 
-#include "CBL_EE_Common.xcconfig"
-#include "CBL_ObjC_Tests_iOS_App.xcconfig"
+#import <Foundation/Foundation.h>
 
-PRODUCT_BUNDLE_IDENTIFIER                  = com.couchbase.cbl-ee-ios-tests-app
-PRODUCT_NAME                               = CBL-EE_Tests
+NS_ASSUME_NONNULL_BEGIN
+
+@protocol CBLCookieStore <NSObject>
+
+- (nullable NSString*) getCookies: (NSURL*)url error: (NSError**)error;
+
+- (BOOL) saveCookie: (NSString*)cookie
+                url: (NSURL*)url
+ acceptParentDomain: (BOOL)acceptParentDomain
+              error: (NSError**)error;
+
+@end
+
+NS_ASSUME_NONNULL_END
