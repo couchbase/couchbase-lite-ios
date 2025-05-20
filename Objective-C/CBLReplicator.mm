@@ -407,23 +407,19 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 
 #pragma mark - CBLWebSocketContext
 
-- (NSArray*) rootCertsForWebSocket:(CBLWebSocket *)websocket {
-    return nil;
-}
-
-- (nullable id<CBLCookieStore>) cookieStoreForWebsocket: (CBLWebSocket *)websocket {
+- (nullable id<CBLCookieStore>) cookieStoreForWebsocket: (CBLWebSocket*)websocket {
     return _config.database;
 }
 
-- (nullable NSURL*) cookieURLForWebSocket: (CBLWebSocket *)websocket {
+- (nullable NSURL*) cookieURLForWebSocket: (CBLWebSocket*)websocket {
     return $castIf(CBLURLEndpoint, _config.target).url;
 }
 
-- (nullable NSString*) networkInterfaceForWebsocket: (CBLWebSocket *)websocket {
+- (nullable NSString*) networkInterfaceForWebsocket: (CBLWebSocket*)websocket {
     return _config.networkInterface;
 }
 
-- (void)webSocket:(CBLWebSocket *)websocket didReceiveServerCert: (SecCertificateRef)cert {
+- (void)webSocket: (CBLWebSocket*)websocket didReceiveServerCert: (SecCertificateRef)cert {
     CBL_LOCK(self) {
         self.serverCertificate = cert;
     }

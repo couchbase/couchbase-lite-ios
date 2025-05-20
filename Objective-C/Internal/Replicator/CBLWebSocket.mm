@@ -691,7 +691,6 @@ static inline NSError* posixError(int errNo, NSString* msg) {
         NSError* error = nil;
         NSString* cookie = [_cookieStore getCookies: _cookieURL error: &error];
         if (error) {
-            // in case database is not open: CBL-2657
             CBLWarn(Sync, @"%@: Error while fetching cookies: %@", self, error);
             [self closeWithError: error];
             return;
