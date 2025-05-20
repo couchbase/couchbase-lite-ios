@@ -31,6 +31,16 @@
     [super tearDown];
 }
 
+- (BOOL) isExecutionAllowed {
+#if TARGET_OS_SIMULATOR
+    // Cannot be tested on the simulator as local network access permission is required.
+    // See FAQ-12 : https://developer.apple.com/forums/thread/663858)
+    return NO;
+#else
+    return self.keyChainAccessAllowed;
+#endif
+}
+
 - (NSString*) identityNameForNumber: (NSUInteger)num {
     return [NSString stringWithFormat: @"%@-%lu", kTestIdentityCommonName, (unsigned long)num];
 }
@@ -90,7 +100,7 @@
 }
 
 - (void) testSanityStartStop {
-    XCTSkipUnless(self.keyChainAccessAllowed, @"Keychain access is required.");
+    XCTSkipUnless(self.isExecutionAllowed);
     
     CBLMultipeerReplicator* repl = [self replicatorForDatabase: self.db];
     
@@ -112,8 +122,12 @@
     [self waitForExpectations: @[xUnactive] timeout: 10.0];
 }
 
-- (void) testSanityReplication {
-    XCTSkipUnless(self.keyChainAccessAllowed, @"Keychain access is required.");
+// Disable until the fix is merged and published:
+// https://github.com/couchbase/couchbase-lite-core/tree/fix/notify-all-peers
+- (void) _testSanityReplication {
+    XCTSkipUnless(self.isExecutionAllowed);
+    
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
     
     // Peer#1
     CBLMultipeerReplicator* repl1 = [self replicatorForDatabase: self.db];
@@ -193,7 +207,9 @@
     
     [repl2 start];
     
-    [self waitForExpectations: @[xActive2, xOnline1, xOnline2] timeout: 10.0];
+    [self waitForExpectations: @[xActive2] timeout: 10.0];
+    
+    [self waitForExpectations: @[xOnline1, xOnline2] timeout: 60.0];
     
     [self waitForExpectations: @[xIdle1, xIdle2] timeout: 10.0];
     
