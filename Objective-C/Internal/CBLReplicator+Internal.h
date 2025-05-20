@@ -48,11 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-
-@interface CBLReplicatorStatus ()
-- (instancetype) initWithStatus: (C4ReplicatorStatus)c4Status;
-@end
-
 @interface CBLReplicator () <CBLStoppable> {
     // For CBLReplicator+Backgrounding:
     BOOL _deepBackground;

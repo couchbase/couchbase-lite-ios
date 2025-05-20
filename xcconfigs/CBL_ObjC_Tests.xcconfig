@@ -17,7 +17,10 @@
 //  limitations under the License.
 //
 
-HEADER_SEARCH_PATHS       = $(SRCROOT)/vendor/couchbase-lite-core/C/include $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC
+#include "CBL_OS_Target_Versions.xcconfig"
+
+HEADER_SEARCH_PATHS       = $(SRCROOT)/vendor/couchbase-lite-core/C/include $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API
+
 INFOPLIST_FILE            = Objective-C/Tests/Info.plist
 LD_RUNPATH_SEARCH_PATHS   = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
 PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteTests

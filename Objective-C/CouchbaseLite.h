@@ -97,6 +97,8 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLReplicator.h>
 #import <CouchbaseLite/CBLReplicatorChange.h>
 #import <CouchbaseLite/CBLReplicatorConfiguration.h>
+#import <CouchbaseLite/CBLReplicatorStatus.h>
+#import <CouchbaseLite/CBLReplicatorTypes.h>
 #import <CouchbaseLite/CBLScope.h>
 #import <CouchbaseLite/CBLSessionAuthenticator.h>
 #import <CouchbaseLite/CBLURLEndpoint.h>
@@ -128,6 +130,13 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLMessageEndpointConnection.h>
 #import <CouchbaseLite/CBLMessageEndpointListener.h>
 #import <CouchbaseLite/CBLMessagingError.h>
+#import <CouchbaseLite/CBLMultipeerCertificateAuthenticator.h>
+#import <CouchbaseLite/CBLMultipeerCollectionConfiguration.h>
+#import <CouchbaseLite/CBLMultipeerEventTypes.h>
+#import <CouchbaseLite/CBLMultipeerReplicator.h>
+#import <CouchbaseLite/CBLMultipeerReplicatorConfiguration.h>
+#import <CouchbaseLite/CBLPeerID.h>
+#import <CouchbaseLite/CBLPeerInfo.h>
 #import <CouchbaseLite/CBLPrediction.h>
 #import <CouchbaseLite/CBLPredictiveIndex.h>
 #import <CouchbaseLite/CBLProtocolType.h>
@@ -140,5 +149,4 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLVectorEncoding.h>
 #import <CouchbaseLite/CBLVectorIndexConfiguration.h>
 #import <CouchbaseLite/CBLVectorIndexTypes.h>
-
 #endif

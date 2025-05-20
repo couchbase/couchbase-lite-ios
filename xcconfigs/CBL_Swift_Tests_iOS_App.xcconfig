@@ -17,10 +17,12 @@
 //  limitations under the License.
 //
 
+#include "CBL_OS_Target_Versions.xcconfig"
+
 ASSETCATALOG_COMPILER_APPICON_NAME      = AppIcon
 CODE_SIGN_IDENTITY                      = iPhone Developer
 INFOPLIST_FILE                          = $(SRCROOT)/Swift/Tests/iOS/Info.plist
 LD_RUNPATH_SEARCH_PATHS                 = $(inherited) @executable_path/Frameworks
 PRODUCT_BUNDLE_IDENTIFIER               = com.couchbase.cbl-swift-ios-tests-app
-PRODUCT_NAME                            = CBL Swift Tests
+PRODUCT_NAME                            = CBL_Swift_Tests
 SDKROOT                                 = iphoneos

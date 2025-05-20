@@ -18,9 +18,23 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLCookieStore.h"
+
+@class CBLWebSocket;
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol CBLWebSocketContext <NSObject>
+
+- (nullable NSURL*) cookieURLForWebSocket: (CBLWebSocket*)websocket;
+
+- (nullable id <CBLCookieStore>) cookieStoreForWebsocket: (CBLWebSocket*)websocket;
+
+- (nullable NSString*) networkInterfaceForWebsocket: (CBLWebSocket*)websocket;
+
+- (void) webSocket: (CBLWebSocket*)websocket didReceiveServerCert: (SecCertificateRef)cert;
+
+@end
 
 @interface CBLWebSocket : NSObject <NSURLSessionStreamDelegate>
 
@@ -28,13 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString*) webSocketAcceptHeaderForKey: (NSString*)key;
 
-// for testing purpose only:
+// For testing purpose only
 + (NSArray*) parseCookies: (NSString*) cookie;
 
-// for testing purpose, we exposing this function;
+// For testing purpose, we exposing this function
 + (nullable NSString*) getNetworkInterfaceName: (NSString*)name error: (NSError**)outError;
 
 @end
-
 
 NS_ASSUME_NONNULL_END

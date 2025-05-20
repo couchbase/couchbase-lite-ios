@@ -25,6 +25,7 @@
 #import "CBLDocumentReplication+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+#import "CBLReplicatorStatus+Internal.h"
 #import "CBLScope.h"
 #import "CBLURLEndpoint.h"
 #import "fleece/Expert.hh"              // for AllocedDict
@@ -72,7 +73,7 @@ typedef enum {
     kCBLStateStarting           ///< The replicator was asked to start but in progress.
 } CBLReplicatorState;
 
-@interface CBLReplicator () <CBLLockable, CBLRemovableListenerToken>
+@interface CBLReplicator () <CBLLockable, CBLRemovableListenerToken, CBLWebSocketContext>
 @property (readwrite, atomic) CBLReplicatorStatus* status;
 @end
 
@@ -402,6 +403,26 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     [self endCurrentBackgroundTask];
 #endif
     CBLLogInfo(Sync, @"%@ Replicator is now idled.", self);
+}
+
+#pragma mark - CBLWebSocketContext
+
+- (nullable id<CBLCookieStore>) cookieStoreForWebsocket: (CBLWebSocket*)websocket {
+    return _config.database;
+}
+
+- (nullable NSURL*) cookieURLForWebSocket: (CBLWebSocket*)websocket {
+    return $castIf(CBLURLEndpoint, _config.target).url;
+}
+
+- (nullable NSString*) networkInterfaceForWebsocket: (CBLWebSocket*)websocket {
+    return _config.networkInterface;
+}
+
+- (void)webSocket: (CBLWebSocket*)websocket didReceiveServerCert: (SecCertificateRef)cert {
+    CBL_LOCK(self) {
+        self.serverCertificate = cert;
+    }
 }
 
 #pragma mark - Server Certificate
@@ -936,30 +957,6 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
         c4repl_setSuspended(_repl, suspended);
         [self setConflictResolutionSuspended: suspended];
     }
-}
-
-@end
-
-#pragma mark - CBLReplicatorStatus:
-
-@implementation CBLReplicatorStatus
-
-@synthesize activity=_activity, progress=_progress, error=_error;
-
-- (instancetype) initWithStatus: (C4ReplicatorStatus)c4Status {
-    self = [super init];
-    if (self) {
-        // Note: c4Status.level is current matched with CBLReplicatorActivityLevel:
-        _activity = (CBLReplicatorActivityLevel)c4Status.level;
-        _progress = { c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal };
-        if (c4Status.error.code) {
-            NSError* error;
-            convertError(c4Status.error, &error);
-            _error = error;
-            
-        }
-    }
-    return self;
 }
 
 @end

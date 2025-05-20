@@ -38,7 +38,10 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_MyService._tcp</string>
+        <string>_couchbaseP2P._tcp</string>
 	</array>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>This app uses the local network to discover nearby devices.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
