@@ -235,7 +235,7 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     
     /// Equal to operator for comparing two Array objects.
     public static func == (array1: ArrayObject, array2: ArrayObject) -> Bool {
-        return array1.impl == array2.impl
+        return array1.impl.isEqual(array2.impl)
     }
     
     // MARK: Hashable
