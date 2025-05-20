@@ -261,7 +261,7 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     
     /// Equal to operator for comparing two Dictionary objects.
     public static func == (dict1: DictionaryObject, dict2: DictionaryObject) -> Bool {
-        return (dict1.impl as! NSObject) == (dict2.impl as! NSObject)
+        return dict1.impl.isEqual(dict2.impl)
     }
     
     // MARK: Hashable
