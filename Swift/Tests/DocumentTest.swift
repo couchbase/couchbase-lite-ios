@@ -816,6 +816,10 @@ class DocumentTest: CBLTestCase {
         doc.setValue(array, forKey: "members")
         
         let members = doc.array(forKey: "members")!
+        
+        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
+        
+        
         XCTAssertTrue(members == doc.value(forKey: "members") as! ArrayObject)
         XCTAssertEqual(members.count, 4)
         XCTAssertEqual(members.string(at: 0), "a")

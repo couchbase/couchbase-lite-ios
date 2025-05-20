@@ -107,7 +107,7 @@ public final class Blob: Equatable, Hashable {
     
     /// Equal to operator for comparing two Blob objects.
     public static func == (blob1: Blob, blob2: Blob) -> Bool {
-        return blob1.impl == blob2.impl
+        return (blob1.impl as? NSObject)?.isEqual(blob2.impl)  ?? false
     }
     
     // MARK: Hashable
