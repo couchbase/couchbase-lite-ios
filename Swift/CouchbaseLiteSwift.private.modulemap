@@ -116,6 +116,7 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLCollection+Swift.h"
     header "CBLDatabase+Swift.h"
     header "CBLDictionary+Swift.h"
+    header "CBLDocument+Swift.h"
     header "CBLLog+Swift.h"
     header "CBLReplicatorConfiguration+Swift.h"
     header "CBLConflictResolverBridge.h"
