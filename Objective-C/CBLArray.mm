@@ -18,6 +18,7 @@
 //
 
 #import "CBLArray.h"
+#import "CBLArray+Swift.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
@@ -32,6 +33,8 @@ using namespace fleece;
 @implementation CBLArray {
     __weak NSObject* _sharedLock;
 }
+
+@synthesize swiftObject=_swiftObject;
 
 - (instancetype) initEmpty {
     self = [super init];

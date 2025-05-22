@@ -18,6 +18,7 @@
 //
 
 #import "CBLBlob.h"
+#import "CBLBlob+Swift.h"
 #import "CBLBlobStream.h"
 #import "CBLCollection+Internal.h"
 #import "CBLDatabase+Internal.h"
@@ -64,6 +65,7 @@ static NSString* const kCBLBlobDataProperty = @kC4BlobDataProperty;
 }
 
 @synthesize contentType=_contentType, length=_length, digest=_digest;
+@synthesize swiftObject=_swiftObject;
 
 - (instancetype) initWithContentType: (NSString*)contentType
                                 data: (NSData*)data

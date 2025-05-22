@@ -126,7 +126,7 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.array)
             XCTAssertNotNil(fragment.value)
             XCTAssertNotNil(fragment.dictionary)
-            XCTAssert(fragment.dictionary! == fragment.value as! DictionaryObject)
+            XCTAssert(fragment.dictionary! === fragment.value as! DictionaryObject)
             XCTAssert(fragment.dictionary!.toDictionary() == dict["address"] as! [String: Any])
         }
     }
@@ -146,7 +146,7 @@ class FragmentTest: CBLTestCase {
             XCTAssertTrue(fragment.boolean)
             XCTAssertNotNil(fragment.array)
             XCTAssertNotNil(fragment.value)
-            XCTAssert(fragment.array! == fragment.value as! ArrayObject)
+            XCTAssert(fragment.array! === fragment.value as! ArrayObject)
             XCTAssert(fragment.array!.toArray() == dict["references"] as! [Any])
             XCTAssertNil(fragment.dictionary)
         })
@@ -287,7 +287,7 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.array)
             XCTAssertNotNil(fragment.value)
             XCTAssertNotNil(fragment.dictionary)
-            XCTAssert(fragment.dictionary! == fragment.value as! DictionaryObject)
+            XCTAssert(fragment.dictionary! === fragment.value as! DictionaryObject)
             XCTAssert(fragment.dictionary!.toDictionary() ==
                 (dict["address"] as! [String:Any])["phones"] as! [String: Any])
         })
@@ -330,7 +330,7 @@ class FragmentTest: CBLTestCase {
             XCTAssertTrue(fragment.boolean)
             XCTAssertNotNil(fragment.array)
             XCTAssertNotNil(fragment.value)
-            XCTAssert(fragment.array! == fragment.value as! ArrayObject)
+            XCTAssert(fragment.array! === fragment.value as! ArrayObject)
             XCTAssert(fragment.array!.toArray() == dict["nested-array"] as! [Any])
             XCTAssertNil(fragment.dictionary)
         })

@@ -281,6 +281,26 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
     
     init(_ impl: CBLDictionaryProtocol) {
         self.impl = impl
+        
+        switch impl {
+        case let dict as CBLDictionary:
+            dict.swiftObject = self
+        case let dict as CBLNewDictionary:
+            dict.swiftObject = self
+        default:
+            fatalError("Invalid dictionary!!!")
+        }
+    }
+    
+    deinit {
+        switch impl {
+        case let dict as CBLDictionary:
+            dict.swiftObject = nil
+        case let dict as CBLNewDictionary:
+            dict.swiftObject = nil
+        default:
+            fatalError("Invalid dictionary!!!")
+        }
     }
     
     let impl: CBLDictionaryProtocol
