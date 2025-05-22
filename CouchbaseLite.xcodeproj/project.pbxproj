@@ -1788,6 +1788,8 @@
 		AE5F25592CAC310800AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255A2CAC310900AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255B2CAC311100AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
+		AE6660E02DDF720900860706 /* WeakHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6660DF2DDF720900860706 /* WeakHolder.swift */; };
+		AE6660E12DDF720900860706 /* WeakHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6660DF2DDF720900860706 /* WeakHolder.swift */; };
 		AE83D0842C0637ED0055D2CF /* CBLIndexUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AE83D0852C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */; };
 		AE83D0862C0637ED0055D2CF /* CBLIndexUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -2907,6 +2909,7 @@
 		AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorSearchTest.swift; sourceTree = "<group>"; };
 		AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordEmbeddingModel.swift; sourceTree = "<group>"; };
 		AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UnnestArrayIndexTest.m; sourceTree = "<group>"; };
+		AE6660DF2DDF720900860706 /* WeakHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakHolder.swift; sourceTree = "<group>"; };
 		AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexUpdater.h; sourceTree = "<group>"; };
 		AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLIndexUpdater.mm; sourceTree = "<group>"; };
 		AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherTest.swift; sourceTree = "<group>"; };
@@ -3966,6 +3969,7 @@
 				938196051EC10E890032CC51 /* MutableDictionaryObject.swift */,
 				275F92A51E4D3A91007FD5A2 /* MutableDocument.swift */,
 				93765EA91EC17FEA005E4050 /* MutableFragment.swift */,
+				AE6660DF2DDF720900860706 /* WeakHolder.swift */,
 			);
 			name = Document;
 			sourceTree = "<group>";
@@ -6378,6 +6382,7 @@
 				401D7FEA2C3F8AE100DAAB62 /* QueryIndex.swift in Sources */,
 				9384D8631FC4163D00FE89D8 /* FullTextFunction.swift in Sources */,
 				1A8E2FB328FF756600E141A8 /* Defaults.swift in Sources */,
+				AE6660E02DDF720900860706 /* WeakHolder.swift in Sources */,
 				9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */,
 				EA8731552D7B2C710091E90F /* FleeceDecoder.swift in Sources */,
 				1A3471632671C9230042C6BA /* CBLValueIndexConfiguration.m in Sources */,
@@ -6818,6 +6823,7 @@
 				9343F058207D61AB00F19A89 /* Test.m in Sources */,
 				9343F059207D61AB00F19A89 /* ArrayFunction.swift in Sources */,
 				40FC1BEF2B928A4F00394276 /* CBLQueryFunction+Vector.m in Sources */,
+				AE6660E12DDF720900860706 /* WeakHolder.swift in Sources */,
 				9343F05C207D61AB00F19A89 /* CBLMutableArray.mm in Sources */,
 				9343F05E207D61AB00F19A89 /* CBLReachability.m in Sources */,
 				1A8E2FB428FF756600E141A8 /* Defaults.swift in Sources */,
