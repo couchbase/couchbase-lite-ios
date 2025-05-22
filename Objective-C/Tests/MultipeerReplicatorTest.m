@@ -22,12 +22,12 @@
 
 - (void) setUp {
     [super setUp];
-    [self cleanupIdentity];
+    [self cleanupIdentities];
     [self openOtherDB];
 }
 
 - (void) tearDown {
-    [self cleanupIdentity];
+    [self cleanupIdentities];
     [super tearDown];
 }
 
@@ -45,7 +45,7 @@
     return [NSString stringWithFormat: @"%@-%lu", kTestIdentityCommonName, (unsigned long)num];
 }
 
-- (void) cleanupIdentity {
+- (void) cleanupIdentities {
     for (NSUInteger i = 1; i <= kTestMaxIdentity; i++) {
         NSString* label = [self identityNameForNumber: i];
         [self ignoreException: ^{
@@ -72,7 +72,7 @@
 
 /** A function to return a multipeer replicator for the default collection of the given database.
     Will be enhanced it later for more customization as needed by tests. */
-- (CBLMultipeerReplicator*) replicatorForDatabase: (CBLDatabase*)database {
+- (CBLMultipeerReplicator*) multipeerReplicatorForDatabase: (CBLDatabase*)database {
     CBLCollection* collection = [self.db defaultCollection: nil];
     AssertNotNil(collection);
     
@@ -102,7 +102,7 @@
 - (void) testSanityStartStop {
     XCTSkipUnless(self.isExecutionAllowed);
     
-    CBLMultipeerReplicator* repl = [self replicatorForDatabase: self.db];
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
     
     XCTestExpectation* xActive = [self expectationWithDescription: @"Active"];
     XCTestExpectation* xUnactive = [self expectationWithDescription: @"Unactive"];
@@ -124,13 +124,11 @@
 
 // Disable until the fix is merged and published:
 // https://github.com/couchbase/couchbase-lite-core/tree/fix/notify-all-peers
-- (void) _testSanityReplication {
+- (void) testSanityReplication {
     XCTSkipUnless(self.isExecutionAllowed);
     
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
-    
     // Peer#1
-    CBLMultipeerReplicator* repl1 = [self replicatorForDatabase: self.db];
+    CBLMultipeerReplicator* repl1 = [self multipeerReplicatorForDatabase: self.db];
     
     XCTestExpectation* xActive1 = [self expectationWithDescription: @"Active"];
     XCTestExpectation* xUnactive1 = [self expectationWithDescription: @"Unactive"];
@@ -144,7 +142,7 @@
     }];
     
     XCTestExpectation* xOnline1 = [self expectationWithDescription: @"Online"];
-    [repl1 addPeerDiscoveryStatusListener: nil listener: ^(CBLPeerDiscoveryStatus* status) {
+    [repl1 addPeerDiscoveryStatusListenerWithQueue: nil listener: ^(CBLPeerDiscoveryStatus* status) {
         AssertNotNil(status.peerID);
         if (status.online) {
             [xOnline1 fulfill];
@@ -154,7 +152,7 @@
     XCTestExpectation* xIdle1 = [self expectationWithDescription: @"Idle"];
     [xIdle1 setAssertForOverFulfill: NO]; // TODO: Investigate if it's an issue or not.
     XCTestExpectation* xStopped1 = [self expectationWithDescription: @"Stopped"];
-    [repl1 addPeerReplicatorStatusListener: nil listener: ^(CBLPeerReplicatorStatus* change) {
+    [repl1 addPeerReplicatorStatusListenerWithQueue: nil listener: ^(CBLPeerReplicatorStatus* change) {
         AssertNotNil(change.peerID);
         if (change.status.activity == kCBLReplicatorIdle) {
             [xIdle1 fulfill];
@@ -168,7 +166,7 @@
     [self waitForExpectations: @[xActive1] timeout: 10.0];
     
     // Peer#2
-    CBLMultipeerReplicator* repl2 = [self replicatorForDatabase: self.otherDB];
+    CBLMultipeerReplicator* repl2 = [self multipeerReplicatorForDatabase: self.otherDB];
     
     XCTestExpectation* xActive2 = [self expectationWithDescription: @"Active"];
     XCTestExpectation* xUnactive2 = [self expectationWithDescription: @"Unactive"];
@@ -184,7 +182,7 @@
     XCTestExpectation* xOnline2 = [self expectationWithDescription: @"Online"];
     XCTestExpectation* xOffline2 = [self expectationWithDescription: @"Offline"];
     [xOffline2 setAssertForOverFulfill: NO]; // TODO: Investigate if it's an issue or not.
-    [repl2 addPeerDiscoveryStatusListener: nil listener: ^(CBLPeerDiscoveryStatus* status) {
+    [repl2 addPeerDiscoveryStatusListenerWithQueue: nil listener: ^(CBLPeerDiscoveryStatus* status) {
         AssertNotNil(status.peerID);
         if (status.online) {
             [xOnline2 fulfill];
@@ -196,7 +194,7 @@
     XCTestExpectation* xIdle2 = [self expectationWithDescription: @"Idle"];
     [xIdle2 setAssertForOverFulfill: NO]; // TODO: Investigate if it's an issue or not.
     XCTestExpectation* xStopped2 = [self expectationWithDescription: @"Stopped"];
-    [repl2 addPeerReplicatorStatusListener: nil listener: ^(CBLPeerReplicatorStatus* change) {
+    [repl2 addPeerReplicatorStatusListenerWithQueue: nil listener: ^(CBLPeerReplicatorStatus* change) {
         AssertNotNil(change.peerID);
         if (change.status.activity == kCBLReplicatorIdle) {
             [xIdle2 fulfill];

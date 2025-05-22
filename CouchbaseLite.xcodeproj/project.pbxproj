@@ -423,6 +423,32 @@
 		40AA729E2C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */; };
 		40C5FD5B2B9947B3004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40C5FD5C2B9947B9004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCB02DDD175200F209D7 /* CBLMultipeerCertificateAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AD92DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCB12DDD175E00F209D7 /* CBLMultipeerCertificateAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46ADA2DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.m */; };
+		40D6BCB22DDD176700F209D7 /* CBLPeerInfo.mm in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AE62DD6A4E7007E495D /* CBLPeerInfo.mm */; };
+		40D6BCB32DDD176700F209D7 /* CBLPeerID.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AE42DD6A4E7007E495D /* CBLPeerID.m */; };
+		40D6BCB42DDD176700F209D7 /* CBLMultipeerReplicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AE02DD6A4E7007E495D /* CBLMultipeerReplicator.mm */; };
+		40D6BCB52DDD176700F209D7 /* CBLMultipeerReplicatorConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AE22DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.m */; };
+		40D6BCB62DDD176700F209D7 /* CBLMultipeerCollectionConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46ADC2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.m */; };
+		40D6BCB72DDD176700F209D7 /* CBLMultipeerEventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46ADE2DD6A4E7007E495D /* CBLMultipeerEventTypes.m */; };
+		40D6BCB82DDD176700F209D7 /* CBLPeerID.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE32DD6A4E7007E495D /* CBLPeerID.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCB92DDD176700F209D7 /* CBLMultipeerReplicatorConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE12DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCBA2DDD176700F209D7 /* CBLMultipeerCollectionConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCBB2DDD176700F209D7 /* CBLMultipeerEventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADD2DD6A4E7007E495D /* CBLMultipeerEventTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCBC2DDD176700F209D7 /* CBLPeerInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE52DD6A4E7007E495D /* CBLPeerInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCBD2DDD176700F209D7 /* CBLMultipeerReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADF2DD6A4E7007E495D /* CBLMultipeerReplicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40D6BCC02DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */; };
+		40D6BCC22DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */; };
+		40D6BCC42DDD19D900F209D7 /* PeerID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCC32DDD19D900F209D7 /* PeerID.swift */; };
+		40D6BCC52DDD1D4F00F209D7 /* CBLMultipeerConflictResolverWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AF82DD6A592007E495D /* CBLMultipeerConflictResolverWrapper.m */; };
+		40D6BCC82DDD2C6700F209D7 /* CBLBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCC72DDD2C6700F209D7 /* CBLBridging.swift */; };
+		40D6BCC92DDD2C6700F209D7 /* CBLBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCC72DDD2C6700F209D7 /* CBLBridging.swift */; };
+		40D6BCCB2DDD322200F209D7 /* MultipeerCollectionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCCA2DDD322200F209D7 /* MultipeerCollectionConfiguration.swift */; };
+		40D6BCCE2DDD485400F209D7 /* PeerInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCCD2DDD485400F209D7 /* PeerInfo.swift */; };
+		40D6BCD02DDD4B7200F209D7 /* MultipeerEventTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCCF2DDD4B7200F209D7 /* MultipeerEventTypes.swift */; };
+		40D6BCD22DDD69C000F209D7 /* MultipeerReplicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD12DDD69C000F209D7 /* MultipeerReplicator.swift */; };
+		40D6BCD42DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */; };
+		40D6BCD52DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */; };
 		40E46AE82DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE12DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AE92DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AEA2DD6A4E7007E495D /* CBLMultipeerEventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADD2DD6A4E7007E495D /* CBLMultipeerEventTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2494,6 +2520,15 @@
 		40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "VectorSearchTest+Lazy.m"; sourceTree = "<group>"; };
 		40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorSearchTest.h; sourceTree = "<group>"; };
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
+		40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorConfiguration.swift; sourceTree = "<group>"; };
+		40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerCertificateAuthenticator.swift; sourceTree = "<group>"; };
+		40D6BCC32DDD19D900F209D7 /* PeerID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerID.swift; sourceTree = "<group>"; };
+		40D6BCC72DDD2C6700F209D7 /* CBLBridging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBLBridging.swift; sourceTree = "<group>"; };
+		40D6BCCA2DDD322200F209D7 /* MultipeerCollectionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerCollectionConfiguration.swift; sourceTree = "<group>"; };
+		40D6BCCD2DDD485400F209D7 /* PeerInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfo.swift; sourceTree = "<group>"; };
+		40D6BCCF2DDD4B7200F209D7 /* MultipeerEventTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerEventTypes.swift; sourceTree = "<group>"; };
+		40D6BCD12DDD69C000F209D7 /* MultipeerReplicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicator.swift; sourceTree = "<group>"; };
+		40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorTest.swift; sourceTree = "<group>"; };
 		40E46AD92DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCertificateAuthenticator.h; sourceTree = "<group>"; };
 		40E46ADA2DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLMultipeerCertificateAuthenticator.m; sourceTree = "<group>"; };
 		40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCollectionConfiguration.h; sourceTree = "<group>"; };
@@ -2647,7 +2682,7 @@
 		930AE46B1EAA6C9100E92E9A /* CBLData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLData.h; sourceTree = "<group>"; };
 		930AE46C1EAA6C9100E92E9A /* CBLData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLData.mm; sourceTree = "<group>"; };
 		930B368D24AAFACB000DF2B3 /* CBLDocBranchIterator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDocBranchIterator.h; sourceTree = "<group>"; };
-		930B63D0246B9CD1006D94FF /* CBL-EE_Swift_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE_Swift_Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_EE_Swift_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		930B63D2246B9CD1006D94FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		930B63D4246B9CD1006D94FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		930B63D7246B9CD1006D94FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -2709,7 +2744,7 @@
 		9343F00F207D611600F19A89 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9343F16D207D62C900F19A89 /* CBL-EE_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL-EE_Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_EE_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBL_EE_Objc_Tests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9343F1B7207D63BF00F19A89 /* CBLPerfTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3282,6 +3317,7 @@
 				9338BEE21ED5475200634873 /* Replication */,
 				9388CC4521C250A4005CA66D /* Log */,
 				409389E72D4AB7DE00691393 /* LogSink */,
+				40D6BCC62DDD2C2D00F209D7 /* Support */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
 				40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */,
@@ -3323,6 +3359,7 @@
 				93F74A8A1EC5549C001289F8 /* FragmentTest.swift */,
 				9388CC5221C25C9E005CA66D /* LogTest.swift */,
 				40938A0B2D4AFA5900691393 /* LogSinkTest.swift */,
+				40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */,
 				93E17F141ED4ED4000671CA1 /* NotificationTest.swift */,
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */,
@@ -3417,6 +3454,28 @@
 				40A7892D2BE2C7D100CA43A1 /* generate_exports.sh */,
 			);
 			path = Exports;
+			sourceTree = "<group>";
+		};
+		40D6BCBE2DDD17FF00F209D7 /* Multipeer */ = {
+			isa = PBXGroup;
+			children = (
+				40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */,
+				40D6BCCA2DDD322200F209D7 /* MultipeerCollectionConfiguration.swift */,
+				40D6BCCF2DDD4B7200F209D7 /* MultipeerEventTypes.swift */,
+				40D6BCD12DDD69C000F209D7 /* MultipeerReplicator.swift */,
+				40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */,
+				40D6BCC32DDD19D900F209D7 /* PeerID.swift */,
+				40D6BCCD2DDD485400F209D7 /* PeerInfo.swift */,
+			);
+			path = Multipeer;
+			sourceTree = "<group>";
+		};
+		40D6BCC62DDD2C2D00F209D7 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				40D6BCC72DDD2C6700F209D7 /* CBLBridging.swift */,
+			);
+			name = Support;
 			sourceTree = "<group>";
 		};
 		40E46AE72DD6A4E7007E495D /* Multipeer */ = {
@@ -3687,6 +3746,7 @@
 			children = (
 				40FC1C392B928C1600394276 /* Database */,
 				40FC1C3C2B928C1600394276 /* Listener */,
+				40D6BCBE2DDD17FF00F209D7 /* Multipeer */,
 				40FC1C4C2B928C1600394276 /* Query */,
 				40FC1C442B928C1600394276 /* Replicator */,
 				40FC1C432B928C1600394276 /* CouchbaseLiteSwift.private.modulemap */,
@@ -4330,11 +4390,11 @@
 				9343F00F207D611600F19A89 /* CouchbaseLite.framework */,
 				9343F133207D61AB00F19A89 /* CouchbaseLiteSwift.framework */,
 				9343F151207D61EC00F19A89 /* CouchbaseLiteTests.xctest */,
-				9343F16D207D62C900F19A89 /* CBL-EE_Tests.app */,
+				9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */,
 				9343F188207D633300F19A89 /* CBL_EE_Objc_Tests_iOS.xctest */,
 				9343F1A2207D636300F19A89 /* CouchbaseLiteSwiftTests.xctest */,
 				9343F1B7207D63BF00F19A89 /* CBLPerfTests */,
-				930B63D0246B9CD1006D94FF /* CBL-EE_Swift_Tests.app */,
+				930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */,
 				930B63E3246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS.xctest */,
 				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
 				93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */,
@@ -5227,6 +5287,7 @@
 				1A3471B426736E680042C6BA /* CBLQuery+N1QL.h in Headers */,
 				40FC1C342B928BB100394276 /* CBLMessageSocket.h in Headers */,
 				9343F0E1207D61AB00F19A89 /* CBLMutableArray.h in Headers */,
+				40D6BCB02DDD175200F209D7 /* CBLMultipeerCertificateAuthenticator.h in Headers */,
 				40FC1C152B928ADD00394276 /* CBLURLEndpointListenerConfiguration+Internal.h in Headers */,
 				1A34714C2671C8800042C6BA /* CBLFullTextIndexConfiguration.h in Headers */,
 				9343F0E2207D61AB00F19A89 /* CBLDocument.h in Headers */,
@@ -5241,6 +5302,12 @@
 				9343F0E9207D61AB00F19A89 /* CBLQueryParameters.h in Headers */,
 				9343F0EA207D61AB00F19A89 /* CBLMutableFragment.h in Headers */,
 				9343F0EB207D61AB00F19A89 /* CBLDatabaseConfiguration.h in Headers */,
+				40D6BCB82DDD176700F209D7 /* CBLPeerID.h in Headers */,
+				40D6BCB92DDD176700F209D7 /* CBLMultipeerReplicatorConfiguration.h in Headers */,
+				40D6BCBA2DDD176700F209D7 /* CBLMultipeerCollectionConfiguration.h in Headers */,
+				40D6BCBB2DDD176700F209D7 /* CBLMultipeerEventTypes.h in Headers */,
+				40D6BCBC2DDD176700F209D7 /* CBLPeerInfo.h in Headers */,
+				40D6BCBD2DDD176700F209D7 /* CBLMultipeerReplicator.h in Headers */,
 				40FC1BF02B928A4F00394276 /* CBLPrediction.h in Headers */,
 				40C5FD5C2B9947B9004BFD3B /* CBLVectorIndexTypes.h in Headers */,
 				9388CBF821BF74E8005CA66D /* CBLLogger.h in Headers */,
@@ -5639,7 +5706,7 @@
 			);
 			name = CBL_EE_Swift_Tests_iOS_App;
 			productName = "cbl-swift-ios-tests-app";
-			productReference = 930B63D0246B9CD1006D94FF /* CBL-EE_Swift_Tests.app */;
+			productReference = 930B63D0246B9CD1006D94FF /* CBL_EE_Swift_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		930B63E2246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS */ = {
@@ -5740,7 +5807,7 @@
 			);
 			name = CBL_EE_Objc_Tests_iOS_App;
 			productName = "ios-tests";
-			productReference = 9343F16D207D62C900F19A89 /* CBL-EE_Tests.app */;
+			productReference = 9343F16D207D62C900F19A89 /* CBL_EE_Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
 		9343F16F207D633300F19A89 /* CBL_EE_Objc_Tests_iOS */ = {
@@ -6530,6 +6597,7 @@
 				93C18E831FB638E80029B567 /* CBLDatabaseConfiguration.m in Sources */,
 				1A53B2862966AB910010A73E /* FullTextIndexExpression.swift in Sources */,
 				9381961C1EC113860032CC51 /* CBLFragment.m in Sources */,
+				40D6BCC92DDD2C6700F209D7 /* CBLBridging.swift in Sources */,
 				93EC42E91FB3930E00D54BB4 /* CBLQueryArrayExpression.m in Sources */,
 				93B41D7E1F05B3A800A7F114 /* Join.swift in Sources */,
 				401D7FED2C3F8F5300DAAB62 /* Collection.swift in Sources */,
@@ -6752,6 +6820,7 @@
 				93BB1C9E246BB2BF004FFA00 /* DatabaseTest.swift in Sources */,
 				AEFEED7D2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				AE9D61A42D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
+				40D6BCD42DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */,
 				93BB1C9C246BB2BB004FFA00 /* CBLTestCase.swift in Sources */,
 				93BB1CB8246BB2F4004FFA00 /* ReplicatorTest+CustomConflict.swift in Sources */,
 				406F8E002C27F0AB000223FC /* VectorSearchTest+Lazy.swift in Sources */,
@@ -6929,6 +6998,7 @@
 				AE83D0872C0637ED0055D2CF /* CBLIndexUpdater.mm in Sources */,
 				40FC1C5C2B928C1600394276 /* ListenerPasswordAuthenticator.swift in Sources */,
 				40FC1BFA2B928A4F00394276 /* CBLVectorIndexConfiguration.mm in Sources */,
+				40D6BCD22DDD69C000F209D7 /* MultipeerReplicator.swift in Sources */,
 				9343F016207D61AB00F19A89 /* CBLBlob.mm in Sources */,
 				9343F017207D61AB00F19A89 /* Authenticator.swift in Sources */,
 				93EB261C21DDC34C0006FB88 /* IndexBuilder.swift in Sources */,
@@ -6946,6 +7016,7 @@
 				9343F01F207D61AB00F19A89 /* Endpoint.swift in Sources */,
 				9343F020207D61AB00F19A89 /* GroupBy.swift in Sources */,
 				9343F021207D61AB00F19A89 /* CBLFleece.mm in Sources */,
+				40D6BCC82DDD2C6700F209D7 /* CBLBridging.swift in Sources */,
 				9343F022207D61AB00F19A89 /* CBLJSON.mm in Sources */,
 				9343F023207D61AB00F19A89 /* Database+Query.swift in Sources */,
 				932565C221ED51290092F4E0 /* LogFileConfiguration.swift in Sources */,
@@ -6958,6 +7029,7 @@
 				9343F027207D61AB00F19A89 /* CBLQueryFunction.m in Sources */,
 				1AAFB681284A266F00878453 /* CollectionConfiguration.swift in Sources */,
 				40FC1B7F2B9288A800394276 /* CBLMessageEndpoint.mm in Sources */,
+				40D6BCCB2DDD322200F209D7 /* MultipeerCollectionConfiguration.swift in Sources */,
 				1AEF05A1283380F800D5DDEA /* CBLCollection.mm in Sources */,
 				4017E46C2BED6E5400A438EE /* CBLContextManager.m in Sources */,
 				9343F028207D61AB00F19A89 /* CBLIndexBuilder.m in Sources */,
@@ -6986,6 +7058,7 @@
 				9343F034207D61AB00F19A89 /* Function.swift in Sources */,
 				40FC1C6D2B928C1600394276 /* Function+Prediction.swift in Sources */,
 				40FC1C2E2B928B5000394276 /* CBLScalarQuantizer.mm in Sources */,
+				40D6BCC22DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift in Sources */,
 				935A58BD21AFA34D009A29CB /* CBLDocumentReplication.mm in Sources */,
 				9343F036207D61AB00F19A89 /* Ordering.swift in Sources */,
 				9343F037207D61AB00F19A89 /* Replicator.swift in Sources */,
@@ -7007,10 +7080,17 @@
 				1AAFB685284A266F00878453 /* CollectionChange.swift in Sources */,
 				9343F03F207D61AB00F19A89 /* CBLReplicatorChange.m in Sources */,
 				9343F040207D61AB00F19A89 /* CBLTrustCheck.mm in Sources */,
+				40D6BCB22DDD176700F209D7 /* CBLPeerInfo.mm in Sources */,
+				40D6BCB32DDD176700F209D7 /* CBLPeerID.m in Sources */,
+				40D6BCB42DDD176700F209D7 /* CBLMultipeerReplicator.mm in Sources */,
+				40D6BCB52DDD176700F209D7 /* CBLMultipeerReplicatorConfiguration.m in Sources */,
+				40D6BCB62DDD176700F209D7 /* CBLMultipeerCollectionConfiguration.m in Sources */,
+				40D6BCB72DDD176700F209D7 /* CBLMultipeerEventTypes.m in Sources */,
 				9343F041207D61AB00F19A89 /* DocumentFragment.swift in Sources */,
 				40FC1B6A2B9287BD00394276 /* CBLURLEndpointListener.mm in Sources */,
 				40FC1C7F2B92D0F000394276 /* CBLClientCertificateAuthenticator.mm in Sources */,
 				40FC1C332B928BB100394276 /* CBLMessageSocket.mm in Sources */,
+				40D6BCC52DDD1D4F00F209D7 /* CBLMultipeerConflictResolverWrapper.m in Sources */,
 				9343F043207D61AB00F19A89 /* Result.swift in Sources */,
 				40FC1C5A2B928C1600394276 /* TLSIdentity.swift in Sources */,
 				40FC1C5E2B928C1600394276 /* MessageEndpointConnection.swift in Sources */,
@@ -7040,6 +7120,7 @@
 				9343F051207D61AB00F19A89 /* WhereRouter.swift in Sources */,
 				932565AB21ED13290092F4E0 /* CBLLogFileConfiguration.m in Sources */,
 				9343F052207D61AB00F19A89 /* CBLValueExpression.m in Sources */,
+				40D6BCC02DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift in Sources */,
 				9343F053207D61AB00F19A89 /* PropertyExpression.swift in Sources */,
 				9343F054207D61AB00F19A89 /* CBLChangeNotifier.m in Sources */,
 				9388CC0221BF74FD005CA66D /* CBLConsoleLogger.m in Sources */,
@@ -7055,9 +7136,11 @@
 				40FC1BEF2B928A4F00394276 /* CBLQueryFunction+Vector.m in Sources */,
 				9343F05C207D61AB00F19A89 /* CBLMutableArray.mm in Sources */,
 				9343F05E207D61AB00F19A89 /* CBLReachability.m in Sources */,
+				40D6BCC42DDD19D900F209D7 /* PeerID.swift in Sources */,
 				1A8E2FB428FF756600E141A8 /* Defaults.swift in Sources */,
 				9343F05F207D61AB00F19A89 /* FullTextExpression.swift in Sources */,
 				9343F060207D61AB00F19A89 /* CBLData.mm in Sources */,
+				40D6BCB12DDD175E00F209D7 /* CBLMultipeerCertificateAuthenticator.m in Sources */,
 				40FC1B552B92873D00394276 /* CBLEncryptionKey.m in Sources */,
 				93292DA122BD448400A0862A /* CBLReplicatorConfiguration+Swift.m in Sources */,
 				9343F062207D61AB00F19A89 /* ArrayExpressionIn.swift in Sources */,
@@ -7069,6 +7152,7 @@
 				9343F063207D61AB00F19A89 /* Fragment.swift in Sources */,
 				9343F064207D61AB00F19A89 /* VariableExpression.swift in Sources */,
 				9343F065207D61AB00F19A89 /* Query.swift in Sources */,
+				40D6BCCE2DDD485400F209D7 /* PeerInfo.swift in Sources */,
 				1AAFB695284A266F00878453 /* Indexable.swift in Sources */,
 				9343F066207D61AB00F19A89 /* Joins.swift in Sources */,
 				40FC1BF72B928A4F00394276 /* CBLQueryFunction+Prediction.m in Sources */,
@@ -7185,6 +7269,7 @@
 				9343F0AE207D61AB00F19A89 /* Meta.swift in Sources */,
 				1A8E2FBA28FF75D500E141A8 /* CBLDefaults.m in Sources */,
 				9343F0AF207D61AB00F19A89 /* CBLPropertyExpression.m in Sources */,
+				40D6BCD02DDD4B7200F209D7 /* MultipeerEventTypes.swift in Sources */,
 				40FC1B672B9287BD00394276 /* CBLListenerPasswordAuthenticator.m in Sources */,
 				40FC1BEB2B928A4F00394276 /* CBLPrediction.mm in Sources */,
 				9388CC4821C250D1005CA66D /* Log.swift in Sources */,
@@ -7343,6 +7428,7 @@
 				9343F198207D636300F19A89 /* CBLTestCase.swift in Sources */,
 				AEFEED7C2D4AB999008AF4C2 /* PartialIndexTest.swift in Sources */,
 				AE9D61A22D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
+				40D6BCD52DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */,
 				93C50EB021BDFC7B00C7E980 /* DocumentExpirationTest.swift in Sources */,
 				9369A6B7207DEB60009B5B83 /* DatabaseEncryptionTest.swift in Sources */,
 				406F8DFF2C27F0A9000223FC /* VectorSearchTest+Lazy.swift in Sources */,

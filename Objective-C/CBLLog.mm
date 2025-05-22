@@ -121,11 +121,15 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
         case kCBLLogDomainNetwork:
             c4Domain = kCBL_LogDomainWebSocket;
             break;
-#ifdef COUCHBASE_ENTERPRISE
         case kCBLLogDomainListener:
             c4Domain = kCBL_LogDomainListener;
             break;
-#endif
+        case kCBLLogDomainPeerDiscovery:
+            c4Domain = kCBL_LogDomainDiscovery;
+            break;
+        case kCBLLogDomainMultipeer:
+            c4Domain = kCBL_LogDomainP2P;
+            break;
         default:
             c4Domain = kCBL_LogDomainDatabase;
     }

@@ -170,7 +170,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Create:
         let attrs = [certAttrCommonName: "CBL-Server"]
-        identity = try TLSIdentity.createIdentity(forServer: true,
+        identity = try TLSIdentity.createIdentity(for: .serverAuth,
                                                   attributes: attrs,
                                                   expiration: nil,
                                                   label: serverCertLabel)
@@ -199,7 +199,7 @@ class TLSIdentityTest: CBLTestCase {
         // Create:
         var identity: TLSIdentity?
         let attrs = [certAttrCommonName: "CBL-Server"]
-        identity = try TLSIdentity.createIdentity(forServer: true,
+        identity = try TLSIdentity.createIdentity(for: .serverAuth,
                                                   attributes: attrs,
                                                   expiration: nil,
                                                   label: serverCertLabel)
@@ -214,7 +214,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Create again with the same label:
         self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
-            identity = try TLSIdentity.createIdentity(forServer: true,
+            identity = try TLSIdentity.createIdentity(for: .serverAuth,
                                                       attributes: attrs,
                                                       expiration: nil,
                                                       label: self.serverCertLabel)
@@ -232,7 +232,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Create:
         let attrs = [certAttrCommonName: "CBL-Client"]
-        identity = try TLSIdentity.createIdentity(forServer: false,
+        identity = try TLSIdentity.createIdentity(for: .clientAuth,
                                                   attributes: attrs,
                                                   expiration: nil,
                                                   label: clientCertLabel)
@@ -261,7 +261,7 @@ class TLSIdentityTest: CBLTestCase {
         // Create:
         var identity: TLSIdentity?
         let attrs = [certAttrCommonName: "CBL-Client"]
-        identity = try TLSIdentity.createIdentity(forServer: false,
+        identity = try TLSIdentity.createIdentity(for: .clientAuth,
                                                   attributes: attrs,
                                                   expiration: nil,
                                                   label: clientCertLabel)
@@ -276,7 +276,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Create again with the same label:
         self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
-            identity = try TLSIdentity.createIdentity(forServer: false,
+            identity = try TLSIdentity.createIdentity(for: .clientAuth,
                                                       attributes: attrs,
                                                       expiration: nil,
                                                       label: self.clientCertLabel)
@@ -374,7 +374,7 @@ class TLSIdentityTest: CBLTestCase {
         
         // Create:
         self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
-            identity = try TLSIdentity.createIdentity(forServer: false,
+            identity = try TLSIdentity.createIdentity(for: .clientAuth,
                                                       attributes: [:],
                                                       expiration: nil,
                                                       label: self.clientCertLabel)
@@ -392,7 +392,7 @@ class TLSIdentityTest: CBLTestCase {
         
         let attrs = [certAttrCommonName: "CBL-Server"]
         let expiration = Date(timeIntervalSinceNow: 300)
-        identity = try TLSIdentity.createIdentity(forServer: true,
+        identity = try TLSIdentity.createIdentity(for: .serverAuth,
                                                   attributes: attrs,
                                                   expiration: expiration,
                                                   label: serverCertLabel)

@@ -169,11 +169,12 @@
     NSError* err;
     NSString* label = isServer ? kServerCertLabel : kClientCertLabel;
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: isServer ? @"CBL-Server" : @"daniel" };
-    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: isServer
-                                                            attributes: attrs
-                                                            expiration: nil
-                                                                 label: label
-                                                                 error: &err];
+    CBLKeyUsages keyUsages = isServer ? kCBLKeyUsagesServerAuth : kCBLKeyUsagesClientAuth;
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForKeyUsages: keyUsages
+                                                               attributes: attrs
+                                                               expiration: nil
+                                                                    label: label
+                                                                    error: &err];
     AssertNotNil(identity);
     AssertNil(err);
     return identity;

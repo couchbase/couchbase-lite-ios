@@ -21,4 +21,4 @@
 #include "CBL_Swift_Tests_iOS_App.xcconfig"
 
 PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-swift-ios-tests-app
-PRODUCT_NAME = CBL-EE_Swift_Tests
+PRODUCT_NAME = CBL_EE_Swift_Tests

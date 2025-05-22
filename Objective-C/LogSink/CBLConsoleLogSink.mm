@@ -64,11 +64,15 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
         case kCBLLogDomainNetwork:
             return @"Network";
             break;
-#ifdef COUCHBASE_ENTERPRISE
         case kCBLLogDomainListener:
             return @"Listener";
             break;
-#endif
+        case kCBLLogDomainPeerDiscovery:
+            return @"PeerDiscovery";
+            break;
+        case kCBLLogDomainMultipeer:
+            return @"Multipeer";
+            break;
         default:
             return @"Database";
     }
