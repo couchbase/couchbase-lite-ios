@@ -22,6 +22,7 @@ import CouchbaseLiteSwift_Private
 
 /* internal */ class DataConverter {
     
+    
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
         case let impl as CBLMutableDictionary:
