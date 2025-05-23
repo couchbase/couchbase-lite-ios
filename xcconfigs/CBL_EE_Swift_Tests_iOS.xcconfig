@@ -21,4 +21,4 @@
 #include "CBL_Swift_Tests_iOS.xcconfig"
 
 PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-swift-ios-tests
-TEST_HOST = $(BUILT_PRODUCTS_DIR)/CBL-EE_Swift_Tests.app/CBL-EE_Swift_Tests
+TEST_HOST = $(BUILT_PRODUCTS_DIR)/CBL_EE_Swift_Tests.app/CBL_EE_Swift_Tests

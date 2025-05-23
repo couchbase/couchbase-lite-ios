@@ -26,8 +26,10 @@ C4LogDomain kCBL_LogDomainQuery;
 C4LogDomain kCBL_LogDomainSync;
 C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainListener;
+C4LogDomain kCBL_LogDomainDiscovery;
+C4LogDomain kCBL_LogDomainP2P;
 
-static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener"];
+static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"P2P"];
 static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
@@ -59,6 +61,8 @@ NSDictionary* domainDictionary = nil;
         kCBL_LogDomainSync  = c4log_getDomain("Sync", true);
         kCBL_LogDomainWebSocket  = c4log_getDomain("WS", true);
         kCBL_LogDomainListener  = c4log_getDomain("Listener", true);
+        kCBL_LogDomainDiscovery = c4log_getDomain("Discovery", true);
+        kCBL_LogDomainP2P = c4log_getDomain("P2P", true);
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
@@ -126,15 +130,17 @@ NSDictionary* domainDictionary = nil;
     
     if (_domainsLevel != domainsLevel) {
         for (NSString* domain in c4Domains) {
-            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], false);
-            if (c4domain)
+            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], true);
+            if (c4domain) {
                 c4log_setLevel(c4domain, c4Level);
+            }
         }
         
         for (NSString* domain in platformDomains) {
-            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], false);
-            if (c4domain)
+            C4LogDomain c4domain = c4log_getDomain([domain UTF8String], true);
+            if (c4domain) {
                 c4log_setLevel(c4domain, c4Level);
+            }
         }
         _domainsLevel = domainsLevel;
     }
@@ -162,7 +168,6 @@ static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
-
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
         domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
@@ -175,9 +180,9 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"BLIPMessages": @(kCBLLogDomainNetwork),
                               @"Zip": @(kCBLLogDomainNetwork),
                               @"TLS": @(kCBLLogDomainNetwork),
-#ifdef COUCHBASE_ENTERPRISE
-                              @"Listener": @(kCBLLogDomainListener)
-#endif
+                              @"Listener": @(kCBLLogDomainListener),
+                              @"Discovery": @(kCBLLogDomainPeerDiscovery),
+                              @"P2P": @(kCBLLogDomainMultipeer)
         };
     }
     

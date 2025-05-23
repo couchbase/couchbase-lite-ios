@@ -205,11 +205,11 @@
     // Create:
     error = nil;
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kServerCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kServerCertLabel
+                                                    error: &error];
     AssertNotNil(identity);
     AssertNil(error);
     AssertEqual(identity.certs.count, 1);
@@ -240,11 +240,11 @@
     
     // Create:
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kServerCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kServerCertLabel
+                                                    error: &error];
     AssertNotNil(identity);
     AssertNil(error);
     [self checkIdentityInKeyChain: identity];
@@ -257,11 +257,11 @@
     [self checkIdentityInKeyChain: identity];
     
     // Create again with the same label:
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kServerCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kServerCertLabel
+                                                    error: &error];
     AssertNil(identity);
     AssertEqual(error.domain, CBLErrorDomain);
     AssertEqual(error.code, CBLErrorCrypto);
@@ -282,11 +282,11 @@
     // Create:
     error = nil;
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Client" };
-    identity = [CBLTLSIdentity createIdentityForServer: NO
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kClientCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kClientCertLabel
+                                                    error: &error];
     AssertNotNil(identity);
     AssertNil(error);
     AssertEqual(identity.certs.count, 1);
@@ -317,11 +317,11 @@
     
     // Create:
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Client" };
-    identity = [CBLTLSIdentity createIdentityForServer: NO
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kClientCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kClientCertLabel
+                                                    error: &error];
     AssertNotNil(identity);
     AssertNil(error);
     [self checkIdentityInKeyChain: identity];
@@ -333,11 +333,11 @@
     [self checkIdentityInKeyChain: identity];
     
     // Create again with the same label:
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: attrs
-                                            expiration: nil
-                                                 label: kClientCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: attrs
+                                               expiration: nil
+                                                    label: kClientCertLabel
+                                                    error: &error];
     AssertNil(identity);
     AssertEqual(error.domain, CBLErrorDomain);
     AssertEqual(error.code, CBLErrorCrypto);
@@ -446,11 +446,11 @@
     
     // Create:
     error = nil; // reset the error
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: @{ }
-                                            expiration: nil
-                                                 label: kServerCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: @{ }
+                                               expiration: nil
+                                                    label: kServerCertLabel
+                                                    error: &error];
     AssertNil(identity);
     AssertEqual(error.domain, CBLErrorDomain);
     AssertEqual(error.code, CBLErrorCrypto);
@@ -472,11 +472,11 @@
     error = nil; // reset the error
     NSDate* expiration = [NSDate dateWithTimeIntervalSinceNow: 300];
     NSDictionary* attrs = @{ kCBLCertAttrCommonName: @"CBL-Server" };
-    identity = [CBLTLSIdentity createIdentityForServer: YES
-                                            attributes: attrs
-                                            expiration: expiration
-                                                 label: kServerCertLabel
-                                                 error: &error];
+    identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                               attributes: attrs
+                                               expiration: expiration
+                                                    label: kServerCertLabel
+                                                    error: &error];
     AssertNotNil(identity);
     AssertNil(error);
     AssertEqual(identity.certs.count, 1);

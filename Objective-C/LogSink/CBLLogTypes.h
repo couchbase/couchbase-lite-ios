@@ -21,16 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Log domain options. */
 typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
-    kCBLLogDomainDatabase       = 1 << 0, ///< Database domain.
-    kCBLLogDomainQuery          = 1 << 1, ///< Query domain.
-    kCBLLogDomainReplicator     = 1 << 2, ///< Replicator domain.
-    kCBLLogDomainNetwork        = 1 << 3, ///< Network domain.
-#ifdef COUCHBASE_ENTERPRISE
-    kCBLLogDomainListener       = 1 << 4, ///< Listener domain.
-    kCBLLogDomainAll            = kCBLLogDomainDatabase | kCBLLogDomainQuery | kCBLLogDomainReplicator | kCBLLogDomainNetwork | kCBLLogDomainListener, ///< All domains
-#else
-    kCBLLogDomainAll            = kCBLLogDomainDatabase | kCBLLogDomainQuery | kCBLLogDomainReplicator | kCBLLogDomainNetwork, ///< All domains
-#endif
+    kCBLLogDomainDatabase       = 1 << 0,       ///< Database domain.
+    kCBLLogDomainQuery          = 1 << 1,       ///< Query domain.
+    kCBLLogDomainReplicator     = 1 << 2,       ///< Replicator domain.
+    kCBLLogDomainNetwork        = 1 << 3,       ///< Network domain.
+    kCBLLogDomainListener       = 1 << 4,       ///< Listener domain.
+    kCBLLogDomainPeerDiscovery  = 1 << 5,       ///< Peer Discovery domain.
+    kCBLLogDomainMultipeer      = 1 << 6,       ///< Multipeer Replication domain.
+    kCBLLogDomainAll            = (1 << 7) - 1  ///< All domains
 };
 
 /** Log level. */

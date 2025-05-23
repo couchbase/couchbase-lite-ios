@@ -45,15 +45,19 @@ public struct LogDomains: OptionSet {
     /// Network domain.
     public static let network = LogDomains(rawValue: Int(LogDomain.network.rawValue))
     
-#if COUCHBASE_ENTERPRISE
     /// Listener domain.
     public static let listener = LogDomains(rawValue: Int(LogDomain.listener.rawValue))
     
+    /// Peer Discovery domain.
+    public static let peerDiscovery = LogDomains(rawValue: Int(LogDomain.peerDiscovery.rawValue))
+    
+    /// Multipeer Replication domain.
+    public static let multipeer = LogDomains(rawValue: Int(LogDomain.multipeer.rawValue))
+    
     /// All domains.
-    public static let all: LogDomains = [.database, .query, .replicator, .network, .listener]
-#else
-    public static let all: LogDomains = [.database, .query, .replicator, .network]
-#endif
+    public static let all: LogDomains = [
+        .database, .query, .replicator, .network, .listener, .peerDiscovery, .multipeer
+    ]
 }
 
 public class ConsoleLogger {

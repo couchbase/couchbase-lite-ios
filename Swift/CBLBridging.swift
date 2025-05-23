@@ -1,8 +1,8 @@
 //
-//  CBL_EE_ObjC_Tests_iOS.xcconfig
+//  CBLBridging.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,8 +17,16 @@
 //  limitations under the License.
 //
 
-#include "CBL_EE_Common.xcconfig"
-#include "CBL_ObjC_Tests_iOS.xcconfig"
+import Foundation
 
-PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.cbl-ee-ios-tests
-TEST_HOST                 = $(BUILT_PRODUCTS_DIR)/CBL_EE_Tests.app/CBL_EE_Tests
+/// A type that can be wrapped or constructed from a corresponding CBL Obj-C type.
+protocol CBLWrappable {
+    associatedtype CBLType
+    init(impl: CBLType)
+}
+
+/// A type that can be converted to a corresponding CBL Obj-C type.
+protocol CBLConvertible {
+    associatedtype CBLType
+    func toCBL() -> CBLType
+}

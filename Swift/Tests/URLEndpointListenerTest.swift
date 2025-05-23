@@ -82,7 +82,8 @@ class URLEndpointListenerTest: ReplicatorTest {
         
         // Create client identity:
         let attrs = [certAttrCommonName: isServer ? "CBL-Server" : "daniel"]
-        return try TLSIdentity.createIdentity(forServer: false, attributes: attrs, expiration: nil,
+        let keyUsages: KeyUsages = isServer ? .serverAuth : .clientAuth
+        return try TLSIdentity.createIdentity(for: keyUsages, attributes: attrs, expiration: nil,
                                               label: label)
     }
     
@@ -406,7 +407,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // Different pinned cert
         try TLSIdentity.deleteIdentity(withLabel: "dummy")
-        let tlsID = try TLSIdentity.createIdentity(forServer: false,
+        let tlsID = try TLSIdentity.createIdentity(for: .clientAuth,
                                                    attributes: [certAttrCommonName: "client"],
                                                    expiration: nil, label: "dummy")
         run(target: listener.localURLEndpoint,
@@ -452,7 +453,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // Different pinned cert
         try TLSIdentity.deleteIdentity(withLabel: "dummy")
-        let tlsID = try TLSIdentity.createIdentity(forServer: false,
+        let tlsID = try TLSIdentity.createIdentity(for: .clientAuth,
                                                    attributes: [certAttrCommonName: "client"],
                                                    expiration: nil, label: "dummy")
         run(target: listener.localURLEndpoint,
