@@ -18,7 +18,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class DocumentTest: CBLTestCase {
     
