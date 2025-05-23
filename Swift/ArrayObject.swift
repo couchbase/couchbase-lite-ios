@@ -253,6 +253,11 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     
     init(_ impl: CBLArray) {
         self.impl = impl
+        impl.swiftObject = WeakHolder(self)
+    }
+    
+    deinit {
+        impl.swiftObject = nil
     }
     
     let impl: CBLArray

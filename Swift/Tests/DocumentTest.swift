@@ -579,7 +579,7 @@ class DocumentTest: CBLTestCase {
         var dict = MutableDictionaryObject()
         dict.setValue("1 Main street", forKey: "street")
         doc.setDictionary(dict, forKey: "dict")
-        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject == dict)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === dict)
         try saveDocument(doc, eval: { (d) in
             let savedDict = doc.value(forKey: "dict") as! DictionaryObject
             XCTAssertTrue(savedDict.toDictionary() == dict.toDictionary())
@@ -655,8 +655,8 @@ class DocumentTest: CBLTestCase {
         array.addValue("item2")
         array.addValue("item3")
         doc.setArray(array, forKey: "array")
-        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject == array)
-        XCTAssertTrue(doc.array(forKey: "array")! == array)
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === array)
+        XCTAssertTrue(doc.array(forKey: "array")! === array)
         try saveDocument(doc, eval: { (d) in
             let savedArray = doc.value(forKey: "array") as! ArrayObject
             XCTAssertTrue(savedArray.toArray() == array.toArray())
@@ -767,12 +767,13 @@ class DocumentTest: CBLTestCase {
         doc.setValue(dict, forKey: "address")
         
         let address = doc.dictionary(forKey: "address")!
-        XCTAssertTrue(address == doc.value(forKey: "address") as! DictionaryObject)
+        XCTAssertTrue(address === doc.value(forKey: "address") as! DictionaryObject)
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
         let attachments = address.dictionary(forKey: "attachments")!
         XCTAssertEqual(attachments.blob(forKey: "attach1"), blob)
+        XCTAssertTrue(address.toDictionary() == dict)
         
         // Update with a new dictionary:
         let nuDict = ["street": "1 Second street",
@@ -780,13 +781,11 @@ class DocumentTest: CBLTestCase {
                       "state": "CA"]
         doc.setValue(nuDict, forKey: "address")
         
-        // Check whether the old members array is still accessible. Needs unnest because [Any] comparison differs between Swift versions:
-        let oldDict = address.toDictionary()
-        XCTAssertEqual(oldDict["street"] as! String, "1 Main street")
-        XCTAssertEqual(oldDict["city"] as! String, "Mountain View")
-        XCTAssertEqual(oldDict["state"] as! String, "CA")
-        let blobDict = oldDict["attachments"] as! [String: Any]
-        XCTAssertEqual(blobDict["attach1"] as! Blob, blob)
+        // Check whether the old address dictionary is still accessible:
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
+        XCTAssertTrue(address.toDictionary() == dict)
         
         // The old address dictionary should be detached:
         let nuAddress = doc.dictionary(forKey: "address")!
@@ -816,7 +815,7 @@ class DocumentTest: CBLTestCase {
         doc.setValue(array, forKey: "members")
         
         let members = doc.array(forKey: "members")!
-        XCTAssertTrue(members == doc.value(forKey: "members") as! ArrayObject)
+        XCTAssertTrue(members === doc.value(forKey: "members") as! ArrayObject)
         XCTAssertEqual(members.count, 4)
         XCTAssertEqual(members.string(at: 0), "a")
         XCTAssertEqual(members.string(at: 1), "b")
@@ -824,20 +823,14 @@ class DocumentTest: CBLTestCase {
         let blobs = members.array(at: 3)!
         XCTAssertEqual(blobs.count, 1)
         XCTAssertEqual(blobs.blob(at: 0), blob)
+        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
         
         // Update with a new array:
         let nuArray = ["d", "e", "f"]
         doc.setValue(nuArray, forKey: "members")
         
-        // Check whether the old members array is still accessible. Needs unnest because [Any] comparison differs between Swift versions:
-        let arr = members.toArray()
-        XCTAssertEqual(arr.count, 4)
-        XCTAssertEqual(arr[0] as! String, "a")
-        XCTAssertEqual(arr[1] as! String, "b")
-        XCTAssertEqual(arr[2] as! String, "c")
-        let blobArr = arr[3] as! [Blob]
-        XCTAssertEqual(blobArr.count, 1)
-        XCTAssertEqual(blobArr[0], blob)
+        // Check whether the old members array is still accessible:
+        XCTAssertTrue(members.toArray() == ["a", "b", "c", [blob]])
         
         // The old members array should be detached:
         let nuMembers = doc.array(forKey: "members")!
@@ -1089,8 +1082,8 @@ class DocumentTest: CBLTestCase {
         doc.setValue(address, forKey: "shipping")
         doc.setValue(address, forKey: "billing")
         
-        XCTAssert(doc.dictionary(forKey: "shipping")! == address)
-        XCTAssert(doc.dictionary(forKey: "billing")! == address)
+        XCTAssert(doc.dictionary(forKey: "shipping")! === address)
+        XCTAssert(doc.dictionary(forKey: "billing")! === address)
         
         // Update address: both shipping and billing should get the update:
         address.setValue("94042", forKey: "zip")
@@ -1099,14 +1092,19 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
+        // Both shipping address and billing address are still the same instance:
+        let shipping = doc.dictionary(forKey: "shipping")!
+        let billing = doc.dictionary(forKey: "billing")!
+        XCTAssert(shipping === address)
+        XCTAssert(billing === address)
+        
         // After save: both shipping and billing address are now independent to each other
         let savedDoc = try defaultCollection!.document(id: doc.id)!
         let savedShipping = savedDoc.dictionary(forKey: "shipping")!
         let savedBilling = savedDoc.dictionary(forKey: "billing")!
-        XCTAssertNotIdentical(savedShipping, address)
-        XCTAssertEqual(savedShipping, address)
-        XCTAssertNotIdentical(savedBilling, address)
-        XCTAssertEqual(savedBilling, address)
+        XCTAssert(savedShipping !== address)
+        XCTAssert(savedBilling !== address)
+        XCTAssert(savedShipping !== savedBilling)
     }
     
     func testSetArrayToMultipleKeys() throws {
@@ -1119,8 +1117,8 @@ class DocumentTest: CBLTestCase {
         doc.setValue(phones, forKey: "mobile")
         doc.setValue(phones, forKey: "home")
         
-        XCTAssert(doc.array(forKey: "mobile")! == phones)
-        XCTAssert(doc.array(forKey: "home")! == phones)
+        XCTAssert(doc.array(forKey: "mobile")! === phones)
+        XCTAssert(doc.array(forKey: "home")! === phones)
         
         // Update phones: both mobile and home should get the update
         phones.addValue("650-000-0003")
@@ -1134,8 +1132,8 @@ class DocumentTest: CBLTestCase {
         // Both mobile and home are still the same instance:
         let mobile = doc.array(forKey: "mobile")!
         let home = doc.array(forKey: "home")!
-        XCTAssert(mobile == phones)
-        XCTAssert(home == phones)
+        XCTAssert(mobile === phones)
+        XCTAssert(home === phones)
         
         // After getting the document from the database, mobile and home
         // are now independent to each other:

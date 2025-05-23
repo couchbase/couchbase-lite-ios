@@ -42,6 +42,8 @@ using namespace fleece;
     BOOL _changed;
 }
 
+@synthesize swiftObject=_swiftObject;
+
 - (instancetype) init {
     self = [super init];
     if (self) {

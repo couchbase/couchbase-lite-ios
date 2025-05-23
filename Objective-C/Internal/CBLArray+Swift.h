@@ -1,5 +1,5 @@
 //
-//  CBLNewDictionary.h
+//  CBLArray+Swift.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,23 +17,10 @@
 //  limitations under the License.
 //
 
-#import "CBLMutableDictionary.h"
+#import "CBLArray.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
-
-/** An implementation of a CBLMutableDictionary with no storage, i.e. that's just been added to a doc.
-     This class is an optimization that does less work than the regular CBLMutableDictionary. */
-@interface CBLNewDictionary : NSObject <CBLMutableDictionary>
+@interface CBLArray ()
 
 @property (strong, atomic, nullable) id swiftObject;
 
-- (instancetype) initWithDictionary: (NSDictionary*)dictionary;
-
-- (CBLMutableDictionary*) toMutable;
-
-- (CBLDictionary*) toCBLDictionary;
-
 @end
-
-NS_ASSUME_NONNULL_END

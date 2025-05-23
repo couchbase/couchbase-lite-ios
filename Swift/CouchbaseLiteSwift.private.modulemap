@@ -110,8 +110,11 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLLogSinks+Reset.h"
     
     // Swift Extensions:
+    header "CBLArray+Swift.h"
+    header "CBLBlob+Swift.h"
     header "CBLCollection+Swift.h"
     header "CBLDatabase+Swift.h"
+    header "CBLDictionary+Swift.h"
     header "CBLLog+Swift.h"
     header "CBLReplicatorConfiguration+Swift.h"
     header "CBLConflictResolverBridge.h"

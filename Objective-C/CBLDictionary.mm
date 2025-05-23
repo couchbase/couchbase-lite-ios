@@ -21,6 +21,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDictionary+Swift.h"
 #import "CBLDocument+Internal.h"
 #import "CBLFleece.hh"
 #import "CBLJSON.h"
@@ -37,6 +38,8 @@ using namespace fleece;
     NSArray* _keys;
     __weak NSObject* _sharedLock;
 }
+
+@synthesize swiftObject=_swiftObject;
 
 - (instancetype) initEmpty {
     self = [super init];
