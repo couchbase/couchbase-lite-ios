@@ -42,11 +42,15 @@ class MultipeerReplicatorTest: CBLTestCase {
     
     override func setUp() {
         super.setUp()
-        try! cleanUpIdentities()
+        if (isExecutionAllowed) {
+            try! cleanUpIdentities()
+        }
     }
     
     override func tearDown() {
-        try! cleanUpIdentities()
+        if (isExecutionAllowed) {
+            try! cleanUpIdentities()
+        }
         super.tearDown()
     }
     
@@ -121,8 +125,6 @@ class MultipeerReplicatorTest: CBLTestCase {
     func testSanityReplication() throws {
         try XCTSkipUnless(isExecutionAllowed)
         
-        LogSinks.console = ConsoleLogSink(level: .verbose)
-
         // Peer #1
         let repl1 = try multipeerReplicator(for: db)
 

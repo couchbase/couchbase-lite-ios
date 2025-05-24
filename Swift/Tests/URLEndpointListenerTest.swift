@@ -589,6 +589,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testClientCertAuthWithRootCerts() throws {
+        #if os(macOS)
+        try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
+        #endif
+        
         if !self.keyChainAccessAllowed { return }
         
         // Root Cert:
@@ -1063,6 +1067,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testListenerWithImportIdentity() throws {
+        #if os(macOS)
+        try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
+        #endif
+        
         if !self.keyChainAccessAllowed { return }
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
@@ -1190,6 +1198,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testChainedCertServerAndCertPinning() throws {
+        #if os(macOS)
+        try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
+        #endif
+        
         if !keyChainAccessAllowed { return }
         
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
@@ -1230,6 +1242,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     // MARK: acceptSelfSignedOnly tests
     
     func testAcceptSelfSignedWithNonSelfSignedCert() throws {
+        #if os(macOS)
+        try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
+        #endif
+        
         if !self.keyChainAccessAllowed { return }
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
