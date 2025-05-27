@@ -730,6 +730,10 @@
 }
 
 - (void) testClientCertAuthRootCerts {
+#if TARGET_OS_OSX
+    XCTSkip(@"CBL-7005 : importIdentityWithData not working on newer macOS");
+#endif
+    
     if (!self.keyChainAccessAllowed) return;
     
     NSData* rootCertData = [self dataFromResource: @"identity/client-ca" ofType: @"der"];
@@ -807,6 +811,10 @@
 }
 
 - (void) testEmptyNetworkInterface {
+#if TARGET_OS_OSX
+    XCTSkip(@"Not applicable test on some network environment");
+#endif
+    
     if (!self.keyChainAccessAllowed) return;
     
     [self listen];
@@ -1260,6 +1268,10 @@
 }
 
 - (void) testListenerWithImportIdentity {
+#if TARGET_OS_OSX
+    XCTSkip(@"CBL-7005 : importIdentityWithData not working on newer macOS");
+#endif
+    
     if (!self.keyChainAccessAllowed) return;
     
     NSError* err = nil;
@@ -1351,6 +1363,10 @@
 }
 
 - (void) testChainedCertServerAndCertPinning {
+#if TARGET_OS_OSX
+    XCTSkip(@"CBL-7005 : importIdentityWithData not working on newer macOS");
+#endif
+    
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
@@ -1470,6 +1486,10 @@
 }
 
 - (void) testAcceptSelfSignedWithNonSelfSignedCert {
+#if TARGET_OS_OSX
+    XCTSkip(@"CBL-7005 : importIdentityWithData not working on newer macOS");
+#endif
+    
     if (!self.keyChainAccessAllowed) return;
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];

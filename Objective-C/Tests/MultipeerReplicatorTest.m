@@ -22,12 +22,16 @@
 
 - (void) setUp {
     [super setUp];
-    [self cleanupIdentities];
-    [self openOtherDB];
+    if (self.isExecutionAllowed) {
+        [self cleanupIdentities];
+        [self openOtherDB];
+    }
 }
 
 - (void) tearDown {
-    [self cleanupIdentities];
+    if (self.isExecutionAllowed) {
+        [self cleanupIdentities];
+    }
     [super tearDown];
 }
 
@@ -63,6 +67,7 @@
     CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForKeyUsages: kTestKeyUsages
                                                                attributes: attrs
                                                                expiration: nil
+                                                                   issuer: nil
                                                                     label: name
                                                                     error: &error];
     AssertNotNil(identity);
