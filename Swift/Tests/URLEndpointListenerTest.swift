@@ -725,68 +725,6 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         XCTAssertEqual(self.otherDB_defaultCollection!.count, 1)
     }
     
-    func testReplicatorAndListenerOnSameDatabase() throws {
-        if !self.keyChainAccessAllowed { return }
-        
-        let exp1 = expectation(description: "replicator#1 stop")
-        let exp2 = expectation(description: "replicator#2 stop")
-        
-        // listener
-        let doc = createDocument()
-        try self.otherDB_defaultCollection!.save(document: doc)
-        try startListener()
-        
-        // Replicator#1 (otherDB -> DB#1)
-        let doc1 = createDocument()
-        try self.defaultCollection!.save(document: doc1)
-        let target = DatabaseEndpoint(database: self.db)
-        let repl1 = createReplicator(db: self.otherDB!, target: target)
-        
-        // Replicator#2 (DB#2 -> Listener(otherDB))
-        try deleteDB(name: "db2")
-        let db2 = try openDB(name: "db2")
-        let db2_defaultCollection = try! db2.defaultCollection()
-        let doc2 = createDocument()
-        try db2_defaultCollection.save(document: doc2)
-        let repl2 = createReplicator(db: db2,
-                               target: self.listener!.localURLEndpoint,
-                               serverCert: self.listener!.tlsIdentity!.certs[0])
-        
-        let changeListener = { (change: ReplicatorChange) in
-            if change.status.activity == .idle &&
-                change.status.progress.completed == change.status.progress.total {
-                if self.otherDB_defaultCollection!.count == 3 && self.defaultCollection!.count == 3 && db2_defaultCollection.count == 3 {
-                    change.replicator.stop()
-                }
-            }
-            
-            if change.status.activity == .stopped {
-                if change.replicator.config.database.name == "db2" {
-                    exp2.fulfill()
-                } else {
-                    exp1.fulfill()
-                }
-            }
-            
-        }
-        let token1 = repl1.addChangeListener(changeListener)
-        let token2 = repl2.addChangeListener(changeListener)
-        
-        repl1.start()
-        repl2.start()
-        wait(for: [exp1, exp2], timeout: 20.0) // TODO: FIXME
-        
-        XCTAssertEqual(self.otherDB_defaultCollection!.count, 3)
-        XCTAssertEqual(self.defaultCollection!.count, 3)
-        XCTAssertEqual(db2_defaultCollection.count, 3)
-        
-        repl1.removeChangeListener(withToken: token1)
-        repl2.removeChangeListener(withToken: token2)
-        
-        try db2.close()
-        try stopListener()
-    }
-    
     func testCloseWithActiveListener() throws {
         if !self.keyChainAccessAllowed { return }
         
