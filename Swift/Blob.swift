@@ -136,7 +136,7 @@ public final class Blob: Equatable, Hashable {
     
     init(_ impl: CBLBlob) {
         self.impl = impl
-        impl.swiftObject = self
+        impl.swiftObject = WeakHolder(self)
     }
     
     deinit {
