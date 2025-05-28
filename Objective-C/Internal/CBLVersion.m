@@ -48,10 +48,13 @@
         [NSString stringWithFormat: @"Commit/%.8s%s", GitCommit, GitDirty] : @"NA";
         
         C4StringResult liteCoreVers = c4_getVersion();
+        NSString* liteCoreString = [NSString stringWithFormat:@"%.*s", (int)liteCoreVers.size, (char*)liteCoreVers.buf];
         
-        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore/%.*s",
-                      CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit,
-                      (int)liteCoreVers.size, (char*)liteCoreVers.buf];
+        NSString* liteCoreCommit = [liteCoreString substringFromIndex:[liteCoreString rangeOfString:@"("].location];
+        
+        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore%@",
+                      CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit, liteCoreCommit];
+        
         c4slice_free(liteCoreVers);
     });
     return sUserAgent;
