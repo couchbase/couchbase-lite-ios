@@ -22,35 +22,43 @@ import CouchbaseLiteSwift_Private
 
 /* internal */ class DataConverter {
     
+    static func unwrap<T: AnyObject>(_ swiftObject: Any?) -> T? {
+        if let holder = swiftObject as? WeakHolder,
+           let value = holder.object as? T {
+            return value
+        }
+        return nil
+    }
+    
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
         case let impl as CBLMutableDictionary:
-            if let dict = impl.swiftObject {
+            if let dict: MutableDictionaryObject = unwrap(impl.swiftObject) {
                 return dict
             }
             return MutableDictionaryObject(impl)
         case let impl as CBLMutableArray:
-            if let array = impl.swiftObject {
+            if let array: MutableArrayObject = unwrap(impl.swiftObject) {
                 return array
             }
             return MutableArrayObject(impl)
         case let impl as CBLDictionary:
-            if let dict = impl.swiftObject {
+            if let dict: DictionaryObject = unwrap(impl.swiftObject) {
                 return dict
             }
             return DictionaryObject(impl)
         case let impl as CBLNewDictionary:
-            if let dict = impl.swiftObject {
+            if let dict: DictionaryObject = unwrap(impl.swiftObject) {
                 return dict
             }
             return DictionaryObject(impl)
         case let impl as CBLArray:
-            if let array = impl.swiftObject {
+            if let array: ArrayObject = unwrap(impl.swiftObject) {
                 return array
             }
             return ArrayObject(impl)
         case let impl as CBLBlob:
-            if let blob = impl.swiftObject {
+            if let blob: Blob = unwrap(impl.swiftObject) {
                 return blob
             }
             return Blob(impl)

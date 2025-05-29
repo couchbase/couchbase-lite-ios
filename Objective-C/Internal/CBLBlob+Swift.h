@@ -21,7 +21,7 @@
 
 @interface CBLBlob ()
 
-@property (weak, nonatomic, nullable) id swiftObject;
+@property (strong, atomic, nullable) id swiftObject;
 
 @end
 

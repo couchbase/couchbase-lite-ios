@@ -284,9 +284,9 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence
         
         switch impl {
         case let dict as CBLDictionary:
-            dict.swiftObject = self
+            dict.swiftObject = WeakHolder(self)
         case let dict as CBLNewDictionary:
-            dict.swiftObject = self
+            dict.swiftObject = WeakHolder(self)
         default:
             fatalError("Invalid dictionary!!!")
         }
