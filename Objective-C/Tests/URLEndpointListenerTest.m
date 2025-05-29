@@ -51,6 +51,8 @@
 - (void) setUp {
     [super setUp];
     
+    XCTSkip(@"CBL-7038 : Stop URLEndpointListener may crash as recursive_mutex lock failed");
+    
     timeout = 15.0;
     [self cleanUpIdentities];
 }
