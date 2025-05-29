@@ -1,4 +1,12 @@
 #!/bin/bash -xe
+
+if [[ -z "$KEYCHAIN_PWD" ]]; then
+  echo "Keychain password not set. Skipping unlock ..."
+else
+  echo "Unlocking keychain ..."
+  security -v unlock-keychain -p $KEYCHAIN_PWD $HOME/Library/Keychains/login.keychain-db
+fi
+
 if [ "$1" = "-enterprise" ]
   then
     cd couchbase-lite-ios-ee/couchbase-lite-ios
