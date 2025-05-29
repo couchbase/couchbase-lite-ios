@@ -19,7 +19,7 @@
 
 #include "CBL_OS_Target_Versions.xcconfig"
 
-HEADER_SEARCH_PATHS                        = $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece/Support
+HEADER_SEARCH_PATHS                        = $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/API   $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece/Support
 ASSETCATALOG_COMPILER_APPICON_NAME         = AppIcon
 CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = NO
 CODE_SIGN_IDENTITY                         = iPhone Developer
