@@ -39,7 +39,6 @@ class PublisherTest: CBLTestCase {
     
     func testCollectionChangePublisher() throws {
         let expect = self.expectation(description: "Collection changed")
-        expect.expectedFulfillmentCount = 1
 
         defaultCollection!.changePublisher()
             .sink { change in
@@ -57,7 +56,6 @@ class PublisherTest: CBLTestCase {
     
     func testCollectionDocumentChangePublisher() throws {
         let expect = self.expectation(description: "Document changed")
-        expect.expectedFulfillmentCount = 1
 
         defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
