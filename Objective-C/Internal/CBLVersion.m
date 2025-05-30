@@ -52,7 +52,7 @@
         
         NSString* liteCoreCommit = [liteCoreString substringFromIndex:[liteCoreString rangeOfString:@"("].location];
         
-        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore%@",
+        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore/0.0.0 %@",
                       CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit, liteCoreCommit];
         
         c4slice_free(liteCoreVers);
