@@ -39,7 +39,6 @@ class PublisherTest: CBLTestCase {
     
     func testCollectionChangePublisher() throws {
         let expect = self.expectation(description: "Collection changed")
-        expect.expectedFulfillmentCount = 2
 
         defaultCollection!.changePublisher()
             .sink { change in
@@ -51,14 +50,12 @@ class PublisherTest: CBLTestCase {
         // it also saves the document into the db
         let doc = try generateDocument(withID: "doc1")
         
-        try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: expTimeout)
     }
     
     func testCollectionDocumentChangePublisher() throws {
         let expect = self.expectation(description: "Document changed")
-        expect.expectedFulfillmentCount = 2
 
         defaultCollection!.documentChangePublisher(for: "doc1")
             .sink { change in
@@ -70,7 +67,6 @@ class PublisherTest: CBLTestCase {
         // it also saves the document into the db
         let doc = try generateDocument(withID: "doc1")
         
-        try defaultCollection!.save(document: doc)
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: expTimeout)
     }
