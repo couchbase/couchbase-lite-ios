@@ -761,6 +761,7 @@ class CodableTest: CBLTestCase {
     }
     
     // CBL-7061
+    // Test that Codable can decode Date when it was encoded using Document methods.
     func testCollectionDecodeISO8601Date() throws {
         // Create a ReportFile document
         let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
@@ -779,6 +780,29 @@ class CodableTest: CBLTestCase {
         let reportFile = try defaultCollection!.document(id: document.id, as: ReportFile.self)!
         // Assert the loaded object Date is identical to the source (to accuracy of 1 millisecond)
         XCTAssertEqual(reportFile.dateFiled.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 0.001)
+    }
+    
+    // CBL-7061
+    // Test that Codable can decode Date when it was encoded using Swift's default ISO8601 formatter.
+    func testCollectionDecodeISO8601DateWithDefaultFormatter() throws {
+        // Create a ReportFile document
+        let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
+        let report = MutableDictionaryObject()
+        report.setValue(NSNull(), forKey: "id")
+        report.setString("My Report", forKey: "title")
+        report.setBoolean(false, forKey: "filed")
+        report.setBlob(body, forKey: "body")
+        let document = MutableDocument()
+        let now = Date()
+        let nowString = ISO8601DateFormatter().string(from: now)
+        document.setString(nowString, forKey: "dateFiled")
+        document.setDictionary(report, forKey: "report")
+        // Save to the default collection
+        try defaultCollection!.save(document: document)
+        //  Load the object from the collection
+        let reportFile = try defaultCollection!.document(id: document.id, as: ReportFile.self)!
+        // Assert the loaded object Date is identical to the source (to accuracy of 1 second)
+        XCTAssertEqual(reportFile.dateFiled.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1)
     }
     
     // 23. TestCollectionEncodeAndDecodeArrayNestedBlob
