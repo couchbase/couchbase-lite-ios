@@ -760,6 +760,7 @@ class CodableTest: CBLTestCase {
         XCTAssertEqual(loadedReportFile.report.body, body)
     }
     
+    // CBL-7061
     func testCollectionDecodeISO8601Date() throws {
         // Create a ReportFile document
         let body = Blob(contentType: "text/plain", data: Data("Hello, World!".utf8))
