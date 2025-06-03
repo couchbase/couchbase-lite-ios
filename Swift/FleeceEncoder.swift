@@ -90,8 +90,7 @@ internal class FleeceEncoder : Encoder {
         case is Blob:
             try _writeNSObject((value as! Blob).impl)
         case is Date:
-            let formatter = ISO8601DateFormatter()
-            let string = formatter.string(from: value as! Date)
+            let string = ISO8601DateFormatter.couchbase.string(from: value as! Date)
             try _writeNSObject(string as NSString)
         case is NSObject:
             try _writeNSObject(value as! NSObject)
