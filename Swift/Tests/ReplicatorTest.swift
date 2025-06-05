@@ -541,6 +541,31 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNil(try otherDB_defaultCollection!.document(id: "doc3"))
     }
     
+    func testFilterPerf() throws {
+        Database.log.console.level = .verbose
+        Database.log.console.domains = .replicator
+        try createDocNumbered(otherDB_defaultCollection!, start: 0, num: 6000)
+    
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
+            if (doc.string(forKey: "typeProp") == "type1") {
+                return true
+            }
+            return false
+        }
+        
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollection(defaultCollection!, config: colConfig)
+            
+        // Run the replicator:
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(try defaultCollection!.document(id: "doc100"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc1001"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc3999"))
+    }
+    
     func testPullFilter() throws {
         // Add a document to db database so that it can pull the deleted docs from:
         let doc0 = MutableDocument(id: "doc0")

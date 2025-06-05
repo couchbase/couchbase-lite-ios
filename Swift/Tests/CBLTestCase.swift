@@ -167,6 +167,8 @@ class CBLTestCase: XCTestCase {
     func createDocNumbered(_ col: Collection, start: Int, num: Int) throws {
         for i in start..<start+num {
             let mdoc = createDocument("doc\(i)")
+            let filterProperty = i % 3 == 0 ? "type1" : (i % 3 == 1 ? "type2" : "type3")
+            mdoc.setString(filterProperty, forKey: "typeProp")
             mdoc.setInt(i, forKey: "number1")
             try col.save(document: mdoc)
         }
