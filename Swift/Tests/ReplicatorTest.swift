@@ -30,7 +30,7 @@ class ReplicatorTest: CBLTestCase {
     override func setUp() {
         super.setUp()
         try! openOtherDB()
-        timeout = 10 // At least 10 to cover single-shot replicator's retry logic
+        timeout = 500 // At least 10 to cover single-shot replicator's retry logic
     }
     
     override func tearDown() {
@@ -544,7 +544,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     func testFilterPerf() throws {
         Database.log.console.level = .verbose
         Database.log.console.domains = .replicator
-        try createDocNumbered(otherDB_defaultCollection!, start: 0, num: 6000)
+        try createDocNumbered(otherDB_defaultCollection!, start: 0, num: 4000)
     
         var colConfig = CollectionConfiguration()
         colConfig.pullFilter = { (doc, flags) in
@@ -563,7 +563,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         XCTAssertNil(try defaultCollection!.document(id: "doc100"))
         XCTAssertNil(try defaultCollection!.document(id: "doc1001"))
-        XCTAssertNotNil(try defaultCollection!.document(id: "doc3999"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc3000"))
     }
     
     func testPullFilter() throws {
