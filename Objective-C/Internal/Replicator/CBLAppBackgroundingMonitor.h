@@ -1,5 +1,5 @@
 //
-//  CBLReplicationConflictResolver.h
+//  CBLAppBackgroundingMonitor.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2025 Couchbase, Inc All rights reserved.
@@ -19,24 +19,32 @@
 
 #import <Foundation/Foundation.h>
 
-@class CBLCollection;
-@class CBLReplicatedDocument;
-@protocol CBLConflictResolver;
-
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLConflictResolverService : NSObject
+@protocol CBLAppBackgroundingMonitorDelegate;
 
-- (instancetype) initWithReplicatorID: (NSString*)replicatorID;
+@interface CBLAppBackgroundingMonitor : NSObject
 
-- (BOOL) shutdownAndWait: (BOOL)waitForPendingTasks completion:(void (^)(void))completion;
+- (instancetype) initWithDelegate: (id<CBLAppBackgroundingMonitorDelegate>)delegate
+                     databasePath: (NSString*)databasePath;
 
-- (void) addConflict: (CBLReplicatedDocument*)doc
-          collection: (CBLCollection*)collection
-            resolver: (id<CBLConflictResolver>)resolver
-          completion: (void (^)(BOOL cancelled, NSError* _Nullable error))completion;
+- (void) start;
+
+- (void) stop;
+
+- (void) endCurrentBackgroundTask;
 
 - (instancetype) init NS_UNAVAILABLE;
+
+@end
+
+@protocol CBLAppBackgroundingMonitorDelegate <NSObject>
+
+- (BOOL) appWillBackgroundAndShouldExtend: (CBLAppBackgroundingMonitor*)monitor;
+
+- (void) appDidBackground: (CBLAppBackgroundingMonitor*)monitor;
+
+- (void) appDidForeground: (CBLAppBackgroundingMonitor*)monitor;
 
 @end
 
