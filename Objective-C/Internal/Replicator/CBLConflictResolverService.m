@@ -2,8 +2,19 @@
 //  CBLReplicationConflictResolver.m
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 5/5/25.
-//  Copyright © 2025 Couchbase. All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 //
 
 #import "CBLConflictResolverService.h"
@@ -37,7 +48,7 @@ typedef NS_ENUM(NSInteger, CBLConflictResolverState) {
     return self;
 }
 
-- (BOOL) shutdown: (void (^)(void))completion {
+- (BOOL) shutdownAndWait: (BOOL)waitForPendingTasks completion: (void (^)(void))completion {
     NSArray<dispatch_block_t> *blocksToCancel;
     
     CBL_LOCK(_mutex) {
@@ -47,13 +58,18 @@ typedef NS_ENUM(NSInteger, CBLConflictResolverState) {
         
         if (_pendingBlocks.count == 0) {
             _state = CBLConflictResolverStopped;
-            completion();
+            dispatch_async(_queue, ^{
+                completion();
+            });
             return YES;
         }
         
         _state = CBLConflictResolverStopping;
         _pendingShutdownCompletion = completion;
-        blocksToCancel = [_pendingBlocks copy];
+        
+        if (!waitForPendingTasks) {
+            blocksToCancel = [_pendingBlocks copy];
+        }
     }
     
     for (dispatch_block_t block in blocksToCancel) {

@@ -127,8 +127,6 @@
     [self waitForExpectations: @[xUnactive] timeout: 10.0];
 }
 
-// Disable until the fix is merged and published:
-// https://github.com/couchbase/couchbase-lite-core/tree/fix/notify-all-peers
 - (void) testSanityReplication {
     XCTSkipUnless(self.isExecutionAllowed);
     
@@ -212,7 +210,7 @@
     
     [self waitForExpectations: @[xActive2] timeout: 10.0];
     
-    [self waitForExpectations: @[xOnline1, xOnline2] timeout: 60.0];
+    [self waitForExpectations: @[xOnline1, xOnline2] timeout: 10.0];
     
     [self waitForExpectations: @[xIdle1, xIdle2] timeout: 10.0];
     
@@ -222,7 +220,7 @@
     
     [self waitForExpectations: @[xOffline2] timeout: 10.0];
     
-    [self waitForExpectations: @[xUnactive1] timeout: 60.0];
+    [self waitForExpectations: @[xUnactive1] timeout: 10.0];
     
     [repl2 stop];
     
