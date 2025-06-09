@@ -25,7 +25,7 @@
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 
-@interface CBLQueryObserver () <CBLStoppable>
+@interface CBLQueryObserver () <CBLDatabaseService>
 
 /** The query object will be set to nil when the replicator is stopped to break the circular retain references.  */
 @property (nonatomic, readonly, nullable) CBLQuery* query;
@@ -58,7 +58,7 @@
         _context = [[CBLContextManager shared] registerObject: self];
         _c4obs = c4queryobs_create(query.c4query, liveQueryCallback, _context); // c4queryobs_create is thread-safe.
         
-        [query.database addActiveStoppable: self];
+        [query.database registerActiveService: self];
     }
     return self;
 }
@@ -91,7 +91,7 @@
         [_query.database safeBlock: ^{
             c4queryobs_setEnabled(self->_c4obs, false);
             c4queryobs_free(self->_c4obs);
-            [self->_query.database removeActiveStoppable: self];
+            [self->_query.database unregisterActiveService: self];
         }];
         
         [[CBLContextManager shared] unregisterObjectForPointer: _context];

@@ -20,7 +20,7 @@
 #import "CBLReplicator.h"
 #import "CBLReplicatorConfiguration.h"
 #import "c4.h"
-#import "CBLStoppable.h"
+#import "CBLDatabaseService.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLReplicatorConfiguration+ServerCert.h"
@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface CBLReplicator () <CBLStoppable> {
+@interface CBLReplicator () <CBLDatabaseService> {
     // For CBLReplicator+Backgrounding:
     BOOL _deepBackground;
     BOOL _filesystemUnavailable;

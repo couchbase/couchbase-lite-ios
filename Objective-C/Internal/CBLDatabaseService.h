@@ -1,8 +1,8 @@
 //
-//  CBLStoppable.h
+//  CBLDatabaseService.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLStoppable <NSObject>
+@protocol CBLDatabaseService <NSObject>
 
 - (void) stop;
 
