@@ -397,7 +397,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - DATABASE MAINTENANCE
 
 - (BOOL) close: (NSError**)outError {
-    NSArray *activeServices = nil;
+    NSArray* activeServices = nil;
     
     CBL_LOCK(_mutex) {
         if ([self isClosed])
