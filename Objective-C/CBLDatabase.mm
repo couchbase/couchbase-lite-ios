@@ -87,7 +87,7 @@ typedef enum {
     BOOL _shellMode;
     dispatch_source_t _docExpiryTimer;
     
-    NSMutableSet<id<CBLStoppable>>* _activeStoppables;
+    NSMutableSet<id<CBLDatabaseService>>* _activeServices;
     
     NSCondition* _closeCondition;
     
@@ -397,7 +397,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - DATABASE MAINTENANCE
 
 - (BOOL) close: (NSError**)outError {
-    NSArray *activeStoppables = nil;
+    NSArray* activeServices = nil;
     
     CBL_LOCK(_mutex) {
         if ([self isClosed])
@@ -411,13 +411,13 @@ static const C4DatabaseConfig2 kDBConfig = {
             if (!_closeCondition)
                 _closeCondition = [[NSCondition alloc] init];
             
-            activeStoppables = [_activeStoppables allObjects];
+            activeServices = [_activeServices allObjects];
         }
     }
     
-    // Stop all active stoppable connections:
-    for (id<CBLStoppable> instance in activeStoppables) {
-        [instance stop];
+    // Stop all active services:
+    for (id<CBLDatabaseService> service in activeServices) {
+        [service stop];
     }
     
     // Wait for all active replicators and live queries to stop:
@@ -450,7 +450,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) isReadyToClose {
     CBL_LOCK(_mutex) {
-        return _activeStoppables.count == 0;
+        return _activeServices.count == 0;
     }
 }
 
@@ -1154,23 +1154,23 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     }
 }
 
-#pragma mark - Stoppable
+#pragma mark - Database Services
 
-- (void) addActiveStoppable: (id<CBLStoppable>)stoppable {
+- (void) registerActiveService: (id<CBLDatabaseService>)service {
     CBL_LOCK(_mutex) {
         [self mustBeOpenAndNotClosing];
         
-        if (!_activeStoppables)
-            _activeStoppables = [NSMutableSet new];
+        if (!_activeServices)
+            _activeServices = [NSMutableSet new];
         
-        [_activeStoppables addObject: stoppable];
+        [_activeServices addObject: service];
     }
 }
 
-- (void) removeActiveStoppable: (id<CBLStoppable>)stoppable {
+- (void) unregisterActiveService: (id<CBLDatabaseService>)service {
     CBL_LOCK(_mutex) {
-        [_activeStoppables removeObject: stoppable];
-        if (_activeStoppables.count == 0) {
+        [_activeServices removeObject: service];
+        if (_activeServices.count == 0) {
             [_closeCondition lock];
             [_closeCondition broadcast];
             [_closeCondition unlock];
@@ -1178,9 +1178,9 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
     }
 }
 
-- (uint64_t) activeStoppableCount {
+- (uint64_t) activeServiceCount {
     CBL_LOCK(_mutex) {
-        return _activeStoppables.count;
+        return _activeServices.count;
     }
 }
 

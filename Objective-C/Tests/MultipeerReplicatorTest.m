@@ -7,6 +7,7 @@
 //
 
 #import "MultipeerReplicatorTest.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLTLSIdentity+Internal.h"
 
 #define kTestKeyUsages kCBLKeyUsagesClientAuth | kCBLKeyUsagesServerAuth
@@ -225,6 +226,35 @@
     [repl2 stop];
     
     [self waitForExpectations: @[xUnactive2] timeout: 10.0];
+}
+
+- (void) testStopOnCloseDatabase {
+    XCTSkipUnless(self.isExecutionAllowed);
+    
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
+    
+    XCTestExpectation* xActive = [self expectationWithDescription: @"Active"];
+    XCTestExpectation* xUnactive = [self expectationWithDescription: @"Unactive"];
+    [repl addStatusListenerWithQueue: nil listener: ^(CBLMultipeerReplicatorStatus* status) {
+        AssertNil(status.error);
+        if (status.active) {
+            [xActive fulfill];
+        } else {
+            [xUnactive fulfill];
+        }
+    }];
+    
+    AssertEqual([self.db activeServiceCount], 0);
+    [repl start];
+    [self waitForExpectations: @[xActive] timeout: 10.0];
+    AssertEqual([self.db activeServiceCount], 1);
+    
+    NSError* error;
+    Assert([self.db close: &error]);
+    AssertNil(error);
+    AssertEqual([self.db activeServiceCount], 0);
+    
+    [self waitForExpectations: @[xUnactive] timeout: 10.0];
 }
 
 @end

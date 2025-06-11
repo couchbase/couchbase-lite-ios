@@ -208,15 +208,41 @@ class MultipeerReplicatorTest: CBLTestCase {
 
         repl2.start()
         wait(for: [xActive2], timeout: 10.0)
-        wait(for: [xOnline1, xOnline2], timeout: 60.0)
+        wait(for: [xOnline1, xOnline2], timeout: 10.0)
         wait(for: [xIdle1, xIdle2], timeout: 10.0)
 
         repl1.stop()
         wait(for: [xStopped1, xStopped2], timeout: 10.0)
         wait(for: [xOffline2], timeout: 10.0)
-        wait(for: [xUnactive1], timeout: 60.0)
+        wait(for: [xUnactive1], timeout: 10.0)
 
         repl2.stop()
         wait(for: [xUnactive2], timeout: 10.0)
+    }
+    
+    func testStopOnCloseDatabase() throws {
+        try XCTSkipUnless(isExecutionAllowed)
+
+        let repl = try multipeerReplicator(for: db)
+        
+        let xActive = expectation(description: "Active")
+        let xInactive = expectation(description: "Inactive")
+
+        _ = repl.addStatusListener(on: nil) { status in
+            XCTAssertNil(status.error)
+            if status.active {
+                xActive.fulfill()
+            } else {
+                xInactive.fulfill()
+            }
+        }
+        
+        repl.start()
+        wait(for: [xActive], timeout: 10.0)
+
+        // Close database:
+        try db.close()
+        
+        wait(for: [xInactive], timeout: 10.0)
     }
 }

@@ -187,7 +187,7 @@ typedef enum {
             [self setConflictResolutionSuspended: NO];
             c4repl_start(_repl, reset);
             status = c4repl_getStatus(_repl);
-            [_config.database addActiveStoppable: self];
+            [_config.database registerActiveService: self];
             
 #if TARGET_OS_IPHONE
             if (!_config.allowReplicatingInBackground)
@@ -381,7 +381,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     
     // Prevent self to get released when removing from the active replications:
     CBLReplicator* repl = self;
-    [_config.database removeActiveStoppable: repl];
+    [_config.database unregisterActiveService: repl];
     
 #if TARGET_OS_IPHONE
     [self endBackgroundingMonitor];

@@ -30,7 +30,7 @@
 #import "CBLDocumentChange.h"
 #import "CBLReplicator.h"
 #import "CBLConflictResolver.h"
-#import "CBLStoppable.h"
+#import "CBLDatabaseService.h"
 #import "CBLLockable.h"
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -61,9 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable C4BlobStore*) getBlobStore: (NSError**)outError;
 
-- (void) addActiveStoppable: (id<CBLStoppable>)stoppable;
-- (void) removeActiveStoppable: (id<CBLStoppable>)stoppable;
-- (uint64_t) activeStoppableCount; // For testing only
+- (void) registerActiveService: (id<CBLDatabaseService>)service;
+- (void) unregisterActiveService: (id<CBLDatabaseService>)service;
+- (uint64_t) activeServiceCount; // For testing only
 
 // Initialize the CBLDatabase with a give C4Database object in the shell mode.
 // This is currently used for creating a CBLDictionary as an input of the predict()
