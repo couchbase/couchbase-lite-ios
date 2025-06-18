@@ -89,14 +89,8 @@ typedef NS_ENUM(NSInteger, CBLConflictResolverState) {
             return;
         }
         
-        __block dispatch_block_t block;
-        block = dispatch_block_create(0, ^{
-            if (dispatch_block_testcancel(block)) {
-                completion(YES, nil);
-                return;
-            }
-            
-            NSError* error;
+        dispatch_block_t block = dispatch_block_create(0, ^{
+            NSError* error = nil;
             if (![collection resolveConflictInDocument: doc.id
                                   withConflictResolver: resolver
                                                  error: &error]) {
@@ -116,8 +110,7 @@ typedef NS_ENUM(NSInteger, CBLConflictResolverState) {
 
 - (void) removePendingBlock :(dispatch_block_t)block {
     CBL_LOCK(_mutex) {
-        [_pendingBlocks removeObject:block];
-        
+        [_pendingBlocks removeObject: block];
         if (_state == CBLConflictResolverStopping && _pendingBlocks.count == 0) {
             _state = CBLConflictResolverStopped;
             void (^completion)(void) = _pendingShutdownCompletion;

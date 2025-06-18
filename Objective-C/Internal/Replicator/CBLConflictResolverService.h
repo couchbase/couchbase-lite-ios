@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) addConflict: (CBLReplicatedDocument*)doc
           collection: (CBLCollection*)collection
-            resolver: (id<CBLConflictResolver>)resolver
+            resolver: (nullable id<CBLConflictResolver>)resolver
           completion: (void (^)(BOOL cancelled, NSError* _Nullable error))completion;
 
 - (instancetype) init NS_UNAVAILABLE;
