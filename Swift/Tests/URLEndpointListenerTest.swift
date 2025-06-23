@@ -27,9 +27,7 @@ class URLEndpointListenerTest: ReplicatorTest {
     
     var listener: URLEndpointListener?
     
-    override func setUpWithError() throws {
-        throw XCTSkip("CBL-7038 : Stop URLEndpointListener may crash as recursive_mutex lock failed")
-    }
+    override func setUpWithError() throws { }
     
     // MARK: --  Helper methods
     // MARK: Listener Helper methods
