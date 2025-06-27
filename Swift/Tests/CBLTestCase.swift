@@ -347,6 +347,28 @@ class CBLTestCase: XCTestCase {
         return try stringFromResource(name: "rick_morty", ofType: "json")
     }
     
+    func createSecCertFromPEM(_ pem: String) throws -> SecCertificate {
+        // Split lines and filter out header/footer
+        let lines = pem
+            .components(separatedBy: .newlines)
+            .filter { !$0.contains("BEGIN CERTIFICATE") && !$0.contains("END CERTIFICATE") }
+        
+        // Join base64 lines
+        let base64String = lines.joined()
+        
+        // Decode base64 to Data
+        guard let certData = Data(base64Encoded: base64String) else {
+            throw NSError(domain: "CertDecode", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid base64 certificate"])
+        }
+        
+        // Create SecCertificate
+        guard let cert = SecCertificateCreateWithData(nil, certData as CFData) else {
+            throw NSError(domain: "CertDecode", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to create SecCertificate"])
+        }
+        
+        return cert
+    }
+    
 }
 
 /** Comparing JSON Dictionary */
