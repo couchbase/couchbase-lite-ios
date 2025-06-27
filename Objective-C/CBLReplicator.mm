@@ -45,12 +45,14 @@
 #import "CBLErrorMessage.h"
 #import "CBLLockable.h"
 #import "CBLScope.h"
+#import "CBLWebSocket.h"
 
 #import "c4Replicator.h"
 #import "c4Socket.h"
-#import "CBLWebSocket.h"
 #import "fleece/Fleece.hh"
+
 #import <algorithm>
+#import <vector>
 
 using namespace std;
 using namespace fleece;
@@ -274,13 +276,15 @@ typedef enum {
         .socketFactory = &socketFactory,
     };
     
-    NSUInteger collectionCount = _config.collectionConfigs.count;
-    C4ReplicationCollection cols[collectionCount];
-    alloc_slice optionDicts[collectionCount];
-    NSUInteger i = 0;
+    // Collections:
+    std::vector<C4ReplicationCollection> cols;
+    std::vector<alloc_slice> optionDicts;
+    
     for (CBLCollection* col in _config.collectionConfigs) {
         CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
+        
         alloc_slice dict = [self encodedOptions: colConfig.effectiveOptions];
+        optionDicts.push_back(dict);
         
         C4ReplicationCollection c = {
             .collection = col.c4spec,
@@ -291,16 +295,17 @@ typedef enum {
             .callbackContext    = (__bridge void*)self,
             .optionsDictFleece  = dict,
         };
-        optionDicts[i] = dict;
-        cols[i++] = c;
+        
+        cols.push_back(c);
     }
-    params.collectionCount = collectionCount;
-    params.collections = cols;
+    
+    params.collections = cols.data();
+    params.collectionCount = cols.size();
+    
+    [self createCollectionMap];
     
     [self initReachability: _reachabilityURL];
     
-    [self createCollectionMap];
-
     // Create a C4Replicator:
     [_config.database safeBlock: ^{
         [self->_config.database mustBeOpenLocked];
