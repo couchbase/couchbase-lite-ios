@@ -344,6 +344,25 @@
                                            data: [string dataUsingEncoding: NSUTF8StringEncoding]];
 }
 
+- (SecCertificateRef) createSecCertFromPEM: (NSString*)pem {
+    // Separate the lines and remove BEGIN/END headers
+    NSMutableArray<NSString*>*lines = [NSMutableArray array];
+    for (NSString* line in [pem componentsSeparatedByCharactersInSet: [NSCharacterSet newlineCharacterSet]]) {
+        if (![line containsString: @"BEGIN CERTIFICATE"] && ![line containsString: @"END CERTIFICATE"]) {
+            [lines addObject:line];
+        }
+    }
+    
+    // Join the base64 lines
+    NSString* base64String = [lines componentsJoinedByString: @""];
+    
+    // Decode base64 to NSData
+    NSData* certData = [[NSData alloc] initWithBase64EncodedString: base64String options: 0];
+    AssertNotNil(certData);
+    
+    return SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+}
+
 // helper method to check error
 - (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block {
     if ([self isProfiling])

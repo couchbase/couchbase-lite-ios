@@ -183,6 +183,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** Creates blob object from string. */
 - (CBLBlob*) blobForString: (NSString*)string;
 
+- (SecCertificateRef) createSecCertFromPEM: (NSString*)pem;
+
 /** Utility to check a failure case. This method asserts that the block returns NO, and that
     it sets the NSError to the given domain and code. */
 - (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block;

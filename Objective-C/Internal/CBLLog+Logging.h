@@ -44,8 +44,7 @@ extern C4LogDomain kCBL_LogDomainP2P;
     
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \
-        ({if (__builtin_expect(c4log_getLevel(kCBL_LogDomain##DOMAIN) <= LEVEL, false))   \
-              cblLog(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
+        ({cblLog(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
 #define CBLLogVerbose(DOMAIN, FMT, ...) CBLLogToAt(DOMAIN, kC4LogVerbose, FMT, ## __VA_ARGS__)
 #define CBLLogInfo(DOMAIN, FMT, ...)    CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
 #define CBLWarn(DOMAIN, FMT, ...)       CBLLogToAt(DOMAIN, kC4LogWarning, FMT, ## __VA_ARGS__)

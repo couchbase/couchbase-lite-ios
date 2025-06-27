@@ -96,11 +96,17 @@
 }
 
 void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
+    // If CBLLogSinks is not initialized yet, the domain will be NULL.
+    // To avoid crash from checking the log level for this edge case, just return.
+    if (!domain) { return; }
+    
+    if (__builtin_expect(c4log_getLevel(domain) > level, true)) {
+        return;
+    }
+    
     va_list args;
     va_start(args, msg);
-    
     NSString *formatted = [[NSString alloc] initWithFormat: msg arguments: args];
-    
     [CBLLogSinks writeCBLLog: domain level: level message: formatted];
 }
 

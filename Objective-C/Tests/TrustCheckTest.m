@@ -49,25 +49,6 @@
     return (SecTrustRef) CFAutorelease(trust);
 }
 
-- (SecCertificateRef) getCertFromPEM: (NSString*)pem {
-    // Separate the lines and remove BEGIN/END headers
-    NSMutableArray<NSString*>*lines = [NSMutableArray array];
-    for (NSString* line in [pem componentsSeparatedByCharactersInSet: [NSCharacterSet newlineCharacterSet]]) {
-        if (![line containsString:@"BEGIN CERTIFICATE"] && ![line containsString:@"END CERTIFICATE"]) {
-            [lines addObject:line];
-        }
-    }
-    
-    // Join the base64 lines
-    NSString* base64String = [lines componentsJoinedByString: @""];
-    
-    // Decode base64 to NSData
-    NSData* certData = [[NSData alloc] initWithBase64EncodedString: base64String options: 0];
-    AssertNotNil(certData);
-    
-    return SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
-}
-
 - (NSArray*) getAnchorCerts {
     SecCertificateRef certificate = [self getSelfSignedCertificate];
     NSArray* certArray = @[ (__bridge id)certificate ];
@@ -160,7 +141,7 @@
     "r+WpI4oH5gbfdA==\n"
     "-----END CERTIFICATE-----";
     
-    SecCertificateRef secCert1 = [self getCertFromPEM: cert1];
+    SecCertificateRef secCert1 = [self createSecCertFromPEM: cert1];
     NSArray* certs = @[(__bridge id) secCert1];
     
     SecTrustRef trust;
@@ -242,9 +223,9 @@
     "0pSfRUdNpkoVwOskW1ji\n"
     "-----END CERTIFICATE-----";
     
-    SecCertificateRef secCert1 = [self getCertFromPEM: cert1];
-    SecCertificateRef secCert2 = [self getCertFromPEM: cert2];
-    SecCertificateRef secCert3 = [self getCertFromPEM: cert3];
+    SecCertificateRef secCert1 = [self createSecCertFromPEM: cert1];
+    SecCertificateRef secCert2 = [self createSecCertFromPEM: cert2];
+    SecCertificateRef secCert3 = [self createSecCertFromPEM: cert3];
     
     SecTrustRef trust;
     SecPolicyRef policy = SecPolicyCreateSSL(true, (__bridge CFStringRef)_host);
