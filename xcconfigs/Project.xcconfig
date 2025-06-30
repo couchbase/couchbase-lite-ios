@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-CBL_VERSION_STRING                 = 4.0.0
+CBL_VERSION_STRING                 = 0
 CBL_BUILD_NUMBER                   = 0
 CBL_COPYRIGHT_YEAR                 = 2025
 

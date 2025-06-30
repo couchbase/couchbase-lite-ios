@@ -122,9 +122,9 @@ then
     -sdk macosx || checkCrashLogs
   
   # get the latest simulator
-  TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
-  
+  TEST_SIMULATOR=$(xcrun simctl list devices available | grep -E "iPhone.*" | head -n 1 | sed 's/^[[:space:]]*//; s/ (.*//')
   echo "Run ObjC iOS tests on ${TEST_SIMULATOR}..."
+  
   # iOS-App target runs Keychain-Accessing tests
   sh Scripts/xctest_crash_log.sh --delete-all
   xcodebuild clean test \

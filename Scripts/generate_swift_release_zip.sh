@@ -120,7 +120,7 @@ then
     -sdk macosx
 
   # get the latest simulator
-  TEST_SIMULATOR=$(xcrun simctl list devicetypes | grep \.iPhone- | tail -1 |  sed  "s/ (com.apple.*//g")
+  TEST_SIMULATOR=$(xcrun simctl list devices available | grep -E "iPhone.*" | head -n 1 | sed 's/^[[:space:]]*//; s/ (.*//')
   echo "Run Swift iOS tests on ${TEST_SIMULATOR}..."
   
   xcodebuild clean test \
