@@ -1244,7 +1244,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self runConflictResolverTestWithResolver: [[MultipeerConflictResolver alloc] initWithBlock: block]
                                   verifyBlock: ^BOOL(CBLDocument *resolvedDoc) {
-        return [resolvedDoc stringForKey: @"hi"];
+        return [[resolvedDoc stringForKey: @"greeting"] isEqualToString: @"hi"];
     }];
 }
 
