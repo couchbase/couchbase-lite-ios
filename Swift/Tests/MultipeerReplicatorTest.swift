@@ -1401,6 +1401,9 @@ class MultipeerReplicatorTest: CBLTestCase {
 
         stopMultipeerReplicator(repl1)
         XCTAssertEqual(repl1.neighborPeers.count, 0)
+        
+        // Wait to ensure the neighborPeers are updated
+        Thread.sleep(forTimeInterval: 5.0)
         XCTAssertEqual(repl2.neighborPeers.count, 0)
         
         stopMultipeerReplicator(repl2)

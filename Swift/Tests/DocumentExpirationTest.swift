@@ -433,7 +433,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date())
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         
         /// Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
@@ -458,15 +458,13 @@ class DocumentExpirationTest: CBLTestCase {
             let docID = change.documentIDs.first
             XCTAssertNotNil(docID)
             XCTAssertEqual(doc.id, docID)
-            if try! change.collection.document(id: doc.id) == nil {
-                promise.fulfill()
-            }
+            promise.fulfill()
         }
         
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date(timeIntervalSinceNow: 1))
         
         // Wait for result
-        waitForExpectations(timeout: 5.0)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()

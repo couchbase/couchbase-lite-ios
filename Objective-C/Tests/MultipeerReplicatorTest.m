@@ -139,6 +139,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
                                                                    issuer: [self issuer]
                                                                     label: name
                                                                     error: &error];
+    
     AssertNotNil(identity);
     AssertNil(error);
     return identity;
@@ -1513,6 +1514,9 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self stopMultipeerReplicator: repl1];
     AssertEqual(repl1.neighborPeers.count, 0);
+    
+    // Wait to ensure the neighborPeers are updated
+    [NSThread sleepForTimeInterval: 5.0];
     AssertEqual(repl2.neighborPeers.count, 0);
     
     [self stopMultipeerReplicator: repl2];

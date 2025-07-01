@@ -83,6 +83,7 @@
     
     self.crashWhenStoppedTimeoutOccurred = YES;
     
+    // Minimum 20 seconds to accommodate single-shot replicator retries and slower machines
     timeout = 20.0;
     
     [self openOtherDB];

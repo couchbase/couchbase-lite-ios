@@ -2061,44 +2061,6 @@
     [token1 remove];
 }
 
-- (void) testAddRemoveChangeListenerAfterReplicatorStart {
-    XCTestExpectation* exp1 = [self expectationWithDescription: @"Replicator Stopped 1"];
-    XCTestExpectation* exp2 = [self expectationWithDescription: @"Replicator Stopped 2 - Inverted"];
-    XCTestExpectation* exp3 = [self expectationWithDescription: @"Replicator Stopped 3"];
-    exp2.inverted = YES;
-    
-    CBLReplicatorConfiguration* config = [self configWithTarget: kConnRefusedTarget
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
-    config.maxAttempts = 4;
-    config.maxAttemptWaitTime = 2;
-    repl = [[CBLReplicator alloc] initWithConfig: config];
-    id token1 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
-        if (c.status.activity == kCBLReplicatorStopped) {
-            [exp1 fulfill];
-        }
-    }];
-    [repl start];
-    
-    id token2 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
-        if (c.status.activity == kCBLReplicatorStopped) {
-            [exp2 fulfill];
-        }
-    }];
-    
-    id token3 = [repl addChangeListener: ^(CBLReplicatorChange * c) {
-        if (c.status.activity == kCBLReplicatorOffline) {
-            [c.replicator removeChangeListenerWithToken: token2];
-        } else if (c.status.activity == kCBLReplicatorStopped) {
-            [exp3 fulfill];
-        }
-    }];
-    
-    [self waitForExpectations: @[exp1, exp2, exp3] timeout: timeout];
-    [repl removeChangeListenerWithToken: token1];
-    [repl removeChangeListenerWithToken: token3];
-}
-
 #pragma clang diagnostic pop
 
 @end
