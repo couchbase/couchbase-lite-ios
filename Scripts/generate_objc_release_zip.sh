@@ -147,8 +147,6 @@ then
         --ignore "vendor/*" --ignore "Swift/*" \
         --ignore "Objective-C/Tests/*" --ignore "../Sources/Swift/*" \
         --output-directory "$OUTPUT_DIR/$COVERAGE_NAME" \
-        --binary-basename "CouchbaseLite.framework"  \
-        --binary-basename "CBL_EE_Tests" \
         CouchbaseLite.xcodeproj > /dev/null
         
         # Zip reports:
