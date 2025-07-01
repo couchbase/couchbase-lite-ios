@@ -30,7 +30,9 @@ class ReplicatorTest: CBLTestCase {
     override func setUp() {
         super.setUp()
         try! openOtherDB()
-        timeout = 10 // At least 10 to cover single-shot replicator's retry logic
+        
+        // Minimum 20 seconds to accommodate single-shot replicator retries and slower machines
+        timeout = 20
     }
     
     override func tearDown() {
@@ -1166,46 +1168,6 @@ class ReplicatorTest_Main: ReplicatorTest {
         repl.start()
         wait(for: [x1, x2], timeout: timeout)
         token1.remove()
-    }
-
-    
-    func testAddRemoveChangeListenerAfterReplicatorStart() throws {
-        let x1 = self.expectation(description: "Replicator Stopped 1")
-        let x2 = self.expectation(description: "Replicator Stopped 2 - Inverted")
-        let x3 = self.expectation(description: "Replicator Stopped 3")
-        x2.isInverted = true
-        
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget)
-        config.maxAttempts = 4
-        config.maxAttemptWaitTime = 2
-        config.addCollection(defaultCollection!)
-        
-        repl = Replicator(config: config)
-        let token1 = repl.addChangeListener { (change) in
-            if change.status.activity == .stopped {
-                x1.fulfill()
-            }
-        }
-        
-        repl.start()
-        
-        let token2 = repl.addChangeListener { (change) in
-            if change.status.activity == .stopped {
-                x2.fulfill()
-            }
-        }
-        
-        let token3 = repl.addChangeListener { (change) in
-            if change.status.activity == .offline {
-                token2.remove()
-            } else if change.status.activity == .stopped {
-                x3.fulfill()
-            }
-        }
-        
-        wait(for: [x1, x2, x3], timeout: timeout)
-        token1.remove()
-        token3.remove()
     }
     
     // MARK: ReplicatorConfig

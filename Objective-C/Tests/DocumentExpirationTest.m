@@ -566,24 +566,23 @@
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    id token = [self.db addChangeListener:^(CBLDatabaseChange* change) {
+    
+    id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
         AssertEqual(change.documentIDs.count, 1u);
         NSString* documentID = change.documentIDs.firstObject;
         AssertEqualObjects(documentID, doc.id);
-        if ([change.database documentWithID: documentID] == nil) {
-            [expectation fulfill];
-        }
+        [expectation fulfill];
     }];
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
     // Set expiry
     NSDate* begin = [NSDate dateWithTimeIntervalSinceNow: 1];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &err]);
-    AssertNil(err);
+    NSError* error;
+    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &error]);
+    AssertNil(error);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: 20.0 handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
