@@ -296,7 +296,7 @@
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
     [self.db addChangeListener: ^(CBLDatabaseChange *change) {
-        [self waitForExpectations: @[exp1] timeout: expTimeout]; // Test deadlock
+        [self waitForExpectations: @[exp1] timeout: kExpTimeout]; // Test deadlock
         [exp2 fulfill];
     }];
     
@@ -305,14 +305,14 @@
         [exp1 fulfill];
     }];
     
-    [self waitForExpectations: @[exp2] timeout: expTimeout]; // Test deadlock
+    [self waitForExpectations: @[exp2] timeout: kExpTimeout]; // Test deadlock
 }
 
 - (void) testDocumentChange {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
     [self.db addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange *change) {
-        [self waitForExpectations: @[exp1] timeout: expTimeout]; // Test deadlock
+        [self waitForExpectations: @[exp1] timeout: kExpTimeout]; // Test deadlock
         [exp2 fulfill];
     }];
     
@@ -321,7 +321,7 @@
         [exp1 fulfill];
     }];
     
-    [self waitForExpectations: @[exp2] timeout: expTimeout]; // Test deadlock
+    [self waitForExpectations: @[exp2] timeout: kExpTimeout]; // Test deadlock
 }
 
 - (void) testConcurrentCreateAndQuery {

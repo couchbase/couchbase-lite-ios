@@ -29,7 +29,7 @@ extension String {
 }
 
 class CBLTestCase: XCTestCase {
-    static let expTimeout: TimeInterval = 20.0
+    let expTimeout: TimeInterval = 20.0
 
     /// Opened when setting up each test case.
     var db: Database!

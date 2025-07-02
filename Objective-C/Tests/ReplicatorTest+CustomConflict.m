@@ -795,7 +795,7 @@
     pullConfig.conflictResolver = resolver;
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    [self waitForExpectations: @[ex] timeout: expTimeout];
+    [self waitForExpectations: @[ex] timeout: kExpTimeout];
     
     // make sure, first doc starts resolution but finishes last.
     // in between second doc starts and finishes it.
@@ -833,7 +833,7 @@
         if (ccrCount++ == 0) {
             // 2
             [expCCR fulfill];
-            [self waitForExpectations: @[expFirstDocResolve] timeout: expTimeout];
+            [self waitForExpectations: @[expFirstDocResolve] timeout: kExpTimeout];
         }
         // 5
         return c == 1 ? con.localDocument /*non-sleeping*/ : con.remoteDocument /*sleeping*/;
@@ -863,7 +863,7 @@
     
     // 1
     [replicator start];
-    [self waitForExpectations: @[expCCR] timeout: expTimeout];
+    [self waitForExpectations: @[expCCR] timeout: kExpTimeout];
     
     // 3
     // in between the conflict, we wil suspend replicator.
@@ -871,7 +871,7 @@
     
     // Skip exception breakpoint thrown from c4doc_resolve
     [self ignoreException:^{
-        [self waitForExpectations: @[expSTOP] timeout: expTimeout];
+        [self waitForExpectations: @[expSTOP] timeout: kExpTimeout];
     }];
     
     AssertEqual(ccrCount, 2u);

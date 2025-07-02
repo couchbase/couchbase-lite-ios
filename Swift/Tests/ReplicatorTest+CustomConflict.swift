@@ -733,7 +733,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
 
         run(config: config, expectedError: nil)
         
-        wait(for: [expectation], timeout: CBLTestCase.expTimeout)
+        wait(for: [expectation], timeout: expTimeout)
         
         // make sure, first doc starts resolution but finishes last.
         // in between second doc starts and finishes it.

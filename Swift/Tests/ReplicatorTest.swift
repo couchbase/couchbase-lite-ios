@@ -137,7 +137,7 @@ class ReplicatorTest: CBLTestCase {
             replicator.start()
         }
         
-        wait(for: [x], timeout: CBLTestCase.expTimeout)
+        wait(for: [x], timeout: expTimeout)
         
         if replicator.status.activity != .stopped {
             replicator.stop()
@@ -1045,7 +1045,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout:  pow(2, Double(count + 1)) + CBLTestCase.expTimeout)
+        wait(for: [x], timeout:  pow(2, Double(count + 1)) + expTimeout)
         XCTAssertEqual(count, offlineCount)
     }
     
@@ -1133,7 +1133,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout: CBLTestCase.expTimeout)
+        wait(for: [x], timeout: expTimeout)
         XCTAssert(abs(diff - config.maxAttemptWaitTime) < 1.0)
     }
     
@@ -1161,7 +1161,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         token2.remove()
         
         repl.start()
-        wait(for: [x1, x2], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1, x2], timeout: expTimeout)
         token1.remove()
     }
     

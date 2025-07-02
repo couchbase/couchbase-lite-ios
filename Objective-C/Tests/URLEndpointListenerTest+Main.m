@@ -93,7 +93,7 @@
     // start & wait for replication
     [repl1 start];
     [repl2 start];
-    [self waitForExpectations: @[exp1, exp2] timeout: expTimeout];
+    [self waitForExpectations: @[exp1, exp2] timeout: kExpTimeout];
     
     NSUInteger expectedReplicatorDBDocs = existingDocsInListener;
     if (type == kCBLReplicatorTypePull || type == kCBLReplicatorTypePushAndPull) {
@@ -173,7 +173,7 @@
     
     [repl1 start];
     [repl2 start];
-    [self waitForExpectations: @[idleExp1, idleExp2] timeout: expTimeout];
+    [self waitForExpectations: @[idleExp1, idleExp2] timeout: kExpTimeout];
     
     if (isDeleteDBs) {
         [db2 delete: &err];
@@ -187,7 +187,7 @@
         AssertNil(err);
     }
     
-    [self waitForExpectations: @[stopExp1, stopExp2] timeout: expTimeout];
+    [self waitForExpectations: @[stopExp1, stopExp2] timeout: kExpTimeout];
     [repl1 removeChangeListenerWithToken: token1];
     [repl2 removeChangeListenerWithToken: token2];
     [self stopListen];
@@ -229,7 +229,7 @@
         }
     }];
     [replicator start];
-    [self waitForExpectations: @[idleExp] timeout: expTimeout];
+    [self waitForExpectations: @[idleExp] timeout: kExpTimeout];
     
     // delete / close
     if (isDeleteDB)
@@ -237,7 +237,7 @@
     else
         [self.otherDB close: &err];
     
-    [self waitForExpectations: @[stopExp] timeout: expTimeout];
+    [self waitForExpectations: @[stopExp] timeout: kExpTimeout];
     
     // cleanup
     [replicator removeChangeListenerWithToken: token];
@@ -388,7 +388,7 @@
     }];
     
     [replicator start];
-    [self waitForExpectations: @[pullFilterBusy, replicatorStop] timeout: expTimeout];
+    [self waitForExpectations: @[pullFilterBusy, replicatorStop] timeout: kExpTimeout];
     [replicator removeChangeListenerWithToken: token];
     
     AssertEqual(maxActiveCount, 1);
@@ -1035,7 +1035,7 @@
     
     [replicator start];
     
-    [self waitForExpectations: @[x1] timeout: expTimeout];
+    [self waitForExpectations: @[x1] timeout: kExpTimeout];
     
     SecCertificateRef receivedServerCert = replicator.serverCertificate;
     Assert(receivedServerCert != NULL);
@@ -1044,7 +1044,7 @@
     
     [replicator stop];
     
-    [self waitForExpectations: @[x2] timeout: expTimeout];
+    [self waitForExpectations: @[x2] timeout: kExpTimeout];
     
     receivedServerCert = replicator.serverCertificate;
     Assert(receivedServerCert != NULL);
@@ -1077,7 +1077,7 @@
     
     [replicator start];
     
-    [self waitForExpectations: @[x1] timeout: expTimeout];
+    [self waitForExpectations: @[x1] timeout: kExpTimeout];
     SecCertificateRef receivedServerCert = replicator.serverCertificate;
     Assert(receivedServerCert != NULL);
     [self checkEqualForCert: serverCert andCert: receivedServerCert];
@@ -1101,7 +1101,7 @@
     
     [replicator start];
     
-    [self waitForExpectations: @[x1] timeout: expTimeout];
+    [self waitForExpectations: @[x1] timeout: kExpTimeout];
     receivedServerCert = replicator.serverCertificate;
     Assert(receivedServerCert != NULL);
     [self checkEqualForCert: serverCert andCert: receivedServerCert];
@@ -1109,7 +1109,7 @@
     
     [replicator stop];
     
-    [self waitForExpectations: @[x2] timeout: expTimeout];
+    [self waitForExpectations: @[x2] timeout: kExpTimeout];
     receivedServerCert = replicator.serverCertificate;
     Assert(receivedServerCert != NULL);
     [self checkEqualForCert: serverCert andCert: receivedServerCert];
@@ -1140,12 +1140,12 @@
     
     [replicator start];
     
-    [self waitForExpectations: @[x1] timeout: expTimeout];
+    [self waitForExpectations: @[x1] timeout: kExpTimeout];
     Assert(replicator.serverCertificate == NULL);
     
     [replicator stop];
     
-    [self waitForExpectations: @[x2] timeout: expTimeout];
+    [self waitForExpectations: @[x2] timeout: kExpTimeout];
     Assert(replicator.serverCertificate == NULL);
     
     [self stopListen];
@@ -1261,13 +1261,13 @@
     [replicator start];
     
     // Wait until idle then stop the listener:
-    [self waitForExpectations: @[x1] timeout: expTimeout];
+    [self waitForExpectations: @[x1] timeout: kExpTimeout];
     
     // Stop listen:
     [self stopListen];
     
     // Wait for the replicator to be stopped:
-    [self waitForExpectations: @[x2] timeout: expTimeout];
+    [self waitForExpectations: @[x2] timeout: kExpTimeout];
     
     // Check error
     AssertEqual(replicator.status.error.code, CBLErrorWebSocketGoingAway);

@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
     CBLDatabase* _otherDB;
 }
 
-extern const NSTimeInterval expTimeout;
+extern const NSTimeInterval kExpTimeout;
 
 /** Opened when setting up each test case. */
 @property (readonly, nonatomic) CBLDatabase* db;

@@ -273,7 +273,7 @@
         
         NSLog(@"****** Start Replicator ******");
         [r start];
-        [self waitForExpectations: @[x] timeout: expTimeout];
+        [self waitForExpectations: @[x] timeout: kExpTimeout];
         [r removeChangeListenerWithToken: token];
     }
     r = nil;
@@ -371,20 +371,20 @@
     }];
     
     [r start];
-    [self waitForExpectations: @[foregroundExps[0]] timeout: expTimeout];
+    [self waitForExpectations: @[foregroundExps[0]] timeout: kExpTimeout];
     
     for (int i = 0; i < numRounds; i++) {
         [r appBackgrounding];
-        [self waitForExpectations: @[backgroundExps[i]] timeout: expTimeout];
+        [self waitForExpectations: @[backgroundExps[i]] timeout: kExpTimeout];
         Assert(r.conflictResolutionSuspended);
         
         [r appForegrounding];
-        [self waitForExpectations: @[foregroundExps[i+1]] timeout: expTimeout];
+        [self waitForExpectations: @[foregroundExps[i+1]] timeout: kExpTimeout];
         AssertFalse(r.conflictResolutionSuspended);
     }
     
     [r stop];
-    [self waitForExpectations: @[stopped] timeout: expTimeout];
+    [self waitForExpectations: @[stopped] timeout: kExpTimeout];
     
     AssertEqual(foregroundCount, numRounds + 1);
     AssertEqual(backgroundCount, numRounds);
@@ -416,16 +416,16 @@
     }];
 
     [r start];
-    [self waitForExpectations: @[idle] timeout: expTimeout];
+    [self waitForExpectations: @[idle] timeout: kExpTimeout];
 
     // Switch to background and immediately comes back to foreground
     [r setSuspended: YES];
     [r setSuspended: NO];
 
-    [self waitForExpectations: @[foregroundExp] timeout: expTimeout];
+    [self waitForExpectations: @[foregroundExp] timeout: kExpTimeout];
 
     [r stop];
-    [self waitForExpectations: @[stopped] timeout: expTimeout];
+    [self waitForExpectations: @[stopped] timeout: kExpTimeout];
 
     [r removeChangeListenerWithToken: token];
     r = nil;
@@ -455,13 +455,13 @@
     }];
     
     [r start];
-    [self waitForExpectations: @[idle] timeout: expTimeout];
+    [self waitForExpectations: @[idle] timeout: kExpTimeout];
     
     [r stop];
     
     // This shouldn't prevent the replicator to stop:
     [r appBackgrounding];
-    [self waitForExpectations: @[stopped] timeout: expTimeout];
+    [self waitForExpectations: @[stopped] timeout: kExpTimeout];
     
     // This shouldn't wake up the replicator:
     foregrounding = YES;
@@ -472,7 +472,7 @@
     [NSTimer scheduledTimerWithTimeInterval: 0.3
                                      target: block
                                    selector: @selector(main) userInfo: nil repeats: NO];
-    [self waitForExpectations: @[done] timeout: expTimeout];
+    [self waitForExpectations: @[done] timeout: kExpTimeout];
     
     [r removeChangeListenerWithToken: token];
     r = nil;
@@ -510,7 +510,7 @@
     // start and wait for idle
     AssertEqual(self.otherDB.count, 0);
     [replicator start];
-    [self waitForExpectations: @[idle] timeout: expTimeout];
+    [self waitForExpectations: @[idle] timeout: kExpTimeout];
     
     // replicate a doc with blob, and wait for busy
     NSError* error;
@@ -519,17 +519,17 @@
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg" data: data];
     [doc1 setBlob: blob forKey: @"blob"];
     Assert([self.db saveDocument: doc1 error: &error]);
-    [self waitForExpectations: @[busy] timeout: expTimeout];
+    [self waitForExpectations: @[busy] timeout: kExpTimeout];
     
     // background during the data transfer!
     [replicator setSuspended: YES];
-    [self waitForExpectations: @[offline] timeout: expTimeout];
+    [self waitForExpectations: @[offline] timeout: kExpTimeout];
     
     // forground after 0.2 secs
     [NSThread sleepForTimeInterval: 0.2];
     [replicator setSuspended: NO];
     
-    [self waitForExpectations: @[stop] timeout: expTimeout];
+    [self waitForExpectations: @[stop] timeout: kExpTimeout];
     [replicator removeChangeListenerWithToken: token];
     
     // make sure the doc with blob transferred successfully!
@@ -587,7 +587,7 @@
     [r start];
     
     // Wait until there is at least one conflict resolver is called.
-    [self waitForExpectations: @[resolving] timeout: expTimeout];
+    [self waitForExpectations: @[resolving] timeout: kExpTimeout];
     
     // Now suspend.
     [r setSuspended: YES];
@@ -605,13 +605,13 @@
     Assert(resolvingCount < numDocs);
     
     // Wait until suspended:
-    [self waitForExpectations: @[offline] timeout: expTimeout];
+    [self waitForExpectations: @[offline] timeout: kExpTimeout];
     
     // Stop the replicator:
     [r stop];
     
     // Wait until the replicator is stopped:
-    [self waitForExpectations: @[stopped] timeout: expTimeout];
+    [self waitForExpectations: @[stopped] timeout: kExpTimeout];
     
     [r removeChangeListenerWithToken: token];
 }
@@ -883,7 +883,7 @@
     
     // --- 2. Start then stop after IDLE
     [r start];
-    [self waitForExpectations: @[xc1] timeout: expTimeout];
+    [self waitForExpectations: @[xc1] timeout: kExpTimeout];
     [r removeChangeListenerWithToken: token1];
     
     // --- 3. Add some documents to the database
@@ -917,7 +917,7 @@
         }
     }];
     [r start];
-    [self waitForExpectations: @[xc2] timeout: expTimeout];
+    [self waitForExpectations: @[xc2] timeout: kExpTimeout];
     [r removeChangeListenerWithToken: token2];
     
     // --- 6. There should be some document replication events notified
@@ -1070,7 +1070,7 @@
         [token remove];
     }];
     
-    [self waitForExpectations: @[exp] timeout: expTimeout];
+    [self waitForExpectations: @[exp] timeout: kExpTimeout];
 }
 
 - (void) testSingleShotPushFilter {
@@ -1269,7 +1269,7 @@
         }];
     }];
     
-    [self waitForExpectations: @[expectation] timeout: expTimeout];
+    [self waitForExpectations: @[expectation] timeout: kExpTimeout];
     
     AssertEqual(self.db.count, 0u);
     AssertEqual(self.otherDB.count, 1u);
@@ -1901,7 +1901,7 @@
         }
     }];
     [repl start];
-    [self waitForExpectations: @[exp] timeout: pow(2, count + 1) + expTimeout];
+    [self waitForExpectations: @[exp] timeout: pow(2, count + 1) + kExpTimeout];
     AssertEqual(offlineCount, count);
 }
 
@@ -1986,7 +1986,7 @@
         }
     }];
     [repl start];
-    [self waitForExpectations: @[exp] timeout: expTimeout];
+    [self waitForExpectations: @[exp] timeout: kExpTimeout];
     Assert(ABS(diff - config.maxAttemptWaitTime) < 1.0);
 }
 
@@ -2057,7 +2057,7 @@
     [token2 remove];
     
     [repl start];
-    [self waitForExpectations: @[exp1, exp2] timeout: expTimeout];
+    [self waitForExpectations: @[exp1, exp2] timeout: kExpTimeout];
     [token1 remove];
 }
 

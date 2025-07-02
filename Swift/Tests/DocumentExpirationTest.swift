@@ -68,7 +68,7 @@ class DocumentExpirationTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             promise.fulfill()
         }
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testDocumentPurgedAfterExpiration() throws {
@@ -89,7 +89,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove();
@@ -115,7 +115,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()
@@ -155,7 +155,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()
@@ -181,7 +181,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testExpiredDocumentPurgedAfterReopenDatabase() throws {
@@ -208,7 +208,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try self.defaultCollection!.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()
@@ -241,7 +241,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         XCTAssertNil(try self.defaultCollection!.document(id: doc.id))
         XCTAssertNil(try otherDB_defaultCollection.document(id: doc.id))
@@ -278,7 +278,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(1.0))
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
@@ -312,7 +312,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(-9.0))
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin < 3.0)
@@ -341,7 +341,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testSetExpirationThenDeletionAfterwards() throws {
@@ -369,7 +369,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.delete(document: doc)
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener
@@ -401,7 +401,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener
@@ -428,7 +428,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date())
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         
         /// Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
@@ -459,7 +459,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date(timeIntervalSinceNow: 1))
         
         // Wait for result
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
         
         // Remove listener
         token.remove()

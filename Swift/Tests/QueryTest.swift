@@ -1854,13 +1854,13 @@ class QueryTest: CBLTestCase {
                 let token = query.addChangeListener {
                     change in exp.fulfill()
                 }
-                self.wait(for: [exp], timeout: CBLTestCase.expTimeout)
+                self.wait(for: [exp], timeout: expTimeout)
                 token.remove()
                 remExp.fulfill()
             }
         }
         
-        wait(for: [remExp], timeout: CBLTestCase.expTimeout)
+        wait(for: [remExp], timeout: expTimeout)
     }
     
     func testLiveQuery(query: Query) throws {
@@ -1883,10 +1883,10 @@ class QueryTest: CBLTestCase {
             }
         }
         
-        wait(for: [x1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1], timeout: expTimeout)
         try! self.createDoc(numbered: -1, of: 100)
         
-        wait(for: [x2], timeout: CBLTestCase.expTimeout)
+        wait(for: [x2], timeout: expTimeout)
         query.removeChangeListener(withToken: token)
     }
     
@@ -1905,7 +1905,7 @@ class QueryTest: CBLTestCase {
             x1.fulfill()
         }
         
-        wait(for: [x1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1], timeout: expTimeout)
         XCTAssertEqual(count, 1)
         q.removeChangeListener(withToken: token)
     }
@@ -1932,7 +1932,7 @@ class QueryTest: CBLTestCase {
                 x1.fulfill()
             }
         }
-        wait(for: [x1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1], timeout: expTimeout)
         XCTAssertEqual(count, 1)
         
         // adding a second listener should be returning the last results!
@@ -1948,7 +1948,7 @@ class QueryTest: CBLTestCase {
             }
         }        
         
-        wait(for: [x2], timeout: CBLTestCase.expTimeout)
+        wait(for: [x2], timeout: expTimeout)
         query.removeChangeListener(withToken: token)
         query.removeChangeListener(withToken: token2)
         XCTAssertEqual(count, 1)
@@ -1981,7 +1981,7 @@ class QueryTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.defaultCollection!.purge(id: "doc1")
         }
-        wait(for: [x1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1], timeout: expTimeout)
         query.removeChangeListener(withToken: token)
         XCTAssertEqual(count, 2)
     }
@@ -2053,10 +2053,10 @@ class QueryTest: CBLTestCase {
                 y2.fulfill()
             }
         }
-        wait(for: [x1, y1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1, y1], timeout: expTimeout)
         try! self.createDoc(numbered: -1, of: 100)
         
-        wait(for: [x2, y2], timeout: CBLTestCase.expTimeout)
+        wait(for: [x2, y2], timeout: expTimeout)
         
         query.removeChangeListener(withToken: token1)
         query.removeChangeListener(withToken: token2)
@@ -2089,10 +2089,10 @@ class QueryTest: CBLTestCase {
                 x2.fulfill()
             }
         }
-        wait(for: [x1], timeout: CBLTestCase.expTimeout)
+        wait(for: [x1], timeout: expTimeout)
         query.parameters = Parameters().setInt(5, forName: "param")
         
-        wait(for: [x2], timeout: CBLTestCase.expTimeout)
+        wait(for: [x2], timeout: expTimeout)
         query.removeChangeListener(withToken: token)
         XCTAssertEqual(count, 2)
     }

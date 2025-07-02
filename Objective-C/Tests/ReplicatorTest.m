@@ -173,7 +173,7 @@
                                       [x fulfill];
                                   }];
     [task resume];
-    [self waitForExpectations: @[x] timeout: expTimeout];
+    [self waitForExpectations: @[x] timeout: kExpTimeout];
     
     if (error != nil || status >= 300) {
         XCTFail(@"Failed to send request; URL=<%@>, Method=<%@>, Status=%ld, Error=%@",
@@ -419,14 +419,14 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     }
     
     @try {
-        XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: expTimeout];
+        XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: kExpTimeout];
         if (result != XCTWaiterResultCompleted) {
             if (result == XCTWaiterResultTimedOut) {
                 if (self.crashWhenStoppedTimeoutOccurred) {
                     NSLog(@"!!! Exceeding stopped timeout, let's crash the test to get thread dump ...");
                     assert(false);
                 }
-                XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, expTimeout);
+                XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, kExpTimeout);
             } else {
                 XCTFail(@"Unfulfilled expectations for %@ as result = %ld", x.expectationDescription, (long)result);
             }

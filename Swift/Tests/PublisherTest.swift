@@ -51,7 +51,7 @@ class PublisherTest: CBLTestCase {
         let doc = try generateDocument(withID: "doc1")
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testCollectionDocumentChangePublisher() throws {
@@ -68,7 +68,7 @@ class PublisherTest: CBLTestCase {
         let doc = try generateDocument(withID: "doc1")
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
 #if COUCHBASE_ENTERPRISE
@@ -100,7 +100,7 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
     
     func testReplicatorDocumentPublisher() throws {
@@ -124,7 +124,7 @@ class PublisherTest: CBLTestCase {
         replicator.start()
         
         XCTAssert(cancellables.count == 1)
-        waitForExpectations(timeout: CBLTestCase.expTimeout)
+        waitForExpectations(timeout: expTimeout)
     }
 #endif
     
@@ -153,9 +153,9 @@ class PublisherTest: CBLTestCase {
         
         XCTAssert(cancellables.count == 1)
         
-        wait(for: [expect1], timeout: CBLTestCase.expTimeout)
+        wait(for: [expect1], timeout: expTimeout)
         try createDocNumbered(defaultCollection!, start: -1, num: 10)
         
-        wait(for: [expect2], timeout: CBLTestCase.expTimeout)
+        wait(for: [expect2], timeout: expTimeout)
     }
 }

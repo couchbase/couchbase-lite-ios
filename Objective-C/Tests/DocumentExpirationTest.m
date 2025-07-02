@@ -96,7 +96,7 @@
                    });
     
     // Wait for result, it shouldn't crash due to already purged doc
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testDocumentPurgedAfterExpiration {
@@ -123,7 +123,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -156,7 +156,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -204,7 +204,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -233,7 +233,7 @@
                    });
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testExpiredDocumentPurgedAfterReopenDatabase {
@@ -266,7 +266,7 @@
     AssertNotNil([self.db documentWithID: doc.id]);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -303,7 +303,7 @@
     AssertNotNil([otherDB documentWithID: doc.id]);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     AssertNil([self.db documentWithID: doc.id]);
     AssertNil([otherDB documentWithID: doc.id]);
@@ -347,7 +347,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Validate
     Assert(purgeTime - begin >= 2.0);
@@ -386,7 +386,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Validate
     Assert(purgeTime - begin < 3.0);
@@ -420,7 +420,7 @@
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testSetExpirationThenDeletionAfterwards {
@@ -467,7 +467,7 @@
     AssertNotNil(deletedDoc);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     AssertEqual(count, 2);
     
     // Remove listener
@@ -509,7 +509,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     AssertEqual(count, 2);
     
     // Remove listener
@@ -542,7 +542,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     /*
      Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
@@ -577,7 +577,7 @@
     AssertNil(error);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: expTimeout handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
