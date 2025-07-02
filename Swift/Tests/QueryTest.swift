@@ -1854,7 +1854,7 @@ class QueryTest: CBLTestCase {
                 let token = query.addChangeListener {
                     change in exp.fulfill()
                 }
-                self.wait(for: [exp], timeout: expTimeout)
+                self.wait(for: [exp], timeout: self.expTimeout)
                 token.remove()
                 remExp.fulfill()
             }
