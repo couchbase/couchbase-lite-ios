@@ -28,6 +28,8 @@
 #define kDatabaseDirName @"CouchbaseLite"
 #endif
 
+const NSTimeInterval expTimeout = 20.0;
+
 @implementation CBLTestCase
 {
     int _c4ObjectCount;

@@ -83,9 +83,6 @@
     
     self.crashWhenStoppedTimeoutOccurred = YES;
     
-    // Minimum 20 seconds to accommodate single-shot replicator retries and slower machines
-    timeout = 20.0;
-    
     [self openOtherDB];
 }
 
@@ -176,7 +173,7 @@
                                       [x fulfill];
                                   }];
     [task resume];
-    [self waitForExpectations: @[x] timeout: timeout];
+    [self waitForExpectations: @[x] timeout: expTimeout];
     
     if (error != nil || status >= 300) {
         XCTFail(@"Failed to send request; URL=<%@>, Method=<%@>, Status=%ld, Error=%@",
@@ -422,14 +419,14 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     }
     
     @try {
-        XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: timeout];
+        XCTWaiterResult result = [XCTWaiter waitForExpectations: @[x] timeout: expTimeout];
         if (result != XCTWaiterResultCompleted) {
             if (result == XCTWaiterResultTimedOut) {
                 if (self.crashWhenStoppedTimeoutOccurred) {
                     NSLog(@"!!! Exceeding stopped timeout, let's crash the test to get thread dump ...");
                     assert(false);
                 }
-                XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, timeout);
+                XCTFail(@"Unfulfilled expectations for %@ as exceeding timeout of %f seconds)", x.expectationDescription, expTimeout);
             } else {
                 XCTFail(@"Unfulfilled expectations for %@ as result = %ld", x.expectationDescription, (long)result);
             }

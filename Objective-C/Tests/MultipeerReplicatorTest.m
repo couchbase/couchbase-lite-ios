@@ -243,7 +243,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self addListenerToken: token2 forReplicator: repl];
     
     [repl start];
-    [self waitForExpectations: @[xActive] timeout: 10.0];
+    [self waitForExpectations: @[xActive] timeout: expTimeout];
     [token1 remove];
 }
 
@@ -257,7 +257,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
         }
     }];
     [repl stop];
-    [self waitForExpectations: @[xInactive] timeout: 10.0];
+    [self waitForExpectations: @[xInactive] timeout: expTimeout];
     [token remove];
     
     [self resetListenerTokensForReplicator: repl];
@@ -486,10 +486,10 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     
     [repl start];
-    [self waitForExpectations: @[xActive] timeout: 10.0];
+    [self waitForExpectations: @[xActive] timeout: expTimeout];
     
     [repl stop];
-    [self waitForExpectations: @[xInactive] timeout: 10.0];
+    [self waitForExpectations: @[xInactive] timeout: expTimeout];
     
     [token remove];
     
@@ -530,7 +530,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [repl start];
     [repl stop];
     
-    [self waitForExpectations: @[xInactive] timeout: 10.0];
+    [self waitForExpectations: @[xInactive] timeout: expTimeout];
     
     [token remove];
 }
@@ -570,13 +570,13 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     
     [repl start];
-    [self waitForExpectations: @[xActive] timeout: 10.0];
+    [self waitForExpectations: @[xActive] timeout: expTimeout];
     
     NSError* error;
     Assert([self.db close: &error]);
     AssertNil(error);
     
-    [self waitForExpectations: @[xUnactive] timeout: 10.0];
+    [self waitForExpectations: @[xUnactive] timeout: expTimeout];
     
     [token remove];
 }
@@ -634,8 +634,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     repl2 = [self multipeerReplicatorForDatabase: self.otherDB];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     CBLDocument* checkDoc1a = [collection1 documentWithID: @"doc1" error: nil];
     AssertNotNil(checkDoc1a);
@@ -698,8 +698,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Wait until the replicator is IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
@@ -803,7 +803,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForExpectations: @[xStopped] timeout: 10.0];
+    [self waitForExpectations: @[xStopped] timeout: expTimeout];
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
@@ -883,7 +883,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForExpectations: @[xStopped] timeout: 10.0];
+    [self waitForExpectations: @[xStopped] timeout: expTimeout];
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
@@ -958,13 +958,13 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForExpectations: @[xPeer2Online, xPeer1Online] timeout: 10.0];
+    [self waitForExpectations: @[xPeer2Online, xPeer1Online] timeout: expTimeout];
     
     [NSThread sleepForTimeInterval: 1.0];
     
     [self stopMultipeerReplicator: repl1];
     
-    [self waitForExpectations: @[xPeer1Offline] timeout: 10.0];
+    [self waitForExpectations: @[xPeer1Offline] timeout: expTimeout];
     
     [self stopMultipeerReplicator: repl2];
     
@@ -1040,8 +1040,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [doc1 setString: @"hello" forKey: @"greeting"];
     [self saveDocument: doc1 collection: collection1];
     
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     AssertEqual(docRepl1.count, 1);
     Assert(docRepl1[0].isPush);
@@ -1095,8 +1095,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self saveDocument: doc1 collection: collection1];
     
     // Wait until the replicator is IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     NSLog(@"-----------------------------------------");
     
@@ -1134,8 +1134,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Wait until the replicator is IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     // Check the doc on both peers:
     CBLDocument* checkDoc1 = [collection1 documentWithID: @"doc1" error: nil];
@@ -1317,8 +1317,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self saveDocument: doc3 collection: collection1];
     
     // Wait until the replicator is IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     // Check that only doc1 and doc3 are pushed to Peer #2
     CBLCollection* collection2 = [self.otherDB defaultCollection: nil];
@@ -1412,8 +1412,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self saveDocument: doc4 collection: collection2];
     
     // Wait until the replicator is IDLE:
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     // Check that only doc4 but not doc3 are pulled to peer #1:
     CBLDocument* checkDoc4 = [collection1 documentWithID: @"doc4" error: nil];
@@ -1510,7 +1510,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self startMultipeerReplicator: repl2];
     
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     AssertEqual(repl1.neighborPeers.count, 1);
     AssertEqualObjects(repl1.neighborPeers[0], repl2.peerID);
@@ -1588,8 +1588,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl1];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     repl1Peer1 = [repl1 peerInfoForPeerID: repl1.peerID];
     AssertNotNil(repl1Peer1);
@@ -1629,7 +1629,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     CBLMultipeerReplicator* repl2 = [self multipeerReplicatorForDatabase: self.otherDB];
     [self startMultipeerReplicator: repl2];
     
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[x] timeout: expTimeout];
     [token remove];
     
     // Save a doc in passive peer:
@@ -1640,8 +1640,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self saveDocument: doc1 collection: collection];
         
     // Wait until the replicators are all IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: expTimeout];
     
     NSLog(@"------------------- DONE ------------------- ");
     

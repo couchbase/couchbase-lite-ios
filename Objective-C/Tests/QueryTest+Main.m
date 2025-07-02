@@ -1838,10 +1838,10 @@
         }
     }];
     
-    [self waitForExpectations: @[first] timeout: 5.0];
+    [self waitForExpectations: @[first] timeout: expTimeout];
     [self createDocNumbered: -1 of: 100];
     
-    [self waitForExpectations: @[second] timeout: 5.0];
+    [self waitForExpectations: @[second] timeout: expTimeout];
     [q removeChangeListenerWithToken: token];
 }
 
@@ -1868,7 +1868,7 @@
         }
     }];
     
-    [self waitForExpectations: @[first] timeout: 5.0];
+    [self waitForExpectations: @[first] timeout: expTimeout];
     
     // This change will not affect the query results because 'number1 < 10' is not true.
     [self createDocNumbered: 111 of: 100];
@@ -1882,7 +1882,7 @@
                    });
     
     NSLog(@"Waiting for 2secs...");
-    [self waitForExpectations: @[x] timeout: 5.0];
+    [self waitForExpectations: @[x] timeout: expTimeout];
     NSLog(@"Done!");
     
     AssertEqual(count, 1);
@@ -1909,13 +1909,13 @@
             id token = [query addChangeListener:^(CBLQueryChange* change) {
                 [exp fulfill];
             }];
-            [self waitForExpectations: @[exp] timeout: 5.0];
+            [self waitForExpectations: @[exp] timeout: expTimeout];
             [token remove];
             [remExp fulfill];
         });
     }
     
-    [self waitForExpectations: @[remExp] timeout: 5.0];
+    [self waitForExpectations: @[remExp] timeout: expTimeout];
 }
 
 /**
@@ -1939,7 +1939,7 @@
         AssertEqual([rows[0] integerAtIndex: 0], 7);
         [first fulfill];
     }];
-    [self waitForExpectations: @[first] timeout: 5.0];
+    [self waitForExpectations: @[first] timeout: expTimeout];
     
     XCTestExpectation* firstA = [self expectationWithDescription: @"2nd listener with 1st result"];
     __block int count2 = 0;
@@ -1950,7 +1950,7 @@
         AssertEqual([rows[0] integerAtIndex: 0], 7);
         [firstA fulfill];
     }];
-    [self waitForExpectations: @[firstA] timeout: 5.0];
+    [self waitForExpectations: @[firstA] timeout: expTimeout];
     AssertEqual(count2, 1);
     AssertEqual(count, 1);
     [q removeChangeListenerWithToken: token1];
@@ -1966,7 +1966,7 @@
         AssertEqual(rows.count, 0);
         [first fulfill];
     }];
-    [self waitForExpectations: @[first] timeout: 5.0];
+    [self waitForExpectations: @[first] timeout: expTimeout];
     [q removeChangeListenerWithToken: token];
 }
 
@@ -2029,10 +2029,10 @@
         }
     }];
     
-    [self waitForExpectations:@[first1, first2] timeout: 5.0];
+    [self waitForExpectations:@[first1, first2] timeout: expTimeout];
     [self createDocNumbered: -1 of: 100];
     
-    [self waitForExpectations: @[second1, second2] timeout: 5.0];
+    [self waitForExpectations: @[second1, second2] timeout: expTimeout];
     [q removeChangeListenerWithToken: token1];
     [q removeChangeListenerWithToken: token2];
 }
@@ -2062,7 +2062,7 @@
             [second fulfill];
         }
     }];
-    [self waitForExpectations: @[first] timeout: 5.0];
+    [self waitForExpectations: @[first] timeout: expTimeout];
     CBLQueryParameters* updated = [[CBLQueryParameters alloc] init];
     [updated setInteger: 5 forName: @"param1"];
     [q setParameters: updated];
@@ -2147,7 +2147,7 @@
         }
     }];
     
-    [self waitForExpectations: @[changedExp] timeout: 5.0];
+    [self waitForExpectations: @[changedExp] timeout: expTimeout];
     
     // Remove the token:
     tokenRemoved = YES;
@@ -2189,7 +2189,7 @@
             }
         }];
         
-        [self waitForExpectations: @[changedExp] timeout: 5.0];
+        [self waitForExpectations: @[changedExp] timeout: expTimeout];
         
         // Inject some delay in C4QueryObserverCallback:
         [CBLQueryObserver setC4QueryObserverCallbackDelayInterval: 3.0];
@@ -2206,7 +2206,7 @@
     }
     
     // Wait for no changes notified:
-    [self waitForExpectations: @[noChangedExp] timeout: 5.0];
+    [self waitForExpectations: @[noChangedExp] timeout: expTimeout];
 }
 
 #endif

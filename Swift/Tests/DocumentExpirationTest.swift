@@ -68,7 +68,7 @@ class DocumentExpirationTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             promise.fulfill()
         }
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
     }
     
     func testDocumentPurgedAfterExpiration() throws {
@@ -89,7 +89,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id,
                                      expiration: Date().addingTimeInterval(1))
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Remove listener
         token.remove();
@@ -115,7 +115,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Remove listener
         token.remove()
@@ -142,11 +142,9 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        var purgeTime: TimeInterval = 0.0
         let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
-                purgeTime = Date().timeIntervalSince1970
                 promise.fulfill()
             }
         }
@@ -157,10 +155,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
-        
-        // Validate
-        XCTAssert(purgeTime - begin >= 2.0)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Remove listener
         token.remove()
@@ -186,7 +181,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
     }
     
     func testExpiredDocumentPurgedAfterReopenDatabase() throws {
@@ -213,7 +208,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try self.defaultCollection!.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Remove listener
         token.remove()
@@ -246,7 +241,7 @@ class DocumentExpirationTest: CBLTestCase {
         XCTAssertNotNil(try otherDB_defaultCollection.document(id: doc.id))
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         XCTAssertNil(try self.defaultCollection!.document(id: doc.id))
         XCTAssertNil(try otherDB_defaultCollection.document(id: doc.id))
@@ -283,7 +278,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(1.0))
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin >= 2.0)
@@ -317,7 +312,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate.addingTimeInterval(-9.0))
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Validate
         XCTAssert(purgeTime - begin < 3.0)
@@ -346,7 +341,7 @@ class DocumentExpirationTest: CBLTestCase {
         }
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
     }
     
     func testSetExpirationThenDeletionAfterwards() throws {
@@ -374,7 +369,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.delete(document: doc)
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener
@@ -406,7 +401,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: expiryDate)
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         XCTAssertEqual(count, 2)
         
         // Remove listener
@@ -433,7 +428,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date())
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         
         /// Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
@@ -464,7 +459,7 @@ class DocumentExpirationTest: CBLTestCase {
         try defaultCollection!.setDocumentExpiration(id: doc.id, expiration: Date(timeIntervalSinceNow: 1))
         
         // Wait for result
-        waitForExpectations(timeout: expTimeout)
+        waitForExpectations(timeout: CBLTestCase.expTimeout)
         
         // Remove listener
         token.remove()

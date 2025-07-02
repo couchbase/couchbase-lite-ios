@@ -50,8 +50,7 @@
 
 - (void) setUp {
     [super setUp];
-    
-    timeout = 15.0;
+
     [self cleanUpIdentities];
 }
 

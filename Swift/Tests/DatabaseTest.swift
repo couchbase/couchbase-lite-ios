@@ -1375,7 +1375,7 @@ class DatabaseTest: CBLTestCase {
         let q2 = QueryBuilder.select().from(ds)
         q2.addChangeListener { (ch) in change2.fulfill() }
         
-        wait(for: [change1, change2], timeout: expTimeout)
+        wait(for: [change1, change2], timeout: CBLTestCase.expTimeout)
         
         try db.close()
     }
@@ -1396,7 +1396,7 @@ class DatabaseTest: CBLTestCase {
         let q2 = QueryBuilder.select().from(ds)
         q2.addChangeListener { (ch) in change2.fulfill() }
         
-        wait(for: [change1, change2], timeout: expTimeout)
+        wait(for: [change1, change2], timeout: CBLTestCase.expTimeout)
         
         // Replicators:
         
@@ -1418,11 +1418,11 @@ class DatabaseTest: CBLTestCase {
         let stopped2 = expectation(description: "Stopped 2")
         startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
         
-        wait(for: [idle1, idle2], timeout: expTimeout)
+        wait(for: [idle1, idle2], timeout: CBLTestCase.expTimeout)
         
         try! db.close()
         
-        wait(for: [stopped1, stopped2], timeout: expTimeout)
+        wait(for: [stopped1, stopped2], timeout: CBLTestCase.expTimeout)
     }
     
     func startReplicator(_ replicator: Replicator, idleExpectation: XCTestExpectation, stoppedExpectation: XCTestExpectation) {
@@ -1452,11 +1452,11 @@ class DatabaseTest: CBLTestCase {
         let stopped2 = expectation(description: "Stopped 2")
         startReplicator(r2, idleExpectation: idle2, stoppedExpectation: stopped2)
               
-        wait(for: [idle1, idle2], timeout: expTimeout)
+        wait(for: [idle1, idle2], timeout: CBLTestCase.expTimeout)
               
         try! db.close()
               
-        wait(for: [stopped1, stopped2], timeout: expTimeout)
+        wait(for: [stopped1, stopped2], timeout: CBLTestCase.expTimeout)
     }
     
     #endif
