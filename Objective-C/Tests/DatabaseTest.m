@@ -1503,7 +1503,7 @@
     CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
-    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
@@ -1535,13 +1535,13 @@
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
-    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
     [self closeDatabase: self.db];
     
-    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
@@ -1561,7 +1561,7 @@
     CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
-    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
@@ -1586,14 +1586,14 @@
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
-    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)4); // total services
     
     // Close database:
     [self closeDatabase: self.db];
     
-    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
@@ -1725,7 +1725,7 @@
     CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
-    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
@@ -1757,13 +1757,13 @@
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stopped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
-    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
     [self deleteDatabase: self.db];
     
-    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
     Assert([self.db isClosedLocked]);
@@ -1783,7 +1783,7 @@
     CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
-    [self waitForExpectations: @[change1, change2] timeout: 5.0];
+    [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
@@ -1804,13 +1804,13 @@
     XCTestExpectation *stopped2 = [self expectationWithDescription: @"Stoped 2"];
     [self startReplicator: r2 idleExpectation: idle2 stoppedExpectation: stopped2];
     
-    [self waitForExpectations: @[idle1, idle2] timeout: 5.0];
+    [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)4); // total services
     
     [self deleteDatabase: self.db];
     
-    [self waitForExpectations: @[stopped1, stopped2] timeout: 5.0];
+    [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
     AssertEqual([self.db activeServiceCount], (unsigned long)0);
@@ -2795,7 +2795,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [token remove];

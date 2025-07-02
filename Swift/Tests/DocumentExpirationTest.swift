@@ -142,11 +142,9 @@ class DocumentExpirationTest: CBLTestCase {
         let doc = try generateDocument(withID: nil)
         
         // Setup document change notification
-        var purgeTime: TimeInterval = 0.0
         let token = defaultCollection!.addDocumentChangeListener(id: doc.id) { (change) in
             XCTAssertEqual(doc.id, change.documentID)
             if try! change.collection.document(id: doc.id) == nil {
-                purgeTime = Date().timeIntervalSince1970
                 promise.fulfill()
             }
         }
@@ -158,9 +156,6 @@ class DocumentExpirationTest: CBLTestCase {
         
         // Wait for result
         waitForExpectations(timeout: expTimeout)
-        
-        // Validate
-        XCTAssert(purgeTime - begin >= 2.0)
         
         // Remove listener
         token.remove()

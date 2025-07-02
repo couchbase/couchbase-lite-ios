@@ -194,7 +194,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl1.start()
         repl2.start()
-        wait(for: [exp1, exp2], timeout: 5.0)
+        wait(for: [exp1, exp2], timeout: expTimeout)
         
         // pushAndPull might cause race, so only checking push
         if type == .push {
@@ -259,7 +259,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let token2 = repl2.addChangeListener(changeListener)
         repl1.start()
         repl2.start()
-        wait(for: [idleExp1, idleExp2], timeout: 10.0) // TODO: FIXME
+        wait(for: [idleExp1, idleExp2], timeout: expTimeout)
         
         if (isDeleteDBs) {
             try db2.delete()
@@ -269,7 +269,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             try self.otherDB!.close()
         }
         
-        wait(for: [stopExp1, stopExp2], timeout: 10.0) // TODO: FIXME
+        wait(for: [stopExp1, stopExp2], timeout: expTimeout)
         repl1.removeChangeListener(withToken: token1)
         repl2.removeChangeListener(withToken: token2)
         try stopListener()
@@ -307,7 +307,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             }
         })
         repl1.start()
-        wait(for: [idleExp], timeout: 5.0)
+        wait(for: [idleExp], timeout: expTimeout)
         
         if (isDeleteDB) {
             try self.otherDB!.delete()
@@ -315,7 +315,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             try self.otherDB!.close()
         }
         
-        wait(for: [stopExp], timeout: 5.0)
+        wait(for: [stopExp], timeout: expTimeout)
         
         // cleanup
         repl1.removeChangeListener(withToken: token1)
@@ -690,7 +690,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         
         repl.start()
-        wait(for: [pullFilterBusy, replicatorStop], timeout: 5.0)
+        wait(for: [pullFilterBusy, replicatorStop], timeout: expTimeout)
         repl.removeChangeListener(withToken: token)
         
         XCTAssertEqual(maxConnectionCount, 1)
@@ -851,14 +851,14 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl.start()
         
-        wait(for: [x1], timeout: 5.0)
+        wait(for: [x1], timeout: expTimeout)
         var receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkCertificateEqual(cert: serverCert, andCert: receivedServerCert!)
         
         repl.stop()
         
-        wait(for: [x2], timeout: 5.0)
+        wait(for: [x2], timeout: expTimeout)
         receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkCertificateEqual(cert: serverCert, andCert: receivedServerCert!)
@@ -887,7 +887,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl.start()
         
-        wait(for: [x1], timeout: 5.0)
+        wait(for: [x1], timeout: expTimeout)
         var receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkCertificateEqual(cert: serverCert, andCert: receivedServerCert!)
@@ -911,14 +911,14 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl.start()
         
-        wait(for: [x1], timeout: 5.0)
+        wait(for: [x1], timeout: expTimeout)
         receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkCertificateEqual(cert: serverCert, andCert: receivedServerCert!)
         
         repl.stop()
         
-        wait(for: [x2], timeout: 5.0)
+        wait(for: [x2], timeout: expTimeout)
         receivedServerCert = repl.serverCertificate
         XCTAssertNotNil(receivedServerCert)
         checkCertificateEqual(cert: serverCert, andCert: receivedServerCert!)
@@ -944,12 +944,12 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl.start()
         
-        wait(for: [x1], timeout: 5.0)
+        wait(for: [x1], timeout: expTimeout)
         XCTAssertNil(repl.serverCertificate)
         
         repl.stop()
         
-        wait(for: [x2], timeout: 5.0)
+        wait(for: [x2], timeout: expTimeout)
         XCTAssertNil(repl.serverCertificate)
         
         try stopListener()
@@ -1064,13 +1064,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         repl.start()
         
         // Wait until idle then stop the listener:
-        wait(for: [x1], timeout: 5.0)
+        wait(for: [x1], timeout: expTimeout)
         
         // Stop listen:
         try stopListener()
         
         // Wait for the replicator to be stopped:
-        wait(for: [x2], timeout: 5.0)
+        wait(for: [x2], timeout: expTimeout)
         
         // Check error:
         XCTAssertEqual((repl.status.error! as NSError).code, CBLError.webSocketGoingAway)

@@ -189,7 +189,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         addListenerToken(token2, for: repl)
         
         repl.start()
-        wait(for: [xActive], timeout: 10.0)
+        wait(for: [xActive], timeout: expTimeout)
         token1.remove()
     }
     
@@ -203,7 +203,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
         
         repl.stop()
-        wait(for: [xInactive], timeout: 10.0)
+        wait(for: [xInactive], timeout: expTimeout)
         token.remove()
         
         resetListenerTokens(for: repl)
@@ -224,10 +224,9 @@ class MultipeerReplicatorTest: CBLTestCase {
                                  peerID: PeerID,
                                  activityLevel: Replicator.ActivityLevel,
                                  errorCode: Int = 0,
-                                 errorDomain: String? = nil,
-                                 timeout: TimeInterval = 10.0) {
+                                 errorDomain: String? = nil) {
         var idleCount = 0
-        let deadline = Date().addingTimeInterval(timeout)
+        let deadline = Date().addingTimeInterval(expTimeout)
         while Date() < deadline {
             if let status = replicatorStatus(for: repl, peerID: peerID),
                 status.status.activity == activityLevel {
@@ -408,10 +407,10 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
             
         repl.start()
-        wait(for: [xActive], timeout: 10.0)
+        wait(for: [xActive], timeout: expTimeout)
         
         repl.stop()
-        wait(for: [xInactive], timeout: 10.0)
+        wait(for: [xInactive], timeout: expTimeout)
         
         token.remove()
         
@@ -440,8 +439,6 @@ class MultipeerReplicatorTest: CBLTestCase {
     func testImmediateStartStop() throws {
         let repl = try multipeerReplicator(for: db)
 
-        var didStop = false
-
         let xInactive = expectation(description: "Inactive")
 
         let token = repl.addStatusListener(on: nil) { status in
@@ -453,7 +450,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         repl.start()
         repl.stop()
 
-        wait(for: [xInactive], timeout: 10.0)
+        wait(for: [xInactive], timeout: expTimeout)
 
         token.remove()
     }
@@ -494,11 +491,11 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
         
         repl.start()
-        wait(for: [xActive], timeout: 10.0)
+        wait(for: [xActive], timeout: expTimeout)
         
         try db.close()
         
-        wait(for: [xInactive], timeout: 10.0)
+        wait(for: [xInactive], timeout: expTimeout)
     }
     
     // MARK: - Replication
@@ -711,7 +708,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
         startMultipeerReplicator(repl2)
 
-        wait(for: [xStopped], timeout: 10.0)
+        wait(for: [xStopped], timeout: expTimeout)
 
         stopMultipeerReplicator(repl1)
         stopMultipeerReplicator(repl2)
@@ -785,7 +782,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
         startMultipeerReplicator(repl2)
     
-        wait(for: [xStopped], timeout: 10.0)
+        wait(for: [xStopped], timeout: expTimeout)
     
         stopMultipeerReplicator(repl1)
         stopMultipeerReplicator(repl2)
@@ -859,13 +856,13 @@ class MultipeerReplicatorTest: CBLTestCase {
         
         startMultipeerReplicator(repl2)
         
-        wait(for: [xPeer2Online, xPeer1Online], timeout: 10.0)
+        wait(for: [xPeer2Online, xPeer1Online], timeout: expTimeout)
         
         Thread.sleep(forTimeInterval: 1.0)
         
         stopMultipeerReplicator(repl1)
         
-        wait(for: [xPeer1Offline], timeout: 10.0)
+        wait(for: [xPeer1Offline], timeout: expTimeout)
         
         stopMultipeerReplicator(repl2)
         

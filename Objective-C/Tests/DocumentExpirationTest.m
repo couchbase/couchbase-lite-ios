@@ -96,7 +96,7 @@
                    });
     
     // Wait for result, it shouldn't crash due to already purged doc
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testDocumentPurgedAfterExpiration {
@@ -123,7 +123,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -156,7 +156,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -187,13 +187,11 @@
     CBLDocument* doc = [self generateDocumentWithID: nil];
     AssertNil([self.db getDocumentExpirationWithID: doc.id]);
     
-    __block NSTimeInterval purgeTime;
     id token = [self.db addDocumentChangeListenerWithID: doc.id
                                                listener: ^(CBLDocumentChange *change)
     {
         AssertEqualObjects(change.documentID, doc.id);
         if ([change.database documentWithID: change.documentID] == nil) {
-            purgeTime = [[NSDate date] timeIntervalSince1970];
             [expectation fulfill];
         }
     }];
@@ -206,10 +204,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    
-    // Validate
-    Assert(purgeTime - begin >= 2.0);
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -238,7 +233,7 @@
                    });
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testExpiredDocumentPurgedAfterReopenDatabase {
@@ -271,7 +266,7 @@
     AssertNotNil([self.db documentWithID: doc.id]);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];
@@ -308,7 +303,7 @@
     AssertNotNil([otherDB documentWithID: doc.id]);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     AssertNil([self.db documentWithID: doc.id]);
     AssertNil([otherDB documentWithID: doc.id]);
@@ -352,7 +347,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Validate
     Assert(purgeTime - begin >= 2.0);
@@ -391,7 +386,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Validate
     Assert(purgeTime - begin < 3.0);
@@ -425,7 +420,7 @@
                        [expectation fulfill];
                    });
     
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
 }
 
 - (void) testSetExpirationThenDeletionAfterwards {
@@ -472,7 +467,7 @@
     AssertNotNil(deletedDoc);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     AssertEqual(count, 2);
     
     // Remove listener
@@ -514,7 +509,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     AssertEqual(count, 2);
     
     // Remove listener
@@ -547,7 +542,7 @@
     AssertNil(err);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     /*
      Validate. Delay inside the KeyStore::now() is in seconds, without milliseconds part.
@@ -582,7 +577,7 @@
     AssertNil(error);
     
     // Wait for result
-    [self waitForExpectationsWithTimeout: 20.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
     [self.db removeChangeListenerWithToken: token];

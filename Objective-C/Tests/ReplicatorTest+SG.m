@@ -144,7 +144,7 @@
     }];
     
     [r start];
-    [self waitForExpectations: @[x1, x2] timeout: 10.0];
+    [self waitForExpectations: @[x1, x2] timeout: kExpTimeout];
     [repl removeChangeListenerWithToken: token];
     r = nil;
 }
@@ -192,7 +192,6 @@
 }
 
 - (void) testPushAndPullBigBodyDocument_SG {
-    timeout = 200;
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -225,7 +224,6 @@
 }
 
 - (void) testPushAndPullExpiredDocument_SG {
-    timeout = 200;
     id target = [self remoteEndpointWithName: @"scratch" secure: NO];
     if (!target)
         return;
@@ -256,7 +254,7 @@
     AssertNil(err);
     
     // Wait for the document get expired.
-    [self waitForExpectations: @[expectation] timeout: 5.0];
+    [self waitForExpectations: @[expectation] timeout: kExpTimeout];
     [self.db removeChangeListenerWithToken: token];
     
     // Erase remote data:

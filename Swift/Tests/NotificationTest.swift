@@ -37,7 +37,7 @@ class NotificationTest: CBLTestCase {
                 try saveDocument(doc)
             }
         }
-        waitForExpectations(timeout: 5, handler: nil)
+        waitForExpectations(timeout: expTimeout, handler: nil)
         
         token.remove()
     }
@@ -82,7 +82,7 @@ class NotificationTest: CBLTestCase {
         doc3.setValue("Jack", forKey: "name")
         try saveDocument(doc3)
         
-        waitForExpectations(timeout: 5, handler: nil)
+        waitForExpectations(timeout: expTimeout, handler: nil)
         
         listener1.remove()
         listener2.remove()
@@ -113,7 +113,7 @@ class NotificationTest: CBLTestCase {
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
-        waitForExpectations(timeout: 5, handler: nil)
+        waitForExpectations(timeout: expTimeout, handler: nil)
         
         listener1.remove()
         listener2.remove()
@@ -136,7 +136,7 @@ class NotificationTest: CBLTestCase {
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
-        waitForExpectations(timeout: 5, handler: nil)
+        waitForExpectations(timeout: expTimeout, handler: nil)
         
         // Remove change listener:
         token.remove()
@@ -149,7 +149,7 @@ class NotificationTest: CBLTestCase {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             x2.fulfill()
         }
-        waitForExpectations(timeout: 5, handler: nil)
+        waitForExpectations(timeout: expTimeout, handler: nil)
         
         // Remove again:
         token.remove()

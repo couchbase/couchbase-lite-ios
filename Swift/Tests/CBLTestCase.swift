@@ -29,6 +29,7 @@ extension String {
 }
 
 class CBLTestCase: XCTestCase {
+    let expTimeout: TimeInterval = 20.0
 
     /// Opened when setting up each test case.
     var db: Database!
@@ -39,8 +40,6 @@ class CBLTestCase: XCTestCase {
     let databaseName = "testdb"
     
     let otherDatabaseName = "otherdb"
-    
-    let expTimeout: TimeInterval = 20.0
     
     var defaultCollection: Collection?
     

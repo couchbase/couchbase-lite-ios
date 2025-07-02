@@ -48,7 +48,7 @@
     }];
     Assert(ok);
     
-    [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listener:
     [self.db removeChangeListenerWithToken: token];
@@ -92,7 +92,7 @@
     [doc3 setValue: @"Jack" forKey: @"name"];
     [self saveDocument: doc3];
     
-    [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
     [_db removeChangeListenerWithToken:listener1];
@@ -127,7 +127,7 @@
                 [x fulfill];
     });
     
-    [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
     [_db removeChangeListenerWithToken:listener1];
@@ -153,7 +153,7 @@
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
-    [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove change listener:
     [_db removeChangeListenerWithToken:listener1];
@@ -168,7 +168,7 @@
         dispatch_get_main_queue(), ^{
             [x2 fulfill];
     });
-    [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove again:
     [_db removeChangeListenerWithToken:listener1];

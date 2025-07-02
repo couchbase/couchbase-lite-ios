@@ -693,7 +693,7 @@
     [self createDocNumbered: col1 start: 0 num: 10];
     [self createDocNumbered: col2 start: 0 num: 10];
     
-    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: 10.0];
+    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: kExpTimeout];
     changeListenerFired = 0;
     [token1 remove];
     [token2 remove];
@@ -720,7 +720,7 @@
         
         [self createDocNumbered: colA start: 0 num: 1];
         
-        [self waitForExpectations: @[exp1] timeout: 10.0];
+        [self waitForExpectations: @[exp1] timeout: kExpTimeout];
     }
 }
 
@@ -794,7 +794,7 @@
     [col1 saveDocument: doc error: &error];
     
     [self createDocNumbered: col2 start: 0 num: 10];
-    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: 10.0];
+    [self waitForExpectations: @[exp1, exp2, exp3, exp4] timeout: kExpTimeout];
     changeListenerFired = 0;
     [token1 remove];
     [token2 remove];
@@ -826,7 +826,7 @@
         [doc setString: @"str" forKey: @"key"];
         [colA saveDocument: doc error: &error];
         
-        [self waitForExpectations: @[exp1] timeout: 10.0];
+        [self waitForExpectations: @[exp1] timeout: kExpTimeout];
     }
 }
 

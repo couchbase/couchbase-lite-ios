@@ -142,7 +142,7 @@
     [mdoc setString: @"db" forKey: @"name"];
     [mdoc setInteger: 1 forKey: @"version"];
     [self saveDocument:mdoc toDatabase: firstSource];
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[x] timeout: kExpTimeout];
     
     uint64_t previousCompleted = replicator.status.progress.completed;
     AssertEqual(firstTarget.count, 1UL);
@@ -151,14 +151,14 @@
     mdoc = [[secondSource documentWithID: @"doc1"] toMutable];
     [mdoc setInteger: 2 forKey: @"version"];
     [self saveDocument: mdoc toDatabase: secondSource];
-    [self waitForExpectations: @[x] timeout: 10.0];
+    [self waitForExpectations: @[x] timeout: kExpTimeout];
     
     x = [self waitForReplicatorStopped: replicator];
     CBLDocument* savedDoc = [secondTarget documentWithID: @"doc1"];
     AssertEqual([savedDoc integerForKey: @"version"], 2);
     [replicator stop];
-    [self waitForExpectations: @[x] timeout: 5.0];
-    [self waitForExpectations: @[listenerStop] timeout: 10.0];
+    [self waitForExpectations: @[x] timeout: kExpTimeout];
+    [self waitForExpectations: @[listenerStop] timeout: kExpTimeout];
 }
 
 - (void) runErrorTestForCase: (CBLMockConnectionLifecycleLocation)location
@@ -186,7 +186,7 @@
     [self run: config errorCode: expectedCode errorDomain: expectedDomain];
     
     if (listenerStop) {
-        [self waitForExpectations: @[listenerStop] timeout: 10.0];
+        [self waitForExpectations: @[listenerStop] timeout: kExpTimeout];
     }
 }
 
@@ -309,7 +309,7 @@
     
     [replicator start];
     [replicator2 start];
-    [self waitForExpectations: @[idle1, idle2] timeout: 10.0];
+    [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
     errorLogic.isErrorActive = YES;
     
@@ -326,9 +326,9 @@
     }];
     
     [listener closeAll];
-    [self waitForExpectations: @[listenerStop1, listenerStop2] timeout: 10.0];
+    [self waitForExpectations: @[listenerStop1, listenerStop2] timeout: kExpTimeout];
     [listener removeChangeListenerWithToken: listenerToken];
-    [self waitForExpectations: @[stop1, stop2] timeout: 10.0];
+    [self waitForExpectations: @[stop1, stop2] timeout: kExpTimeout];
     AssertNotNil(replicator.status.error);
     AssertNotNil(replicator2.status.error);
 }

@@ -38,7 +38,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ReplicatorTest : CBLTestCase {
     CBLReplicator* repl;
-    NSTimeInterval timeout;
 }
 
 - (void) saveDocument: (CBLMutableDocument*)document

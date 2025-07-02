@@ -22,7 +22,6 @@ import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
     var repl: Replicator!
-    var timeout: TimeInterval!
     
     // connect to an unknown-db on same machine, for the connection refused transient error.
     let kConnRefusedTarget: URLEndpoint = URLEndpoint(url: URL(string: "ws://localhost:4083/unknown-db-wXBl5n3fed")!)
@@ -30,9 +29,6 @@ class ReplicatorTest: CBLTestCase {
     override func setUp() {
         super.setUp()
         try! openOtherDB()
-        
-        // Minimum 20 seconds to accommodate single-shot replicator retries and slower machines
-        timeout = 20
     }
     
     override func tearDown() {
@@ -141,7 +137,7 @@ class ReplicatorTest: CBLTestCase {
             replicator.start()
         }
         
-        wait(for: [x], timeout: timeout)
+        wait(for: [x], timeout: expTimeout)
         
         if replicator.status.activity != .stopped {
             replicator.stop()
@@ -1049,7 +1045,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout:  pow(2, Double(count + 1)) + 10.0)
+        wait(for: [x], timeout:  pow(2, Double(count + 1)) + expTimeout)
         XCTAssertEqual(count, offlineCount)
     }
     
@@ -1115,7 +1111,6 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testMaxAttemptWaitTimeOfReplicator() {
-        timeout = 12 // already it takes 8 secs of retry, hence 12secs timeout. 
         let x = self.expectation(description: "repl finish")
         var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
                                                           type: .pushAndPull,
@@ -1138,7 +1133,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         }
         
         repl.start()
-        wait(for: [x], timeout: timeout)
+        wait(for: [x], timeout: expTimeout)
         XCTAssert(abs(diff - config.maxAttemptWaitTime) < 1.0)
     }
     
@@ -1166,7 +1161,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         token2.remove()
         
         repl.start()
-        wait(for: [x1, x2], timeout: timeout)
+        wait(for: [x1, x2], timeout: expTimeout)
         token1.remove()
     }
     
