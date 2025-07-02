@@ -257,8 +257,7 @@ class MultipeerReplicatorTest: CBLTestCase {
             Thread.sleep(forTimeInterval: 0.5)
         }
         
-        // CBL-7099 : Commented out to avoid test failure due to timeout.
-        // XCTFail("Timeout waiting for activity level: \(activityLevel.rawValue)")
+        XCTFail("Timeout waiting for activity level: \(activityLevel.rawValue)")
     }
     
     // MARK: - Configuration
@@ -1444,8 +1443,7 @@ class MultipeerReplicatorTest: CBLTestCase {
          - Activity level is IDLE
      13. Stop both replicators and wait until the replicators are inactive.
      */
-    // CBL-7099 : Skipped
-    func _testPeerInfo() throws {
+    func testPeerInfo() throws {
         let repl1 = try multipeerReplicator(for: db)
         var repl1Peer1 = repl1.peerInfo(for: repl1.peerID)
         XCTAssertNotNil(repl1Peer1)
