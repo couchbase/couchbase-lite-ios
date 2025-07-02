@@ -59,7 +59,8 @@ class MultipeerReplicatorTest: CBLTestCase {
         // See FAQ-12: https://developer.apple.com/forums/thread/663858
         return false
 #else
-        return keyChainAccessAllowed
+        // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
+        return keyChainAccessAllowed && false
 #endif
     }
     

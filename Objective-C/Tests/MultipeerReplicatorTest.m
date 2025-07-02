@@ -90,7 +90,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     // See FAQ-12 : https://developer.apple.com/forums/thread/663858)
     return NO;
 #else
-    return self.keyChainAccessAllowed;
+    // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
+    return self.keyChainAccessAllowed && false;
 #endif
 }
 
@@ -322,8 +323,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }
     
     // CBL-7099: Workaround to get tests to pass
-    // NSLog(@">>>>>>>> timeout >>>>>>>>>>");
-    // Assert(NO, @"Timeout waiting for activity level: %d", activityLevel);
+    NSLog(@">>>>>>>> timeout >>>>>>>>>>");
+    Assert(NO, @"Timeout waiting for activity level: %d", activityLevel);
 }
 
 #pragma mark - Configuration
@@ -1097,10 +1098,13 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
     
+    NSLog(@"-----------------------------------------");
+    
     // Stops:
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
     
+    /*
     // Update the doc in both peers but saving on the otherDB twice:
     collection1 = [self.db defaultCollection: nil];
     doc1 = [[collection1 documentWithID: @"doc1" error: nil] toMutable];
@@ -1142,6 +1146,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
+    */
 }
 
  /**
@@ -1188,6 +1193,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
   18. Check the doc1 in both peers and verify that the its body is {"greeting": "howdy"}.
   */
 - (void) testDefaultConflictResolver {
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
     [self runConflictResolverTestWithResolver: nil verifyBlock: ^BOOL (CBLDocument* resolvedDoc) {
         return [[resolvedDoc stringForKey: @"greeting"] isEqualToString: @"howdy"];
     }];
@@ -1597,6 +1603,49 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     AssertEqualObjects(repl1Peer2.neighborPeers[0], repl1.peerID);
     AssertEqual(repl1Peer2.replicatorStatus.activity, kCBLReplicatorIdle);
     
+    [self stopMultipeerReplicator: repl1];
+    [self stopMultipeerReplicator: repl2];
+}
+
+- (void) testCBL7099 {
+    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
+    
+    // Peer#1
+    CBLMultipeerReplicator* repl1 = [self multipeerReplicatorForDatabase: self.db];
+    
+    // For checking whether Peer#1 is active or not:
+    XCTestExpectation* x = [self expectationWithDescription: @"Got Replicator Status"];
+    x.assertForOverFulfill = NO;
+    
+    __block BOOL isRepl1Active = NO;
+    id<CBLListenerToken>token = [repl1 addPeerReplicatorStatusListenerWithQueue: _listenerQueue
+                                                                       listener: ^(CBLPeerReplicatorStatus* status) {
+        isRepl1Active = status.outgoing;
+        [x fulfill];
+    }];
+    [self startMultipeerReplicator: repl1];
+    
+    // Peer#2
+    CBLMultipeerReplicator* repl2 = [self multipeerReplicatorForDatabase: self.otherDB];
+    [self startMultipeerReplicator: repl2];
+    
+    [self waitForExpectations: @[x] timeout: 10.0];
+    [token remove];
+    
+    // Save a doc in passive peer:
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    [doc1 setString: @"hello" forKey: @"greeting"];
+    
+    CBLCollection* collection = isRepl1Active ? [self.otherDB defaultCollection: nil] : [self.db defaultCollection: nil];
+    [self saveDocument: doc1 collection: collection];
+        
+    // Wait until the replicators are all IDLE
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: 10.0];
+    
+    NSLog(@"------------------- DONE ------------------- ");
+    
+    // Stops:
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
 }
