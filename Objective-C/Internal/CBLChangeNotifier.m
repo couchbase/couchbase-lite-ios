@@ -51,6 +51,12 @@
     }
 }
 
+- (BOOL) containsToken: (id<CBLListenerToken>)token {
+    CBL_LOCK(self) {
+        return [_listenerTokens containsObject: token];
+    }
+}
+
 - (void) postChange: (id)change {
     CBLAssertNotNil(change);
 
