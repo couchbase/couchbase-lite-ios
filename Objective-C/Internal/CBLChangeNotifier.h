@@ -49,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSUInteger) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
+/** Check whether this notifier has the token or not. */
+- (BOOL) containsToken: (id<CBLListenerToken>)token;
 
 /** Posts a change notification object to all listeners, asynchronously. */
 - (void) postChange: (ChangeType)change;
