@@ -124,15 +124,16 @@
 /** All the methods below are called on the MAIN THREAD */
 
 - (void) appBackgrounding {
-    BOOL extend = [_delegate appWillBackgroundAndShouldExtend: self];
+    id<CBLAppBackgroundingMonitorDelegate> delegate = _delegate;
+    BOOL extend = [delegate appWillBackgroundAndShouldExtend: self];
     if (extend && [_bgMonitor beginBackgroundTaskNamed: self.description]) {
         CBLLogInfo(Sync, @"%@: App backgrounding, starting background task.", self);
-        return;
+        [delegate appDidExtendBackgroundTask: self];
+    } else {
+        CBLLogInfo(Sync, @"%@: App backgrounding without starting background task.", self);
+        _deepBackground = YES;
+        [self updateState];
     }
-    
-    CBLLogInfo(Sync, @"%@: App backgrounding without starting background task.", self);
-    _deepBackground = YES;
-    [self updateState];
 }
 
 - (void) appForegrounding {
