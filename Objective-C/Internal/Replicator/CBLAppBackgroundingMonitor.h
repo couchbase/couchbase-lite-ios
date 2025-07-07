@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL) appWillBackgroundAndShouldExtend: (CBLAppBackgroundingMonitor*)monitor;
 
+- (void) appDidExtendBackgroundTask: (CBLAppBackgroundingMonitor*)monitor;
+
 - (void) appDidBackground: (CBLAppBackgroundingMonitor*)monitor;
 
 - (void) appDidForeground: (CBLAppBackgroundingMonitor*)monitor;
