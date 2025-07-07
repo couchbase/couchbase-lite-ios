@@ -526,7 +526,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     ///   - index: Index instance.
     ///   - name: The index name.
     /// - Returns: True if the index is created successfully.
-    /// - Throws: If name or config are invalid, if the collection is invalid or the database is closed.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
     /// - Note: To be used with Index Builder
     public func createIndex(_ index: Index, name: String) throws {
         try impl.createIndex(index.toImpl(), name: name)
@@ -536,7 +536,8 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// - Parameters:
     ///   - name: The index name.
     /// - Returns: True if the index is delete successfully.
-    /// - Throws: If name is invalid, if the collection is invalid or the database is closed.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
+    /// - Note: If the index doesn't exist, this method will succeed without throwing an error (no-op).
     public func deleteIndex(forName name: String) throws {
         try impl.deleteIndex(withName: name)
     }
@@ -545,7 +546,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     /// - Parameters:
     ///   - name: The index name.
     /// - Returns: The index object if found, otherwise nil.
-    /// - Throws: If name is invalid, if the collection is invalid or the database is closed.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
     public func index(withName name: String) throws -> QueryIndex? {
         var error: NSError?
         let index = impl.index(withName: name, error: &error)

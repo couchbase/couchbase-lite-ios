@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
  Get the names of all indexes of the collection.
  
  @param error On return, the error if any.
- @return Names of all indexes of the collection or nil if no indexes exist.
+ @return Names of all indexes of the collection or empty array if no indexes exist. It will return nil if an error occurred.
  */
 - (nullable NSArray<NSString*>*) indexes: (NSError**)error;
 
@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param name The index name.
  @param error On return, the error if any.
- @return The index object or nil.
+ @return The index object, or nil if the index does not exist or an error occurred.
  */
 - (nullable CBLQueryIndex*) indexWithName: (NSString*)name
                                     error: (NSError**)error NS_SWIFT_NOTHROW;
