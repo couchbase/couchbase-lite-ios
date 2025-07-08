@@ -504,27 +504,49 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     
     // MARK: Indexable
     
-    /// Return all index names
+    /// Get the names of all indexes of the collection.
+    /// - Returns: Names of all indexes of the collection
+    /// - Throws: If the collection is invalid or the database is closed.
     public func indexes() throws -> [String] {
         return try impl.indexes()
     }
     
     /// Create an index with the index name and config.
+    /// - Parameters:
+    ///   - name: The index name.
+    ///   - config: The index config.
+    /// - Returns: True if the index is created successfully.
+    /// - Throws: If name or config are invalid, if the collection is invalid or the database is closed.
     public func createIndex(withName name: String, config: IndexConfiguration) throws {
         try impl.createIndex(withName: name, config: config.toImpl())
     }
     
-    /// Create an index with the index name and index instance.
+    /// Create an index with the index name and index instance
+    /// - Parameters:
+    ///   - index: Index instance.
+    ///   - name: The index name.
+    /// - Returns: True if the index is created successfully.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
+    /// - Note: To be used with Index Builder
     public func createIndex(_ index: Index, name: String) throws {
         try impl.createIndex(index.toImpl(), name: name)
     }
     
     /// Delete an index by name.
+    /// - Parameters:
+    ///   - name: The index name.
+    /// - Returns: True if the index is delete successfully.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
+    /// - Note: If the index doesn't exist, this method will succeed without throwing an error (no-op).
     public func deleteIndex(forName name: String) throws {
         try impl.deleteIndex(withName: name)
     }
     
     /// Get an index by name. Return nil if the index doesn't exists.
+    /// - Parameters:
+    ///   - name: The index name.
+    /// - Returns: The index object if found, otherwise nil.
+    /// - Throws: If the collection is invalid, the database is closed, or an error occurs.
     public func index(withName name: String) throws -> QueryIndex? {
         var error: NSError?
         let index = impl.index(withName: name, error: &error)

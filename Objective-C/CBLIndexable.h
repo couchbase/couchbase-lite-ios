@@ -28,21 +28,53 @@ NS_ASSUME_NONNULL_BEGIN
 /** The Indexable interface defines a set of functions for managing the query indexes. */
 @protocol CBLIndexable <NSObject>
 
-/** Return all index names, or nil if an error occurred. */
+/**
+ Get the names of all indexes of the collection.
+ 
+ @param error On return, the error if any.
+ @return Names of all indexes of the collection or empty array if no indexes exist. It will return nil if an error occurred.
+ */
 - (nullable NSArray<NSString*>*) indexes: (NSError**)error;
 
-/** Create an index with the index name and config. */
+/**
+ Create an index with the index name and config.
+ 
+ @param name The index name.
+ @param config The index configuration.
+ @param error On return, the error if any.
+ @return True if index is created successfully, otherwise false.
+ */
 - (BOOL) createIndexWithName: (NSString*)name
                       config: (CBLIndexConfiguration*)config
                        error: (NSError**)error;
 
-/** Create an index with the index name and index. */
+/**
+ Create an index with the index name and index.
+ 
+ @param index The index instance.
+ @param name The index name.
+ @param error On return, the error if any.
+ @return True if index is created successfully, otherwise false.
+ @note To be used with Index Builder
+ */
 - (BOOL) createIndex: (CBLIndex*)index name: (NSString*)name error: (NSError**)error;
 
-/** Delete an index by name. */
+/**
+ Delete an index by name.
+ 
+ @param name The index name.
+ @param error On return, the error if any.
+ @return True if index is deleted successfully, otherwise false.
+ */
 - (BOOL) deleteIndexWithName: (NSString*)name error: (NSError**)error;
 
-/** Get an index object by name. */
+/**
+ Get an index object by name.
+ 
+ @param name The index name.
+ @param error On return, the error if any.
+ @return The index object, or nil if the index does not exist or an error occurred.
+ */
 - (nullable CBLQueryIndex*) indexWithName: (NSString*)name
                                     error: (NSError**)error NS_SWIFT_NOTHROW;
 
