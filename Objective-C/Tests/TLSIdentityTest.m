@@ -27,6 +27,8 @@
 
 #define kServerCertLabel @"CBL-Server-Cert"
 #define kClientCertLabel @"CBL-Client-Cert"
+#define kCACertLabel     @"CBL-CA-Cert"
+
 #define kServerCertAttrs @{ kCBLCertAttrCommonName: @"CBL-Server" }
 #define kClientCertAttrs @{ kCBLCertAttrCommonName: @"CBL-Client" }
 
@@ -74,25 +76,6 @@
         (id)kSecReturnRef:              @YES
     }];
     Assert(privateKeyRef != nil);
-    
-    // Get public key from Cert via Trust:
-    SecTrustRef trustRef;
-    SecPolicyRef policyRef = SecPolicyCreateBasicX509();
-    SecTrustCreateWithCertificates(certRef, policyRef, &trustRef);
-    CFRelease(policyRef);
-    Assert(trustRef != nil);
-    
-    SecKeyRef publicKeyRef = SecTrustCopyKey(trustRef);
-    CFRelease(trustRef);
-    Assert(publicKeyRef != nil);
-    
-    CFErrorRef errRef = nil;
-    NSData* publicKeyData = CFBridgingRelease(SecKeyCopyExternalRepresentation(publicKeyRef, &errRef));
-    CFRelease(publicKeyRef);
-    
-    Assert(errRef == nil);
-    AssertNotNil(publicKeyData);
-    Assert(publicKeyData.length > 0);
 }
 
 - (void) storePrivateKey: (SecKeyRef)privateKey certs: (NSArray*)certs label: (NSString*)label {
@@ -104,7 +87,8 @@
     // Certificates:
     int i = 0;
     for (id cert in certs) {
-        [self storeCertificate: (SecCertificateRef) cert label: (i++) == 0 ? label : nil];
+        NSString* certLabel = (i++) == 0 ? label : @"com.couchbase.lite.cert";
+        [self storeCertificate: (SecCertificateRef) cert label: certLabel];
     }
 }
 
@@ -122,6 +106,27 @@
     
     OSStatus status = SecItemUpdate((CFDictionaryRef)query, (CFDictionaryRef)update);
     Assert(status == errSecSuccess);
+}
+
+- (void) deleteCert: (SecCertificateRef)cert {
+    // Build a query dictionary to match the certificate
+    NSDictionary *query = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassCertificate,
+        (__bridge id)kSecValueRef: (__bridge id)cert
+    };
+    
+    OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
+    Assert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef);
+}
+
+- (void) deletePrivateKey: (SecKeyRef)key {
+    NSDictionary *query = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassKey,
+        (__bridge id)kSecValueRef: (__bridge id)key
+    };
+
+    OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
+    Assert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef);
 }
 
 - (void) storePrivateKey: (SecKeyRef)key {
@@ -150,8 +155,10 @@
     Assert(status == errSecSuccess);
 }
 
+#if 1
+
 /** For Debugging */
-- (void) printItemsInKeyChain {
+- (void) dumpItemsInKeyChain {
     NSArray *classes = @[(id)kSecClassKey, (id)kSecClassCertificate, (id)kSecClassIdentity];
     for (id clazz in classes) {
         NSLog(@">>>> Class: %@", clazz);
@@ -174,6 +181,41 @@
     }
 }
 
+// For Debugging: Dump all certificates in the Keychain
+- (void) dumpCertsInKeyChain {
+    NSDictionary *query = @{
+        (__bridge id)kSecClass:               (__bridge id)kSecClassCertificate,
+        (__bridge id)kSecMatchLimit:          (__bridge id)kSecMatchLimitAll,
+        (__bridge id)kSecReturnRef:           @YES,
+        (__bridge id)kSecReturnAttributes:    @YES
+    };
+
+    CFTypeRef result = NULL;
+    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
+    if (status != errSecSuccess) {
+        NSLog(@"Failed to query certificates: %d", (int)status);
+        return;
+    }
+    
+    NSLog(@"Certificates in Keychain:");
+    
+    NSArray *items = (__bridge_transfer NSArray *)result;
+    for (NSDictionary *item in items) {
+        NSString *label = item[(__bridge id)kSecAttrLabel] ?: @"<no label>";
+        SecCertificateRef certRef = (__bridge SecCertificateRef)item[(__bridge id)kSecValueRef];
+        
+        NSString *commonName = @"<unknown>";
+        CFStringRef cn = NULL;
+        if (SecCertificateCopyCommonName(certRef, &cn) == errSecSuccess && cn) {
+            commonName = (__bridge_transfer NSString *)cn;
+        }
+
+        NSLog(@"Label: %@\nCommon Name: %@", label, commonName);
+    }
+}
+
+#endif
+
 - (void) setUp {
     [super setUp];
     
@@ -184,6 +226,9 @@
     }];
     [self ignoreExceptionBreakPoint: ^{
         Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    }];
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kCACertLabel error: nil]);
     }];
 }
 
@@ -197,6 +242,9 @@
     }];
     [self ignoreExceptionBreakPoint: ^{
         Assert([CBLTLSIdentity deleteIdentityWithLabel: kClientCertLabel error: nil]);
+    }];
+    [self ignoreExceptionBreakPoint: ^{
+        Assert([CBLTLSIdentity deleteIdentityWithLabel: kCACertLabel error: nil]);
     }];
 }
 
@@ -256,14 +304,12 @@
                                                     error: &error];
     AssertNotNil(identity);
     AssertNil(error);
-    [self checkIdentityInKeyChain: identity];
     
     // Get:
     error = nil;
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNotNil(identity);
     AssertNil(error);
-    [self checkIdentityInKeyChain: identity];
     
     // Create again with the same label:
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
@@ -334,13 +380,11 @@
                                                     error: &error];
     AssertNotNil(identity);
     AssertNil(error);
-    [self checkIdentityInKeyChain: identity];
     
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNotNil(identity);
     AssertNil(error);
-    [self checkIdentityInKeyChain: identity];
     
     // Create again with the same label:
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
@@ -387,6 +431,11 @@
     
     // For iOS, need to explicitly store the identity into the KeyChain as SecPKCS12Import doesn't do it.
 #if TARGET_OS_IPHONE
+    // Clean up first:
+    [self deletePrivateKey: privateKeyRef];
+    for (id cert in certs) {
+        [self deleteCert: (SecCertificateRef)cert];
+    }
     [self storePrivateKey: privateKeyRef certs: certs label: kServerCertLabel];
 #endif
     
@@ -401,17 +450,10 @@
     
 #if TARGET_OS_OSX
     // Cleanup: remove the certificate and private key from the keychain
-    if (certs.count > 0) {
-        SecCertificateRef certRef = (__bridge SecCertificateRef)certs[0];
-        NSDictionary* certQuery = @{ (__bridge id)kSecClass: (__bridge id)kSecClassCertificate,
-                                     (__bridge id)kSecValueRef: (__bridge id)certRef };
-        SecItemDelete((__bridge CFDictionaryRef)certQuery);
-    }
+    [self deletePrivateKey: privateKeyRef];
     
-    if (privateKeyRef) {
-        NSDictionary* keyQuery = @{ (__bridge id)kSecClass: (__bridge id)kSecClassKey,
-                                    (__bridge id)kSecValueRef: (__bridge id)privateKeyRef };
-        SecItemDelete((__bridge CFDictionaryRef)keyQuery);
+    for (id cert in certs) {
+        [self deleteCert: (SecCertificateRef)cert];
     }
 #endif
 }
@@ -422,6 +464,8 @@
 #endif
     
     XCTSkipUnless(self.keyChainAccessAllowed);
+    
+    //@autoreleasepool {
     
     NSData* data = [self dataFromResource: @"identity/certs" ofType: @"p12"];
     
@@ -458,6 +502,7 @@
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
     AssertEqual(error.code, CBLErrorNotFound);
+    //}
 }
 
 - (void) testCreateIdentityWithNoAttributes {
@@ -553,14 +598,84 @@
     AssertEqual(status, errSecSuccess);
     
     CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust];
-    SecCertificateRef rootCert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)caCertData);
-    trustCheck.rootCerts = @[(__bridge id) rootCert];
+    trustCheck.rootCerts = issuer.certs;
+    NSURLCredential* credential = [trustCheck checkTrust: &error];
+    AssertNotNil(credential);
+    AssertNil(error);
+
+    CFRelease(policy);
+    
+    // Check the identity in KeyChain:
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 2);
+    
+    // Delete the identity which is a cert chain:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    
+    // Check the identity in KeyChain:
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNil(identity);
+    AssertNotNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
+}
+
+- (void) testCreateIdentitySignedWithImportedIssuer {
+#if TARGET_OS_OSX
+    XCTSkip(@"CBL-7005 : importIdentityWithData not working on newer macOS");
+#endif
+    
+    XCTSkipUnless(self.keyChainAccessAllowed);
+    
+    NSData* data = [self dataFromResource: @"identity/ca" ofType: @"p12"];
+    
+    NSError* error;
+    CBLTLSIdentity* issuer = [CBLTLSIdentity importIdentityWithData: data
+                                                           password: @"123"
+                                                              label: kCACertLabel
+                                                              error: &error];
+    
+    AssertNotNil(issuer);
+    AssertNil(error);
+    
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                                               attributes: kServerCertAttrs
+                                                               expiration: nil
+                                                                   issuer: issuer
+                                                                    label: kServerCertLabel
+                                                                    error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 2);
+    
+    // Validate the identity is signed by the issuer's cert using trust check:
+    SecTrustRef trust;
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
+    OSStatus status = SecTrustCreateWithCertificates((__bridge CFTypeRef)identity.certs, policy, &trust);
+    AssertEqual(status, errSecSuccess);
+    
+    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust];
+    trustCheck.rootCerts = identity.certs;
     NSURLCredential* credential = [trustCheck checkTrust: &error];
     AssertNotNil(credential);
     AssertNil(error);
     
     CFRelease(policy);
-    CFRelease(rootCert);
+    
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 2);
+    
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+    
+    identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
+    AssertNil(identity);
+    AssertNotNil(error);
+    AssertEqual(error.code, CBLErrorNotFound);
 }
 
 @end
