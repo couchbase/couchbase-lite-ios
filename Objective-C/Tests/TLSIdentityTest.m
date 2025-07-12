@@ -155,7 +155,7 @@
     Assert(status == errSecSuccess);
 }
 
-#if 1
+#if 0
 
 /** For Debugging */
 - (void) dumpItemsInKeyChain {
@@ -257,7 +257,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
     
     // Create:
     error = nil;
@@ -286,7 +286,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
 }
 
 - (void) testCreateDuplicateServerIdentity {
@@ -333,7 +333,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
     
     // Create:
     error = nil;
@@ -362,7 +362,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kClientCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
 }
 
 - (void) testCreateDuplicateClientIdentity {
@@ -501,8 +501,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
-    //}
+    AssertNil(error);
 }
 
 - (void) testCreateIdentityWithNoAttributes {
@@ -514,7 +513,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
     
     // Create:
     error = nil; // reset the error
@@ -539,7 +538,7 @@
     // Get:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
     
     // Create:
     error = nil; // reset the error
@@ -618,8 +617,7 @@
     // Check the identity in KeyChain:
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
 }
 
 - (void) testCreateIdentitySignedWithImportedIssuer {
@@ -674,8 +672,7 @@
     
     identity = [CBLTLSIdentity identityWithLabel: kServerCertLabel error: &error];
     AssertNil(identity);
-    AssertNotNil(error);
-    AssertEqual(error.code, CBLErrorNotFound);
+    AssertNil(error);
 }
 
 @end

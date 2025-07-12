@@ -143,6 +143,37 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef)
     }
     
+    /// For Debugging
+    func dumpCertsInKeychain() {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassCertificate,
+            kSecMatchLimit: kSecMatchLimitAll,
+            kSecReturnRef: true,
+            kSecReturnAttributes: true
+        ]
+
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess, let items = result as? [[CFString: Any]] else {
+            print("Failed to query certificates: \(status)")
+            return
+        }
+
+        print("Certificates in Keychain:")
+
+        for item in items {
+            let label = item[kSecAttrLabel] as? String ?? "<no label>"
+            let certRef = item[kSecValueRef] as! SecCertificate
+
+            var commonName: CFString?
+            let cnStatus = SecCertificateCopyCommonName(certRef, &commonName)
+            let commonNameString = (cnStatus == errSecSuccess && commonName != nil) ? (commonName! as String) : "<unknown>"
+
+            print("Label: \(label)\nCommon Name: \(commonNameString)\n")
+        }
+    }
+    
     override func setUp() {
         super.setUp()
         if (!keyChainAccessAllowed) { return }
@@ -177,10 +208,8 @@ class TLSIdentityTest: CBLTestCase {
         try XCTSkipUnless(keyChainAccessAllowed)
         
         // Get:
-        var identity: TLSIdentity?
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        var identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(identity)
         
         // Create:
         identity = try TLSIdentity.createIdentity(for: .serverAuth,
@@ -200,25 +229,23 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         
         // Get:
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(identity)
     }
     
     func testCreateDuplicateServerIdentity() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         
         // Create:
-        var identity: TLSIdentity?
-        identity = try TLSIdentity.createIdentity(for: .serverAuth,
-                                                  attributes: serverCertAttrs,
-                                                  label: serverCertLabel)
+        var identity = try TLSIdentity.createIdentity(for: .serverAuth,
+                                                      attributes: serverCertAttrs,
+                                                      label: serverCertLabel)
         XCTAssertNotNil(identity)
         
         // Get:
-        identity = try TLSIdentity.identity(withLabel: serverCertLabel)
-        XCTAssertNotNil(identity)
-        XCTAssertEqual(identity!.certs.count, 1)
+        var checkIdentity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        XCTAssertNotNil(checkIdentity)
+        XCTAssertEqual(checkIdentity!.certs.count, 1)
         
         // Create again with the same label:
         self.expectError(domain: CBLError.domain, code: CBLError.crypto) {
@@ -232,10 +259,8 @@ class TLSIdentityTest: CBLTestCase {
         try XCTSkipUnless(keyChainAccessAllowed)
         
         // Get:
-        var identity: TLSIdentity?
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
-        }
+        var identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
+        XCTAssertNil(identity)
         
         // Create:
         identity = try TLSIdentity.createIdentity(for: .clientAuth,
@@ -255,9 +280,8 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: clientCertLabel)
         
         // Get:
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
-        }
+        identity = try TLSIdentity.identity(withLabel: self.clientCertLabel)
+        XCTAssertNil(identity)
     }
     
     func testCreateDuplicateClientIdentity() throws {
@@ -369,20 +393,15 @@ class TLSIdentityTest: CBLTestCase {
         }
         
         // Get:
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(identity)
     }
     
     func testCreateIdentityWithNoAttributes() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         
         // Get:
-        var identity: TLSIdentity?
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
-        
+        var identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         XCTAssertNil(identity)
         
         // Create:
@@ -397,10 +416,8 @@ class TLSIdentityTest: CBLTestCase {
         try XCTSkipUnless(keyChainAccessAllowed)
         
         // Get:
-        var identity: TLSIdentity?
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        var identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(identity)
         
         let attrs = [certAttrCommonName: "CBL-Server"]
         let expiration = Date(timeIntervalSinceNow: 300)
@@ -449,7 +466,7 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssertTrue(isValid)
         
         // Check the identity in KeyChain:
-        let checkIdentity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        var checkIdentity = try TLSIdentity.identity(withLabel: serverCertLabel)
         XCTAssertNotNil(checkIdentity)
         XCTAssertEqual(checkIdentity?.certs.count, 2)
         
@@ -457,9 +474,8 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: self.serverCertLabel)
         
         // Check the identity in KeyChain:
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            _ = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        checkIdentity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(checkIdentity)
     }
     
     func testCreateIdentitySignedWithImportedIssuer() throws {
@@ -500,7 +516,7 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssertTrue(isValid)
         
         // Check the identity in KeyChain:
-        let checkIdentity = try TLSIdentity.identity(withLabel: serverCertLabel)
+        var checkIdentity = try TLSIdentity.identity(withLabel: serverCertLabel)
         XCTAssertNotNil(checkIdentity)
         XCTAssertEqual(checkIdentity?.certs.count, 2)
         
@@ -508,8 +524,7 @@ class TLSIdentityTest: CBLTestCase {
         try TLSIdentity.deleteIdentity(withLabel: self.serverCertLabel)
         
         // Check the identity in KeyChain:
-        expectError(domain: CBLError.domain, code: CBLError.notFound) {
-            _ = try TLSIdentity.identity(withLabel: self.serverCertLabel)
-        }
+        checkIdentity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
+        XCTAssertNil(checkIdentity)
     }
 }
