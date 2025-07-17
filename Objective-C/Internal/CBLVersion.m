@@ -44,12 +44,21 @@
         NSString* platform = strcmp(CBL_PRODUCT_NAME, "CouchbaseLiteSwift") == (0) ?
         @"Swift" : @"ObjC";
         
-        NSString* commit = strlen(GitCommit) > (0) ?
-        [NSString stringWithFormat: @"Commit/%.8s%s", GitCommit, GitDirty] : @"NA";
+        
+        NSString* ceCommit = [NSString stringWithFormat:@"%.8s", GitCommit];
+        NSString* eeCommit = [NSString stringWithFormat:@"%.8s", GitCommitEE];
+
+        NSMutableString* commit = [NSMutableString stringWithString:ceCommit];
+
+        // Add +EE hash only if eeCommit is not empty
+        if (GitCommitEE && GitCommitEE[0]) {
+            [commit appendFormat:@"+%@", eeCommit];
+        } else {
+        }
         
         C4StringResult liteCoreVers = c4_getVersion();
         
-        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@ LiteCore/%.*s",
+        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d Commit/%@ LiteCore/%.*s",
                       CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit,
                       (int)liteCoreVers.size, (char*)liteCoreVers.buf];
         c4slice_free(liteCoreVers);
