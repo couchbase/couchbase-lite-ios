@@ -172,7 +172,6 @@
     CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForKeyUsages: keyUsages
                                                                attributes: attrs
                                                                expiration: nil
-                                                                   issuer: nil
                                                                     label: label
                                                                     error: &err];
     AssertNotNil(identity);

@@ -17,7 +17,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class TLSIdentityTest: CBLTestCase {
     let serverCertLabel = "CBL-Swift-Server-Cert"
@@ -438,8 +438,8 @@ class TLSIdentityTest: CBLTestCase {
         let caKeyData = try dataFromResource(name: "identity/ca-key", ofType: "der")
         let caCertData = try dataFromResource(name: "identity/ca-cert", ofType: "der")
         
-        let issuer = try TLSIdentity.createIdentity(withPrivateKey: caKeyData,
-                                                    certificate: caCertData)
+        let issuer = try TLSIdentity.createIssuer(withPrivateKey: caKeyData,
+                                                  certificate: caCertData)
         
         let identity = try TLSIdentity.createIdentity(for: .serverAuth,
                                                       attributes: serverCertAttrs,
