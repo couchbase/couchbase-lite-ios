@@ -273,8 +273,9 @@
         
         NSLog(@"****** Start Replicator ******");
         [r start];
+
         [self waitForExpectations: @[x] timeout: kExpTimeout];
-        [r removeChangeListenerWithToken: token];
+        [token remove];
     }
     r = nil;
 }
@@ -389,7 +390,7 @@
     AssertEqual(foregroundCount, numRounds + 1);
     AssertEqual(backgroundCount, numRounds);
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -427,7 +428,7 @@
     [r stop];
     [self waitForExpectations: @[stopped] timeout: kExpTimeout];
 
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -474,7 +475,7 @@
                                    selector: @selector(main) userInfo: nil repeats: NO];
     [self waitForExpectations: @[done] timeout: kExpTimeout];
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -530,7 +531,7 @@
     [replicator setSuspended: NO];
     
     [self waitForExpectations: @[stop] timeout: kExpTimeout];
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // make sure the doc with blob transferred successfully!
     AssertEqual(self.otherDB.count, 1);
@@ -613,7 +614,7 @@
     // Wait until the replicator is stopped:
     [self waitForExpectations: @[stopped] timeout: kExpTimeout];
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 #endif // TARGET_OS_IPHONE
@@ -857,7 +858,7 @@
     Assert([self.db saveDocument: doc4 error: &error]);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // Run the replicator again:
     [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
@@ -883,8 +884,9 @@
     
     // --- 2. Start then stop after IDLE
     [r start];
+
     [self waitForExpectations: @[xc1] timeout: kExpTimeout];
-    [r removeChangeListenerWithToken: token1];
+    [token1 remove];
     
     // --- 3. Add some documents to the database
     NSError* error;
@@ -917,8 +919,9 @@
         }
     }];
     [r start];
+
     [self waitForExpectations: @[xc2] timeout: kExpTimeout];
-    [r removeChangeListenerWithToken: token2];
+    [token2 remove];
     
     // --- 6. There should be some document replication events notified
     AssertEqual(array.count, 2u);
@@ -967,7 +970,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentReplicationEventWithPullConflict {
@@ -1007,7 +1010,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentReplicationEventWithDeletion {
@@ -1048,7 +1051,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testRemoveDocumentReplicationListener {
@@ -1273,8 +1276,8 @@
     
     AssertEqual(self.db.count, 0u);
     AssertEqual(self.otherDB.count, 1u);
-    [self.db removeChangeListenerWithToken: docChangeToken];
-    [replicator removeChangeListenerWithToken: docReplToken];
+    [docChangeToken remove];
+    [docReplToken remove];
 }
 
 #pragma mark Removed Doc with Filter
