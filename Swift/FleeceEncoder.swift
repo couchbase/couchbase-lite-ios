@@ -285,15 +285,6 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
         }
     }
     
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: Int128?, forKey key: Key) throws {
-        if value != nil {
-            try encode(value, forKey: key)
-        } else {
-            try encodeNil(forKey: key)
-        }
-    }
-    
     func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
         if value != nil {
             try encode(value, forKey: key)
@@ -327,15 +318,6 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
     }
     
     func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
-        if value != nil {
-            try encode(value, forKey: key)
-        } else {
-            try encodeNil(forKey: key)
-        }
-    }
-    
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: UInt128?, forKey key: Key) throws {
         if value != nil {
             try encode(value, forKey: key)
         } else {

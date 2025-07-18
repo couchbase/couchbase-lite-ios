@@ -168,15 +168,6 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
         }
     }
     
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: Int128?, forKey key: Key) throws {
-        if value != nil {
-            try encode(value, forKey: key)
-        } else {
-            try encodeNil(forKey: key)
-        }
-    }
-    
     func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
         if value != nil {
             try encode(value, forKey: key)
@@ -210,15 +201,6 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
     
     func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
-        if value != nil {
-            try encode(value, forKey: key)
-        } else {
-            try encodeNil(forKey: key)
-        }
-    }
-    
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: UInt128?, forKey key: Key) throws {
         if value != nil {
             try encode(value, forKey: key)
         } else {
@@ -341,11 +323,6 @@ private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerP
         throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
     
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: Int128?, forKey key: Key) throws {
-        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
-    }
-    
     func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
         throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
@@ -363,11 +340,6 @@ private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerP
     }
     
     func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
-        throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
-    }
-    
-    @available(macOSApplicationExtension 15.0, *)
-    func encodeIfPresent(_ value: UInt128?, forKey key: Key) throws {
         throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
     }
     
