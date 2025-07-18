@@ -1842,7 +1842,7 @@
     [self createDocNumbered: -1 of: 100];
     
     [self waitForExpectations: @[second] timeout: kExpTimeout];
-    [q removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testLiveQueryNoUpdate {
@@ -1886,7 +1886,7 @@
     NSLog(@"Done!");
     
     AssertEqual(count, 1);
-    [q removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 // CBSE-15957: Crash when creating multiple live queries concurrently
@@ -1953,8 +1953,8 @@
     [self waitForExpectations: @[firstA] timeout: kExpTimeout];
     AssertEqual(count2, 1);
     AssertEqual(count, 1);
-    [q removeChangeListenerWithToken: token1];
-    [q removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
 }
 
 - (void) testLiveQueryReturnsEmptyResultSet {
@@ -1966,8 +1966,9 @@
         AssertEqual(rows.count, 0);
         [first fulfill];
     }];
+
     [self waitForExpectations: @[first] timeout: kExpTimeout];
-    [q removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 /**
@@ -2033,8 +2034,8 @@
     [self createDocNumbered: -1 of: 100];
     
     [self waitForExpectations: @[second1, second2] timeout: kExpTimeout];
-    [q removeChangeListenerWithToken: token1];
-    [q removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
 }
 
 - (void) testLiveQueryUpdateQueryParam {
@@ -2069,7 +2070,7 @@
     
     [self waitForExpectations: @[second] timeout: 10.0];
     AssertEqual(count, 2);
-    [q removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 // CBSE-16662, CBL-5631: thread_mutex crash issue

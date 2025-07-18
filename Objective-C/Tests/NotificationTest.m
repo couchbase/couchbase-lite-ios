@@ -51,7 +51,7 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listener:
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentChange {
@@ -95,9 +95,9 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListenerWithToken:listener1];
-    [_db removeChangeListenerWithToken:listener2];
-    [_db removeChangeListenerWithToken:listener3];
+    [listener1 remove];
+    [listener2 remove];
+    [listener3 remove];
 }
 
 - (void) testAddSameChangeListeners {
@@ -130,9 +130,9 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListenerWithToken:listener1];
-    [_db removeChangeListenerWithToken:listener2];
-    [_db removeChangeListenerWithToken:listener3];
+    [listener1 remove];
+    [listener2 remove];
+    [listener3 remove];
 }
 
 - (void) testRemoveDocumentChangeListener {
@@ -156,7 +156,7 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove change listener:
-    [_db removeChangeListenerWithToken:listener1];
+    [listener1 remove];
     
     // Update doc1 again:
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
@@ -171,7 +171,7 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove again:
-    [_db removeChangeListenerWithToken:listener1];
+    [listener1 remove];
 }
 
 #pragma clang diagnostic pop

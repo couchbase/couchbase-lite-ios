@@ -144,8 +144,9 @@
     }];
     
     [r start];
+
     [self waitForExpectations: @[x1, x2] timeout: kExpTimeout];
-    [repl removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -254,8 +255,9 @@
     AssertNil(err);
     
     // Wait for the document get expired.
+
     [self waitForExpectations: @[expectation] timeout: kExpTimeout];
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
     
     // Erase remote data:
     [self eraseRemoteEndpoint: target];

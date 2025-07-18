@@ -392,7 +392,7 @@
     // make sure only single listener event is fired when conflict occured.
     AssertEqual(docIds.count, 1u);
     AssertEqualObjects(docIds.firstObject, docId);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // resolve any un-resolved conflict through pull replication.
     [self run: [self config: kCBLReplicatorTypePull] errorCode: 0 errorDomain: nil];
@@ -488,8 +488,9 @@
     NSString* warning = [NSString stringWithFormat: @"The document ID of the resolved document '%@'"
                          " is not matching with the document ID of the conflicting document '%@'.",
                          wrongDocID, docId];
+
     Assert([logSink.lines containsObject: warning]);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     CBLLogSinks.custom = nil;
 }
 
@@ -526,7 +527,7 @@
     AssertEqual(errors.lastObject.code, CBLErrorConflict);
     AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // should be solved when the replicator runs next time!!
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -569,7 +570,7 @@
     AssertEqual(errors.lastObject.code, CBLErrorConflict);
     AssertEqualObjects(errors.lastObject.domain, CBLErrorDomain);
     AssertEqualObjects([self.db documentWithID: docId].toDictionary, localData);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // should be solved when the replicator runs next time!!
     resolver = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* con) {
@@ -883,8 +884,8 @@
     Assert([logSink.lines containsObject: @"Unable to select conflicting revision for doc1, "
             "the conflict may have been resolved..."]);
     
-    [replicator removeChangeListenerWithToken: changeToken];
-    [replicator removeChangeListenerWithToken: docReplToken];
+    [changeToken remove];
+    [docReplToken remove];
     
     CBLLogSinks.custom = nil;
 }
@@ -915,7 +916,7 @@
             AssertNil(docRepl.documents.firstObject.error);
         }];
     }];
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // using blob from remote document of user's- which is a different database
     CBLDocument* otherDBDoc = [self.otherDB documentWithID: docID];
@@ -941,7 +942,7 @@
     AssertNotNil(error);
     AssertEqual(error.code, CBLErrorUnexpectedError);
     AssertEqualObjects(error.userInfo[NSLocalizedDescriptionKey], kCBLErrorMessageBlobDifferentDatabase);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testConflictResolverWhenDocumentIsPurged {
@@ -976,7 +977,7 @@
     
     AssertEqual(errors.count, 1u);
     AssertEqual(errors.firstObject.code, CBLErrorNotFound);
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testConflictResolverPreservesFlags {

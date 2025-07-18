@@ -42,7 +42,7 @@
     token = [listener addChangeListener:^(CBLMessageEndpointListenerChange* change) {
         if(change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
-            [wListener removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     
@@ -56,7 +56,7 @@
     token = [listener addChangeListener: ^(CBLMessageEndpointListenerChange * change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
-            [wListener removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     return x;
@@ -327,7 +327,7 @@
     
     [listener closeAll];
     [self waitForExpectations: @[listenerStop1, listenerStop2] timeout: kExpTimeout];
-    [listener removeChangeListenerWithToken: listenerToken];
+    [listenerToken remove];
     [self waitForExpectations: @[stop1, stop2] timeout: kExpTimeout];
     AssertNotNil(replicator.status.error);
     AssertNotNil(replicator2.status.error);

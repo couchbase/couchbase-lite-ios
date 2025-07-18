@@ -109,8 +109,8 @@
     }
     
     // cleanup
-    [repl1 removeChangeListenerWithToken: token1];
-    [repl2 removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
     repl1 = nil;
     repl2 = nil;
     Assert([db1 close: &err], @"Failed to close db1 %@", err);
@@ -188,8 +188,8 @@
     }
     
     [self waitForExpectations: @[stopExp1, stopExp2] timeout: kExpTimeout];
-    [repl1 removeChangeListenerWithToken: token1];
-    [repl2 removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
     [self stopListen];
 }
 
@@ -240,7 +240,7 @@
     [self waitForExpectations: @[stopExp] timeout: kExpTimeout];
     
     // cleanup
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     [self stopListener: listener1];
     [self stopListener: listener2];
 }
@@ -389,7 +389,7 @@
     
     [replicator start];
     [self waitForExpectations: @[pullFilterBusy, replicatorStop] timeout: kExpTimeout];
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     AssertEqual(maxActiveCount, 1);
     AssertEqual(maxConnectionCount, 1);

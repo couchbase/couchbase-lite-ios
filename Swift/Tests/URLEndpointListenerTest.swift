@@ -189,7 +189,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             }
             
         }
-        let token1 = repl1.addChangeListener(changeListener)
+        let token = repl1.addChangeListener(changeListener)
         let token2 = repl2.addChangeListener(changeListener)
         
         repl1.start()
@@ -207,8 +207,8 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             XCTAssertEqual(db2.count, count + 1); // existing docs + pulls one doc from db#1
         }
         
-        repl1.removeChangeListener(withToken: token1)
-        repl2.removeChangeListener(withToken: token2)
+        token.remove()
+        token2.remove()
         
         try db1.close()
         try db2.close()
@@ -255,7 +255,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
                 }
             }
         }
-        let token1 = repl1.addChangeListener(changeListener)
+        let token = repl1.addChangeListener(changeListener)
         let token2 = repl2.addChangeListener(changeListener)
         repl1.start()
         repl2.start()
@@ -269,9 +269,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             try self.otherDB!.close()
         }
         
-        wait(for: [stopExp1, stopExp2], timeout: expTimeout)
-        repl1.removeChangeListener(withToken: token1)
-        repl2.removeChangeListener(withToken: token2)
+
+        token.remove()
+        token2.remove()
         try stopListener()
     }
     
@@ -298,7 +298,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         let repl1 = createReplicator(db: self.otherDB!,
                                      target: listener1.localURLEndpoint,
                                      serverCert: listener1.tlsIdentity!.certs[0])
-        let token1 = repl1.addChangeListener({ (change: ReplicatorChange) in
+        let token = repl1.addChangeListener({ (change: ReplicatorChange) in
             if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
                 idleExp.fulfill()
                 
@@ -318,7 +318,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         wait(for: [stopExp], timeout: expTimeout)
         
         // cleanup
-        repl1.removeChangeListener(withToken: token1)
+        token.remove()
         try stopListener(listener: listener1)
         try stopListener(listener: listener2)
     }
@@ -690,8 +690,9 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         
         repl.start()
+
         wait(for: [pullFilterBusy, replicatorStop], timeout: expTimeout)
-        repl.removeChangeListener(withToken: token)
+        token.remove()
         
         XCTAssertEqual(maxConnectionCount, 1)
         XCTAssertEqual(maxActiveCount, 1)

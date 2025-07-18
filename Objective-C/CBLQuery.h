@@ -99,6 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param token The listener token.
  */
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+__deprecated_msg("Use [ListenerToken remove] instead.");
 
 
 /** Not available */
