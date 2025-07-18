@@ -135,7 +135,7 @@ the replicator change notification.
  
  @param token The listener token;
  */
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token
 __deprecated_msg("Use [ListenerToken remove] instead.");
 
 /**
