@@ -211,6 +211,138 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
         }
     }
     
+    // For some reason we have to override every overload of encodeIfPresent
+    
+    func encodeIfPresent(_ value: Bool?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: String?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Double?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Float?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Int?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Int8?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Int16?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Int32?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: Int64?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    @available(macOSApplicationExtension 15.0, *)
+    func encodeIfPresent(_ value: Int128?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: UInt8?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: UInt16?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: UInt32?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
+    @available(macOSApplicationExtension 15.0, *)
+    func encodeIfPresent(_ value: UInt128?, forKey key: Key) throws {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
         try! encoder.writeKey(key)
         let container = try! DictEncodingContainer<NestedKey>(encoder: encoder)
