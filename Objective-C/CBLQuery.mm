@@ -307,10 +307,12 @@ using namespace fleece;
 }
 
 #pragma mark delegate(CBLRemovableListenerToken)
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (void) removeToken: (id)token {
     [self removeChangeListenerWithToken: token];
 }
+#pragma clang diagnostic pop
 
 #pragma mark - Internal
 
