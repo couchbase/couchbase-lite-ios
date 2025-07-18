@@ -118,9 +118,9 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     NSData* caCertData = [self dataFromResource: @"identity/ca-cert" ofType: @"der"];
     
     NSError* error;
-    _issuer = [CBLTLSIdentity createIdentityWithPrivateKey: caKeyData
-                                               certificate: caCertData
-                                                     error: &error];
+    _issuer = [CBLTLSIdentity createIssuerWithPrivateKey: caKeyData
+                                             certificate: caCertData
+                                                   error: &error];
     AssertNotNil(_issuer);
     AssertNil(error);
     
