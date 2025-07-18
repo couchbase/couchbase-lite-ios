@@ -86,6 +86,14 @@ private class DocumentEncodingContainer<Key: CodingKey>: KeyedEncodingContainerP
         codingPath.append(key)
     }
     
+    func encodeIfPresent<T>(_ value: T?, forKey key: Key) throws where T : Encodable {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
     // Nested containers use FleeceEncoder, because they don't need the override for DocumentId
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
         try! encoder._encoder.writeKey(key)
@@ -153,6 +161,14 @@ private struct ImpossibleKeyedContainer<Key: CodingKey>: KeyedEncodingContainerP
     
     func encodeNil(forKey key: Key) throws {
         throw CBLError.create(CBLError.encodingError, description: "Document encoding requires a keyed container")
+    }
+    
+    func encodeIfPresent<T>(_ value: T?, forKey key: Key) throws where T : Encodable {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {

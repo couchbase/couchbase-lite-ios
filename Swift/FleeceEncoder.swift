@@ -203,6 +203,14 @@ internal class DictEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProt
         try encoder.writeValue(value)
     }
     
+    func encodeIfPresent<T>(_ value: T?, forKey key: Key) throws where T : Encodable {
+        if value != nil {
+            try encode(value, forKey: key)
+        } else {
+            try encodeNil(forKey: key)
+        }
+    }
+    
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
         try! encoder.writeKey(key)
         let container = try! DictEncodingContainer<NestedKey>(encoder: encoder)
