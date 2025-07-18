@@ -251,6 +251,12 @@ class Favourites : Codable, Equatable {
     var colour: String?
     var animal: Animal?
     
+    init(id: String? = nil, colour: String? = nil, animal: Animal? = nil) {
+        self.id = id
+        self.colour = colour
+        self.animal = animal
+    }
+    
     static func == (lhs: Favourites, rhs: DictionaryProtocol) -> Bool {
         // use DictionaryEquatable protocol to test equality
         return lhs.eq(dict: rhs)
@@ -787,6 +793,15 @@ class CodableTest: CBLTestCase {
         expectError(domain: CBLError.domain, code: CBLError.decodingError) {
             let _ = try self.defaultCollection!.document(id: largeCalc.id!, as: Calculation.self)
         }
+    }
+    
+    func testCollectionEncodeAndDecodeNil() throws {
+        let favourites = Favourites(colour: nil, animal: Animal(name: "Whale", legs: nil))
+        try defaultCollection!.save(from: favourites)
+        let favouritesLoaded = try defaultCollection!.document(id: favourites.id!, as: Favourites.self)
+        XCTAssertEqual(favourites, favouritesLoaded)
+        let favouritesDoc = try defaultCollection!.document(id: favourites.id!)!
+        XCTAssert(favourites == favouritesDoc)
     }
 }
 
