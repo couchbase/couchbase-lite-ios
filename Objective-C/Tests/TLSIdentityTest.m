@@ -264,7 +264,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
                                                attributes: kServerCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kServerCertLabel
                                                     error: &error];
     AssertNotNil(identity);
@@ -299,7 +298,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
                                                attributes: kServerCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kServerCertLabel
                                                     error: &error];
     AssertNotNil(identity);
@@ -315,7 +313,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
                                                attributes: kServerCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kServerCertLabel
                                                     error: &error];
     AssertNil(identity);
@@ -340,7 +337,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
                                                attributes: kClientCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kClientCertLabel
                                                     error: &error];
     AssertNotNil(identity);
@@ -375,7 +371,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
                                                attributes: kClientCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kClientCertLabel
                                                     error: &error];
     AssertNotNil(identity);
@@ -390,7 +385,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesClientAuth
                                                attributes: kClientCertAttrs
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kClientCertLabel
                                                     error: &error];
     AssertNil(identity);
@@ -520,7 +514,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
                                                attributes: @{ }
                                                expiration: nil
-                                                   issuer: nil
                                                     label: kServerCertLabel
                                                     error: &error];
     AssertNil(identity);
@@ -546,7 +539,6 @@
     identity = [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
                                                attributes: kServerCertAttrs
                                                expiration: expiration
-                                                   issuer: nil
                                                     label: kServerCertLabel
                                                     error: &error];
     AssertNotNil(identity);
@@ -574,9 +566,9 @@
     
     
     NSError* error;
-    CBLTLSIdentity* issuer = [CBLTLSIdentity createIdentityWithPrivateKey: caKeyData
-                                                              certificate: caCertData
-                                                                    error: &error];
+    CBLTLSIdentity* issuer = [CBLTLSIdentity createIssuerWithPrivateKey: caKeyData
+                                                            certificate: caCertData
+                                                                  error: &error];
     AssertNotNil(issuer);
     AssertNil(error);
     

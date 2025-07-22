@@ -17,7 +17,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 /// Test Spec : https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0012-MultipeerReplicator.md
 /// Version : 1.1.0
@@ -75,7 +75,7 @@ class MultipeerReplicatorTest: CBLTestCase {
             let caKeyData = try dataFromResource(name: "identity/ca-key", ofType: "der")
             let caCertData = try dataFromResource(name: "identity/ca-cert", ofType: "der")
 
-            let newIssuer = try TLSIdentity.createIdentity(withPrivateKey: caKeyData, certificate: caCertData)
+            let newIssuer = try TLSIdentity.createIssuer(withPrivateKey: caKeyData, certificate: caCertData)
             _issuer = newIssuer
             return newIssuer
         }
