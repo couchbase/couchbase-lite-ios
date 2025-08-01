@@ -177,16 +177,14 @@ class DatabaseTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(key.greaterThan(Expression.int(9)))
         
-        var explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX KeyIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "KeyIndex", for: q))
         
         // Reindex:
         try db.performMaintenance(type: .reindex)
         
         // Check if the index is still there and used:
         XCTAssertEqual(try defaultCollection!.indexes().count, 1)
-        explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX KeyIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "KeyIndex", for: q))
     }
     
     func testPerformMaintenanceIntegrityCheck() throws {

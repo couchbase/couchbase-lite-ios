@@ -453,6 +453,19 @@ const NSTimeInterval kExpTimeout = 20.0;
     return n;
 }
 
+- (BOOL) isUsingIndexNamed: (NSString*)indexName forQuery: (CBLQuery*)query {
+    NSError* error;
+    NSString* plan = [query explain: &error];
+    AssertNil(error);
+    AssertNotNil(plan);
+    
+    NSString *usingIndex = [NSString stringWithFormat:@"USING INDEX %@", indexName];
+    NSString *usingCoveringIndex = [NSString stringWithFormat:@"USING COVERING INDEX %@", indexName];
+    
+    return ([plan rangeOfString:usingIndex].location != NSNotFound ||
+            [plan rangeOfString:usingCoveringIndex].location != NSNotFound);
+}
+
 - (BOOL) isProfiling {
     return NSProcessInfo.processInfo.environment[@"PROFILING"] != nil;
 }

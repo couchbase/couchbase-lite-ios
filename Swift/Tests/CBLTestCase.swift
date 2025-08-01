@@ -334,6 +334,13 @@ class CBLTestCase: XCTestCase {
         return n
     }
     
+    func isUsingIndex(named indexName: String, for query: Query) throws -> Bool {
+        let plan = try query.explain()
+        let usingIndex = "USING INDEX \(indexName)"
+        let usingCoveringIndex = "USING COVERING INDEX \(indexName)"
+        return plan.contains(usingIndex) || plan.contains(usingCoveringIndex)
+    }
+    
     func getRickAndMortyJSON() throws -> String {
         var content = "Earth(C-137)".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
