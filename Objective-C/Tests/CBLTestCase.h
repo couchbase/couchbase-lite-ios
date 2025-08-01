@@ -204,10 +204,13 @@ extern const NSTimeInterval kExpTimeout;
             randomAccess: (BOOL)randomAccess
                     test: (void (^)(uint64_t n, CBLQueryResult *result))block;
 
+/** Checks whether the explain plan contains either USING INDEX or USING COVERING INDEX for the given index name. */
+- (BOOL) isUsingIndexNamed: (NSString*)indexName forQuery: (CBLQuery*)query;
+
 - (NSString*) getRickAndMortyJSON;
 
 /**
- /// This expectation will allow overfill expectation.
+ This expectation will allow overfill expectation.
  CBL-2363: Replicator might send extra idle status when its being stopped, which is not a bug
  */
 - (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description;

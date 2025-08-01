@@ -50,13 +50,11 @@ class PartialIndexTest: CBLTestCase {
 
         var sql = "SELECT * FROM _ WHERE type = 'number' AND num > 1000"
         var q = try db.createQuery(sql)
-        var explain = try q.explain()
-        XCTAssert(explain.contains("USING INDEX numIndex"))
+        XCTAssert(try isUsingIndex(named: "numIndex", for: q))
         
         sql = "SELECT * FROM _ WHERE type = 'foo' AND num > 1000"
         q = try db.createQuery(sql)
-        explain = try q.explain()
-        XCTAssertFalse(explain.contains("USING INDEX numIndex"))
+        XCTAssertFalse(try isUsingIndex(named: "numIndex", for: q))
     }
     
     /// 2. TestCreatePartialFullTextIndex
