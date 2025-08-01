@@ -491,9 +491,8 @@ class PredictiveQueryTest: CBLTestCase {
             .select(SelectResult.property("numbers"), SelectResult.expression(prediction.property("sum")).as("sum"))
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
-        
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
+
+        XCTAssert(try isUsingIndex(named: "SumIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -530,9 +529,8 @@ class PredictiveQueryTest: CBLTestCase {
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                    prediction.property("avg").equalTo(Expression.value(8))))
         
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
-        XCTAssertNotEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "SumIndex", for: q))
+        XCTAssert(try isUsingIndex(named: "AvgIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             XCTAssert(r.int(at: 0) == 15 || r.int(at: 1) == 8)
@@ -562,8 +560,7 @@ class PredictiveQueryTest: CBLTestCase {
             .where(prediction.property("sum").equalTo(Expression.value(15)).and(
                    prediction.property("avg").equalTo(Expression.value(3))))
         
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumAvgIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "SumAvgIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             XCTAssertEqual(r.int(at: 0), 15)
@@ -593,8 +590,7 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
-        let explain = try q.explain() as NSString
-        XCTAssertEqual(explain.range(of: "USING INDEX AggIndex").location, NSNotFound)
+        XCTAssertFalse(try isUsingIndex(named: "AggIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -629,8 +625,7 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "SumIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -669,9 +664,8 @@ class PredictiveQueryTest: CBLTestCase {
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                 prediction.property("avg").equalTo(Expression.value(8))))
         
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
-        XCTAssertNotEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "SumIndex", for: q))
+        XCTAssert(try isUsingIndex(named: "AvgIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             XCTAssert(r.int(at: 0) == 15 || r.int(at: 1) == 8)
@@ -703,8 +697,7 @@ class PredictiveQueryTest: CBLTestCase {
             .where(prediction.property("sum").equalTo(Expression.value(15)).and(
                 prediction.property("avg").equalTo(Expression.value(3))))
         
-        let explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumAvgIndex").location, NSNotFound)
+        XCTAssert(try isUsingIndex(named: "SumAvgIndex", for: q))
         
         let rows = try verifyQuery(q) { (n, r) in
             XCTAssertEqual(r.int(at: 0), 15)
@@ -737,7 +730,7 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         var explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
+        XCTAssertNotEqual(explain.range(of: "USING COVERING INDEX SumIndex").location, NSNotFound)
         
         var rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -756,7 +749,7 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").equalTo(Expression.value(15)))
         explain = try q.explain() as NSString
-        XCTAssertEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
+        XCTAssertEqual(explain.range(of: "USING COVERING INDEX SumIndex").location, NSNotFound)
         
         rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -797,9 +790,9 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                    prediction.property("avg").equalTo(Expression.value(8))))
-        var explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
-        XCTAssertNotEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        
+        XCTAssert(try isUsingIndex(named: "SumIndex", for: q))
+        XCTAssert(try isUsingIndex(named: "AvgIndex", for: q))
         
         var rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -819,8 +812,7 @@ class PredictiveQueryTest: CBLTestCase {
         .from(DataSource.collection(defaultCollection!))
         .where(prediction.property("sum").equalTo(Expression.value(15)))
         
-        explain = try q.explain() as NSString
-        XCTAssertEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
+        XCTAssertFalse(try isUsingIndex(named: "SumIndex", for: q))
         
         rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -834,8 +826,8 @@ class PredictiveQueryTest: CBLTestCase {
             .select(SelectResult.property("numbers"))
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("avg").equalTo(Expression.value(8)))
-        explain = try q.explain() as NSString
-        XCTAssertNotEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        
+        XCTAssert(try isUsingIndex(named: "AvgIndex", for: q))
         
         rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -852,8 +844,8 @@ class PredictiveQueryTest: CBLTestCase {
             .select(SelectResult.property("numbers"))
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("avg").equalTo(Expression.value(8)))
-        explain = try q.explain() as NSString
-        XCTAssertEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        
+        XCTAssertFalse(try isUsingIndex(named: "AvgIndex", for: q))
         
         rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray
@@ -871,9 +863,9 @@ class PredictiveQueryTest: CBLTestCase {
             .from(DataSource.collection(defaultCollection!))
             .where(prediction.property("sum").lessThanOrEqualTo(Expression.value(15)).or(
                 prediction.property("avg").equalTo(Expression.value(8))))
-        explain = try q.explain() as NSString
-        XCTAssertEqual(explain.range(of: "USING INDEX SumIndex").location, NSNotFound)
-        XCTAssertEqual(explain.range(of: "USING INDEX AvgIndex").location, NSNotFound)
+        
+        XCTAssertFalse(try isUsingIndex(named: "SumIndex", for: q))
+        XCTAssertFalse(try isUsingIndex(named: "AvgIndex", for: q))
         
         rows = try verifyQuery(q) { (n, r) in
             let numbers = r.array(at: 0)!.toArray() as NSArray

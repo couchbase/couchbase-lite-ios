@@ -61,13 +61,11 @@
     NSString* sql = @"SELECT * FROM _ WHERE type = 'number' AND num > 1000";
     CBLQuery* q = [_db createQuery: sql error: &error];
     AssertNotNil(q);
-    NSString* explain = [q explain: &error];
-    Assert([explain rangeOfString: @"USING INDEX numIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"numIndex" forQuery: q]);
     
     sql = @"SELECT * FROM _ WHERE type = 'foo' AND num > 1000";
     q = [_db createQuery: sql error: &error];
-    explain = [q explain: &error];
-    AssertFalse([explain rangeOfString: @"USING INDEX numIndex"].location != NSNotFound);
+    AssertFalse([self isUsingIndexNamed: @"numIndex" forQuery: q]);
 }
 
 /**

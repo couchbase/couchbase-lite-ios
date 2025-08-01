@@ -538,7 +538,7 @@
                                      from: kDATA_SRC_DB
                                     where: [sumPrediction equalTo: EXPR_VAL(@15)]];
     
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -577,9 +577,9 @@
                                      from: kDATA_SRC_DB
                                     where: [[sumPrediction lessThanOrEqualTo: EXPR_VAL(@15)] orExpression:
                                             [avgPrediction equalTo: EXPR_VAL(@8)]]];
-    NSString* explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
+    Assert([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
     
     int64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         Assert([r integerAtIndex: 0] == 15 || [r integerAtIndex: 1] == 8);
@@ -611,7 +611,7 @@
                                     where: [[sumPrediction equalTo: EXPR_VAL(@15)] andExpression:
                                             [avgPrediction equalTo: EXPR_VAL(@3)]]];
     
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumAvgIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"SumAvgIndex" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         AssertEqual([r integerAtIndex: 0], 15);
@@ -644,7 +644,7 @@
                                      from: kDATA_SRC_DB
                                     where: [sumPrediction equalTo: EXPR_VAL(@15)]];
     
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX AggCache"].location == NSNotFound);
+    AssertFalse([self isUsingIndexNamed: @"AggCache" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -677,12 +677,12 @@
                                                                 properties: @[@"sum"]];
     Assert([self.db createIndex: index withName: @"SumIndex" error: &error]);
     
-    CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers"),
+    CBLQuery* q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers"),
                                              SEL_EXPR(sumPrediction)]
                                      from: kDATA_SRC_DB
                                     where: [sumPrediction equalTo: EXPR_VAL(@15)]];
     
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -725,9 +725,9 @@
                                      from: kDATA_SRC_DB
                                     where: [[sumPrediction lessThanOrEqualTo: EXPR_VAL(@15)] orExpression:
                                             [avgPrediction equalTo: EXPR_VAL(@8)]]];
-    NSString* explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
+    Assert([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
     
     int64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         Assert([r integerAtIndex: 0] == 15 || [r integerAtIndex: 1] == 8);
@@ -762,7 +762,7 @@
                                     where: [[sumPrediction equalTo: EXPR_VAL(@15)] andExpression:
                                             [avgPrediction equalTo: EXPR_VAL(@3)]]];
     
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumAvgIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"SumAvgIndex" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         AssertEqual([r integerAtIndex: 0], 15);
@@ -795,7 +795,8 @@
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                                      from: kDATA_SRC_DB
                                     where: [sumPrediction equalTo: EXPR_VAL(@15)]];
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
     
     // Query with index:
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
@@ -813,7 +814,8 @@
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                            from: kDATA_SRC_DB
                           where: [sumPrediction equalTo: EXPR_VAL(@15)]];
-    Assert([[q explain: nil] rangeOfString: @"USING INDEX SumIndex"].location == NSNotFound);
+    
+    AssertFalse([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
     
     numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -861,9 +863,9 @@
                                      from: kDATA_SRC_DB
                                     where: [[sumPrediction lessThanOrEqualTo: EXPR_VAL(@15)] orExpression:
                                             [avgPrediction equalTo: EXPR_VAL(@8)]]];
-    NSString* explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX SumIndex"].location != NSNotFound);
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
+    Assert([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -881,8 +883,8 @@
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                            from: kDATA_SRC_DB
                           where: [sumPrediction equalTo: EXPR_VAL(@15)]];
-    explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX SumIndex"].location == NSNotFound);
+    
+    AssertFalse([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
     
     numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -894,8 +896,8 @@
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                            from: kDATA_SRC_DB
                           where: [avgPrediction equalTo: EXPR_VAL(@8)]];
-    explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
     
     numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -911,8 +913,8 @@
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                            from: kDATA_SRC_DB
                           where: [avgPrediction equalTo: EXPR_VAL(@8)]];
-    explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location == NSNotFound);
+    
+    AssertFalse([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
     
     numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
@@ -929,9 +931,10 @@
                            from: kDATA_SRC_DB
                           where: [[sumPrediction lessThanOrEqualTo: EXPR_VAL(@15)] orExpression:
                                   [avgPrediction equalTo: EXPR_VAL(@8)]]];
-    explain = [q explain: nil];
-    Assert([explain rangeOfString: @"USING INDEX SumIndex"].location == NSNotFound);
-    Assert([explain rangeOfString: @"USING INDEX AvgIndex"].location == NSNotFound);
+    
+    AssertFalse([self isUsingIndexNamed: @"SumIndex" forQuery: q]);
+    AssertFalse([self isUsingIndexNamed: @"AvgIndex" forQuery: q]);
+    
     numRows = [self verifyQuery: q randomAccess: NO  test: ^(uint64_t n, CBLQueryResult *r) {
         NSArray* numbers = [[r arrayAtIndex:0] toArray];
         Assert(numbers.count > 0);
