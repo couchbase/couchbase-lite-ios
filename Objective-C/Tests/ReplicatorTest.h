@@ -104,6 +104,16 @@ NS_ASSUME_NONNULL_BEGIN
                                       serverCert: (nullable SecCertificateRef)serverCert;
 #endif
 
+- (CBLReplicatorConfiguration*) configWithCollectionConfigs: (NSArray<CBLCollectionConfiguration*>*)configs
+                                                     target: (id<CBLEndpoint>)target
+                                                       type: (CBLReplicatorType)type
+                                                 continuous: (BOOL)continuous;
+
+- (CBLReplicatorConfiguration*) configWithCollections: (NSArray<CBLCollection*>*)collections
+                                               target: (id<CBLEndpoint>)target
+                                                 type: (CBLReplicatorType)type
+                                           continuous: (BOOL)continuous;
+
 #pragma mark - Run Replicator
 
 - (BOOL) run: (CBLReplicatorConfiguration*)config

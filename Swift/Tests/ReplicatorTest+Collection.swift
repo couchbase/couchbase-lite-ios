@@ -38,7 +38,6 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let config = ReplicatorConfiguration(database: self.db, target: target)
         XCTAssertEqual(config.collections.count, 1)
         
-        
         let col = try self.db.defaultCollection()
         XCTAssertEqual(col, config.collections[0])
         XCTAssertEqual(col.name, config.collections[0].name)
@@ -432,10 +431,9 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2b.count, 0)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: continous)
-        config.addCollections([col1a, col1b])
-        
+        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: continous)
         run(config: config, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 5)
         XCTAssertEqual(col1b.count, 3)
         XCTAssertEqual(col2a.count, 5)
@@ -465,8 +463,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2b.count, 10)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: continous)
-        config.addCollections([col1a, col1b])
+        var config = self.config(collections: [col1a, col1b], target: target, type: .pull, continuous: continous)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 10)
@@ -503,8 +500,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2b.count, 8)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pushAndPull, continuous: continous)
-        config.addCollections([col1a, col1b])
+        var config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: continous)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 7)
@@ -522,9 +518,9 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: false)
-        config.addCollections([col1a])
+        var config = self.config(collections: [col1a], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 5)
         XCTAssertEqual(col2a.count, 5)
         
@@ -533,10 +529,12 @@ class ReplicatorTest_Collection: ReplicatorTest {
             try col1a.purge(id: "doc\(i)")
         }
         run(config: config, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 0)
         XCTAssertEqual(col2a.count, 5)
         
         run(config: config, reset: true, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 5)
         XCTAssertEqual(col2a.count, 5)
     }
@@ -545,12 +543,11 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
         
-        let doc1 = try createDocument("doc1")
+        let doc1 = createDocument("doc1")
         try col1a.save(document: doc1)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pushAndPull, continuous: false)
-        config.addCollections([col1a])
+        var config = self.config(collections: [col1a], target: target, type: .pushAndPull, continuous: false)
         run(config: config, expectedError: nil)
         
         let mdoc1 = try col1a.document(id: "doc1")!.toMutable()
@@ -593,11 +590,11 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         // Create a document with id "doc1" in colA and colB of the database A.
-        let doc1a = try createDocument("doc1")
+        let doc1a = createDocument("doc1")
         doc1a.setString("update0", forKey: "update")
         try col1a.save(document: doc1a)
         
-        let doc1b = try createDocument("doc2")
+        let doc1b = createDocument("doc2")
         doc1b.setString("update0", forKey: "update")
         try col1b.save(document: doc1b)
         
@@ -608,16 +605,14 @@ class ReplicatorTest_Collection: ReplicatorTest {
             return con.remoteDocument
         })
         
-        var colConfig1 = CollectionConfiguration()
+        var colConfig1 = CollectionConfiguration(collection: col1a)
         colConfig1.conflictResolver = conflictResolver1
         
-        var colConfig2 = CollectionConfiguration()
+        var colConfig2 = CollectionConfiguration(collection: col1b)
         colConfig2.conflictResolver = conflictResolver2
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pushAndPull, continuous: false)
-        config.addCollection(col1a, config: colConfig1)
-        config.addCollection(col1b, config: colConfig2)
+        var config = self.config(configs: [colConfig1, colConfig2], target: target, type: .pushAndPull, continuous: false)
         run(config: config, expectedError: nil)
         
         // Update "doc1" in colA and colB of database A.
@@ -625,7 +620,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         mdoc1a.setString("update1a", forKey: "update")
         try col1a.save(document: mdoc1a)
         
-        var mdoc2a = try col2a.document(id: "doc1")!.toMutable()
+        let mdoc2a = try col2a.document(id: "doc1")!.toMutable()
         mdoc2a.setString("update2a", forKey: "update")
         try col2a.save(document: mdoc2a)
         
@@ -634,7 +629,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         mdoc1b.setString("update1b", forKey: "update")
         try col1b.save(document: mdoc1b)
         
-        var mdoc2b = try col2b.document(id: "doc2")!.toMutable()
+        let mdoc2b = try col2b.document(id: "doc2")!.toMutable()
         mdoc2b.setString("update2b", forKey: "update")
         try col2b.save(document: mdoc2b)
         
@@ -679,8 +674,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1a, start: 0, num: 10)
         try createDocNumbered(col1b, start: 10, num: 10)
         
-        var colConfig = CollectionConfiguration()
-        colConfig.pushFilter = { (doc: Document, flags: DocumentFlags) in
+        let filter: ReplicationFilter = { (doc: Document, flags: DocumentFlags) in
             if doc.collection!.name == "colA" {
                 return doc.int(forKey: "number1") < 5
             } else {
@@ -688,9 +682,14 @@ class ReplicatorTest_Collection: ReplicatorTest {
             }
         }
         
+        var config1 = CollectionConfiguration(collection: col1a)
+        config1.pushFilter = filter
+        
+        var config2 = CollectionConfiguration(collection: col1b)
+        config2.pushFilter = filter
+        
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollections([col1a, col1b], config: colConfig)
+        var config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 10)
@@ -710,8 +709,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col2a, start: 0, num: 10)
         try createDocNumbered(col2b, start: 10, num: 10)
         
-        var colConfig = CollectionConfiguration()
-        colConfig.pullFilter = { (doc: Document, flags: DocumentFlags) in
+        let filter: ReplicationFilter = { (doc: Document, flags: DocumentFlags) in
             if doc.collection!.name == "colA" {
                 return doc.int(forKey: "number1") < 5
             } else {
@@ -719,9 +717,14 @@ class ReplicatorTest_Collection: ReplicatorTest {
             }
         }
         
+        var config1 = CollectionConfiguration(collection: col1a)
+        config1.pullFilter = filter
+        
+        var config2 = CollectionConfiguration(collection: col1b)
+        config2.pullFilter = filter
+        
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: false)
-        config.addCollections([col1a, col1b], config: colConfig)
+        var config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 5)
@@ -741,18 +744,16 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
+
+        var config1 = CollectionConfiguration(collection: col1a)
+        config1.documentIDs = ["doc1", "doc2"]
         
-        var colConfig1 = CollectionConfiguration()
-        colConfig1.documentIDs = ["doc1", "doc2"]
+        var config2 = CollectionConfiguration(collection: col1b)
+        config2.documentIDs = ["doc10", "doc11", "doc13"]
         
-        var colConfig2 = CollectionConfiguration()
-        colConfig2.documentIDs = ["doc10", "doc11", "doc13"]
-        
-        config.addCollection(col1a, config: colConfig1)
-        config.addCollection(col1b, config: colConfig2)
-        
+        var config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 5)
         XCTAssertEqual(col1b.count, 5)
         XCTAssertEqual(col2a.count, 2)
@@ -770,18 +771,16 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col2b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: false)
         
-        var colConfig1 = CollectionConfiguration()
-        colConfig1.documentIDs = ["doc1", "doc2"]
+        var config1 = CollectionConfiguration(collection: col1a)
+        config1.documentIDs = ["doc1", "doc2"]
         
-        var colConfig2 = CollectionConfiguration()
-        colConfig2.documentIDs = ["doc10", "doc11", "doc13"]
+        var config2 = CollectionConfiguration(collection: col1b)
+        config2.documentIDs = ["doc10", "doc11", "doc13"]
         
-        config.addCollection(col1a, config: colConfig1)
-        config.addCollection(col1b, config: colConfig2)
-        
+        var config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
+        
         XCTAssertEqual(col1a.count, 2)
         XCTAssertEqual(col1b.count, 3)
         XCTAssertEqual(col2a.count, 5)
@@ -792,15 +791,14 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
-        let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
+        _ = try otherDB!.createCollection(name: "colA", scope: "scopeA")
+        _ = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
         try createDocNumbered(col1a, start: 0, num: 10)
         try createDocNumbered(col1b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollections([col1a, col1b])
+        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
         let r = Replicator(config: config)
         
         var docIds1a = try r.pendingDocumentIds(collection: col1a)
@@ -843,8 +841,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollections([col1a, col1b])
+        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
         let r = Replicator(config: config)
         
         // make sure all docs are pending
@@ -890,8 +887,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 5, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pushAndPull, continuous: false)
-        config.addCollections([col1a, col1b])
+        var config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: false)
         let r = Replicator(config: config)
         var docCount = 0;
         var docs = [String]()

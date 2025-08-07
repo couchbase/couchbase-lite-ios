@@ -811,9 +811,7 @@
 }
 
 - (void) testEmptyNetworkInterface {
-#if TARGET_OS_OSX
     XCTSkip(@"Not applicable test on some network environment");
-#endif
     
     if (!self.keyChainAccessAllowed) return;
     
@@ -977,11 +975,11 @@
     
     // Push Replication to ReadOnly Listener
     [self ignoreException: ^{
-        [self runWithTarget: _listener.localEndpoint
+        [self runWithTarget: self->_listener.localEndpoint
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil
-                 serverCert: (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0]
+                 serverCert: (__bridge SecCertificateRef) self->_listener.tlsIdentity.certs[0]
                   errorCode: CBLErrorHTTPForbidden
                 errorDomain: CBLErrorDomain];
     }];
@@ -1213,7 +1211,7 @@
     
     [self ignoreException:^{
         NSError* error = nil;
-        Assert([_listener startWithError: &error]);
+        Assert([self->_listener startWithError: &error]);
         AssertNil(error);
     }];
     
@@ -1442,7 +1440,7 @@
     
     // Reject the server with non-self-signed cert
     [self ignoreException: ^{
-        [self runWithTarget: _listener.localEndpoint
+        [self runWithTarget: self->_listener.localEndpoint
                        type: kCBLReplicatorTypePushAndPull
                  continuous: NO
               authenticator: nil

@@ -67,11 +67,15 @@
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
+    NSArray<CBLCollectionConfiguration*>* collections =
+    [CBLCollectionConfiguration fromCollections: @[col1a, col1b]];
+    
+    CBLReplicatorConfiguration* rConfig =
+    [[CBLReplicatorConfiguration alloc] initWithCollections: collections target: _listener.localEndpoint];
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
-    [rConfig addCollections: @[col1a, col1b] config: nil];
     
     [self run: rConfig errorCode: 0 errorDomain: nil];
+    
     AssertEqual(col1a.count, 3);
     AssertEqual(col1b.count, 5);
     AssertEqual(col2a.count, 3);
@@ -111,12 +115,16 @@
     Config* config = [[Config alloc] initWithCollections: @[col2a, col2b]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
+    NSArray<CBLCollectionConfiguration*>* collections =
+    [CBLCollectionConfiguration fromCollections: @[col1a, col1b]];
+    
+    CBLReplicatorConfiguration* rConfig =
+    [[CBLReplicatorConfiguration alloc] initWithCollections: collections target: _listener.localEndpoint];
     rConfig.continuous = YES;
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
-    [rConfig addCollections: @[col1a, col1b] config: nil];
     
     [self run: rConfig errorCode: 0 errorDomain: nil];
+    
     AssertEqual(col1a.count, 10);
     AssertEqual(col1b.count, 10);
     AssertEqual(col2a.count, 10);
@@ -145,9 +153,12 @@
     Config* config = [[Config alloc] initWithCollections: @[colB]];
     [self listen: config];
     
-    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _listener.localEndpoint];
+    NSArray<CBLCollectionConfiguration*>* collections =
+    [CBLCollectionConfiguration fromCollections: @[colA]];
+    
+    CBLReplicatorConfiguration* rConfig =
+    [[CBLReplicatorConfiguration alloc] initWithCollections: collections target: _listener.localEndpoint];
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
-    [rConfig addCollections: @[colA] config: nil];
     
     [self run: rConfig errorCode: CBLErrorHTTPNotFound errorDomain: CBLErrorDomain];
     

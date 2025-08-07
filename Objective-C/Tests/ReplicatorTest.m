@@ -211,8 +211,7 @@
 
 - (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
                                             type: (CBLReplicatorType)type
-                                      continuous: (BOOL)continuous
-{
+                                      continuous: (BOOL)continuous {
     return [self configWithTarget: target
                              type: type
                        continuous: continuous
@@ -250,10 +249,16 @@
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert
                                      maxAttempts: (NSInteger)maxAttempts /* for default, set -1 */ {
-    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
-                                                                                  target: target];
-    c.replicatorType = type;
-    c.continuous = continuous;
+    NSError* error;
+    CBLCollection* collection = [self.db defaultCollection: &error];
+    AssertNotNil(collection);
+    AssertNil(error);
+    
+    CBLReplicatorConfiguration* c = [self configWithCollections: @[collection]
+                                                         target: target
+                                                           type: type
+                                                     continuous: continuous];
+    
     c.authenticator = authenticator;
     
     if (maxAttempts >= 0)
@@ -288,6 +293,27 @@
     return c;
 }
 #endif
+
+- (CBLReplicatorConfiguration*) configWithCollectionConfigs: (NSArray<CBLCollectionConfiguration*>*)configs
+                                                     target: (id<CBLEndpoint>)target
+                                                       type: (CBLReplicatorType)type
+                                                 continuous: (BOOL)continuous {
+    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithCollections: configs
+                                                                                     target: target];
+    c.replicatorType = type;
+    c.continuous = continuous;
+    return c;
+}
+
+- (CBLReplicatorConfiguration*) configWithCollections: (NSArray<CBLCollection*>*)collections
+                                               target: (id<CBLEndpoint>)target
+                                                 type: (CBLReplicatorType)type
+                                           continuous: (BOOL)continuous {
+    return [self configWithCollectionConfigs: [CBLCollectionConfiguration fromCollections: collections]
+                                      target: target
+                                        type: type
+                                  continuous: continuous];
+}
 
 #pragma mark - Run Replicator
 

@@ -24,28 +24,26 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     
     func testConflictResolverConfigProperty() {
         let target = URLEndpoint(url: URL(string: "wss://foo")!)
-        var pullConfig = config(target: target, type: .pull, continuous: false)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let conflictResolver = TestConflictResolver { (con) -> Document? in
             return con.remoteDocument
         }
         colConfig.conflictResolver = conflictResolver
         
-        pullConfig.addCollection(defaultCollection!, config: colConfig)
-        repl = Replicator(config: pullConfig)
+        let config = config(configs: [colConfig], target: target, type: .pull, continuous: false)
+        repl = Replicator(config: config)
         
-        XCTAssertNotNil(pullConfig.collectionConfig(defaultCollection!)!.conflictResolver)
-        XCTAssertNotNil(repl.config.collectionConfig(defaultCollection!)!.conflictResolver)
+        XCTAssertNotNil(config.collectionConfigs.first?.conflictResolver)
+        XCTAssertNotNil(repl.config.collectionConfigs.first?.conflictResolver)
     }
     
     #if COUCHBASE_ENTERPRISE
     
-    func getConfig(_ type: ReplicatorType) -> ReplicatorConfiguration {
+    func getConfig(configs: [CollectionConfiguration]? = nil, type: ReplicatorType) -> ReplicatorConfiguration {
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = config(target: target, type: type, continuous: false)
-        config.addCollection(defaultCollection!)
-        return config
+        let collections = configs != nil ?
+            configs! : CollectionConfiguration.fromCollections([defaultCollection!])
+        return config(configs: collections, target: target, type: type, continuous: false)
     }
     
     func makeConflict(forID docID: String,
@@ -56,12 +54,12 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         try saveDocument(doc)
         
         // sync the doc in both DBs.
-        let config = getConfig(.push)
+        let config = getConfig(type: .push)
         run(config: config, expectedError: nil)
         
         // Now make different changes in db and oDBs
         if let data = localData {
-            let doc1a = db.document(withID: docID)!.toMutable()
+            let doc1a = try db.defaultCollection().document(id: docID)!.toMutable()
             doc1a.setData(data)
             try saveDocument(doc1a)
         } else {
@@ -82,15 +80,13 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        var config = getConfig(.pull)
-
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(defaultCollection!.count, 1)
@@ -103,15 +99,13 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        var config = getConfig(.pull)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.localDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(defaultCollection!.count, 1)
@@ -124,15 +118,13 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["pattern": "striped"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: remoteData)
         
-        var config = getConfig(.pull)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             return nil
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-
+        
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertNil(resolver.winner)
@@ -147,17 +139,15 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let remoteData = ["key2": "value2"]
         try makeConflict(forID: "doc", withLocal: nil, withRemote: remoteData)
         
-        var config = getConfig(.pull)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             XCTAssertNil(conflict.localDocument)
             XCTAssertNotNil(conflict.remoteDocument)
             return nil
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
 
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertNil(resolver.winner)
@@ -169,17 +159,15 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let localData = ["key1": "value1"]
         try makeConflict(forID: "doc", withLocal: localData, withRemote: nil)
         
-        var config = getConfig(.pull)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { (conflict) -> Document? in
             XCTAssertNotNil(conflict.localDocument)
             XCTAssertNil(conflict.remoteDocument)
             return nil
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-
+        
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertNil(resolver.winner)
@@ -191,19 +179,19 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        
         var count = 0;
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         let resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
             count += 1
             
             // update the doc will cause a second conflict
-            let savedDoc = self.db.document(withID: docID)!.toMutable()
+            let savedDoc = try! self.db.defaultCollection().document(id: docID)!.toMutable()
             if !savedDoc["secondUpdate"].exists {
                 savedDoc.setBoolean(true, forKey: "secondUpdate")
-                try! self.db.saveDocument(savedDoc)
+                try! self.db.defaultCollection().save(document: savedDoc)
             }
             
             let mDoc = conflict.localDocument!.toMutable()
@@ -211,8 +199,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return mDoc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(count, 2)
@@ -228,19 +216,19 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
         var resolver: TestConflictResolver!
-        var config = getConfig(.pull)
         
         // EDIT LOCAL DOCUMENT
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        var colConfig = CollectionConfiguration()
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         resolver = TestConflictResolver() { (conflict: Conflict) -> Document? in
             let doc = conflict.localDocument?.toMutable()
             doc?.setString("local", forKey: "edit")
             return doc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        var config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         var expectedDocDict = localData
@@ -256,8 +244,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return doc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-        
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         expectedDocDict = remoteData
@@ -273,8 +260,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return doc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-        
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         value = try defaultCollection!.document(id: docID)!.toDictionary()
@@ -309,13 +295,13 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        
-        var colConfig = CollectionConfiguration()
-        colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        colConfig.conflictResolver = resolver
+        
+        let config = getConfig(configs: [colConfig], type: .pull)
         
         var token: ListenerToken!
         var replicator: Replicator!
@@ -335,7 +321,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         replicator.removeChangeListener(withToken: token)
         
         // resolve any un-resolved conflict through pull replication.
-        run(config: getConfig(.pull), expectedError: nil)
+        run(config: getConfig(type: .pull), expectedError: nil)
     }
     
     
@@ -349,19 +335,18 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let wrongDocID = "wrong-doc-id"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
             let mDoc = MutableDocument(id: wrongDocID)
             mDoc.setString("update", forKey: "edit")
             return mDoc
         }
-        
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        let config = getConfig(configs: [colConfig], type: .pull)
         
         var token: ListenerToken!
         var replicator: Replicator!
@@ -398,16 +383,15 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
-
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        var resolver = TestConflictResolver() { [unowned self] (conflict) -> Document? in
             return try! self.otherDB_defaultCollection!.document(id: docID) // doc from different DB!!
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        var config = getConfig(configs: [colConfig], type: .pull)
 
         var token: ListenerToken!
         var replicator: Replicator!
@@ -432,8 +416,10 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
+        
         XCTAssert(try defaultCollection!.document(id: docID)!.toDictionary() == remoteData)
     }
     
@@ -443,19 +429,20 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
-        
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        
+        var resolver = TestConflictResolver() { (conflict) -> Document? in
             NSException(name: .internalInconsistencyException,
                         reason: "some exception happened inside custom conflict resolution",
                         userInfo: nil).raise()
             return nil
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        var config = getConfig(configs: [colConfig], type: .pull)
+        
         var token: ListenerToken!
         var replicator: Replicator!
         var error: NSError?
@@ -479,9 +466,10 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
+        
         XCTAssert(try defaultCollection!.document(id: docID)!.toDictionary() == remoteData)
     }
     
@@ -526,8 +514,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         doc.setString("value4", forKey: "key4")
         try otherDB_defaultCollection!.save(document: doc)
         
-        var config = getConfig(.pull)
-
+        let config = getConfig(type: .pull)
         run(config: config, expectedError: nil)
         
         // validate saved doc includes the key3, which is the highest generation.
@@ -546,20 +533,19 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let content = "I am a blob".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
         
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
-        
-        // RESOLVE WITH REMOTE and BLOB data in LOCAL
         var localData: [String: Any] = ["key1": "value1", "blob": blob]
         var remoteData: [String: Any] = ["key2": "value2"]
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        
+        // RESOLVE WITH REMOTE and BLOB data in LOCAL
+        var resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-
+        
+        var config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertNil(try defaultCollection!.document(id: docID)?.blob(forKey: "blob"))
@@ -571,8 +557,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.localDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(try defaultCollection!.document(id: docID)?.blob(forKey: "blob"), blob)
@@ -587,8 +573,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.localDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertNil(try defaultCollection!.document(id: docID)?.blob(forKey: "blob"))
@@ -600,8 +586,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
         
+        config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(try defaultCollection!.document(id: docID)?.blob(forKey: "blob"), blob)
@@ -614,19 +600,20 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let blob = Blob(contentType: "text/plain", data: content)
         let localData: [String: Any] = ["key1": "value1"]
         let remoteData: [String: Any] = ["key2": "value2", "blob": blob]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
+        
+        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         
         // using remote document blob is okay to use!
-        try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        var resolver = TestConflictResolver() { (conflict) -> Document? in
             let mDoc = conflict.localDocument?.toMutable()
             mDoc?.setBlob(conflict.remoteDocument?.blob(forKey: "blob"), forKey: "blob")
             return mDoc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        var config = getConfig(configs: [colConfig], type: .pull)
 
         var token: ListenerToken!
         var replicator: Replicator!
@@ -647,7 +634,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return mDoc
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
+        
+        config = getConfig(configs: [colConfig], type: .pull)
 
         var error: NSError? = nil
         ignoreException {
@@ -671,28 +659,27 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     func testNonBlockingDatabaseOperationConflictResolver() throws {
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
+        
         try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
         
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         var count = 0;
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
             count += 1
             
             let timestamp = "\(Date())"
             let mDoc = self.createDocument("doc2", data: ["timestamp": timestamp])
             XCTAssertNotNil(mDoc)
-            XCTAssert(try! self.db.saveDocument(mDoc, concurrencyControl: .failOnConflict))
+            XCTAssert(try! self.db.defaultCollection().save(document: mDoc, concurrencyControl: .failOnConflict))
             
-            let doc2 = self.db.document(withID: "doc2")
+            let doc2 = try! self.db.defaultCollection().document(id: "doc2")
             XCTAssertNotNil(doc2)
             XCTAssertEqual(doc2?.string(forKey: "timestamp"), timestamp)
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-
+        
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(count, 1) // make sure, it entered the conflict resolver
@@ -705,12 +692,11 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         try makeConflict(forID: "doc1", withLocal: localData, withRemote: remoteData)
         try makeConflict(forID: "doc2", withLocal: localData, withRemote: remoteData)
         
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        
         var order = [String]()
         let lock = NSLock()
-        resolver = TestConflictResolver() { (conflict) -> Document? in
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
             // concurrent conflict resolver queue can cause race here
             lock.lock()
             order.append(conflict.documentID)
@@ -729,8 +715,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
 
+        let config = getConfig(configs: [colConfig], type: .pull)
         run(config: config, expectedError: nil)
         
         wait(for: [expectation], timeout: expTimeout)
@@ -745,18 +731,18 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let docID = "doc"
         let localData = ["key1": "value1"]
         let remoteData = ["key2": "value2"]
-        var config = getConfig(.pull)
-        var resolver: TestConflictResolver!
-        var colConfig = CollectionConfiguration()
         
         try makeConflict(forID: docID, withLocal: localData, withRemote: remoteData)
-        resolver = TestConflictResolver() { (conflict) -> Document? in
-            try! self.db.purgeDocument(withID: conflict.documentID)
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
+        let resolver = TestConflictResolver() { (conflict) -> Document? in
+            try! self.db.defaultCollection().purge(id: conflict.documentID)
             return conflict.remoteDocument
         }
         colConfig.conflictResolver = resolver
-        config.addCollection(defaultCollection!, config: colConfig)
-
+        
+        let config = getConfig(configs: [colConfig], type:.pull)
+        
         var error: NSError? = nil
         var replicator: Replicator!
         var token: ListenerToken!
