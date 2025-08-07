@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) CBLDatabase* database;
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
 @property (nonatomic) NSTimeInterval checkpointInterval;
-@property (nonatomic) NSMutableDictionary<CBLCollection*, CBLCollectionConfiguration*>* collectionConfigs;
+@property (nonatomic) NSMutableDictionary<CBLCollection*, CBLCollectionConfiguration*>* collectionConfigMap;
 
 #ifdef COUCHBASE_ENTERPRISE
 @property (nonatomic) BOOL acceptOnlySelfSignedServerCertificate;

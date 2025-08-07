@@ -21,7 +21,11 @@ import Foundation
 import CouchbaseLiteSwift_Private
 
 class Precondition {
-    static func validateParam(_ condition: @autoclosure @escaping () -> Bool, message: String) {
-        CBLPrecondition.validateParam({ condition() }, message: message)
+    static func assert(_ condition: @autoclosure () -> Bool, message: String) {
+        precondition(condition(), message)
+    }
+    
+    static func assertNotEmpty<C: Swift.Collection>(_ collection: C, name: String) {
+        precondition(!collection.isEmpty, "\(name) must not be empty.")
     }
 }

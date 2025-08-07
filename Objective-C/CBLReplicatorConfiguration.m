@@ -20,14 +20,15 @@
 #import "CBLReplicatorConfiguration.h"
 #import "CBLReplicatorConfiguration+Swift.h"
 #import "CBLAuthenticator+Internal.h"
-#import "CBLReplicator+Internal.h"
+#import "CBLCollection+Internal.h"
+#import "CBLCollectionConfiguration+Internal.h"
+#import "CBLScope+Internal.h"
+#import "CBLDefaults.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLErrorMessage.h"
+#import "CBLPrecondition.h"
+#import "CBLReplicator+Internal.h"
 #import "CBLVersion.h"
-#import "CBLCollection+Internal.h"
-#import "CBLScope+Internal.h"
-#import "CBLCollectionConfiguration+Internal.h"
-#import "CBLDefaults.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #import "CBLMessageEndpoint.h"
@@ -49,7 +50,7 @@
 @synthesize checkpointInterval=_checkpointInterval, heartbeat=_heartbeat;
 @synthesize maxAttempts=_maxAttempts, maxAttemptWaitTime=_maxAttemptWaitTime;
 @synthesize enableAutoPurge=_enableAutoPurge;
-@synthesize collectionConfigs=_collectionConfigs;
+@synthesize collectionConfigMap=_collectionConfigMap;
 
 #ifdef COUCHBASE_ENTERPRISE
 @synthesize acceptOnlySelfSignedServerCertificate=_acceptOnlySelfSignedServerCertificate;
@@ -72,12 +73,37 @@
         _maxAttempts = kCBLDefaultReplicatorMaxAttemptsSingleShot;
         _maxAttemptWaitTime = kCBLDefaultReplicatorMaxAttemptsWaitTime;
         _enableAutoPurge = kCBLDefaultReplicatorEnableAutoPurge;
-        _collectionConfigs = [NSMutableDictionary dictionary];
+        _collectionConfigMap = [NSMutableDictionary dictionary];
     #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = kCBLDefaultReplicatorAllowReplicatingInBackground;
     #endif
     }
     
+    return self;
+}
+
+- (instancetype) initWithCollections: (NSArray<CBLCollectionConfiguration*>*)collections
+                              target: (id <CBLEndpoint>)target {
+    [CBLPrecondition assertArrayNotEmpty: collections name: @"collections"];
+    [CBLPrecondition assertNotNil: target name: @"target"];
+    
+    self = [self initWithDefaults];
+    if (self) {
+        for (CBLCollectionConfiguration* config in collections) {
+            [CBLPrecondition assert: config.collection != nil
+                            message: @"Each collection configuration must have a non-null collection."];
+
+            if (!_database) {
+                _database = config.collection.database;
+            } else {
+                [CBLPrecondition assert: (self->_database == config.collection.database)
+                                message: $sprintf(@"Collection '%@' belongs to a different database instance.",
+                                                  config.collection.fullName)];
+            }
+            [_collectionConfigMap setObject: config forKey: config.collection];
+        }
+        _target = target;
+    }
     return self;
 }
 
@@ -167,7 +193,8 @@
 
 - (CBLCollectionConfiguration*) defaultCollectionConfig: (BOOL)mustExist {
     __block CBLCollectionConfiguration* config;
-    [_collectionConfigs enumerateKeysAndObjectsUsingBlock: ^(CBLCollection *col, CBLCollectionConfiguration *conf, BOOL *stop) {
+    [_collectionConfigMap enumerateKeysAndObjectsUsingBlock:
+     ^(CBLCollection *col, CBLCollectionConfiguration *conf, BOOL *stop) {
         if ([col.scope.name isEqualToString: kCBLDefaultScopeName] &&
             [col.name isEqualToString: kCBLDefaultCollectionName]) {
             config = conf;
@@ -270,60 +297,62 @@
     return _database;
 }
 
+- (NSArray<CBLCollectionConfiguration*>*) collectionConfigs {
+    return [_collectionConfigMap allValues];
+}
+
 - (void) addCollection: (CBLCollection*)collection
-                config: (nullable CBLCollectionConfiguration*)config {    
-    CBLDatabase* colDB = collection.database;
-    if (!collection.isValid) {
-        [NSException raise: NSInvalidArgumentException
-                    format: @"%@", kCBLErrorMessageAddInvalidCollection];
-    }
+                config: (nullable CBLCollectionConfiguration*)config {
+    [CBLPrecondition assert: collection.isValid
+                    message: kCBLErrorMessageAddInvalidCollection];
+    
+    [CBLPrecondition assert: config.collection == nil || config.collection == collection
+                    message: @"CollectionConfiguration collection must be null or match the given collection."];
     
     if (_database) {
-        if (_database != colDB) {
-            [NSException raise: NSInvalidArgumentException
-                        format: @"%@", kCBLErrorMessageAddCollectionFromAnotherDB];
-        }
+        [CBLPrecondition assert: _database == collection.database
+                        message: kCBLErrorMessageAddCollectionFromAnotherDB];
     } else {
-        _database = colDB;
+        _database = collection.database;
     }
     
     // collection config is copied
     CBLCollectionConfiguration* colConfig = nil;
-    if (config)
+    if (config) {
         colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];
-    else
+    } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         colConfig = [[CBLCollectionConfiguration alloc] init];
+#pragma clang diagnostic pop
+    }
     
-    [_collectionConfigs setObject: colConfig forKey: collection];
+    [_collectionConfigMap setObject: colConfig forKey: collection];
 }
 
 - (void) addCollections: (NSArray<CBLCollection*>*)collections
                  config: (nullable CBLCollectionConfiguration*)config {
-    if (collections.count <= 0) {
-        [NSException raise: NSInvalidArgumentException
-                    format: @"%@", kCBLErrorMessageAddEmptyCollectionArray];
-    }
-    
+    [CBLPrecondition assertArrayNotEmpty: collections name: @"collections"];
     for (CBLCollection* col in collections) {
         [self addCollection: col config: config];
     }
 }
 
 - (NSArray<CBLCollection*>*) collections {
-    return _collectionConfigs.allKeys;
+    return _collectionConfigMap.allKeys;
 }
 
 - (void) removeCollection:(CBLCollection *)collection {
-    [_collectionConfigs removeObjectForKey: collection];
+    [_collectionConfigMap removeObjectForKey: collection];
     
     // reset the database, when all collections are removed
-    if (_collectionConfigs.count == 0) {
+    if (_collectionConfigMap.count == 0) {
         _database = nil;
     }
 }
 
 - (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
-    return [_collectionConfigs objectForKey: collection];
+    return [_collectionConfigMap objectForKey: collection];
 }
 
 #pragma mark - Internal
@@ -346,12 +375,6 @@
         _networkInterface = config.networkInterface;
         _acceptParentDomainCookies = config.acceptParentDomainCookies;
         _headers = config.headers;
-        _collectionConfigs = [NSMutableDictionary dictionaryWithCapacity: config.collectionConfigs.count];
-        for (CBLCollection* col in config.collectionConfigs) {
-            if (col.isValid) {
-                [_collectionConfigs setObject: [config.collectionConfigs objectForKey: col] forKey: col];
-            }
-        }
         _heartbeat = config.heartbeat;
         _checkpointInterval = config.checkpointInterval;
         _maxAttempts = config.maxAttempts;
@@ -360,6 +383,7 @@
 #if TARGET_OS_IPHONE
         _allowReplicatingInBackground = config.allowReplicatingInBackground;
 #endif
+        _collectionConfigMap = [config.collectionConfigMap mutableCopy];
     }
     return self;
 }
@@ -438,7 +462,7 @@
 
 - (void) dealloc {
     cfrelease(_pinnedServerCertificate);
-    [_collectionConfigs removeAllObjects];
+    [_collectionConfigMap removeAllObjects];
 }
 
 @end

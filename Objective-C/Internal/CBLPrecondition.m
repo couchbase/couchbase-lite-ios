@@ -21,12 +21,33 @@
 
 @implementation CBLPrecondition
 
-+ (void) validateParam: (BOOL (^)(void))condition message: (NSString *)message {
-    if (!condition()) {
++ (void) assert: (BOOL)condition message: (NSString*)message {
+    if (!condition) {
         @throw [NSException exceptionWithName: NSInvalidArgumentException
                                        reason: message
                                      userInfo: nil];
     }
+}
+
++ (void) assert: (BOOL)condition format: (NSString*)format, ... {
+    if (!condition) {
+        va_list args;
+        va_start(args, format);
+        NSString *reason = [[NSString alloc] initWithFormat: format arguments: args];
+        va_end(args);
+        @throw [NSException exceptionWithName: NSInvalidArgumentException
+                                       reason: reason
+                                     userInfo: nil];
+    }
+}
+
++ (void) assertNotNil: (nullable id)object name: (NSString*)name {
+    [self assert: (object != nil) format: @"%@ must not be nil.", name];
+}
+
++ (void) assertArrayNotEmpty: (NSArray*)array name: (NSString*)name {
+    [self assertNotNil: array name: name];
+    [self assert: (array.count > 0) format: @"%@ must not be empty", name];
 }
 
 @end
