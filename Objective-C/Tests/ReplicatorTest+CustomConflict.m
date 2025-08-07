@@ -1007,34 +1007,6 @@
     Assert(localDoc.c4Doc.revFlags & kRevHasAttachments & localRevFlags);
 }
 
-- (void) testCollection {
-    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"wss://foo"]];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc]
-                                          initWithTarget: target];
-    NSError* error = nil;
-    CBLCollection* c1 = [self.db createCollectionWithName: @"collection1" scope: @"scope1" error: &error];
-    CBLCollectionConfiguration* cConfig = [[CBLCollectionConfiguration alloc] init];
-    
-    TestConflictResolver* r;
-    r = [[TestConflictResolver alloc] initWithResolver: ^CBLDocument* (CBLConflict* c) { return c.localDocument; }];
-    [cConfig setConflictResolver: r];
-    [cConfig setPushFilter:^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; }];
-    [cConfig setPullFilter:^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; }];
-    [cConfig setChannels: @[@"channel1", @"channel2"]];
-    [cConfig setDocumentIDs: @[@"doc-id-1", @"doc-id-2"]];
-    
-    [config addCollection: c1 config: cConfig];
-    [config addCollections: @[c1] config: cConfig];
-    
-    CBLReplicator* re = [[CBLReplicator alloc] initWithConfig: [self config: kCBLReplicatorTypePull]];
-    [re addDocumentReplicationListener:^(CBLDocumentReplication * docReplication) {
-        for (CBLReplicatedDocument* doc in docReplication.documents) {
-            AssertNil(doc.collection); // collection inside replicatedDocument
-        }
-    }];
-    AssertEqual(config.collections.count, 1);
-}
-
 #endif
 #pragma clang diagnostic pop
 

@@ -23,7 +23,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLPrecondition : NSObject
 
-+ (void) validateParam: (BOOL (^)(void))condition message: (NSString *)message;
+/** Asserts that the specified condition is true */
++ (void) assert: (BOOL)condition message: (NSString*)message;
+
+/** Asserts that the specified condition is true */
++ (void) assert: (BOOL)condition format: (NSString*)format, ... NS_FORMAT_FUNCTION(2,3);
+
+/** Asserts that the specified object is not nil. */
++ (void) assertNotNil: (nullable id)object name: (NSString*)name;
+
+/** Asserts that the specified array is not nil and not empty. */
++ (void) assertArrayNotEmpty: (nullable NSArray*)array name: (NSString*)name;
 
 @end
 

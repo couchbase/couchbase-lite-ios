@@ -29,6 +29,10 @@
     CBLReplicatorConfiguration* _config;
 }
 
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void)setUp {
     [super setUp];
     
@@ -55,10 +59,6 @@
         [self->_config addCollections: @[] config: nil];
     }];
 }
-
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (void) testAddCollectionsToDatabaseInitiatedConfig {
     [self createDocNumbered: nil start: 0 num: 5];
@@ -635,11 +635,10 @@
     AssertEqual(col1b.count, 10);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: continous];
-    [config addCollections: @[col1a, col1b] config: nil];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePush
+                                                          continuous: continous];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col2a.count, 10);
@@ -688,11 +687,10 @@
     AssertEqual(col1b.count, 0);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: continous];
-    [config addCollections: @[col1a, col1b] config: nil];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePull
+                                                          continuous: continous];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col2a.count, totalDocs);
@@ -745,11 +743,10 @@
     AssertEqual(col2b.count, 8);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: continous];
-    [config addCollections: @[col1a, col1b] config: nil];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePushAndPull
+                                                          continuous: continous];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col1a.count, 7);
@@ -775,11 +772,10 @@
     AssertEqual(col1a.count, 0);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: NO];
-    [config addCollection: col1a config: nil];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePull
+                                                          continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     AssertEqual(col2a.count, 10);
     AssertEqual(col1a.count, 10);
@@ -815,11 +811,10 @@
     [col1a saveDocument: doc1 error: &error];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: NO];
-    [config addCollection: col1a config: nil];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePushAndPull
+                                                          continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     CBLMutableDocument* mdoc = [[col1a documentWithID: @"doc1" error: &error] toMutable];
@@ -887,19 +882,17 @@
         return con.remoteDocument;
     }];
     
-    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
+    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
     colConfig1.conflictResolver = resolver1;
     
-    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
+    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] initWithCollection: col1b];
     colConfig2.conflictResolver = resolver2;
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: NO];
-    [config addCollection: col1a config: colConfig1];
-    [config addCollection: col1b config: colConfig2];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollectionConfigs: @[colConfig1, colConfig2]
+                                                                    target: target
+                                                                      type: kCBLReplicatorTypePushAndPull
+                                                                continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Update "doc1" in colA and colB of database A.
@@ -975,20 +968,24 @@
     [self createDocNumbered: col1b start: 10 num: 10];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
     
-    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
-    colConfig.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+    CBLReplicationFilter filter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         if ([document.collection.name isEqualToString: @"colA"])
             return [document integerForKey: @"number1"] < 5;
         else
             return [document integerForKey: @"number1"] >= 15;
     };
     
-    [config addCollections: @[col1a, col1b] config: colConfig];
+    CBLCollectionConfiguration* config1 = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
+    config1.pushFilter = filter;
     
+    CBLCollectionConfiguration* config2 = [[CBLCollectionConfiguration alloc] initWithCollection: col1b];
+    config2.pushFilter = filter;
+    
+    CBLReplicatorConfiguration* config = [self configWithCollectionConfigs: @[config1, config2]
+                                                                    target: target
+                                                                      type: kCBLReplicatorTypePush
+                                                                continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col1a.count, 10);
@@ -1025,20 +1022,24 @@
     [self createDocNumbered: col2b start: 10 num: 10];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: NO];
     
-    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
-    colConfig.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+    CBLReplicationFilter filter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
         if ([document.collection.name isEqualToString: @"colA"])
             return [document integerForKey: @"number1"] < 5;
         else
             return [document integerForKey: @"number1"] >= 15;
     };
     
-    [config addCollections: @[col1a, col1b] config: colConfig];
+    CBLCollectionConfiguration* config1 = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
+    config1.pullFilter = filter;
     
+    CBLCollectionConfiguration* config2 = [[CBLCollectionConfiguration alloc] initWithCollection: col1b];
+    config2.pullFilter = filter;
+    
+    CBLReplicatorConfiguration* config = [self configWithCollectionConfigs: @[config1, config2]
+                                                                    target: target
+                                                                      type: kCBLReplicatorTypePull
+                                                                continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col1a.count, 5);
@@ -1075,19 +1076,17 @@
     [self createDocNumbered: col1b start: 10 num: 5];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
+
+    CBLCollectionConfiguration* config1 = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
+    config1.documentIDs = @[@"doc1", @"doc2"];
     
-    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
-    colConfig1.documentIDs = @[@"doc1", @"doc2"];
+    CBLCollectionConfiguration* config2 = [[CBLCollectionConfiguration alloc] initWithCollection: col1b];
+    config2.documentIDs = @[@"doc10", @"doc11", @"doc13"];
     
-    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
-    colConfig2.documentIDs = @[@"doc10", @"doc11", @"doc13"];
-    
-    [config addCollection: col1a config: colConfig1];
-    [config addCollection: col1b config: colConfig2];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollectionConfigs: @[config1, config2]
+                                                                    target: target
+                                                                      type: kCBLReplicatorTypePush
+                                                                continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col1a.count, 5);
@@ -1125,19 +1124,17 @@
     [self createDocNumbered: col2b start: 10 num: 5];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: NO];
     
-    CBLCollectionConfiguration* colConfig1 = [[CBLCollectionConfiguration alloc] init];
-    colConfig1.documentIDs = @[@"doc1", @"doc2"];
+    CBLCollectionConfiguration* config1 = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
+    config1.documentIDs = @[@"doc1", @"doc2"];
     
-    CBLCollectionConfiguration* colConfig2 = [[CBLCollectionConfiguration alloc] init];
-    colConfig2.documentIDs = @[@"doc11", @"doc13", @"doc14"];
+    CBLCollectionConfiguration* config2 = [[CBLCollectionConfiguration alloc] initWithCollection: col1b];
+    config2.documentIDs = @[@"doc11", @"doc13", @"doc14"];
     
-    [config addCollection: col1a config: colConfig1];
-    [config addCollection: col1b config: colConfig2];
-    
+    CBLReplicatorConfiguration* config = [self configWithCollectionConfigs: @[config1, config2]
+                                                                    target: target
+                                                                      type: kCBLReplicatorTypePull
+                                                                continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(col1a.count, 2); // only 2 docs sync
@@ -1159,7 +1156,6 @@
     AssertNotNil(col1b);
     AssertNil(error);
     
-    
     CBLCollection* col2a = [self.otherDB createCollectionWithName: @"colA"
                                                             scope: @"scopeA" error: &error];
     AssertNotNil(col2a);
@@ -1179,10 +1175,10 @@
     AssertEqual(col2b.count, 0);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
-    [config addCollections: @[col1a, col1b] config: nil];
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePush
+                                                          continuous: NO];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     NSSet* docIds1a = [r pendingDocumentIDsForCollection: col1a error: &error];
@@ -1260,10 +1256,12 @@
     [self createDocNumbered: col1b start: 10 num: 5];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: NO];
-    [config addCollections: @[col1a, col1b] config: nil];
+    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePush
+                                                          continuous: NO];
+    
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     for (NSUInteger i = 0; i < 10; i++) {
@@ -1335,11 +1333,12 @@
     [self createDocNumbered: col1b start: 5 num: 5];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: NO];
-    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] init];
-    [config addCollections: @[col1a, col1b] config: colConfig];
+    
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+                                                              target: target
+                                                                type: kCBLReplicatorTypePushAndPull
+                                                          continuous: NO];
+    
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     __block CBLDocumentFlags flags = 0;
@@ -1401,12 +1400,10 @@
     [doc1 setValue: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
-    CBLReplicatorConfiguration* pushConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
-    pushConfig.replicatorType = kCBLReplicatorTypePush;
-    [pushConfig addCollection: defaultCollection config: nil];
-    CBLCollectionConfiguration* colConfig = [pushConfig collectionConfig: defaultCollection];
-    AssertNil(colConfig.conflictResolver);
-    
+    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[defaultCollection]
+                                                                  target: _target
+                                                                    type: kCBLReplicatorTypePush
+                                                              continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
     // Now make different changes in db and otherDB:
@@ -1423,12 +1420,10 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     // Pull from otherDB, creating a conflict to resolve:
-    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
-    pullConfig.replicatorType = kCBLReplicatorTypePull;
-    [pullConfig addCollection: defaultCollection config: nil];
-    colConfig = [pullConfig collectionConfig: defaultCollection];
-    AssertNil(colConfig.conflictResolver);
-    
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+                                                                  target: _target
+                                                                    type: kCBLReplicatorTypePull
+                                                              continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved:
@@ -1472,12 +1467,10 @@
     [doc2 setValue: @"black-yellow" forKey: @"color"];
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
-    pullConfig.replicatorType = kCBLReplicatorTypePull;
-    [pullConfig addCollection: defaultCollection config: nil];
-    CBLCollectionConfiguration* colConfig = [pullConfig collectionConfig: defaultCollection];
-    AssertNil(colConfig.conflictResolver);
-    
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+                                                                  target: _target
+                                                                    type: kCBLReplicatorTypePull
+                                                              continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 1u);
@@ -1496,9 +1489,10 @@
     [doc1 setValue: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
     
-    CBLReplicatorConfiguration* pushConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
-    pushConfig.replicatorType = kCBLReplicatorTypePush;
-    [pushConfig addCollection: defaultCollection config: nil];
+    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[defaultCollection]
+                                                                  target: _target
+                                                                    type: kCBLReplicatorTypePush
+                                                              continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
     // Delete the document from db:
@@ -1515,12 +1509,10 @@
     Assert([self.otherDB saveDocument: doc2 error: &error]);
     
     // Pull from otherDB, creating a conflict to resolve:
-    CBLReplicatorConfiguration* pullConfig = [[CBLReplicatorConfiguration alloc] initWithTarget: _target];
-    pullConfig.replicatorType = kCBLReplicatorTypePull;
-    [pullConfig addCollection: defaultCollection config: nil];
-    CBLCollectionConfiguration* colConfig = [pullConfig collectionConfig: defaultCollection];
-    AssertNil(colConfig.conflictResolver);
-    
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+                                                                  target: _target
+                                                                    type: kCBLReplicatorTypePull
+                                                              continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved as delete wins:

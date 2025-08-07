@@ -1099,7 +1099,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
     
-    /*
     // Update the doc in both peers but saving on the otherDB twice:
     collection1 = [self.db defaultCollection: nil];
     doc1 = [[collection1 documentWithID: @"doc1" error: nil] toMutable];
@@ -1129,8 +1128,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Wait until the replicator is IDLE
-    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle timeout: kExpTimeout];
-    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle timeout: kExpTimeout];
+    [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
+    [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
     // Check the doc on both peers:
     CBLDocument* checkDoc1 = [collection1 documentWithID: @"doc1" error: nil];
@@ -1141,7 +1140,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
-    */
 }
 
  /**

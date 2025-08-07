@@ -22,6 +22,9 @@ import CouchbaseLiteSwift_Private
 
 /// The collection configuration that can be configured specifically for the replication.
 public struct CollectionConfiguration {
+    /// The collection.
+    public var collection: Collection?
+    
     /// The custom conflict resolver function. If this value is nil, the default conflict resolver will be used..
     public var conflictResolver: ConflictResolverProtocol?
     
@@ -44,50 +47,90 @@ public struct CollectionConfiguration {
     /// If not specified, all docs in the collection will be replicated.
     public var documentIDs: Array<String>?
     
-    public init() {
-        self.init(config: nil)
+    /// Initializes the configuration. 
+    @available(*, deprecated, message: "Use init(collection:) instead.")
+    public init() { }
+    
+    /// Initializes the configuration with the specified collection.
+    ///
+    /// - Parameter collection: The collection.
+    public init(collection: Collection) {
+        self.collection = collection
+    }
+    
+    /// Creates an array of `CollectionConfiguration` objects from the given collections.
+    ///
+    /// Each collection is wrapped in a `CollectionConfiguration`using default settings
+    /// (no filters and no custom conflict resolvers).
+    ///
+    /// This is a convenience method for configuring multiple collections with default configurations.
+    /// If custom configurations are needed, construct `CollectionConfiguration` objects
+    /// directly instead.
+    ///
+    /// - Parameter collections: An array of `Collection` objects to configure for replication.
+    /// - Returns: An array of `CollectionConfiguration` objects corresponding to the given collections.
+    public static func fromCollections(_ collections: [Collection]) -> [CollectionConfiguration] {
+        Precondition.assertNotEmpty(collections, name: "collections")
+        return collections.map { CollectionConfiguration(collection: $0) }
     }
     
     // MARK: internal
     
+    /// Used by ReplicatatorConfiguration's addCollection()
     init(config: CollectionConfiguration?) {
-        if let config = config {
-            self.conflictResolver = config.conflictResolver
-            self.pushFilter = config.pushFilter
-            self.pullFilter = config.pullFilter
-            self.channels = config.channels
-            self.documentIDs = config.documentIDs
-        }
+        guard let config = config else { return }
+        
+        self.collection = config.collection
+        self.conflictResolver = config.conflictResolver
+        self.pushFilter = config.pushFilter
+        self.pullFilter = config.pullFilter
+        self.channels = config.channels
+        self.documentIDs = config.documentIDs
     }
     
     func toImpl(_ collection: Collection) -> CBLCollectionConfiguration {
-        let c = CBLCollectionConfiguration()
-        c.channels = self.channels
-        c.documentIDs = self.documentIDs
-        if let pushFilter = self.filter(push: true, collection: collection) {
-            c.pushFilter = pushFilter
+        // This function is called by ReplicatorConfiguration's toImpl() to construct
+        // the objective-c CBLCollectionConfiguration version.
+        //
+        // When using the old (deprecated now) api, the collection passed to this function is
+        // from the ReplicatorConfiguration used for setting up the filter and
+        // conflict resolver wrapper functions. Once we removed the deprecated API,
+        // the collection doesn't need to be passed anymore.
+        let config: CBLCollectionConfiguration
+        if let coll = self.collection {
+            config = CBLCollectionConfiguration(collection: coll.impl)
+        } else {
+            // If no collection specified, use the old API.
+            config = CBLCollectionConfiguration()
         }
         
-        if let pullFilter = self.filter(push: false, collection: collection) {
-            c.pullFilter = pullFilter
+        config.channels = self.channels
+        config.documentIDs = self.documentIDs
+        
+        if let pushFilter = self.wrapFilter(push: true, collection: collection) {
+            config.pushFilter = pushFilter
+        }
+        
+        if let pullFilter = self.wrapFilter(push: false, collection: collection) {
+            config.pullFilter = pullFilter
         }
         
         if let resolver = self.conflictResolver {
-            c.setConflictResolverUsing { (conflict) -> CBLDocument? in
+            config.setConflictResolverUsing { (conflict) -> CBLDocument? in
                 return resolver.resolve(conflict: Conflict(impl: conflict, collection: collection))?.impl
             }
         }
-
-        return c
+        
+        return config
     }
     
-    func filter(push: Bool, collection: Collection) -> ((CBLDocument, CBLDocumentFlags) -> Bool)? {
-        guard let f = push ? self.pushFilter : self.pullFilter else {
+    func wrapFilter(push: Bool, collection: Collection) -> ((CBLDocument, CBLDocumentFlags) -> Bool)? {
+        guard let filter = push ? self.pushFilter : self.pullFilter else {
             return nil
         }
         
         return { (doc, flags) in
-            return f(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
+            return filter(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
         }
     }
 }

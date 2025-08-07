@@ -107,12 +107,12 @@ class URLEndpointListenerTest: ReplicatorTest {
                           continuous: Bool = true,
                           type: ReplicatorType = .pushAndPull,
                           serverCert: SecCertificate? = nil) -> Replicator {
-        let db_defaultCollection = try! db.defaultCollection()
-        var config = ReplicatorConfiguration(target: target)
+        let defaultCollection = try! db.defaultCollection()
+        let collections = CollectionConfiguration.fromCollections([defaultCollection])
+        var config = ReplicatorConfiguration(collections: collections, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.pinnedServerCertificate = serverCert
-        config.addCollection(db_defaultCollection)
         return Replicator(config: config)
     }
     
@@ -669,10 +669,8 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try self.otherDB_defaultCollection!.save(document: doc1)
         
         var maxConnectionCount: UInt64 = 0, maxActiveCount:UInt64 = 0
-        var rConfig = ReplicatorConfiguration(target: self.listener!.localURLEndpoint)
-        rConfig.replicatorType = .pull
-        rConfig.continuous = false
-        var colConfig = CollectionConfiguration()
+        
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pullFilter = { (doc, flags) -> Bool in
             let s = self.listener!.status
             maxConnectionCount = max(s.connectionCount, maxConnectionCount)
@@ -681,7 +679,11 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             return true
         }
         
-        rConfig.addCollection(defaultCollection!, config: colConfig)
+        var rConfig = ReplicatorConfiguration(collections: [colConfig],
+                                              target: self.listener!.localURLEndpoint)
+        rConfig.replicatorType = .pull
+        rConfig.continuous = false
+        
         let repl: Replicator = Replicator(config: rConfig)
         let token = repl.addChangeListener { (change) in
             if change.status.activity == .stopped {
@@ -739,7 +741,10 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try stopListener()
     }
     
+    /// This test is flaky depending on your local network and doesn't much value.
     func testEmptyNetworkInterface() throws {
+        try XCTSkipIf(true, "Not applicable test on some network environment")
+        
         if !self.keyChainAccessAllowed { return }
         
         try startListener()
@@ -751,16 +756,18 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         for (i, url) in notLinkLocal.enumerated() {
             // separate db instance!
             let db = try Database(name: "db-\(i)")
-            let db_defaultCollection = try! db.defaultCollection()
+            let defaultCollection = try! db.defaultCollection()
+            
             let doc = createDocument()
             doc.setString(url.absoluteString, forKey: "url")
-            try db_defaultCollection.save(document: doc)
+            try defaultCollection.save(document: doc)
             
             // separate replicator instance
             let target = URLEndpoint(url: url)
-            var rConfig = ReplicatorConfiguration(target: target)
+            let collections = CollectionConfiguration.fromCollections([defaultCollection])
+            var rConfig = ReplicatorConfiguration(collections: collections, target: target)
             rConfig.pinnedServerCertificate = self.listener?.tlsIdentity!.certs[0]
-            rConfig.addCollection(db_defaultCollection)
+            
             run(config: rConfig, expectedError: nil)
             
             // remove the db

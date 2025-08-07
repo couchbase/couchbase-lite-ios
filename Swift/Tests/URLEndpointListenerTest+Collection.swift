@@ -48,9 +48,9 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         let config = URLEndpointListenerConfiguration(collections: [col2a, col2b])
         let listener = try startListener(withConfig: config)
         
-        var rConfig = ReplicatorConfiguration(target: listener.localURLEndpoint)
+        let collections = CollectionConfiguration.fromCollections([col1a, col1b])
+        var rConfig = ReplicatorConfiguration(collections: collections, target: listener.localURLEndpoint)
         rConfig.pinnedServerCertificate = listener.tlsIdentity!.certs[0]
-        rConfig.addCollections([col1a, col1b])
         
         run(config: rConfig, expectedError: nil)
         XCTAssertEqual(col1a.count, 3)
@@ -80,10 +80,10 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         let config = URLEndpointListenerConfiguration(collections: [col2a, col2b])
         let listener = try startListener(withConfig: config)
         
-        var rConfig = ReplicatorConfiguration(target: listener.localURLEndpoint)
+        let collections = CollectionConfiguration.fromCollections([col1a, col1b])
+        var rConfig = ReplicatorConfiguration(collections: collections, target: listener.localURLEndpoint)
         rConfig.continuous = true
         rConfig.pinnedServerCertificate = listener.tlsIdentity!.certs[0]
-        rConfig.addCollections([col1a, col1b])
         
         run(config: rConfig, expectedError: nil)
         XCTAssertEqual(col1a.count, 10)
@@ -105,9 +105,9 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         let config = URLEndpointListenerConfiguration(collections: [col2b])
         let listener = try startListener(withConfig: config)
         
-        var rConfig = ReplicatorConfiguration(target: listener.localURLEndpoint)
+        let collections = CollectionConfiguration.fromCollections([col1a])
+        var rConfig = ReplicatorConfiguration(collections: collections, target: listener.localURLEndpoint)
         rConfig.pinnedServerCertificate = listener.tlsIdentity!.certs[0]
-        rConfig.addCollections([col1a])
         
         run(config: rConfig, expectedError: CBLError.httpNotFound)
         try stopListener()

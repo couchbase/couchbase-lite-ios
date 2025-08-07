@@ -36,32 +36,51 @@ class ReplicatorTest: CBLTestCase {
         super.tearDown()
     }
     
-    func config(target: Endpoint, type: ReplicatorType = .pushAndPull, continuous: Bool = false,
-                auth: Authenticator? = nil, serverCert: SecCertificate? = nil,
-                maxAttempts: UInt? = 0) -> ReplicatorConfiguration {
-        var config = ReplicatorConfiguration(target: target)
+    func config(collections: [Collection],
+                target: Endpoint,
+                type: ReplicatorType = .pushAndPull,
+                continuous: Bool = false,
+                auth: Authenticator? = nil,
+                acceptSelfSignedOnly: Bool = false,
+                serverCert: SecCertificate? = nil,
+                maxAttempts: UInt = 0) -> ReplicatorConfiguration {
+        let configs = CollectionConfiguration.fromCollections(collections)
+        return config(configs: configs,
+                      target: target,
+                      type: type,
+                      continuous: continuous,
+                      auth: auth,
+                      acceptSelfSignedOnly: acceptSelfSignedOnly,
+                      serverCert: serverCert,
+                      maxAttempts: maxAttempts)
+    }
+    
+    func config(configs: [CollectionConfiguration]? = nil,
+                target: Endpoint,
+                type: ReplicatorType = .pushAndPull,
+                continuous: Bool = false,
+                auth: Authenticator? = nil,
+                acceptSelfSignedOnly: Bool = false,
+                serverCert: SecCertificate? = nil,
+                maxAttempts: UInt = 0) -> ReplicatorConfiguration {
+        var config: ReplicatorConfiguration
+        if let configs = configs {
+            config = ReplicatorConfiguration(collections: configs, target: target)
+        } else {
+            config = ReplicatorConfiguration(target: target)
+        }
+        
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
         config.pinnedServerCertificate = serverCert
-        if let maxAttempts = maxAttempts {
-            config.maxAttempts = maxAttempts
-        }
-        return config
-    }
-
+        config.maxAttempts = maxAttempts
+        
     #if COUCHBASE_ENTERPRISE
-    func config(target: Endpoint, type: ReplicatorType = .pushAndPull,
-                continuous: Bool = false, auth: Authenticator? = nil,
-                acceptSelfSignedOnly: Bool = false,
-                serverCert: SecCertificate? = nil,
-                maxAttempts: UInt? = ReplicatorConfiguration.defaultMaxAttemptsSingleShot) -> ReplicatorConfiguration {
-        var config = self.config(target: target, type: type, continuous: continuous, auth: auth,
-                            serverCert: serverCert, maxAttempts: maxAttempts)
         config.acceptOnlySelfSignedServerCertificate = acceptSelfSignedOnly
+    #endif
         return config
     }
-    #endif
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         run(config: config, reset: false, expectedError: expectedError)
@@ -78,30 +97,24 @@ class ReplicatorTest: CBLTestCase {
         run(replicator: repl, reset: reset, expectedError: expectedError)
     }
     
-    func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
-             continuous: Bool = false, auth: Authenticator? = nil,
-             serverCert: SecCertificate? = nil,
-             expectedError: Int? = nil) {
-        var config = self.config(target: target, type: type, continuous: continuous,
-                                 auth: auth, serverCert: serverCert)
-        config.addCollection(defaultCollection!)
-        run(config: config, reset: false, expectedError: expectedError)
-    }
-    
-    #if COUCHBASE_ENTERPRISE
-    func run(target: Endpoint, type: ReplicatorType = .pushAndPull,
-             continuous: Bool = false, auth: Authenticator? = nil,
+    func run(target: Endpoint,
+             type: ReplicatorType = .pushAndPull,
+             continuous: Bool = false,
+             auth: Authenticator? = nil,
              acceptSelfSignedOnly: Bool = false,
              serverCert: SecCertificate? = nil,
-             maxAttempts: UInt? = 0,
+             maxAttempts: UInt = 0,
              expectedError: Int? = nil) {
-        var config = self.config(target: target, type: type, continuous: continuous, auth: auth,
-                                 acceptSelfSignedOnly: acceptSelfSignedOnly, serverCert: serverCert,
+        let config = self.config(collections: [defaultCollection!],
+                                 target: target,
+                                 type: type,
+                                 continuous: continuous,
+                                 auth: auth,
+                                 acceptSelfSignedOnly: acceptSelfSignedOnly,
+                                 serverCert: serverCert,
                                  maxAttempts: maxAttempts)
-        config.addCollection(defaultCollection!)
         run(config: config, reset: false, expectedError: expectedError)
     }
-    #endif
     
     func run(replicator: Replicator, expectedError: Int? = nil) {
         run(replicator: replicator, reset: false, expectedError: expectedError);
@@ -152,9 +165,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testEmptyPush() throws {
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
-
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
     }
     
@@ -171,15 +182,11 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
-        
+        var config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
         
         // Pull:
-        config = self.config(target: target, type: .pull, continuous: false)
-        config.addCollection(defaultCollection!)
-
+        config = self.config(collections: [defaultCollection!], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(defaultCollection!.count, 2)
@@ -214,14 +221,11 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: true)
-        config.addCollection(defaultCollection!)
-
+        var config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: true)
         run(config: config, expectedError: nil)
         
         // Pull:
-        config = self.config(target: target, type: .pull, continuous: true)
-        config.addCollection(defaultCollection!)
+        config = self.config(collections: [defaultCollection!], target: target, type: .pull, continuous: true)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(defaultCollection!.count, 2)
@@ -256,8 +260,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -324,8 +327,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push)
         
         let x = self.expectation(description: "Document Replication - Inverted")
         x.isInverted = true
@@ -352,8 +354,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -395,8 +396,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Pull:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: false)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .pull, continuous: false)
 
         var replicator: Replicator!
         var token: ListenerToken!
@@ -433,8 +433,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         
         var replicator: Replicator!
         var token: ListenerToken!
@@ -495,9 +494,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         // Create replicator with push filter:
         let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: isContinuous)
-        
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
@@ -522,8 +519,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.id == "doc2" ? false : true
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
-        
+        let config = self.config(configs: [colConfig], target: target, type: .push, continuous: isContinuous)
+
         // Run the replicator:
         run(config: config, expectedError: nil)
         
@@ -569,11 +566,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         try self.otherDB_defaultCollection!.delete(document: doc3)
         
         // Create replicator with pull filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: false)
         
-        var colConfig = CollectionConfiguration()
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             let isDeleted = flags.contains(.deleted)
@@ -600,7 +596,7 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.id == "doc2" ? false : true
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .pull, continuous: false)
         
         // Run the replicator:
         run(config: config, expectedError: nil)
@@ -636,8 +632,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: false)
-        config.addCollection(defaultCollection!)
+        let config = self.config(collections: [defaultCollection!], target: target, type: .push, continuous: false)
         var replicator: Replicator!
         var docReplicationToken: ListenerToken!
         self.run(config: config, reset: false, expectedError: nil) { [unowned self] (r) in
@@ -677,11 +672,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         try otherDB_defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: isContinuous)
         
-        var colConfig = CollectionConfiguration()
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -693,7 +687,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .pull, continuous: isContinuous)
+        
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
@@ -753,11 +748,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         try defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: isContinuous)
         
-        var colConfig = CollectionConfiguration()
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -769,7 +763,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .push, continuous: isContinuous)
+        
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
@@ -802,11 +797,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         try otherDB_defaultCollection!.save(document: doc2)
         
         // Create replicator with push filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: isContinuous)
-
-        var colConfig = CollectionConfiguration()
+        
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             
@@ -818,7 +812,8 @@ class ReplicatorTest_Main: ReplicatorTest {
             return doc.string(forKey: "name") == "pass"
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .pull, continuous: isContinuous)
+        
         // Run the replicator:
         run(config: config, expectedError: nil)
         XCTAssertEqual(docIds.count, 0)
@@ -849,18 +844,18 @@ class ReplicatorTest_Main: ReplicatorTest {
         try defaultCollection!.save(document: doc1)
         
         // Create replicator with pull filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .push, continuous: true)
         
-        var colConfig = CollectionConfiguration()
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pushFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
             return doc.string(forKey: "name") == "pass"
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .push, continuous: true)
+        
         // create a replicator
         repl = Replicator(config: config)
         run(replicator: repl, expectedError: nil)
@@ -901,18 +896,18 @@ class ReplicatorTest_Main: ReplicatorTest {
         try otherDB_defaultCollection!.save(document: doc1)
         
         // Create replicator with pull filter:
-        let docIds = NSMutableSet()
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(target: target, type: .pull, continuous: true)
         
-        var colConfig = CollectionConfiguration()
+        let docIds = NSMutableSet()
+        var colConfig = CollectionConfiguration(collection: defaultCollection!)
         colConfig.pullFilter = { (doc, flags) in
             XCTAssertNotNil(doc.id)
             docIds.add(doc.id)
             return doc.string(forKey: "name") == "pass"
         }
         
-        config.addCollection(defaultCollection!, config: colConfig)
+        let config = self.config(configs: [colConfig], target: target, type: .pull, continuous: true)
+        
         // create a replicator
         repl = Replicator(config: config)
         run(replicator: repl, expectedError: nil)
@@ -950,8 +945,8 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testReplicatorConfigDefaultValues() {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config = ReplicatorConfiguration(target: target)
-        config.addCollection(defaultCollection!)
+        let collections = CollectionConfiguration.fromCollections([defaultCollection!])
+        var config = ReplicatorConfiguration(collections: collections, target: target)
         
         XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
@@ -987,11 +982,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     }
     
     func testCustomHeartbeat() {
-        let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config = self.config(target: target, type: .pushAndPull, continuous: true)
+        let collections = CollectionConfiguration.fromCollections([defaultCollection!])
+        var config = ReplicatorConfiguration(collections: collections, target: kConnRefusedTarget)
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         config.heartbeat = 60
-        config.addCollection(defaultCollection!)
         repl = Replicator(config: config)
         
         XCTAssertEqual(repl.config.heartbeat, 60)
@@ -1003,7 +997,8 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptCount() {
         // single shot
-        var config = ReplicatorConfiguration(target: kConnRefusedTarget)
+        let collections = CollectionConfiguration.fromCollections([defaultCollection!])
+        var config = ReplicatorConfiguration(collections: collections, target: kConnRefusedTarget)
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
         
         // continous
@@ -1013,13 +1008,14 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testCustomMaxAttemptCount() {
         // single shot
-        var config: ReplicatorConfiguration = ReplicatorConfiguration(target: kConnRefusedTarget)
+        let collections = CollectionConfiguration.fromCollections([defaultCollection!])
+        var config = ReplicatorConfiguration(collections: collections, target: kConnRefusedTarget)
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
         config.maxAttempts = 22
         XCTAssertEqual(config.maxAttempts, 22)
         
         // continous
-        config = ReplicatorConfiguration(target: kConnRefusedTarget)
+        config = ReplicatorConfiguration(collections: collections, target: kConnRefusedTarget)
         config.continuous = true
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsContinuous)
         config.maxAttempts = 11
@@ -1028,13 +1024,12 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttempt(attempt: UInt, count: Int, continuous: Bool) {
         let x = self.expectation(description: "repl finish")
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
+        let config: ReplicatorConfiguration = self.config(collections: [defaultCollection!],
+                                                          target: kConnRefusedTarget,
                                                           type: .pushAndPull,
-                                                          continuous: continuous)
+                                                          continuous: continuous,
+                                                          maxAttempts: attempt)
         var offlineCount = 0
-        config.maxAttempts = attempt
-        config.addCollection(defaultCollection!)
-
         repl = Replicator(config: config)
         repl.addChangeListener { (change) in
             if change.status.activity == .offline {
@@ -1069,21 +1064,23 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptWaitTime() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        var config = self.config(collections: [defaultCollection!], target: kConnRefusedTarget,
+                                 type: .pushAndPull, continuous: false)
         XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config = self.config(collections: [defaultCollection!], target: kConnRefusedTarget,
+                             type: .pushAndPull, continuous: true)
         XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         
-        config.addCollection(defaultCollection!)
         repl = Replicator(config: config)
         XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
     }
     
     func testCustomMaxAttemptWaitTime() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
+        var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget,
+                                                          type: .pushAndPull, continuous: false)
         config.maxAttemptWaitTime = 444
         XCTAssertEqual(config.maxAttemptWaitTime, 444)
         
@@ -1097,7 +1094,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         func expectException(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
-                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget, type: .pushAndPull, continuous: false)
+                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget,
+                                                                      type: .pushAndPull, continuous: false)
                     config.maxAttemptWaitTime = val
                 }
             } catch {
@@ -1112,13 +1110,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptWaitTimeOfReplicator() {
         let x = self.expectation(description: "repl finish")
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget,
-                                                          type: .pushAndPull,
-                                                          continuous: false)
+        var config = self.config(collections: [defaultCollection!], target: kConnRefusedTarget,
+                                 type: .pushAndPull, continuous: false)
         config.maxAttempts = 4
         config.maxAttemptWaitTime = 2
-        
-        config.addCollection(defaultCollection!)
 
         var diff: TimeInterval = 0
         var time = Date()
@@ -1144,9 +1139,8 @@ class ReplicatorTest_Main: ReplicatorTest {
         let x2 = self.expectation(description: "Replicator Stopped - Inverted")
         x2.isInverted = true
         
-        var config: ReplicatorConfiguration = self.config(target: kConnRefusedTarget)
+        var config = self.config(collections: [defaultCollection!], target: kConnRefusedTarget)
         config.maxAttempts = 1
-        config.addCollection(defaultCollection!)
         
         repl = Replicator(config: config)
         let token1 = repl.addChangeListener { (change) in
@@ -1168,26 +1162,7 @@ class ReplicatorTest_Main: ReplicatorTest {
     // MARK: ReplicatorConfig
     
     func testCopyingReplicatorConfiguration() throws {
-        let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config1 = ReplicatorConfiguration(target: target)
-        
-        
-        #if COUCHBASE_ENTERPRISE
-        config1.acceptOnlySelfSignedServerCertificate = true
-        #endif
-        
-        config1.continuous = true
-        config1.authenticator = basic
-        config1.headers = ["a": "aa", "b": "bb"]
-        config1.replicatorType = .pull
-        config1.heartbeat = 211
-        config1.maxAttempts = 223
-        config1.maxAttemptWaitTime = 227
-        
-        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
-        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
-        config1.pinnedServerCertificate = cert
         
         let filter = { (doc: Document, flags: DocumentFlags) -> Bool in
             guard doc.boolean(forKey: "sync") else {
@@ -1197,17 +1172,34 @@ class ReplicatorTest_Main: ReplicatorTest {
             return !flags.contains(.deleted)
         }
         
-        var colConfig1 = CollectionConfiguration()
+        var colConfig1 = CollectionConfiguration(collection: otherDB_defaultCollection!)
         colConfig1.channels = ["c1", "c2"]
         colConfig1.documentIDs = ["d1", "d2"]
         colConfig1.pushFilter = filter
         colConfig1.pullFilter = filter
+
+        var config1 = ReplicatorConfiguration(collections: [colConfig1], target: target)
         
-        config1.addCollection(otherDB_defaultCollection!, config: colConfig1)
+        #if COUCHBASE_ENTERPRISE
+        config1.acceptOnlySelfSignedServerCertificate = true
+        #endif
+        
+        config1.continuous = true
+        config1.headers = ["a": "aa", "b": "bb"]
+        config1.replicatorType = .pull
+        config1.heartbeat = 211
+        config1.maxAttempts = 223
+        config1.maxAttemptWaitTime = 227
+        
+        let basic = BasicAuthenticator(username: "abcd", password: "1234")
+        config1.authenticator = basic
+        
+        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
+        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
+        config1.pinnedServerCertificate = cert
         
         // copying
         let config = ReplicatorConfiguration(config: config1)
-        
         
         // update config1 after passing to configuration’s constructor
         #if COUCHBASE_ENTERPRISE
@@ -1225,45 +1217,29 @@ class ReplicatorTest_Main: ReplicatorTest {
         colConfig1.documentIDs = nil
         colConfig1.pullFilter = nil
         colConfig1.pushFilter = nil
-
-        config1.addCollection(otherDB_defaultCollection!, config: colConfig1)
         
-        #if COUCHBASE_ENTERPRISE
-        XCTAssert(config.acceptOnlySelfSignedServerCertificate)
-        #endif
         XCTAssert(config.continuous)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((config.authenticator as! BasicAuthenticator).password, basic.password)
-        XCTAssertEqual(config.collectionConfig(otherDB_defaultCollection!)!.channels, ["c1", "c2"])
-        XCTAssertEqual(config.collectionConfig(otherDB_defaultCollection!)!.documentIDs, ["d1", "d2"])
         XCTAssertEqual(config.headers, ["a": "aa", "b": "bb"])
         XCTAssertEqual(config.replicatorType, .pull)
         XCTAssertEqual(config.heartbeat, 211)
         XCTAssertEqual(config.maxAttempts, 223)
         XCTAssertEqual(config.maxAttemptWaitTime, 227)
         XCTAssertEqual(config.pinnedServerCertificate, cert)
-        XCTAssertNotNil(config.collectionConfig(otherDB_defaultCollection!)!.pushFilter)
-        XCTAssertNotNil(config.collectionConfig(otherDB_defaultCollection!)!.pullFilter)
+        XCTAssertEqual(config.collectionConfigs.count, 1)
+        XCTAssertEqual(config.collectionConfigs.first?.channels, ["c1", "c2"])
+        XCTAssertEqual(config.collectionConfigs.first?.documentIDs, ["d1", "d2"])
+        XCTAssertNotNil(config.collectionConfigs.first?.pushFilter)
+        XCTAssertNotNil(config.collectionConfigs.first?.pullFilter)
+        
+    #if COUCHBASE_ENTERPRISE
+        XCTAssert(config.acceptOnlySelfSignedServerCertificate)
+    #endif
     }
     
     func testReplicationConfigSetterMethods() throws {
-        let basic = BasicAuthenticator(username: "abcd", password: "1234")
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config = ReplicatorConfiguration(target: target)
-        #if COUCHBASE_ENTERPRISE
-        config.acceptOnlySelfSignedServerCertificate = true
-        #endif
-        config.continuous = true
-        config.authenticator = basic
-        config.headers = ["a": "aa", "b": "bb"]
-        config.replicatorType = .pull
-        config.heartbeat = 211
-        config.maxAttempts = 223
-        config.maxAttemptWaitTime = 227
-        
-        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
-        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
-        config.pinnedServerCertificate = cert
         
         let filter = { (doc: Document, flags: DocumentFlags) -> Bool in
             guard doc.boolean(forKey: "sync") else {
@@ -1273,60 +1249,34 @@ class ReplicatorTest_Main: ReplicatorTest {
             return !flags.contains(.deleted)
         }
         
-        var colConfig = CollectionConfiguration()
+        var colConfig = CollectionConfiguration(collection: otherDB_defaultCollection!)
         colConfig.channels = ["c1", "c2"]
         colConfig.documentIDs = ["d1", "d2"]
         colConfig.pushFilter = filter
         colConfig.pullFilter = filter
         
-        config.addCollection(otherDB_defaultCollection!, config: colConfig)
+        var config = ReplicatorConfiguration(collections: [colConfig], target: target)
+        config.continuous = true
+        config.headers = ["a": "aa", "b": "bb"]
+        config.replicatorType = .pull
+        config.heartbeat = 211
+        config.maxAttempts = 223
+        config.maxAttemptWaitTime = 227
+        
+        let basic = BasicAuthenticator(username: "abcd", password: "1234")
+        config.authenticator = basic
+        
+        let certData = try dataFromResource(name: "SelfSigned", ofType: "cer")
+        let cert = SecCertificateCreateWithData(kCFAllocatorDefault, certData as CFData)!
+        config.pinnedServerCertificate = cert
+        
+    #if COUCHBASE_ENTERPRISE
+        config.acceptOnlySelfSignedServerCertificate = true
+    #endif
         
         // set correctly on replicator
         repl = Replicator(config:  config)
         
-        // -------------
-        // update config, after passed to the target's constructor
-        #if COUCHBASE_ENTERPRISE
-        config.acceptOnlySelfSignedServerCertificate = false
-        #endif
-        config.continuous = false
-        config.authenticator = nil
-        config.headers = nil
-        config.replicatorType = .push
-        config.heartbeat = 11
-        config.maxAttempts = 13
-        config.maxAttemptWaitTime = 17
-        config.pinnedServerCertificate = nil
-        colConfig.channels = nil
-        colConfig.documentIDs = nil
-        colConfig.pullFilter = nil
-        colConfig.pushFilter = nil
-        
-        config.addCollection(otherDB_defaultCollection!, config: colConfig)
-        
-        // update returned configuration.
-        var config2 = repl.config
-        var colConfig2 = config.collectionConfig(otherDB_defaultCollection!)
-        #if COUCHBASE_ENTERPRISE
-        config2.acceptOnlySelfSignedServerCertificate = false
-        #endif
-        config2.continuous = false
-        config2.authenticator = nil
-        config2.headers = nil
-        config2.replicatorType = .push
-        config2.heartbeat = 11
-        config2.maxAttempts = 13
-        config2.maxAttemptWaitTime = 17
-        config2.pinnedServerCertificate = nil
-        colConfig2!.channels = nil
-        colConfig2!.documentIDs = nil
-        colConfig2!.pullFilter = nil
-        colConfig2!.pushFilter = nil
-        
-        // validate no impact on above updates.
-        #if COUCHBASE_ENTERPRISE
-        XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
-        #endif
         XCTAssert(repl.config.continuous)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).username, basic.username)
         XCTAssertEqual((repl.config.authenticator as! BasicAuthenticator).password, basic.password)
@@ -1336,54 +1286,48 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(repl.config.maxAttempts, 223)
         XCTAssertEqual(repl.config.maxAttemptWaitTime, 227)
         XCTAssertEqual(repl.config.pinnedServerCertificate, cert)
-        let colConfigRepl = repl.config.collectionConfig(otherDB_defaultCollection!)
-        XCTAssertEqual(colConfigRepl!.channels, ["c1", "c2"])
-        XCTAssertEqual(colConfigRepl!.documentIDs, ["d1", "d2"])
-        XCTAssertNotNil(colConfigRepl!.pushFilter)
-        XCTAssertNotNil(colConfigRepl!.pullFilter)
+        
+    #if COUCHBASE_ENTERPRISE
+        XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
+    #endif
+        
+        let colConfigs = repl.config.collectionConfigs
+        XCTAssertEqual(colConfigs.count, 1)
+        XCTAssertEqual(colConfigs.first?.channels, ["c1", "c2"])
+        XCTAssertEqual(colConfigs.first?.documentIDs, ["d1", "d2"])
+        XCTAssertNotNil(colConfigs.first?.pushFilter)
+        XCTAssertNotNil(colConfigs.first?.pullFilter)
     }
     
     func testDefaultReplicatorConfiguration() throws {
         let target = URLEndpoint(url: URL(string: "ws://foo.couchbase.com/db")!)
-        var config = ReplicatorConfiguration(target: target)
-        config.addCollection(otherDB_defaultCollection!)
+        let collections = CollectionConfiguration.fromCollections([otherDB_defaultCollection!])
+        var config = ReplicatorConfiguration(collections: collections, target: target)
         
-#if COUCHBASE_ENTERPRISE
-        XCTAssertEqual(config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
-#endif
         XCTAssertNil(config.authenticator)
         XCTAssertNil(config.headers)
         XCTAssertNil(config.pinnedServerCertificate)
-        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.channels)
-        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.conflictResolver)
-        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.documentIDs)
-        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.pullFilter)
-        XCTAssertNil(config.collectionConfig(otherDB_defaultCollection!)?.pushFilter)
-        
         XCTAssertEqual(config.continuous, ReplicatorConfiguration.defaultContinuous)
         XCTAssertEqual(config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
         XCTAssertEqual(config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
         XCTAssertEqual(config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
         XCTAssertEqual(config.replicatorType, ReplicatorConfiguration.defaultType)
         XCTAssertEqual(config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
-#if os(iOS)
+        
+    #if os(iOS)
         XCTAssertEqual(config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
-#endif
+    #endif
         
-        repl = Replicator(config: config)
+    #if COUCHBASE_ENTERPRISE
+        XCTAssertEqual(config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
+    #endif
         
-#if COUCHBASE_ENTERPRISE
-        XCTAssertEqual(repl.config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
-#endif
-        XCTAssertEqual(repl.config.continuous, ReplicatorConfiguration.defaultContinuous)
-        XCTAssertEqual(repl.config.heartbeat, ReplicatorConfiguration.defaultHeartbeat)
-        XCTAssertEqual(repl.config.maxAttempts, ReplicatorConfiguration.defaultMaxAttemptsSingleShot)
-        XCTAssertEqual(repl.config.maxAttemptWaitTime, ReplicatorConfiguration.defaultMaxAttemptsWaitTime)
-        XCTAssertEqual(repl.config.replicatorType, ReplicatorConfiguration.defaultType)
-        XCTAssertEqual(repl.config.enableAutoPurge, ReplicatorConfiguration.defaultEnableAutoPurge)
-#if os(iOS)
-        XCTAssertEqual(repl.config.allowReplicatingInBackground, ReplicatorConfiguration.defaultAllowReplicatingInBackground)
-#endif
+        XCTAssertEqual(config.collectionConfigs.count, 1)
+        XCTAssertNil(config.collectionConfigs.first?.channels)
+        XCTAssertNil(config.collectionConfigs.first?.conflictResolver)
+        XCTAssertNil(config.collectionConfigs.first?.documentIDs)
+        XCTAssertNil(config.collectionConfigs.first?.pullFilter)
+        XCTAssertNil(config.collectionConfigs.first?.pushFilter)
     }
 }
 

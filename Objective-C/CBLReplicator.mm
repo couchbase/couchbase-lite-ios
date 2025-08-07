@@ -280,8 +280,8 @@ typedef enum {
     std::vector<C4ReplicationCollection> cols;
     std::vector<alloc_slice> optionDicts;
     
-    for (CBLCollection* col in _config.collectionConfigs) {
-        CBLCollectionConfiguration* colConfig = _config.collectionConfigs[col];
+    for (CBLCollection* col in _config.collectionConfigMap) {
+        CBLCollectionConfiguration* colConfig = _config.collectionConfigMap[col];
         
         alloc_slice dict = [self encodedOptions: colConfig.effectiveOptions];
         optionDicts.push_back(dict);

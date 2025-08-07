@@ -17,16 +17,32 @@
 //  limitations under the License.
 //
 #import "CBLCollectionConfiguration.h"
+#import "CBLCollection+Internal.h"
+#import "CBLPrecondition.h"
 
 @implementation CBLCollectionConfiguration
 
+@synthesize collection=_collection;
 @synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize conflictResolver=_conflictResolver;
 
+- (instancetype) init {
+    return [super init];
+}
+
+- (instancetype) initWithCollection: (CBLCollection*)collection {
+    self = [super init];
+    if (self) {
+        _collection = collection;
+    }
+    return self;
+}
+
 - (instancetype) initWithConfig: (CBLCollectionConfiguration*)config {
     self = [super init];
     if (self) {
+        _collection = config.collection;
         _documentIDs = config.documentIDs;
         _channels = config.channels;
         _pushFilter = config.pushFilter;
@@ -34,6 +50,15 @@
         _conflictResolver = config.conflictResolver;
     }
     return self;
+}
+
++ (NSArray<CBLCollectionConfiguration*>*) fromCollections: (NSArray<CBLCollection*>*)collections {
+    [CBLPrecondition assertArrayNotEmpty: collections name: @"collections"];
+    NSMutableArray* configs = [NSMutableArray arrayWithCapacity: collections.count];
+    for (CBLCollection* collection in collections) {
+        [configs addObject: [[CBLCollectionConfiguration alloc] initWithCollection: collection]];
+    }
+    return configs;
 }
 
 - (NSDictionary*) effectiveOptions {
