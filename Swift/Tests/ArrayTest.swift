@@ -249,6 +249,7 @@ class ArrayTest: CBLTestCase {
         }
     }
     
+    
     func testArrayToJSON() throws {
         let json = "[\(try getRickAndMortyJSON()),\(try getRickAndMortyJSON())]"
         let mArray = try MutableArrayObject(json: json)
