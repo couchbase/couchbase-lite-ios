@@ -66,9 +66,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-/** The hybrid logical timestamp that the revision was created. */
-@property (nonatomic, readonly) NSTimeInterval timestamp;
-
 - (void) setFleece: (FLDict)data;
 
 - (instancetype) initWithCollection: (nullable CBLCollection*)collection
