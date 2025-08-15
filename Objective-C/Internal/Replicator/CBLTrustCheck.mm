@@ -80,8 +80,11 @@ static BOOL sOnlyTrustAnchorCerts;
     return [NSString stringWithFormat: @"%@[%@:%@]", self.class, (_host ?: @""), port];
 }
 
-// Checks whether the reported problems with a SecTrust are OK.
-// Currently do not accept any problems.
+/**
+ Validates whether the issues reported by SecTrust are acceptable if trust validation
+ result is not kSecTrustResultProceed or kSecTrustResultUnspecified.
+ Note: Used only when no pinned certificate or self-signed certificate restriction is set.
+ */
 - (BOOL) shouldAcceptProblems: (NSError**)outError {
     NSDictionary* resultDict = CFBridgingRelease(SecTrustCopyResult(_trust));
     NSArray* detailsArray = resultDict[@"TrustResultDetails"];
@@ -95,15 +98,21 @@ static BOOL sOnlyTrustAnchorCerts;
                     [details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
         #endif
             ) {
+                if (!_host) {
+                    continue; // When no host specified, accept and check next problem
+                }
                 MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
                                   @"Server TLS certificate has a hostname mismatch.");
-            } else if ([problem isEqualToString: @"AnchorTrusted"]) {
-                MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
-                              @"Server TLS certificate has an unknown root or is self-signed.");
+                return NO;
             } else {
-                // Any other problem:
-                MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
-                              @"Server TLS certificate is untrusted (problem = %@)", problem);
+                if ([problem isEqualToString: @"AnchorTrusted"]) {
+                    MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+                                  @"Server TLS certificate has an unknown root or is self-signed.");
+                } else {
+                    // Any other problem:
+                    MYReturnError(outError, NSURLErrorServerCertificateUntrusted, NSURLErrorDomain,
+                                  @"Server TLS certificate is untrusted (problem = %@)", problem);
+                }
                 return NO;
             }
         }
@@ -174,38 +183,26 @@ static BOOL sOnlyTrustAnchorCerts;
     
     // If using pinned cert, accept cert if it matches the pinned cert:
     if (_pinnedCertData) {
-        CFIndex count = SecTrustGetCertificateCount(_trust);
-#if __IPHONE_OS_VERSION_MAX_REQUIRED >= 150000
-        if (@available(iOS 15.0, *)) {
-            NSData* certData = nil;
-            for (CFIndex i = 0; i < count; i++) {
-                CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
-                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, i);
-                certData = CFBridgingRelease(SecCertificateCopyData(cert));
+        CFArrayRef certs = SecTrustCopyCertificateChain(_trust);
+        CFIndex count = CFArrayGetCount(certs);
+        for (CFIndex i = 0; i < count; i++) {
+            SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(certs, i);
+            NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
+            if ([_pinnedCertData isEqual:certData]) {
                 CFRelease(certs);
-                if ([_pinnedCertData isEqual: certData]) {
-                    [self forceTrusted];
-                    return credential;
-                }
-            }
-        } else
-#endif
-        {
-            for (CFIndex i = 0; i < count; i++) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                SecCertificateRef cert = SecTrustGetCertificateAtIndex(_trust, i);
-#pragma clang diagnostic pop
-                if ([_pinnedCertData isEqual: CFBridgingRelease(SecCertificateCopyData(cert))]) {
-                    [self forceTrusted];
-                    return credential;
-                }
+                [self forceTrusted];
+                return credential;
             }
         }
-        MYReturnError(outError, NSURLErrorServerCertificateHasUnknownRoot, NSURLErrorDomain,
+
+        CFRelease(certs);
+        MYReturnError(outError,
+                      NSURLErrorServerCertificateHasUnknownRoot,
+                      NSURLErrorDomain,
                       @"Server TLS Certificate does not match the pinned cert.");
         return nil;
     }
+    
 #ifdef COUCHBASE_ENTERPRISE
     else if (_acceptOnlySelfSignedCert) {
         NSError* err;

@@ -228,7 +228,7 @@
     SecCertificateRef secCert3 = [self createSecCertFromPEM: cert3];
     
     SecTrustRef trust;
-    SecPolicyRef policy = SecPolicyCreateSSL(true, (__bridge CFStringRef)_host);
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
     
     // Validate leaf cert:
     
@@ -239,8 +239,7 @@
     NSError* error;
     NSURLCredential* credential;
     
-    
-    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust host: _host port: 443];
+    CBLTrustCheck* trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust];
     credential = [trustCheck checkTrust: &error];
     AssertNil(credential);
     
@@ -261,7 +260,7 @@
     status = SecTrustCreateWithCertificates((__bridge CFTypeRef)certs, policy, &trust);
     AssertEqual(status, errSecSuccess);
     
-    trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust host: _host port: 443];
+    trustCheck = [[CBLTrustCheck alloc] initWithTrust: trust];
     credential = [trustCheck checkTrust: &error];
     AssertNil(credential);
     
