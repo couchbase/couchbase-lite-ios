@@ -85,13 +85,13 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
 
 // TODO: Too flaky, enable after all LiteCore issues have been handled.
 - (BOOL) isExecutionAllowed {
-#if TARGET_OS_SIMULATOR
+#if TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST || TARGET_OS_OSX
     // Cannot be tested on the simulator as local network access permission is required.
     // See FAQ-12 : https://developer.apple.com/forums/thread/663858)
     return NO;
 #else
     // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
-    return self.keyChainAccessAllowed && false;
+    return self.keyChainAccessAllowed;
 #endif
 }
 
@@ -406,6 +406,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
  4. Check that the configuration cannot be created as the collections are empty.
  */
 - (void) testConfigurationValidation {
+    // When exception is thrown, the object will not get released:
     self.disableObjectLeakCheck = YES;
     
     CBLTLSIdentity* identity = [self createIdentity];
@@ -1084,8 +1085,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     // Wait until the replicator is IDLE
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
-    
-    NSLog(@"-----------------------------------------");
     
     // Stops:
     [self stopMultipeerReplicator: repl1];
