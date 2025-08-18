@@ -105,7 +105,7 @@ typedef enum {
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 
 static const C4DatabaseConfig2 kDBConfig = {
-    .flags = (kC4DB_Create | kC4DB_AutoCompact),
+    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_VersionVectors),
 };
 
 /** 

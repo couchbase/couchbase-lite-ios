@@ -1880,10 +1880,6 @@
 		AE5F25592CAC310800AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255A2CAC310900AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255B2CAC311100AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
-		AE6660AF2DDF631500860706 /* CBLDocument+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		AE6660B02DDF631500860706 /* CBLDocument+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */; };
-		AE6660B12DDF631500860706 /* CBLDocument+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		AE6660B22DDF631500860706 /* CBLDocument+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */; };
 		AE6660E02DDF720900860706 /* WeakHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6660DF2DDF720900860706 /* WeakHolder.swift */; };
 		AE6660E12DDF720900860706 /* WeakHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6660DF2DDF720900860706 /* WeakHolder.swift */; };
 		AE83D0842C0637ED0055D2CF /* CBLIndexUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3076,7 +3072,6 @@
 		AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorSearchTest.swift; sourceTree = "<group>"; };
 		AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordEmbeddingModel.swift; sourceTree = "<group>"; };
 		AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UnnestArrayIndexTest.m; sourceTree = "<group>"; };
-		AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLDocument+Swift.h"; sourceTree = "<group>"; };
 		AE6660DF2DDF720900860706 /* WeakHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakHolder.swift; sourceTree = "<group>"; };
 		AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexUpdater.h; sourceTree = "<group>"; };
 		AE83D0832C0637ED0055D2CF /* CBLIndexUpdater.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLIndexUpdater.mm; sourceTree = "<group>"; };
@@ -4580,7 +4575,6 @@
 				930AE46C1EAA6C9100E92E9A /* CBLData.mm */,
 				9381961D1EC11A8C0032CC51 /* CBLDictionary+Swift.h */,
 				93900CF91EA171B900745D4F /* CBLDocument+Internal.h */,
-				AE6660AE2DDF631500860706 /* CBLDocument+Swift.h */,
 				27D721971F8E97F400AA4458 /* CBLFleece.hh */,
 				27D721981F8E97F400AA4458 /* CBLFleece.mm */,
 				27D721B81F904B2500AA4458 /* CBLNewDictionary.h */,
@@ -4863,7 +4857,6 @@
 				937F01E21EFB269300060D64 /* CBLAuthenticator.h in Headers */,
 				93DBCFF72004B5FD0017CA83 /* CBLEndpoint.h in Headers */,
 				9388CC3321C18672005CA66D /* CBLLog+Internal.h in Headers */,
-				AE6660AF2DDF631500860706 /* CBLDocument+Swift.h in Headers */,
 				9383A58B1F1EE8EF0083053D /* CBLQueryResult.h in Headers */,
 				27476665201946A3007B39D1 /* CBLErrors.h in Headers */,
 				40E46B102DD6A763007E495D /* CBLCookieStore.h in Headers */,
@@ -5194,7 +5187,6 @@
 				1A3470E2266F415E0042C6BA /* CBLIndexSpec.h in Headers */,
 				40FC1B4B2B92872000394276 /* CBLDatabase+Encryption.h in Headers */,
 				9343EFF4207D611600F19A89 /* ExceptionUtils.h in Headers */,
-				AE6660B02DDF631500860706 /* CBLDocument+Swift.h in Headers */,
 				9343EFF5207D611600F19A89 /* CBLDocumentChangeNotifier.h in Headers */,
 				40FC1C002B928AB100394276 /* CBLKeyChain.h in Headers */,
 				9343EFF6207D611600F19A89 /* CBLQueryJSONEncoding.h in Headers */,
@@ -5249,7 +5241,6 @@
 				9388CC5B21C25FDE005CA66D /* CBLLog+Swift.h in Headers */,
 				932565A721ED13290092F4E0 /* CBLLogFileConfiguration.h in Headers */,
 				9343F0B8207D61AB00F19A89 /* CBLBinaryExpression.h in Headers */,
-				AE6660B12DDF631500860706 /* CBLDocument+Swift.h in Headers */,
 				9343F0B9207D61AB00F19A89 /* CBLFleece.hh in Headers */,
 				9343F0BA207D61AB00F19A89 /* CBLReplicator+Backgrounding.h in Headers */,
 				9343F0BB207D61AB00F19A89 /* CBLBlobStream.h in Headers */,
@@ -5498,7 +5489,6 @@
 				93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */,
 				9374A8A6201FC53600BA0D9E /* CBLReplicator+Backgrounding.h in Headers */,
 				409F44AD2DF3B09F00BB7851 /* CBLAppBackgroundingMonitor.h in Headers */,
-				AE6660B22DDF631500860706 /* CBLDocument+Swift.h in Headers */,
 				27D721991F8E97F400AA4458 /* CBLFleece.hh in Headers */,
 				933208161E77415E000D9993 /* CBLQueryOrdering.h in Headers */,
 				93DBCFF62004B5FD0017CA83 /* CBLEndpoint.h in Headers */,
