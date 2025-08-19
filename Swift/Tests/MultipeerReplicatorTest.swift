@@ -121,14 +121,18 @@ class MultipeerReplicatorTest: CBLTestCase {
         assert(identityCount <= kTestMaxIdentity)
         identityCount += 1
         
-        let name = identityNameForNumber(identityCount)
-        let attrs = [certAttrCommonName: name]
+        let label = identityNameForNumber(identityCount)
+        
+        let timestamp = UInt64(Date().timeIntervalSince1970 * 1000)
+        let cn = "\(label)-\(timestamp)"
+        let attrs = [certAttrCommonName: cn]
+        
         return try TLSIdentity.createIdentity(
             for: kTestKeyUsages,
             attributes: attrs,
             expiration: nil,
             issuer: self.issuer,
-            label: name)
+            label: label)
     }
     
     typealias CollectionConfigBlock = (inout MultipeerCollectionConfiguration) -> Void
